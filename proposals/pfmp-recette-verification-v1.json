@@ -1,0 +1,33 @@
+{
+  "docId": "j1jDArBkzi7P",
+  "verifiedAt": "2026-07-31T23:54:44.704Z",
+  "backup": "pfmp-recette-backup-before-v1-2026-07-31T23-54-04-109Z.json",
+  "checks": {
+    "schema": {
+      "Code_classe": "Text",
+      "Afficher_formulaire_PFMP": "Bool",
+      "Offre_formation": "Ref:EUC_OFFRES_FORMATION",
+      "Periode": "Ref:Planning_Periodes",
+      "Active": "Bool",
+      "Code_liaison": "Text",
+      "Commentaire": "Text"
+    },
+    "diplomas": 14,
+    "offers": 38,
+    "visibleOffers": 38,
+    "btsWithoutClass": 8,
+    "excludedVisible": 0,
+    "relations": 43,
+    "duplicateCodes": 0,
+    "invalidRelationReferences": 0,
+    "invalidDiplomaReferences": 0,
+    "directPlanningLinks": 29,
+    "directPlanningMismatch": 0,
+    "unexpectedPlanningChanges": 0,
+    "submissions": 0,
+    "companies": 0,
+    "contacts": 0,
+    "productionAccess": false
+  },
+  "success": true
+}

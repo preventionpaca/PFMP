@@ -1,0 +1,16 @@
+{
+  "years": 3,
+  "activeYears": 1,
+  "classes": 38,
+  "activeClasses": 38,
+  "inactiveClasses": 0,
+  "diplomasProposed": 16,
+  "offersProposed": 38,
+  "periodsTotal": 368,
+  "officialPeriodsRecognized": 47,
+  "periodCertain": 20,
+  "periodProbable": 10,
+  "periodImpossible": 17,
+  "periodOfferDirectlyFillable": 30,
+  "classesWithoutOfficialPeriod": 5
+}

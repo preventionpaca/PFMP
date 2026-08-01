@@ -1,0 +1,56 @@
+{
+  "tables": [
+    {
+      "id": "EUC_ENTREPRISES",
+      "columns": [
+        {"id":"SIRET","fields":{"label":"SIRET","type":"Text"}},
+        {"id":"SIREN","fields":{"label":"SIREN","type":"Text"}},
+        {"id":"Raison_sociale","fields":{"label":"Raison sociale","type":"Text"}},
+        {"id":"Enseigne","fields":{"label":"Enseigne","type":"Text"}},
+        {"id":"Est_siege","fields":{"label":"Établissement siège","type":"Bool"}},
+        {"id":"Etat","fields":{"label":"État","type":"Text"}},
+        {"id":"Forme_juridique","fields":{"label":"Forme juridique","type":"Text"}},
+        {"id":"Code_APE","fields":{"label":"Code APE / NAF","type":"Text"}},
+        {"id":"Libelle_activite","fields":{"label":"Libellé de l’activité","type":"Text"}},
+        {"id":"Date_creation","fields":{"label":"Date de création","type":"Date"}},
+        {"id":"Complement_adresse","fields":{"label":"Complément d’adresse","type":"Text"}},
+        {"id":"Numero_voie","fields":{"label":"Numéro et voie","type":"Text"}},
+        {"id":"Code_postal","fields":{"label":"Code postal","type":"Text"}},
+        {"id":"Commune","fields":{"label":"Commune","type":"Text"}},
+        {"id":"Pays","fields":{"label":"Pays","type":"Text"}},
+        {"id":"Adresse_complete","fields":{"label":"Adresse complète normalisée","type":"Text"}},
+        {"id":"Telephone","fields":{"label":"Téléphone principal","type":"Text"}},
+        {"id":"Telephone_2","fields":{"label":"Téléphone secondaire","type":"Text"}},
+        {"id":"Courriel","fields":{"label":"Courriel général","type":"Text"}},
+        {"id":"Site_web","fields":{"label":"Site Internet","type":"Text"}},
+        {"id":"Accueil_eleves","fields":{"label":"Susceptible d’accueillir des élèves","type":"Bool"}},
+        {"id":"Statut_relation","fields":{"label":"Statut de la relation","type":"Text"}},
+        {"id":"Commentaire_interne","fields":{"label":"Commentaire interne","type":"Text"}},
+        {"id":"Premiere_relation","fields":{"label":"Date de première relation","type":"Date"}},
+        {"id":"Derniere_relation","fields":{"label":"Date de dernière relation","type":"Date"}},
+        {"id":"Origine_creation","fields":{"label":"Origine de la création","type":"Text"}},
+        {"id":"Auteur_creation","fields":{"label":"Auteur de la création","type":"Text"}},
+        {"id":"Date_creation_fiche","fields":{"label":"Date de création de la fiche","type":"DateTime"}},
+        {"id":"Date_modification_fiche","fields":{"label":"Date de modification de la fiche","type":"DateTime"}}
+      ]
+    },
+    {
+      "id": "EUC_CONTACTS_ENTREPRISES",
+      "columns": [
+        {"id":"Entreprise","fields":{"label":"Entreprise","type":"Ref:EUC_ENTREPRISES"}},
+        {"id":"Civilite","fields":{"label":"Civilité","type":"Text"}},
+        {"id":"Prenom","fields":{"label":"Prénom","type":"Text"}},
+        {"id":"Nom","fields":{"label":"Nom","type":"Text"}},
+        {"id":"Fonction","fields":{"label":"Fonction","type":"Text"}},
+        {"id":"Telephone_direct","fields":{"label":"Téléphone direct","type":"Text"}},
+        {"id":"Courriel_direct","fields":{"label":"Courriel direct","type":"Text"}},
+        {"id":"Type_contact","fields":{"label":"Type de contact","type":"Text"}},
+        {"id":"Origine_donnee","fields":{"label":"Origine de la donnée","type":"Text"}},
+        {"id":"Actif","fields":{"label":"Contact actif","type":"Bool"}},
+        {"id":"Commentaire","fields":{"label":"Commentaire","type":"Text"}},
+        {"id":"Date_creation_fiche","fields":{"label":"Date de création de la fiche","type":"DateTime"}},
+        {"id":"Date_modification_fiche","fields":{"label":"Date de modification de la fiche","type":"DateTime"}}
+      ]
+    }
+  ]
+}

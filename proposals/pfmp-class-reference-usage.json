@@ -1,0 +1,160 @@
+{
+  "docId": "j1jDArBkzi7P",
+  "targets": [
+    6,
+    27,
+    37,
+    38
+  ],
+  "referencingTables": [
+    {
+      "table": "Appartenances_Groupes",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Services_Enseignants",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Creneaux_EDT",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Seances_Generees",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Synthese_Hebdo_Enseignants",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Synthese_Annuelle_Enseignants",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Groupes",
+      "columns": [
+        {
+          "id": "Classe_principale",
+          "type": "Ref:Classes"
+        },
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Groupes_Classes",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Quotas_PFMP_Enseignants",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Repartition_PFMP",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "TRM_Lignes",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Vues_EDT_Lignes",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Indisponibilites_EDT",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "Creneaux_Lieux",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "EUC_OFFRES_FORMATION",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    },
+    {
+      "table": "EUC_SOUMISSIONS_PFMP",
+      "columns": [
+        {
+          "id": "Classe",
+          "type": "Ref:Classes"
+        }
+      ]
+    }
+  ],
+  "usages": []
+}

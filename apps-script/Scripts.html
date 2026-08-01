@@ -1,0 +1,19 @@
+<script>(function(){
+const form=document.querySelector('#form'),siret=document.querySelector('#siret'),status=document.querySelector('#status'),details=document.querySelector('#details'),searchBtn=document.querySelector('#searchBtn'),saveBtn=document.querySelector('#saveBtn');
+function busy(b){searchBtn.disabled=b;saveBtn.disabled=b}
+function message(t,err){status.textContent=t;status.style.color=err?'#a12622':'#176c53'}
+function fill(d){Object.keys(d||{}).forEach(k=>{const e=form.elements[k];if(e)e.type==='checkbox'?e.checked=!!d[k]:e.value=d[k]??''});form.elements.gristId.value=d&&d.id||'';details.disabled=false}
+function fail(e){busy(false);message(e&&e.message||String(e),true)}
+function showResult(r){busy(false);if(r.introuvable){details.disabled=true;message('Aucun établissement trouvé.',true);return}fill(r.entreprise);message(r.source==='grist'?'Fiche existante chargée depuis Grist.':'Données publiques chargées. Vérifiez-les avant enregistrement.')}
+async function fetchPublicApi(r){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    const rep=await fetch(r.url,{headers:{Accept:'application/json'},signal:controller.signal});
+    if(!rep.ok)throw new Error(rep.status===429?'API temporairement limitée. Réessayez plus tard.':'API entreprises indisponible ('+rep.status+').');
+    const json=await rep.json();
+    google.script.run.withSuccessHandler(showResult).withFailureHandler(fail).EUC_ENT_traiterReponseApiNavigateur(json,r.siret);
+  }catch(e){fail(e&&e.name==='AbortError'?new Error('API entreprises trop lente. Réessayez.'):e)}finally{clearTimeout(timer)}
+}
+searchBtn.addEventListener('click',()=>{busy(true);message('Recherche en cours…');google.script.run.withSuccessHandler(r=>{if(r.source==='api_navigateur'){fetchPublicApi(r);return}showResult(r)}).withFailureHandler(fail).EUC_ENT_rechercherSiret(siret.value)});
+form.addEventListener('submit',e=>{e.preventDefault();if(saveBtn.disabled)return;busy(true);message('Enregistrement en cours…');const d=Object.fromEntries(new FormData(form));d.accueilEleves=form.elements.accueilEleves.checked;google.script.run.withSuccessHandler(r=>{busy(false);if(r&&r.entrepriseId)form.elements.gristId.value=r.entrepriseId;message(r&&r.operation==='modification'?'Entreprise mise à jour.':'Entreprise enregistrée.')}).withFailureHandler(x=>{busy(false);message(x.message||String(x),true)}).EUC_ENT_enregistrerOuModifierEntreprise(d)});
+})();</script>

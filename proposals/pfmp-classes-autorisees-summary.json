@@ -1,0 +1,18 @@
+{
+  "Correspondance exacte": 28,
+  "Correspondance normalisée certaine": 2,
+  "Correspondance probable à valider": 0,
+  "Classe introuvable": 8,
+  "Plusieurs classes candidates": 0,
+  "total": 38,
+  "classesExcluesGrist": [
+    2,
+    6,
+    27,
+    34,
+    35,
+    36,
+    37,
+    38
+  ]
+}

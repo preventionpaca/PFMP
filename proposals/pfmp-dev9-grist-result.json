@@ -1,0 +1,34 @@
+{
+  "docId": "j1jDArBkzi7P",
+  "columnsCreated": [
+    "EUC_OFFRES_FORMATION.Libelle_affichage",
+    "EUC_SOUMISSIONS_PFMP.Entreprise_complement_adresse_snapshot",
+    "EUC_SOUMISSIONS_PFMP.Entreprise_code_postal_snapshot",
+    "EUC_SOUMISSIONS_PFMP.Entreprise_pays_snapshot"
+  ],
+  "offersUpdated": [
+    13,
+    14,
+    17,
+    18
+  ],
+  "relationsCreated": [
+    "1:285",
+    "2:26",
+    "2:34",
+    "11:137",
+    "19:284",
+    "19:287",
+    "20:10",
+    "20:62"
+  ],
+  "checks": {
+    "offers": 38,
+    "relations": 51,
+    "carrosserieRelations": 8,
+    "displayLabels": 4,
+    "submissionColumns": 64,
+    "duplicates": 0
+  },
+  "success": true
+}

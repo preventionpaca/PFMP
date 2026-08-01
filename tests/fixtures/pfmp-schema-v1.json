@@ -1,0 +1,102 @@
+{
+  "docId": "j1jDArBkzi7P",
+  "tables": [
+    {
+      "id": "EUC_DIPLOMES",
+      "columns": [
+        {"id":"Code","fields":{"label":"Code","type":"Text"}},
+        {"id":"Libelle","fields":{"label":"Libellé","type":"Text"}},
+        {"id":"Actif","fields":{"label":"Actif","type":"Bool"}},
+        {"id":"Ordre","fields":{"label":"Ordre","type":"Int"}},
+        {"id":"Commentaire","fields":{"label":"Commentaire","type":"Text"}}
+      ]
+    },
+    {
+      "id": "EUC_OFFRES_FORMATION",
+      "columns": [
+        {"id":"Annee_scolaire","fields":{"label":"Année scolaire","type":"Ref:Annees_Scolaires"}},
+        {"id":"Diplome","fields":{"label":"Diplôme","type":"Ref:EUC_DIPLOMES"}},
+        {"id":"Classe","fields":{"label":"Classe","type":"Ref:Classes"}},
+        {"id":"Actif","fields":{"label":"Actif","type":"Bool"}},
+        {"id":"Ordre","fields":{"label":"Ordre","type":"Int"}},
+        {"id":"Commentaire","fields":{"label":"Commentaire","type":"Text"}}
+      ]
+    },
+    {
+      "id": "EUC_SOUMISSIONS_PFMP",
+      "columns": [
+        {"id":"Reference","fields":{"label":"Référence","type":"Text"}},
+        {"id":"Date_creation","fields":{"label":"Date de création","type":"DateTime"}},
+        {"id":"Date_modification","fields":{"label":"Date de modification","type":"DateTime"}},
+        {"id":"Annee_scolaire","fields":{"label":"Année scolaire","type":"Ref:Annees_Scolaires"}},
+        {"id":"Annee_libelle_snapshot","fields":{"label":"Année photographiée","type":"Text"}},
+        {"id":"Statut_jeune","fields":{"label":"Statut du jeune","type":"Choice"}},
+        {"id":"Diplome","fields":{"label":"Diplôme","type":"Ref:EUC_DIPLOMES"}},
+        {"id":"Diplome_snapshot","fields":{"label":"Diplôme photographié","type":"Text"}},
+        {"id":"Classe","fields":{"label":"Classe","type":"Ref:Classes"}},
+        {"id":"Classe_snapshot","fields":{"label":"Classe photographiée","type":"Text"}},
+        {"id":"Offre_formation","fields":{"label":"Offre de formation","type":"Ref:EUC_OFFRES_FORMATION"}},
+        {"id":"Periode_officielle","fields":{"label":"Période officielle","type":"Ref:Planning_Periodes"}},
+        {"id":"Periode_snapshot","fields":{"label":"Période photographiée","type":"Text"}},
+        {"id":"Date_officielle_debut","fields":{"label":"Date officielle de début","type":"Date"}},
+        {"id":"Date_officielle_fin","fields":{"label":"Date officielle de fin","type":"Date"}},
+        {"id":"Dates_conformes","fields":{"label":"Dates conformes","type":"Bool"}},
+        {"id":"Scenario_dates","fields":{"label":"Scénario de dates","type":"Choice"}},
+        {"id":"Date_declaree_debut","fields":{"label":"Date déclarée de début","type":"Date"}},
+        {"id":"Date_declaree_fin","fields":{"label":"Date déclarée de fin","type":"Date"}},
+        {"id":"Motif","fields":{"label":"Motif","type":"Text"}},
+        {"id":"Commentaire_jeune","fields":{"label":"Commentaire du jeune","type":"Text"}},
+        {"id":"Jeune_nom","fields":{"label":"Nom du jeune","type":"Text"}},
+        {"id":"Jeune_prenom","fields":{"label":"Prénom du jeune","type":"Text"}},
+        {"id":"Jeune_date_naissance","fields":{"label":"Date de naissance","type":"Date"}},
+        {"id":"Jeune_telephone","fields":{"label":"Téléphone du jeune","type":"Text"}},
+        {"id":"Jeune_courriel","fields":{"label":"Courriel du jeune","type":"Text"}},
+        {"id":"Jeune_adresse","fields":{"label":"Adresse du jeune","type":"Text"}},
+        {"id":"Jeune_complement_adresse","fields":{"label":"Complément d’adresse du jeune","type":"Text"}},
+        {"id":"Jeune_code_postal","fields":{"label":"Code postal du jeune","type":"Text"}},
+        {"id":"Jeune_commune","fields":{"label":"Commune du jeune","type":"Text"}},
+        {"id":"Entreprise","fields":{"label":"Entreprise","type":"Ref:EUC_ENTREPRISES"}},
+        {"id":"Entreprise_siret_snapshot","fields":{"label":"SIRET photographié","type":"Text"}},
+        {"id":"Entreprise_raison_sociale_snapshot","fields":{"label":"Raison sociale photographiée","type":"Text"}},
+        {"id":"Entreprise_enseigne_snapshot","fields":{"label":"Enseigne photographiée","type":"Text"}},
+        {"id":"Entreprise_nom_usage_snapshot","fields":{"label":"Nom d’usage photographié","type":"Text"}},
+        {"id":"Entreprise_adresse_snapshot","fields":{"label":"Adresse entreprise photographiée","type":"Text"}},
+        {"id":"Entreprise_commune_snapshot","fields":{"label":"Commune entreprise photographiée","type":"Text"}},
+        {"id":"Entreprise_confirmee","fields":{"label":"Entreprise confirmée","type":"Bool"}},
+        {"id":"Entreprise_telephone_snapshot","fields":{"label":"Téléphone entreprise photographié","type":"Text"}},
+        {"id":"Entreprise_courriel_snapshot","fields":{"label":"Courriel entreprise photographié","type":"Text"}},
+        {"id":"Contact_entreprise","fields":{"label":"Contact entreprise","type":"Ref:EUC_CONTACTS_ENTREPRISES"}},
+        {"id":"Responsable_nom","fields":{"label":"Nom du responsable","type":"Text"}},
+        {"id":"Responsable_fonction","fields":{"label":"Fonction du responsable","type":"Text"}},
+        {"id":"Responsable_telephone","fields":{"label":"Téléphone du responsable","type":"Text"}},
+        {"id":"Responsable_courriel","fields":{"label":"Courriel du responsable","type":"Text"}},
+        {"id":"Tuteur_nom","fields":{"label":"Nom du tuteur","type":"Text"}},
+        {"id":"Tuteur_fonction","fields":{"label":"Fonction du tuteur","type":"Text"}},
+        {"id":"Tuteur_telephone","fields":{"label":"Téléphone du tuteur","type":"Text"}},
+        {"id":"Tuteur_courriel","fields":{"label":"Courriel du tuteur","type":"Text"}},
+        {"id":"Statut_administratif","fields":{"label":"Statut administratif","type":"Choice"}},
+        {"id":"Valide_par","fields":{"label":"Validé par","type":"Text"}},
+        {"id":"Date_validation","fields":{"label":"Date de validation","type":"DateTime"}},
+        {"id":"Commentaire_administratif","fields":{"label":"Commentaire administratif","type":"Text"}},
+        {"id":"Etat_courriel_admin","fields":{"label":"État du courriel administratif","type":"Choice"}},
+        {"id":"Date_courriel_admin","fields":{"label":"Date du courriel administratif","type":"DateTime"}},
+        {"id":"Erreur_courriel_admin","fields":{"label":"Erreur du courriel administratif","type":"Text"}},
+        {"id":"Etat_courriel_jeune","fields":{"label":"État du courriel au jeune","type":"Choice"}},
+        {"id":"Empreinte_doublon","fields":{"label":"Empreinte de doublon","type":"Text"}},
+        {"id":"Nonce_hash","fields":{"label":"Empreinte du nonce","type":"Text"}},
+        {"id":"Auteur_technique","fields":{"label":"Auteur technique","type":"Text"}},
+        {"id":"Version_formulaire","fields":{"label":"Version du formulaire","type":"Text"}}
+      ]
+    }
+  ],
+  "alterTables": [
+    {
+      "table": "Planning_Periodes",
+      "columns": [
+        {"id":"Offre_formation","fields":{"label":"Offre de formation","type":"Ref:EUC_OFFRES_FORMATION"}},
+        {"id":"Libelle_periode","fields":{"label":"Libellé de période","type":"Text"}},
+        {"id":"Code_periode","fields":{"label":"Code période","type":"Text"}}
+      ]
+    }
+  ]
+}
