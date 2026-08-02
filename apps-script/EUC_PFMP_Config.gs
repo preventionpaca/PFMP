@@ -1,5 +1,5 @@
-/** Eucalyptus PFMP — v1.0.0-dev.25 */
-var EUC_PFMP_VERSION = 'Eucalyptus PFMP — v1.0.0-dev.25';
+/** Eucalyptus PFMP — v1.0.0-dev.26 */
+var EUC_PFMP_VERSION = 'Eucalyptus PFMP — v1.0.0-dev.26';
 var EUC_PFMP_TABLES = {
   annees:'Annees_Scolaires', diplomes:'EUC_DIPLOMES', offres:'EUC_OFFRES_FORMATION',
   relations:'EUC_OFFRES_PERIODES', periodes:'Planning_Periodes', soumissions:'EUC_SOUMISSIONS_PFMP',

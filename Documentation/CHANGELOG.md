@@ -1,5 +1,13 @@
 # Changelog
 
+# Eucalyptus PFMP — v1.0.0-dev.26 — 2026-08-02
+
+- Ajout dans la copie Grist des statuts explicites `PERIODES_DEFINIES`, `AUCUNE_PERIODE_PREVUE` et `A_VERIFIER`.
+- Les cinq offres validées sans période affichent désormais un message neutre et ne sont pas comptées comme anomalies calendaires.
+- Les blocs `ENT.` et d’alternance sont exclus défensivement des périodes du formulaire scolaire.
+- Les identifiants techniques Grist ne sont plus insérés dans le DOM comme numéros visibles de période.
+- Vérification des premières années BTS ELEC et CIEL : deux lignes sources propres à leur spécialité, avec le même intervalle officiel du 24/05/2027 au 02/07/2027 ; aucune relation croisée ni relation vers une deuxième année.
+
 # Eucalyptus PFMP — v1.0.0-dev.25 — 2026-08-02
 
 - Audit en lecture seule des périodes 2026-2027 dans les sept tables Grist de la copie.
