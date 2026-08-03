@@ -44,6 +44,7 @@ test('aucun enseignant codé en dur',()=>{assert.match(adminCode,/EUC_PERSONNELS
 test('double clic et concurrence contrôlés',()=>{assert.match(adminCode,/doubleClickToken/);assert.match(adminCode,/tryLock/)});
 test('aucun appel réseau externe dans les nouveaux services',()=>assert.doesNotMatch(importCode+adminCode,/UrlFetchApp|MailApp|GmailApp/));
 test('quatre modes de recette configurés explicitement',()=>{for(const x of ["EUC_PFMP_SUBMISSION_MODE:'DRY_RUN'","EUC_PFMP_EMAIL_MODE:'DISABLED'","EUC_PFMP_PRONOTE_IMPORT_MODE:'DRY_RUN'","EUC_PFMP_ADMIN_MUTATION_MODE:'DRY_RUN'"])assert.match(configCode,new RegExp(x));assert.match(configCode,/EUC_ENT_controlerCibleRecette_/)});
+test('contrôle distant des modes ne retourne aucun secret',()=>{assert.match(configCode,/function EUC_PFMP_controlerModesDev27/);const bloc=configCode.slice(configCode.indexOf('function EUC_PFMP_controlerModesDev27'));assert.doesNotMatch(bloc,/SECRET_KEY['"]\s*:/);assert.match(bloc,/turnstileActif/)});
 test('schéma structurel cible uniquement la copie et zéro donnée',()=>{assert.match(schema,/j1jDArBkzi7P/);assert.match(schema,/recordsWritten:0/);assert.doesNotMatch(schema,/3pnVrygfNn7c/)});
 test('tables dev.27 et synthèses non nominatives préparées',()=>{for(const t of ['EUC_IMPORTS_PRONOTE_PFMP','EUC_HISTORIQUE_SOUMISSIONS_PFMP','EUC_PERSONNELS_PFMP','EUC_AFFECTATIONS_PFMP'])assert.match(schema,new RegExp(t));assert.doesNotMatch(schema,/Date_naissance|Jeune_nom|Jeune_prenom/)});
 if(!process.exitCode)console.log(`\n${n} tests dev.27 réussis.`);

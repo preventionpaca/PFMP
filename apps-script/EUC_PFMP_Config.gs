@@ -41,3 +41,8 @@ function EUC_PFMP_configurerModesDev27(autorisation) {
   PropertiesService.getScriptProperties().setProperties({EUC_PFMP_SUBMISSION_MODE:'DRY_RUN',EUC_PFMP_EMAIL_MODE:'DISABLED',EUC_PFMP_PRONOTE_IMPORT_MODE:'DRY_RUN',EUC_PFMP_ADMIN_MUTATION_MODE:'DRY_RUN'},false);
   return {version:EUC_PFMP_VERSION,submission:'DRY_RUN',email:'DISABLED',pronoteImport:'DRY_RUN',adminMutation:'DRY_RUN',docId:'j1jDArBkzi7P'};
 }
+function EUC_PFMP_controlerModesDev27() {
+  EUC_ENT_controlerCibleRecette_();
+  var p=PropertiesService.getScriptProperties();
+  return {version:EUC_PFMP_VERSION,submission:p.getProperty('EUC_PFMP_SUBMISSION_MODE')||'',email:p.getProperty('EUC_PFMP_EMAIL_MODE')||'',pronoteImport:p.getProperty('EUC_PFMP_PRONOTE_IMPORT_MODE')||'',adminMutation:p.getProperty('EUC_PFMP_ADMIN_MUTATION_MODE')||'',turnstileActif:!!(p.getProperty('EUC_PFMP_TURNSTILE_SITE_KEY')&&p.getProperty('EUC_PFMP_TURNSTILE_SECRET_KEY')),cibleRecette:true};
+}

@@ -1,0 +1,1 @@
+Mettre dev.27 en recette sécurisée : configurer les modes DRY_RUN, tester l’import Pronote synthétique et les droits, stabiliser Git, déployer sur le Web App existant et réaliser la recette des nouvelles routes.
