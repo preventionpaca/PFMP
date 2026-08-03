@@ -1,5 +1,5 @@
-/** Eucalyptus PFMP — v1.0.0-dev.26 */
-var EUC_PFMP_VERSION = 'Eucalyptus PFMP — v1.0.0-dev.26';
+/** Eucalyptus PFMP — v1.0.0-dev.27 */
+var EUC_PFMP_VERSION = 'Eucalyptus PFMP — v1.0.0-dev.27';
 var EUC_PFMP_TABLES = {
   annees:'Annees_Scolaires', diplomes:'EUC_DIPLOMES', offres:'EUC_OFFRES_FORMATION',
   relations:'EUC_OFFRES_PERIODES', periodes:'Planning_Periodes', soumissions:'EUC_SOUMISSIONS_PFMP',
@@ -34,4 +34,10 @@ function EUC_PFMP_configurerModesRecette(autorisation) {
   if(autorisation!=='AUTORISATION_MODES_PFMP_RECETTE_DEV8')throw new Error('Autorisation explicite requise.');
   PropertiesService.getScriptProperties().setProperties({EUC_PFMP_SUBMISSION_MODE:'DRY_RUN',EUC_PFMP_EMAIL_MODE:'DISABLED'},false);
   return {version:EUC_PFMP_VERSION,submission:'DRY_RUN',email:'DISABLED'};
+}
+function EUC_PFMP_configurerModesDev27(autorisation) {
+  if(autorisation!=='CONFIGURER_MODES_PFMP_DEV27_RECETTE')throw new Error('Autorisation explicite requise.');
+  EUC_ENT_controlerCibleRecette_();
+  PropertiesService.getScriptProperties().setProperties({EUC_PFMP_SUBMISSION_MODE:'DRY_RUN',EUC_PFMP_EMAIL_MODE:'DISABLED',EUC_PFMP_PRONOTE_IMPORT_MODE:'DRY_RUN',EUC_PFMP_ADMIN_MUTATION_MODE:'DRY_RUN'},false);
+  return {version:EUC_PFMP_VERSION,submission:'DRY_RUN',email:'DISABLED',pronoteImport:'DRY_RUN',adminMutation:'DRY_RUN',docId:'j1jDArBkzi7P'};
 }

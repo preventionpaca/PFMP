@@ -1,5 +1,15 @@
 # Changelog
 
+# Eucalyptus PFMP — v1.0.0-dev.27 — développement local non déployé
+
+- route administrative protégée de prévisualisation d’un export Pronote, sans écriture ;
+- compatibilité UTF-16LE/UTF-8 et détection contrôlée des séparateurs ;
+- séparation stricte des années scolaires et rapprochement conservateur ;
+- route de gestion administrative en lecture seule avec mutations simulées en `DRY_RUN` ;
+- statuts de suivi distinguant soumission, traitement Pronote, annulation et sortie ;
+- schéma Grist non nominatif et idempotent préparé pour imports, historique, personnels, affectations et synthèses ;
+- aucun import réel, aucune mutation métier, aucun courriel et aucun déploiement dev.27.
+
 # Eucalyptus PFMP — v1.0.0-dev.26 — 2026-08-02
 
 - Ajout dans la copie Grist des statuts explicites `PERIODES_DEFINIES`, `AUCUNE_PERIODE_PREVUE` et `A_VERIFIER`.
