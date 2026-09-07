@@ -1,6 +1,6 @@
-/** Eucalyptus Entreprises SIRET — v1.0.0-dev.10 */
-var EUC_ENT_VERSION = 'Eucalyptus Entreprises SIRET — v1.0.0-dev.10';
-var EUC_ENT_DOC_ID_RECETTE_AUTORISE = 'j1jDArBkzi7P';
+/** Eucalyptus Entreprises SIRET — v1.0.0-dev.11 */
+var EUC_ENT_VERSION = 'Eucalyptus Entreprises SIRET — v1.0.0-dev.11';
+var EUC_ENT_DOC_ID_RECETTE_AUTORISE = 'b2CyeMEdVEMS';
 var EUC_ENT_CLES_CONFIG = ['EUC_ENT_ENVIRONMENT','EUC_ENT_ALLOWED_DOMAIN','EUC_ENT_GRIST_API_URL','EUC_ENT_GRIST_DOC_ID','EUC_ENT_GRIST_API_KEY','EUC_ENT_TABLE_ENTREPRISES','EUC_ENT_TABLE_CONTACTS','EUC_ENT_API_RECHERCHE_URL'];
 function EUC_ENT_lireConfiguration() {
   var p = PropertiesService.getScriptProperties(); var c = {};
@@ -12,7 +12,7 @@ function EUC_ENT_controlerAccesUtilisateur_() {
   var courriel=String(Session.getActiveUser().getEmail()||'').toLowerCase();
 
   // RECETTE : l'accès applicatif est autorisé sans dépendre de l'adresse renvoyée par Session.
-  // La sécurité de cible reste stricte : environnement=recette ET doc Grist explicitement autorisé.
+  // La sécurité de cible reste stricte : environnement=recette ET doc Grist PFMP explicitement autorisé.
   if(c.EUC_ENT_ENVIRONMENT==='recette') {
     if(c.EUC_ENT_GRIST_DOC_ID!==EUC_ENT_DOC_ID_RECETTE_AUTORISE) {
       throw new Error('Accès recette refusé : cible Grist non autorisée.');
