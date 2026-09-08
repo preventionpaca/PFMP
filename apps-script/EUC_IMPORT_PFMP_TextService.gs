@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.61 — copier-coller Pronote + correspondance / exclusion classes Camin + multi-source. */
+/** Eucalyptus PFMP — v1.0.0-dev.62 — copier-coller Pronote + correspondance / exclusion classes Camin + multi-source. */
 function EUC_IMPORT_exigerAdminTexte_(){
   var ctx=EUC_PFMP_contexteAdmin_();
   if(!ctx||!ctx.autorise||['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0) throw new Error('Accès non autorisé.');
@@ -26,10 +26,16 @@ function EUC_IMPORT_chargerDonneesPreviewTexte_(annee,sourcePronote){
   try{imports=EUC_IMPORT_lireRecords_('EUC_IMPORTS_PRONOTE_PFMP').filter(function(i){var is=EUC_IMPORT_normaliserSourcePronote_(i.Source_Pronote||'');return !is||is===source;});}catch(e){}
   return {existing:existing,imports:imports,classes:EUC_IMPORT_chargerClassesCamin_(),correspondances:EUC_IMPORT_chargerCorrespondances_(annee,source)};
 }
+function EUC_IMPORT_enrichirModificationsIdentite_(preview,parsed,source){
+  var parLigne={};(parsed.rows||[]).forEach(function(r){parLigne[String(r.ligne)]={nom:r.nom||'',prenom:r.prenom||'',sourcePronote:source||'',classePronote:r.classePronote||''};});
+  preview.modifications=(preview.modifications||[]).map(function(m){var i=parLigne[String(m.ligne)]||{};return Object.assign({},m,i);});
+  return preview;
+}
 function EUC_IMPORT_previsualiserTexte(payload){
   EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var texte=String(payload.texte||''),source=EUC_IMPORT_normaliserSourcePronote_(payload.sourcePronote||'');if(!source)throw new Error('Source Pronote obligatoire.');if(!texte.trim()) throw new Error('Aucune donnée Pronote collée.');
   var parsed=EUC_IMPORT_analyserTexte_(texte,{annee:payload.annee});parsed.encoding='COPIER_COLLER';parsed.sourcePronote=source;parsed.empreinte=EUC_IMPORT_empreinte_(Utilities.newBlob(source+'\n'+texte,'text/plain').getBytes());
   var d=EUC_IMPORT_chargerDonneesPreviewTexte_(parsed.annee,source),corr=EUC_IMPORT_preparerClasses_(parsed,d.classes,d.correspondances,payload.correspondances||{},payload.classesExclues||[]),offers=d.classes.filter(function(c){return c.actif;}).map(function(c){return {Code_classe:c.nom,Actif:true,Afficher_formulaire_PFMP:true};}),preview=EUC_IMPORT_previsualiser_(parsed,d.existing,offers,d.imports);
+  EUC_IMPORT_enrichirModificationsIdentite_(preview,parsed,source);
   preview.sourcePronote=source;preview.classesCamin=d.classes.filter(function(c){return c.actif;});preview.classesPronote=corr.classesPronote;preview.classesInconnues=corr.inconnues;preview.classesExclues=corr.exclues;preview.tableCorrespondancePresente=d.correspondances.length>0;preview.correspondancesTemporaires=true;preview.compteurs.classesCaminDisponibles=preview.classesCamin.length;preview.compteurs.classesInconnues=corr.inconnues.length;preview.compteurs.classesEcartees=corr.exclues.length;preview.compteurs.elevesEcartes=corr.effectifExclu;preview.pretAValider=preview.pretAValider&&corr.inconnues.length===0;return preview;
 }
 function EUC_IMPORT_confirmerSimulationTexte(payload){var lock=LockService.getScriptLock();if(!lock.tryLock(1000)) throw new Error('Un autre import est déjà en cours.');try{EUC_IMPORT_exigerAdminTexte_();if(!payload||payload.confirmation!=='CONFIRMER_IMPORT') throw new Error('Validation humaine explicite obligatoire.');var mode=PropertiesService.getScriptProperties().getProperty('EUC_PFMP_PRONOTE_IMPORT_MODE')||'DRY_RUN';if(mode!=='DRY_RUN') throw new Error('Import réel non autorisé dans cette version.');var preview=EUC_IMPORT_previsualiserTexte(payload);if(!preview.pretAValider) throw new Error(preview.dejaImporte?'Fichier identique déjà importé.':'Prévisualisation bloquée par des anomalies ou classes non correspondantes.');return {statut:'SIMULATION',mode:'DRY_RUN',ecriture:false,sourcePronote:preview.sourcePronote,empreinte:preview.empreinte,compteurs:preview.compteurs};}finally{lock.releaseLock();}}
