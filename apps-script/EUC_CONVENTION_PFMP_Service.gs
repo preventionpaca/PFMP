@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.71 — génération de conventions + accès QR sécurisé. */
+/** Eucalyptus PFMP — v1.0.0-dev.72 — génération individuelle/par classe + classe convention par défaut. */
 var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
@@ -10,13 +10,41 @@ function EUC_CONVENTION_assurerTableAcces_(){
 }
 function EUC_CONVENTION_token_(){var raw=[Utilities.getUuid(),Utilities.getUuid(),new Date().getTime(),Math.random()].join('|');return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,raw,Utilities.Charset.UTF_8)).replace(/=+$/,'');}
 function EUC_CONVENTION_hash_(v){return EUC_PFMP_hash_(String(v||''));}
-function EUC_CONVENTION_lireElevesAdmin(){EUC_IMPORT_exigerAdminTexte_();var rows=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP');return rows.filter(function(r){return r.Actif!==false;}).map(function(r){return {id:r.id,nom:r.Nom||'',prenom:r.Prenom_usage||r.Prenom||'',dateNaissance:EUC_IMPORT_dateExistanteISO_(r.Date_naissance),classe:r.Code_classe_importe||r.Classe_nom||'',annee:r.Annee_scolaire_code||r.Annee_scolaire||'',numeroNational:r.Numero_national||''};}).sort(function(a,b){return String(a.nom).localeCompare(String(b.nom),'fr')||String(a.prenom).localeCompare(String(b.prenom),'fr');});}
-function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){EUC_IMPORT_exigerAdminTexte_();var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});var periodes=EUC_IMPORT_lireRecords_('Planning_Periodes').map(function(r){return {id:r.id,annee:String(r.Annee_scolaire||''),classe:String(r.Classe||''),formation:String(r.Formation||''),niveau:String(r.Niveau||''),debut:EUC_IMPORT_dateExistanteISO_(r.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(r.Date_fin),type:String(r.Type||'PFMP')};}).filter(function(r){return r.debut&&r.fin;});return {classes:classes,periodes:periodes};}
+function EUC_CONVENTION_norm_(v){return String(v||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');}
+function EUC_CONVENTION_lireElevesAdmin(){
+  EUC_IMPORT_exigerAdminTexte_();
+  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;}),byNom={};
+  classes.forEach(function(c){byNom[EUC_CONVENTION_norm_(c.nom)]=c;if(c.libelle)byNom[EUC_CONVENTION_norm_(c.libelle)]=c;});
+  var rows=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP');
+  return rows.filter(function(r){return r.Actif!==false;}).map(function(r){
+    var classeNom=r.Code_classe_importe||r.Classe_nom||'',cl=byNom[EUC_CONVENTION_norm_(classeNom)];
+    return {id:r.id,nom:r.Nom||'',prenom:r.Prenom_usage||r.Prenom||'',dateNaissance:EUC_IMPORT_dateExistanteISO_(r.Date_naissance),classe:classeNom,classeId:cl?cl.id:0,annee:r.Annee_scolaire_code||r.Annee_scolaire||'',numeroNational:r.Numero_national||''};
+  }).sort(function(a,b){return String(a.classe).localeCompare(String(b.classe),'fr')||String(a.nom).localeCompare(String(b.nom),'fr')||String(a.prenom).localeCompare(String(b.prenom),'fr');});
+}
+function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
+  EUC_IMPORT_exigerAdminTexte_();
+  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});
+  var periodes=EUC_IMPORT_lireRecords_('Planning_Periodes').map(function(r){return {id:r.id,annee:String(r.Annee_scolaire||''),classe:String(r.Classe||''),formation:String(r.Formation||''),niveau:String(r.Niveau||''),debut:EUC_IMPORT_dateExistanteISO_(r.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(r.Date_fin),type:String(r.Type||'PFMP')};}).filter(function(r){return r.debut&&r.fin;});
+  return {classes:classes,periodes:periodes};
+}
+function EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee){
+  var token=EUC_CONVENTION_token_(),hash=EUC_CONVENTION_hash_(token),now=new Date().toISOString(),ref='PFMP-'+annee.replace('-','')+'-'+eleve.id+'-'+String(new Date().getTime()).slice(-6)+'-'+String(Math.floor(Math.random()*90)+10);
+  return {token:token,reference:ref,record:{fields:{Token_hash:hash,Eleve:eleve.id,Annee_scolaire:annee,Classe_convention:cl.id,Classe_convention_nom:cl.nom,Periode:p.id,Periode_libelle:p.type+' '+p.debut+' → '+p.fin,Date_debut:p.debut,Date_fin:p.fin,Statut:'CONVENTION_GENEREE',Tentatives_echec:0,Bloque_jusqua:null,Date_creation:now,Date_derniere_utilisation:null,Auteur:ctx.email||'',Reference_convention:ref,Revoked:false}}};
+}
 function EUC_CONVENTION_preparerAcces(payload){
   var ctx=EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var eleveId=Number(payload.eleveId||0),classeId=Number(payload.classeConventionId||0),periodeId=Number(payload.periodeId||0),annee=String(payload.anneeConvention||'').trim();if(!eleveId||!classeId||!periodeId||!/^20\d{2}-20\d{2}$/.test(annee))throw new Error('Élève, classe de convention, période et année scolaire sont obligatoires.');
   var eleves=EUC_CONVENTION_lireElevesAdmin(),eleve=eleves.filter(function(e){return e.id===eleveId;})[0];if(!eleve)throw new Error('Élève introuvable.');var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),cl=meta.classes.filter(function(c){return c.id===classeId;})[0],p=meta.periodes.filter(function(x){return x.id===periodeId;})[0];if(!cl||!p)throw new Error('Classe ou période introuvable.');
-  var token=EUC_CONVENTION_token_(),hash=EUC_CONVENTION_hash_(token),now=new Date().toISOString(),ref='PFMP-'+annee.replace('-','')+'-'+eleveId+'-'+String(new Date().getTime()).slice(-6);EUC_CONVENTION_assurerTableAcces_();EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{fields:{Token_hash:hash,Eleve:eleveId,Annee_scolaire:annee,Classe_convention:classeId,Classe_convention_nom:cl.nom,Periode:periodeId,Periode_libelle:p.type+' '+p.debut+' → '+p.fin,Date_debut:p.debut,Date_fin:p.fin,Statut:'CONVENTION_GENEREE',Tentatives_echec:0,Bloque_jusqua:null,Date_creation:now,Date_derniere_utilisation:null,Auteur:ctx.email||'',Reference_convention:ref,Revoked:false}}]});
-  var base=ScriptApp.getService().getUrl();return {ok:true,reference:ref,token:token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(token),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee};
+  EUC_CONVENTION_assurerTableAcces_();var a=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee);EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]});
+  var base=ScriptApp.getService().getUrl();return {ok:true,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee};
+}
+function EUC_CONVENTION_preparerAccesClasse(payload){
+  var ctx=EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var classeElevesId=Number(payload.classeElevesId||0),classeConventionId=Number(payload.classeConventionId||0),periodeId=Number(payload.periodeId||0),annee=String(payload.anneeConvention||'').trim();
+  if(!classeElevesId||!classeConventionId||!periodeId||!/^20\d{2}-20\d{2}$/.test(annee))throw new Error('Classe d’élèves, classe de convention, période et année scolaire sont obligatoires.');
+  var eleves=EUC_CONVENTION_lireElevesAdmin().filter(function(e){return Number(e.classeId)===classeElevesId;});if(!eleves.length)throw new Error('Aucun élève actif trouvé dans cette classe.');
+  var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),cl=meta.classes.filter(function(c){return c.id===classeConventionId;})[0],p=meta.periodes.filter(function(x){return x.id===periodeId;})[0];if(!cl||!p)throw new Error('Classe de convention ou période introuvable.');
+  EUC_CONVENTION_assurerTableAcces_();var records=[],items=[],base=ScriptApp.getService().getUrl();eleves.forEach(function(e){var a=EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,p,annee);records.push(a.record);items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,reference:a.reference,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token)});});
+  EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
+  return {ok:true,total:items.length,classeElevesId:classeElevesId,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items};
 }
 function EUC_CONVENTION_trouverAccesParToken_(token){var hash=EUC_CONVENTION_hash_(token),rows=EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_),r=rows.filter(function(x){return x.Token_hash===hash&&x.Revoked!==true;})[0];if(!r)throw new Error('Lien de convention invalide ou révoqué.');return r;}
 function EUC_CONVENTION_contextFormulaire_(a,e){
