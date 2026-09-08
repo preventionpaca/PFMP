@@ -1,0 +1,22 @@
+{
+  "version": "Eucalyptus PFMP — v1.0.0-dev.34",
+  "table": {
+    "id": "EUC_CORRESPONDANCE_CLASSES_PRONOTE",
+    "columns": [
+      {"id": "Annee_scolaire", "type": "Ref:Annees_Scolaires", "required": true},
+      {"id": "Nom_classe_Pronote", "type": "Text", "required": true},
+      {"id": "Classe_Grist", "type": "Ref:Classes", "required": true},
+      {"id": "Actif", "type": "Bool", "required": true, "default": true},
+      {"id": "Date_creation", "type": "DateTime", "required": false},
+      {"id": "Date_modification", "type": "DateTime", "required": false},
+      {"id": "Commentaire", "type": "Text", "required": false}
+    ],
+    "functional_unique_key": ["Annee_scolaire", "Nom_classe_Pronote"],
+    "notes": [
+      "Table administrative PFMP uniquement.",
+      "Aucune creation Grist n'est executee par ce fichier.",
+      "Une classe Pronote inconnue doit bloquer l'import de la ligne jusqu'a resolution humaine.",
+      "La correspondance ne renomme ni la classe Pronote ni la ligne de Classes dans Grist."
+    ]
+  }
+}
