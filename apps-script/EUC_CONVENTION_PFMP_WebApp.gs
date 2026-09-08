@@ -1,7 +1,7 @@
-/** Eucalyptus PFMP — v1.0.0-dev.72 — générateur de conventions PFMP individuel / par classe. */
+/** Eucalyptus PFMP — v1.0.0-dev.73 — générateur de conventions PFMP individuel / par classe. */
 function EUC_CONVENTION_afficherGenerateur(){
   var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');
-  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_Generateur');tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.72',baseUrl:ScriptApp.getService().getUrl()});
+  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_Generateur');tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.73',baseUrl:ScriptApp.getService().getUrl()});
   return tpl.evaluate().setTitle('Génération des conventions PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
 function EUC_CONVENTION_afficherImpression(e){
