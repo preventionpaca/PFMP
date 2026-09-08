@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.59 — copier-coller Pronote + correspondance classes Camin. */
+/** Eucalyptus PFMP — v1.0.0-dev.60 — copier-coller Pronote + correspondance / exclusion classes Camin. */
 function EUC_IMPORT_exigerAdminTexte_(){
   var ctx=EUC_PFMP_contexteAdmin_();
   if(!ctx||!ctx.autorise||['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0) throw new Error('Accès non autorisé.');
@@ -19,21 +19,41 @@ function EUC_IMPORT_chargerClassesCamin_(){
 function EUC_IMPORT_chargerCorrespondances_(annee){
   return EUC_IMPORT_lireRecords_('EUC_CORRESPONDANCE_CLASSES_PRONOTE').filter(function(r){
     return r.Actif!==false&&(!r.Annee_scolaire||String(r.Annee_scolaire)===String(annee));
-  }).map(function(r){return {pronote:String(r.Nom_classe_Pronote||'').trim(),classeId:r.Classe_Grist||'',classeNom:String(r.Classe_Grist_nom||r.Classe_Grist_libelle||'').trim()};});
+  }).map(function(r){return {pronote:String(r.Nom_classe_Pronote||'').trim(),classeId:r.Classe_Grist||'',classeNom:String(r.Classe_Grist_nom||r.Classe_Grist_libelle||'').trim(),exclue:r.Exclure_import===true};});
 }
 function EUC_IMPORT_indexerCorrespondances_(classes,mappingsPersistes,mappingsTemporaires){
   var byId={},byNom={},map={};
   (classes||[]).forEach(function(c){byId[String(c.id)]=c;byNom[String(c.nom).toUpperCase()]=c;byNom[String(c.libelle).toUpperCase()]=c;});
   function add(pronote,idOrNom){var key=String(pronote||'').trim().toUpperCase();if(!key)return;var c=byId[String(idOrNom)]||byNom[String(idOrNom||'').trim().toUpperCase()];if(c&&c.actif)map[key]=c;}
-  (mappingsPersistes||[]).forEach(function(m){add(m.pronote,m.classeId||m.classeNom);});
+  (mappingsPersistes||[]).forEach(function(m){if(!m.exclue)add(m.pronote,m.classeId||m.classeNom);});
   Object.keys(mappingsTemporaires||{}).forEach(function(k){add(k,mappingsTemporaires[k]);});
   (classes||[]).forEach(function(c){if(c.actif){var k=String(c.nom).toUpperCase();if(!map[k])map[k]=c;var l=String(c.libelle).toUpperCase();if(!map[l])map[l]=c;}});
   return map;
 }
-function EUC_IMPORT_preparerClasses_(parsed,classes,mappingsPersistes,mappingsTemporaires){
-  var index=EUC_IMPORT_indexerCorrespondances_(classes,mappingsPersistes,mappingsTemporaires),stats={},inconnues={};
-  parsed.rows.forEach(function(r){var original=String(r.classe||'').trim();r.classePronote=original;if(!original)return;stats[original]=(stats[original]||0)+1;var c=index[original.toUpperCase()];if(c){r.classe=c.nom;r.classeGristId=c.id;}else{inconnues[original]=(inconnues[original]||0)+1;r.classe='__NON_CORRESPONDUE__'+original;}});
-  return {classesPronote:Object.keys(stats).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(n){var c=index[n.toUpperCase()];return {pronote:n,effectif:stats[n],correspondue:!!c,classeGristId:c?c.id:'',classeGristNom:c?c.nom:''};}),inconnues:Object.keys(inconnues).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(n){return {pronote:n,effectif:inconnues[n]};})};
+function EUC_IMPORT_indexExclusions_(mappingsPersistes,exclusionsTemporaires){
+  var out={};
+  (mappingsPersistes||[]).forEach(function(m){if(m.exclue&&m.pronote)out[String(m.pronote).trim().toUpperCase()]=true;});
+  (exclusionsTemporaires||[]).forEach(function(n){if(n)out[String(n).trim().toUpperCase()]=true;});
+  return out;
+}
+function EUC_IMPORT_preparerClasses_(parsed,classes,mappingsPersistes,mappingsTemporaires,exclusionsTemporaires){
+  var index=EUC_IMPORT_indexerCorrespondances_(classes,mappingsPersistes,mappingsTemporaires),exclusions=EUC_IMPORT_indexExclusions_(mappingsPersistes,exclusionsTemporaires),stats={},inconnues={},exclues={},rows=[];
+  parsed.rows.forEach(function(r){
+    var original=String(r.classe||'').trim();r.classePronote=original;
+    if(!original){rows.push(r);return;}
+    stats[original]=(stats[original]||0)+1;
+    if(exclusions[original.toUpperCase()]){exclues[original]=(exclues[original]||0)+1;return;}
+    var c=index[original.toUpperCase()];
+    if(c){r.classe=c.nom;r.classeGristId=c.id;}else{inconnues[original]=(inconnues[original]||0)+1;r.classe='__NON_CORRESPONDUE__'+original;}
+    rows.push(r);
+  });
+  parsed.rows=rows;
+  return {
+    classesPronote:Object.keys(stats).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(n){var c=index[n.toUpperCase()],x=!!exclusions[n.toUpperCase()];return {pronote:n,effectif:stats[n],correspondue:!!c,classeGristId:c?c.id:'',classeGristNom:c?c.nom:'',exclue:x};}),
+    inconnues:Object.keys(inconnues).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(n){return {pronote:n,effectif:inconnues[n]};}),
+    exclues:Object.keys(exclues).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(n){return {pronote:n,effectif:exclues[n]};}),
+    effectifExclu:Object.keys(exclues).reduce(function(s,n){return s+exclues[n];},0)
+  };
 }
 function EUC_IMPORT_chargerDonneesPreviewTexte_(annee){
   var existing=[],imports=[];
@@ -44,8 +64,9 @@ function EUC_IMPORT_chargerDonneesPreviewTexte_(annee){
 function EUC_IMPORT_previsualiserTexte(payload){
   EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var texte=String(payload.texte||'');if(!texte.trim()) throw new Error('Aucune donnée Pronote collée.');
   var parsed=EUC_IMPORT_analyserTexte_(texte,{annee:payload.annee});parsed.encoding='COPIER_COLLER';parsed.empreinte=EUC_IMPORT_empreinte_(Utilities.newBlob(texte,'text/plain').getBytes());
-  var d=EUC_IMPORT_chargerDonneesPreviewTexte_(parsed.annee),corr=EUC_IMPORT_preparerClasses_(parsed,d.classes,d.correspondances,payload.correspondances||{}),offers=d.classes.filter(function(c){return c.actif;}).map(function(c){return {Code_classe:c.nom,Actif:true,Afficher_formulaire_PFMP:true};}),preview=EUC_IMPORT_previsualiser_(parsed,d.existing,offers,d.imports);
-  preview.classesCamin=d.classes.filter(function(c){return c.actif;});preview.classesPronote=corr.classesPronote;preview.classesInconnues=corr.inconnues;preview.tableCorrespondancePresente=d.correspondances.length>0;preview.correspondancesTemporaires=true;preview.compteurs.classesCaminDisponibles=preview.classesCamin.length;preview.compteurs.classesInconnues=corr.inconnues.length;preview.pretAValider=preview.pretAValider&&corr.inconnues.length===0;
+  var d=EUC_IMPORT_chargerDonneesPreviewTexte_(parsed.annee),corr=EUC_IMPORT_preparerClasses_(parsed,d.classes,d.correspondances,payload.correspondances||{},payload.classesExclues||[]),offers=d.classes.filter(function(c){return c.actif;}).map(function(c){return {Code_classe:c.nom,Actif:true,Afficher_formulaire_PFMP:true};}),preview=EUC_IMPORT_previsualiser_(parsed,d.existing,offers,d.imports);
+  preview.classesCamin=d.classes.filter(function(c){return c.actif;});preview.classesPronote=corr.classesPronote;preview.classesInconnues=corr.inconnues;preview.classesExclues=corr.exclues;preview.tableCorrespondancePresente=d.correspondances.length>0;preview.correspondancesTemporaires=true;
+  preview.compteurs.classesCaminDisponibles=preview.classesCamin.length;preview.compteurs.classesInconnues=corr.inconnues.length;preview.compteurs.classesEcartees=corr.exclues.length;preview.compteurs.elevesEcartes=corr.effectifExclu;preview.pretAValider=preview.pretAValider&&corr.inconnues.length===0;
   return preview;
 }
 function EUC_IMPORT_confirmerSimulationTexte(payload){
