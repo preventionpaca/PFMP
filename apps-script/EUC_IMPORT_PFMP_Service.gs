@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.28 — prévisualisation Pronote sans écriture. */
+/** Eucalyptus PFMP — v1.0.0-dev.61 — prévisualisation Pronote sans écriture. */
 var EUC_IMPORT_HEADERS_=[
   'NUMERO','IDENT','CIVILITE','NOM','PRENOM USAGE','PRENOM','NOMNAISS','DATE NAISS','NE(E) LE','CLASSES','CLASSE','GROUPES','SEXE','PAYS NAISS','N NATIONAL','NUMERO NATIONAL','DATE ENTREE','DATE D ENTREE','DATE SORTIE','DATE DE SORTIE','MOTIF SORTIE ETABLISSEMENT','FORMATION','FILIERE','CLASSE DE RATTACHEMENT'
 ];
@@ -16,86 +16,33 @@ function EUC_IMPORT_analyserTexte_(text,options){
   var lines=String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).filter(function(x){return x.trim();});
   if(lines.length<2)throw new Error('Export Pronote vide ou incomplet.');
   var sep=EUC_IMPORT_detecterSeparateur_(lines[0]),headers=EUC_IMPORT_lireCSV_(lines.shift(),sep).map(EUC_IMPORT_normaliserEntete_);
-  var ix={
-    nom:EUC_IMPORT_indexAlias_(headers,['NOM']),
-    prenomUsage:EUC_IMPORT_indexAlias_(headers,['PRENOM USAGE','PRENOM D USAGE']),
-    prenom:EUC_IMPORT_indexAlias_(headers,['PRENOM']),
-    classe:EUC_IMPORT_indexAlias_(headers,['CLASSE','CLASSES']),
-    naissance:EUC_IMPORT_indexAlias_(headers,['NE(E) LE','DATE NAISS','DATE DE NAISSANCE']),
-    numeroNational:EUC_IMPORT_indexAlias_(headers,['NUMERO NATIONAL','N NATIONAL']),
-    numero:EUC_IMPORT_indexAlias_(headers,['NUMERO']),
-    ident:EUC_IMPORT_indexAlias_(headers,['IDENT']),
-    dateEntree:EUC_IMPORT_indexAlias_(headers,['DATE D ENTREE','DATE ENTREE']),
-    dateSortie:EUC_IMPORT_indexAlias_(headers,['DATE DE SORTIE','DATE SORTIE']),
-    formation:EUC_IMPORT_indexAlias_(headers,['FORMATION']),
-    filiere:EUC_IMPORT_indexAlias_(headers,['FILIERE'])
-  };
-  var missing=[];
-  if(ix.nom<0)missing.push('Nom');
-  if(ix.prenomUsage<0&&ix.prenom<0)missing.push('Prénom');
-  if(ix.classe<0)missing.push('Classe');
-  if(ix.dateEntree<0)missing.push('Date d’entrée');
-  if(ix.dateSortie<0)missing.push('Date de sortie');
-  if(missing.length)throw new Error('Mauvais type d’export : colonnes obligatoires absentes ('+missing.join(', ')+').');
+  var ix={nom:EUC_IMPORT_indexAlias_(headers,['NOM']),prenomUsage:EUC_IMPORT_indexAlias_(headers,['PRENOM USAGE','PRENOM D USAGE']),prenom:EUC_IMPORT_indexAlias_(headers,['PRENOM']),classe:EUC_IMPORT_indexAlias_(headers,['CLASSE','CLASSES']),naissance:EUC_IMPORT_indexAlias_(headers,['NE(E) LE','DATE NAISS','DATE DE NAISSANCE']),numeroNational:EUC_IMPORT_indexAlias_(headers,['NUMERO NATIONAL','N NATIONAL']),numero:EUC_IMPORT_indexAlias_(headers,['NUMERO']),ident:EUC_IMPORT_indexAlias_(headers,['IDENT']),dateEntree:EUC_IMPORT_indexAlias_(headers,['DATE D ENTREE','DATE ENTREE']),dateSortie:EUC_IMPORT_indexAlias_(headers,['DATE DE SORTIE','DATE SORTIE']),formation:EUC_IMPORT_indexAlias_(headers,['FORMATION']),filiere:EUC_IMPORT_indexAlias_(headers,['FILIERE'])};
+  var missing=[];if(ix.nom<0)missing.push('Nom');if(ix.prenomUsage<0&&ix.prenom<0)missing.push('Prénom');if(ix.classe<0)missing.push('Classe');if(ix.dateEntree<0)missing.push('Date d’entrée');if(ix.dateSortie<0)missing.push('Date de sortie');if(missing.length)throw new Error('Mauvais type d’export : colonnes obligatoires absentes ('+missing.join(', ')+').');
   var extra=headers.filter(function(h){return EUC_IMPORT_HEADERS_.indexOf(h)<0;}),rows=[],rejects=[];
-  lines.forEach(function(line,n){
-    var c=EUC_IMPORT_lireCSV_(line,sep),nom=EUC_IMPORT_valeur_(c,ix.nom),prenom=EUC_IMPORT_valeur_(c,ix.prenomUsage)||EUC_IMPORT_valeur_(c,ix.prenom),classe=EUC_IMPORT_valeur_(c,ix.classe),birth=EUC_IMPORT_valeur_(c,ix.naissance),entry=EUC_IMPORT_valeur_(c,ix.dateEntree),exit=EUC_IMPORT_valeur_(c,ix.dateSortie),national=EUC_IMPORT_valeur_(c,ix.numeroNational);
-    if(!nom||!prenom){rejects.push({ligne:n+2,motif:'Identité incomplète'});return;}
-    rows.push({
-      ligne:n+2,
-      numeroNational:national,
-      numero:EUC_IMPORT_valeur_(c,ix.numero),
-      ident:EUC_IMPORT_valeur_(c,ix.ident),
-      nom:nom,
-      prenom:prenom,
-      naissance:birth?EUC_SUIVI_dateISO_(birth):'',
-      classe:classe,
-      dateEntree:entry?EUC_SUIVI_dateISO_(entry):'',
-      dateSortie:exit?EUC_SUIVI_dateISO_(exit):'',
-      formation:EUC_IMPORT_valeur_(c,ix.formation),
-      filiere:EUC_IMPORT_valeur_(c,ix.filiere),
-      annee:annee
-    });
-  });
+  lines.forEach(function(line,n){var c=EUC_IMPORT_lireCSV_(line,sep),nom=EUC_IMPORT_valeur_(c,ix.nom),prenom=EUC_IMPORT_valeur_(c,ix.prenomUsage)||EUC_IMPORT_valeur_(c,ix.prenom),classe=EUC_IMPORT_valeur_(c,ix.classe),birth=EUC_IMPORT_valeur_(c,ix.naissance),entry=EUC_IMPORT_valeur_(c,ix.dateEntree),exit=EUC_IMPORT_valeur_(c,ix.dateSortie),national=EUC_IMPORT_valeur_(c,ix.numeroNational);if(!nom||!prenom){rejects.push({ligne:n+2,motif:'Identité incomplète'});return;}rows.push({ligne:n+2,numeroNational:national,numero:EUC_IMPORT_valeur_(c,ix.numero),ident:EUC_IMPORT_valeur_(c,ix.ident),nom:nom,prenom:prenom,naissance:birth?EUC_SUIVI_dateISO_(birth):'',classe:classe,dateEntree:entry?EUC_SUIVI_dateISO_(entry):'',dateSortie:exit?EUC_SUIVI_dateISO_(exit):'',formation:EUC_IMPORT_valeur_(c,ix.formation),filiere:EUC_IMPORT_valeur_(c,ix.filiere),annee:annee});});
   return {annee:annee,separateur:sep==='\t'?'TABULATION':sep===';'?'POINT_VIRGULE':'VIRGULE',headers:headers,extraHeaders:extra,rows:rows,rejects:rejects,lineCount:lines.length,columnCount:headers.length};
 }
 function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
-  var allowed={};
-  (offers||[]).filter(function(o){return o.Actif!==false&&o.Afficher_formulaire_PFMP===true;}).forEach(function(o){allowed[String(o.Code_classe||'').toUpperCase()]=o;});
+  var allowed={};(offers||[]).filter(function(o){return o.Actif!==false&&o.Afficher_formulaire_PFMP===true;}).forEach(function(o){allowed[String(o.Code_classe||'').toUpperCase()]=o;});
   var fingerprint=String(parsed.empreinte||''),already=(imports||[]).some(function(i){return i.Empreinte_SHA256===fingerprint&&i.Statut_import==='IMPORTE';}),byStable={},byIdentity={};
-  (existing||[]).forEach(function(e){
-    var y=String(e.Annee_code||e.Annee_scolaire||'');if(y&&y!==parsed.annee)return;
-    var national=String(e.Numero_national||e.Numero_National||e.Identifiant_national||'').trim();
-    if(national)(byStable['NN|'+national]=(byStable['NN|'+national]||[]).concat(e));
-    (e.Identifiant_Pronote||e.Identifiant_source)&&(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]=(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]||[]).concat(e));
-    e.Numero_Pronote&&(byStable['N|'+e.Numero_Pronote]=(byStable['N|'+e.Numero_Pronote]||[]).concat(e));
-    var k=[EUC_SUIVI_normaliserIdentite_(e.Nom),EUC_SUIVI_normaliserIdentite_(e.Prenom_usage||e.Prenom),EUC_SUIVI_dateISO_(e.Date_naissance)].join('|');
-    byIdentity[k]=(byIdentity[k]||[]).concat(e);
-  });
+  (existing||[]).forEach(function(e){var y=String(e.Annee_code||e.Annee_scolaire||'');if(y&&y!==parsed.annee)return;var national=String(e.Numero_national||e.Numero_National||e.Identifiant_national||'').trim();if(national)(byStable['NN|'+national]=(byStable['NN|'+national]||[]).concat(e));(e.Identifiant_Pronote||e.Identifiant_source)&&(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]=(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]||[]).concat(e));e.Numero_Pronote&&(byStable['N|'+e.Numero_Pronote]=(byStable['N|'+e.Numero_Pronote]||[]).concat(e));var k=[EUC_SUIVI_normaliserIdentite_(e.Nom),EUC_SUIVI_normaliserIdentite_(e.Prenom_usage||e.Prenom),EUC_SUIVI_dateISO_(e.Date_naissance)].join('|');byIdentity[k]=(byIdentity[k]||[]).concat(e);});
   var changes=[],stats={lignes:parsed.lineCount,admissibles:0,horsPerimetre:0,sansClasse:0,sansNumeroNational:0,nouveaux:0,inchanges:0,misesAJour:0,changementsClasse:0,changementsCoordonnees:0,nouveauxSortis:0,reactives:0,absentsNouvelExport:0,doublons:0,homonymes:0,ambiguites:0,rejets:parsed.rejects.length},seen={},matched={};
   parsed.rows.forEach(function(r){
+    if(r._exclueImport)return;
     if(!r.classe){stats.sansClasse++;return;}
     if(!allowed[r.classe.toUpperCase()]){stats.horsPerimetre++;return;}
-    stats.admissibles++;
-    if(!r.numeroNational)stats.sansNumeroNational++;
-    var candidates=[];
-    if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];
-    if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];
-    if(!candidates.length&&r.numero)candidates=byStable['N|'+r.numero]||[];
-    var ik=[EUC_SUIVI_normaliserIdentite_(r.nom),EUC_SUIVI_normaliserIdentite_(r.prenom),r.naissance].join('|');
-    if(!candidates.length)candidates=byIdentity[ik]||[];
+    stats.admissibles++;if(!r.numeroNational)stats.sansNumeroNational++;
+    var candidates=[];if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];if(!candidates.length&&r.numero)candidates=byStable['N|'+r.numero]||[];
+    var ik=[EUC_SUIVI_normaliserIdentite_(r.nom),EUC_SUIVI_normaliserIdentite_(r.prenom),r.naissance].join('|');if(!candidates.length)candidates=byIdentity[ik]||[];
     var duplicateKey=(r.numeroNational?'NN|'+r.numeroNational:r.ident?'I|'+r.ident:r.numero?'N|'+r.numero:ik);
-    if(seen[duplicateKey]){stats.doublons++;stats.ambiguites++;changes.push({ligne:r.ligne,type:'AMBIGUITE',motif:'Doublon dans le fichier'});return;}
-    seen[duplicateKey]=true;
-    if(candidates.length>1){stats.homonymes++;stats.ambiguites++;changes.push({ligne:r.ligne,type:'AMBIGUITE',motif:'Plusieurs élèves correspondent'});return;}
-    if(!candidates.length){stats.nouveaux++;if(r.dateSortie)stats.nouveauxSortis++;changes.push({ligne:r.ligne,type:'CREATION',classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sansNumeroNational:!r.numeroNational});return;}
+    if(seen[duplicateKey]){stats.doublons++;stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Doublon dans le fichier'});return;}seen[duplicateKey]=true;
+    if(candidates.length>1){stats.homonymes++;stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Plusieurs élèves correspondent'});return;}
+    if(!candidates.length){stats.nouveaux++;if(r.dateSortie)stats.nouveauxSortis++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'CREATION',classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sansNumeroNational:!r.numeroNational});return;}
     var e=candidates[0];matched[e.id||e.Cle_inscription_annuelle||duplicateKey]=true;
-    if(r.naissance&&e.Date_naissance&&EUC_SUIVI_dateISO_(e.Date_naissance)!==r.naissance){stats.ambiguites++;changes.push({ligne:r.ligne,type:'AMBIGUITE',motif:'Dates de naissance divergentes'});return;}
+    if(r.naissance&&e.Date_naissance&&EUC_SUIVI_dateISO_(e.Date_naissance)!==r.naissance){stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Dates de naissance divergentes'});return;}
     var oldClass=String(e.Code_classe_importe||e.Classe_code||''),oldEntry=EUC_SUIVI_dateISO_(e.Date_entree||''),oldExit=EUC_SUIVI_dateISO_(e.Date_sortie||''),diffClass=oldClass&&oldClass!==r.classe,diffEntry=!!r.dateEntree&&oldEntry!==r.dateEntree,diffExit=oldExit!==r.dateSortie,reactive=e.Statut_scolarite==='SORTI'&&!r.dateSortie;
-    if(diffClass)stats.changementsClasse++;
-    if(diffEntry||diffExit)stats.changementsCoordonnees++;
-    if(reactive)stats.reactives++;
-    if(diffClass||diffEntry||diffExit||reactive){stats.misesAJour++;changes.push({ligne:r.ligne,type:diffClass?'CHANGEMENT_CLASSE':reactive?'REACTIVATION':diffExit?'SORTIE_EXPLICITE':'MISE_A_JOUR',classeAvant:oldClass,classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sortie:!!r.dateSortie});}else stats.inchanges++;
+    if(diffClass)stats.changementsClasse++;if(diffEntry||diffExit)stats.changementsCoordonnees++;if(reactive)stats.reactives++;
+    if(diffClass||diffEntry||diffExit||reactive){stats.misesAJour++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:diffClass?'CHANGEMENT_CLASSE':reactive?'REACTIVATION':diffExit?'SORTIE_EXPLICITE':'MISE_A_JOUR',classeAvant:oldClass,classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sortie:!!r.dateSortie});}else stats.inchanges++;
   });
   (existing||[]).filter(function(e){return String(e.Annee_code||e.Annee_scolaire||'')===parsed.annee;}).forEach(function(e){var key=e.id||e.Cle_inscription_annuelle;if(!matched[key])stats.absentsNouvelExport++;});
   return {annee:parsed.annee,empreinte:fingerprint,dejaImporte:already,format:{encodage:parsed.encoding,separateur:parsed.separateur,colonnes:parsed.columnCount,colonnesSupplementaires:parsed.extraHeaders.length},compteurs:stats,modifications:changes,rejets:parsed.rejects,pretAValider:!already&&stats.ambiguites===0&&stats.rejets===0,ecriture:false};
