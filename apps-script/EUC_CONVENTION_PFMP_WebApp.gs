@@ -5,6 +5,7 @@ function EUC_CONVENTION_afficherGenerateur(){
   return tpl.evaluate().setTitle('Génération des conventions PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
 function EUC_CONVENTION_afficherImpression(e){
+  var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');
   var token=String(e&&e.parameter&&e.parameter.token||'').trim();if(!token)throw new Error('Jeton manquant.');
   var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_Print');tpl.data=EUC_CONVENTION_donneesImpression(token);return tpl.evaluate().setTitle('Convention PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
