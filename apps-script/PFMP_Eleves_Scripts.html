@@ -1,46 +1,19 @@
 <script>(function(){
-const form=document.querySelector('#pfmpForm');
-if(!form)return;
-const field=n=>form.elements[n];
-const picker=document.querySelector('#studentPicker');
-const status=document.querySelector('#studentPickerStatus');
-const notFound=document.querySelector('#studentNotFound');
-const showExited=document.querySelector('#showExitedStudents');
-let lastData={actifs:[],sortis:[]};
+const form=document.querySelector('#pfmpForm');if(!form)return;
+const field=n=>form.elements[n],year=field('anneeId'),offer=field('offreId'),period=field('periodeId'),picker=document.querySelector('#studentPicker'),status=document.querySelector('#studentPickerStatus'),notFound=document.querySelector('#studentNotFound'),showExited=document.querySelector('#showExitedStudents'),info=document.querySelector('#catalogInfo'),global=document.querySelector('#globalStatus');
+let catalog={annees:[],offres:[]},lastData={actifs:[],sortis:[]};
 function esc(v){const d=document.createElement('div');d.textContent=v??'';return d.innerHTML}
-function frDate(v){const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'')}
-function selectedPeriodStart(){const p=field('periodeId');if(!p||!p.value)return '';const txt=p.selectedOptions&&p.selectedOptions[0]?p.selectedOptions[0].textContent:'';const m=String(txt).match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''}
-function setIdentityReadonly(readonly){['jeuneNom','jeunePrenom','jeuneDateNaissance'].forEach(n=>{const x=field(n);if(x){x.readOnly=!!readonly;x.setAttribute('aria-readonly',String(!!readonly));}})}
+function fr(v){const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'')}
+function currentOffer(){return catalog.offres.find(x=>String(x.id)===String(offer.value))}
+function setIdentityReadonly(ro){['jeuneNom','jeunePrenom','jeuneDateNaissance'].forEach(n=>{const x=field(n);if(x){x.readOnly=!!ro;x.setAttribute('aria-readonly',String(!!ro));}})}
 function clearIdentity(){field('jeuneEleveId').value='';field('jeuneNumeroNational').value='';['jeuneNom','jeunePrenom','jeuneDateNaissance'].forEach(n=>field(n).value='')}
-function render(){
-  const current=picker.value;
-  let html='<option value="">Choisir votre nom…</option>';
-  html+=lastData.actifs.map(x=>`<option value="${x.id}">${esc(x.nom)} ${esc(x.prenom)}</option>`).join('');
-  if(showExited.checked&&lastData.sortis.length){html+='<optgroup label="Élèves sortis avant cette PFMP">'+lastData.sortis.map(x=>`<option value="${x.id}" data-sorti="1">⛔ ${esc(x.nom)} ${esc(x.prenom)} — sorti le ${esc(frDate(x.dateSortie))}</option>`).join('')+'</optgroup>'}
-  picker.innerHTML=html;
-  if([...picker.options].some(o=>o.value===current))picker.value=current;
-}
-function loadStudents(){
-  const annee=Number(field('anneeId')&&field('anneeId').value||0),offre=Number(field('offreId')&&field('offreId').value||0);
-  if(!annee||!offre){lastData={actifs:[],sortis:[]};render();status.textContent='Choisissez d’abord l’année et la classe.';return}
-  status.textContent='Chargement des élèves…';picker.disabled=true;
-  google.script.run.withSuccessHandler(data=>{lastData=data||{actifs:[],sortis:[]};render();picker.disabled=false;status.textContent=(lastData.actifs||[]).length+' élève(s) proposé(s) pour cette classe'+((lastData.sortis||[]).length?' — '+lastData.sortis.length+' élève(s) sorti(s) masqué(s).':'');}).withFailureHandler(e=>{picker.disabled=false;status.textContent='Impossible de charger la liste : '+(e&&e.message?e.message:String(e));}).EUC_PFMP_listerElevesPourPeriode(annee,offre,selectedPeriodStart());
-}
-function chooseStudent(){
-  const id=Number(picker.value||0);if(!id)return;
-  const x=[...(lastData.actifs||[]),...(lastData.sortis||[])].find(r=>Number(r.id)===id);if(!x)return;
-  notFound.checked=false;field('jeuneEleveId').value=String(x.id||'');field('jeuneNumeroNational').value=x.numeroNational||'';field('jeuneNom').value=x.nom||'';field('jeunePrenom').value=x.prenom||'';field('jeuneDateNaissance').value=x.dateNaissance||'';setIdentityReadonly(true);
-  if(x.sorti)status.textContent='Attention : cet élève est indiqué comme sorti avant la période sélectionnée.';
-}
-function toggleManual(){
-  if(notFound.checked){picker.value='';picker.required=false;clearIdentity();setIdentityReadonly(false);status.textContent='Saisie libre activée : renseignez votre identité.';field('jeuneNom').focus();}
-  else{picker.required=true;clearIdentity();setIdentityReadonly(true);status.textContent='Choisissez votre nom dans la liste.';}
-}
-if(field('offreId'))field('offreId').addEventListener('change',()=>{picker.value='';clearIdentity();setIdentityReadonly(true);setTimeout(loadStudents,0)});
-if(field('periodeId'))field('periodeId').addEventListener('change',()=>{picker.value='';clearIdentity();setIdentityReadonly(true);setTimeout(loadStudents,0)});
-if(field('anneeId'))field('anneeId').addEventListener('change',()=>{picker.value='';clearIdentity();setIdentityReadonly(true);setTimeout(loadStudents,0)});
-picker.addEventListener('change',chooseStudent);
-notFound.addEventListener('change',toggleManual);
-showExited.addEventListener('change',render);
-setIdentityReadonly(true);
+function renderStudents(){let html='<option value="">Choisir votre nom…</option>';html+=(lastData.actifs||[]).map(x=>`<option value="${x.id}">${esc(x.nom)} ${esc(x.prenom)}</option>`).join('');if(showExited&&showExited.checked&&(lastData.sortis||[]).length){html+='<optgroup label="Élèves sortis avant cette PFMP">'+lastData.sortis.map(x=>`<option value="${x.id}">⛔ ${esc(x.nom)} ${esc(x.prenom)} — sorti le ${fr(x.dateSortie)}</option>`).join('')+'</optgroup>';}picker.innerHTML=html;}
+function noStudents(message){lastData={actifs:[],sortis:[]};picker.innerHTML='<option value="">Aucun élève importé pour le moment</option>';picker.disabled=true;picker.required=false;status.textContent=message||'La liste des élèves sera disponible après le premier import Pronote. Utilisez « Je ne trouve pas mon nom » pour la recette.';}
+function loadStudents(){const annee=Number(year.value||0),offre=Number(offer.value||0);if(!annee||!offre){noStudents('Choisissez d’abord l’année et la classe.');return;}picker.disabled=true;status.textContent='Recherche des élèves importés…';google.script.run.withSuccessHandler(data=>{lastData=data||{actifs:[],sortis:[]};if(!(lastData.actifs||[]).length&&!(lastData.sortis||[]).length){noStudents();return;}picker.disabled=false;picker.required=!notFound.checked;renderStudents();status.textContent=lastData.actifs.length+' élève(s) proposé(s).';}).withFailureHandler(()=>noStudents()).EUC_PFMP_listerElevesPourPeriode(annee,offre,'');}
+function renderClasses(){const y=String(year.value);const rows=catalog.offres.filter(x=>String(x.anneeId)===y);offer.innerHTML='<option value="">Choisir…</option>'+rows.map(x=>`<option value="${x.id}">${esc(x.classe)}${x.diplome?' — '+esc(x.diplome):''}</option>`).join('');period.innerHTML='<option value="">Choisir…</option>';info.textContent=rows.length+' classe(s) disponibles pour cette année.';noStudents('Choisissez d’abord une classe et une période.');}
+function renderPeriods(){const o=currentOffer();period.innerHTML='<option value="">Choisir…</option>'+((o&&o.periodes)||[]).map(x=>`<option value="${x.id}">${esc(x.libelle)} — ${fr(x.debut)} au ${fr(x.fin)}</option>`).join('');noStudents('Choisissez maintenant la période PFMP.');}
+function chooseStudent(){const id=Number(picker.value||0);if(!id)return;const x=[...(lastData.actifs||[]),...(lastData.sortis||[])].find(r=>Number(r.id)===id);if(!x)return;notFound.checked=false;field('jeuneEleveId').value=String(x.id||'');field('jeuneNumeroNational').value=x.numeroNational||'';field('jeuneNom').value=x.nom||'';field('jeunePrenom').value=x.prenom||'';field('jeuneDateNaissance').value=x.dateNaissance||'';setIdentityReadonly(true);}
+function toggleManual(){if(notFound.checked){picker.required=false;picker.disabled=true;clearIdentity();setIdentityReadonly(false);status.textContent='Saisie libre activée.';field('jeuneNom').focus();}else{clearIdentity();setIdentityReadonly(true);loadStudents();}}
+function loaded(data){catalog=data||{annees:[],offres:[]};year.innerHTML=catalog.annees.map(x=>`<option value="${x.id}">${esc(x.code)}</option>`).join('');if(catalog.annees.length){const a=catalog.annees.find(x=>x.code==='2026-2027')||catalog.annees[catalog.annees.length-1];year.value=String(a.id);}renderClasses();year.onchange=renderClasses;offer.onchange=renderPeriods;period.onchange=loadStudents;picker.onchange=chooseStudent;notFound.onchange=toggleManual;if(showExited)showExited.onchange=renderStudents;setIdentityReadonly(true);if(global)global.textContent='Référentiel Grist chargé.';}
+google.script.run.withSuccessHandler(loaded).withFailureHandler(e=>{if(global){global.textContent='Impossible de charger le référentiel : '+(e&&e.message?e.message:String(e));global.classList.add('error');}}).EUC_PFMP_chargerReferentielNatif();
 })();</script>
