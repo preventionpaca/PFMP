@@ -17,6 +17,7 @@ function doGet(e) {
   if (page === 'gestion-pfmp') return EUC_ADMIN_afficherApplication(e);
   if (page === 'conventions-pfmp') return EUC_CONVENTION_afficherGenerateur(e);
   if (page === 'convention-pfmp-print') return EUC_CONVENTION_afficherImpression(e);
+  if (page === 'conventions-pfmp-batch-print') return EUC_CONVENTION_afficherImpressionLot(e);
   return EDT_afficherWebAppExistante_(e);
 }
 
