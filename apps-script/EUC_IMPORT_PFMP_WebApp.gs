@@ -1,9 +1,9 @@
-/** Eucalyptus PFMP — v1.0.0-dev.56 — route import Pronote protégée et séparée du formulaire élève. */
+/** Eucalyptus PFMP — v1.0.0-dev.58 — route import Pronote protégée et séparée du formulaire élève. */
 function EUC_IMPORT_afficherApplication(){
   var ctx=EUC_PFMP_contexteAdmin_();
   if(!ctx.autorise||['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0) throw new Error('Accès non autorisé.');
   var tpl=HtmlService.createTemplateFromFile('Import_Pronote_PFMP');
-  tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.56',mode:'DRY_RUN',role:ctx.role,baseUrl:ScriptApp.getService().getUrl()});
+  tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.58',mode:'DRY_RUN',role:ctx.role,baseUrl:ScriptApp.getService().getUrl()});
   return tpl.evaluate().setTitle('Import Pronote PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
 function EUC_IMPORT_diagnosticAutorisation(){return EUC_PFMP_diagnosticAdmin_();}
