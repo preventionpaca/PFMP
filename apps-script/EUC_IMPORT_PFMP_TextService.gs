@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.63 — copier-coller Pronote + correspondances + multi-source LP/LGT + professeur principal. */
+/** Eucalyptus PFMP — v1.0.0-dev.66 — copier-coller Pronote + correspondances + multi-source LP/LGT + professeur principal + dates Grist normalisées. */
 function EUC_IMPORT_exigerAdminTexte_(){
   var ctx=EUC_PFMP_contexteAdmin_();
   if(!ctx||!ctx.autorise||['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0) throw new Error('Accès non autorisé.');
@@ -43,9 +43,18 @@ function EUC_IMPORT_extraireProfesseursPrincipaux_(texte,parsed){
   var byLine={};(parsed.rows||[]).forEach(function(r){byLine[String(r.ligne)]=r;});
   for(var n=1;n<lines.length;n++){var r=byLine[String(n+1)];if(!r)continue;var c=EUC_IMPORT_lireCSV_(lines[n],sep),vals=[];idx.forEach(function(i){var v=String(c[i]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});r.professeurPrincipal=vals.join(' / ');}
 }
+function EUC_IMPORT_dateExistanteISO_(v){
+  if(v===null||v===undefined||v==='')return '';
+  if(typeof v==='number'&&isFinite(v))return new Date(v*1000).toISOString().slice(0,10);
+  var s=String(v).trim();
+  if(/^\d{10}(?:\.\d+)?$/.test(s)){var n=Number(s);if(isFinite(n))return new Date(n*1000).toISOString().slice(0,10);}
+  if(/^\d{13}$/.test(s)){var ms=Number(s);if(isFinite(ms))return new Date(ms).toISOString().slice(0,10);}
+  return EUC_SUIVI_dateISO_(s);
+}
+function EUC_IMPORT_normaliserDatesExistantes_(rows){return (rows||[]).map(function(e){var x=Object.assign({},e);x.Date_naissance=EUC_IMPORT_dateExistanteISO_(e.Date_naissance);x.Date_entree=EUC_IMPORT_dateExistanteISO_(e.Date_entree);x.Date_sortie=EUC_IMPORT_dateExistanteISO_(e.Date_sortie);return x;});}
 function EUC_IMPORT_chargerDonneesPreviewTexte_(annee,sourcePronote){
   var existing=[],imports=[],source=EUC_IMPORT_normaliserSourcePronote_(sourcePronote);
-  try{existing=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_("SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?",[annee]));}catch(e){}
+  try{existing=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_("SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?",[annee]));existing=EUC_IMPORT_normaliserDatesExistantes_(existing);}catch(e){}
   if(source&&source!=='AUTO'){existing=existing.filter(function(e){var es=EUC_IMPORT_normaliserSourcePronote_(e.Source_Pronote||e.Source_import||'');return !es||es===source;});}
   try{imports=EUC_IMPORT_lireRecords_('EUC_IMPORTS_PRONOTE_PFMP').filter(function(i){var is=EUC_IMPORT_normaliserSourcePronote_(i.Source_Pronote||'');return !is||is===source;});}catch(e){}
   return {existing:existing,imports:imports,classes:EUC_IMPORT_chargerClassesCamin_(),correspondances:EUC_IMPORT_chargerCorrespondances_(annee,source)};
