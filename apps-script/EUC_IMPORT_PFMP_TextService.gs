@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.68 — copier-coller Pronote + vue complète de tous les élèves analysés. */
+/** Eucalyptus PFMP — v1.0.0-dev.77 — copier-coller Pronote complet élèves + responsables. */
 function EUC_IMPORT_exigerAdminTexte_(){
   var ctx=EUC_PFMP_contexteAdmin_();
   if(!ctx||!ctx.autorise||['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0) throw new Error('Accès non autorisé.');
@@ -48,7 +48,7 @@ function EUC_IMPORT_dateExistanteISO_(v){
   if(typeof v==='number'&&isFinite(v))return new Date(v*1000).toISOString().slice(0,10);
   var s=String(v).trim();
   if(/^\d{10}(?:\.\d+)?$/.test(s)){var n=Number(s);if(isFinite(n))return new Date(n*1000).toISOString().slice(0,10);}
-  if(/^\d{13}$/.test(s)){var ms=Number(s);if(isFinite(ms))return new Date(ms).toISOString().slice(0,10);}
+  if(/^\d{13}$/.test(s)){var ms=Number(s);if(isFinite(ms))return new Date(ms*1000).toISOString().slice(0,10);}
   return EUC_SUIVI_dateISO_(s);
 }
 function EUC_IMPORT_normaliserDatesExistantes_(rows){return (rows||[]).map(function(e){var x=Object.assign({},e);x.Date_naissance=EUC_IMPORT_dateExistanteISO_(e.Date_naissance);x.Date_entree=EUC_IMPORT_dateExistanteISO_(e.Date_entree);x.Date_sortie=EUC_IMPORT_dateExistanteISO_(e.Date_sortie);return x;});}
@@ -75,15 +75,5 @@ function EUC_IMPORT_construireLignesAnalysees_(preview,parsed,source){
     return Object.assign(base,{type:'INCHANGE',motif:'Déjà présent dans Grist, aucune modification détectée.'});
   });
 }
-function EUC_IMPORT_previsualiserTexte(payload){
-  EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var texte=String(payload.texte||''),sourceDemandee=EUC_IMPORT_normaliserSourcePronote_(payload.sourcePronote||'AUTO');if(!texte.trim()) throw new Error('Aucune donnée Pronote collée.');
-  var parsed=EUC_IMPORT_analyserTexte_(texte,{annee:payload.annee});EUC_IMPORT_extraireProfesseursPrincipaux_(texte,parsed);parsed.encoding='COPIER_COLLER';
-  var classes=EUC_IMPORT_chargerClassesCamin_(),detection=EUC_IMPORT_detecterSource_(parsed,parsed.annee,classes),source=sourceDemandee==='AUTO'?detection.source:sourceDemandee;
-  if(!source)throw new Error('Source Pronote indéterminée automatiquement. Choisissez LP ou LGT puis relancez l’analyse.');
-  parsed.sourcePronote=source;parsed.empreinte=EUC_IMPORT_empreinte_(Utilities.newBlob(source+'\n'+texte,'text/plain').getBytes());
-  var d=EUC_IMPORT_chargerDonneesPreviewTexte_(parsed.annee,source);d.classes=classes;var corr=EUC_IMPORT_preparerClasses_(parsed,d.classes,d.correspondances,payload.correspondances||{},payload.classesExclues||[]),offers=d.classes.filter(function(c){return c.actif;}).map(function(c){return {Code_classe:c.nom,Actif:true,Afficher_formulaire_PFMP:true};}),preview=EUC_IMPORT_previsualiser_(parsed,d.existing,offers,d.imports);
-  EUC_IMPORT_enrichirModificationsIdentite_(preview,parsed,source);
-  preview.lignesAnalysees=EUC_IMPORT_construireLignesAnalysees_(preview,parsed,source);
-  preview.sourcePronote=source;preview.sourceDemandee=sourceDemandee;preview.sourceDetection=detection;preview.classesCamin=d.classes.filter(function(c){return c.actif;});preview.classesPronote=corr.classesPronote;preview.classesInconnues=corr.inconnues;preview.classesExclues=corr.exclues;preview.tableCorrespondancePresente=d.correspondances.length>0;preview.correspondancesTemporaires=true;preview.compteurs.classesCaminDisponibles=preview.classesCamin.length;preview.compteurs.classesInconnues=corr.inconnues.length;preview.compteurs.classesEcartees=corr.exclues.length;preview.compteurs.elevesEcartes=corr.effectifExclu;preview.compteurs.lignesAffichees=preview.lignesAnalysees.length;preview.pretAValider=preview.pretAValider&&corr.inconnues.length===0;return preview;
-}
-function EUC_IMPORT_confirmerSimulationTexte(payload){var lock=LockService.getScriptLock();if(!lock.tryLock(1000)) throw new Error('Un autre import est déjà en cours.');try{EUC_IMPORT_exigerAdminTexte_();if(!payload||payload.confirmation!=='CONFIRMER_IMPORT') throw new Error('Validation humaine explicite obligatoire.');var mode=PropertiesService.getScriptProperties().getProperty('EUC_PFMP_PRONOTE_IMPORT_MODE')||'DRY_RUN';if(mode!=='DRY_RUN') throw new Error('Import réel non autorisé dans cette version.');var preview=EUC_IMPORT_previsualiserTexte(payload);if(!preview.pretAValider) throw new Error(preview.dejaImporte?'Fichier identique déjà importé.':'Prévisualisation bloquée par des anomalies ou classes non correspondantes.');return {statut:'SIMULATION',mode:'DRY_RUN',ecriture:false,sourcePronote:preview.sourcePronote,empreinte:preview.empreinte,compteurs:preview.compteurs};}finally{lock.releaseLock();}}
+function EUC_IMPORT_previsualiserTexte(payload){return EUC_IMPORT_previsualiserTexteCompletV77(payload);}
+function EUC_IMPORT_confirmerSimulationTexte(payload){return EUC_IMPORT_confirmerSimulationCompletV77(payload);}
