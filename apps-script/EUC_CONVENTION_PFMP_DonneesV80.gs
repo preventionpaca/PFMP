@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.80 — données enrichies pour impression convention. */
+/** Eucalyptus PFMP — v1.0.0-dev.84 — données enrichies convention : élève, responsables, diplôme et professeur principal. */
 function EUC_CONVENTION_refIdV80_(v){return EUC_PFMP_ref_(v);}
 function EUC_CONVENTION_txtV80_(v){return String(v===null||v===undefined?'':v).trim();}
 function EUC_CONVENTION_adresseV80_(o){
@@ -26,8 +26,22 @@ function EUC_CONVENTION_coordonneesV80_(e){
   if(!tel&&r)tel=EUC_CONVENTION_telRespV80_(r);
   return {adresse:adresseEleve,codePostal:cp,ville:ville,pays:pays,email:email,telephone:tel,responsable:r?{nom:EUC_CONVENTION_txtV80_(r.Nom),prenom:EUC_CONVENTION_txtV80_(r.Prenom),lien:EUC_CONVENTION_txtV80_(r.Lien_avec_eleve),type:EUC_CONVENTION_txtV80_(r.Type_responsabilite)}:null,sourceEmail:EUC_CONVENTION_txtV80_(e.Email_eleve||e.Courriel)?'ELEVE':(email?'RESPONSABLE':''),sourceTelephone:EUC_CONVENTION_txtV80_(e.Telephone_eleve||e.Telephone)?'ELEVE':(tel?'RESPONSABLE':'')};
 }
+function EUC_CONVENTION_professeursPrincipauxV84_(classeId,fallback){
+  var out=[];
+  try{
+    var links=EUC_IMPORT_lireRecords_('EUC_CLASSES_PROFESSEURS_PFMP').filter(function(r){return r.Actif!==false&&String(r.Role||'')==='PROFESSEUR_PRINCIPAL'&&EUC_CONVENTION_refIdV80_(r.Classe)===Number(classeId);});
+    var profs=EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP'),byId={};profs.forEach(function(p){byId[p.id]=p;});
+    links.forEach(function(l){var p=byId[EUC_CONVENTION_refIdV80_(l.Professeur)];if(!p)return;out.push({nom:[EUC_CONVENTION_txtV80_(p.Civilite),EUC_CONVENTION_txtV80_(p.Prenom),EUC_CONVENTION_txtV80_(p.Nom)].filter(Boolean).join(' '),email:EUC_CONVENTION_txtV80_(p.Email),telephone:EUC_CONVENTION_txtV80_(p.Telephone_portable||p.Telephone_fixe),discipline:EUC_CONVENTION_txtV80_(p.Discipline)});});
+  }catch(e){}
+  if(!out.length&&fallback)out.push({nom:EUC_CONVENTION_txtV80_(fallback),email:'',telephone:'',discipline:''});
+  return out;
+}
+function EUC_CONVENTION_diplomeV84_(classeId,e){
+  var d='';try{d=EUC_PC_diplomeClasse_(classeId);}catch(err){}
+  return EUC_CONVENTION_txtV80_(d||e.Formation_Pronote||e.Formation||'');
+}
 function EUC_CONVENTION_donneesImpressionV80(token){
   var a=EUC_CONVENTION_trouverAccesParToken_(token),rows=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'),e=rows.filter(function(x){return x.id===EUC_CONVENTION_refIdV80_(a.Eleve);})[0];if(!e)throw new Error('Élève introuvable.');
-  var debut=EUC_IMPORT_dateExistanteISO_(a.Date_debut),fin=EUC_IMPORT_dateExistanteISO_(a.Date_fin),c=EUC_CONVENTION_coordonneesV80_(e),pdifMode=String(a.PDIF_mode||'');
-  return {reference:a.Reference_convention||'',token:String(token||''),formUrl:ScriptApp.getService().getUrl()+'?page=pfmp&token='+encodeURIComponent(token),annee:a.Annee_scolaire||'',classe:a.Classe_convention_nom||'',debut:debut,fin:fin,jours:EUC_CONVENTION_compterJoursV80_(debut,fin),pdifMode:pdifMode,professeurReferent:EUC_CONVENTION_txtV80_(e.Professeur_principal),eleve:{nom:EUC_CONVENTION_txtV80_(e.Nom),prenom:EUC_CONVENTION_txtV80_(e.Prenom_usage||e.Prenom),dateNaissance:EUC_IMPORT_dateExistanteISO_(e.Date_naissance),adresse:c.adresse,codePostal:c.codePostal,ville:c.ville,pays:c.pays,telephone:c.telephone,courriel:c.email,formation:EUC_CONVENTION_txtV80_(e.Formation_Pronote),responsable:c.responsable,sourceTelephone:c.sourceTelephone,sourceEmail:c.sourceEmail}};
+  var debut=EUC_IMPORT_dateExistanteISO_(a.Date_debut),fin=EUC_IMPORT_dateExistanteISO_(a.Date_fin),c=EUC_CONVENTION_coordonneesV80_(e),pdifMode=String(a.PDIF_mode||''),classeId=EUC_CONVENTION_refIdV80_(a.Classe_convention),pps=EUC_CONVENTION_professeursPrincipauxV84_(classeId,e.Professeur_principal),diplome=EUC_CONVENTION_diplomeV84_(classeId,e);
+  return {reference:a.Reference_convention||'',token:String(token||''),formUrl:ScriptApp.getService().getUrl()+'?page=pfmp&token='+encodeURIComponent(token),annee:a.Annee_scolaire||'',classe:a.Classe_convention_nom||'',classeId:classeId,debut:debut,fin:fin,jours:EUC_CONVENTION_compterJoursV80_(debut,fin),pdifMode:pdifMode,professeurReferent:pps.map(function(p){return p.nom;}).filter(Boolean).join(' / '),professeursReferents:pps,professeurReferentEmail:pps.map(function(p){return p.email;}).filter(Boolean).join(' / '),professeurReferentTelephone:pps.map(function(p){return p.telephone;}).filter(Boolean).join(' / '),diplome:diplome,eleve:{nom:EUC_CONVENTION_txtV80_(e.Nom),prenom:EUC_CONVENTION_txtV80_(e.Prenom_usage||e.Prenom),dateNaissance:EUC_IMPORT_dateExistanteISO_(e.Date_naissance),adresse:c.adresse,codePostal:c.codePostal,ville:c.ville,pays:c.pays,telephone:c.telephone,courriel:c.email,formation:diplome,responsable:c.responsable,sourceTelephone:c.sourceTelephone,sourceEmail:c.sourceEmail}};
 }
