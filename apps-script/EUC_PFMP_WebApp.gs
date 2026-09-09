@@ -1,9 +1,11 @@
-/** Eucalyptus PFMP — v1.0.0-dev.85 — accès formulaire standard ou QR sécurisé. */
+/** Eucalyptus PFMP — v1.0.0-dev.94 — accès formulaire standard, QR court ou ancien jeton. */
 function EUC_PFMP_afficherApplication(e) {
   var token=String(e&&e.parameter&&e.parameter.token||'').trim();
-  if(token){
+  var q=String(e&&e.parameter&&e.parameter.q||'').trim();
+  if(token||q){
     var qr=HtmlService.createTemplateFromFile('PFMP_Acces_QR');
     qr.conventionToken=token;
+    qr.conventionCode=q;
     return qr.evaluate().setTitle('Accès sécurisé PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
   }
   EUC_ENT_controlerAccesUtilisateur_();
