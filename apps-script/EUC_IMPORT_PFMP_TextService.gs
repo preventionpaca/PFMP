@@ -48,7 +48,7 @@ function EUC_IMPORT_dateExistanteISO_(v){
   if(typeof v==='number'&&isFinite(v))return new Date(v*1000).toISOString().slice(0,10);
   var s=String(v).trim();
   if(/^\d{10}(?:\.\d+)?$/.test(s)){var n=Number(s);if(isFinite(n))return new Date(n*1000).toISOString().slice(0,10);}
-  if(/^\d{13}$/.test(s)){var ms=Number(s);if(isFinite(ms))return new Date(ms*1000).toISOString().slice(0,10);}
+  if(/^\d{13}$/.test(s)){var ms=Number(s);if(isFinite(ms))return new Date(ms).toISOString().slice(0,10);}
   return EUC_SUIVI_dateISO_(s);
 }
 function EUC_IMPORT_normaliserDatesExistantes_(rows){return (rows||[]).map(function(e){var x=Object.assign({},e);x.Date_naissance=EUC_IMPORT_dateExistanteISO_(e.Date_naissance);x.Date_entree=EUC_IMPORT_dateExistanteISO_(e.Date_entree);x.Date_sortie=EUC_IMPORT_dateExistanteISO_(e.Date_sortie);return x;});}
