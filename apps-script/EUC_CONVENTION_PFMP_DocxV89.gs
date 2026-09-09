@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.89 — génération DOCX native depuis modèle Word maître stocké dans Drive. */
+/** Eucalyptus PFMP — v1.0.0-dev.92 — génération DOCX native depuis modèle Word maître stocké dans Drive. */
 var EUC_DOCX_TEMPLATE_PROP_='EUC_PFMP_DOCX_TEMPLATE_ID';
 var EUC_DOCX_ROOT_FOLDER_='Eucalyptus PFMP';
 var EUC_DOCX_MODEL_FOLDER_='Modeles';
@@ -40,7 +40,9 @@ function EUC_DOCX_genererDepuisToken(token){
   parts.forEach(function(b){var n=b.getName();if(n==='word/document.xml'){foundDoc=true;out.push(Utilities.newBlob(EUC_DOCX_replaceAll_(b.getDataAsString('UTF-8'),map),'application/xml',n));}else if(n==='word/media/image1.png'){foundQr=true;out.push(qr);}else out.push(b);});
   if(!foundDoc)throw new Error('Modèle DOCX invalide : word/document.xml introuvable.');if(!foundQr)throw new Error('Modèle DOCX invalide : emplacement QR introuvable.');
   var filename='Convention_'+EUC_DOCX_safeName_(data.eleve.nom)+'_'+EUC_DOCX_safeName_(data.eleve.prenom)+'_'+EUC_DOCX_safeName_(data.reference)+'.docx',folder=EUC_DOCX_destination_(data),old=folder.getFilesByName(filename);while(old.hasNext())old.next().setTrashed(true);
-  var blob=Utilities.zip(out,filename);blob.setContentType(EUC_DOCX_MIME_);blob.setName(filename);var f=folder.createFile(blob);
+  var zipBlob=Utilities.zip(out,'archive.zip');
+  var docxBlob=Utilities.newBlob(zipBlob.getBytes(),EUC_DOCX_MIME_,filename);
+  var f=folder.createFile(docxBlob);
   return {ok:true,id:f.getId(),nom:f.getName(),url:f.getUrl(),folderUrl:folder.getUrl(),emplacement:'Mon Drive / '+EUC_DOCX_ROOT_FOLDER_+' / '+EUC_DOCX_OUTPUT_FOLDER_+' / '+EUC_DOCX_safeName_(data.annee)+' / '+EUC_DOCX_safeName_(data.classe),reference:data.reference};
 }
 function EUC_DOCX_genererLot(tokens){EUC_DOCX_exigerAdmin_();tokens=(tokens||[]).map(String).filter(Boolean);if(!tokens.length)throw new Error('Aucune convention à générer.');if(tokens.length>80)throw new Error('Lot trop important : maximum 80 conventions par génération.');var items=tokens.map(function(t){return EUC_DOCX_genererDepuisToken(t);});return {ok:true,total:items.length,items:items,folderUrl:items[0]&&items[0].folderUrl||''};}
