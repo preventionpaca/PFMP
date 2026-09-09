@@ -16,6 +16,7 @@ function doGet(e) {
   if (page === 'import-pronote-pfmp') return EUC_IMPORT_afficherApplication(e);
   if (page === 'import-prof-classes-pfmp') return EUC_PC_afficherSynchronisation(e);
   if (page === 'diplomes-classes-pfmp') return EUC_PC_afficherDiplomes(e);
+  if (page === 'parametres-convention-pfmp') return EUC_PARAM_CONV_afficher(e);
   if (page === 'gestion-pfmp') return EUC_ADMIN_afficherApplication(e);
   if (page === 'conventions-pfmp') return EUC_CONVENTION_afficherGenerateur(e);
   if (page === 'convention-pfmp-print') return EUC_CONVENTION_afficherImpression(e);
@@ -49,25 +50,7 @@ function webappGetInitialData() {
   };
 }
 
-function webappGetLastUpdate() {
-  return paramsAsObject_().LastUpdate || '';
-}
-
-function paramsAsObject_() {
-  const rows = getRecords_('Parametres_EDT');
-  const out = {};
-  rows.forEach(r => out[r.fields.Cle] = r.fields.Valeur);
-  return out;
-}
-
-function stripFields_(records) {
-  return records.map(r => Object.assign({ id: r.id }, r.fields));
-}
-
-function safeStrip_(tableId) {
-  try {
-    return stripFields_(getRecords_(tableId));
-  } catch (e) {
-    return [];
-  }
-}
+function webappGetLastUpdate() { return paramsAsObject_().LastUpdate || ''; }
+function paramsAsObject_() { const rows = getRecords_('Parametres_EDT'); const out = {}; rows.forEach(r => out[r.fields.Cle] = r.fields.Valeur); return out; }
+function stripFields_(records) { return records.map(r => Object.assign({ id: r.id }, r.fields)); }
+function safeStrip_(tableId) { try { return stripFields_(getRecords_(tableId)); } catch (e) { return []; } }
