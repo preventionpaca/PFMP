@@ -14,6 +14,8 @@ function doGet(e) {
   if (page === 'suivi-pfmp') return EUC_SUIVI_afficherApplication(e);
   if (page === 'admin-pfmp') return EUC_CENTRE_ADMIN_afficherApplication(e);
   if (page === 'import-pronote-pfmp') return EUC_IMPORT_afficherApplication(e);
+  if (page === 'import-prof-classes-pfmp') return EUC_PC_afficherSynchronisation(e);
+  if (page === 'diplomes-classes-pfmp') return EUC_PC_afficherDiplomes(e);
   if (page === 'gestion-pfmp') return EUC_ADMIN_afficherApplication(e);
   if (page === 'conventions-pfmp') return EUC_CONVENTION_afficherGenerateur(e);
   if (page === 'convention-pfmp-print') return EUC_CONVENTION_afficherImpression(e);
