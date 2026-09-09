@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — v1.0.0-dev.92 — génération DOCX native depuis modèle Word maître stocké dans Drive. */
+/** Eucalyptus PFMP — v1.0.0-dev.93 — génération DOCX native depuis modèle Word maître stocké dans Drive. */
 var EUC_DOCX_TEMPLATE_PROP_='EUC_PFMP_DOCX_TEMPLATE_ID';
 var EUC_DOCX_ROOT_FOLDER_='Eucalyptus PFMP';
 var EUC_DOCX_MODEL_FOLDER_='Modeles';
@@ -36,7 +36,9 @@ function EUC_DOCX_map_(data){return {
 };}
 function EUC_DOCX_genererDepuisToken(token){
   EUC_DOCX_exigerAdmin_();token=String(token||'').trim();if(!token)throw new Error('Jeton de convention manquant.');var tpl=EUC_DOCX_fileByProp_();if(!tpl)throw new Error('Aucun modèle Word actif. Ouvrez « Paramètres de la convention » et installez le modèle DOCX maître.');
-  var data=EUC_CONVENTION_donneesImpressionV80(token),map=EUC_DOCX_map_(data),parts=Utilities.unzip(tpl.getBlob()),out=[],foundDoc=false,foundQr=false,qr=EUC_DOCX_qrBlob_(data.formUrl);
+  var data=EUC_CONVENTION_donneesImpressionV80(token),map=EUC_DOCX_map_(data);
+  var sourceZip=Utilities.newBlob(tpl.getBlob().getBytes(),'application/zip','modele.zip');
+  var parts=Utilities.unzip(sourceZip),out=[],foundDoc=false,foundQr=false,qr=EUC_DOCX_qrBlob_(data.formUrl);
   parts.forEach(function(b){var n=b.getName();if(n==='word/document.xml'){foundDoc=true;out.push(Utilities.newBlob(EUC_DOCX_replaceAll_(b.getDataAsString('UTF-8'),map),'application/xml',n));}else if(n==='word/media/image1.png'){foundQr=true;out.push(qr);}else out.push(b);});
   if(!foundDoc)throw new Error('Modèle DOCX invalide : word/document.xml introuvable.');if(!foundQr)throw new Error('Modèle DOCX invalide : emplacement QR introuvable.');
   var filename='Convention_'+EUC_DOCX_safeName_(data.eleve.nom)+'_'+EUC_DOCX_safeName_(data.eleve.prenom)+'_'+EUC_DOCX_safeName_(data.reference)+'.docx',folder=EUC_DOCX_destination_(data),old=folder.getFilesByName(filename);while(old.hasNext())old.next().setTrashed(true);
