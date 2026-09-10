@@ -1,52 +1,42 @@
-/** Eucalyptus PFMP — v1.0.0-dev.108 — lignes riches pilotées par Grist. */
+/** Eucalyptus PFMP — v1.0.0-dev.110 — lignes riches paramétrables + migration contrôlée. */
 var EUC_CONVENTION_LIGNES_TABLE_='EUC_PARAMETRES_LIGNES_CONVENTION';
+var EUC_CONVENTION_LIGNES_MIGRATION_PROP_='EUC_LIGNES_MIGRATION_DEV110';
 
-function EUC_CONVENTION_modelesLignesDefautV108_(){
+function EUC_CONVENTION_modelesLignesDefautV110_(){
   return [
     {Cle:'PERIODE_LIGNE',Modele:'du **{{DATE_DEBUT}}** au **{{DATE_FIN}}** - soit **{{NB_JOURS}} jours**',Taille_police:8.4,Taille_min:6.8,Alignement:'CENTER',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:10},
     {Cle:'CLASSE_LIGNE',Modele:'Classe : **{{CLASSE}}**',Taille_police:8.2,Taille_min:6.8,Alignement:'CENTER',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:20},
-    {Cle:'ELEVE_LIGNE',Modele:'[orange]**-> L\'élève :**[/orange] **{{NOM_PRENOM}}**   Né(e) le : **{{DATE_NAISSANCE}}**',Taille_police:7.2,Taille_min:5.8,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:30},
+    {Cle:'ELEVE_LIGNE',Modele:'[arrow][orange]**L\'élève :**[/orange] **{{NOM_PRENOM}}**   Né(e) le : **{{DATE_NAISSANCE}}**',Taille_police:7.2,Taille_min:5.8,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:30},
     {Cle:'ADRESSE_ELEVE_LIGNE',Modele:'Adresse personnelle : **{{ADRESSE_ELEVE_COMPLETE}}**',Taille_police:6.6,Taille_min:5.2,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:40},
     {Cle:'CONTACT_ELEVE_LIGNE',Modele:'N° de téléphone : **{{TEL_ELEVE}}**   e-mail : **{{EMAIL_ELEVE}}**',Taille_police:6.5,Taille_min:5.0,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:50},
     {Cle:'DIPLOME_LIGNE',Modele:'Diplôme préparé : **{{DIPLOME}}**',Taille_police:7.1,Taille_min:5.4,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:60},
-    {Cle:'ETABLISSEMENT_LIGNE',Modele:'[orange]**-> {{ETABLISSEMENT}}**[/orange]   {{ADRESSE_ETAB}}   Tél : **{{TEL_ETAB}}**',Taille_police:7.1,Taille_min:5.0,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:70},
+    {Cle:'ETABLISSEMENT_LIGNE',Modele:'[arrow][orange]**{{ETABLISSEMENT}}**[/orange]   {{ADRESSE_ETAB}}   Tél : **{{TEL_ETAB}}**',Taille_police:7.1,Taille_min:5.0,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:70},
     {Cle:'PROVISEUR_LIGNE',Modele:'Représenté par Monsieur **{{PROVISEUR}}** en qualité de {{FONCTION_PROVISEUR}}   e-mail : **{{EMAIL_ETAB}}**',Taille_police:6.3,Taille_min:4.8,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:80},
     {Cle:'PROF_LIGNE',Modele:'Professeur référent : **{{PROF_REFERENT}}**   e-mail : **{{EMAIL_PROF}}**',Taille_police:6.3,Taille_min:4.8,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:90},
     {Cle:'PROF_SIGNATURE_LIGNE',Modele:'**{{PROF_REFERENT}}**',Taille_police:6.0,Taille_min:4.2,Alignement:'CENTER',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:100},
-    {Cle:'REFERENCE_LIGNE',Modele:'Réf. {{REFERENCE}}',Taille_police:5.0,Taille_min:4.0,Alignement:'LEFT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:110}
+    {Cle:'REFERENCE_LIGNE',Modele:'Réf. {{REFERENCE}}',Taille_police:5.0,Taille_min:4.0,Alignement:'RIGHT',Alignement_vertical:'MIDDLE',Couleur_defaut:'NOIR',Ordre:110}
   ];
 }
-
+function EUC_CONVENTION_modelesLignesDefautV108_(){return EUC_CONVENTION_modelesLignesDefautV110_();}
 function EUC_CONVENTION_colonneLigneV108_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_CONVENTION_assurerTableLignesV108_(){
   var t=EUC_CONVENTION_LIGNES_TABLE_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;}),c=EUC_CONVENTION_colonneLigneV108_;
   var cols=[c('Cle','Clé'),c('Modele','Modèle de ligne'),c('Taille_police','Taille police','Numeric'),c('Taille_min','Taille minimale','Numeric'),c('Alignement','Alignement horizontal'),c('Alignement_vertical','Alignement vertical'),c('Couleur_defaut','Couleur par défaut'),c('Actif','Actif','Bool'),c('Ordre','Ordre','Int')];
-  if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});}
-  else{var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var missingCols=cols.filter(function(x){return !presentes[x.id];});if(missingCols.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missingCols});}
-  var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/records'),rows=raw.records||[],present={};rows.forEach(function(r){present[String((r.fields||{}).Cle||'').trim()]=true;});
-  var missing=EUC_CONVENTION_modelesLignesDefautV108_().filter(function(d){return !present[d.Cle];});
-  if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/records',{records:missing.map(function(d){return {fields:{Cle:d.Cle,Modele:d.Modele,Taille_police:d.Taille_police,Taille_min:d.Taille_min,Alignement:d.Alignement,Alignement_vertical:d.Alignement_vertical,Couleur_defaut:d.Couleur_defaut,Actif:true,Ordre:d.Ordre}};})});
+  if(!exists)EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});
+  else{var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var mc=cols.filter(function(x){return !presentes[x.id];});if(mc.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:mc});}
+  var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/records'),rows=raw.records||[],present={};rows.forEach(function(r){present[String((r.fields||{}).Cle||'').trim()]=r;});
+  var defs=EUC_CONVENTION_modelesLignesDefautV110_(),missing=defs.filter(function(d){return !present[d.Cle];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/records',{records:missing.map(function(d){return {fields:{Cle:d.Cle,Modele:d.Modele,Taille_police:d.Taille_police,Taille_min:d.Taille_min,Alignement:d.Alignement,Alignement_vertical:d.Alignement_vertical,Couleur_defaut:d.Couleur_defaut,Actif:true,Ordre:d.Ordre}};})});
+  var props=PropertiesService.getScriptProperties();if(props.getProperty(EUC_CONVENTION_LIGNES_MIGRATION_PROP_)!=='1'){
+    raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/records');rows=raw.records||[];var by={};rows.forEach(function(r){by[String((r.fields||{}).Cle||'').trim()]=r;});var patches=[];defs.forEach(function(d){var r=by[d.Cle];if(r)patches.push({id:r.id,fields:{Modele:d.Modele,Taille_police:d.Taille_police,Taille_min:d.Taille_min,Alignement:d.Alignement,Alignement_vertical:d.Alignement_vertical,Couleur_defaut:d.Couleur_defaut,Actif:true,Ordre:d.Ordre}});});if(patches.length)EUC_ENT_grist('patch','/tables/'+encodeURIComponent(t)+'/records',{records:patches});props.setProperty(EUC_CONVENTION_LIGNES_MIGRATION_PROP_,'1');
+  }
   return {ok:true,table:t,creee:!exists,ajoutees:missing.map(function(d){return d.Cle;})};
 }
-
-function EUC_CONVENTION_lireModelesLignesV108_(){
-  EUC_CONVENTION_assurerTableLignesV108_();
-  var defs=EUC_CONVENTION_modelesLignesDefautV108_(),fallback={};defs.forEach(function(d){fallback[d.Cle]=d;});
-  var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_CONVENTION_LIGNES_TABLE_)+'/records'),out={};
-  (raw.records||[]).forEach(function(r){var f=r.fields||{},cle=String(f.Cle||'').trim();if(!cle||f.Actif===false)return;var d=fallback[cle]||{};out[cle]={modele:String(f.Modele||d.Modele||''),taille:Number(f.Taille_police||d.Taille_police||6),tailleMin:Number(f.Taille_min||d.Taille_min||4),alignement:String(f.Alignement||d.Alignement||'LEFT').toUpperCase(),alignementVertical:String(f.Alignement_vertical||d.Alignement_vertical||'MIDDLE').toUpperCase(),couleur:String(f.Couleur_defaut||d.Couleur_defaut||'NOIR').toUpperCase()};});
-  defs.forEach(function(d){if(!out[d.Cle])out[d.Cle]={modele:d.Modele,taille:d.Taille_police,tailleMin:d.Taille_min,alignement:d.Alignement,alignementVertical:d.Alignement_vertical,couleur:d.Couleur_defaut};});
-  return out;
-}
-
-function EUC_CONVENTION_variablesLignesV108_(data){
-  data=data||{};var e=data.eleve||{},et=data.etablissement||{};
-  var adresse=[String(e.adresse||'').trim(),[String(e.codePostal||'').trim(),String(e.ville||'').trim()].filter(Boolean).join(' ')].filter(Boolean).join(' - ');
-  return {DATE_DEBUT:data.debutCourt||data.debut||'',DATE_FIN:data.finCourt||data.fin||'',NB_JOURS:String(data.jours||0),CLASSE:data.classe||'',NOM_PRENOM:[e.nom||'',e.prenom||''].filter(Boolean).join(' '),DATE_NAISSANCE:e.dateNaissance||'',ADRESSE_ELEVE_COMPLETE:adresse,TEL_ELEVE:e.telephone||'',EMAIL_ELEVE:e.courriel||'',DIPLOME:data.diplome||'',ETABLISSEMENT:et.libelle||'',ADRESSE_ETAB:et.adresse||'',TEL_ETAB:et.telephone||'',PROVISEUR:et.proviseur||'',FONCTION_PROVISEUR:et.fonctionProviseur||'',EMAIL_ETAB:et.email||'',PROF_REFERENT:data.professeurReferent||'',EMAIL_PROF:data.professeurReferentEmail||'',REFERENCE:data.reference||''};
-}
+function EUC_CONVENTION_lireModelesLignesV108_(){EUC_CONVENTION_assurerTableLignesV108_();var defs=EUC_CONVENTION_modelesLignesDefautV110_(),fallback={};defs.forEach(function(d){fallback[d.Cle]=d;});var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_CONVENTION_LIGNES_TABLE_)+'/records'),out={};(raw.records||[]).forEach(function(r){var f=r.fields||{},cle=String(f.Cle||'').trim();if(!cle||f.Actif===false)return;var d=fallback[cle]||{};out[cle]={id:r.id,cle:cle,modele:String(f.Modele||d.Modele||''),taille:Number(f.Taille_police||d.Taille_police||6),tailleMin:Number(f.Taille_min||d.Taille_min||4),alignement:String(f.Alignement||d.Alignement||'LEFT').toUpperCase(),alignementVertical:String(f.Alignement_vertical||d.Alignement_vertical||'MIDDLE').toUpperCase(),couleur:String(f.Couleur_defaut||d.Couleur_defaut||'NOIR').toUpperCase(),ordre:Number(f.Ordre||d.Ordre||0)};});defs.forEach(function(d){if(!out[d.Cle])out[d.Cle]={cle:d.Cle,modele:d.Modele,taille:d.Taille_police,tailleMin:d.Taille_min,alignement:d.Alignement,alignementVertical:d.Alignement_vertical,couleur:d.Couleur_defaut,ordre:d.Ordre};});return out;}
+function EUC_CONVENTION_listerModelesLignesV110(){EUC_PDF_exigerAdmin_();var m=EUC_CONVENTION_lireModelesLignesV108_();return Object.keys(m).map(function(k){var x=m[k];return {cle:k,modele:x.modele,taille:x.taille,tailleMin:x.tailleMin,alignement:x.alignement,alignementVertical:x.alignementVertical,couleur:x.couleur,ordre:x.ordre};}).sort(function(a,b){return a.ordre-b.ordre;});}
+function EUC_CONVENTION_enregistrerModelesLignesV110(items){EUC_PDF_exigerAdmin_();EUC_CONVENTION_assurerTableLignesV108_();items=items||[];var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_CONVENTION_LIGNES_TABLE_)+'/records'),by={};(raw.records||[]).forEach(function(r){by[String((r.fields||{}).Cle||'').trim()]=r;});var patches=[];items.forEach(function(i){var r=by[String(i.cle||'').trim()];if(!r)return;patches.push({id:r.id,fields:{Modele:String(i.modele||''),Taille_police:Number(i.taille||6),Taille_min:Number(i.tailleMin||4),Alignement:String(i.alignement||'LEFT').toUpperCase(),Alignement_vertical:String(i.alignementVertical||'MIDDLE').toUpperCase(),Couleur_defaut:String(i.couleur||'NOIR').toUpperCase(),Actif:true}});});if(patches.length)EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_LIGNES_TABLE_)+'/records',{records:patches});return {ok:true,total:patches.length};}
+function EUC_CONVENTION_variablesLignesV108_(data){data=data||{};var e=data.eleve||{},et=data.etablissement||{};var adresse=[String(e.adresse||'').trim(),[String(e.codePostal||'').trim(),String(e.ville||'').trim()].filter(Boolean).join(' ')].filter(Boolean).join(' - ');return {DATE_DEBUT:data.debutCourt||data.debut||'',DATE_FIN:data.finCourt||data.fin||'',NB_JOURS:String(data.jours||0),CLASSE:data.classe||'',NOM_PRENOM:[e.nom||'',e.prenom||''].filter(Boolean).join(' '),DATE_NAISSANCE:e.dateNaissance||'',ADRESSE_ELEVE_COMPLETE:adresse,TEL_ELEVE:e.telephone||'',EMAIL_ELEVE:e.courriel||'',DIPLOME:data.diplome||'',ETABLISSEMENT:et.libelle||'',ADRESSE_ETAB:et.adresse||'',TEL_ETAB:et.telephone||'',PROVISEUR:et.proviseur||'',FONCTION_PROVISEUR:et.fonctionProviseur||'',EMAIL_ETAB:et.email||'',PROF_REFERENT:data.professeurReferent||'',EMAIL_PROF:data.professeurReferentEmail||'',REFERENCE:data.reference||''};}
 function EUC_CONVENTION_rendreModeleLigneV108_(modele,vars){return String(modele||'').replace(/\{\{([A-Z0-9_]+)\}\}/g,function(_,k){return Object.prototype.hasOwnProperty.call(vars,k)?String(vars[k]||''):'';}).replace(/\s{5,}/g,'   ').trim();}
 function EUC_CONVENTION_rendreLignesV108_(data,modeles){var vars=EUC_CONVENTION_variablesLignesV108_(data),out={};Object.keys(modeles||{}).forEach(function(cle){var m=modeles[cle]||{};out[cle]={texte:EUC_CONVENTION_rendreModeleLigneV108_(m.modele,vars),taille:Number(m.taille||6),tailleMin:Number(m.tailleMin||4),alignement:m.alignement||'LEFT',alignementVertical:m.alignementVertical||'MIDDLE',couleur:m.couleur||'NOIR'};});return out;}
-function EUC_CONVENTION_parametresLignesInfoV108(){EUC_PDF_exigerAdmin_();return {version:'v1.0.0-dev.108',table:EUC_CONVENTION_LIGNES_TABLE_,modeles:EUC_CONVENTION_lireModelesLignesV108_()};}
-
-/* Compatibilité temporaire DEV.107 */
+function EUC_CONVENTION_parametresLignesInfoV108(){EUC_PDF_exigerAdmin_();return {version:'v1.0.0-dev.110',table:EUC_CONVENTION_LIGNES_TABLE_,modeles:EUC_CONVENTION_lireModelesLignesV108_()};}
 function EUC_CONVENTION_lireModelesLignesV107_(){return EUC_CONVENTION_lireModelesLignesV108_();}
 function EUC_CONVENTION_rendreLignesV107_(data,modeles){return EUC_CONVENTION_rendreLignesV108_(data,modeles);}
