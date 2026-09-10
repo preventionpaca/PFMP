@@ -1,13 +1,15 @@
-/** Eucalyptus PFMP — v1.0.0-dev.112 — accès QR par référence + clé Grist. */
+/** Eucalyptus PFMP — v1.0.0-dev.113 — accès QR par ID Grist exact. */
 function EUC_PFMP_afficherApplication(e) {
+  var rid=String(e&&e.parameter&&e.parameter.rid||'').trim();
   var token=String(e&&e.parameter&&e.parameter.token||'').trim();
   var q=String(e&&e.parameter&&e.parameter.q||'').trim();
   var cle=String(e&&e.parameter&&e.parameter.k||'').trim();
   var aid=String(e&&e.parameter&&e.parameter.aid||'').trim();
   var eid=String(e&&e.parameter&&e.parameter.eid||'').trim();
   var sig=String(e&&e.parameter&&e.parameter.sig||'').trim();
-  if(token||q||cle||aid){
+  if(rid||token||q||cle||aid){
     var qr=HtmlService.createTemplateFromFile('PFMP_Acces_QR');
+    qr.conventionRecordId=rid;
     qr.conventionToken=token;
     qr.conventionCode=q;
     qr.conventionAccessKey=cle;
