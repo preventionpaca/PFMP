@@ -1,7 +1,7 @@
-/** Eucalyptus PFMP — v1.0.0-dev.95 — générateur PDF maître 2 pages + conservation Word secondaire. */
+/** Eucalyptus PFMP — v1.0.0-dev.105 — générateur PDF AcroForm 2 pages + conservation Word secondaire. */
 function EUC_CONVENTION_afficherGenerateur(){
   var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');
-  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_Generateur');tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.95',baseUrl:ScriptApp.getService().getUrl()});
+  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_Generateur');tpl.config=JSON.stringify({version:'Eucalyptus PFMP — v1.0.0-dev.105',baseUrl:ScriptApp.getService().getUrl()});
   return tpl.evaluate().setTitle('Génération des conventions PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
 function EUC_CONVENTION_htmlLienDrive_(titre,texte,url,folderUrl){
