@@ -1,16 +1,17 @@
-/** Eucalyptus PFMP — v1.0.0-dev.103 — vérification QR par référence persistante exacte + compatibilité anciens liens. */
+/** Eucalyptus PFMP — v1.0.0-dev.104 — QR fiable : lecture Grist fraîche sans cache + référence exacte. */
+function EUC_CONVENTION_lireAccesFraisV104_(){
+  var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records');
+  return (raw.records||[]).map(function(r){var o={id:r.id},f=r.fields||{};Object.keys(f).forEach(function(k){o[k]=f[k];});return o;});
+}
 function EUC_CONVENTION_trouverAccesParCodeV94_(code){
   code=String(code||'').trim();
   try{code=decodeURIComponent(code);}catch(e){}
   if(!code)throw new Error('Code de convention invalide.');
-  var rows=EUC_IMPORT_lireRecords_('EUC_ACCES_FORMULAIRES_PFMP');
-  /* DEV103 : priorité absolue à la référence imprimée, persistée telle quelle dans Grist. */
+  var rows=EUC_CONVENTION_lireAccesFraisV104_();
   var byRef=rows.filter(function(r){return r.Revoked!==true&&String(r.Reference_convention||'').trim()===code;});
   if(byRef.length===1)return byRef[0];
   if(byRef.length>1)throw new Error('Référence de convention dupliquée. Contactez l’établissement.');
-  /* Compatibilité jeton complet DEV98-102. */
   if(code.length>24){var exactHash=EUC_CONVENTION_hash_(code),exact=rows.filter(function(r){return r.Revoked!==true&&String(r.Token_hash||'')===exactHash;});if(exact.length===1)return exact[0];}
-  /* Compatibilité anciens QR courts. */
   if(code.length<8||code.length>128)throw new Error('Code de convention invalide.');
   var matches=rows.filter(function(r){if(r.Revoked===true)return false;var h=String(r.Token_hash||'');return h&&h.substring(0,code.length)===code;});
   if(matches.length!==1)throw new Error('Lien de convention invalide ou révoqué.');
@@ -26,4 +27,9 @@ function EUC_CONVENTION_verifierIdentiteCommunV94_(a,jour,mois){
   return {ok:true,reference:a.Reference_convention||'',eleve:{nom:e.Nom||'',prenom:e.Prenom_usage||e.Prenom||'',classeConvention:a.Classe_convention_nom||'',anneeConvention:a.Annee_scolaire||'',dateDebut:EUC_CONVENTION_dateFRV85_(EUC_IMPORT_dateExistanteISO_(a.Date_debut),true),dateFin:EUC_CONVENTION_dateFRV85_(EUC_IMPORT_dateExistanteISO_(a.Date_fin),true)}};
 }
 function EUC_CONVENTION_verifierIdentiteV94(code,jour,mois){return EUC_CONVENTION_verifierIdentiteCommunV94_(EUC_CONVENTION_trouverAccesParCodeV94_(code),jour,mois);}
-function EUC_CONVENTION_verifierIdentiteV85(token,jour,mois){token=String(token||'').trim();if(!token)throw new Error('Lien de convention invalide ou révoqué.');return EUC_CONVENTION_verifierIdentiteCommunV94_(EUC_CONVENTION_trouverAccesParToken_(token),jour,mois);}
+function EUC_CONVENTION_verifierIdentiteV85(token,jour,mois){
+  token=String(token||'').trim();if(!token)throw new Error('Lien de convention invalide ou révoqué.');
+  var hash=EUC_CONVENTION_hash_(token),rows=EUC_CONVENTION_lireAccesFraisV104_(),a=rows.filter(function(r){return r.Revoked!==true&&String(r.Token_hash||'')===hash;})[0];
+  if(!a)throw new Error('Lien de convention invalide ou révoqué.');
+  return EUC_CONVENTION_verifierIdentiteCommunV94_(a,jour,mois);
+}
