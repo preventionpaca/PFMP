@@ -16,6 +16,7 @@ function EUC_PDF_preparerDataV108_(data,rows,modeles){
   var h=EUC_CONVENTION_hash_(token),matches=(rows||[]).filter(function(r){return r.Revoked!==true&&String(r.Token_hash||'')===h&&String(r.Reference_convention||'').trim()===ref;});
   if(matches.length!==1)throw new Error('Contrôle QR impossible : le couple référence/jeton n’est pas retrouvé de façon unique dans Grist.');
   var a=matches[0],aid=Number(a.id||0),eid=Number(EUC_PFMP_ref_(a.Eleve)||0);if(!aid||!eid)throw new Error('Contrôle QR impossible : identifiant accès ou élève absent.');
+  data.diplome=EUC_CONVENTION_diplomeStrictV108_(data.classeId);
   var sig=EUC_CONVENTION_qrSignatureV108_(aid,ref,eid,token),base=ScriptApp.getService().getUrl();
   data.accessId=aid;data.eleveIdQr=eid;data.qrSignature=sig;data.formUrl=base+'?page=pfmp&aid='+encodeURIComponent(aid)+'&q='+encodeURIComponent(ref)+'&eid='+encodeURIComponent(eid)+'&token='+encodeURIComponent(token)+'&sig='+encodeURIComponent(sig);data.qrReference=ref;data.lignes=EUC_CONVENTION_rendreLignesV108_(data,modeles);return data;
 }
