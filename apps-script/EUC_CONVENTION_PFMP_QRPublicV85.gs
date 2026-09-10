@@ -1,16 +1,17 @@
-/** Eucalyptus PFMP — v1.0.0-dev.98 — vérification publique QR : jeton complet prioritaire, compatibilité code court. */
+/** Eucalyptus PFMP — v1.0.0-dev.103 — vérification QR par référence persistante exacte + compatibilité anciens liens. */
 function EUC_CONVENTION_trouverAccesParCodeV94_(code){
   code=String(code||'').trim();
   try{code=decodeURIComponent(code);}catch(e){}
   if(!code)throw new Error('Code de convention invalide.');
   var rows=EUC_IMPORT_lireRecords_('EUC_ACCES_FORMULAIRES_PFMP');
-  /* DEV98 : si le QR transporte le jeton complet, on recalcule son hash exact. */
-  if(code.length>24){
-    var exactHash=EUC_CONVENTION_hash_(code),exact=rows.filter(function(r){return r.Revoked!==true&&String(r.Token_hash||'')===exactHash;});
-    if(exact.length===1)return exact[0];
-  }
-  /* Compatibilité avec les conventions DEV94-97 déjà imprimées. */
-  if(code.length<8||code.length>64)throw new Error('Code de convention invalide.');
+  /* DEV103 : priorité absolue à la référence imprimée, persistée telle quelle dans Grist. */
+  var byRef=rows.filter(function(r){return r.Revoked!==true&&String(r.Reference_convention||'').trim()===code;});
+  if(byRef.length===1)return byRef[0];
+  if(byRef.length>1)throw new Error('Référence de convention dupliquée. Contactez l’établissement.');
+  /* Compatibilité jeton complet DEV98-102. */
+  if(code.length>24){var exactHash=EUC_CONVENTION_hash_(code),exact=rows.filter(function(r){return r.Revoked!==true&&String(r.Token_hash||'')===exactHash;});if(exact.length===1)return exact[0];}
+  /* Compatibilité anciens QR courts. */
+  if(code.length<8||code.length>128)throw new Error('Code de convention invalide.');
   var matches=rows.filter(function(r){if(r.Revoked===true)return false;var h=String(r.Token_hash||'');return h&&h.substring(0,code.length)===code;});
   if(matches.length!==1)throw new Error('Lien de convention invalide ou révoqué.');
   return matches[0];
