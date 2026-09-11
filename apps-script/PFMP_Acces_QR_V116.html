@@ -1,0 +1,39 @@
+<!doctype html><html lang="fr"><head><base target="_top"><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;background:#eef7f4;color:#073b35;margin:0}main{max-width:620px;margin:8vh auto;padding:24px}.card{background:#fff;border:1px solid #cfe1dc;border-radius:16px;padding:24px;box-shadow:0 8px 28px #00000012}.eyebrow{font-weight:700;color:#07866e}h1{font-size:1.7rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:grid;gap:6px;font-weight:700}input,button{font:inherit;padding:.8rem}button{grid-column:1/-1;border:0;border-radius:8px;background:#07866e;color:#fff;font-weight:700}.status{margin-top:16px;padding:12px;border-radius:8px}.error{background:#fff0f0;color:#8a1111}.ok{background:#e7f7ef}.verified{margin-top:16px;background:#f4faf8;padding:16px;border-radius:10px}.verified dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px}.verified dt{font-weight:700}.verified dd{margin:0}.hint{color:#59746e;line-height:1.45;font-size:.93rem}.diag{font-family:monospace;font-size:.78rem;margin-top:8px;color:#765}@media(max-width:550px){.grid{grid-template-columns:1fr}}</style></head><body><main><section class="card"><p class="eyebrow">LYCÉE LES EUCALYPTUS · PFMP</p><h1>Accéder à votre convention</h1><p class="hint">Ce lien est personnel. Pour vérifier que vous êtes bien l’élève concerné, indiquez uniquement votre <b>jour</b> et votre <b>mois de naissance</b>.</p><div id="verify"><div class="grid"><label>Jour de naissance<input id="day" type="number" min="1" max="31" inputmode="numeric" placeholder="Ex. 23"></label><label>Mois de naissance<input id="month" type="number" min="1" max="12" inputmode="numeric" placeholder="Ex. 11"></label><button id="go" disabled>Vérifier et continuer</button></div></div><p id="status" class="status" role="status"></p><div id="diag" class="diag"></div><section id="verified" class="verified" hidden><h2>Accès vérifié</h2><dl><dt>Élève</dt><dd id="name"></dd><dt>Classe</dt><dd id="class"></dd><dt>Année</dt><dd id="year"></dd><dt>PFMP</dt><dd id="dates"></dd><dt>Référence</dt><dd id="ref"></dd></dl><p class="hint">Votre accès personnel est valide.</p></section></section></main><script>
+(function(){
+ const $=s=>document.querySelector(s),status=$('#status'),diag=$('#diag'),btn=$('#go');
+ let RID='';
+ function normaliserRid(loc){
+   const p=(loc&&loc.parameter)||{};
+   let rid=String(p.rid||'').trim();
+   const token=String(p.token||'').trim();
+   if(!rid){const m=/^RID:(\d+)$/.exec(token);if(m)rid=m[1];}
+   if(!rid&&/^\d+$/.test(token))rid=token;
+   return rid;
+ }
+ function init(){
+   diag.textContent='DEV.116 — lecture de l’identifiant du QR…';
+   if(!(google&&google.script&&google.script.url&&google.script.url.getLocation)){
+     status.className='status error';status.textContent='Impossible de lire l’URL du QR.';return;
+   }
+   google.script.url.getLocation(function(loc){
+     RID=normaliserRid(loc);
+     const p=(loc&&loc.parameter)||{};
+     diag.textContent='Diagnostic DEV.116 — rid='+(RID||'absent')+', token='+(p.token||'absent');
+     if(!RID){status.className='status error';status.textContent='Le QR ne contient pas d’identifiant de convention exploitable.';btn.disabled=true;return;}
+     status.textContent='';btn.disabled=false;
+   });
+ }
+ btn.onclick=()=>{
+   const day=Number($('#day').value),month=Number($('#month').value);
+   if(!RID){status.className='status error';status.textContent='Identifiant de convention absent.';return;}
+   if(!day||!month){status.className='status error';status.textContent='Indiquez votre jour et votre mois de naissance.';return;}
+   btn.disabled=true;status.className='status';status.textContent='Vérification en cours…';
+   google.script.run.withSuccessHandler(r=>{
+     status.className='status ok';status.textContent='Identité vérifiée.';diag.textContent=r&&r.diagnostic?r.diagnostic:'QR116 OK';$('#verify').hidden=true;$('#verified').hidden=false;$('#name').textContent=r.eleve.prenom+' '+r.eleve.nom;$('#class').textContent=r.eleve.classeConvention||'';$('#year').textContent=r.eleve.anneeConvention||'';$('#dates').textContent=(r.eleve.dateDebut&&r.eleve.dateFin)?r.eleve.dateDebut+' au '+r.eleve.dateFin:'';$('#ref').textContent=r.reference||'';
+   }).withFailureHandler(e=>{
+     btn.disabled=false;status.className='status error';status.textContent=e&&e.message?e.message:String(e);diag.textContent='DEV.116 — rid='+RID;
+   }).EUC_CONVENTION_verifierIdentiteV113(RID,day,month);
+ };
+ init();
+})();
+</script></body></html>
