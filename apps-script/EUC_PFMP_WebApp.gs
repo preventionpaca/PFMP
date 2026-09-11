@@ -1,5 +1,7 @@
-/** Eucalyptus PFMP — v1.0.0-dev.116 — QR résolu côté client via google.script.url.getLocation. */
+/** Eucalyptus PFMP — v1.0.0-dev.117 — QR + continuation entreprise sécurisée. */
 function EUC_PFMP_afficherApplication(e) {
+  var resume=String(e&&e.parameter&&e.parameter.resume||'').trim();
+  if(resume){return HtmlService.createTemplateFromFile('PFMP_Continuation_QR_V117').evaluate().setTitle('Entreprise et tuteur — PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');}
   var rid=String(e&&e.parameter&&e.parameter.rid||'').trim();
   var token=String(e&&e.parameter&&e.parameter.token||'').trim();
   var q=String(e&&e.parameter&&e.parameter.q||'').trim();
