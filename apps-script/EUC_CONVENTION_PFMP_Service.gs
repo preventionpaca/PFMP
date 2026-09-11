@@ -1,4 +1,4 @@
-/** Lycée Les Eucalyptus — PFMP — v1.0.0-dev.120 — filtre strict classe/offre/périodes + validation serveur. */
+/** Lycée Les Eucalyptus — PFMP — v1.0.0-dev.121 — filtre classe/périodes sans dépendance aux tables offres. */
 var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
@@ -34,28 +34,23 @@ function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
   var periodes=EUC_IMPORT_lireRecords_('Planning_Periodes').filter(function(r){return r.Actif!==false;}).map(function(r){return {
     id:r.id,annee:String(r.Annee_scolaire||''),classe:String(r.Classe||''),formation:String(r.Formation||''),niveau:String(r.Niveau||''),groupe:String(r.Groupe||''),debut:EUC_IMPORT_dateExistanteISO_(r.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(r.Date_fin),type:String(r.Type||''),commentaire:String(r.Commentaire||'')
   };}).filter(function(r){return r.debut&&r.fin;});
-  var catalogue=EUC_PFMP_chargerReferentiel(),anneesParId={};
-  (catalogue.annees||[]).forEach(function(a){anneesParId[String(a.id)]=String(a.code||'');});
-  var offres=(catalogue.offres||[]).map(function(o){return {
-    id:o.id,
-    classeId:Number(o.classeId||0),
-    annee:String(anneesParId[String(o.anneeId)]||''),
-    diplomeId:Number(o.diplomeId||0),
-    diplome:String(o.diplome||''),
-    periodeIds:(o.periodes||[]).map(function(p){return Number(p.id||0);}).filter(Boolean)
-  };});
-  return {classes:classes,periodes:periodes,offres:offres};
+  return {classes:classes,periodes:periodes};
 }
 
-function EUC_CONVENTION_offrePourClasse_(meta,classeId,annee){
-  classeId=Number(classeId||0);annee=String(annee||'').trim();
-  return (meta&&meta.offres||[]).filter(function(o){return Number(o.classeId)===classeId&&(!annee||String(o.annee)===annee);})[0]||null;
+function EUC_CONVENTION_periodeCompatibleClasse_(p,c){
+  if(!p||!c)return false;
+  var pc=EUC_CONVENTION_norm_(p.classe),pn=EUC_CONVENTION_norm_(c.nom),pl=EUC_CONVENTION_norm_(c.libelle),pf=EUC_CONVENTION_norm_(p.formation),cf=EUC_CONVENTION_norm_(c.formation);
+  if(pc&&(pc===pn||pc===pl||pc===String(c.id)))return true;
+  if(cf&&pf&&(pf.indexOf(cf)>=0||cf.indexOf(pf)>=0))return true;
+  return false;
 }
 function EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,periodeId,label){
-  var offre=EUC_CONVENTION_offrePourClasse_(meta,classeId,annee),pid=Number(periodeId||0);
-  if(!offre)throw new Error('Aucune offre de formation PFMP active trouvée pour cette classe et cette année.');
-  if((offre.periodeIds||[]).map(Number).indexOf(pid)<0)throw new Error((label||'Période')+' non autorisée pour cette classe et cette année.');
-  return offre;
+  var cl=(meta.classes||[]).filter(function(c){return Number(c.id)===Number(classeId);})[0];
+  var p=(meta.periodes||[]).filter(function(x){return Number(x.id)===Number(periodeId);})[0];
+  if(!cl||!p)throw new Error('Classe ou période introuvable.');
+  if(annee&&String(p.annee||'')!==String(annee))throw new Error((label||'Période')+' hors de l’année scolaire choisie.');
+  if(!EUC_CONVENTION_periodeCompatibleClasse_(p,cl))throw new Error((label||'Période')+' non autorisée pour cette classe.');
+  return true;
 }
 
 function EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,opt){
