@@ -1,4 +1,4 @@
-/** Lycée Les Eucalyptus — PFMP — v1.0.0-dev.121 — filtre classe/périodes sans dépendance aux tables offres. */
+/** Lycée Les Eucalyptus — PFMP — v1.0.0-dev.122 — filtre explicite Planning_Periodes.Classe. */
 var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
@@ -39,17 +39,17 @@ function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
 
 function EUC_CONVENTION_periodeCompatibleClasse_(p,c){
   if(!p||!c)return false;
-  var pc=EUC_CONVENTION_norm_(p.classe),pn=EUC_CONVENTION_norm_(c.nom),pl=EUC_CONVENTION_norm_(c.libelle),pf=EUC_CONVENTION_norm_(p.formation),cf=EUC_CONVENTION_norm_(c.formation);
-  if(pc&&(pc===pn||pc===pl||pc===String(c.id)))return true;
-  if(cf&&pf&&(pf.indexOf(cf)>=0||cf.indexOf(pf)>=0))return true;
-  return false;
+  var pc=EUC_CONVENTION_norm_(p.classe),pn=EUC_CONVENTION_norm_(c.nom),pl=EUC_CONVENTION_norm_(c.libelle);
+  if(!pc)return false;
+  return pc===pn||Boolean(pl&&pc===pl);
 }
 function EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,periodeId,label){
   var cl=(meta.classes||[]).filter(function(c){return Number(c.id)===Number(classeId);})[0];
   var p=(meta.periodes||[]).filter(function(x){return Number(x.id)===Number(periodeId);})[0];
   if(!cl||!p)throw new Error('Classe ou période introuvable.');
   if(annee&&String(p.annee||'')!==String(annee))throw new Error((label||'Période')+' hors de l’année scolaire choisie.');
-  if(!EUC_CONVENTION_periodeCompatibleClasse_(p,cl))throw new Error((label||'Période')+' non autorisée pour cette classe.');
+  if(!EUC_CONVENTION_norm_(p.classe))throw new Error((label||'Période')+' non exploitable : la colonne Classe est vide dans Planning_Periodes.');
+  if(!EUC_CONVENTION_periodeCompatibleClasse_(p,cl))throw new Error((label||'Période')+' associée à "'+String(p.classe||'')+'" et non à la classe "'+String(cl.nom||cl.libelle||classeId)+'".');
   return true;
 }
 
