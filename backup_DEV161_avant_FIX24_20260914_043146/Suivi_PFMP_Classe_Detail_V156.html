@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#1d2939;--muted:#667085;--line:#d9e1ec;--accent:#165d9c}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+    .wrap{max-width:1450px;margin:0 auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+    h1{margin:0;font-size:28px}.sub,.small{color:var(--muted)}.back{background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--ink)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+    .context{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:end}select,input,button{font:inherit}
+    select,input{width:100%;border:1px solid #b9c7d8;border-radius:9px;padding:9px 10px;background:#fff}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.tab{border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .metric span{display:block;color:var(--muted);font-size:12px}.metric b{font-size:22px}
+    .assign-status{display:none;margin-bottom:12px;padding:10px 12px;border-radius:10px;font-weight:700}.assign-status.show{display:block}
+    .assign-status.info{background:#eef5fb;color:#164e7a}.assign-status.ok{background:#ecfdf3;color:#067647}.assign-status.err{background:#fff1f2;color:#b42318}
+    .assignbar{display:grid;grid-template-columns:auto 1fr 1fr;gap:12px;align-items:end;margin-bottom:14px}.assignbox{position:relative}
+    .assignbox label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.assignrow{display:flex;gap:8px}
+    .assignrow button{border:0;border-radius:9px;background:#165d9c;color:#fff;font-weight:700;padding:9px 12px;cursor:pointer}.assignrow button:disabled{opacity:.5;cursor:not-allowed}
+    .prof-suggestions{position:absolute;z-index:50;left:0;right:0;top:70px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 25px rgba(16,24,40,.15);max-height:250px;overflow:auto;display:none}
+    .prof-option{padding:9px 10px;border-bottom:1px solid #edf0f4;cursor:pointer}.prof-option:hover{background:#eef5fb}.selection{font-weight:700;color:#475467;padding:9px 0}.rowcheck{width:18px;height:18px}
+    .mail-actions{display:flex;gap:10px;justify-content:flex-end;margin:0 0 14px;flex-wrap:wrap}
+    .mail-actions button,.mail-actions a{border:0;border-radius:9px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}
+    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec!important}
+    .table-wrap{overflow:auto}table{width:100%;border-collapse:separate;border-spacing:0;min-width:1280px}
+    th,td{padding:10px 9px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:2;font-size:13px;color:#475467}
+    .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
+    .s-SANS_CONVENTION{background:#fff1f2;color:#b42318}.s-ENREGISTREE,.s-DEPOSEE,.s-SIGNEE{background:#fff7ed;color:#b45309}
+    .s-FINALISEE,.s-REMISE,.s-AUTORISEE{background:#ecfdf3;color:#067647}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}
+    .modal{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
+    .modal.show{display:flex}.modal-card{background:#fff;width:min(720px,96vw);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+    .modal-card h3{margin-top:0}.modal-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;max-height:180px;overflow:auto;font-size:13px}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+    @media(max-width:900px){.context,.summary,.assignbar{grid-template-columns:1fr}}
+  
+    .hist-v162{margin-top:5px;color:#b42318;font-size:11px}.hist-v162 summary{cursor:pointer;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a}.hist-v162 span{font-weight:400}
+    .retire-v162{background:#fff;color:#b42318!important;border:1px solid #f1aeb5!important}
+    .modal-ret-v162{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px}.modal-ret-v162.show{display:flex}.modal-ret-card-v162{background:#fff;width:min(560px,96vw);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1 id="pageTitle">Suivi PFMP</h1><div id="pageSub" class="sub"></div></div>
+    <a id="back" class="back" href="#">← Retour aux classes</a>
+  </div>
+
+  <div class="card">
+    <div class="context">
+      <div><label for="yearSelect" style="display:block;font-weight:700;margin-bottom:7px">Année scolaire</label><select id="yearSelect"></select></div>
+      <div><b id="classLabel"></b><div class="sub" id="ppLabel"></div></div>
+    </div>
+    <div class="tabs" id="periodTabs"></div>
+  </div>
+
+  <div class="card">
+    <div class="summary">
+      <div class="metric"><span>Effectif</span><b id="mTotal">0</b></div>
+      <div class="metric"><span>Avec convention</span><b id="mAvec">0</b></div>
+      <div class="metric"><span>Sans convention</span><b id="mSans">0</b></div>
+      <div class="metric"><span>Annulées / interrompues</span><b id="mIncident">0</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="mail-actions">
+      <a id="mailParams" class="secondary" href="#">Paramètres des envois</a>
+      <button id="sendTable" class="primary" type="button">Envoyer le tableau par email</button>
+    </div>
+
+    <div id="assignStatus" class="assign-status"></div>
+
+    <div id="assignToolbar" class="assignbar">
+      <div><label><input id="selectAll" type="checkbox" class="rowcheck"> Tout sélectionner</label><div id="selectedCount" class="selection">0 élève sélectionné</div></div>
+      <div class="assignbox">
+        <label>Professeur — suivi téléphonique</label>
+        <div class="assignrow"><input id="phoneProfInput" autocomplete="off" placeholder="Tapez un nom de professeur..."><button id="phoneAssignBtn" type="button" disabled>Affecter</button></div>
+        <div id="phoneProfSuggestions" class="prof-suggestions"></div>
+      </div>
+      <div class="assignbox">
+        <label>Professeur visiteur</label>
+        <div class="assignrow"><input id="visitProfInput" autocomplete="off" placeholder="Tapez un nom de professeur..."><button id="visitAssignBtn" type="button" disabled>Affecter</button></div>
+        <div id="visitProfSuggestions" class="prof-suggestions"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th id="selectHead">✓</th><th>Élève</th><th>Convention / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Contact entreprise</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="mailModal" class="modal">
+  <div class="modal-card">
+    <h3>Envoyer le tableau de suivi PFMP ?</h3>
+    <p id="mailModalText"></p>
+    <b>Destinataires professeurs</b>
+    <div id="mailTo" class="modal-list"></div><br>
+    <b>Copies institutionnelles</b>
+    <div id="mailCc" class="modal-list"></div>
+    <div class="modal-actions">
+      <button id="mailCancel" class="secondary" type="button">Annuler</button>
+      <button id="mailConfirm" class="primary" type="button">Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+const ANNEE_CTX=<?!= anneeContextJson ?>;
+const DETAIL_INIT=<?!= detailJson ?>;
+
+(function(){
+  const back=document.getElementById('back'),yearSelect=document.getElementById('yearSelect'),pageTitle=document.getElementById('pageTitle'),pageSub=document.getElementById('pageSub'),classLabel=document.getElementById('classLabel'),ppLabel=document.getElementById('ppLabel'),periodTabs=document.getElementById('periodTabs'),tbody=document.getElementById('tbody');
+  const toolbar=document.getElementById('assignToolbar'),assignStatus=document.getElementById('assignStatus'),selectAll=document.getElementById('selectAll'),selectedCount=document.getElementById('selectedCount'),phoneProfInput=document.getElementById('phoneProfInput'),visitProfInput=document.getElementById('visitProfInput'),phoneProfSuggestions=document.getElementById('phoneProfSuggestions'),visitProfSuggestions=document.getElementById('visitProfSuggestions'),phoneAssignBtn=document.getElementById('phoneAssignBtn'),visitAssignBtn=document.getElementById('visitAssignBtn');
+  const sendTable=document.getElementById('sendTable'),mailParams=document.getElementById('mailParams'),mailModal=document.getElementById('mailModal'),mailModalText=document.getElementById('mailModalText'),mailTo=document.getElementById('mailTo'),mailCc=document.getElementById('mailCc'),mailCancel=document.getElementById('mailCancel'),mailConfirm=document.getElementById('mailConfirm');
+
+  let yearContext=ANNEE_CTX||{annees:[],active:''},detail=DETAIL_INIT||{},selectedProfPhone=null,selectedProfVisit=null,pendingMail=null;
+
+  function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+  function fmtPfmpDate(v){const m=String(v||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'').trim()}
+  function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+  function val(v){return v?esc(v):'<span class="empty">—</span>'}
+  function showStatus(text,type){assignStatus.textContent=text||'';assignStatus.className='assign-status'+(text?' show':'')+(type?' '+type:'')}
+  function selectedIds(){return Array.from(document.querySelectorAll('.student-check:checked')).map(x=>Number(x.value))}
+    function historyNoteV161(x){
+    const h=x.historiqueConventions||[];
+    if(!h.length)return '';
+    return '<details class="hist-v162"><summary>'+h.length+' convention'+(h.length>1?'s':'')+' annulée'+(h.length>1?'s':'')+'</summary>'+h.map(function(v){
+      return '<div><b>'+esc(v.type)+'</b>'+(v.entreprise?' — '+esc(v.entreprise):'')+(v.raison?'<br><span>'+esc(v.raison)+'</span>':'')+'</div>';
+    }).join('')+'</details>';
+  }
+
+function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'">'+esc(x.statut)+'</span>'}
+
+  function renderYears(){yearSelect.innerHTML=(yearContext.annees||[]).map(y=>'<option value="'+esc(y.code)+'"'+(y.code===detail.annee?' selected':'')+'>'+esc(y.libelle||y.code)+'</option>').join('')}
+  function renderTabs(){
+    periodTabs.innerHTML=(detail.periodes||[]).map(function(p){
+      const active=detail.periode&&Number(detail.periode.id)===Number(p.id);
+      const debut=fmtPfmpDate(p.debut||p.dateDebut||p.Date_debut||'');
+      const fin=fmtPfmpDate(p.fin||p.dateFin||p.Date_fin||'');
+      const dates=(debut||fin)?'<span class="euc-period-dates">'+esc([debut,fin].filter(Boolean).join(' → '))+'</span>':'';
+      return '<button class="tab'+(active?' active':'')+'" data-p="'+p.id+'">'+esc(p.libelle)+dates+'</button>';
+    }).join('');
+    Array.from(periodTabs.querySelectorAll('[data-p]')).forEach(function(btn){btn.onclick=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(detail.annee)+'&classe='+encodeURIComponent(detail.classe.id)+'&periode='+encodeURIComponent(btn.dataset.p)}});
+  }
+
+  function refreshAssignButtons(){
+    const n=selectedIds().length;
+    selectedCount.textContent=n+' élève'+(n>1?'s':'')+' sélectionné'+(n>1?'s':'');
+    phoneAssignBtn.disabled=(n===0||!selectedProfPhone);visitAssignBtn.disabled=(n===0||!selectedProfVisit);
+    const all=Array.from(document.querySelectorAll('.student-check'));selectAll.checked=all.length>0&&all.every(x=>x.checked);
+  }
+
+  function bindChecks(){
+    Array.from(document.querySelectorAll('.student-check')).forEach(x=>x.onchange=refreshAssignButtons);
+    selectAll.onchange=function(){Array.from(document.querySelectorAll('.student-check')).forEach(x=>x.checked=selectAll.checked);refreshAssignButtons()};
+    refreshAssignButtons();
+  }
+
+  function bindProfAutocomplete(input,box,setter){
+    input.oninput=function(){
+      setter(null);refreshAssignButtons();const q=norm(input.value).trim();
+      if(!q){box.style.display='none';return}
+      const found=(detail.professeursDisponibles||[]).filter(p=>norm(p.nom+' '+p.email+' '+p.discipline).includes(q)).slice(0,15);
+      box.innerHTML=found.length?found.map(p=>'<div class="prof-option" data-prof="'+p.id+'"><b>'+esc(p.nom)+'</b><div class="small">'+esc([p.discipline,p.email].filter(Boolean).join(' · '))+'</div></div>').join(''):'<div class="prof-option">Aucun professeur trouvé</div>';
+      box.style.display='block';
+      Array.from(box.querySelectorAll('[data-prof]')).forEach(function(el){el.onclick=function(){const p=(detail.professeursDisponibles||[]).find(x=>String(x.id)===String(el.dataset.prof));if(!p)return;setter(p);input.value=p.nom;box.style.display='none';showStatus('Professeur sélectionné : '+p.nom,'info');refreshAssignButtons()}});
+    };
+  }
+
+  function assign(type,prof,btn){
+    const ids=selectedIds();
+    if(!ids.length){showStatus('Sélectionnez au moins un élève avant l’affectation.','err');return}
+    if(!prof){showStatus('Sélectionnez un professeur dans la liste.','err');return}
+    if(!detail.periode){showStatus('Aucune période PFMP sélectionnée.','err');return}
+    const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='Affectation en cours...';showStatus('Affectation en cours...','info');
+    google.script.run.withSuccessHandler(function(r){btn.innerHTML=old;detail=r;showStatus('Affectation enregistrée.','ok');render()})
+      .withFailureHandler(function(e){btn.innerHTML=old;showStatus('Erreur : '+(e&&e.message||e),'err');refreshAssignButtons()})
+      .EUC_SUIVI_AFFECTER_V156({annee:detail.annee,classeId:detail.classe.id,periodeId:detail.periode.id,type:type,profId:prof.id,eleveIds:ids});
+  }
+
+  function renderMailList(arr){return arr&&arr.length?arr.map(x=>'<div>'+esc(x)+'</div>').join(''):'<div class="empty">Aucun</div>'}
+
+  function prepareMail(){
+    if(!detail.periode){showStatus('Aucune période PFMP sélectionnée.','err');return}
+    sendTable.disabled=true;sendTable.textContent='Préparation...';
+    google.script.run.withSuccessHandler(function(r){
+      sendTable.disabled=false;sendTable.textContent='Envoyer le tableau par email';pendingMail=r;
+      mailModalText.textContent='Classe '+r.classe+' — '+r.periode;mailTo.innerHTML=renderMailList(r.to);mailCc.innerHTML=renderMailList(r.cc);mailModal.classList.add('show');
+    }).withFailureHandler(function(e){
+      sendTable.disabled=false;sendTable.textContent='Envoyer le tableau par email';showStatus('Erreur : '+(e&&e.message||e),'err');
+    }).EUC_V157_preparerEnvoi({annee:detail.annee,classeId:detail.classe.id,periodeId:detail.periode.id});
+  }
+
+  function sendMail(){
+    if(!pendingMail)return;
+    mailConfirm.disabled=true;mailConfirm.textContent='Envoi en cours...';
+    google.script.run.withSuccessHandler(function(){
+      mailConfirm.disabled=false;mailConfirm.textContent='Envoyer';mailModal.classList.remove('show');pendingMail=null;showStatus('Tableau envoyé par email.','ok');
+    }).withFailureHandler(function(e){
+      mailConfirm.disabled=false;mailConfirm.textContent='Envoyer';mailModal.classList.remove('show');showStatus('Erreur d’envoi : '+(e&&e.message||e),'err');
+    }).EUC_V157_envoyerTableau({annee:detail.annee,classeId:detail.classe.id,periodeId:detail.periode.id});
+  }
+
+  function render(){
+    back.href=C.baseUrl+'?page=suivi-pfmp-classes';mailParams.href=C.baseUrl+'?page=parametres-envois-pfmp';
+    pageTitle.textContent='Suivi PFMP — '+(detail.classe&&detail.classe.nom||'Classe');
+    pageSub.textContent=detail.periode?[detail.periode.libelle,detail.periode.debut,detail.periode.fin].filter(Boolean).join(' · '):'Aucune période sélectionnée';
+    classLabel.textContent=(detail.classe&&detail.classe.nom||'')+' — '+detail.annee;
+    ppLabel.textContent='Professeur principal : '+((detail.professeursPrincipaux||[]).map(p=>p.nom).join(' / ')||'non renseigné');
+    renderYears();renderTabs();
+    const st=detail.stats||{};document.getElementById('mTotal').textContent=st.total||0;document.getElementById('mAvec').textContent=st.avecConvention||0;document.getElementById('mSans').textContent=st.sansConvention||0;document.getElementById('mIncident').textContent=(st.annulees||0)+(st.interrompues||0);
+
+    tbody.innerHTML=(detail.lignes||[]).map(function(x){
+      const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
+      return '<tr><td>'+check+'</td><td><div class="student">'+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+val(x.contactEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
+    }).join('');
+
+    toolbar.style.display=detail.peutModifier?'grid':'none';document.getElementById('selectHead').style.display=detail.peutModifier?'table-cell':'none';sendTable.style.display=detail.peutModifier?'inline-block':'none';mailParams.style.display=detail.peutModifier?'inline-block':'none';bindChecks();
+  }
+
+  bindProfAutocomplete(phoneProfInput,phoneProfSuggestions,p=>selectedProfPhone=p);bindProfAutocomplete(visitProfInput,visitProfSuggestions,p=>selectedProfVisit=p);
+  phoneAssignBtn.onclick=function(){assign('TELEPHONE',selectedProfPhone,phoneAssignBtn)};visitAssignBtn.onclick=function(){assign('VISITE',selectedProfVisit,visitAssignBtn)};
+  sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
+  yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
+  render();
+})();
+</script>
+
+<div id="retModalV162" class="modal-ret-v162">
+  <div class="modal-ret-card-v162">
+    <h3 id="retTitleV162">Retirer une affectation ?</h3>
+    <p id="retTextV162"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+      <button id="retCancelV162" type="button" class="secondary">Annuler</button>
+      <button id="retConfirmV162" type="button" class="primary">Retirer</button>
+    </div>
+  </div>
+</div>
+<script id="DEV161_FIX3_ENHANCEMENT">
+(function(){
+  const ENT_MODE=new URLSearchParams(window.location.search).get('mode')==='ent';
+  function fmtDates(root){
+    const walker=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(function(n){n.nodeValue=n.nodeValue.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g,'$3/$2/$1');});
+  }
+  fmtDates(document.body);
+
+  if(ENT_MODE){
+    ['back','assignToolbar','assignStatus','mailParams','sendTable','selectHead'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    document.querySelectorAll('.student-check').forEach(function(el){el.style.display='none';});
+  }
+
+  if(!ENT_MODE){
+    const phoneBtn=document.getElementById('phoneAssignBtn');
+    const visitBtn=document.getElementById('visitAssignBtn');
+    function mk(label,type,anchor){
+      if(!anchor||document.getElementById('retire'+type+'V162'))return;
+      const b=document.createElement('button');b.type='button';b.id='retire'+type+'V162';b.className='retire-v162';b.textContent='Retirer';
+      anchor.parentElement.appendChild(b);
+      b.onclick=function(){openRet(type);};
+    }
+    mk('Retirer','TELEPHONE',phoneBtn);mk('Retirer','VISITE',visitBtn);
+
+    let pendingType=null;
+    const modal=document.getElementById('retModalV162'),txt=document.getElementById('retTextV162'),confirm=document.getElementById('retConfirmV162'),cancel=document.getElementById('retCancelV162');
+
+    function notify(text,type){
+      var el=document.getElementById('assignStatus');
+      if(!el)return;
+      el.textContent=text||'';
+      el.className='assign-status'+(text?' show':'')+(type?' '+type:'');
+    }
+
+    function ids(){return Array.from(document.querySelectorAll('.student-check:checked')).map(function(x){return Number(x.value);});}
+    function openRet(type){
+      const n=ids().length;if(!n){notify('Sélectionnez au moins un élève.','err');return;}
+      pendingType=type;txt.textContent='Retirer le professeur '+(type==='TELEPHONE'?'de suivi téléphonique':'visiteur')+' pour '+n+' élève'+(n>1?'s':'')+' ?';modal.classList.add('show');
+    }
+    cancel.onclick=function(){modal.classList.remove('show');pendingType=null;};
+    confirm.onclick=function(){
+      if(!pendingType)return;
+
+      const old=confirm.innerHTML;
+      const selected=ids();
+      const selectedMap={};
+      selected.forEach(function(id){selectedMap[Number(id)]=true;});
+
+      const affectationIds=((typeof DETAIL_INIT!=='undefined'&&DETAIL_INIT&&DETAIL_INIT.lignes)||[])
+        .filter(function(x){return selectedMap[Number(x.eleveId)]===true;})
+        .map(function(x){
+          return pendingType==='TELEPHONE'
+            ? Number(x.affectationTelephoneId||0)
+            : Number(x.affectationVisiteId||0);
+        })
+        .filter(function(id){return id>0;});
+
+      if(!affectationIds.length){
+        confirm.disabled=false;
+        confirm.innerHTML=old;
+        txt.textContent='Impossible de retirer : aucun identifiant d’affectation actif n’a été trouvé pour la sélection.';
+        notify('Aucun identifiant d’affectation actif trouvé.','err');
+        return;
+      }
+
+      confirm.disabled=true;
+      confirm.innerHTML='<span class="spinner"></span>Retrait en cours...';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          confirm.disabled=false;
+          confirm.innerHTML=old;
+          modal.classList.remove('show');
+          pendingType=null;
+          notify((r&&r.message)||'Affectation retirée.','ok');
+          window.setTimeout(function(){window.location.reload();},250);
+        })
+        .withFailureHandler(function(e){
+          confirm.disabled=false;
+          confirm.innerHTML=old;
+          modal.classList.remove('show');
+          pendingType=null;
+          notify('Erreur : '+(e&&e.message||e),'err');
+        })
+        .EUC_SUIVI_DESAFFECTER_F18({
+          affectationIds:affectationIds
+        });
+    };
+  }
+})();
+</script>
+
+<style id="EUC_FIX5_STYLE">
+  #eucLoadingOverlayFix5{
+    position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(244,247,251,.72);backdrop-filter:blur(2px);z-index:99999
+  }
+  #eucLoadingOverlayFix5.show{display:flex}
+  .euc-loading-card{
+    display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #d9e1ec;
+    border-radius:14px;padding:16px 20px;box-shadow:0 15px 40px rgba(16,24,40,.18);
+    color:#163a63
+  }
+  .euc-spinner{
+    width:20px;height:20px;border:3px solid #b8c9dc;border-right-color:#165d9c;
+    border-radius:50%;display:inline-block;animation:eucSpinFix5 .75s linear infinite
+  }
+  @keyframes eucSpinFix5{to{transform:rotate(360deg)}}
+  .euc-period-dates{
+    display:block;margin-top:4px;font-size:11px;font-weight:500;opacity:.82;white-space:nowrap
+  }
+  .euc-ent-mode #assignToolbar,
+  .euc-ent-mode #assignToolbarV156,
+  .euc-ent-mode .mail-actions,
+  .euc-ent-mode #mailParams,
+  .euc-ent-mode #sendTable{display:none!important}
+  .euc-ent-mode table th:first-child,
+  .euc-ent-mode table td:first-child{display:none!important}
+</style>
+
+<script id="EUC_DETAIL_FIX5_SCRIPT">
+(function(){
+  'use strict';
+
+  function qs(name){
+    try{return new URLSearchParams(window.location.search).get(name)||'';}catch(e){return '';}
+  }
+
+  function fmtDate(v){
+    var s=String(v||'').trim();
+    if(!s)return '';
+    var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m)return m[3]+'/'+m[2]+'/'+m[1];
+    var d=new Date(s);
+    if(!isNaN(d.getTime())){
+      return String(d.getDate()).padStart(2,'0')+'/'+
+             String(d.getMonth()+1).padStart(2,'0')+'/'+
+             d.getFullYear();
+    }
+    return s;
+  }
+
+  function ensureOverlay(){
+    var el=document.getElementById('eucLoadingOverlayFix5');
+    if(el)return el;
+    el=document.createElement('div');
+    el.id='eucLoadingOverlayFix5';
+    el.innerHTML='<div class="euc-loading-card"><span class="euc-spinner"></span><b>Chargement en cours…</b></div>';
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function showLoading(){
+    ensureOverlay().classList.add('show');
+  }
+
+  function decoratePeriodTabs(){
+    if(typeof detail==='undefined' || !detail || !Array.isArray(detail.periodes))return;
+    Array.from(document.querySelectorAll('#periodTabs [data-p]')).forEach(function(btn){
+      if(btn.querySelector('.euc-period-dates'))return;
+      var p=detail.periodes.find(function(x){return String(x.id)===String(btn.dataset.p);});
+      if(!p)return;
+      var debut=fmtDate(p.debut||p.dateDebut||p.Date_debut);
+      var fin=fmtDate(p.fin||p.dateFin||p.Date_fin);
+      if(!debut && !fin)return;
+      var span=document.createElement('span');
+      span.className='euc-period-dates';
+      span.textContent=[debut,fin].filter(Boolean).join(' → ');
+      btn.appendChild(span);
+    });
+  }
+
+  function activateEntMode(){
+    var ent=qs('mode')==='ent';
+    if(!ent)return;
+
+    document.body.classList.add('euc-ent-mode');
+
+    var toolbar=document.getElementById('assignToolbar') || document.getElementById('assignToolbarV156');
+    if(toolbar)toolbar.style.display='none';
+
+    var mailParams=document.getElementById('mailParams');
+    if(mailParams)mailParams.style.display='none';
+
+    var sendTable=document.getElementById('sendTable');
+    if(sendTable)sendTable.style.display='none';
+
+    var selectHead=document.getElementById('selectHead');
+    if(selectHead)selectHead.style.display='none';
+
+    Array.from(document.querySelectorAll('.student-check')).forEach(function(x){
+      var td=x.closest('td');
+      if(td)td.style.display='none';
+    });
+
+    var back=document.getElementById('back');
+    if(back){
+      try{
+        var u=new URL(back.href,window.location.href);
+        u.searchParams.set('page','suivi-pfmp-classes');
+        u.searchParams.set('mode','ent');
+        back.href=u.toString();
+      }catch(e){}
+      back.textContent='← Retour aux classes';
+    }
+  }
+
+  function bindLoading(){
+    document.addEventListener('click',function(e){
+      var target=e.target.closest && e.target.closest('#periodTabs [data-p], #back');
+      if(target)showLoading();
+    },true);
+
+    var year=document.getElementById('yearSelect');
+    if(year)year.addEventListener('change',showLoading,true);
+  }
+
+  function run(){
+    ensureOverlay();
+    decoratePeriodTabs();
+    activateEntMode();
+    bindLoading();
+
+    var obs=new MutationObserver(function(){
+      decoratePeriodTabs();
+      activateEntMode();
+    });
+    obs.observe(document.body,{childList:true,subtree:true});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',run);
+  }else{
+    run();
+  }
+})();
+
+</script>
+<script id="EUC_ENT_DETAIL_PUBLIC_FIX7">
+(function(){
+  function ent(){try{var u=new URL(location.href);return u.searchParams.get('mode')==='ent'||u.searchParams.get('page')==='suivi-pfmp-ent-classe';}catch(e){return false;}}
+  function apply(){
+    if(!ent())return;
+    document.body.classList.add('euc-ent-mode');
+    ['assignToolbar','assignToolbarV156','mailParams','sendTable'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    var sh=document.getElementById('selectHead');if(sh)sh.style.display='none';
+    Array.from(document.querySelectorAll('.student-check')).forEach(function(x){var td=x.closest('td');if(td)td.style.display='none';});
+    var back=document.getElementById('back');if(back){var base=(typeof C!=='undefined'&&C.baseUrl)?C.baseUrl:location.href.split('?')[0];back.href=base+'?page=suivi-pfmp-ent&mode=ent&annee='+encodeURIComponent((typeof detail!=='undefined'&&detail.annee)||'');back.textContent='← Retour aux classes';}
+    Array.from(document.querySelectorAll('#periodTabs [data-p]')).forEach(function(btn){if(btn.dataset.entFix7)return;btn.dataset.entFix7='1';btn.addEventListener('click',function(ev){ev.stopImmediatePropagation();var base=(typeof C!=='undefined'&&C.baseUrl)?C.baseUrl:location.href.split('?')[0];location.href=base+'?page=suivi-pfmp-ent-classe&mode=ent&annee='+encodeURIComponent(detail.annee)+'&classe='+encodeURIComponent(detail.classe.id)+'&periode='+encodeURIComponent(btn.dataset.p);},true);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
+  new MutationObserver(apply).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<script id="EUC_FIX8_ENT_NAV">
+(function(){
+  function ent(){try{return new URLSearchParams(location.search).get('mode')==='ent';}catch(e){return false;}}
+  function apply(){
+    if(!ent())return;
+    var back=document.getElementById('back');
+    if(back){back.href=C.baseUrl+'?page=suivi-pfmp-ent&mode=ent';back.textContent='← Retour aux classes';}
+    var year=document.getElementById('yearSelect');
+    if(year)year.onchange=function(){location.href=C.baseUrl+'?page=suivi-pfmp-ent-classe&mode=ent&annee='+encodeURIComponent(year.value)+'&classe='+encodeURIComponent(detail.classe.id);};
+    var tabs=document.getElementById('periodTabs');
+    if(tabs)Array.from(tabs.querySelectorAll('[data-p]')).forEach(function(btn){btn.onclick=function(){location.href=C.baseUrl+'?page=suivi-pfmp-ent-classe&mode=ent&annee='+encodeURIComponent(detail.annee)+'&classe='+encodeURIComponent(detail.classe.id)+'&periode='+encodeURIComponent(btn.dataset.p);};});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
+})();
+</script>
+
+
+
+
+
+</body>
+</html>

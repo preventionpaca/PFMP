@@ -1,0 +1,1567 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  background:#eef7f4;
+  color:#073b35;
+  margin:0
+}
+main{
+  max-width:760px;
+  margin:5vh auto;
+  padding:20px
+}
+.card{
+  background:#fff;
+  border:1px solid #cfe1dc;
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 8px 28px #00000012
+}
+.build{
+  font-size:.72rem;
+  color:#78918b;
+  text-align:right
+}
+.eyebrow{
+  font-weight:700;
+  color:#07866e
+}
+h1{font-size:1.7rem}
+h2{margin-top:26px}
+h3{margin-top:24px}
+
+.grid,
+.enterprise-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px
+}
+
+label{
+  display:grid;
+  gap:6px;
+  font-weight:700
+}
+
+.wide{grid-column:1/-1}
+
+input,button{
+  font:inherit;
+  padding:.8rem;
+  border-radius:8px
+}
+
+input{
+  border:1px solid #b9cbc6
+}
+
+button{
+  border:0;
+  background:#07866e;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:wait
+}
+
+#verify button{
+  grid-column:1/-1
+}
+
+.status{
+  margin-top:16px;
+  padding:12px;
+  border-radius:8px;
+  background:#f2f6f5
+}
+
+.error{
+  background:#fff0f0;
+  color:#8a1111
+}
+
+.ok{
+  background:#e7f7ef
+}
+
+.busy{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
+.busy:before{
+  content:"";
+  width:16px;
+  height:16px;
+  border:3px solid #b8d8d1;
+  border-top-color:#07866e;
+  border-radius:50%;
+  animation:spin .75s linear infinite;
+  flex:0 0 auto
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+.verified{
+  margin-top:18px;
+  background:#f4faf8;
+  padding:16px;
+  border-radius:10px
+}
+
+.verified dl{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:8px 14px
+}
+
+.verified dt{font-weight:700}
+.verified dd{margin:0}
+
+.hint{
+  color:#59746e;
+  line-height:1.45;
+  font-size:.93rem
+}
+
+.diag{
+  font-family:monospace;
+  font-size:.74rem;
+  margin-top:8px;
+  color:#78918b
+}
+
+.enterprise{
+  margin-top:24px;
+  border-top:2px solid #d7e9e4;
+  padding-top:4px
+}
+
+.siret-line{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px
+}
+
+.confirm{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin:18px 0;
+  font-weight:700
+}
+
+.confirm input{
+  width:auto
+}
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:20px
+}
+
+.success-number{
+  margin-top:20px;
+  padding:18px;
+  background:#e7f7ef;
+  border:2px solid #07866e;
+  border-radius:12px;
+  font-size:1.15rem;
+  text-align:center
+}
+
+.success-number strong{
+  display:block;
+  font-size:1.45rem;
+  margin-top:8px
+}
+
+@media(max-width:600px){
+  .grid,
+  .enterprise-grid{
+    grid-template-columns:1fr
+  }
+  .wide{grid-column:auto}
+  .siret-line{grid-template-columns:1fr}
+}
+
+.siret-help{
+  grid-column:1/-1;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:4px;
+  font-size:.85rem;
+  font-weight:400;
+  color:#6a7f7a
+}
+.siret-help strong{white-space:nowrap}
+#siret.siret-invalid{
+  border:2px solid #b42318;
+  background:#fff5f5
+}
+#siret.siret-valid{
+  border:2px solid #07866e;
+  background:#f2fbf8
+}
+.siret-state-invalid{color:#b42318}
+.siret-state-valid{color:#07866e;font-weight:700}
+
+</style>
+</head>
+
+<body>
+
+<main>
+<section class="card">
+
+<div class="build">DEV.140</div>
+
+<p class="eyebrow">LYCÉE LES EUCALYPTUS · PFMP</p>
+
+<h1>Accéder à votre convention</h1>
+
+<div id="verifyArea">
+
+<p class="hint">
+Ce lien est personnel. Pour vérifier que vous êtes bien l’élève concerné,
+indiquez uniquement votre <strong>jour</strong> et votre
+<strong>mois de naissance</strong>.
+</p>
+
+<div id="verify" class="grid">
+
+<label>
+Jour de naissance
+<input id="day"
+       type="number"
+       min="1"
+       max="31"
+       inputmode="numeric"
+       placeholder="Ex. 23">
+</label>
+
+<label>
+Mois de naissance
+<input id="month"
+       type="number"
+       min="1"
+       max="12"
+       inputmode="numeric"
+       placeholder="Ex. 11">
+</label>
+
+<button id="go" disabled>
+Vérifier et continuer
+</button>
+
+</div>
+</div>
+
+<p id="status"
+   class="status"
+   role="status"></p>
+
+<div id="diag" class="diag"></div>
+
+
+<section id="verified"
+         class="verified"
+         hidden>
+
+<h2>Accès vérifié</h2>
+
+<dl>
+<dt>Élève</dt>
+<dd id="name"></dd>
+
+<dt>Classe</dt>
+<dd id="class"></dd>
+
+<dt>Année</dt>
+<dd id="year"></dd>
+
+<dt>PFMP</dt>
+<dd id="dates"></dd>
+
+<dt>Référence</dt>
+<dd id="ref"></dd>
+</dl>
+
+</section>
+
+
+<section id="enterprise"
+         class="enterprise"
+         hidden>
+
+<h2>Entreprise et tuteur</h2>
+
+<form id="enterpriseForm"
+      novalidate>
+
+<h3>Entreprise</h3>
+
+<div class="enterprise-grid">
+
+<label class="wide">
+Pays de l’entreprise *
+<select id="entreprisePaysSelectV161">
+  <option value="France">France</option>
+  <option value="Monaco">Monaco</option>
+</select>
+</label>
+
+<label class="wide">
+<span id="identifiantLabelV161">SIRET</span>
+<div class="siret-line">
+<input name="entrepriseSiret"
+       id="siret"
+       inputmode="numeric"
+       pattern="[0-9]{14}"
+       maxlength="14"
+       autocomplete="off"
+       placeholder="14 chiffres">
+<div id="siretHelp" class="siret-help">
+  <span id="siretState">Saisissez les 14 chiffres du SIRET</span>
+  <strong id="siretCount">0 / 14</strong>
+</div>
+
+<button type="button"
+        id="search">
+Rechercher
+</button>
+</div>
+</label>
+
+<label>
+Raison sociale *
+<input name="entrepriseRaisonSociale"
+       required>
+</label>
+
+<label>
+Nom commercial
+<input name="entrepriseEnseigne">
+</label>
+
+<label class="wide">
+Adresse *
+<input name="entrepriseAdresse"
+       required>
+</label>
+
+<label class="wide">
+Complément d’adresse
+<input name="entrepriseComplement">
+</label>
+
+<label>
+Code postal
+<input name="entrepriseCodePostal">
+</label>
+
+<label>
+Ville *
+<input name="entrepriseCommune"
+       required>
+</label>
+
+<label>
+Pays *
+<input name="entreprisePays"
+       value="France"
+       required>
+</label>
+
+</div>
+
+
+<h3>Responsable dans l’entreprise</h3>
+
+<div class="enterprise-grid">
+
+<label>
+Nom *
+<input name="responsableNom"
+       required>
+</label>
+
+<label>
+Prénom
+<input name="responsablePrenom">
+</label>
+
+<label>
+Fonction
+<input name="responsableFonction">
+</label>
+
+<label>
+Téléphone
+<input name="responsableTelephone"
+       type="tel">
+</label>
+
+<label class="wide">
+Courriel
+<input name="responsableCourriel"
+       type="email">
+</label>
+
+</div>
+
+
+<label class="confirm">
+<input type="checkbox"
+       name="tuteurEstResponsable"
+       id="same">
+
+Le tuteur est également le responsable dans l’entreprise
+</label>
+
+
+<div id="tutor">
+
+<h3>Tuteur</h3>
+
+<div class="enterprise-grid">
+
+<label>
+Nom *
+<input name="tuteurNom">
+</label>
+
+<label>
+Prénom
+<input name="tuteurPrenom">
+</label>
+
+<label>
+Fonction
+<input name="tuteurFonction">
+</label>
+
+<label>
+Téléphone
+<input name="tuteurTelephone"
+       type="tel">
+</label>
+
+<label class="wide">
+Courriel
+<input name="tuteurCourriel"
+       type="email">
+</label>
+
+</div>
+</div>
+
+
+<div class="actions">
+
+<button id="save"
+        type="button">
+
+Enregistrer les informations
+
+</button>
+
+</div>
+
+</form>
+
+<div id="success"
+     class="success-number"
+     hidden>
+
+Informations enregistrées.
+
+<strong id="registrationNumber"></strong>
+
+<p>
+Notez ce numéro sur votre convention.
+</p>
+
+</div>
+
+</section>
+
+</section>
+</main>
+
+
+<script>
+(function(){
+
+const $ = s => document.querySelector(s);
+
+const status = $('#status');
+const diag = $('#diag');
+const btn = $('#go');
+const form = $('#enterpriseForm');
+
+let RID = '';
+let RESUME = '';
+
+
+function msg(text,error,busy){
+
+  status.textContent = text || '';
+
+  status.className =
+    'status' +
+    (error ? ' error' :
+     busy  ? ' busy'  : '');
+
+}
+
+
+function normaliserRid(loc){
+
+  const p = (loc && loc.parameter) || {};
+
+  let rid = String(p.rid || '').trim();
+
+  const token =
+    String(p.token || '').trim();
+
+  if(!rid){
+
+    const m =
+      /^RID:(\d+)$/.exec(token);
+
+    if(m)rid = m[1];
+  }
+
+  if(!rid &&
+     /^\d+$/.test(token)){
+
+    rid = token;
+  }
+
+  return rid;
+}
+
+
+function field(name){
+
+  return form.elements[name];
+}
+
+function normaliserSiretValeur(v){
+  return String(v||'')
+    .replace(/\D/g,'')
+    .slice(0,14);
+}
+
+function controleSiret(){
+
+  const input = $('#siret');
+  const count = $('#siretCount');
+  const state = $('#siretState');
+  const search = $('#search');
+
+  let value = normaliserSiretValeur(input.value);
+
+  if(input.value !== value){
+    input.value = value;
+  }
+
+  const n = value.length;
+
+  count.textContent = n + ' / 14';
+
+  input.classList.remove(
+    'siret-valid',
+    'siret-invalid'
+  );
+
+  state.classList.remove(
+    'siret-state-valid',
+    'siret-state-invalid'
+  );
+
+  if(n === 0){
+
+    state.textContent =
+      'Saisissez les 14 chiffres du SIRET';
+
+    search.disabled = true;
+
+    return false;
+  }
+
+  if(n < 14){
+
+    input.classList.add('siret-invalid');
+    state.classList.add('siret-state-invalid');
+
+    state.textContent =
+      'Il manque ' +
+      (14-n) +
+      ' chiffre' +
+      ((14-n)>1?'s':'') +
+      '.';
+
+    search.disabled = true;
+
+    return false;
+  }
+
+  input.classList.add('siret-valid');
+  state.classList.add('siret-state-valid');
+
+  state.textContent =
+    '✓ SIRET complet';
+
+  search.disabled = false;
+
+  return true;
+}
+
+
+function fill(obj){
+
+  Object.keys(obj || {})
+    .forEach(function(key){
+
+      const el = field(key);
+
+      if(el){
+        el.value =
+          obj[key] == null ? '' : obj[key];
+      }
+
+    });
+}
+
+
+function toggleTutor(){
+
+  const same = $('#same');
+
+  $('#tutor').hidden =
+    !!same.checked;
+
+  field('tuteurNom').required =
+    !same.checked;
+}
+
+
+function afficherEntreprise(r){
+
+  RESUME =
+    String(r.resume || '').trim();
+
+  if(!RESUME){
+
+    msg(
+      'Session sécurisée absente après identification.',
+      true
+    );
+
+    return;
+  }
+
+  fill({
+
+    entrepriseSiret:
+      (r.entreprise || {}).siret || '',
+
+    entrepriseRaisonSociale:
+      (r.entreprise || {}).raisonSociale || '',
+
+    entrepriseEnseigne:
+      (r.entreprise || {}).enseigne || '',
+
+    entrepriseAdresse:
+      (r.entreprise || {}).adresse || '',
+
+    entrepriseComplement:
+      (r.entreprise || {}).complement || '',
+
+    entrepriseCodePostal:
+      (r.entreprise || {}).codePostal || '',
+
+    entrepriseCommune:
+      (r.entreprise || {}).commune || '',
+
+    entreprisePays:
+      (r.entreprise || {}).pays || 'France',
+
+    responsableNom:
+      (r.responsable || {}).nom || '',
+
+    responsablePrenom:
+      (r.responsable || {}).prenom || '',
+
+    responsableFonction:
+      (r.responsable || {}).fonction || '',
+
+    responsableTelephone:
+      (r.responsable || {}).telephone || '',
+
+    responsableCourriel:
+      (r.responsable || {}).courriel || '',
+
+    tuteurNom:
+      (r.tuteur || {}).nom || '',
+
+    tuteurPrenom:
+      (r.tuteur || {}).prenom || '',
+
+    tuteurFonction:
+      (r.tuteur || {}).fonction || '',
+
+    tuteurTelephone:
+      (r.tuteur || {}).telephone || '',
+
+    tuteurCourriel:
+      (r.tuteur || {}).courriel || ''
+
+  });
+
+  $('#same').checked =
+    !!(r.tuteur || {}).estResponsable;
+
+  toggleTutor();
+
+  $('#enterprise').hidden = false;
+
+  msg(
+    '✓ Accès vérifié. Vous pouvez maintenant renseigner l’entreprise.',
+    false
+  );
+
+  status.className = 'status ok';
+
+  $('#enterprise')
+    .scrollIntoView({
+      behavior:'smooth',
+      block:'start'
+    });
+}
+
+
+function init(){
+
+  diag.textContent =
+    'DEV.140 — lecture du QR…';
+
+  google.script.url.getLocation(
+    function(loc){
+
+      RID = normaliserRid(loc);
+
+      diag.textContent =
+        'DEV.140 — rid=' +
+        (RID || 'absent');
+
+      if(!RID){
+
+        msg(
+          'Le QR ne contient pas d’identifiant de convention exploitable.',
+          true
+        );
+
+        btn.disabled = true;
+
+        return;
+      }
+
+      status.textContent = '';
+
+      btn.disabled = false;
+
+    }
+  );
+}
+
+
+btn.onclick = function(){
+
+  const day =
+    Number($('#day').value);
+
+  const month =
+    Number($('#month').value);
+
+  if(!RID){
+
+    msg(
+      'Identifiant de convention absent.',
+      true
+    );
+
+    return;
+  }
+
+  if(!day || !month){
+
+    msg(
+      'Indiquez votre jour et votre mois de naissance.',
+      true
+    );
+
+    return;
+  }
+
+  btn.disabled = true;
+
+  btn.textContent =
+    'Vérification…';
+
+  msg(
+    'Vérification de votre identité en cours…',
+    false,
+    true
+  );
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(r){
+
+        $('#verifyArea').hidden = true;
+
+        $('#verified').hidden = false;
+
+        $('#name').textContent =
+          r.eleve.prenom + ' ' +
+          r.eleve.nom;
+
+        $('#class').textContent =
+          r.eleve.classeConvention || '';
+
+        $('#year').textContent =
+          r.eleve.anneeConvention || '';
+
+        $('#dates').textContent =
+          r.eleve.dateDebut &&
+          r.eleve.dateFin
+            ? r.eleve.dateDebut +
+              ' au ' +
+              r.eleve.dateFin
+            : '';
+
+        $('#ref').textContent =
+          r.reference || '';
+
+        diag.textContent =
+          r.diagnostic || 'DEV.140 OK';
+
+        afficherEntreprise(r);
+
+      }
+    )
+
+    .withFailureHandler(
+      function(e){
+
+        btn.disabled = false;
+
+        btn.textContent =
+          'Vérifier et continuer';
+
+        msg(
+          e && e.message
+            ? e.message
+            : String(e),
+          true
+        );
+
+      }
+    )
+
+    .EUC_CONVENTION_verifierIdentiteV113(
+      RID,
+      day,
+      month
+    );
+
+};
+
+
+$('#siret').addEventListener(
+  'input',
+  controleSiret
+);
+
+$('#same').onchange =
+  toggleTutor;
+
+
+$('#search').onclick =
+function(){
+
+  const b = $('#search');
+
+  if(!controleSiret()){
+
+    msg(
+      'Le SIRET doit contenir exactement 14 chiffres.',
+      true
+    );
+
+    return;
+  }
+
+  const siretRecherche =
+    normaliserSiretValeur(
+      field('entrepriseSiret').value
+    );
+
+  b.disabled = true;
+
+  msg(
+    'Recherche du SIRET '+
+    siretRecherche+
+    ' en cours…',
+    false,
+    true
+  );
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(r){
+
+        if(r &&
+           r.source ===
+             'api_navigateur'){
+
+          fetch(
+            r.url,
+            {
+              headers:{
+                Accept:'application/json'
+              }
+            }
+          )
+
+          .then(function(rep){
+
+            if(!rep.ok){
+
+              throw new Error(
+                'API entreprises indisponible ('+
+                rep.status+
+                ').'
+              );
+            }
+
+            return rep.json();
+          })
+
+          .then(function(json){
+
+            google.script.run
+
+              .withSuccessHandler(
+                appliquerEntreprise
+              )
+
+              .withFailureHandler(
+                erreurRecherche
+              )
+
+              .EUC_ENT_traiterReponseApiNavigateur(
+                json,
+                r.siret
+              );
+
+          })
+
+          .catch(erreurRecherche);
+
+          return;
+        }
+
+        appliquerEntreprise(r);
+
+      }
+    )
+
+    .withFailureHandler(
+      erreurRecherche
+    )
+
+    .EUC_ENT_rechercherSiret(
+      normaliserSiretValeur(
+        field('entrepriseSiret').value
+      )
+    );
+
+};
+
+
+function erreurRecherche(e){
+
+  $('#search').disabled = false;
+
+  msg(
+    'Erreur de recherche SIRET : ' +
+    (e && e.message
+      ? e.message
+      : String(e)),
+    true
+  );
+
+}
+
+
+function appliquerEntreprise(r){
+
+  $('#search').disabled = false;
+
+  if(r && r.introuvable){
+
+    const siretConserve =
+      normaliserSiretValeur(
+        field('entrepriseSiret').value
+      );
+
+    field('entrepriseSiret').value =
+      siretConserve;
+
+    controleSiret();
+
+    msg(
+      'SIRET '+siretConserve+
+      ' : aucune entreprise trouvée. Vérifiez le numéro saisi.',
+      true
+    );
+
+    return;
+  }
+
+  if(!r){
+
+    msg(
+      'Aucune donnée entreprise reçue.',
+      true
+    );
+
+    return;
+  }
+
+  const d = r.entreprise || {};
+
+  fill({
+
+    entrepriseSiret:
+      d.siret ||
+      field('entrepriseSiret').value,
+
+    entrepriseRaisonSociale:
+      d.raisonSociale || '',
+
+    entrepriseEnseigne:
+      d.enseigne || '',
+
+    entrepriseAdresse:
+      d.numeroVoie || '',
+
+    entrepriseComplement:
+      d.complementAdresse || '',
+
+    entrepriseCodePostal:
+      d.codePostal || '',
+
+    entrepriseCommune:
+      d.commune || '',
+
+    entreprisePays:
+      d.pays || 'France'
+
+  });
+
+  controleSiret();
+
+  msg(
+    r.source === 'grist'
+      ? '✓ Entreprise existante chargée.'
+      : '✓ Données publiques de l’entreprise chargées.',
+    false
+  );
+
+  status.className = 'status ok';
+
+}
+
+
+$('#save').onclick =
+function(){
+
+  const b = $('#save');
+
+  if(b.disabled)return;
+
+  b.disabled = true;
+
+  b.textContent =
+    'Enregistrement…';
+
+  msg(
+    'Vérification des informations…',
+    false,
+    true
+  );
+
+  setTimeout(function(){
+
+    if(!form.checkValidity()){
+
+      const bad =
+        form.querySelector(':invalid');
+
+      b.disabled = false;
+
+      b.textContent =
+        'Enregistrer les informations';
+
+      msg(
+        'Impossible d’enregistrer : vérifiez le champ signalé.',
+        true
+      );
+
+      if(bad){
+
+        bad.scrollIntoView({
+          behavior:'smooth',
+          block:'center'
+        });
+
+        bad.focus();
+      }
+
+      return;
+    }
+
+
+    const d =
+      Object.fromEntries(
+        new FormData(form)
+      );
+
+    d.tuteurEstResponsable =
+      $('#same').checked;
+
+
+    msg(
+      'Enregistrement des informations…',
+      false,
+      true
+    );
+
+
+    google.script.run
+
+      .withSuccessHandler(
+        function(r){
+
+          b.disabled = false;
+
+          b.textContent =
+            'Enregistrer les informations';
+
+          if(!r || !r.ok){
+
+            msg(
+              'Réponse serveur inattendue.',
+              true
+            );
+
+            return;
+          }
+
+          const numero =
+            r.numeroEnregistrement ||
+            r.reference ||
+            'non disponible';
+
+          $('#registrationNumber')
+            .textContent = numero;
+
+          $('#success').hidden = false;
+
+          msg(
+            '✓ Informations enregistrées.',
+            false
+          );
+
+          status.className =
+            'status ok';
+
+          $('#success')
+            .scrollIntoView({
+              behavior:'smooth',
+              block:'center'
+            });
+
+        }
+      )
+
+      .withFailureHandler(
+        function(e){
+
+          b.disabled = false;
+
+          b.textContent =
+            'Enregistrer les informations';
+
+          msg(
+            'Erreur d’enregistrement : '+
+            (e && e.message
+              ? e.message
+              : String(e)),
+            true
+          );
+
+        }
+      )
+
+      .EUC_CONVENTION_enregistrerEntrepriseV117(
+        RESUME,
+        d
+      );
+
+  },80);
+
+};
+
+
+window.addEventListener(
+  'error',
+  function(e){
+
+    msg(
+      'Erreur technique : '+
+      (e.message || 'Javascript'),
+      true
+    );
+
+  }
+);
+
+
+toggleTutor();
+controleSiret();
+init();
+
+})();
+</script>
+
+<style id="EUC_MONACO_FIX7">
+.euc-mc-box{grid-column:1/-1;background:#f8fafc;border:1px solid #d9e1ec;border-radius:10px;padding:10px}.euc-mc-box select{width:100%;padding:9px;border:1px solid #b9c7d8;border-radius:8px;background:#fff;margin-top:6px}.euc-mc-msg{margin-top:7px;font-weight:700;font-size:13px}
+</style>
+
+
+
+
+
+
+<script id="EUC_QR_CONTROLLER_FIX9">
+(function(){
+  'use strict';
+
+  function txt(v){ return String(v==null?'':v).trim(); }
+  function siretNorm(v){ return txt(v).replace(/\D/g,'').slice(0,14); }
+  function nisNorm(v){ return txt(v).toUpperCase().replace(/[\s-]+/g,''); }
+
+  function esc(v){ return String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"'); }
+
+  function F(key){
+    var el=document.getElementById(key);
+    if(el) return el;
+    if(typeof field==='function'){
+      try{ el=field(key); if(el) return el; }catch(e){}
+    }
+    var sels=[
+      '[name="'+esc(key)+'"]',
+      '[data-field="'+esc(key)+'"]',
+      '[data-key="'+esc(key)+'"]',
+      '[data-name="'+esc(key)+'"]'
+    ];
+    for(var i=0;i<sels.length;i++){
+      try{ el=document.querySelector(sels[i]); if(el) return el; }catch(e){}
+    }
+    return null;
+  }
+
+  function V(key,value){ var el=F(key); if(el) el.value=value==null?'':value; }
+
+  function lockOne(key,on){
+    var el=F(key);
+    if(!el) return;
+    if('readOnly' in el) el.readOnly=!!on;
+    el.disabled=false;
+    el.classList.toggle('euc-locked',!!on);
+    el.setAttribute('aria-readonly',on?'true':'false');
+  }
+
+  function lockIdentity(on,includeTradeName){
+    [
+      'entrepriseRaisonSociale',
+      'entrepriseAdresse',
+      'entrepriseComplement',
+      'entrepriseCodePostal',
+      'entrepriseCommune',
+      'entreprisePays'
+    ].forEach(function(k){ lockOne(k,on); });
+    if(includeTradeName) lockOne('entrepriseEnseigne',on);
+  }
+
+  function clearIdentity(clearTradeName){
+    V('entrepriseRaisonSociale','');
+    if(clearTradeName) V('entrepriseEnseigne','');
+    V('entrepriseAdresse','');
+    V('entrepriseComplement','');
+    V('entrepriseCodePostal','');
+    V('entrepriseCommune','');
+  }
+
+  function status(text,error){
+    if(typeof msg==='function'){
+      try{ msg(text,!!error); return; }catch(e){}
+    }
+    var ids=['message','msg','status','siretState'];
+    for(var i=0;i<ids.length;i++){
+      var el=document.getElementById(ids[i]);
+      if(el){
+        el.textContent=text;
+        el.style.color=error?'#b42318':'#067647';
+        return;
+      }
+    }
+  }
+
+  function fillIdentity(r,includeTradeName){
+    V('entrepriseRaisonSociale',r.entrepriseRaisonSociale||r.nom||'');
+    if(includeTradeName) V('entrepriseEnseigne',r.entrepriseEnseigne||r.enseigne||'');
+    V('entrepriseAdresse',r.entrepriseAdresse||r.adresse||'');
+    V('entrepriseComplement',r.entrepriseComplement||r.complement||'');
+    V('entrepriseCodePostal',r.entrepriseCodePostal||r.cp||r.codePostal||'');
+    V('entrepriseCommune',r.entrepriseCommune||r.ville||r.commune||'');
+    V('entreprisePays',r.entreprisePays||r.pays||'');
+  }
+
+  function boot(){
+    var country=document.getElementById('entreprisePaysSelectV161');
+    var ident=document.getElementById('siret');
+    var search=document.getElementById('search');
+    var save=document.getElementById('save');
+    if(!country||!ident||!search||!save){
+      console.error('FIX9: éléments principaux QR introuvables.');
+      return;
+    }
+
+    function franceMode(){
+      V('entreprisePays','France');
+      ident.value=siretNorm(ident.value);
+      ident.setAttribute('maxlength','14');
+      ident.setAttribute('pattern','[0-9]{14}');
+      ident.setAttribute('inputmode','numeric');
+      ident.placeholder='14 chiffres';
+      clearIdentity(false);
+      lockIdentity(true,false);
+      lockOne('entrepriseEnseigne',false);
+      document.documentElement.dataset.eucFranceVerified='0';
+      document.documentElement.dataset.eucMonacoManual='0';
+      search.disabled=ident.value.length!==14;
+    }
+
+    function monacoMode(){
+      V('entreprisePays','Monaco');
+      ident.value=nisNorm(ident.value);
+      ident.removeAttribute('maxlength');
+      ident.removeAttribute('pattern');
+      ident.setAttribute('inputmode','text');
+      ident.placeholder='NIS obligatoire';
+      clearIdentity(true);
+      lockIdentity(true,true);
+      document.documentElement.dataset.eucFranceVerified='0';
+      document.documentElement.dataset.eucMonacoManual='0';
+      search.disabled=!nisNorm(ident.value);
+    }
+
+    function applyMode(){ country.value==='Monaco' ? monacoMode() : franceMode(); }
+
+    country.addEventListener('change',function(ev){
+      ev.stopImmediatePropagation();
+      applyMode();
+    },true);
+
+    ident.addEventListener('input',function(ev){
+      ev.stopImmediatePropagation();
+      if(country.value==='France'){
+        ident.value=siretNorm(ident.value);
+        document.documentElement.dataset.eucFranceVerified='0';
+        clearIdentity(false);
+        lockIdentity(true,false);
+        lockOne('entrepriseEnseigne',false);
+        search.disabled=ident.value.length!==14;
+      }else{
+        ident.value=nisNorm(ident.value);
+        document.documentElement.dataset.eucMonacoManual='0';
+        clearIdentity(true);
+        lockIdentity(true,true);
+        search.disabled=!ident.value;
+      }
+    },true);
+
+    search.addEventListener('click',function(ev){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+
+      if(country.value==='France'){
+        var siret=siretNorm(ident.value);
+        ident.value=siret;
+        if(siret.length!==14){
+          status('Le SIRET est obligatoire et doit comporter 14 chiffres.',true);
+          return;
+        }
+        search.disabled=true;
+        status('Recherche du SIRET dans la base officielle…',false);
+
+        google.script.run
+          .withSuccessHandler(function(r){
+            search.disabled=false;
+            if(!r||!r.found){
+              document.documentElement.dataset.eucFranceVerified='0';
+              clearIdentity(false);
+              lockIdentity(true,false);
+              lockOne('entrepriseEnseigne',false);
+              status('SIRET non retrouvé : enregistrement impossible.',true);
+              return;
+            }
+            fillIdentity(r,false);
+            V('entreprisePays','France');
+            document.documentElement.dataset.eucFranceVerified='1';
+            lockIdentity(true,false);
+            lockOne('entrepriseEnseigne',false);
+            status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
+          })
+          .withFailureHandler(function(e){
+            search.disabled=false;
+            document.documentElement.dataset.eucFranceVerified='0';
+            clearIdentity(false);
+            lockIdentity(true,false);
+            lockOne('entrepriseEnseigne',false);
+            status('Erreur de recherche SIRET : '+(e&&e.message||e),true);
+          })
+          .EUC_V161_verifierSiretFrance(siret);
+        return;
+      }
+
+      var nis=nisNorm(ident.value);
+      ident.value=nis;
+      if(!nis){
+        status('Le NIS est obligatoire pour une entreprise monégasque.',true);
+        return;
+      }
+
+      search.disabled=true;
+      status('Recherche du NIS dans notre référentiel…',false);
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          search.disabled=false;
+          if(r&&r.found){
+            fillIdentity(r,true);
+            V('entreprisePays','Monaco');
+            document.documentElement.dataset.eucMonacoManual='0';
+            lockIdentity(true,true);
+            status('✓ Entreprise monégasque retrouvée. Données verrouillées.',false);
+            return;
+          }
+
+          clearIdentity(true);
+          V('entreprisePays','Monaco');
+          lockIdentity(false,true);
+          lockOne('entreprisePays',true);
+          document.documentElement.dataset.eucMonacoManual='1';
+          status('Entreprise absente de notre base. Merci de compléter manuellement ses coordonnées.',false);
+          var first=F('entrepriseRaisonSociale');
+          if(first) first.focus();
+        })
+        .withFailureHandler(function(e){
+          search.disabled=false;
+          document.documentElement.dataset.eucMonacoManual='0';
+          lockIdentity(true,true);
+          status('Erreur de recherche NIS : '+(e&&e.message||e),true);
+        })
+        .EUC_V161_rechercherEntrepriseMonaco(nis);
+    },true);
+
+    save.addEventListener('click',function(ev){
+      if(country.value==='France'){
+        if(siretNorm(ident.value).length!==14 || document.documentElement.dataset.eucFranceVerified!=='1'){
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          status('Recherche SIRET obligatoire avant enregistrement.',true);
+          return;
+        }
+      }else{
+        ident.value=nisNorm(ident.value);
+        if(!ident.value){
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          status('Le NIS est obligatoire pour une entreprise monégasque.',true);
+          return;
+        }
+
+        if(document.documentElement.dataset.eucMonacoManual==='1'){
+          var req=[
+            ['entrepriseRaisonSociale','raison sociale'],
+            ['entrepriseAdresse','adresse'],
+            ['entrepriseCodePostal','code postal'],
+            ['entrepriseCommune','ville']
+          ];
+          for(var i=0;i<req.length;i++){
+            var el=F(req[i][0]);
+            if(!el||!txt(el.value)){
+              ev.preventDefault();
+              ev.stopImmediatePropagation();
+              status('Le champ '+req[i][1]+' est obligatoire.',true);
+              return;
+            }
+          }
+        }
+      }
+    },true);
+
+    applyMode();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
+</script>
+<style id="EUC_QR_CONTROLLER_FIX9_STYLE">
+.euc-locked{
+  background:#e9edf0 !important;
+  color:#59636b !important;
+  cursor:not-allowed !important;
+  border-color:#c5ccd1 !important;
+}
+</style>
+
+</body>
+</html>

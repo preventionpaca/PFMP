@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#1d2939}
+    .wrap{max-width:1500px;margin:auto;padding:24px}
+    .top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+    h1{margin:0}.sub{color:#667085}
+    .card{background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:18px;margin-bottom:18px}
+    .upload{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+    .metric{background:#f8fafc;border:1px solid #d9e1ec;border-radius:12px;padding:12px}
+    .metric span{display:block;color:#667085;font-size:12px}.metric b{font-size:22px}
+    button,a.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none}
+    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec}
+    .okb{background:#067647;color:#fff}
+    .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#fff;border:1px solid #d9e1ec}.tab.active{background:#165d9c;color:#fff}
+    table{width:100%;border-collapse:collapse;min-width:1400px}.table-wrap{overflow:auto}
+    th,td{border-bottom:1px solid #edf0f4;padding:8px;text-align:left;vertical-align:top;font-size:13px}
+    th{background:#f8fafc;position:sticky;top:0;z-index:2}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:800;font-size:11px}
+    .VERT{background:#ecfdf3;color:#067647}.ORANGE{background:#fff7ed;color:#b45309}.ROUGE{background:#fff1f2;color:#b42318}
+    .small{font-size:11px;color:#667085}.alert{max-width:260px}
+    textarea{width:100%;min-height:52px;border:1px solid #b9c7d8;border-radius:8px;padding:6px}
+    select{border:1px solid #b9c7d8;border-radius:8px;padding:6px}
+    #status{display:none;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-weight:700}
+    #status.show{display:block}.info{background:#eef5fb;color:#164e7a}.success{background:#ecfdf3;color:#067647}.error{background:#fff1f2;color:#b42318}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:900px){.metrics{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Migration JotForm PFMP — 2026-2027</h1>
+      <div class="sub">Import tampon, analyse automatique et contrôle avant toute migration définitive.</div>
+    </div>
+    <a id="back" class="btn secondary" href="#">← Retour</a>
+  </div>
+
+  <div id="status"></div>
+
+  <div class="card">
+    <div class="upload">
+      <input id="file" type="file" accept=".csv,text/csv">
+      <button id="analyse" class="primary" type="button">Analyser / importer le CSV</button>
+      <button id="validateGreen" class="okb" type="button">Valider toutes les lignes vertes</button>
+    </div>
+    <div class="small" style="margin-top:8px">Seules les lignes <b>2026-2027</b> sont importées. Les autres années sont ignorées dans cette phase.</div>
+
+    <div class="metrics">
+      <div class="metric"><span>Total tampon</span><b id="mTotal">0</b></div>
+      <div class="metric"><span>Vert</span><b id="mVert">0</b></div>
+      <div class="metric"><span>À contrôler</span><b id="mOrange">0</b></div>
+      <div class="metric"><span>Bloqué</span><b id="mRouge">0</b></div>
+      <div class="metric"><span>Validé</span><b id="mValide">0</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-filter="TOUS">Tous</button>
+      <button class="tab" data-filter="VERT">Verts</button>
+      <button class="tab" data-filter="ORANGE">À contrôler</button>
+      <button class="tab" data-filter="ROUGE">Bloqués</button>
+      <button class="tab" data-filter="VALIDEE">Validés</button>
+      <button class="tab" data-filter="IGNOREE">Ignorés</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Contrôle</th>
+          <th>Élève</th>
+          <th>Classe</th>
+          <th>Dates</th>
+          <th>Entreprise saisie</th>
+          <th>SIRET</th>
+          <th>Rapprochement entreprise</th>
+          <th>Alertes</th>
+          <th>Décision</th>
+          <th>Commentaire</th>
+          <th>Action</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+let DATA=<?!= dataJson ?>;
+let filter='TOUS';
+
+const tbody=document.getElementById('tbody');
+const status=document.getElementById('status');
+const analyse=document.getElementById('analyse');
+const validateGreen=document.getElementById('validateGreen');
+
+function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+function show(text,type){status.textContent=text||'';status.className=text?'show '+type:''}
+function busy(btn,text){btn.dataset.old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+text}
+function unbusy(btn){btn.disabled=false;btn.innerHTML=btn.dataset.old||btn.innerHTML}
+
+function renderMetrics(){
+  const r=DATA.resume||{};
+  document.getElementById('mTotal').textContent=r.total||0;
+  document.getElementById('mVert').textContent=r.VERT||0;
+  document.getElementById('mOrange').textContent=r.ORANGE||0;
+  document.getElementById('mRouge').textContent=r.ROUGE||0;
+  document.getElementById('mValide').textContent=r.VALIDEE||0;
+}
+
+function visible(x){
+  if(filter==='TOUS')return true;
+  if(filter==='VALIDEE'||filter==='IGNOREE')return x.decision===filter;
+  return x.niveau===filter;
+}
+
+function render(){
+  renderMetrics();
+  tbody.innerHTML=(DATA.lignes||[]).filter(visible).map(function(x){
+    return '<tr data-id="'+x.id+'">'+
+      '<td><span class="pill '+esc(x.niveau)+'">'+esc(x.niveau)+'</span><div class="small">JotForm '+esc(x.convention||x.submission)+'</div></td>'+
+      '<td><b>'+esc(x.eleve)+'</b><div class="small">'+(x.matchEleve?'✓ '+esc(x.matchEleve):'Non reconnu')+'</div></td>'+
+      '<td><b>'+esc(x.classe)+'</b><div class="small">'+(x.matchClasse?'✓ '+esc(x.matchClasse):'Non reconnue')+'</div></td>'+
+      '<td>'+esc(x.debut)+'<br>'+esc(x.fin)+'</td>'+
+      '<td><b>'+esc(x.entreprise)+'</b><div class="small">'+esc(x.ville)+'</div></td>'+
+      '<td>'+esc(x.siret||'—')+'<div class="small">'+esc(x.siretN||'')+'</div></td>'+
+      '<td>'+(x.matchEntreprise?'<b>'+esc(x.matchEntreprise)+'</b><div class="small">score '+x.score+'%</div>':'<span class="small">Aucun rapprochement sûr</span>')+'</td>'+
+      '<td class="alert">'+esc(x.alertes||'—')+'</td>'+
+      '<td><select class="decision">'+
+        '<option value="A_CONTROLER" '+(x.decision==='A_CONTROLER'?'selected':'')+'>À contrôler</option>'+
+        '<option value="VALIDEE" '+(x.decision==='VALIDEE'?'selected':'')+'>Validée</option>'+
+        '<option value="IGNOREE" '+(x.decision==='IGNOREE'?'selected':'')+'>Ignorée</option>'+
+      '</select></td>'+
+      '<td><textarea class="commentaire">'+esc(x.commentaire||'')+'</textarea></td>'+
+      '<td><button class="saveLine primary" type="button">Enregistrer</button></td>'+
+    '</tr>';
+  }).join('');
+
+  Array.from(tbody.querySelectorAll('.saveLine')).forEach(function(btn){
+    btn.onclick=function(){
+      const tr=btn.closest('tr');
+      busy(btn,'Enregistrement...');
+      google.script.run
+        .withSuccessHandler(function(r){DATA=r;unbusy(btn);show('Ligne enregistrée.','success');render()})
+        .withFailureHandler(function(e){unbusy(btn);show('Erreur : '+(e&&e.message||e),'error')})
+        .EUC_V160_sauverControle({
+          id:Number(tr.dataset.id),
+          decision:tr.querySelector('.decision').value,
+          commentaire:tr.querySelector('.commentaire').value
+        });
+    };
+  });
+}
+
+Array.from(document.querySelectorAll('.tab')).forEach(function(btn){
+  btn.onclick=function(){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');filter=btn.dataset.filter;render();
+  };
+});
+
+analyse.onclick=function(){
+  const file=document.getElementById('file').files[0];
+  if(!file){show('Choisissez d’abord le fichier CSV JotForm.','error');return}
+
+  busy(analyse,'Analyse en cours...');
+  show('Lecture et analyse du CSV en cours...','info');
+
+  const reader=new FileReader();
+  reader.onload=function(){
+    google.script.run
+      .withSuccessHandler(function(r){
+        show('Import tampon terminé : '+r.yearCount+' ligne(s) 2026-2027, '+r.ignoredCount+' autre(s) année(s) ignorée(s).','success');
+        google.script.run.withSuccessHandler(function(d){DATA=d;unbusy(analyse);render()}).EUC_V160_lister();
+      })
+      .withFailureHandler(function(e){unbusy(analyse);show('Erreur : '+(e&&e.message||e),'error')})
+      .EUC_V160_importCsv(reader.result);
+  };
+  reader.onerror=function(){unbusy(analyse);show('Impossible de lire le fichier.','error')};
+  reader.readAsText(file,'UTF-8');
+};
+
+validateGreen.onclick=function(){
+  busy(validateGreen,'Validation en cours...');
+  show('Validation des lignes vertes en cours...','info');
+  google.script.run
+    .withSuccessHandler(function(r){DATA=r;unbusy(validateGreen);show('Toutes les lignes vertes ont été validées.','success');render()})
+    .withFailureHandler(function(e){unbusy(validateGreen);show('Erreur : '+(e&&e.message||e),'error')})
+    .EUC_V160_validerVerts();
+};
+
+document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+render();
+</script>
+</body>
+</html>

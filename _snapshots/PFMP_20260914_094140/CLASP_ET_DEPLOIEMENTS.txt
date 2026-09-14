@@ -1,0 +1,177 @@
+=== clasp deployments ===
+Found 8 deployments.
+- AKfycbw0B6PpxJeuuMI0ymLnWFiGwPbyoaP0sUS4nLlwQBf4 @HEAD 
+- AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg @268 - PFMP v1.0.0-dev.161-fix26-masquer-vfmp-liste-classes
+- AKfycbzuSz9fFrB5xFRLHFjjgVArAyo85ggt94EuKIskZJzeE6oWpnRreS7UP9u15kiFmN1Wew @39 - camin3
+- AKfycbxR_BgC9lNqSOxwAJk4YXq2jLZVF8ltOGBk3LKdUWjUuWHpSbIP9ke3sRXA0tQkzbEEvA @34 - Diagnostic temporaire Calendriers v0.5.4
+- AKfycbwSE5TocT0peMw2VgEm4MiEMtbuHPLg9jYMeNwT5iMoejvVGApYWHCvdxPwL9To0p9Q7g @31 - Diagnostic schema Calendriers lecture seule
+- AKfycbzvKG76E6TJ-Yj7zMjzUArsz2eX0xVeCz8smgDfQs-pjQezjfZc-g8rf2dxjCpF9w_Ckw @28 - Calendriers v0.5.1 - recette Grist lecture seule
+- AKfycbzRer1FYmh2ZuIajC-fIYGZnPb0GprOHD4HeewB4f1HrWesG-AtpWHCjfnoOqD4kz946Q @27 - Calendriers v0.5.0 - recette Grist lecture seule
+- AKfycbyb9qS0J_qbRAXQZox4N8HBc8l2QIRC4g-_krRtDdTP8SjFQegQfP-lj4Nw4UW1LTZGgA @33 - Diagnostic temporaire Calendriers v0.5.4
+
+=== clasp versions ===
+Found 161 versions.
+27 - Calendriers v0.5.0 - recette Grist lecture seule
+28 - Calendriers v0.5.1 - recette Grist lecture seule
+31 - Diagnostic temporaire schema Calendriers
+33 - Diagnostic temporaire v0.5.4
+34 - Diagnostic temporaire v0.5.4 publie
+39 - camin3
+114 - Eucalyptus PFMP v1.0.0-dev.113
+115 - Eucalyptus PFMP v1.0.0-dev.114
+116 - Eucalyptus PFMP v1.0.0-dev.115
+117 - Eucalyptus PFMP v1.0.0-dev.116
+118 - Eucalyptus PFMP v1.0.0-dev.117
+119 - Eucalyptus PFMP v1.0.0-dev.119
+120 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.120
+121 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.121
+122 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.122
+123 - Eucalyptus PFMP v1.0.0-dev.123 - periodes multi-classes et garde-fou Classes_concernees
+124 - Eucalyptus PFMP v1.0.0-dev.123 - periodes multi-classes et garde-fou Classes_concernees
+125 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.124 — ouverture automatique convention
+126 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.127 — liens convention et QR visibles
+127 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.129 — génération convention fiabilisée
+128 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.130 — retours visuels QR et enregistrement
+129 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.131 — enregistrement QR et numéro d'enregistrement
+130 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.132 — feedback visuel QR et enregistrement direct
+131 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.133 — formulaire entreprise sans mutation de schéma
+132 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.134 — reprise QR signée sans cache
+133 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.135 — diagnostic reprise entreprise
+134 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.136 — parcours QR et entreprise sur une page unique
+135 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.137 — formulaire entreprise alimenté directement après identification
+136 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.137 — formulaire entreprise alimenté directement après identification
+137 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.138 — parcours QR et entreprise sur une page unique
+138 - Lycée Les Eucalyptus — PFMP v1.0.0-dev.140 — validation SIRET 14 chiffres
+139 - PFMP v1.0.0-dev.143
+140 - PFMP v1.0.0-dev.143
+141 - PFMP v1.0.0-dev.143-fix2
+142 - PFMP v1.0.0-dev.143-fix2
+143 - PFMP v1.0.0-dev.143-fix3
+144 - PFMP v1.0.0-dev.143-fix3
+145 - PFMP v1.0.0-dev.144
+146 - PFMP v1.0.0-dev.144
+147 - PFMP v1.0.0-dev.144-fix2
+148 - PFMP v1.0.0-dev.144-fix2
+149 - PFMP v1.0.0-dev.144-fix3
+150 - PFMP v1.0.0-dev.144-fix3
+151 - PFMP v1.0.0-dev.145
+152 - PFMP v1.0.0-dev.145
+153 - PFMP v1.0.0-dev.146-fix2
+154 - PFMP v1.0.0-dev.146-fix2
+155 - PFMP v1.0.0-dev.146-fix3
+156 - PFMP v1.0.0-dev.146-fix3
+157 - PFMP v1.0.0-dev.146-fix4
+158 - PFMP v1.0.0-dev.146-fix4
+159 - PFMP v1.0.0-dev.146-fix4
+160 - PFMP v1.0.0-dev.146-fix4
+161 - PFMP v1.0.0-dev.146-fix5
+162 - PFMP v1.0.0-dev.146-fix5
+163 - PFMP v1.0.0-dev.147
+164 - PFMP v1.0.0-dev.147
+165 - PFMP v1.0.0-dev.147-fix1
+166 - PFMP v1.0.0-dev.147-fix1
+167 - PFMP v1.0.0-dev.147-fix2
+168 - PFMP v1.0.0-dev.147-fix2
+169 - PFMP v1.0.0-dev.148
+170 - PFMP v1.0.0-dev.148
+171 - PFMP v1.0.0-dev.148-fix1
+172 - PFMP v1.0.0-dev.148-fix1
+173 - PFMP v1.0.0-dev.149-fix1
+174 - PFMP v1.0.0-dev.149-fix1
+175 - PFMP v1.0.0-dev.150
+176 - PFMP v1.0.0-dev.150
+177 - PFMP v1.0.0-dev.151
+178 - PFMP v1.0.0-dev.151
+179 - PFMP v1.0.0-dev.151
+180 - PFMP v1.0.0-dev.151
+181 - PFMP v1.0.0-dev.152
+182 - PFMP v1.0.0-dev.152
+183 - PFMP v1.0.0-dev.153
+184 - PFMP v1.0.0-dev.153
+185 - PFMP v1.0.0-dev.154
+186 - PFMP v1.0.0-dev.154
+187 - PFMP v1.0.0-dev.155-fix1
+188 - PFMP v1.0.0-dev.155-fix1
+189 - PFMP v1.0.0-dev.155-fix3
+190 - PFMP v1.0.0-dev.155-fix3
+191 - PFMP v1.0.0-dev.156
+192 - PFMP v1.0.0-dev.156
+193 - PFMP v1.0.0-dev.156-fix5
+194 - PFMP v1.0.0-dev.156-fix5
+195 - PFMP v1.0.0-dev.157-fix1
+196 - PFMP v1.0.0-dev.157-fix1
+197 - PFMP v1.0.0-dev.157-fix1
+198 - PFMP v1.0.0-dev.157-fix1
+199 - PFMP v1.0.0-dev.157-fix2
+200 - PFMP v1.0.0-dev.157-fix2
+201 - PFMP v1.0.0-dev.158
+202 - PFMP v1.0.0-dev.158
+203 - PFMP v1.0.0-dev.158-fix3
+204 - PFMP v1.0.0-dev.158-fix3
+205 - PFMP v1.0.0-dev.159
+206 - PFMP v1.0.0-dev.159
+207 - PFMP v1.0.0-dev.160
+208 - PFMP v1.0.0-dev.160
+209 - PFMP v1.0.0-dev.161-fix2
+210 - PFMP v1.0.0-dev.161-fix2
+211 - PFMP v1.0.0-dev.161-fix3
+212 - PFMP v1.0.0-dev.161-fix3
+213 - PFMP v1.0.0-dev.161-fix5
+214 - PFMP v1.0.0-dev.161-fix5
+215 - PFMP v1.0.0-dev.161-fix6a
+216 - PFMP v1.0.0-dev.161-fix6a
+217 - PFMP v1.0.0-dev.161-fix8g
+218 - PFMP v1.0.0-dev.161-fix8g
+219 - PFMP v1.0.0-dev.161-fix-classes-1
+220 - PFMP v1.0.0-dev.161-fix-classes-1
+221 - PFMP v1.0.0-dev.161-siret-nis-procedure-amende1
+222 - PFMP v1.0.0-dev.161-siret-nis-procedure-amende1
+223 - PFMP v1.0.0-dev.161-fix9a-validated
+224 - PFMP v1.0.0-dev.161-fix9a-validated
+225 - PFMP v1.0.0-dev.161-fix9b-pdf-js
+226 - PFMP v1.0.0-dev.161-fix9b-pdf-js
+227 - PFMP v1.0.0-dev.161-fix10-siret-diplome
+228 - PFMP v1.0.0-dev.161-fix10-siret-diplome
+229 - PFMP v1.0.0-dev.161-fix11-contacts-cap
+230 - PFMP v1.0.0-dev.161-fix11-contacts-cap
+231 - PFMP v1.0.0-dev.161-fix12a-final
+232 - PFMP v1.0.0-dev.161-fix12a-final
+233 - PFMP v1.0.0-dev.161-fix12b-annee-dates-fr
+234 - PFMP v1.0.0-dev.161-fix12b-annee-dates-fr
+235 - PFMP v1.0.0-dev.161-fix13a-suivi-classes-periodes
+236 - PFMP v1.0.0-dev.161-fix13a-suivi-classes-periodes
+237 - PFMP v1.0.0-dev.161-fix14a-desaffectation-prof
+238 - PFMP v1.0.0-dev.161-fix14a-desaffectation-prof
+239 - PFMP v1.0.0-dev.161-fix14b-desaffectation-directe
+240 - PFMP v1.0.0-dev.161-fix14b-desaffectation-directe
+241 - PFMP v1.0.0-dev.161-fix15-desaffectation-par-id
+242 - PFMP v1.0.0-dev.161-fix15-desaffectation-par-id
+243 - PFMP v1.0.0-dev.161-trace-desaffectation
+244 - PFMP v1.0.0-dev.161-trace-desaffectation
+245 - PFMP v1.0.0-dev.161-fix16-desaffectation-minimale
+246 - PFMP v1.0.0-dev.161-fix16-desaffectation-minimale
+247 - PFMP v1.0.0-dev.161-fix16a-ids-desaffectation
+248 - PFMP v1.0.0-dev.161-fix16a-ids-desaffectation
+249 - PFMP v1.0.0-dev.161-fix17-route-detail-retrait-dates
+250 - PFMP v1.0.0-dev.161-fix17-route-detail-retrait-dates
+251 - PFMP v1.0.0-dev.161-fix18-retrait-dates-tableau
+252 - PFMP v1.0.0-dev.161-fix18-retrait-dates-tableau
+253 - PFMP v1.0.0-dev.161-fix18-redeploy-correct
+254 - PFMP v1.0.0-dev.161-fix19a-nettoyage-direct
+255 - PFMP v1.0.0-dev.161-fix21-filtre-vfmp-terminales-bac
+256 - PFMP v1.0.0-dev.161-fix21-filtre-vfmp-terminales-bac
+257 - PFMP v1.0.0-dev.161-fix22-retrait-scope
+258 - PFMP v1.0.0-dev.161-fix22-retrait-scope
+259 - PFMP v1.0.0-dev.161-rollback-fix22-html
+260 - PFMP v1.0.0-dev.161-rollback-fix22-html
+261 - PFMP v1.0.0-dev.161-fix23-retrait-detail-init
+262 - PFMP v1.0.0-dev.161-fix23-retrait-detail-init
+263 - PFMP v1.0.0-dev.161-fix24-retrait-par-eleves
+264 - PFMP v1.0.0-dev.161-fix24-retrait-par-eleves
+265 - PFMP v1.0.0-dev.161-fix25-retrait-sans-reload
+266 - PFMP v1.0.0-dev.161-fix25-retrait-sans-reload
+267 - PFMP v1.0.0-dev.161-fix26-masquer-vfmp-liste-classes
+268 - PFMP v1.0.0-dev.161-fix26-masquer-vfmp-liste-classes
+
+=== .clasp.json ===
+{"scriptId":"1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c","rootDir":"apps-script"}

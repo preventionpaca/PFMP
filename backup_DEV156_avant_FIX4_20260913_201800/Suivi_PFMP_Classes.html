@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#1d2939;--muted:#667085;--line:#d9e1ec;--accent:#165d9c;--ok:#079669;--warn:#d97706;--bad:#c62828}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+    h1{margin:0;font-size:28px}.sub{color:var(--muted);margin-top:5px}.back{background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--ink)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+    .yearbox{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:end;margin-bottom:20px}
+    select{width:100%;border:1px solid #b9c7d8;border-radius:10px;padding:11px 12px;background:#fff;font:inherit}
+    .section-title{font-size:21px;margin:24px 0 12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .classlink{display:block;text-decoration:none;color:inherit}.classcard{cursor:pointer;transition:.15s ease}.classcard:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(16,24,40,.10)}
+    .classhead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.classhead b{font-size:19px}
+    .badge{font-size:12px;background:#eef5fb;color:#165d9c;padding:5px 8px;border-radius:999px}
+    .period{border-top:1px solid #edf0f4;padding:10px 0 0;margin-top:10px}.period-line{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .counter{font-weight:800;font-size:16px}.counter.ok{color:var(--ok)}.counter.warn{color:var(--warn)}.counter.bad{color:var(--bad)}
+    .dates{font-size:12px;color:var(--muted);margin-top:3px}.empty{padding:24px;text-align:center;color:var(--muted)}.status{margin-top:8px;color:var(--muted)}
+    .coming{margin-top:12px;font-size:12px;color:var(--muted)}
+    @media(max-width:950px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.grid,.yearbox{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Suivi des PFMP par classe</h1><div class="sub">Vue synthétique des conventions enregistrées par période.</div></div>
+    <a id="back" class="back" href="#">← Retour Administration PFMP</a>
+  </div>
+
+  <div class="card yearbox">
+    <div>
+      <label for="yearSelect" style="display:block;font-weight:700;margin-bottom:7px">Année scolaire</label>
+      <select id="yearSelect"></select>
+    </div>
+    <div class="sub">L'année scolaire est le filtre principal et reste mémorisée pour les outils PFMP.</div>
+  </div>
+
+  <div id="content"></div>
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+const ANNEE_CTX=<?!= anneeContextJson ?>;
+const ACCUEIL_INIT=<?!= accueilJson ?>;
+
+(function(){
+  document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+  const yearSelect=document.getElementById('yearSelect');
+  const content=document.getElementById('content');
+  const status=document.getElementById('status');
+  let yearContext=ANNEE_CTX||{annees:[],active:''};
+  let accueil=ACCUEIL_INIT||{cartes:[]};
+
+  function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+  function renderYears(){
+    yearSelect.innerHTML=(yearContext.annees||[]).map(function(y){
+      return '<option value="'+esc(y.code)+'"'+(y.code===yearContext.active?' selected':'')+'>'+esc(y.libelle||y.code)+'</option>';
+    }).join('');
+  }
+  function counterClass(p){
+    if(!p.total)return 'bad';
+    if(p.conventions>=p.total)return 'ok';
+    if(p.conventions===0)return 'bad';
+    return 'warn';
+  }
+  function render(){
+    const cats={};
+    (accueil.cartes||[]).forEach(function(c){if(!cats[c.categorie])cats[c.categorie]=[];cats[c.categorie].push(c)});
+    const order=['BAC PRO','BTS','CAP'];
+    let html='';
+    order.concat(Object.keys(cats).filter(k=>order.indexOf(k)<0)).forEach(function(cat){
+      const cards=cats[cat]||[];if(!cards.length)return;
+      html+='<h2 class="section-title">'+esc(cat)+'</h2><div class="grid">';
+      html+=cards.map(function(c){
+        const periods=(c.periodes||[]).map(function(p){
+          return '<div class="period"><div class="period-line"><span>'+esc(p.libelle)+'</span><span class="counter '+counterClass(p)+'">'+p.conventions+' / '+p.total+'</span></div><div class="dates">'+esc([p.debut,p.fin].filter(Boolean).join(' → '))+'</div></div>';
+        }).join('')||'<div class="period sub">Aucune période configurée.</div>';
+        const href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearContext.active)+'&classe='+encodeURIComponent(c.classeId);
+        return '<a class="classlink" href="'+href+'"><div class="card classcard">'+
+          '<div class="classhead"><b>'+esc(c.classe)+'</b><span class="badge">'+c.effectif+' élève(s)</span></div>'+
+          periods+
+          '<div class="coming">Cliquer pour ouvrir le tableau détaillé</div>'+
+        '</div></a>';
+      }).join('');
+      html+='</div>';
+    });
+    content.innerHTML=html||'<div class="card empty">Aucune classe PFMP pour cette année scolaire.</div>';
+    status.textContent=(accueil.cartes||[]).length+' classe(s) affichée(s) pour '+yearContext.active+'.';
+  }
+  function reloadYear(code){
+    window.location.href=C.baseUrl+'?page=suivi-pfmp-classes&annee='+encodeURIComponent(code);
+  }
+  yearSelect.onchange=function(){reloadYear(yearSelect.value)};
+  renderYears();render();
+})();
+</script>
+</body>
+</html>

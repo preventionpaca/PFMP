@@ -1,0 +1,286 @@
+<!doctype html><html lang="fr"><head><base target="_top"><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;color:#182230}main{max-width:1040px;margin:auto;padding:28px}.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.12em;color:#49627a}h1{margin:.2rem 0 1.2rem}.intro{background:white;border:1px solid #dce3ea;border-radius:12px;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:20px}.card{display:block;background:white;border:1px solid #dce3ea;border-radius:12px;padding:20px;text-decoration:none;color:inherit}.card:hover{border-color:#7794b0;box-shadow:0 3px 12px rgba(0,0,0,.06)}.card h2{font-size:1.05rem;margin:0 0 8px}.card p{margin:0;line-height:1.45;color:#4d5c6b}.tag{display:inline-block;margin-top:14px;font-size:.75rem;font-weight:700;background:#eaf1f7;border-radius:999px;padding:5px 9px}.tag.new{background:#e5f5ef;color:#076653}footer{margin-top:24px;color:#677482;font-size:.8rem}</style></head><body><main><p class="eyebrow">LYCÉE LES EUCALYPTUS</p><h1>Centre d’administration PFMP</h1><section class="intro"><strong>Accès réservé à l’administration PFMP.</strong><p>Le formulaire public destiné aux élèves reste totalement séparé de cet espace.</p></section><section class="grid"><a class="card" id="link-import"><h2>Importer les élèves Pronote</h2><p>Importer l’export complet élèves + responsables, contrôler les classes et mettre à jour le référentiel.</p><span class="tag">Import / contrôle</span></a><a class="card" id="link-profclasses"><h2>Synchroniser professeurs & classes</h2><p>Importer les professeurs puis les classes Pronote afin d’alimenter les coordonnées enseignants et les professeurs principaux.</p><span class="tag new">Pronote</span></a><a class="card" id="link-diplomes"><h2>Diplômes par classe</h2><p>Renseigner l’intitulé exact du diplôme pour les classes du périmètre PFMP.</p><span class="tag new">Référentiel</span></a><a class="card" id="link-paramconv"><h2>Paramètres de la convention</h2><p>Modifier le proviseur, les libellés LP/LGT et les coordonnées imprimées sans toucher au code.</p><span class="tag new">Configuration</span></a><a class="card" id="link-conventions"><h2>Générer les conventions</h2><p>Choisir un élève, la classe et la période de convention, puis générer le document papier et son accès QR individuel.</p><span class="tag new">QR sécurisé</span></a><a class="card" id="link-gestion"><h2>Gestion des déclarations</h2><p>Consulter et administrer les déclarations PFMP, corrections et affectations.</p><span class="tag">Gestion métier</span></a><a class="card" id="link-suivi"><h2>Suivi par classe et période</h2><p>Accéder aux tableaux de suivi, conventions, entreprises et répartition des visites.</p><span class="tag">Analyse</span></a></section><footer id="version"></footer><section class="card" id="workflow-admin-v146-tile">
+  <h2>Administration des conventions</h2>
+  <p>Recherche et suivi complet des conventions : finalisation, dépôt BFE, signature, remise, autorisation, annulation et interruption.</p>
+  <a class="btn primary" href="https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=admin-conventions-pfmp">Ouvrir l'administration des conventions</a>
+</section>
+
+<section class="card" id="suivi-pfmp-classes-v154">
+  <h2>Suivi des PFMP par classe</h2>
+  <p>Tableaux de suivi par année scolaire, classe et période, avec compteurs de conventions enregistrées.</p>
+  <a class="btn primary" href="https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-pfmp-classes">Ouvrir le suivi par classe</a>
+</section>
+</main><script>const ADMIN_CENTER_CONFIG=<?!= config ?>;(function(){const base=String(ADMIN_CENTER_CONFIG.baseUrl||'');document.getElementById('link-import').href=base+'?page=import-pronote-pfmp';document.getElementById('link-profclasses').href=base+'?page=import-prof-classes-pfmp';document.getElementById('link-diplomes').href=base+'?page=diplomes-classes-pfmp';document.getElementById('link-paramconv').href=base+'?page=parametres-convention-pfmp';document.getElementById('link-conventions').href=base+'?page=conventions-pfmp';document.getElementById('link-gestion').href=base+'?page=gestion-pfmp';document.getElementById('link-suivi').href=base+'?page=suivi-pfmp';document.getElementById('version').textContent=(ADMIN_CENTER_CONFIG.version||'')+' — rôle '+(ADMIN_CENTER_CONFIG.role||'');})();</script><script>
+(function(){
+  const sel=document.getElementById('wf145Select');
+  const head=document.getElementById('wf145Header');
+  const steps=document.getElementById('wf145Steps');
+  const hist=document.getElementById('wf145History');
+  const status=document.getElementById('wf145Status');
+  const cancelReason=document.getElementById('wf145CancelReason');
+  const cancelBtn=document.getElementById('wf145CancelBtn');
+  const stopDate=document.getElementById('wf145StopDate');
+  const stopReason=document.getElementById('wf145StopReason');
+  const stopBtn=document.getElementById('wf145StopBtn');
+
+  if(!sel)return;
+  let currentId=null;
+
+  function esc(v){
+    const d=document.createElement('div');
+    d.textContent=v==null?'':v;
+    return d.innerHTML;
+  }
+
+  function setStatus(t,k){
+    status.textContent=t||'';
+    status.className='status '+(k||'');
+  }
+
+  function dossierLabel(d){
+    return [d.numero,d.eleve,d.classe,d.entreprise].filter(Boolean).join(' — ');
+  }
+
+  function loadList(){
+    google.script.run
+      .withSuccessHandler(function(rows){
+        rows=rows||[];
+        sel.innerHTML='<option value="">— Choisir un dossier —</option>'+
+          rows.map(function(d){
+            return '<option value="'+esc(d.id)+'">'+esc(dossierLabel(d))+'</option>';
+          }).join('');
+      })
+      .withFailureHandler(function(e){
+        sel.innerHTML='<option value="">Erreur de chargement</option>';
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_listerDossiersV145();
+  }
+
+  function render(v){
+    if(!v){
+      head.textContent='Dossier introuvable.';
+      steps.innerHTML='';
+      hist.innerHTML='';
+      return;
+    }
+
+    head.className='status info';
+    head.innerHTML =
+      '<b>'+esc(v.numero||('Dossier '+v.id))+'</b>'+
+      (v.entreprise?' — '+esc(v.entreprise):'')+
+      '<br>Statut : <b>'+esc(v.statut||'')+'</b>';
+
+    steps.innerHTML=(v.etapes||[]).map(function(e){
+      const done=!!e.validee;
+      return '<div class="linecard" style="margin-bottom:10px">'+
+        '<div class="linehead">'+(done?'✓ ':'○ ')+esc(e.label)+'</div>'+
+        '<div class="hint">'+
+        (done
+          ? ('Validée'+(e.date?' le '+esc(e.date):'')+(e.auteur?' par '+esc(e.auteur):''))
+          : 'À valider')+
+        '</div>'+
+        (!done
+          ? '<div style="margin-top:8px">'+
+              '<input data-comment="'+esc(e.code)+'" placeholder="Commentaire facultatif">'+
+              '<button type="button" data-step="'+esc(e.code)+'">Valider cette étape</button>'+
+            '</div>'
+          : '')+
+      '</div>';
+    }).join('');
+
+    Array.from(steps.querySelectorAll('[data-step]')).forEach(function(btn){
+      btn.onclick=function(){
+        const code=btn.dataset.step;
+        const input=steps.querySelector('[data-comment="'+code+'"]');
+        const commentaire=input?input.value:'';
+
+        btn.disabled=true;
+        setStatus('Validation en cours...','info');
+
+        google.script.run
+          .withSuccessHandler(function(r){
+            setStatus('✓ Étape validée.','ok');
+            render(r);
+          })
+          .withFailureHandler(function(e){
+            btn.disabled=false;
+            setStatus('Erreur : '+(e&&e.message||e),'err');
+          })
+          .EUC_ADMIN_WORKFLOW_validerEtapeV145(currentId,code,commentaire);
+      };
+    });
+
+    const h=v.historique||[];
+    hist.innerHTML=h.length
+      ? '<b>Historique administratif :</b><br>'+
+        h.slice().reverse().map(function(x){
+          return esc(
+            (x.date||'')+' — '+
+            (x.libelle||x.action||x.statut||'Action')+
+            (x.auteur?' — '+x.auteur:'')+
+            (x.motif?' — '+x.motif:'')+
+            (x.commentaire?' — '+x.commentaire:'')
+          );
+        }).join('<br>')
+      : 'Aucun historique administratif complémentaire.';
+  }
+
+  function loadOne(id){
+    currentId=Number(id)||null;
+    if(!currentId){
+      head.textContent='Sélectionnez un dossier.';
+      steps.innerHTML='';
+      hist.innerHTML='';
+      return;
+    }
+
+    head.textContent='Chargement...';
+    setStatus('','');
+
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(function(e){
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_vueV144(currentId);
+  }
+
+  sel.onchange=function(){loadOne(sel.value);};
+
+  cancelBtn.onclick=function(){
+    if(!currentId){
+      setStatus('Sélectionnez un dossier.','err');
+      return;
+    }
+
+    const motif=cancelReason.value.trim();
+    if(!motif){
+      setStatus("Motif d'annulation obligatoire.",'err');
+      return;
+    }
+
+    if(!confirm("Confirmer l'annulation avant démarrage de cette PFMP ?"))return;
+
+    cancelBtn.disabled=true;
+    setStatus('Annulation en cours...','info');
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        cancelBtn.disabled=false;
+        cancelReason.value='';
+        setStatus('✓ PFMP annulée avant démarrage.','ok');
+        render(r);
+      })
+      .withFailureHandler(function(e){
+        cancelBtn.disabled=false;
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_annulerV145(currentId,motif);
+  };
+
+  stopBtn.onclick=function(){
+    if(!currentId){
+      setStatus('Sélectionnez un dossier.','err');
+      return;
+    }
+
+    const dateFin=stopDate.value;
+    const motif=stopReason.value.trim();
+
+    if(!dateFin){
+      setStatus('Date de fin réelle obligatoire.','err');
+      return;
+    }
+    if(!motif){
+      setStatus("Motif d'interruption obligatoire.",'err');
+      return;
+    }
+
+    if(!confirm("Confirmer l'interruption de cette PFMP ?"))return;
+
+    stopBtn.disabled=true;
+    setStatus("Enregistrement de l'interruption...",'info');
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        stopBtn.disabled=false;
+        stopDate.value='';
+        stopReason.value='';
+        setStatus('✓ Interruption enregistrée.','ok');
+        render(r);
+      })
+      .withFailureHandler(function(e){
+        stopBtn.disabled=false;
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_interrompreV145(currentId,dateFin,motif);
+  };
+
+  loadList();
+})();
+</script>
+
+<style id="destV158Style">
+.euc-v158-tile{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  background:#fff;
+  border:1px solid #d9e1ec;
+  border-radius:16px;
+  padding:18px;
+  margin:16px 0;
+  box-shadow:0 2px 8px rgba(16,24,40,.05);
+  transition:.15s ease
+}
+.euc-v158-tile:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(16,24,40,.10)
+}
+.euc-v158-title{
+  font-weight:800;
+  font-size:18px;
+  color:#163a63;
+  margin-bottom:6px
+}
+.euc-v158-sub{
+  color:#667085;
+  font-size:13px
+}
+</style>
+
+<script id="destV158Script">
+(function(){
+  function addV158Tile(){
+    if(document.getElementById('destV158Tile')) return;
+
+    var a=document.createElement('a');
+    a.id='destV158Tile';
+    a.className='euc-v158-tile';
+    a.href=location.href.split('?')[0]+'?page=destinataires-envois-pfmp';
+    a.innerHTML=
+      '<div class="euc-v158-title">✉ Destinataires & envois</div>'+
+      '<div class="euc-v158-sub">Gérer les personnes, leurs emails et les documents qu’elles doivent recevoir.</div>';
+
+    var host=
+      document.querySelector('.tiles') ||
+      document.querySelector('.cards') ||
+      document.querySelector('.grid') ||
+      document.querySelector('.menu-grid') ||
+      document.querySelector('.actions-grid') ||
+      document.querySelector('main') ||
+      document.querySelector('.container') ||
+      document.body;
+
+    host.appendChild(a);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',addV158Tile);
+  }else{
+    addV158Tile();
+  }
+})();
+</script>
+
+</body></html>

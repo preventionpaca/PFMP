@@ -1,0 +1,235 @@
+=== git status --short ===
+ M apps-script/Admin_PFMP.html
+ M apps-script/Convention_PFMP_Batch_Print.html
+ M apps-script/Convention_PFMP_Generateur.html
+ M apps-script/Convention_PFMP_PdfV95.html
+ M apps-script/Convention_PFMP_Print.html
+ M apps-script/EDT.js
+ M apps-script/EUC_CONVENTION_PFMP_DonneesV80.gs
+ M apps-script/EUC_CONVENTION_PFMP_PdfV95.gs
+ M apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs
+ M apps-script/EUC_CONVENTION_PFMP_Service.gs
+ M apps-script/EUC_CONVENTION_PFMP_WebApp.gs
+ M apps-script/EUC_PFMP_Config.gs
+ M apps-script/PFMP_Acces_QR_V116.html
+ M apps-script/PFMP_Continuation_QR_V117.html
+ M apps-script/Parametres_Convention_PFMP.html
+?? AUDIT_PERF_PFMP_20260914_045030.txt
+?? "Eucalyptus \342\200\224 PFMP \342\200\224 v1.0.0-dev.122\""
+?? _scripts_recus/
+?? _snapshots/
+?? apps-script/Admin_Conventions_PFMP.html
+?? apps-script/Destinataires_Envois_PFMP_V158.html
+?? apps-script/EUC_ADMIN_PFMP_TraceV154Fix.gs
+?? apps-script/EUC_CONVENTION_PFMP_AdminBridgeV141.gs
+?? apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs
+?? apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs
+?? apps-script/EUC_CONVENTION_PFMP_NotificationsV143.gs
+?? apps-script/EUC_CONVENTION_PFMP_PdfV95.gs.backup_avant_fix_diplome
+?? apps-script/EUC_MIGRATION_JOTFORM_V160.gs
+?? apps-script/EUC_PFMP_FixV161_7.gs
+?? apps-script/EUC_PFMP_International_StatusV161.gs
+?? apps-script/EUC_PFMP_Monaco_V161Fix8.gs
+?? apps-script/EUC_SIRET_NIS_StrictV161.gs
+?? apps-script/EUC_SUIVI_PFMP_AffectationsV156.gs
+?? apps-script/EUC_SUIVI_PFMP_ClasseDetailV155.gs
+?? apps-script/EUC_SUIVI_PFMP_ClassesV154.gs
+?? apps-script/EUC_SUIVI_PFMP_DestinatairesV158.gs
+?? apps-script/EUC_SUIVI_PFMP_ENT_V161.gs
+?? apps-script/EUC_SUIVI_PFMP_EnvoisV157.gs
+?? apps-script/EUC_SUIVI_PFMP_FixV161_17.gs
+?? apps-script/EUC_SUIVI_PFMP_FixV161_18.gs
+?? apps-script/EUC_SUIVI_PFMP_FixV161_24.gs
+?? apps-script/EUC_SUIVI_PFMP_FixV161_3.gs
+?? apps-script/EUC_SUIVI_PFMP_V156.gs
+?? apps-script/Migration_JotForm_PFMP_V160.html
+?? apps-script/Parametres_Envois_PFMP_V157.html
+?? apps-script/Suivi_PFMP_Classe_Detail.html
+?? apps-script/Suivi_PFMP_Classe_Detail_V156.html
+?? apps-script/Suivi_PFMP_Classes.html
+?? apps-script_BACKUP_DEV118_20260911_115425/
+?? backup_DEV122_avant_DEV123_20260911_204305/
+?? backup_DEV123_avant_DEV124_20260911_205055/
+?? backup_DEV124_avant_DEV125_20260911_205451/
+?? backup_DEV125_avant_DEV126_20260911_205718/
+?? backup_DEV126_avant_DEV127_20260911_205810/
+?? backup_DEV127_avant_DEV128_20260911_210601/
+?? backup_DEV127_avant_DEV128_20260911_211047/
+?? backup_DEV129_avant_DEV130_20260911_214008/
+?? backup_DEV129_avant_DEV130_20260911_214137/
+?? backup_DEV130_avant_DEV131_20260911_214600/
+?? backup_DEV131_avant_DEV132_20260911_215200/
+?? backup_DEV132_avant_DEV133_20260911_215830/
+?? backup_DEV133_avant_DEV134_20260911_220323/
+?? backup_DEV134_avant_DEV135_20260911_222650/
+?? backup_DEV134_avant_DEV136_CORRIGE_20260911_223803/
+?? backup_DEV134_reel_avant_DEV137_20260912_001529/
+?? backup_DEV135_avant_DEV136_20260911_223515/
+?? backup_DEV135_avant_DEV136_20260911_223700/
+?? backup_DEV136_avant_DEV137_20260911_224604/
+?? backup_DEV138_avant_DEV139_20260912_003049/
+?? backup_DEV139_avant_DEV140_20260912_003702/
+?? backup_DEV140_avant_DEV141_20260912_092154/
+?? backup_DEV140_avant_DEV141_20260912_092220/
+?? backup_DEV140_avant_DEV141_20260912_132045/
+?? backup_DEV141_avant_DEV142_20260912_134754/
+?? backup_DEV141_avant_DEV142_20260912_134758/
+?? backup_DEV141_avant_DEV142_20260912_135029/
+?? backup_DEV142_FIX3_avant_FIX4_20260912_140615/
+?? backup_DEV142_FIX_avant_FIX3_20260912_140402/
+?? backup_DEV142_avant_DEV143_20260912_142747/
+?? backup_DEV142_avant_DEV143_20260912_142753/
+?? backup_DEV142_avant_DEV143_20260912_142957/
+?? backup_DEV142_avant_DEV143_20260912_145212/
+?? backup_DEV142_avant_DEV143_20260912_150104/
+?? backup_DEV142_avant_FIX_20260912_135743/
+?? backup_DEV143_avant_DIAG_ECRITURE_20260912_152053/
+?? backup_DEV143_avant_FIX1_20260912_143127/
+?? backup_DEV143_avant_FIX1_20260912_145106/
+?? backup_DEV143_avant_FIX3_20260912_152526/
+?? backup_DEV143_diag_item_20260912_152358/
+?? backup_DEV143_diag_save_20260912_152225/
+?? backup_DEV144_avant_FIX1_20260912_170209/
+?? backup_DEV144_avant_FIX1_20260912_170305/
+?? backup_DEV144_avant_FIX2_20260912_170623/
+?? backup_DEV144_avant_FIX3_20260912_170948/
+?? backup_DEV146_avant_FIX1_20260912_224017/
+?? backup_DEV146_avant_FIX2_20260912_225107/
+?? backup_DEV146_avant_FIX3_20260912_230302/
+?? backup_DEV146_avant_FIX4_20260912_232402/
+?? backup_DEV146_avant_FIX4_20260912_234132/
+?? backup_DEV146_avant_FIX5_20260912_234803/
+?? backup_DEV146_diag_recherche_20260912_231519/
+?? backup_DEV147_avant_FIX1_20260913_000112/
+?? backup_DEV147_avant_FIX2_20260913_000335/
+?? backup_DEV148_avant_FIX1_20260913_100146/
+?? backup_DEV148_avant_FIX1_20260913_100342/
+?? backup_DEV149_avant_FIX1_20260913_102046/
+?? backup_DEV154_avant_FIX1_20260913_124519/
+?? backup_DEV154_avant_FIX1_20260913_132252/
+?? backup_DEV155_avant_FIX2_20260913_135019/
+?? backup_DEV155_avant_FIX2_20260913_135121/
+?? backup_DEV155_avant_FIX3_20260913_135816/
+?? backup_DEV156_avant_FIX1_20260913_192733/
+?? backup_DEV156_avant_FIX2_20260913_193548/
+?? backup_DEV156_avant_FIX4_20260913_201800/
+?? backup_DEV156_avant_FIX5_20260913_203100/
+?? backup_DEV157_avant_FIX1_20260913_211408/
+?? backup_DEV157_avant_FIX1_20260913_211841/
+?? backup_DEV157_avant_FIX2_20260913_213224/
+?? backup_DEV158_avant_FIX1_20260913_220558/
+?? backup_DEV158_avant_FIX2_20260913_220735/
+?? backup_DEV158_avant_FIX3_20260913_221717/
+?? backup_DEV161_avant_FIX10_20260914_022551/
+?? backup_DEV161_avant_FIX11_20260914_024217/
+?? backup_DEV161_avant_FIX12A_20260914_025427/
+?? backup_DEV161_avant_FIX12B_20260914_025733/
+?? backup_DEV161_avant_FIX12_20260914_025311/
+?? backup_DEV161_avant_FIX13A_20260914_030410/
+?? backup_DEV161_avant_FIX13_20260914_030248/
+?? backup_DEV161_avant_FIX14A_20260914_031238/
+?? backup_DEV161_avant_FIX14B_20260914_031640/
+?? backup_DEV161_avant_FIX14_20260914_030751/
+?? backup_DEV161_avant_FIX15_20260914_031939/
+?? backup_DEV161_avant_FIX16A_20260914_033416/
+?? backup_DEV161_avant_FIX16_20260914_032946/
+?? backup_DEV161_avant_FIX17_20260914_033949/
+?? backup_DEV161_avant_FIX18_20260914_034336/
+?? backup_DEV161_avant_FIX19_20260914_035045/
+?? backup_DEV161_avant_FIX1_20260914_001431/
+?? backup_DEV161_avant_FIX21_20260914_035656/
+?? backup_DEV161_avant_FIX22_20260914_041159/
+?? backup_DEV161_avant_FIX23_20260914_042600/
+?? backup_DEV161_avant_FIX24_20260914_043146/
+?? backup_DEV161_avant_FIX25_20260914_043447/
+?? backup_DEV161_avant_FIX26_20260914_044137/
+?? backup_DEV161_avant_FIX2_20260914_001524/
+?? backup_DEV161_avant_FIX3_20260914_002402/
+?? backup_DEV161_avant_FIX5_20260914_003819/
+?? backup_DEV161_avant_FIX6A_20260914_004251/
+?? backup_DEV161_avant_FIX6_20260914_004043/
+?? backup_DEV161_avant_FIX7A_20260914_004918/
+?? backup_DEV161_avant_FIX7_20260914_004823/
+?? backup_DEV161_avant_FIX8A_20260914_005537/
+?? backup_DEV161_avant_FIX8B_20260914_005637/
+?? backup_DEV161_avant_FIX8C_20260914_005747/
+?? backup_DEV161_avant_FIX8D_20260914_005844/
+?? backup_DEV161_avant_FIX8E_20260914_005937/
+?? backup_DEV161_avant_FIX8F_20260914_010213/
+?? backup_DEV161_avant_FIX8G_20260914_010409/
+?? backup_DEV161_avant_FIX8_20260914_005303/
+?? backup_DEV161_avant_FIX9B_20260914_021612/
+?? backup_DEV161_avant_FIX9_20260914_014943/
+?? backup_DEV161_avant_TRACE_DESAFFECT_20260914_032723/
+?? backup_DEV161_filtre_classes_20260914_010646/
+?? backup_DEV161_siret_nis_20260914_013611/
+?? backup_avant_DEV138_20260912_002151/
+?? backup_avant_DEV145_20260912_192811/
+?? backup_avant_DEV146_20260912_193742/
+?? backup_avant_DEV147_20260912_235829/
+?? backup_avant_DEV148_20260913_001146/
+?? backup_avant_DEV149_20260913_101650/
+?? backup_avant_DEV150_20260913_110810/
+?? backup_avant_DEV151_20260913_112026/
+?? backup_avant_DEV151_20260913_112646/
+?? backup_avant_DEV152_20260913_114301/
+?? backup_avant_DEV153_20260913_115202/
+?? backup_avant_DEV154_20260913_123830/
+?? backup_avant_DEV155_20260913_130036/
+?? backup_avant_DEV155_20260913_131945/
+?? backup_avant_DEV155_20260913_132003/
+?? backup_avant_DEV155_20260913_132024/
+?? backup_avant_DEV155_FIX1_20260913_133410/
+?? backup_avant_DEV156_20260913_140531/
+?? backup_avant_DEV157_20260913_205354/
+?? backup_avant_DEV158_20260913_220015/
+?? backup_avant_DEV159_20260913_223618/
+?? backup_avant_DEV160_20260913_233239/
+?? backup_avant_DEV161_20260914_001057/
+?? "ion Apps Script cr\303\251\303\251e : $VERSION_NUMBER\""
+?? lancer_dernier_script_pfmp.sh
+?? "p deployments"
+?? "p push -f"
+
+=== git branch --show-current ===
+dev28-formulaire-pfmp
+
+=== git log -20 ===
+fe7425e (HEAD -> dev28-formulaire-pfmp, origin/dev28-formulaire-pfmp) DEV.122: use Planning_Periodes.Classe as PFMP mapping
+88f3af5 DEV.121: fix PFMP period filter without offers tables
+e56bb35 DEV.120: affiche la version courante du générateur
+b9ae77e DEV.120: filtre interface par relations Grist offre-périodes
+d8d0189 DEV.120: filtre strict des périodes par offre de formation
+e92c9ee DEV.117: align version PDF with QR continuation
+b141b9b DEV.117: recentrage fin professeur signature
+a0adf26 DEV.117: route continuation entreprise QR
+4f25cd7 DEV.117: formulaire continuation entreprise QR
+3aef6c0 DEV.117: bouton poursuivre saisie entreprise
+e67543b DEV.117: continuation entreprise après validation QR
+d9aa539 DEV.116: version QR client URL resolver
+d695d10 DEV.116: fine-center teacher signature
+17a45da DEV.116: serve QR client location resolver
+bba75b1 DEV.116: resolve QR rid from client URL location
+2119f4b DEV.115: exact teacher-cell centering and hard fit long lines
+1d7e989 DEV.115: decode QR record id from routed token parameter
+cb9ec72 DEV.115: carry Grist row id through existing token route
+4fd7de9 DEV.114: fix obsolete period cleanup without unsupported Grist DELETE
+cadaf81 DEV.113: center teacher across exact signature cell
+
+=== git diff --stat ===
+ apps-script/Admin_PFMP.html                    |  308 +++-
+ apps-script/Convention_PFMP_Batch_Print.html   |    2 +-
+ apps-script/Convention_PFMP_Generateur.html    |   17 +-
+ apps-script/Convention_PFMP_PdfV95.html        |    2 +-
+ apps-script/Convention_PFMP_Print.html         |    2 +-
+ apps-script/EDT.js                             |    9 +
+ apps-script/EUC_CONVENTION_PFMP_DonneesV80.gs  |   55 +-
+ apps-script/EUC_CONVENTION_PFMP_PdfV95.gs      |    8 +-
+ apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs |  462 +++++-
+ apps-script/EUC_CONVENTION_PFMP_Service.gs     |   13 +-
+ apps-script/EUC_CONVENTION_PFMP_WebApp.gs      |    4 +-
+ apps-script/EUC_PFMP_Config.gs                 |    2 +-
+ apps-script/PFMP_Acces_QR_V116.html            | 1791 +++++++++++++++++++++++-
+ apps-script/PFMP_Continuation_QR_V117.html     |  147 +-
+ apps-script/Parametres_Convention_PFMP.html    |   65 +-
+ 15 files changed, 2840 insertions(+), 47 deletions(-)

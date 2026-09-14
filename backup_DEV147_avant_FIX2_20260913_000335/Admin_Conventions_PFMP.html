@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --bg:#f4f7fb;--card:#fff;--ink:#1d2939;--muted:#667085;
+      --line:#d9e1ec;--ok:#079669;--danger:#c62828;--accent:#165d9c;--soft:#eef5fb
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:24px}
+    .top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+    h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}
+    .back{background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--ink)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+    .searchbox{position:relative}.searchrow{display:grid;grid-template-columns:1fr auto;gap:10px}
+    input,textarea,button{font:inherit}
+    input,textarea{width:100%;border:1px solid #b9c7d8;border-radius:10px;padding:11px 12px}
+    button{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}
+    .primary{background:var(--accent);color:#fff}
+    .danger{background:#fff0f0;color:var(--danger);border:1px solid #f3b7b7}
+    .suggestions{position:absolute;z-index:20;left:0;right:0;top:48px;background:#fff;border:1px solid var(--line);border-radius:12px;max-height:300px;overflow:auto;box-shadow:0 10px 30px rgba(16,24,40,.16);display:none}
+    .suggestion{padding:11px 13px;border-bottom:1px solid #edf0f4;cursor:pointer}
+    .suggestion:hover{background:var(--soft)}.suggestion b{display:block}.suggestion small{color:var(--muted)}
+    .identity{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .info{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:13px}
+    .info span{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.info b{font-size:16px}
+    .steps{display:grid;gap:10px}
+    .step{display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:13px}
+    .dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#edf2f7;font-weight:800}
+    .step.done{background:#f0fbf7;border-color:#b9e8d7}.step.done .dot{background:var(--ok);color:#fff}
+    .step-title{font-weight:700}.step-meta{color:var(--muted);font-size:13px;margin-top:3px}
+    .step-actions{display:flex;gap:8px}.step-actions input{min-width:220px}
+    .exceptions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .exception{border:1px solid #f0caca;background:#fffafa;border-radius:13px;padding:16px}
+    .exception h3{margin:0 0 12px;color:#8f1d1d}
+    .history-item{padding:8px 0;border-bottom:1px solid #edf0f4}
+    .hidden{display:none}.ok{background:#e9f8f2;color:#056c4d;padding:10px;border-radius:10px}.err{background:#fff0f0;color:#a61b1b;padding:10px;border-radius:10px}
+
+    .busy{opacity:.72;pointer-events:none}
+    .spinner{display:inline-block;width:14px;height:14px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+    .modal-backdrop.show{display:flex}
+    .modal-box{width:min(520px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:22px}
+    .modal-icon{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff0f0;color:#b42318;font-size:22px;font-weight:800;margin-bottom:12px}
+    .modal-box h3{margin:0 0 8px;font-size:21px}
+    .modal-box p{margin:0;color:var(--muted);line-height:1.45}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+    .modal-cancel{background:#edf2f7;color:var(--ink)}
+    .modal-confirm{background:#b42318;color:#fff}
+
+    @media(max-width:850px){
+      .identity,.exceptions{grid-template-columns:1fr}
+      .step{grid-template-columns:38px 1fr}.step-actions{grid-column:2;flex-direction:column}
+      .searchrow{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Administration des conventions PFMP</h1>
+      <div class="sub">Recherche, finalisation, annulation et interruption des conventions.</div>
+    </div>
+    <a id="back" class="back" href="#">← Retour Administration PFMP</a>
+  </div>
+
+  <section class="card">
+    <h2>Rechercher une convention</h2>
+    <div class="searchbox">
+      <div class="searchrow">
+        <input id="search" autocomplete="off" placeholder="Tapez une référence, le nom ou le prénom du jeune...">
+        <button id="openBtn" class="primary" disabled>Ouvrir le dossier</button>
+      </div>
+      <div id="suggestions" class="suggestions"></div>
+    </div>
+    <div id="selectedHint" class="sub" style="margin-top:9px">Aucun dossier sélectionné.</div>
+  </section>
+
+  <section id="detail" class="hidden">
+    <div class="card">
+      <h2 id="title">Dossier</h2>
+      <div class="identity">
+        <div class="info"><span>Jeune</span><b id="young">—</b></div>
+        <div class="info"><span>Classe</span><b id="class">—</b></div>
+        <div class="info"><span>Entreprise</span><b id="company">—</b></div>
+        <div class="info"><span>Période PFMP</span><b id="period">—</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Parcours administratif</h2>
+      <div id="steps" class="steps"></div>
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>Historique</h2>
+      <div id="history">Aucun historique complémentaire.</div>
+    </div>
+
+    <div class="card">
+      <h2>Actions exceptionnelles</h2>
+      <div class="exceptions">
+        <div class="exception">
+          <h3>Annuler avant démarrage</h3>
+          <textarea id="cancelReason" rows="4" placeholder="Motif obligatoire"></textarea>
+          <button id="cancelBtn" class="danger" style="margin-top:10px">Enregistrer l'annulation</button>
+        </div>
+        <div class="exception">
+          <h3>Interrompre une PFMP commencée</h3>
+          <input id="stopDate" type="date">
+          <textarea id="stopReason" rows="3" placeholder="Motif obligatoire" style="margin-top:8px"></textarea>
+          <button id="stopBtn" class="danger" style="margin-top:10px">Enregistrer l'interruption</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="confirmModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="modal-icon">!</div>
+    <h3 id="confirmModalTitle">Confirmation</h3>
+    <p id="confirmModalText"></p>
+    <div class="modal-actions">
+      <button id="confirmModalCancel" type="button" class="modal-cancel">Annuler</button>
+      <button id="confirmModalOk" type="button" class="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+const DOSSIERS_INIT=<?!= dossiersJson ?>;
+(function(){
+  document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+
+  const search=document.getElementById('search');
+  const suggestions=document.getElementById('suggestions');
+  const openBtn=document.getElementById('openBtn');
+  const selectedHint=document.getElementById('selectedHint');
+  const detail=document.getElementById('detail');
+  const title=document.getElementById('title');
+  const young=document.getElementById('young');
+  const cls=document.getElementById('class');
+  const company=document.getElementById('company');
+  const period=document.getElementById('period');
+  const steps=document.getElementById('steps');
+  const history=document.getElementById('history');
+  const status=document.getElementById('status');
+
+  let dossiers=Array.isArray(DOSSIERS_INIT)?DOSSIERS_INIT:[],selected=null,current=null;
+  const confirmModal=document.getElementById('confirmModal');
+  const confirmModalTitle=document.getElementById('confirmModalTitle');
+  const confirmModalText=document.getElementById('confirmModalText');
+  const confirmModalCancel=document.getElementById('confirmModalCancel');
+  const confirmModalOk=document.getElementById('confirmModalOk');
+  let confirmResolver=null;
+
+  if(!Array.isArray(DOSSIERS_INIT)){
+    console.error('DEV146 FIX5 - DOSSIERS_INIT invalide',DOSSIERS_INIT);
+  }
+
+  function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+  function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+  function setStatus(t,k){status.className=k||'';status.textContent=t||''}
+  function label(d){return [d.numero,d.jeune,d.classe,d.entreprise].filter(Boolean).join(' — ')}
+
+  function askConfirm(titleText,bodyText,confirmText){
+    return new Promise(function(resolve){
+      confirmResolver=resolve;
+      confirmModalTitle.textContent=titleText;
+      confirmModalText.textContent=bodyText;
+      confirmModalOk.textContent=confirmText||'Confirmer';
+      confirmModal.classList.add('show');
+      confirmModal.setAttribute('aria-hidden','false');
+    });
+  }
+  function closeConfirm(result){
+    confirmModal.classList.remove('show');
+    confirmModal.setAttribute('aria-hidden','true');
+    if(confirmResolver){const r=confirmResolver;confirmResolver=null;r(result);}
+  }
+  confirmModalCancel.onclick=function(){closeConfirm(false)};
+  confirmModalOk.onclick=function(){closeConfirm(true)};
+  confirmModal.onclick=function(e){if(e.target===confirmModal)closeConfirm(false)};
+
+
+  function renderSuggestions(){
+    const q=norm(search.value).trim();
+    if(!q){suggestions.style.display='none';return}
+
+    const words=q.split(/\s+/).filter(Boolean);
+    const found=dossiers.filter(function(d){
+      const hay=norm(d.recherche||label(d));
+      return words.every(function(w){return hay.includes(w)});
+    }).slice(0,20);
+
+    suggestions.innerHTML=found.length
+      ? found.map(function(d){
+          return '<div class="suggestion" data-id="'+d.id+'"><b>'+esc(d.numero)+' — '+esc(d.jeune||'Jeune non renseigné')+'</b><small>'+esc([d.classe,d.entreprise].filter(Boolean).join(' — '))+'</small></div>';
+        }).join('')
+      : '<div class="suggestion">Aucun dossier trouvé</div>';
+
+    suggestions.style.display='block';
+
+    Array.from(suggestions.querySelectorAll('[data-id]')).forEach(function(el){
+      el.onclick=function(){
+        selected=dossiers.find(function(x){return String(x.id)===String(el.dataset.id)});
+        if(!selected)return;
+        search.value=label(selected);
+        selectedHint.textContent='Sélectionné : '+label(selected);
+        openBtn.disabled=false;
+        suggestions.style.display='none';
+      };
+    });
+  }
+
+  function render(v){
+    current=v;
+    detail.classList.remove('hidden');
+
+    const selectedYoung=selected&&selected.jeune?selected.jeune:'';
+    const selectedClass=selected&&selected.classe?selected.classe:'';
+    const selectedCompany=selected&&selected.entreprise?selected.entreprise:'';
+    const selectedStart=selected&&selected.dateDebut?selected.dateDebut:'';
+    const selectedEnd=selected&&selected.dateFin?selected.dateFin:'';
+
+    const detailYoung=[v.jeune&&v.jeune.prenom,v.jeune&&v.jeune.nom].filter(Boolean).join(' ')||selectedYoung||'—';
+    const detailClass=v.classe||selectedClass||'—';
+    const detailCompany=v.entreprise||selectedCompany||'—';
+    const detailStart=(v.periode&&v.periode.debut)||selectedStart||'';
+    const detailEnd=(v.periode&&v.periode.fin)||selectedEnd||'';
+    const detailPeriod=[detailStart,detailEnd].filter(Boolean).join(' au ')||'—';
+
+    title.textContent=[v.numero||('Dossier '+v.id),detailYoung!=='—'?detailYoung:'',detailClass!=='—'?detailClass:'',v.statut||''].filter(Boolean).join(' — ');
+    young.textContent=detailYoung;
+    cls.textContent=detailClass;
+    company.textContent=detailCompany;
+    period.textContent=detailPeriod;
+
+    steps.innerHTML=(v.etapes||[]).map(function(e){
+      return '<div class="step '+(e.validee?'done':'')+'">'+
+        '<div class="dot">'+(e.validee?'✓':'○')+'</div>'+
+        '<div><div class="step-title">'+esc(e.label)+'</div>'+
+        '<div class="step-meta">'+
+        (e.validee
+          ? ('Validée'+(e.dateLisible?' le '+esc(e.dateLisible):'')+(e.auteur?' par '+esc(e.auteur):''))
+          : 'À valider')+
+        '</div></div>'+
+        (!e.validee
+          ? '<div class="step-actions"><input data-comment="'+esc(e.code)+'" placeholder="Commentaire facultatif"><button class="primary" data-step="'+esc(e.code)+'">Valider</button></div>'
+          : '')+
+      '</div>';
+    }).join('');
+
+    Array.from(steps.querySelectorAll('[data-step]')).forEach(function(btn){
+      btn.onclick=function(){
+        const code=btn.dataset.step;
+        const inp=steps.querySelector('[data-comment="'+code+'"]');
+        const oldText=btn.innerHTML;
+        btn.disabled=true;
+        btn.classList.add('busy');
+        btn.innerHTML='<span class="spinner"></span>Validation en cours';
+        setStatus('Traitement en cours...','');
+
+        google.script.run
+          .withSuccessHandler(function(r){setStatus('Étape validée.','ok');render(r)})
+          .withFailureHandler(function(e){
+            btn.disabled=false;btn.classList.remove('busy');btn.innerHTML=oldText;
+            setStatus('Erreur : '+(e&&e.message||e),'err');
+          })
+          .EUC_ADMIN_WORKFLOW_validerEtapeV145(v.id,code,inp?inp.value:'');
+      };
+    });
+
+    const h=v.historique||[];
+    history.innerHTML=h.length
+      ? h.slice().reverse().map(function(x){
+          return '<div class="history-item">'+esc(
+            (x.date||'')+' — '+
+            (x.libelle||x.action||x.statut||'Action')+
+            (x.auteur?' — '+x.auteur:'')+
+            (x.motif?' — '+x.motif:'')+
+            (x.commentaire?' — '+x.commentaire:'')
+          )+'</div>';
+        }).join('')
+      : 'Aucun historique administratif complémentaire.';
+  }
+
+  search.oninput=function(){
+    selected=null;
+    openBtn.disabled=true;
+    selectedHint.textContent='Aucun dossier sélectionné.';
+    renderSuggestions();
+  };
+
+  openBtn.onclick=function(){
+    if(!selected)return;
+    openBtn.disabled=true;
+
+    google.script.run
+      .withSuccessHandler(function(v){openBtn.disabled=false;render(v)})
+      .withFailureHandler(function(e){openBtn.disabled=false;alert('Erreur : '+(e&&e.message||e))})
+      .EUC_ADMIN_WORKFLOW_vueV146(selected.id);
+  };
+
+  document.getElementById('cancelBtn').onclick=async function(){
+    if(!current)return;
+    const btn=this;
+    const motif=document.getElementById('cancelReason').value.trim();
+    if(!motif){setStatus("Motif d'annulation obligatoire.",'err');return}
+    const ok=await askConfirm('Annuler cette PFMP avant démarrage ?', "Cette action conservera le dossier dans l'historique avec le motif saisi.", "Confirmer l'annulation");
+    if(!ok)return;
+    const oldText=btn.innerHTML;
+    btn.disabled=true;btn.classList.add('busy');btn.innerHTML='<span class="spinner"></span>Annulation en cours';
+    setStatus('Annulation en cours...','');
+    google.script.run
+      .withSuccessHandler(function(v){
+        btn.disabled=false;btn.classList.remove('busy');btn.innerHTML=oldText;
+        document.getElementById('cancelReason').value='';setStatus('Annulation enregistrée.','ok');render(v);
+      })
+      .withFailureHandler(function(e){
+        btn.disabled=false;btn.classList.remove('busy');btn.innerHTML=oldText;
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_annulerV145(current.id,motif);
+  };
+
+  document.getElementById('stopBtn').onclick=async function(){
+    if(!current)return;
+    const btn=this;
+    const date=document.getElementById('stopDate').value;
+    const motif=document.getElementById('stopReason').value.trim();
+    if(!date){setStatus('Date de fin réelle obligatoire.','err');return}
+    if(!motif){setStatus("Motif d'interruption obligatoire.",'err');return}
+    const ok=await askConfirm('Interrompre cette PFMP ?', 'La date de fin réelle et le motif seront enregistrés dans le dossier administratif.', "Confirmer l'interruption");
+    if(!ok)return;
+    const oldText=btn.innerHTML;
+    btn.disabled=true;btn.classList.add('busy');btn.innerHTML='<span class="spinner"></span>Interruption en cours';
+    setStatus('Interruption en cours...','');
+    google.script.run
+      .withSuccessHandler(function(v){
+        btn.disabled=false;btn.classList.remove('busy');btn.innerHTML=oldText;
+        document.getElementById('stopDate').value='';document.getElementById('stopReason').value='';
+        setStatus('Interruption enregistrée.','ok');render(v);
+      })
+      .withFailureHandler(function(e){
+        btn.disabled=false;btn.classList.remove('busy');btn.innerHTML=oldText;
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_interrompreV145(current.id,date,motif);
+  };
+
+  selectedHint.textContent=dossiers.length+' dossier(s) disponible(s).';
+})();
+</script>
+</body>
+</html>

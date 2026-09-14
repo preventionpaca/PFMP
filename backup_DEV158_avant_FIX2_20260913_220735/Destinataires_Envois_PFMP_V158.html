@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#1d2939}
+    .wrap{max-width:1180px;margin:auto;padding:24px}
+    .top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+    h1{margin:0}.sub{color:#667085}
+    .card{background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:18px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #edf0f4;padding:10px;text-align:left;vertical-align:middle}
+    th{background:#f8fafc;color:#475467;font-size:13px}
+    input[type=text],input[type=email]{width:100%;box-sizing:border-box;border:1px solid #b9c7d8;border-radius:9px;padding:9px 10px}
+    input[type=checkbox]{width:18px;height:18px}
+    .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+    button,a.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}
+    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec}
+    #status{display:none;padding:10px 12px;border-radius:10px;margin-bottom:14px;font-weight:700}
+    #status.show{display:block}.ok{background:#ecfdf3;color:#067647}.err{background:#fff1f2;color:#b42318}.info{background:#eef5fb;color:#164e7a}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{background:#eef5fb;border:1px solid #cfe0ef;border-radius:12px;padding:12px 14px;margin-bottom:16px;color:#164e7a}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Destinataires & envois PFMP</h1>
+      <div class="sub">Table centrale des personnes et des droits de diffusion.</div>
+    </div>
+    <a id="back" class="btn secondary" href="#">← Retour</a>
+  </div>
+
+  <div class="hint">
+    Les professeurs principal, de suivi téléphonique et visiteurs restent ajoutés automatiquement.
+    Cette table gère les destinataires institutionnels. De futures colonnes d'envoi pourront être ajoutées ici.
+  </div>
+
+  <div id="status"></div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28%">Fonction</th>
+          <th style="width:20%">Nom</th>
+          <th>Email</th>
+          <th style="width:80px">Actif</th>
+          <th style="width:150px">Tableaux de suivi PFMP</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="actions">
+      <button id="save" class="primary" type="button">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+let DATA=<?!= dataJson ?>;
+
+const tbody=document.getElementById('tbody');
+const save=document.getElementById('save');
+const status=document.getElementById('status');
+
+function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+function show(text,type){status.textContent=text||'';status.className=text?'show '+type:''}
+
+function render(){
+  tbody.innerHTML=(DATA||[]).map(function(x){
+    return '<tr data-id="'+x.id+'">'+
+      '<td><b>'+esc(x.fonction)+'</b></td>'+
+      '<td><input class="nom" type="text" value="'+esc(x.nom||'')+'" placeholder="Nom de la personne"></td>'+
+      '<td><input class="email" type="email" value="'+esc(x.email||'')+'" placeholder="adresse@domaine.fr"></td>'+
+      '<td><input class="actif" type="checkbox" '+(x.actif?'checked':'')+'></td>'+
+      '<td><input class="tableaux" type="checkbox" '+(x.tableauxSuivi?'checked':'')+'></td>'+
+    '</tr>';
+  }).join('');
+}
+
+save.onclick=function(){
+  const old=save.innerHTML;
+  save.disabled=true;
+  save.innerHTML='<span class="spinner"></span>Enregistrement en cours...';
+  show('Enregistrement en cours...','info');
+
+  const lignes=Array.from(tbody.querySelectorAll('tr[data-id]')).map(function(tr){
+    return {
+      id:Number(tr.dataset.id),
+      nom:tr.querySelector('.nom').value.trim(),
+      email:tr.querySelector('.email').value.trim(),
+      actif:tr.querySelector('.actif').checked,
+      tableauxSuivi:tr.querySelector('.tableaux').checked
+    };
+  });
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      DATA=r;render();save.disabled=false;save.innerHTML=old;show('Paramètres enregistrés.','ok');
+    })
+    .withFailureHandler(function(e){
+      save.disabled=false;save.innerHTML=old;show('Erreur : '+(e&&e.message||e),'err');
+    })
+    .EUC_V158_sauver({lignes:lignes});
+};
+
+document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+render();
+</script>
+</body>
+</html>

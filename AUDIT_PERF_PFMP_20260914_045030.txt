@@ -1,0 +1,387 @@
+============================================================
+ AUDIT PERFORMANCE PFMP — LECTURE SEULE
+============================================================
+Projet : /home/rudy/PFMP
+Date   : 2026-09-14 04:50:30
+AUCUNE MODIFICATION — AUCUN PUSH — AUCUN DEPLOIEMENT
+
+=== 1) VOLUME DU PROJET ===
+Fichiers apps-script : 110
+Taille totale        : 1127053 octets
+.gs  :  60 fichier(s),    434325 octets
+.js  :  13 fichier(s),    333728 octets
+.html:  37 fichier(s),    359000 octets
+
+Fonctions détectées    : 1301
+Noms dupliqués         : 84
+  DUP EDT_NETTOYER_STRUCTURE_GROUPES => Code.js:7489, Code.js:7547
+  DUP EDT_applyActions_ => EDT_API.js:15, EDT_Install_Reset_V21.js:252
+  DUP EDT_archiverVersionEDT_V24 => EDT_Install_V24_1.js:137, EDT_Install_V24.js:119
+  DUP EDT_clearTable_ => EDT_API.js:57, EDT_Calculs.js:184
+  DUP EDT_col_ => EDT_Install.js:120, EDT_Install_Reset_V21.js:37
+  DUP EDT_getExistingColumns_ => EDT_API.js:40, EDT_Install_Reset_V21.js:221
+  DUP EDT_getExistingTables_ => EDT_API.js:35, EDT_Install_Reset_V21.js:216
+  DUP EDT_getRecords_ => EDT_API.js:30, EDT_Install_Reset_V21.js:233
+  DUP EDT_gristGet_ => EDT_API.js:3, EDT_Install_Reset_V21.js:238
+  DUP EDT_initialiserVuesExemples_V24_ => EDT_Install_V24_1.js:96, EDT_Install_V24.js:78
+  DUP EDT_journaliser_ => EDT_API.js:76, EDT_Install_Reset_V21.js:199, EDT_Calculs.js:186
+  DUP EDT_markUpdate_ => EDT_API.js:65, EDT_Calculs.js:185
+  DUP EDT_reconstruireLibelles_V24 => EDT_Install_V24_1.js:106, EDT_Install_V24.js:88
+  DUP EDT_ref_ => EDT_API.js:86, EDT_Calculs.js:179
+  DUP EDT_v24FillIfEmpty_ => EDT_Install_V24_1.js:116, EDT_Install_V24.js:98
+  DUP EUC_IMPORT_confirmerSimulationTexte => EUC_IMPORT_PFMP_TextService.gs:79, EUC_IMPORT_PFMP_Paste.gs:23
+  DUP EUC_IMPORT_previsualiserTexte => EUC_IMPORT_PFMP_TextService.gs:78, EUC_IMPORT_PFMP_Paste.gs:2
+  DUP EUC_SUIVI_AFFECTER_V156 => EUC_SUIVI_PFMP_V156.gs:83, EUC_SUIVI_PFMP_AffectationsV156.gs:109
+  DUP EUC_SUIVI_CLASSE_detailV161 => EUC_SUIVI_PFMP_V156.gs:65, EUC_PFMP_International_StatusV161.gs:106
+  DUP EUC_V156_affectations_ => EUC_SUIVI_PFMP_V156.gs:57, EUC_SUIVI_PFMP_AffectationsV156.gs:72
+
+=== 2) ROUTES WEBAPP REELLES ===
+entreprises                    -> EUC_ENT_afficherApplication  (EDT.js:11)
+pfmp                           -> EUC_PFMP_afficherApplication  (EDT.js:12)
+pfmp-diagnostic                -> EUC_PFMP_afficherDiagnosticReferentiel  (EDT.js:13)
+suivi-pfmp                     -> EUC_SUIVI_afficherApplication  (EDT.js:14)
+admin-pfmp                     -> EUC_CENTRE_ADMIN_afficherApplication  (EDT.js:15)
+import-pronote-pfmp            -> EUC_IMPORT_afficherApplication  (EDT.js:16)
+import-prof-classes-pfmp       -> EUC_PC_afficherSynchronisation  (EDT.js:17)
+diplomes-classes-pfmp          -> EUC_PC_afficherDiplomes  (EDT.js:18)
+parametres-convention-pfmp     -> EUC_PARAM_CONV_afficher  (EDT.js:19)
+admin-conventions-pfmp         -> EUC_ADMIN_CONVENTIONS_afficherV146  (EDT.js:20)
+suivi-pfmp-ent                 -> EUC_SUIVI_ENT_afficherClassesV161  (EDT.js:22)
+suivi-pfmp-ent-classe          -> EUC_SUIVI_ENT_afficherClasseV161  (EDT.js:23)
+suivi-pfmp-classes             -> EUC_SUIVI_CLASSES_afficherV154  (EDT.js:24)
+migration-jotform-pfmp         -> EUC_V160_afficher  (EDT.js:25)
+destinataires-envois-pfmp      -> EUC_V158_afficher  (EDT.js:26)
+parametres-envois-pfmp         -> EUC_V157_afficherParametres  (EDT.js:27)
+suivi-pfmp-classe              -> EUC_SUIVI_CLASSE_afficherF18  (EDT.js:28)
+gestion-pfmp                   -> EUC_ADMIN_afficherApplication  (EDT.js:29)
+conventions-pfmp               -> EUC_CONVENTION_afficherGenerateur  (EDT.js:30)
+convention-pfmp-print          -> EUC_CONVENTION_afficherImpression  (EDT.js:31)
+conventions-pfmp-batch-print   -> EUC_CONVENTION_afficherImpressionLot  (EDT.js:32)
+
+=== 3) APPELS POTENTIELLEMENT COUTEUX — GLOBAL ===
+GRIST_POST        : 66
+GRIST_GET         : 60
+FULL_RECORD_READ  : 50
+GRIST_PATCH       : 46
+PROPERTIES        : 28
+URLFETCH          : 14
+CACHE_GET         : 10
+
+Lectures complètes de tables (EUC_IMPORT_lireRecords_) :
+   14 x EUC_ELEVES_PFMP
+    8 x EUC_PROFESSEURS_PFMP
+    5 x Classes
+    4 x Planning_Periodes
+    4 x EUC_CLASSES_PROFESSEURS_PFMP
+    3 x Annees_Scolaires
+    3 x EUC_RESPONSABLES_ELEVES_PFMP
+    2 x EUC_CORRESPONDANCE_CLASSES_PRONOTE
+    2 x EUC_IMPORTS_PRONOTE_PFMP
+    2 x EUC_AFFECTATIONS_SUIVI_PFMP
+    2 x Entreprises
+    1 x EUC_CLASSES_DIPLOMES_PFMP
+
+=== 4) PROFILS STRUCTURELS PAR ROUTE ===
+
+[pfmp] -> EUC_PFMP_afficherApplication
+  fonctions atteignables approx. : 5
+  score I/O statique              : 0
+  lectures complètes              : 0
+  GET Grist                       : 0
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 0
+
+[pfmp-diagnostic] -> EUC_PFMP_afficherDiagnosticReferentiel
+  fonctions atteignables approx. : 6
+  score I/O statique              : 4
+  lectures complètes              : 0
+  GET Grist                       : 3
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[suivi-pfmp] -> EUC_SUIVI_afficherApplication
+  fonctions atteignables approx. : 3
+  score I/O statique              : 0
+  lectures complètes              : 0
+  GET Grist                       : 0
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 0
+
+[admin-pfmp] -> EUC_CENTRE_ADMIN_afficherApplication
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[import-pronote-pfmp] -> EUC_IMPORT_afficherApplication
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[import-prof-classes-pfmp] -> EUC_PC_afficherSynchronisation
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[diplomes-classes-pfmp] -> EUC_PC_afficherDiplomes
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[parametres-convention-pfmp] -> EUC_PARAM_CONV_afficher
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[admin-conventions-pfmp] -> EUC_ADMIN_CONVENTIONS_afficherV146
+  fonctions atteignables approx. : 55
+  score I/O statique              : 21
+  lectures complètes              : 11
+  GET Grist                       : 5
+  POST Grist                      : 3
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_ELEVES_PFMP
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Annees_Scolaires
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+     1 x Classes
+     1 x Planning_Periodes
+
+[suivi-pfmp-ent] -> EUC_SUIVI_ENT_afficherClassesV161
+  fonctions atteignables approx. : 52
+  score I/O statique              : 22
+  lectures complètes              : 12
+  GET Grist                       : 5
+  POST Grist                      : 3
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Annees_Scolaires
+     2 x Classes
+     2 x EUC_ELEVES_PFMP
+     2 x Planning_Periodes
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+
+[suivi-pfmp-ent-classe] -> EUC_SUIVI_ENT_afficherClasseV161
+  fonctions atteignables approx. : 50
+  score I/O statique              : 19
+  lectures complètes              : 9
+  GET Grist                       : 5
+  POST Grist                      : 3
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Annees_Scolaires
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+     1 x Planning_Periodes
+
+[suivi-pfmp-classes] -> EUC_SUIVI_CLASSES_afficherV154
+  fonctions atteignables approx. : 56
+  score I/O statique              : 22
+  lectures complètes              : 12
+  GET Grist                       : 5
+  POST Grist                      : 3
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Classes
+     2 x EUC_ELEVES_PFMP
+     2 x Planning_Periodes
+     2 x Annees_Scolaires
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+
+[migration-jotform-pfmp] -> EUC_V160_afficher
+  fonctions atteignables approx. : 51
+  score I/O statique              : 22
+  lectures complètes              : 8
+  GET Grist                       : 7
+  POST Grist                      : 5
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+     1 x Planning_Periodes
+     1 x Annees_Scolaires
+
+[destinataires-envois-pfmp] -> EUC_V158_afficher
+  fonctions atteignables approx. : 64
+  score I/O statique              : 30
+  lectures complètes              : 9
+  GET Grist                       : 9
+  POST Grist                      : 9
+  PATCH Grist                     : 2
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Classes
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+     1 x EUC_ELEVES_PFMP
+     1 x Planning_Periodes
+     1 x Annees_Scolaires
+
+[parametres-envois-pfmp] -> EUC_V157_afficherParametres
+  fonctions atteignables approx. : 35
+  score I/O statique              : 14
+  lectures complètes              : 4
+  GET Grist                       : 4
+  POST Grist                      : 4
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     2 x EUC_PROFESSEURS_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+
+[suivi-pfmp-classe] -> EUC_SUIVI_CLASSE_afficherF18
+  fonctions atteignables approx. : 58
+  score I/O statique              : 21
+  lectures complètes              : 11
+  GET Grist                       : 5
+  POST Grist                      : 3
+  PATCH Grist                     : 1
+  UrlFetch                        : 1
+  tables lues intégralement :
+     3 x EUC_PROFESSEURS_PFMP
+     2 x Planning_Periodes
+     2 x Annees_Scolaires
+     1 x EUC_AFFECTATIONS_SUIVI_PFMP
+     1 x EUC_CLASSES_PROFESSEURS_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+
+[gestion-pfmp] -> EUC_ADMIN_afficherApplication
+  fonctions atteignables approx. : 10
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[conventions-pfmp] -> EUC_CONVENTION_afficherGenerateur
+  fonctions atteignables approx. : 9
+  score I/O statique              : 2
+  lectures complètes              : 0
+  GET Grist                       : 1
+  POST Grist                      : 0
+  PATCH Grist                     : 0
+  UrlFetch                        : 1
+
+[convention-pfmp-print] -> EUC_CONVENTION_afficherImpression
+  fonctions atteignables approx. : 84
+  score I/O statique              : 27
+  lectures complètes              : 5
+  GET Grist                       : 9
+  POST Grist                      : 6
+  PATCH Grist                     : 2
+  UrlFetch                        : 5
+  tables lues intégralement :
+     2 x EUC_PROFESSEURS_PFMP
+     1 x EUC_CLASSES_DIPLOMES_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+
+[conventions-pfmp-batch-print] -> EUC_CONVENTION_afficherImpressionLot
+  fonctions atteignables approx. : 86
+  score I/O statique              : 27
+  lectures complètes              : 5
+  GET Grist                       : 9
+  POST Grist                      : 6
+  PATCH Grist                     : 2
+  UrlFetch                        : 5
+  tables lues intégralement :
+     2 x EUC_PROFESSEURS_PFMP
+     1 x EUC_CLASSES_DIPLOMES_PFMP
+     1 x Classes
+     1 x EUC_ELEVES_PFMP
+
+=== 5) POINTS CHAUDS PRECIS DETECTES ===
+ 16 | EUC_NOTIF_dossierV143_                        | EUC_CONVENTION_PFMP_NotificationsV143.gs:210 | full=4 get=0 fetch=0 assurer=0
+ 16 | EUC_CONVENTION_preparerDossierAdminV142_      | EUC_CONVENTION_PFMP_NotificationsV142.gs:152 | full=4 get=0 fetch=0 assurer=0
+ 12 | EUC_V154_accueil_                             | EUC_SUIVI_PFMP_ClassesV154.gs:75 | full=3 get=0 fetch=0 assurer=0
+ 10 | EUC_DOCX_xmlEscape_                           | EUC_CONVENTION_PFMP_DocxV89.gs:17 | full=0 get=0 fetch=2 assurer=0
+  9 | EUC_PFMP_diagnostiquerReferentielCourant_     | EUC_PFMP_Diagnostic.gs:2 | full=0 get=3 fetch=0 assurer=0
+  9 | EUC_IMPORT_assurerSchemaRich_                 | EUC_IMPORT_PFMP_RichData.gs:70 | full=0 get=3 fetch=0 assurer=0
+  9 | EUC_CONVENTION_assurerTableLignesV108_        | EUC_CONVENTION_PFMP_LignesV107.gs:18 | full=0 get=3 fetch=0 assurer=0
+  8 | EUC_V155_professeursPrincipaux_               | EUC_SUIVI_PFMP_ClasseDetailV155.gs:12 | full=2 get=0 fetch=0 assurer=0
+  8 | EUC_V141_pp_                                  | EUC_CONVENTION_PFMP_AdminBridgeV141.gs:7 | full=2 get=0 fetch=0 assurer=0
+  8 | EUC_SUIVI_CLASSE_detailV155                   | EUC_SUIVI_PFMP_ClasseDetailV155.gs:136 | full=2 get=0 fetch=0 assurer=0
+  8 | EUC_SUIVI_CLASSE_detailF18_                   | EUC_SUIVI_PFMP_FixV161_18.gs:12 | full=2 get=0 fetch=0 assurer=0
+  6 | EUC_V160_assurerTable_                        | EUC_MIGRATION_JOTFORM_V160.gs:31 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_V159_assurerTableClasses_                 | EUC_SUIVI_PFMP_DestinatairesV158.gs:58 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_V158_assurerTable_                        | EUC_SUIVI_PFMP_DestinatairesV158.gs:31 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_V156_assurerTable_                        | EUC_SUIVI_PFMP_V156.gs:23 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_SUIVI_actualiserSyntheseAdmin             | EUC_SUIVI_PFMP_WebApp.gs:21 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_PC_ensure_                                | EUC_IMPORT_PFMP_ProfClasses.gs:6 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_PARAM_CONV_assurerTable_                  | EUC_PARAM_CONVENTION_PFMP.gs:13 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_IMPORT_previsualiserBase64                | EUC_IMPORT_PFMP_Service.gs:50 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_IMPORT_assurerTableEleves_                | EUC_IMPORT_PFMP_RealService.gs:4 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_ENT_installerOuMettreAJourGrist           | EUC_ENT_InstallationGrist.gs:10 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_CORRESPONDANCE_assurerTable_              | EUC_PFMP_CorrespondanceClasses.gs:8 | full=0 get=2 fetch=0 assurer=0
+  6 | EUC_CONVENTION_assurerTableAcces_             | EUC_CONVENTION_PFMP_Service.gs:5 | full=0 get=2 fetch=0 assurer=0
+
+=== 6) ANTI-PATTERNS RECHERCHES ===
+OUI  - Schéma vérifié pendant une lecture
+OUI  - Lecture complète affectations
+OUI  - Lecture complète élèves
+OUI  - Lecture complète périodes
+OUI  - Lecture complète professeurs
+
+=== 7) RECOMMANDATIONS PRIORITAIRES ===
+P0 - Retirer TOUT `assurerTable_/assurerColonnes_` des chemins de lecture. Ces fonctions doivent être réservées à l'installation/migration.
+P0 - Remplacer les `EUC_IMPORT_lireRecords_(TABLE)` des pages courantes par des lectures ciblées Grist (filter) ou SQL SELECT avec WHERE sur année/classe/période/id.
+P0 - Mettre en cache 5 à 10 min les référentiels quasi-statiques : années, classes, périodes, professeurs, diplômes, paramètres.
+P0 - Pour la liste des classes, servir une synthèse pré-calculée/cachée par année au lieu de recalculer élèves + périodes + conventions à chaque ouverture.
+P1 - Pour le détail d'une classe, ne lire que les 20–30 élèves de la classe, la période active et les affectations de cette classe/période.
+P1 - Passer les gros écrans en rendu 'shell immédiat + google.script.run asynchrone' : HTML en <300 ms, données chargées ensuite sans rechargement complet.
+P1 - Éviter les navigations complètes Apps Script entre liste -> classe -> période ; mettre à jour le contenu en AJAX/google.script.run quand possible.
+P1 - Convention : lire directement l'élève, la classe et la période par ID ; mettre en cache le patron PDF/DOCX et les paramètres établissement.
+P2 - Batcher les écritures Grist : un POST/PATCH avec plusieurs records plutôt qu'une requête par élève quand l'API le permet.
+P2 - Ajouter un chronométrage serveur standard autour de chaque appel Grist et de chaque route, avec `console.log(JSON.stringify({op,dureeMs}))`.
+
+=== 8) OBJECTIFS DE PERFORMANCE A VISEE ===
+Navigation / shell HTML             : 0,2 à 0,8 s
+Liste classes déjà cachée           : < 1,0 s
+Détail classe (20-30 élèves)         : 0,5 à 1,5 s
+Affecter / retirer professeur        : < 1,0 s
+Préparation convention simple        : 1 à 2 s
+Génération PDF                       : 2 à 5 s selon moteur
+
+NOTE : ce premier audit mesure précisément la STRUCTURE des I/O et les scans complets.
+Pour obtenir les millisecondes réelles par appel Grist, il faut instrumenter temporairement les fonctions serveur puis rejouer 3 parcours.
+============================================================
+ RAPPORT ENREGISTRE
+ /home/rudy/PFMP/AUDIT_PERF_PFMP_20260914_045030.txt
+============================================================

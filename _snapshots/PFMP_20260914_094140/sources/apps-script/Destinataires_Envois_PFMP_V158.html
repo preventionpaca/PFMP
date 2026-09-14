@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#1d2939}
+    .wrap{max-width:1450px;margin:auto;padding:24px}
+    .top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+    h1{margin:0}.sub{color:#667085}
+    .card{background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:18px;margin-bottom:18px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #edf0f4;padding:9px;text-align:left;vertical-align:middle}
+    th{background:#f8fafc;color:#475467;font-size:13px}
+    input[type=text],input[type=email],select{width:100%;box-sizing:border-box;border:1px solid #b9c7d8;border-radius:9px;padding:8px 9px;background:#fff}
+    select[multiple]{min-height:88px}
+    input[type=checkbox]{width:18px;height:18px}
+    .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+    button,a.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}
+    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec}
+    #status{display:none;padding:10px 12px;border-radius:10px;margin-bottom:14px;font-weight:700}
+    #status.show{display:block}.ok{background:#ecfdf3;color:#067647}.err{background:#fff1f2;color:#b42318}.info{background:#eef5fb;color:#164e7a}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{background:#eef5fb;border:1px solid #cfe0ef;border-radius:12px;padding:12px 14px;margin-bottom:16px;color:#164e7a}
+    details{margin-top:18px}summary{cursor:pointer;font-weight:800;font-size:17px;padding:10px 0}
+    .tiny{font-size:12px;color:#667085}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Destinataires & envois PFMP</h1>
+      <div class="sub">Matrice centrale de diffusion par document, établissement et filière.</div>
+    </div>
+    <a id="back" class="btn secondary" href="#">← Retour</a>
+  </div>
+
+  <div class="hint">
+    <b>Règle :</b> la personne reçoit le tableau si « Tableaux de suivi PFMP » est coché,
+    si l’établissement correspond, et si la filière correspond. Une liste de filières vide signifie <b>toutes les filières</b>.
+    Les professeurs du tableau restent ajoutés automatiquement.
+  </div>
+
+  <div id="status"></div>
+
+  <div class="card">
+    <h2>Destinataires</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fonction</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Actif</th>
+          <th>Tableaux de suivi PFMP</th>
+          <th>Établissement</th>
+          <th>Filières concernées</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <details>
+      <summary>Référentiel classes → établissement / filière</summary>
+      <p class="tiny">
+        À régler une seule fois. Ce référentiel permet au système de savoir si une classe relève du LP ou du LGT
+        et à quelle filière elle appartient.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Classe</th>
+            <th>Établissement</th>
+            <th>Filière</th>
+            <th>Actif</th>
+          </tr>
+        </thead>
+        <tbody id="classesBody"></tbody>
+      </table>
+    </details>
+
+    <div class="actions">
+      <button id="save" class="primary" type="button">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+let DATA=<?!= dataJson ?>;
+
+const tbody=document.getElementById('tbody');
+const classesBody=document.getElementById('classesBody');
+const save=document.getElementById('save');
+const status=document.getElementById('status');
+
+function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
+function show(text,type){status.textContent=text||'';status.className=text?'show '+type:''}
+
+function etabOptions(value,allowBlank){
+  const vals=allowBlank
+    ? [['','— à définir —'],['LP','LP'],['LGT','LGT']]
+    : [['TOUS','Tous'],['LP','LP'],['LGT','LGT']];
+  return vals.map(function(x){
+    return '<option value="'+x[0]+'" '+(x[0]===value?'selected':'')+'>'+x[1]+'</option>';
+  }).join('');
+}
+
+function filiereOptions(selected){
+  selected=selected||[];
+  return (DATA.filieres||[]).map(function(f){
+    return '<option value="'+esc(f)+'" '+(selected.indexOf(f)>=0?'selected':'')+'>'+esc(f)+'</option>';
+  }).join('');
+}
+
+function render(){
+  tbody.innerHTML=(DATA.lignes||[]).map(function(x){
+    return '<tr data-id="'+x.id+'">'+
+      '<td><b>'+esc(x.fonction)+'</b></td>'+
+      '<td><input class="nom" type="text" value="'+esc(x.nom||'')+'" placeholder="Nom"></td>'+
+      '<td><input class="email" type="email" value="'+esc(x.email||'')+'" placeholder="adresse@domaine.fr"></td>'+
+      '<td><input class="actif" type="checkbox" '+(x.actif?'checked':'')+'></td>'+
+      '<td><input class="tableaux" type="checkbox" '+(x.tableauxSuivi?'checked':'')+'></td>'+
+      '<td><select class="etab">'+etabOptions(x.etablissement||'TOUS',false)+'</select></td>'+
+      '<td><select class="filieres" multiple>'+filiereOptions(x.filieres)+'</select><div class="tiny">Vide = toutes</div></td>'+
+    '</tr>';
+  }).join('');
+
+  classesBody.innerHTML=(DATA.classes||[]).map(function(x){
+    return '<tr data-id="'+x.id+'">'+
+      '<td><b>'+esc(x.classe)+'</b></td>'+
+      '<td><select class="classeEtab">'+etabOptions(x.etablissement||'',true)+'</select></td>'+
+      '<td><input class="classeFiliere" type="text" value="'+esc(x.filiere||'')+'" placeholder="Ex. Numérique, MVA, MELEC..."></td>'+
+      '<td><input class="classeActif" type="checkbox" '+(x.actif?'checked':'')+'></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function selectedValues(select){
+  return Array.from(select.selectedOptions).map(function(o){return o.value}).filter(Boolean);
+}
+
+save.onclick=function(){
+  const old=save.innerHTML;
+  save.disabled=true;
+  save.innerHTML='<span class="spinner"></span>Enregistrement en cours...';
+  show('Enregistrement en cours...','info');
+
+  const lignes=Array.from(tbody.querySelectorAll('tr[data-id]')).map(function(tr){
+    return {
+      id:Number(tr.dataset.id),
+      nom:tr.querySelector('.nom').value.trim(),
+      email:tr.querySelector('.email').value.trim(),
+      actif:tr.querySelector('.actif').checked,
+      tableauxSuivi:tr.querySelector('.tableaux').checked,
+      etablissement:tr.querySelector('.etab').value,
+      filieres:selectedValues(tr.querySelector('.filieres'))
+    };
+  });
+
+  const classes=Array.from(classesBody.querySelectorAll('tr[data-id]')).map(function(tr){
+    return {
+      id:Number(tr.dataset.id),
+      etablissement:tr.querySelector('.classeEtab').value,
+      filiere:tr.querySelector('.classeFiliere').value.trim(),
+      actif:tr.querySelector('.classeActif').checked
+    };
+  });
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      DATA=r;
+      render();
+      save.disabled=false;
+      save.innerHTML=old;
+      show('Paramètres enregistrés.','ok');
+    })
+    .withFailureHandler(function(e){
+      save.disabled=false;
+      save.innerHTML=old;
+      show('Erreur : '+(e&&e.message||e),'err');
+    })
+    .EUC_V158_sauver({lignes:lignes,classes:classes});
+};
+
+document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+render();
+</script>
+</body>
+</html>

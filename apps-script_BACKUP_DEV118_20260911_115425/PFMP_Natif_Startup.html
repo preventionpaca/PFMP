@@ -1,0 +1,14 @@
+<script>(function(){
+const form=document.querySelector('#pfmpForm');if(!form)return;
+const year=form.elements.anneeId,offer=form.elements.offreId,period=form.elements.periodeId,info=document.querySelector('#catalogInfo'),global=document.querySelector('#globalStatus'),picker=document.querySelector('#studentPicker'),pickerStatus=document.querySelector('#studentPickerStatus');
+let data=null;
+function esc(v){const d=document.createElement('div');d.textContent=v??'';return d.innerHTML}
+function fr(v){const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'')}
+function selectedOffer(){return data&&data.offres.find(x=>String(x.id)===String(offer.value))}
+function renderClasses(){if(!data)return;const y=String(year.value);const rows=data.offres.filter(x=>String(x.anneeId)===y);offer.innerHTML='<option value="">Choisir…</option>'+rows.map(x=>`<option value="${x.id}">${esc(x.classe)}${x.diplome?' — '+esc(x.diplome):''}</option>`).join('');period.innerHTML='<option value="">Choisir…</option>';info.textContent=rows.length+' classe(s) avec une période PFMP pour cette année.';resetStudents();}
+function renderPeriods(){const o=selectedOffer();period.innerHTML='<option value="">Choisir…</option>'+((o&&o.periodes)||[]).map(x=>`<option value="${x.id}">${esc(x.libelle)} — ${fr(x.debut)} au ${fr(x.fin)}</option>`).join('');resetStudents();}
+function resetStudents(){if(picker){picker.innerHTML='<option value="">Aucun élève importé pour le moment</option>';picker.disabled=true;}if(pickerStatus)pickerStatus.textContent='La liste des élèves sera disponible après le premier import Pronote.';}
+function loaded(r){data=r||{annees:[],offres:[]};year.innerHTML=data.annees.map(x=>`<option value="${x.id}">${esc(x.code)}</option>`).join('');if(data.annees.length){const active=data.annees.find(x=>String(x.code).includes('2026-2027'))||data.annees[data.annees.length-1];year.value=String(active.id);}renderClasses();year.onchange=renderClasses;offer.onchange=renderPeriods;period.onchange=function(){resetStudents();};if(global)global.textContent='Référentiel natif Grist chargé.';}
+function failed(e){if(global){global.textContent='Impossible de charger le référentiel : '+(e&&e.message?e.message:String(e));global.classList.add('error');}}
+google.script.run.withSuccessHandler(loaded).withFailureHandler(failed).EUC_PFMP_chargerReferentielNatif();
+})();</script>

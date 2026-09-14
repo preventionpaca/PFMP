@@ -1,0 +1,290 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$HOME/PFMP" || exit 1
+
+STAMP="$(date +%Y%m%d_%H%M%S)"
+BACKUP="backup_DEV141_avant_DEV142_${STAMP}"
+mkdir -p "$BACKUP"
+
+for f in \
+  apps-script/EUC_CONVENTION_PFMP_AdminBridgeV141.gs \
+  apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs \
+  apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs
+do
+  [ -f "$f" ] && cp "$f" "$BACKUP/" || true
+done
+
+cat > apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs <<'EOF'
+/** Eucalyptus PFMP — v1.0.0-dev.142 — notifications administratives et configuration destinataire BFE. */
+
+var EUC_CONVENTION_NOTIFICATION_VERSION_V142_='v1.0.0-dev.142';
+
+/**
+ * Adresse par défaut.
+ * Pour changer facilement le destinataire BFE sans toucher au code,
+ * utiliser la propriété de script EUC_PFMP_NOTIFICATION_BFE_EMAIL
+ * ou exécuter EUC_CONVENTION_configurerEmailBFEV142("adresse@domaine.fr").
+ */
+var EUC_PFMP_NOTIFICATION_BFE_EMAIL_DEFAULT_V142_='bfe@lycee-les-eucalyptus.org';
+var EUC_PFMP_NOTIFICATION_BFE_PROPERTY_V142_='EUC_PFMP_NOTIFICATION_BFE_EMAIL';
+
+function EUC_CONVENTION_emailValideV142_(v){
+  var x=String(v||'').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)?x:'';
+}
+
+function EUC_CONVENTION_emailBFEV142_(){
+  var props=PropertiesService.getScriptProperties();
+  var configured=EUC_CONVENTION_emailValideV142_(
+    props.getProperty(EUC_PFMP_NOTIFICATION_BFE_PROPERTY_V142_)
+  );
+  return configured||EUC_PFMP_NOTIFICATION_BFE_EMAIL_DEFAULT_V142_;
+}
+
+/**
+ * Configuration simple du destinataire BFE.
+ * Cette fonction n'envoie aucun mail.
+ */
+function EUC_CONVENTION_configurerEmailBFEV142(email){
+  var x=EUC_CONVENTION_emailValideV142_(email);
+  if(!x)throw new Error('Adresse électronique BFE invalide.');
+  PropertiesService.getScriptProperties().setProperty(
+    EUC_PFMP_NOTIFICATION_BFE_PROPERTY_V142_,
+    x
+  );
+  return {ok:true,email:x,propriete:EUC_PFMP_NOTIFICATION_BFE_PROPERTY_V142_};
+}
+
+function EUC_CONVENTION_lireConfigNotificationV142(){
+  return {
+    version:EUC_CONVENTION_NOTIFICATION_VERSION_V142_,
+    emailBFE:EUC_CONVENTION_emailBFEV142_(),
+    propriete:EUC_PFMP_NOTIFICATION_BFE_PROPERTY_V142_,
+    valeurParDefaut:EUC_PFMP_NOTIFICATION_BFE_EMAIL_DEFAULT_V142_
+  };
+}
+
+function EUC_CONVENTION_uniquesV142_(values){
+  var seen={},out=[];
+  (values||[]).forEach(function(v){
+    var x=EUC_CONVENTION_emailValideV142_(v);
+    if(x&&!seen[x]){seen[x]=true;out.push(x);}
+  });
+  return out;
+}
+
+/**
+ * Règle de routage :
+ * - si l'élève a un mail : élève en destinataire principal ;
+ * - sinon : responsable(s) légal(aux) en destinataire(s) principal(aux) ;
+ * - les responsables légaux sont toujours informés s'ils ont un mail ;
+ * - PP et adresse BFE paramétrable sont en copie ;
+ * - dédoublonnage systématique.
+ */
+function EUC_CONVENTION_destinatairesV142_(dossier){
+  dossier=dossier||{};
+  var eleve=EUC_CONVENTION_uniquesV142_(
+    dossier.destinataires&&dossier.destinataires.eleve||[]
+  );
+  var parents=EUC_CONVENTION_uniquesV142_(
+    dossier.destinataires&&dossier.destinataires.responsables||[]
+  );
+  var pp=EUC_CONVENTION_uniquesV142_(
+    dossier.destinataires&&dossier.destinataires.professeursPrincipaux||[]
+  );
+  var bfe=EUC_CONVENTION_uniquesV142_([EUC_CONVENTION_emailBFEV142_()]);
+
+  var to=eleve.length?eleve.slice():parents.slice();
+  var cc=[];
+
+  if(eleve.length){
+    cc=cc.concat(parents);
+  }
+  cc=cc.concat(pp).concat(bfe);
+
+  to=EUC_CONVENTION_uniquesV142_(to);
+  cc=EUC_CONVENTION_uniquesV142_(cc).filter(function(x){
+    return to.indexOf(x)<0;
+  });
+
+  // Garde-fou : si ni élève ni parent n'a d'adresse,
+  // l'information reste envoyable au PP/BFE après validation explicite.
+  if(!to.length){
+    to=EUC_CONVENTION_uniquesV142_(pp.concat(bfe));
+    cc=[];
+  }
+
+  return {
+    eleve:eleve,
+    parents:parents,
+    pp:pp,
+    bfe:bfe,
+    to:to,
+    cc:cc,
+    eleveSansEmail:eleve.length===0,
+    aucunContactFamille:eleve.length===0&&parents.length===0
+  };
+}
+
+function EUC_CONVENTION_texteConfirmationV142_(d){
+  var numero=d.numeroEnregistrement||'';
+  var prenom=d.eleve&&d.eleve.prenom||'';
+  var nom=d.eleve&&d.eleve.nom||'';
+  var entreprise=d.entreprise&&d.entreprise.raisonSociale||'';
+  var dates='';
+  if(d.periode&&d.periode.debut&&d.periode.fin){
+    dates=d.periode.debut+' au '+d.periode.fin;
+  }
+
+  var objet='[PFMP] Enregistrement '+numero+' — '+prenom+' '+nom;
+
+  var texte=[
+    'Bonjour,',
+    '',
+    'La demande de convention de PFMP de '+prenom+' '+nom+
+      (entreprise?' auprès de '+entreprise:'')+
+      ' a bien été enregistrée sous le numéro '+numero+'.',
+    '',
+    dates?'Période prévue : '+dates+'.':'',
+    '',
+    'L’original papier de la convention doit maintenant être déposé au Bureau des formations et des entreprises afin d’être présenté à la signature de Monsieur le Proviseur.',
+    '',
+    'Important : cet enregistrement ne vaut pas validation définitive de la PFMP. La convention signée constitue le document officiel.',
+    '',
+    'Une fois signée par Monsieur le Proviseur et par les parties concernées, la convention devra être remise à l’entreprise. La PFMP ne pourra débuter qu’après finalisation de la convention.',
+    '',
+    'Ce message confirme uniquement l’enregistrement administratif des informations transmises.',
+    '',
+    'Cordialement,',
+    'Bureau des formations et des entreprises',
+    'Lycée Les Eucalyptus'
+  ].filter(function(x,i,a){
+    return !(x==='' && i>0 && a[i-1]==='');
+  }).join('\n');
+
+  return {objet:objet,texte:texte};
+}
+
+function EUC_CONVENTION_preparerNotificationV142_(accesId){
+  var rows=EUC_CONVENTION_lireAccesFraisV108_();
+  var acces=rows.filter(function(r){return Number(r.id)===Number(accesId);})[0];
+  if(!acces)throw new Error('Dossier QR '+accesId+' introuvable.');
+
+  var dossier=EUC_CONVENTION_preparerDossierAdminV141_(acces);
+  var dest=EUC_CONVENTION_destinatairesV142_(dossier);
+  var mail=EUC_CONVENTION_texteConfirmationV142_(dossier);
+
+  return {
+    version:EUC_CONVENTION_NOTIFICATION_VERSION_V142_,
+    simulation:true,
+    aucunEnvoi:true,
+    dossier:dossier,
+    destinataires:dest,
+    objet:mail.objet,
+    texte:mail.texte
+  };
+}
+
+/**
+ * DIAGNOSTIC : aucune écriture, aucun envoi.
+ */
+function DIAGNOSTIC_DEV142_PFMP_000223(){
+  var x=EUC_CONVENTION_preparerNotificationV142_(223);
+
+  console.log('============================================================');
+  console.log(' DEV.142 — SIMULATION NOTIFICATION PFMP');
+  console.log('============================================================');
+  console.log('Numéro : '+x.dossier.numeroEnregistrement);
+  console.log('Élève : '+x.dossier.eleve.prenom+' '+x.dossier.eleve.nom);
+  console.log('Mail élève présent : '+(!x.destinataires.eleveSansEmail));
+  console.log('Destinataire(s) principal(aux) : '+(x.destinataires.to.join(', ')||'—'));
+  console.log('Copie(s) : '+(x.destinataires.cc.join(', ')||'—'));
+  console.log('Adresse BFE configurée : '+x.destinataires.bfe.join(', '));
+  console.log('Aucun contact famille : '+x.destinataires.aucunContactFamille);
+  console.log('');
+  console.log('OBJET : '+x.objet);
+  console.log('');
+  console.log(x.texte);
+  console.log('');
+  console.log('AUCUN COURRIEL ENVOYÉ — SIMULATION UNIQUEMENT.');
+  return x;
+}
+
+/**
+ * Fonction d'envoi réel disponible mais JAMAIS appelée automatiquement
+ * dans DEV.142. À n'utiliser qu'après validation de la simulation.
+ */
+function EUC_CONVENTION_envoyerConfirmationV142(accesId){
+  var x=EUC_CONVENTION_preparerNotificationV142_(accesId);
+  if(!x.destinataires.to.length)throw new Error('Aucun destinataire principal exploitable.');
+
+  MailApp.sendEmail({
+    to:x.destinataires.to.join(','),
+    cc:x.destinataires.cc.join(','),
+    subject:x.objet,
+    body:x.texte,
+    name:'Lycée Les Eucalyptus — PFMP'
+  });
+
+  return {
+    ok:true,
+    numero:x.dossier.numeroEnregistrement,
+    to:x.destinataires.to,
+    cc:x.destinataires.cc,
+    dateEnvoi:new Date().toISOString()
+  };
+}
+EOF
+
+echo "============================================================"
+echo " DEV.142 — CONTROLES"
+echo "============================================================"
+
+cp apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs \
+   /tmp/EUC_CONVENTION_PFMP_NotificationsV142.js
+
+node --check /tmp/EUC_CONVENTION_PFMP_NotificationsV142.js
+
+grep -q "DIAGNOSTIC_DEV142_PFMP_000223" \
+  apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs
+
+grep -q "EUC_PFMP_NOTIFICATION_BFE_EMAIL_DEFAULT_V142_" \
+  apps-script/EUC_CONVENTION_PFMP_NotificationsV142.gs
+
+# Garde-fou : l'envoi réel existe, mais ne doit être appelé nulle part automatiquement.
+if grep -Rni \
+  "EUC_CONVENTION_envoyerConfirmationV142(" \
+  apps-script \
+  --include="*.gs" \
+  --include="*.js" \
+  --include="*.html" \
+  | grep -v "function EUC_CONVENTION_envoyerConfirmationV142"
+then
+  echo "ERREUR : appel automatique d'envoi détecté."
+  exit 1
+else
+  echo "OK : aucun appel automatique d'envoi."
+fi
+
+echo
+echo "=== PUSH APPS SCRIPT ==="
+clasp push -f
+
+echo
+echo "============================================================"
+echo " DEV.142 TERMINEE"
+echo "============================================================"
+echo "Sauvegarde : $BACKUP"
+echo "✓ adresse BFE paramétrable"
+echo "✓ élève prioritaire s'il possède un mail"
+echo "✓ parents utilisés si l'élève n'a pas de mail"
+echo "✓ parents / PP / BFE intégrés"
+echo "✓ simulation du courriel prête"
+echo "✓ fonction d'envoi réel présente mais NON branchée"
+echo "✓ aucun déploiement public"
+echo "✓ aucun courriel envoyé par ce script"
+echo
+echo "Dans Apps Script, exécuter maintenant :"
+echo "DIAGNOSTIC_DEV142_PFMP_000223"
+echo "============================================================"

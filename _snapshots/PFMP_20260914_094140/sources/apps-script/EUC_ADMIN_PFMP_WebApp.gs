@@ -1,0 +1,2 @@
+/** Eucalyptus PFMP — v1.0.0-dev.27 — route gestion protégée. */
+function EUC_ADMIN_afficherApplication(){var ctx=EUC_ADMIN_contexte_(),tpl=HtmlService.createTemplateFromFile('Gestion_PFMP');tpl.config=JSON.stringify({version:EUC_PFMP_VERSION,role:ctx.role,lectureSeule:ctx.lectureSeule===true,mutationMode:EUC_ADMIN_mode_()});return tpl.evaluate().setTitle('Gestion administrative PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');}
