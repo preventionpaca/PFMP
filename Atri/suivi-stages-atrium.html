@@ -5,36 +5,68 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Point sur les stages</title>
 <style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#f7fbf9;
-}
-.frame-wrap{
-  position:fixed;
-  inset:0;
-  overflow:hidden;
-  background:#f7fbf9;
-}
-iframe{
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7fbf9}
+.wrap{position:fixed;inset:0;background:#f7fbf9}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#f7fbf9}
+.google-mask{
   position:absolute;
-  left:0;
-  top:-92px;
-  width:100%;
-  height:calc(100% + 92px);
-  border:0;
+  z-index:10;
+  top:0;left:0;right:0;
+  height:100px;
   background:#f7fbf9;
+  pointer-events:none;
+  border-bottom:1px solid #eef4f1;
 }
 </style>
 </head>
 <body>
-<div class="frame-wrap">
-  <iframe
-    src="https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-conventions-public"
-    referrerpolicy="no-referrer">
-  </iframe>
+<div class="wrap">
+  <iframe id="app" title="Point sur les stages"></iframe>
+  <div class="google-mask"></div>
 </div>
+<script>
+(function(){
+  const GAS='https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
+  const frame=document.getElementById('app');
+
+  function stateFromUrl(){
+    const q=new URLSearchParams(location.search);
+    return {
+      page:q.get('page')||'suivi-conventions-public',
+      annee:q.get('annee')||'',
+      famille:q.get('famille')||'',
+      classe:q.get('classe')||'',
+      periode:q.get('periode')||''
+    };
+  }
+
+  function load(){
+    const s=stateFromUrl();
+    const u=new URL(GAS);
+    Object.keys(s).forEach(function(k){
+      if(s[k])u.searchParams.set(k,s[k]);
+    });
+    frame.src=u.toString();
+  }
+
+  function push(state){
+    const q=new URLSearchParams();
+    Object.keys(state||{}).forEach(function(k){
+      if(state[k])q.set(k,state[k]);
+    });
+    history.pushState(state,'',location.pathname+(q.toString()?'?'+q.toString():''));
+    load();
+  }
+
+  window.addEventListener('message',function(ev){
+    const d=ev.data||{};
+    if(d.type!=='EUC_ATRIUM_NAV'||!d.state)return;
+    push(d.state);
+  });
+
+  window.addEventListener('popstate',load);
+  load();
+})();
+</script>
 </body>
 </html>
