@@ -4,206 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Point sur les stages</title>
-
 <style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#f7fbf9;
-  font-family:Arial,sans-serif;
-}
-
-.shell{
-  position:fixed;
-  inset:0;
-  background:#f7fbf9;
-}
-
-.header{
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  height:92px;
-  z-index:20;
-  background:#fff;
-  border-bottom:1px solid #cfe5de;
-  display:flex;
-  align-items:center;
-}
-
-.header-inner{
-  width:100%;
-  max-width:1180px;
-  margin:0 auto;
-  padding:0 24px;
-}
-
-.header h1{
-  margin:0;
-  color:#0f4035;
-  font-size:30px;
-}
-
-.viewport{
-  position:absolute;
-  top:92px;
-  left:0;
-  right:0;
-  bottom:0;
-  overflow:hidden;
-  background:#f7fbf9;
-}
-
-iframe{
-  position:absolute;
-  left:0;
-  top:-92px;
-  width:100%;
-  height:calc(100% + 92px);
-  border:0;
-  background:#f7fbf9;
-}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7fbf9;font-family:Arial,sans-serif}
+.shell{position:fixed;inset:0;background:#f7fbf9}
+.header{position:absolute;top:0;left:0;right:0;height:92px;z-index:30;background:#fff;border-bottom:1px solid #cfe5de;display:flex;align-items:center}
+.header-inner{width:100%;max-width:1180px;margin:0 auto;padding:0 24px}
+.header h1{margin:0;color:#0f4035;font-size:30px}
+.viewport{position:absolute;top:92px;left:0;right:0;bottom:0;overflow:hidden;background:#f7fbf9}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#f7fbf9}
+.google-mask{position:absolute;z-index:20;top:0;left:0;right:0;height:48px;background:#f7fbf9;pointer-events:none}
 </style>
 </head>
-
 <body>
 <div class="shell">
-
-<header class="header">
-  <div class="header-inner">
-    <h1>Point sur les stages</h1>
-  </div>
-</header>
-
+<header class="header"><div class="header-inner"><h1>Point sur les stages</h1></div></header>
 <div class="viewport">
-  <iframe
-    id="app"
-    title="Point sur les stages">
-  </iframe>
+<iframe id="app" title="Point sur les stages"></iframe>
+<div class="google-mask" aria-hidden="true"></div>
 </div>
-
 </div>
-
 <script>
 (function(){
-
-  const GAS=
-    'https://script.google.com/macros/s/'+
-    'AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg'+
-    '/exec';
-
-  const frame=
-    document.getElementById('app');
-
-  function state(){
-
-    const q=
-      new URLSearchParams(
-        location.search
-      );
-
-    return {
-      page:
-        q.get('page')||
-        'suivi-conventions-public',
-
-      annee:
-        q.get('annee')||'',
-
-      famille:
-        q.get('famille')||'',
-
-      classe:
-        q.get('classe')||'',
-
-      periode:
-        q.get('periode')||''
-    };
-  }
-
-  function load(){
-
-    const s=state();
-
-    const u=
-      new URL(GAS);
-
-    Object.keys(s)
-      .forEach(function(k){
-
-        if(s[k]){
-          u.searchParams.set(
-            k,
-            s[k]
-          );
-        }
-
-      });
-
-    frame.src=
-      u.toString();
-  }
-
-  function navigate(s){
-
-    const q=
-      new URLSearchParams();
-
-    Object.keys(s||{})
-      .forEach(function(k){
-
-        if(s[k]){
-          q.set(
-            k,
-            s[k]
-          );
-        }
-
-      });
-
-    history.pushState(
-      s,
-      '',
-      location.pathname+
-      (
-        q.toString()
-        ? '?'+q.toString()
-        : ''
-      )
-    );
-
-    load();
-  }
-
-  window.addEventListener(
-    'message',
-    function(ev){
-
-      const d=
-        ev.data||{};
-
-      if(
-        d.type==='EUC_ATRIUM_NAV' &&
-        d.state
-      ){
-        navigate(d.state);
-      }
-
-    }
-  );
-
-  window.addEventListener(
-    'popstate',
-    load
-  );
-
-  load();
-
+ const GAS='https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
+ const frame=document.getElementById('app');
+ function state(){const q=new URLSearchParams(location.search);return{page:q.get('page')||'suivi-conventions-public',annee:q.get('annee')||'',famille:q.get('famille')||'',classe:q.get('classe')||'',periode:q.get('periode')||''}}
+ function load(){const s=state(),u=new URL(GAS);Object.keys(s).forEach(function(k){if(s[k])u.searchParams.set(k,s[k])});frame.src=u.toString()}
+ function navigate(s){const q=new URLSearchParams();Object.keys(s||{}).forEach(function(k){if(s[k])q.set(k,s[k])});history.pushState(s,'',location.pathname+(q.toString()?'?'+q.toString():''));load()}
+ window.addEventListener('message',function(ev){const d=ev.data||{};if(d.type==='EUC_ATRIUM_NAV'&&d.state)navigate(d.state)});
+ window.addEventListener('popstate',load);
+ load();
 })();
 </script>
-
 </body>
 </html>
