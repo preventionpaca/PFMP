@@ -89,6 +89,12 @@ html,body{
   color:#334155;
   font-weight:800;
 }
+
+/*
+ * DEV191 :
+ * plus aucun décalage négatif de l'iframe.
+ * C'était lui qui coupait exactement le haut des pages internes.
+ */
 .viewport{
   position:absolute;
   top:164px;
@@ -100,10 +106,9 @@ html,body{
 }
 iframe{
   position:absolute;
-  left:0;
-  top:-48px;
+  inset:0;
   width:100%;
-  height:calc(100% + 48px);
+  height:100%;
   border:0;
   background:#f7fbf9;
 }
@@ -164,28 +169,18 @@ iframe{
     const q=new URLSearchParams(location.search);
 
     return {
-      page:
-        q.get('page')||
-        'suivi-conventions-public',
-      annee:
-        q.get('annee')||'',
-      famille:
-        q.get('famille')||'',
-      classe:
-        q.get('classe')||'',
-      periode:
-        q.get('periode')||''
+      page:q.get('page')||'suivi-conventions-public',
+      annee:q.get('annee')||'',
+      famille:q.get('famille')||'',
+      classe:q.get('classe')||'',
+      periode:q.get('periode')||''
     };
   }
 
   function currentSchoolYear(){
     const d=new Date();
     const y=d.getFullYear();
-    const start=
-      d.getMonth()+1>=9
-        ? y
-        : y-1;
-
+    const start=d.getMonth()+1>=9?y:y-1;
     return start+'-'+(start+1);
   }
 
@@ -200,11 +195,7 @@ iframe{
     const s=normalizeState(state());
     const y0=Number(s.annee.slice(0,4));
 
-    year.innerHTML=[
-      y0-1,
-      y0,
-      y0+1
-    ].map(function(y){
+    year.innerHTML=[y0-1,y0,y0+1].map(function(y){
       const code=y+'-'+(y+1);
 
       return '<option value="'+code+'"'+
@@ -216,16 +207,12 @@ iframe{
   }
 
   function famLabel(f){
-    return f==='BACPRO'
-      ? 'BAC PRO'
-      : f;
+    return f==='BACPRO'?'BAC PRO':f;
   }
 
   function link(label,target){
     return '<a href="#" data-target="'+
-      encodeURIComponent(
-        JSON.stringify(target)
-      )+
+      encodeURIComponent(JSON.stringify(target))+
       '">'+
       label+
       '</a>';
@@ -296,7 +283,6 @@ iframe{
 
     crumb.querySelectorAll('a[data-target]')
       .forEach(function(a){
-
         a.onclick=function(ev){
           ev.preventDefault();
 
@@ -309,7 +295,6 @@ iframe{
 
           navigate(target);
         };
-
       });
   }
 
@@ -319,10 +304,7 @@ iframe{
 
     Object.keys(s).forEach(function(k){
       if(s[k]){
-        u.searchParams.set(
-          k,
-          s[k]
-        );
+        u.searchParams.set(k,s[k]);
       }
     });
 
@@ -337,10 +319,7 @@ iframe{
 
     Object.keys(s||{}).forEach(function(k){
       if(s[k]){
-        q.set(
-          k,
-          s[k]
-        );
+        q.set(k,s[k]);
       }
     });
 
@@ -355,9 +334,7 @@ iframe{
       s,
       '',
       location.pathname+
-      (q.toString()
-        ? '?'+q.toString()
-        : '')
+      (q.toString()?'?'+q.toString():'')
     );
 
     load();
