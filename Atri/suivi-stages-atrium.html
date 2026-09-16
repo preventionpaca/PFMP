@@ -43,7 +43,7 @@ html,body{
 }
 .viewport{
   position:absolute;
-  top:92px;
+  top:140px;
   left:0;
   right:0;
   bottom:0;
@@ -68,97 +68,56 @@ iframe{
       <h1>Point sur les stages</h1>
     </div>
   </header>
-
   <div class="viewport">
-    <iframe
-      id="app"
-      title="Point sur les stages">
-    </iframe>
+    <iframe id="app" title="Point sur les stages"></iframe>
   </div>
 </div>
-
 <script>
 (function(){
-  const GAS=
-    'https://script.google.com/macros/s/'+
-    'AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg'+
-    '/exec';
-
-  const frame=
-    document.getElementById('app');
+  const GAS='https://script.google.com/macros/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
+  const frame=document.getElementById('app');
 
   function state(){
-    const q=
-      new URLSearchParams(
-        location.search
-      );
-
+    const q=new URLSearchParams(location.search);
     return {
-      page:
-        q.get('page')||
-        'suivi-conventions-public',
-      annee:
-        q.get('annee')||'',
-      famille:
-        q.get('famille')||'',
-      classe:
-        q.get('classe')||'',
-      periode:
-        q.get('periode')||''
+      page:q.get('page')||'suivi-conventions-public',
+      annee:q.get('annee')||'',
+      famille:q.get('famille')||'',
+      classe:q.get('classe')||'',
+      periode:q.get('periode')||''
     };
   }
 
   function load(){
     const s=state();
     const u=new URL(GAS);
-
     Object.keys(s).forEach(function(k){
-      if(s[k]){
-        u.searchParams.set(k,s[k]);
-      }
+      if(s[k])u.searchParams.set(k,s[k]);
     });
-
     frame.src=u.toString();
   }
 
   function navigate(s){
     const q=new URLSearchParams();
-
     Object.keys(s||{}).forEach(function(k){
-      if(s[k]){
-        q.set(k,s[k]);
-      }
+      if(s[k])q.set(k,s[k]);
     });
-
     history.pushState(
       s,
       '',
-      location.pathname+
-      (q.toString()?'?'+q.toString():'')
+      location.pathname+(q.toString()?'?'+q.toString():'')
     );
-
     load();
   }
 
-  window.addEventListener(
-    'message',
-    function(ev){
-      const d=ev.data||{};
-
-      if(
-        d.type==='EUC_ATRIUM_NAV' &&
-        d.state
-      ){
-        navigate(d.state);
-      }
+  window.addEventListener('message',function(ev){
+    const d=ev.data||{};
+    if(d.type==='EUC_ATRIUM_NAV'&&d.state){
+      navigate(d.state);
     }
-  );
+  });
 
-  window.addEventListener(
-    'popstate',
-    load
-  );
-
+  window.addEventListener('popstate',load);
   load();
 })();
 </script>
