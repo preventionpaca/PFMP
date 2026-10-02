@@ -10,7 +10,7 @@ iframe{border:0;width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
-<iframe id="pfmpApp" src="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-conventions-public" title="Suivi des PFMP — consultation"></iframe>
+<iframe id="pfmpApp" src="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-conventions-public&amp;wrapper=1" title="Suivi des PFMP — consultation"></iframe>
 <script>
 (function(){
   'use strict';
@@ -27,7 +27,7 @@ iframe{border:0;width:100%;height:100%;display:block}
   window.addEventListener('message',function(ev){
     if(!ev.data||!/^EUC_PFMP_WRAPPER_/.test(String(ev.data.type||'')))return;
     if(ev.origin!=='null'&&
-       !/^https:\/\/([a-z0-9-]+\.)?script\.googleusercontent\.com$/i.test(ev.origin)&&
+       !/^https:\/\/(?:[a-z0-9-]+-)?script\.googleusercontent\.com$/i.test(ev.origin)&&
        ev.origin!=='https://script.google.com')return;
     if(ev.data.type==='EUC_PFMP_WRAPPER_QUERY'){
       try{ev.source.postMessage({type:'EUC_PFMP_WRAPPER_READY'},'*');}catch(e){}
