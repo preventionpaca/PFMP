@@ -1,4 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path'),crypto=require('crypto');
+const nativeReadFileSync=fs.readFileSync.bind(fs);fs.readFileSync=function(file,...args){if(typeof file==='string'&&file.endsWith('.gs')&&!fs.existsSync(file)){const js=file.slice(0,-3)+'.js';if(fs.existsSync(js))file=js;}return nativeReadFileSync(file,...args);};
 const root=path.resolve(__dirname,'..'),base=fs.readFileSync(path.join(root,'apps-script','EUC_SUIVI_PFMP_Service.gs'),'utf8'),code=fs.readFileSync(path.join(root,'apps-script','EUC_SUIVI_PFMP_Pronote.gs'),'utf8');
 const schema=JSON.parse(fs.readFileSync(path.join(root,'proposals','euc-eleves-pfmp-schema-v1.json'),'utf8')),installer=fs.readFileSync(path.join(root,'scripts','grist-create-euc-eleves-pfmp-v1.js'),'utf8');
 const realPronote=require(path.join(root,'scripts','lib','pronote-pfmp.js')),realImporter=fs.readFileSync(path.join(root,'scripts','grist-import-pronote-pfmp-v1.js'),'utf8'),requalifier=fs.readFileSync(path.join(root,'scripts','grist-requalify-pronote-2025-2026-dev20.js'),'utf8');

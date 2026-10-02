@@ -17,3 +17,15 @@
 - Tests historiques : conservés, mais encore liés à dev.8/dev.27 et non entièrement compatibles avec le snapshot DEV416.
 - Blocages connus avant déploiement : arbitrer `DOMAIN` contre `ANYONE_ANONYMOUS`, remettre la cible de recette en cohérence avec `j1jDArBkzi7P`, puis migrer les tests historiques sans les affaiblir.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
+
+## DEV417 en préparation locale — 2 octobre 2026
+
+- Les interfaces apprentis ADMIN et PUBLIC rejettent désormais les réponses de chargement obsolètes lorsqu'une autre classe ou année a été sélectionnée entre-temps. Cela supprime la course qui pouvait laisser une liste vide ou afficher la mauvaise réponse jusqu'à actualisation.
+- La bulle des compteurs apprentis est maintenant interactive : maintien au passage du pointeur, délai de fermeture élargi, navigation clavier, roulette et barre de défilement stables, confinement du défilement pour les listes longues.
+- Le détail de classe commun ADMIN/PUBLIC conserve exactement dix colonnes ordonnées. Les compteurs `Apprenti`, `Avec convention` et `Sans convention` exposent une liste triée et défilable des élèves concernés.
+- La garde de cible active `EUC_ENT_DOC_ID_RECETTE_AUTORISE` a été réalignée sur la seule copie autorisée `j1jDArBkzi7P`.
+- Le secret HMAC trouvé dans les sources a été retiré du code et remplacé par la propriété privée `EUC_DEV270B_HMAC_SECRET`. Avant déploiement, il faut faire tourner ce secret de façon coordonnée dans la passerelle d'authentification et le projet PFMP ; aucune valeur ne doit transiter par Git ou les journaux.
+- Test ciblé : `node tests/run-dev417-ui-tests.js` vert. Les scripts HTML modifiés passent le contrôle syntaxique V8 local.
+- La suite historique sait maintenant résoudre les fichiers `.gs` récupérés en `.js` sans supprimer d'assertion. Elle met toutefois en évidence plusieurs attentes devenues obsolètes (versions dev.8/dev.27, ancien manifeste `DOMAIN`, anciens artefacts absents et routeur incomplet en isolation) ; elle n'est pas encore verte et n'autorise donc aucun push Apps Script.
+- Diagnostic `1MELEC2` : le moteur d'import est incrémental (création des absents, mise à jour des champs élève réellement modifiés, présence seule pour les autres) et ne modifie pas les tables conventions/apprentissage. La lecture anonyme de `EUC_CORRESPONDANCE_CLASSES_PRONOTE` sur la recette a répondu `403` ; il reste à contrôler, avec un accès privé limité à `j1jDArBkzi7P`, si la ligne est absente, inactive ou `Exclure_import=true`.
+- Aucun accès production, aucune écriture Grist, aucun import, aucun `clasp push`, aucune version ni aucun déploiement n'a été effectué dans DEV417.

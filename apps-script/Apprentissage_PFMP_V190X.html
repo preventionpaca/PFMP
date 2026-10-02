@@ -2457,6 +2457,7 @@ function setKpis(s){
 /* DEV248_LAYOUT_MEMOIRE_COMPTEURS_DATES */
 (function(){
   var lastRows=[];
+  var loadSequence=0;
 
   function esc(v){
     var d=document.createElement('div');
@@ -3014,6 +3015,7 @@ function setKpis(s){
   }
 
   function install(){
+    /* EUC_DEV417_APPRENTICE_LOAD_GUARD */
     var classe=document.getElementById('classe');
     var year=document.getElementById('year');
     var status=document.getElementById('status');
@@ -3025,6 +3027,7 @@ function setKpis(s){
     classe.onchange=null;
 
     classe.addEventListener('change',function(){
+      var requestId=++loadSequence;
       var classId=Number(classe.value||0);
 
       if(!classId){
@@ -3040,16 +3043,23 @@ function setKpis(s){
 
       var className=
         classe.options[classe.selectedIndex].text;
+      var requestYear=String(year.value||'');
 
       var t0=Date.now();
 
       results.hidden=true;
+      results.setAttribute('data-dev417-loading','1');
       list.innerHTML='';
       status.textContent=
         'Chargement des élèves de '+className+'…';
 
       google.script.run
         .withSuccessHandler(function(r){
+          if(
+            requestId!==loadSequence ||
+            Number(classe.value||0)!==classId ||
+            String(year.value||'')!==requestYear
+          )return;
           try{
             var obj=
               (typeof r==='string')
@@ -3060,6 +3070,7 @@ function setKpis(s){
 
             render(rows);
             results.hidden=false;
+            results.removeAttribute('data-dev417-loading');
 
             status.textContent=
               rows.length+
@@ -3081,7 +3092,9 @@ function setKpis(s){
           }
         })
         .withFailureHandler(function(e){
+          if(requestId!==loadSequence)return;
           results.hidden=true;
+          results.removeAttribute('data-dev417-loading');
           status.textContent=
             'Erreur chargement : '+
             String(e&&e.message||e);
@@ -3089,7 +3102,7 @@ function setKpis(s){
           status.style.color='#b42318';
         })
         .EUC_DEV235_loadStudentsJson(
-          year.value,
+          requestYear,
           classId,
           className
         );
@@ -3124,6 +3137,9 @@ function setKpis(s){
   max-height:440px;
   overflow-y:auto;
   overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  pointer-events:auto;
   padding:12px 14px;
   background:#fff;
   border:1px solid #b9ddd4;
@@ -3217,24 +3233,40 @@ function setKpis(s){
     t=document.createElement('div');
     t.id='dev278Tooltip';
 
+    t.setAttribute('tabindex','-1');
+
     t.addEventListener(
-      'mouseenter',
+      'pointerenter',
       function(){
         clearTimeout(hideTimer);
       }
     );
 
     t.addEventListener(
-      'mouseleave',
+      'pointerleave',
       function(){
         hideTimer=setTimeout(
           function(){
             t.style.display='none';
           },
-          120
+          450
         );
       }
     );
+
+    t.addEventListener('focusin',function(){
+      clearTimeout(hideTimer);
+    });
+
+    t.addEventListener('focusout',function(){
+      hideTimer=setTimeout(function(){
+        t.style.display='none';
+      },450);
+    });
+
+    t.addEventListener('wheel',function(){
+      clearTimeout(hideTimer);
+    },{passive:true});
 
     document.body.appendChild(t);
 
@@ -3462,7 +3494,7 @@ function setKpis(s){
     card.dataset.dev278Kpi='1';
 
     card.addEventListener(
-      'mouseenter',
+      'pointerenter',
       function(){
         clearTimeout(hideTimer);
 
@@ -3478,7 +3510,7 @@ function setKpis(s){
     );
 
     card.addEventListener(
-      'mouseleave',
+      'pointerleave',
       function(){
         hideTimer=setTimeout(
           function(){
@@ -3488,7 +3520,7 @@ function setKpis(s){
 
             if(t)t.style.display='none';
           },
-          180
+          600
         );
       }
     );

@@ -1,4 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
+const nativeReadFileSync=fs.readFileSync.bind(fs);fs.readFileSync=function(file,...args){if(typeof file==='string'&&file.endsWith('.gs')&&!fs.existsSync(file)){const js=file.slice(0,-3)+'.js';if(fs.existsSync(js))file=js;}return nativeReadFileSync(file,...args);};
 const root=path.resolve(__dirname,'..');
 const code=n=>fs.readFileSync(path.join(root,'apps-script',n),'utf8');
 const bytesToArray=b=>Array.from(b,v=>v>127?v-256:v);

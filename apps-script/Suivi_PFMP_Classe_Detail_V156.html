@@ -154,9 +154,9 @@ body{background:#f7fbf9!important}
   <div class="card">
     <div class="summary">
       <div class="metric"><span>Effectif</span><b id="mTotal">0</b></div>
-      <div class="metric"><span>Apprenti</span><b id="mApprenti">0</b></div>
-      <div class="metric"><span>Avec convention</span><b id="mAvec">0</b></div>
-      <div class="metric"><span>Sans convention</span><b id="mSans">0</b></div>
+      <div class="metric" data-dev417-list="apprentis" tabindex="0"><span>Apprenti</span><b id="mApprenti">0</b></div>
+      <div class="metric" data-dev417-list="avec" tabindex="0"><span>Avec convention</span><b id="mAvec">0</b></div>
+      <div class="metric" data-dev417-list="sans" tabindex="0"><span>Sans convention</span><b id="mSans">0</b></div>
       <div class="metric"><span>Annulées / interrompues</span><b id="mIncident">0</b></div>
     </div>
   </div>
@@ -316,6 +316,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   }
 
   function render(){
+    window.EUC_DEV417_DETAIL_CURRENT=detail;
     back.href=C.baseUrl+'?page=suivi-conventions';mailParams.href=C.baseUrl+'?page=parametres-envois-pfmp';
     pageTitle.textContent='Suivi PFMP — '+(detail.classe&&detail.classe.nom||'Classe');
     pageSub.textContent=detail.periode?[detail.periode.libelle,detail.periode.debut,detail.periode.fin].filter(Boolean).join(' · '):'Aucune période sélectionnée';
@@ -337,6 +338,95 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
   yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
   render();
+})();
+</script>
+
+<!-- EUC_DEV417_DETAIL_KPI_LISTS -->
+<style id="EUC_DEV417_DETAIL_KPI_LISTS_STYLE">
+[data-dev417-list]{cursor:pointer;outline:none}
+[data-dev417-list]:focus{box-shadow:0 0 0 3px rgba(11,143,114,.18);border-radius:8px}
+#eucDev417DetailTip{
+  position:fixed;z-index:1000001;display:none;
+  width:min(360px,calc(100vw - 24px));max-height:min(430px,70vh);
+  overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;
+  padding:12px 14px;background:#fff;border:1px solid #b9ddd4;
+  border-radius:11px;box-shadow:0 12px 32px rgba(0,0,0,.18);
+  color:#17312b;font-size:13px;line-height:1.4
+}
+#eucDev417DetailTip strong{display:block;color:#086954;margin-bottom:7px}
+#eucDev417DetailTip ul{margin:0;padding-left:20px}
+#eucDev417DetailTip li{margin:3px 0}
+</style>
+<script id="EUC_DEV417_DETAIL_KPI_LISTS_JS">
+(function(){
+  'use strict';
+  var hideTimer=null;
+
+  function rows(){
+    var current=window.EUC_DEV417_DETAIL_CURRENT;
+    if(current&&Array.isArray(current.lignes))return current.lignes;
+    return (typeof DETAIL_INIT!=='undefined'&&DETAIL_INIT&&DETAIL_INIT.lignes)||[];
+  }
+  function incident(x){
+    var s=String((x&&x.statutCode)||'')+' '+String((x&&x.statut)||'');
+    s=s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return s.indexOf('ANNULE')>=0||s.indexOf('INTERROMP')>=0;
+  }
+  function list(key){
+    return rows().filter(function(x){
+      if(key==='apprentis')return !!x.apprenti;
+      if(x.apprenti||incident(x))return false;
+      if(key==='avec')return Number(x.conventionId)>0;
+      return Number(x.conventionId)<=0;
+    }).map(function(x){
+      return [x.nom,x.prenom].filter(Boolean).join(' ');
+    }).filter(Boolean).sort(function(a,b){return a.localeCompare(b,'fr');});
+  }
+  function tip(){
+    var t=document.getElementById('eucDev417DetailTip');
+    if(t)return t;
+    t=document.createElement('div');t.id='eucDev417DetailTip';t.tabIndex=-1;
+    t.addEventListener('pointerenter',function(){clearTimeout(hideTimer)});
+    t.addEventListener('pointerleave',scheduleHide);
+    t.addEventListener('focusin',function(){clearTimeout(hideTimer)});
+    t.addEventListener('focusout',scheduleHide);
+    t.addEventListener('wheel',function(){clearTimeout(hideTimer)},{passive:true});
+    document.body.appendChild(t);return t;
+  }
+  function scheduleHide(){
+    clearTimeout(hideTimer);hideTimer=setTimeout(function(){tip().style.display='none'},500);
+  }
+  function show(card){
+    clearTimeout(hideTimer);
+    var key=card.getAttribute('data-dev417-list'),names=list(key),t=tip();
+    var label=(card.querySelector('span')||{}).textContent||'Élèves';
+    t.innerHTML='<strong>'+label+' — '+names.length+'</strong>'+
+      (names.length?'<ul>'+names.map(function(n){
+        var d=document.createElement('div');d.textContent=n;return '<li>'+d.innerHTML+'</li>';
+      }).join('')+'</ul>':'<div>Aucun élève</div>');
+    t.style.display='block';
+    requestAnimationFrame(function(){
+      var r=card.getBoundingClientRect();
+      var left=Math.max(12,Math.min(r.left,window.innerWidth-t.offsetWidth-12));
+      var top=r.bottom+7;
+      if(top+t.offsetHeight>window.innerHeight-12)top=Math.max(12,r.top-t.offsetHeight-7);
+      t.style.left=left+'px';t.style.top=top+'px';
+    });
+  }
+  function install(){
+    document.querySelectorAll('[data-dev417-list]').forEach(function(card){
+      card.addEventListener('pointerenter',function(){show(card)});
+      card.addEventListener('pointerleave',scheduleHide);
+      card.addEventListener('focus',function(){show(card)});
+      card.addEventListener('blur',scheduleHide);
+      card.addEventListener('click',function(){show(card);tip().focus()});
+    });
+    document.addEventListener('pointerdown',function(e){
+      var t=document.getElementById('eucDev417DetailTip');
+      if(t&&!t.contains(e.target)&&!e.target.closest('[data-dev417-list]'))t.style.display='none';
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 </script>
 

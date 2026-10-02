@@ -1,5 +1,5 @@
 /** Eucalyptus PFMP - v1.0.0-dev.270b - authentification multi-domaines. */
-var EUC_DEV270B_SECRET_='38f630a73d158b797dd0ad52b1ea19f53b7929e1b749dc7dc25f0dadbc0c5804';
+var EUC_DEV270B_SECRET_PROPERTY_='EUC_DEV270B_HMAC_SECRET';
 var EUC_DEV270B_GATEWAY_BASE_='https://script.google.com/macros/s/AKfycbyQ34i64GObLXSFFd9ixCks_16OAPdv2IUNoPq6SRMUiWWxxfli_fXQmrG_z8GZr-0Q/exec';
 var EUC_DEV270B_ADMIN_BASE_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV270B_SESSION_TTL_=21600;
@@ -15,11 +15,22 @@ function EUC_DEV270B_b64uText_(s){
 function EUC_DEV270B_b64u_(bytes){
   return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/,'');
 }
+function EUC_DEV270B_secret_(){
+  var value=String(
+    PropertiesService.getScriptProperties().getProperty(
+      EUC_DEV270B_SECRET_PROPERTY_
+    )||''
+  ).trim();
+  if(value.length<32){
+    throw new Error('Secret d’authentification PFMP absent ou invalide.');
+  }
+  return value;
+}
 function EUC_DEV270B_sign_(payload){
   return EUC_DEV270B_b64u_(
     Utilities.computeHmacSha256Signature(
       payload,
-      EUC_DEV270B_SECRET_,
+      EUC_DEV270B_secret_(),
       Utilities.Charset.UTF_8
     )
   );
