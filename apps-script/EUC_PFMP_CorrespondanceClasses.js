@@ -14,6 +14,18 @@ function EUC_CORRESPONDANCE_assurerTable_(){
 function EUC_CORRESPONDANCE_controlerMappingsProvisoires(mappings){
   EUC_IMPORT_exigerAdminTexte_();mappings=mappings||{};var classes=EUC_IMPORT_chargerClassesCamin_(),ids={};classes.filter(function(c){return c.actif;}).forEach(function(c){ids[String(c.id)]=true;ids[String(c.nom).toUpperCase()]=true;});var erreurs=[];Object.keys(mappings).forEach(function(k){var v=String(mappings[k]||'').trim();if(!k.trim())erreurs.push('Nom Pronote vide');else if(!v||(!ids[v]&&!ids[v.toUpperCase()]))erreurs.push(k+' → classe Grist inconnue');});return {valide:erreurs.length===0,erreurs:erreurs,nombre:Object.keys(mappings).length,ecriture:false};
 }
+function EUC_CORRESPONDANCE_listerChoix(payload){
+  EUC_IMPORT_exigerAdminTexte_();payload=payload||{};
+  var annee=String(payload.annee||'').trim();
+  var source=EUC_IMPORT_normaliserSourcePronote_(payload.sourcePronote||'');
+  if(annee&&!/^20\d{2}-20\d{2}$/.test(annee))throw new Error('Année scolaire invalide.');
+  var rows=EUC_IMPORT_lireRecords_(EUC_CORRESPONDANCE_CLASSES_TABLE_).filter(function(r){
+    var rs=EUC_IMPORT_normaliserSourcePronote_(r.Source_Pronote||'');
+    return (!annee||String(r.Annee_scolaire||'')===annee)&&(!source||rs===source);
+  }).map(function(r){return {id:Number(r.id)||0,annee:String(r.Annee_scolaire||''),source:EUC_IMPORT_normaliserSourcePronote_(r.Source_Pronote||''),classePronote:String(r.Nom_classe_Pronote||''),classeGrist:String(r.Classe_Grist_nom||''),classeGristId:Number(r.Classe_Grist)||0,exclue:r.Exclure_import===true,active:r.Actif!==false,commentaire:String(r.Commentaire||'')};});
+  rows.sort(function(a,b){return [a.annee,a.source,a.classePronote].join('|').localeCompare([b.annee,b.source,b.classePronote].join('|'),'fr');});
+  return {ecriture:false,annee:annee,sourcePronote:source,lignes:rows,total:rows.length};
+}
 function EUC_CORRESPONDANCE_enregistrerChoix(payload){
   var ctx=EUC_IMPORT_exigerAdminTexte_();payload=payload||{};var annee=String(payload.annee||'').trim(),source=EUC_IMPORT_normaliserSourcePronote_(payload.sourcePronote||''),mappings=payload.correspondances||{},exclusions=payload.classesExclues||[];
   if(!/^20\d{2}-20\d{2}$/.test(annee))throw new Error('Année scolaire invalide.');if(!source)throw new Error('Source Pronote obligatoire.');

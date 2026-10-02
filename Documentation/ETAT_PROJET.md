@@ -29,3 +29,12 @@
 - La suite historique sait maintenant résoudre les fichiers `.gs` récupérés en `.js` sans supprimer d'assertion. Elle met toutefois en évidence plusieurs attentes devenues obsolètes (versions dev.8/dev.27, ancien manifeste `DOMAIN`, anciens artefacts absents et routeur incomplet en isolation) ; elle n'est pas encore verte et n'autorise donc aucun push Apps Script.
 - Diagnostic `1MELEC2` : le moteur d'import est incrémental (création des absents, mise à jour des champs élève réellement modifiés, présence seule pour les autres) et ne modifie pas les tables conventions/apprentissage. La lecture anonyme de `EUC_CORRESPONDANCE_CLASSES_PRONOTE` sur la recette a répondu `403` ; il reste à contrôler, avec un accès privé limité à `j1jDArBkzi7P`, si la ligne est absente, inactive ou `Exclure_import=true`.
 - Aucun accès production, aucune écriture Grist, aucun import, aucun `clasp push`, aucune version ni aucun déploiement n'a été effectué dans DEV417.
+
+## Complément DEV417 — rentrée et apprentissage
+
+- Le centre d’administration expose à nouveau un accès visible aux correspondances et exclusions de classes Pronote.
+- La page Pronote peut lister directement, en lecture seule, les correspondances mémorisées par année et source, sans charger ni importer un fichier.
+- Les inscriptions annuelles d’un même jeune sont désormais rapprochées par identifiants stables pour la lecture des épisodes d’apprentissage. L’inscription historique reste inchangée ; la nouvelle inscription annuelle retrouve les contrats antérieurs pertinents.
+- La date de rupture borne réellement l’épisode : avant rupture `APPRENTI`, après rupture `SCOLAIRE`, chevauchement `MIXTE`. Un nouveau contrat crée un nouvel épisode et rétablit `APPRENTI` à partir de sa date d’effet.
+- Tests ciblés verts : `node tests/run-dev417-ui-tests.js` et `node tests/run-dev417-schoolyear-tests.js`.
+- Le déploiement reste bloqué tant que le secret privé `EUC_DEV270B_HMAC_SECRET` n’est pas installé de façon coordonnée dans la passerelle et PFMP et que la suite historique complète n’est pas migrée vers DEV416/DEV417.

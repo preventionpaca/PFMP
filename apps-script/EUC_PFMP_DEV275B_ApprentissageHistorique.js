@@ -204,7 +204,87 @@ function EUC_DEV275B_contract_(r){
   };
 }
 
-function EUC_DEV275B_evalRows_(rows,eid,debut,fin){
+/**
+ * Un élève possède une inscription différente pour chaque année scolaire.
+ * Les contrats restent néanmoins attachés à la personne : on retrouve donc
+ * toutes ses inscriptions par identifiants Pronote/national stables. Le repli
+ * nom + prénom + naissance n'est accepté que lorsqu'il est non ambigu.
+ */
+function EUC_DEV275B_studentIdentity_(e){
+  e=e||{};
+  var strong=[];
+
+  function add(prefix,value){
+    value=EUC_DEV275B_txt_(value);
+    if(value)strong.push(prefix+'|'+value);
+  }
+
+  add('NN',e.Numero_national||e.Numero_National||e.Identifiant_national);
+  add('I',e.Identifiant_Pronote||e.Identifiant_source);
+  add('N',e.Numero_Pronote);
+
+  var fallback='ID|'+[
+    EUC_DEV275B_norm_(e.Nom),
+    EUC_DEV275B_norm_(e.Prenom_usage||e.Prenom),
+    EUC_DEV275B_date_(e.Date_naissance)
+  ].join('|');
+
+  return {strong:strong,fallback:fallback};
+}
+
+function EUC_DEV275B_studentAliases_(students){
+  var byStrong={},byFallback={},identityById={};
+
+  (students||[]).forEach(function(e){
+    var id=Number(e.id)||0;
+    if(!id)return;
+    var identity=EUC_DEV275B_studentIdentity_(e);
+    identityById[id]=identity;
+    identity.strong.forEach(function(k){
+      (byStrong[k]=byStrong[k]||[]).push(id);
+    });
+    if(identity.fallback.indexOf('ID|||')!==0){
+      (byFallback[identity.fallback]=byFallback[identity.fallback]||[]).push(id);
+    }
+  });
+
+  var out={};
+  Object.keys(identityById).forEach(function(rawId){
+    var id=Number(rawId),identity=identityById[id],ids={};
+    ids[id]=true;
+    identity.strong.forEach(function(k){
+      (byStrong[k]||[]).forEach(function(x){ids[x]=true;});
+    });
+    /* Aucun rapprochement faible si plusieurs personnes le partagent. */
+    if(!identity.strong.length && (byFallback[identity.fallback]||[]).length===1){
+      (byFallback[identity.fallback]||[]).forEach(function(x){ids[x]=true;});
+    }else if(identity.strong.length){
+      (byFallback[identity.fallback]||[]).forEach(function(x){
+        var other=identityById[x];
+        if(other&&other.strong.some(function(k){return identity.strong.indexOf(k)>=0;}))ids[x]=true;
+      });
+    }
+    out[id]=Object.keys(ids).map(Number);
+  });
+  return out;
+}
+
+function EUC_DEV275B_evalStudent_(rows,aliases,eid,debut,fin){
+  var ids=(aliases&&aliases[Number(eid)])||[Number(eid)||0];
+  var allowed={};
+  ids.forEach(function(id){if(id)allowed[id]=true;});
+  return EUC_DEV275B_evalRows_(
+    (rows||[]).filter(function(r){
+      return !!allowed[EUC_DEV275B_ref_(r.Eleve)];
+    }),
+    Number(eid)||0,
+    debut,
+    fin,
+    allowed
+  );
+}
+
+function EUC_DEV275B_evalRows_(rows,eid,debut,fin,allowedIds){
   debut=EUC_DEV275B_date_(debut);
   fin=EUC_DEV275B_date_(fin);
 
@@ -216,7 +296,7 @@ function EUC_DEV275B_evalRows_(rows,eid,debut,fin){
     .map(EUC_DEV275B_contract_)
     .filter(function(r){
       return (
-        Number(r.eleveId)===Number(eid) &&
+        (allowedIds ? !!allowedIds[Number(r.eleveId)] : Number(r.eleveId)===Number(eid)) &&
         !!r.debut &&
         r.historiqueValide
       );
@@ -337,6 +417,8 @@ function EUC_DEV275B_enrichDetail_(d){
   }
 
   var rows=EUC_DEV275B_rows_();
+  var allStudents=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP')||[];
+  var aliases=EUC_DEV275B_studentAliases_(allStudents);
   var apprentis=0;
   var mixtes=0;
   var avec=0;
@@ -344,8 +426,9 @@ function EUC_DEV275B_enrichDetail_(d){
   var incidents=0;
 
   (d.lignes||[]).forEach(function(x){
-    var st=EUC_DEV275B_evalRows_(
+    var st=EUC_DEV275B_evalStudent_(
       rows,
+      aliases,
       Number(x.eleveId)||0,
       debut,
       fin
@@ -509,9 +592,11 @@ function EUC_DEV275B_enrichFamilyPayload_(payload,annee,famille){
     }
   }catch(e){}
 
-  var students=(EUC_IMPORT_lireRecords_(
+  var allStudents=(EUC_IMPORT_lireRecords_(
     'EUC_ELEVES_PFMP'
-  )||[])
+  )||[]);
+  var aliases=EUC_DEV275B_studentAliases_(allStudents);
+  var students=allStudents
     .filter(function(e){
       if(
         e.Actif===false ||
@@ -571,8 +656,9 @@ function EUC_DEV275B_enrichFamilyPayload_(payload,annee,famille){
       var mx=0;
 
       (byClass[cid]||[]).forEach(function(e){
-        var st=EUC_DEV275B_evalRows_(
+        var st=EUC_DEV275B_evalStudent_(
           rows,
+          aliases,
           Number(e.id)||0,
           debut,
           fin

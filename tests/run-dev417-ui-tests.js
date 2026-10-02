@@ -66,4 +66,29 @@ assert.match(auth, /EUC_DEV270B_HMAC_SECRET/,
 assert.doesNotMatch(auth, /var\s+EUC_DEV270B_SECRET_\s*=\s*['"][0-9a-f]{32,}/i,
   'un secret HMAC est encore codé en dur');
 
+const admin = read('apps-script/Admin_PFMP.html');
+assert.match(admin, /id="euc-dev417-pronote-classes"/,
+  'centre admin: accès visible aux classes Pronote absent');
+assert.match(admin, /Correspondances et exclusions des classes/,
+  'centre admin: le rôle du lien Pronote n’est pas explicite');
+assert.match(admin, /page=import-pronote-pfmp/,
+  'centre admin: le lien des exclusions ne rejoint pas l’import Pronote');
+
+const importScripts = read('apps-script/Import_Pronote_PFMP_Scripts.html');
+const mappingsService = read('apps-script/EUC_PFMP_CorrespondanceClasses.js');
+assert.match(importScripts, /Correspondances de classes mémorisées/,
+  'import Pronote: consultation directe des correspondances absente');
+assert.match(importScripts, /EUC_CORRESPONDANCE_listerChoix/,
+  'import Pronote: chargement des correspondances mémorisées absent');
+assert.match(mappingsService, /function EUC_CORRESPONDANCE_listerChoix/,
+  'correspondances: service de consultation absent');
+assert.match(mappingsService, /return \{ecriture:false/,
+  'correspondances: la consultation ne déclare pas explicitement la lecture seule');
+
+const annual = read('apps-script/EUC_PFMP_DEV275B_ApprentissageHistorique.js');
+assert.match(annual, /EUC_DEV275B_studentAliases_/,
+  'apprentissage: continuité entre inscriptions annuelles absente');
+assert.match(annual, /EUC_DEV275B_evalStudent_/,
+  'apprentissage: les contrats ne suivent pas encore la personne entre deux années');
+
 console.log('✓ DEV417 : chargeur apprentis, bulles et compteurs protégés');

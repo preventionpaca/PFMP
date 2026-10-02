@@ -1,4 +1,4 @@
-DEV417 est préparé localement depuis le snapshot DEV416 : chargeur apprentis protégé contre les réponses obsolètes, bulle longue interactive, listes des compteurs du détail ADMIN/PUBLIC et alignement commun des dix colonnes. Prochaines étapes obligatoires avant déploiement :
+DEV417 est préparé localement depuis le snapshot DEV416 : chargeur apprentis protégé contre les réponses obsolètes, bulle longue interactive, listes des compteurs du détail ADMIN/PUBLIC, alignement commun des dix colonnes, consultation directe des correspondances Pronote et continuité annuelle des épisodes d’apprentissage. Prochaines étapes obligatoires avant déploiement :
 
 1. lire uniquement la correspondance `1MELEC2` dans la recette `j1jDArBkzi7P` avec un secret privé, sans import réel ni écriture ;
 2. faire tourner et installer `EUC_DEV270B_HMAC_SECRET` simultanément dans la passerelle et le projet PFMP ;
