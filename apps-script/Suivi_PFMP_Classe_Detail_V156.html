@@ -7,7 +7,7 @@
   <style>
     :root{--bg:#f4f7fb;--card:#fff;--ink:#1d2939;--muted:#667085;--line:#d9e1ec;--accent:#165d9c}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
-    .wrap{max-width:1450px;margin:0 auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+    .wrap{max-width:1900px;margin:0 auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
     h1{margin:0;font-size:28px}.sub,.small{color:var(--muted)}.back{background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--ink)}
     .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
     .context{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:end}select,input,button{font:inherit}
@@ -26,8 +26,13 @@
     .mail-actions{display:flex;gap:10px;justify-content:flex-end;margin:0 0 14px;flex-wrap:wrap}
     .mail-actions button,.mail-actions a{border:0;border-radius:9px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}
     .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec!important}
-    .table-wrap{overflow:auto}table{width:100%;border-collapse:separate;border-spacing:0;min-width:1280px}
+    .table-wrap{overflow:auto}table{width:100%;border-collapse:separate;border-spacing:0;min-width:1680px}
     th,td{padding:10px 9px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:2;font-size:13px;color:#475467}
+    th:nth-child(2),td:nth-child(2){min-width:155px}th:nth-child(3),td:nth-child(3){min-width:125px}
+    th:nth-child(4),td:nth-child(4){min-width:175px}th:nth-child(5),td:nth-child(5){min-width:255px;width:17%}
+    th:nth-child(6),td:nth-child(6),th:nth-child(7),td:nth-child(7){min-width:220px;width:15%}
+    th:nth-child(8),td:nth-child(8){min-width:155px}th:nth-child(9),td:nth-child(9),th:nth-child(10),td:nth-child(10){min-width:125px}
+    td{line-height:1.3;overflow-wrap:anywhere}.euc418-contact>div+div{margin-top:3px}.euc418-contact .name{font-weight:700}
     .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
     .s-SANS_CONVENTION{background:#fff1f2;color:#b42318}.s-ENREGISTREE,.s-DEPOSEE,.s-SIGNEE{background:#fff7ed;color:#b45309}
     .s-FINALISEE,.s-REMISE,.s-AUTORISEE{background:#ecfdf3;color:#067647}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}
@@ -225,6 +230,22 @@ const DETAIL_INIT=<?!= detailJson ?>;
   function fmtPfmpDate(v){const m=String(v||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'').trim()}
   function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
   function val(v){return v?esc(v):'<span class="empty">—</span>'}
+  function contactVal(v){
+    var raw=String(v||'').trim();
+    if(!raw)return '<span class="empty">—</span>';
+    var parts=raw.split(/\s+·\s+/).map(function(x){return x.trim();}).filter(Boolean);
+    var mail='',tel='',names=[];
+    parts.forEach(function(x){
+      if(!mail&&x.indexOf('@')>=0){mail=x;return;}
+      if(!tel&&/[0-9]{6}/.test(x.replace(/\D/g,''))){tel=x;return;}
+      names.push(x);
+    });
+    var rows=[];
+    if(names.length)rows.push('<div class="name">'+esc(names.join(' · '))+'</div>');
+    if(tel)rows.push('<div>'+esc(tel)+'</div>');
+    if(mail)rows.push('<div>'+esc(mail)+'</div>');
+    return '<div class="euc418-contact">'+(rows.length?rows.join(''):'<div>'+esc(raw)+'</div>')+'</div>';
+  }
   function showStatus(text,type){assignStatus.textContent=text||'';assignStatus.className='assign-status'+(text?' show':'')+(type?' '+type:'')}
   function selectedIds(){return Array.from(document.querySelectorAll('.student-check:checked')).map(x=>Number(x.value))}
     function historyNoteV161(x){return '';}
@@ -327,7 +348,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
 
     tbody.innerHTML=(detail.lignes||[]).map(function(x){
       const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
-      return '<tr><td>'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+val(x.contactEntreprise)+'</td><td>'+val(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
+      return '<tr><td>'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+contactVal(x.contactEntreprise)+'</td><td>'+contactVal(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
     }).join('');
 
     toolbar.style.display=detail.peutModifier?'grid':'none';document.getElementById('selectHead').style.display=detail.peutModifier?'table-cell':'none';sendTable.style.display=detail.peutModifier?'inline-block':'none';mailParams.style.display=detail.peutModifier?'inline-block':'none';bindChecks();
@@ -1071,7 +1092,8 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
 
 <style id="EUC_DEV190J_ADMIN_CONTACTS_STYLE">
 .euc190j-contact{font-size:11px;line-height:1.25}
-.euc190j-contact div{white-space:nowrap}
+.euc190j-contact div{white-space:normal;overflow-wrap:anywhere}
+.euc190j-contact .name{font-weight:700}
 </style>
 
 <script id="EUC_DEV190J_ADMIN_CONTACTS">
@@ -1081,9 +1103,18 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   }
 
   function compact(tel,mail,fallback){
+    var parts=String(fallback||'').split(/\s+·\s+/).map(function(x){return x.trim();}).filter(Boolean);
+    var guessedTel='',guessedMail='',names=[];
+    parts.forEach(function(x){
+      if(!guessedMail&&x.indexOf('@')>=0){guessedMail=x;return;}
+      if(!guessedTel&&/[0-9]{6}/.test(x.replace(/\D/g,''))){guessedTel=x;return;}
+      names.push(x);
+    });
+    tel=tel||guessedTel;mail=mail||guessedMail;
     var a=[];
-    if(tel) a.push('<div>☎ '+esc(tel)+'</div>');
-    if(mail) a.push('<div>✉ '+esc(mail)+'</div>');
+    if(names.length) a.push('<div class="name">'+esc(names.join(' · '))+'</div>');
+    if(tel) a.push('<div>'+esc(tel)+'</div>');
+    if(mail) a.push('<div>'+esc(mail)+'</div>');
     if(!a.length && fallback) a.push('<div>'+esc(fallback)+'</div>');
     return a.length ? '<div class="euc190j-contact">'+a.join('')+'</div>' : '—';
   }

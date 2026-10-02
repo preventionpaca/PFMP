@@ -43,8 +43,8 @@ function EUC_DEV416_buildFinal_(annee,famille,classe,periode){
       ? EUC_DEV356_detail_(annee,famille,classe,periode)
       : EUC_DEV347_detail(annee,famille,classe,periode);
 
-  try{if(typeof EUC_V50_enrichirDetail_==='function')d=EUC_V50_enrichirDetail_(d,annee,classe,periode)||d;}catch(e1){}
-  try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d;}catch(e2){}
+  /* EUC_DEV356_detail_ renvoie déjà le détail conventions + apprentis enrichi.
+   * Rejouer ces deux enrichissements doublait les lectures Grist à froid. */
   try{if(typeof EUC_DEV401_enrichAffectations_==='function')d=EUC_DEV401_enrichAffectations_(d,annee,classe,periode)||d;}catch(e3){}
   d=d||{}; d.annee=annee;
   return d;

@@ -2559,7 +2559,16 @@ function EUC_DEV190I_allRows_() {
 }
 
 function EUC_DEV190I_activeRows_(payload) {
-  return EUC_DEV190I_allRows_()
+  payload=payload||{};
+  var rows=EUC_DEV190G_fastRecords_(
+    EUC_DEV190I_TABLE_,
+    {
+      Annee_scolaire:[String(payload.annee||'')],
+      Classe_id:[Number(payload.classe||0)],
+      Periode_id:[Number(payload.periode||0)]
+    }
+  );
+  return rows
     .filter(function(r) {
       var f = r.fields || {};
       return (

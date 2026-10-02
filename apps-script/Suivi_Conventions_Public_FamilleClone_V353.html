@@ -84,7 +84,13 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
 <body>
 <script id="EUC_DEV418_WRAPPER_NAV">
 (function(){
-  var ready=false;
+  var ready=<?!= wrapperMode ? 'true' : 'false' ?>;
+  function sendToWrapper(message){
+    var w=window;
+    for(var i=0;i<6;i++){
+      try{w=w.parent;w.postMessage(message,'*');}catch(e){break;}
+    }
+  }
   function internal(url){
     try{
       var page=new URL(url,location.href).searchParams.get('page')||'';
@@ -93,7 +99,7 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
   }
   window.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY')ready=true;});
   window.EUC_DEV418_publicNavigate=function(url){
-    if(ready){window.top.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:String(url||'')},'*');return;}
+    if(ready){var u=new URL(String(url||''),location.href);u.searchParams.set('wrapper','1');sendToWrapper({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:u.toString()});return;}
     window.top.location.href=String(url||'');
   };
   document.addEventListener('click',function(ev){
@@ -101,7 +107,8 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
     if(!a||!internal(a.href))return;
     ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(a.href);
   },true);
-  try{window.top.postMessage({type:'EUC_PFMP_WRAPPER_QUERY'},'*');}catch(e){}
+  function ping(){sendToWrapper({type:'EUC_PFMP_WRAPPER_QUERY'});}
+  ping();setTimeout(ping,100);setTimeout(ping,500);setTimeout(ping,1500);
 })();
 </script>
 <header class="header">

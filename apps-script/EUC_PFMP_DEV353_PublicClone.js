@@ -38,12 +38,14 @@ function EUC_DEV353_publicApprentis(e){
 }
 function EUC_DEV353_publicSummary(e){
  var a=EUC_DEV353_y_(e),t=HtmlService.createTemplateFromFile('Suivi_Conventions_Public_Clone_V353');
- t.paramsJson=JSON.stringify({annee:a});t.baseUrl=EUC_DEV353_PUBLIC_URL_;
+ t.wrapperMode=String(e&&e.parameter&&e.parameter.wrapper||'')==='1';
+ t.paramsJson=JSON.stringify({annee:a,wrapper:t.wrapperMode});t.baseUrl=EUC_DEV353_PUBLIC_URL_;
  return t.evaluate().setTitle('Point sur les stages').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 function EUC_DEV353_publicFamily(e){
  var a=EUC_DEV353_y_(e),f=EUC_DEV353_t_(e&&e.parameter&&e.parameter.famille)||'BACPRO',t=HtmlService.createTemplateFromFile('Suivi_Conventions_Public_FamilleClone_V353');
- t.paramsJson=JSON.stringify({annee:a,famille:f});t.dataJson=JSON.stringify(EUC_DEV353_family_(a,f));t.baseUrl=EUC_DEV353_PUBLIC_URL_;
+ t.wrapperMode=String(e&&e.parameter&&e.parameter.wrapper||'')==='1';
+ t.paramsJson=JSON.stringify({annee:a,famille:f,wrapper:t.wrapperMode});t.dataJson=JSON.stringify(EUC_DEV353_family_(a,f));t.baseUrl=EUC_DEV353_PUBLIC_URL_;
  return t.evaluate().setTitle('Point sur les stages').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 function EUC_DEV353_publicDetail(e){

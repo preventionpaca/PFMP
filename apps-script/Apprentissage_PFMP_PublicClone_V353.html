@@ -1602,6 +1602,7 @@ BOOT.webappUrl='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AK
 
   
 function setKpis(s){
+  if(window.EUC_DEV348_KPIS_ACTIVE)return;
   s=s||{};
   var e;
   e=document.getElementById('dClasseEntiere'); if(e)e.textContent=s.classeEntiere||0;
@@ -2656,6 +2657,7 @@ function setKpis(s){
   }
 
   function setGlobalKpis(s){
+    if(window.EUC_DEV348_KPIS_ACTIVE)return;
     s=s||{};
 
     document.querySelectorAll('.kpi').forEach(function(kpi){
@@ -3573,6 +3575,7 @@ function setKpis(s){
 <!-- EUC_DEV348_KPI_BEGIN -->
 <script id="EUC_DEV348_KPI_JS">
 (function(){
+ window.EUC_DEV348_KPIS_ACTIVE=true;
  function norm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
  function setVal(label,val){document.querySelectorAll('.kpi').forEach(function(k){var s=k.querySelector('span'),b=k.querySelector('b');if(s&&b&&norm(s.textContent).indexOf(label)>=0)b.textContent=String(Number(val)||0);});}
  function apply(r){var l=(r&&r.lists)||{};setVal('classe entiere',(l.classeEntiere||[]).length);setVal('en mixite',(l.mixite||[]).length);setVal('total apprent',(l.total||[]).length);setVal('dossiers remis',(l.dossier||[]).length);setVal('transmis cfa',(l.cfa||[]).length);setVal('contrats valide',(l.contrats||[]).length);setVal('ruptures',(l.ruptures||[]).length);}

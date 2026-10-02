@@ -48,6 +48,10 @@ assert.strictEqual((header[1].match(/<th\b/g) || []).length, 10,
 assert.match(detail,
   /return '<tr><td>'\+check\+'<\/td><td><div class="student">/,
   'détail classe: la cellule Élève doit suivre immédiatement la sélection');
+assert.match(detail, /min-width:1680px/,
+  'détail classe: le tableau reste trop étroit pour les coordonnées entreprise');
+assert.match(detail, /function contactVal\(v\)/,
+  'détail classe: les coordonnées ne sont pas structurées sur plusieurs lignes');
 
 const publicExact = read('apps-script/EUC_PFMP_DEV415_PublicAdminExact.js');
 assert.match(publicExact, /createTemplateFromFile\(\s*'Suivi_PFMP_Classe_Detail_V156'\s*\)/,
@@ -58,6 +62,8 @@ assert.match(publicExact, /#tbody tr>td:first-child/,
   'PUBLIC doit masquer aussi la cellule de sélection de chaque ligne');
 assert.match(publicExact, /EUC_PFMP_WRAPPER_NAVIGATE/,
   'PUBLIC doit demander au wrapper de changer sa propre iframe');
+assert.match(publicExact, /wrapperMode[\s\S]*searchParams\.set\("wrapper","1"\)/,
+  'PUBLIC doit conserver le marqueur du wrapper dans le détail classe');
 assert.doesNotMatch(publicExact, /replace\(\/window\\\.top\\\.location/,
   'PUBLIC ne doit plus convertir une navigation en iframe Apps Script imbriquée');
 assert.match(publicExact, /EUC_DEV417_publicFastDetail/,
@@ -70,6 +76,8 @@ assert.match(publicFamily, /EUC_DEV418_publicNavigate/,
   'famille PUBLIC: le clic classe ne dialogue pas avec le wrapper');
 assert.match(publicFamily, /EUC_PFMP_WRAPPER_NAVIGATE/,
   'famille PUBLIC: le message de navigation vers le wrapper manque');
+assert.match(publicFamily, /searchParams\.set\('wrapper','1'\)/,
+  'famille PUBLIC: le marqueur du wrapper doit être conservé');
 
 const publicSummary = read('apps-script/Suivi_Conventions_Public_Clone_V353.html');
 assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
@@ -78,10 +86,16 @@ assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
 const publicWrapper = read('Atri/suivi-stages-atrium.html');
 assert.match(publicWrapper, /id="pfmpApp"/,
   'wrapper public: iframe PFMP identifiable absente');
+assert.match(publicWrapper, /page=suivi-conventions-public&amp;wrapper=1/,
+  'wrapper public: le mode wrapper doit être annoncé à Apps Script');
 assert.match(publicWrapper, /EUC_PFMP_WRAPPER_NAVIGATE/,
   'wrapper public: réception de navigation absente');
 assert.match(publicWrapper, /u\.hostname===host&&u\.pathname===path/,
   'wrapper public: les destinations Apps Script ne sont pas strictement filtrées');
+assert.match(publicWrapper, /ev\.origin!==['"]null['"]/,
+  'wrapper public: les messages du bac à sable Apps Script doivent être acceptés');
+assert.match(publicWrapper, /\+\-\)\?script\\\.googleusercontent/,
+  'wrapper public: l’origine réelle *-script.googleusercontent.com doit être autorisée');
 
 const detailService = read('apps-script/EUC_SUIVI_PFMP_ClasseDetailV155.js');
 assert.match(detailService, /function EUC_V155_resoudreClasse_/,
@@ -95,6 +109,10 @@ for (const file of apprenticeTemplates) {
     `${file}: compteur et infobulle apprentis n’utilisent pas la même source`);
   assert.doesNotMatch(html, /\.EUC_DEV277_dashboardDetails\(y\)/,
     `${file}: l’ancien calcul incohérent est encore appelé par l’infobulle`);
+  assert.match(html, /window\.EUC_DEV348_KPIS_ACTIVE=true/,
+    `${file}: le dashboard détaillé doit être l’unique source des KPI`);
+  assert.match(html, /if\(window\.EUC_DEV348_KPIS_ACTIVE\)return/,
+    `${file}: un ancien chargement peut encore remettre les KPI à zéro`);
 }
 
 const entConfig = read('apps-script/EUC_ENT_Config.js');
@@ -152,8 +170,18 @@ assert.match(liveDetail, /EUC_DEV418_APP_ROWS/,
   'détail classe: le cache apprentis peut encore réutiliser les zéros de DEV417');
 assert.match(finalCache, /return 'D418_'/,
   'détail classe: le cache final DEV418 n’est pas isolé');
+const buildFinal = finalCache.slice(finalCache.indexOf('function EUC_DEV416_buildFinal_'), finalCache.indexOf('function EUC_DEV416_finalDetail_'));
+assert.doesNotMatch(buildFinal, /EUC_V50_enrichirDetail_|EUC_APP172_enrichirDetail/,
+  'détail classe: les enrichissements conventions/apprentis sont encore rejoués deux fois');
 assert.match(baseDetailCache, /return 'DEV418_DETAIL_'/,
   'détail classe: le cache de base DEV418 n’est pas isolé');
+
+const snapshotSource = read('apps-script/EUC_PFMP_DEV190_Snapshot.js');
+const activeRows = snapshotSource.slice(snapshotSource.indexOf('function EUC_DEV190I_activeRows_'), snapshotSource.indexOf('function EUC_DEV190I_familyCode_'));
+assert.match(activeRows, /EUC_DEV190G_fastRecords_/,
+  'détail classe: le snapshot doit être lu avec un filtre REST ciblé');
+assert.doesNotMatch(activeRows, /EUC_DEV190I_allRows_/,
+  'détail classe: le chemin de consultation relit encore toute la table de snapshots');
 
 const scriptProps = new Map();
 const memoryCache = new Map();

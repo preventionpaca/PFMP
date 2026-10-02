@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 2 octobre 2026 : DEV417, version Apps Script immuable `723`.
+- Version active déployée le 3 octobre 2026 : DEV418 R6, version Apps Script immuable `730`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `723`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `730`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement, après confirmation explicite du 2 octobre 2026. Production `3pnVrygfNn7c` interdite.
@@ -49,3 +49,14 @@
 - Tests verts : `node tests/run-tests.js` (319 tests), `node tests/run-dev417-ui-tests.js` et `node tests/run-dev417-schoolyear-tests.js`.
 - Diagnostic HTTP PUBLIC `page=pfmp-diagnostic` : arrêt avant toute lecture Grist avec `Accès recette refusé : cible Grist non autorisée`. La propriété Apps Script reste donc configurée sur une cible différente de `j1jDArBkzi7P` ; le snapshot immuable 722 et les sauvegardes DEV273 à DEV416 autorisaient `b2CyeMEdVEMS`.
 - L’utilisateur a confirmé explicitement que `b2CyeMEdVEMS` est la base PFMP active et en a autorisé la consultation en lecture seule puis le déploiement DEV418. Toute écriture Grist, tout import et tout accès à la production `3pnVrygfNn7c` restent interdits.
+
+## DEV418 R6 déployée — 3 octobre 2026
+
+- La version Apps Script immuable `730` est appliquée aux deux seuls déploiements historiques : PUBLIC `AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg` et ADMIN `AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA`.
+- Les compteurs apprentis ADMIN/PUBLIC ont une source unique : les anciennes réponses asynchrones ne peuvent plus écraser les valeurs réelles par des zéros. Contrôle PUBLIC : 18 apprentis au total ; TCAR : 19 élèves chargés et 3 apprentis.
+- La liste détaillée PFMP utilise une largeur de travail accrue, réserve davantage d’espace à l’adresse entreprise et affiche contact et tuteur sur trois lignes : nom, téléphone, courriel.
+- Le détail classe lit le snapshot avec un filtre année/classe/période, ne rejoue plus deux enrichissements déjà effectués et mutualise la lecture des épisodes apprentis. Mesure du profileur ADMIN : `3307 ms`, contre `12162 ms` et `15111 ms` avant correction.
+- La navigation publique réelle a été vérifiée depuis `http://pfmp.loucodi.fr/` : accueil, BAC PRO puis TCAR restent sous le sous-domaine. Le dépôt de point d’accès `preventionpaca/pfmp-public` est publié au commit `879d36a` ; le wrapper de référence du dépôt PFMP est publié sur `main` au commit `67d07ce`.
+- Les données de contrôle sont cohérentes : TCAR `19 / 3 / 16 / 0` et TCIEL `26 / 1 / 24 / 1` pour effectif, apprentis, conventions et sans convention.
+- Le temps de calcul serveur est désormais dans la cible de 3 à 4 secondes. Le temps perçu complet peut rester supérieur lors d’un chargement froid à cause de la création des iframes et du bac à sable Google Apps Script ; ce reliquat devient le premier chantier du prochain lot.
+- Suite complète finale verte : `node tests/run-tests.js`, 319 tests. Aucun accès à `3pnVrygfNn7c`, aucune écriture Grist, aucun import Pronote, aucun courriel et aucune mutation métier n’ont été exécutés.

@@ -1,10 +1,16 @@
-## Validation et déploiement DEV418 autorisés
+## DEV418 déployée — prochain lot performance perçue
 
-1. `b2CyeMEdVEMS` est confirmée comme base PFMP active et sa consultation en lecture seule est explicitement autorisée ;
-2. valider en lecture seule les tables et références nécessaires, sans import ni écriture ;
-3. créer la version immuable DEV418 et mettre à jour les deux déploiements existants après tests verts et relecture distante.
+DEV418 R6 est déployée en version immuable `730` sur les déploiements ADMIN et PUBLIC existants. La correction fonctionnelle et la première réduction du coût serveur sont terminées.
 
-Correctifs DEV418 déjà préparés localement : alignement du tableau PUBLIC, maintien dans les sous-domaines, navigation publique rapide en lecture seule, cohérence des infobulles apprentis et résolution offre-vers-classe.
+Ordre proposé pour le prochain lot :
+
+1. réduire le temps perçu froid du détail classe, encore pénalisé par la navigation et la création du bac à sable Apps Script malgré un calcul serveur mesuré à `3307 ms` ;
+2. privilégier une coque publique persistante avec chargement asynchrone du détail et squelette immédiat, afin de ne plus reconstruire toute la page et ses iframes à chaque classe ;
+3. mesurer séparément temps serveur, première peinture, tableau visible et interaction possible sur TCAR, TCIEL et une classe sans apprenti ;
+4. conserver les contrôles de cohérence `effectif = apprentis + conventions + sans convention` et la navigation sous `pfmp.loucodi.fr` ;
+5. ne traiter HTTPS des sous-domaines qu’au niveau hébergement/DNS, sans contourner les avertissements du navigateur.
+
+Le sous-domaine administratif `alternance.loucodi.fr` reste une redirection vers la passerelle d’authentification ; conserver une URL longue après authentification est le comportement retenu. Ne pas transformer l’administration en iframe sans décision explicite, car l’authentification Google peut être affectée.
 
 ## Historique du plan DEV417
 
