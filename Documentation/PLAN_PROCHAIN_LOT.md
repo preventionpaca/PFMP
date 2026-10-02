@@ -4,11 +4,12 @@ DEV418 R6 est déployée en version immuable `730` sur les déploiements ADMIN e
 
 Ordre proposé pour le prochain lot :
 
-1. réduire le temps perçu froid du détail classe, encore pénalisé par la navigation et la création du bac à sable Apps Script malgré un calcul serveur mesuré à `3307 ms` ;
-2. privilégier une coque publique persistante avec chargement asynchrone du détail et squelette immédiat, afin de ne plus reconstruire toute la page et ses iframes à chaque classe ;
-3. mesurer séparément temps serveur, première peinture, tableau visible et interaction possible sur TCAR, TCIEL et une classe sans apprenti ;
-4. conserver les contrôles de cohérence `effectif = apprentis + conventions + sans convention` et la navigation sous `pfmp.loucodi.fr` ;
-5. ne traiter HTTPS des sous-domaines qu’au niveau hébergement/DNS, sans contourner les avertissements du navigateur.
+1. après confirmation explicite, recopier sans l’afficher la propriété privée `EUC_DEV270B_HMAC_SECRET` de la passerelle vers le projet PFMP, puis vérifier `alternance.loucodi.fr` ;
+2. réduire le temps perçu froid du détail classe, encore pénalisé par la navigation et la création du bac à sable Apps Script malgré un calcul serveur mesuré à `3307 ms` ;
+3. privilégier une coque publique persistante avec chargement asynchrone du détail et squelette immédiat, afin de ne plus reconstruire toute la page et ses iframes à chaque classe ;
+4. mesurer séparément temps serveur, première peinture, tableau visible et interaction possible sur TCAR, TCIEL et une classe sans apprenti ;
+5. conserver les contrôles de cohérence `effectif = apprentis + conventions + sans convention` et la navigation sous `pfmp.loucodi.fr` ;
+6. ne traiter HTTPS des sous-domaines qu’au niveau hébergement/DNS, sans contourner les avertissements du navigateur.
 
 Le sous-domaine administratif `alternance.loucodi.fr` reste une redirection vers la passerelle d’authentification ; conserver une URL longue après authentification est le comportement retenu. Ne pas transformer l’administration en iframe sans décision explicite, car l’authentification Google peut être affectée.
 
