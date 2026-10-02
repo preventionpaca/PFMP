@@ -14,7 +14,7 @@ function EUC_DEV340_year_(e){
   return EUC_DEV340_txt_(c&&c.active);
 }
 function EUC_DEV340_accessKey_(annee,classe,periode){
-  return 'EUC_DEV340_ACC_'+EUC_DEV340_txt_(annee)+'_'+Number(classe||0)+'_'+Number(periode||0);
+  return 'EUC_DEV418_ACC_'+EUC_DEV340_txt_(annee)+'_'+Number(classe||0)+'_'+Number(periode||0);
 }
 function EUC_DEV340_compactAccess_(a){
   return {
@@ -161,7 +161,7 @@ function EUC_DEV394_BASE_EUC_DEV340_enrichConventions_(detail,annee,classe,perio
   return detail;
 }
 function EUC_DEV340_appRows_(){
-  var cache=CacheService.getScriptCache(),key='EUC_DEV340_APP_ROWS',got=cache.get(key);
+  var cache=CacheService.getScriptCache(),key='EUC_DEV418_APP_ROWS',got=cache.get(key);
   if(got){try{return JSON.parse(got);}catch(e){}}
   var rows=[];
   try{rows=EUC_IMPORT_lireRecords_('EUC_APPRENTISSAGE_PFMP')||[];}catch(e){rows=[];}
@@ -310,16 +310,16 @@ function EUC_DEV340_afficherFamille(){
   }
 }
 
-function EUC_DEV340_accessRows_(annee){
+function EUC_DEV340_accessRows_(annee,classe,periode){
   var __t=Date.now();
   try{
     var y=String(annee||'').trim();
     if(y){
-      var persisted=EUC_DEV398_getPersistentAccess_(y);
+      var persisted=EUC_DEV398_getPersistentAccess_(y,classe,periode);
       if(persisted)return persisted;
     }
     var rows=EUC_DEV398_BASE_EUC_DEV340_accessRows_.apply(this,arguments);
-    if(y&&Array.isArray(rows))EUC_DEV398_putPersistentAccess_(y,rows);
+    if(y&&Array.isArray(rows))EUC_DEV398_putPersistentAccess_(y,classe,periode,rows);
     return rows;
   } finally {
     EUC_DEV394_mark_('EUC_DEV340_accessRows_',Date.now()-__t);

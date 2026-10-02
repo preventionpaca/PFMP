@@ -27,7 +27,7 @@ function EUC_DEV356_publicDetail(e){
 
 /* DEV383 - cache court du detail, resultat metier inchange. */
 function EUC_DEV383_cacheKey_(a,f,c,p){
-  return 'DEV383_DETAIL_'+String(a)+'_'+String(f||'BACPRO')+'_'+Number(c||0)+'_'+Number(p||0);
+  return 'DEV418_DETAIL_'+String(a)+'_'+String(f||'BACPRO')+'_'+Number(c||0)+'_'+Number(p||0);
 }
 
 function EUC_DEV356_detail_(a,f,c,p){

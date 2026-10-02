@@ -3,7 +3,7 @@ var EUC_DEV416_TTL_=180;
 var EUC_DEV416_CHUNK_=70000;
 
 function EUC_DEV416_key_(a,f,c,p){
-  return 'D416_'+String(a)+'_'+String(f||'BACPRO')+'_'+Number(c||0)+'_'+Number(p||0);
+  return 'D418_'+String(a)+'_'+String(f||'BACPRO')+'_'+Number(c||0)+'_'+Number(p||0);
 }
 
 function EUC_DEV416_cacheGet_(key){

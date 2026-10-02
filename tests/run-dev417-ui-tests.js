@@ -3,6 +3,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
@@ -117,4 +118,48 @@ assert.match(annual, /EUC_DEV275B_studentAliases_/,
 assert.match(annual, /EUC_DEV275B_evalStudent_/,
   'apprentissage: les contrats ne suivent pas encore la personne entre deux années');
 
-console.log('✓ DEV417 : chargeur apprentis, bulles et compteurs protégés');
+const accessCache = read('apps-script/EUC_PFMP_DEV398_Performance.js');
+const liveDetail = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
+const finalCache = read('apps-script/EUC_PFMP_DEV416_Performance.js');
+const baseDetailCache = read('apps-script/EUC_PFMP_DEV356_Finitions.js');
+assert.match(accessCache, /DEV418_ACCESS_ROWS_/,
+  'détail classe: le cache persistant DEV418 n’est pas isolé des anciennes valeurs');
+assert.match(accessCache, /accessSignature_\(annee,classe,periode\)/,
+  'détail classe: la clé persistante ne distingue pas classe et période');
+assert.match(liveDetail, /getPersistentAccess_\(y,classe,periode\)/,
+  'détail classe: une lecture persistante reste partagée entre toutes les classes');
+assert.match(liveDetail, /putPersistentAccess_\(y,classe,periode,rows\)/,
+  'détail classe: une écriture persistante reste partagée entre toutes les classes');
+assert.match(liveDetail, /EUC_DEV418_ACC_/,
+  'détail classe: le cache court peut encore réutiliser les zéros de DEV417');
+assert.match(liveDetail, /EUC_DEV418_APP_ROWS/,
+  'détail classe: le cache apprentis peut encore réutiliser les zéros de DEV417');
+assert.match(finalCache, /return 'D418_'/,
+  'détail classe: le cache final DEV418 n’est pas isolé');
+assert.match(baseDetailCache, /return 'DEV418_DETAIL_'/,
+  'détail classe: le cache de base DEV418 n’est pas isolé');
+
+const scriptProps = new Map();
+const memoryCache = new Map();
+const cacheCtx = {
+  JSON, String, Number, Array,
+  PropertiesService: {getScriptProperties: () => ({
+    getProperty: key => scriptProps.get(key) || null,
+    setProperty: (key, value) => {scriptProps.set(key, value);},
+    deleteProperty: key => {scriptProps.delete(key);}
+  })},
+  CacheService: {getScriptCache: () => ({
+    put: (key, value) => {memoryCache.set(key, value);},
+    remove: key => {memoryCache.delete(key);}
+  })}
+};
+vm.createContext(cacheCtx);
+vm.runInContext(accessCache, cacheCtx);
+cacheCtx.EUC_DEV398_putPersistentAccess_('2026-2027', 24, 62, [{id: 1}]);
+cacheCtx.EUC_DEV398_putPersistentAccess_('2026-2027', 28, 65, [{id: 2}]);
+assert.strictEqual(cacheCtx.EUC_DEV398_getPersistentAccess_('2026-2027', 24, 62)[0].id, 1,
+  'détail classe: TCAR relit les données d’une autre classe');
+assert.strictEqual(cacheCtx.EUC_DEV398_getPersistentAccess_('2026-2027', 28, 65)[0].id, 2,
+  'détail classe: TMP3D relit les données d’une autre classe');
+
+console.log('✓ DEV418 : chargeur, navigation, bulles, compteurs et caches protégés');
