@@ -109,10 +109,37 @@ function EUC_DEV415_publicDetail(e){
    * Dans les wrappers loucodi.fr, la page publique vit dans une iframe.
    * Les anciens target=_top / window.top forçaient la navigation hors du
    * sous-domaine.  La transformation ne concerne que le HTML PUBLIC rendu.
-   */
+  */
   html=html.replace(/target=["']_top["']/gi,'target="_self"');
-  html=html.replace(/window\.top\.location/g,'window.location');
   html=html.replace(/\.EUC_DEV382_fastDetail\(/g,'.EUC_DEV417_publicFastDetail(');
+
+  /*
+   * Le wrapper GitHub conserve pfmp.loucodi.fr et remplace son iframe.
+   * Sans wrapper (URL Apps Script ouverte directement), la navigation _top
+   * reste le repli fonctionnel.
+   */
+  var wrapperNav=
+    '<script id="EUC_DEV418_WRAPPER_NAV">(function(){'+
+    'var ready=false,BASE="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec";'+
+    'function normalized(raw){try{var u=new URL(raw,location.href),p=u.searchParams.get("page")||"";'+
+    'if(p==="suivi-pfmp-classe")u.searchParams.set("page","suivi-pfmp-classe-public");'+
+    'if(p==="suivi-conventions-famille")u.searchParams.set("page","suivi-conventions-public-famille");'+
+    'if(p==="suivi-conventions")u.searchParams.set("page","suivi-conventions-public");'+
+    'if((u.searchParams.get("page")||"").indexOf("suivi-")!==0)return "";return u.toString();}catch(e){return "";}}'+
+    'addEventListener("message",function(ev){if(ev.data&&ev.data.type==="EUC_PFMP_WRAPPER_READY")ready=true;});'+
+    'window.EUC_DEV418_publicNavigate=function(raw){var url=normalized(raw);if(!url)return;'+
+    'if(ready){top.postMessage({type:"EUC_PFMP_WRAPPER_NAVIGATE",url:url},"*");return;}top.location.href=url;};'+
+    'document.addEventListener("click",function(ev){var a=ev.target&&ev.target.closest?ev.target.closest("a[href]"):null;'+
+    'if(!a||!normalized(a.href))return;ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(a.href);},true);'+
+    'document.addEventListener("change",function(ev){var t=ev.target;if(!t)return;'+
+    'if(t.id==="euc357Jump"&&t.value){ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(decodeURIComponent(t.value));return;}'+
+    'if(t.id==="yearSelect"&&typeof detail!=="undefined"){ev.preventDefault();ev.stopImmediatePropagation();var u=new URL(BASE);'+
+    'u.searchParams.set("page","suivi-pfmp-classe-public");u.searchParams.set("annee",t.value);'+
+    'u.searchParams.set("famille","BACPRO");u.searchParams.set("classe",detail.classe.id);u.searchParams.set("periode",detail.periode.id);EUC_DEV418_publicNavigate(u.toString());}},true);'+
+    'try{top.postMessage({type:"EUC_PFMP_WRAPPER_QUERY"},"*");}catch(e){}'+
+    '})();<\/script>';
+
+  html=html.replace(/<\/head>/i,wrapperNav+'</head>');
 
   /*
    * Lecture seule :

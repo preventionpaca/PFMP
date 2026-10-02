@@ -56,16 +56,32 @@ assert.match(publicExact, /#selectHead/,
   'PUBLIC doit masquer l’en-tête de sélection sans décaler les données');
 assert.match(publicExact, /#tbody tr>td:first-child/,
   'PUBLIC doit masquer aussi la cellule de sélection de chaque ligne');
-assert.match(publicExact, /window\\\.top\\\.location/,
-  'PUBLIC doit neutraliser les navigations qui sortent du wrapper');
+assert.match(publicExact, /EUC_PFMP_WRAPPER_NAVIGATE/,
+  'PUBLIC doit demander au wrapper de changer sa propre iframe');
+assert.doesNotMatch(publicExact, /replace\(\/window\\\.top\\\.location/,
+  'PUBLIC ne doit plus convertir une navigation en iframe Apps Script imbriquée');
 assert.match(publicExact, /EUC_DEV417_publicFastDetail/,
   'PUBLIC doit disposer d’une navigation rapide strictement en lecture seule');
 
 const publicFamily = read('apps-script/Suivi_Conventions_Public_FamilleClone_V353.html');
 assert.match(publicFamily, /target="_self"/,
   'famille PUBLIC: les liens doivent rester dans le wrapper');
-assert.doesNotMatch(publicFamily, /window\.top\.location/,
-  'famille PUBLIC: un clic classe sort encore du sous-domaine');
+assert.match(publicFamily, /EUC_DEV418_publicNavigate/,
+  'famille PUBLIC: le clic classe ne dialogue pas avec le wrapper');
+assert.match(publicFamily, /EUC_PFMP_WRAPPER_NAVIGATE/,
+  'famille PUBLIC: le message de navigation vers le wrapper manque');
+
+const publicSummary = read('apps-script/Suivi_Conventions_Public_Clone_V353.html');
+assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
+  'accueil PUBLIC: le clic famille ne dialogue pas avec le wrapper');
+
+const publicWrapper = read('Atri/suivi-stages-atrium.html');
+assert.match(publicWrapper, /id="pfmpApp"/,
+  'wrapper public: iframe PFMP identifiable absente');
+assert.match(publicWrapper, /EUC_PFMP_WRAPPER_NAVIGATE/,
+  'wrapper public: réception de navigation absente');
+assert.match(publicWrapper, /u\.hostname===host&&u\.pathname===path/,
+  'wrapper public: les destinations Apps Script ne sont pas strictement filtrées');
 
 const detailService = read('apps-script/EUC_SUIVI_PFMP_ClasseDetailV155.js');
 assert.match(detailService, /function EUC_V155_resoudreClasse_/,

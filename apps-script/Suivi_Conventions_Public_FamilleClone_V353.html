@@ -82,6 +82,28 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
 
 </head>
 <body>
+<script id="EUC_DEV418_WRAPPER_NAV">
+(function(){
+  var ready=false;
+  function internal(url){
+    try{
+      var page=new URL(url,location.href).searchParams.get('page')||'';
+      return page.indexOf('suivi-conventions')===0||page.indexOf('suivi-pfmp-classe')===0;
+    }catch(e){return false;}
+  }
+  window.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY')ready=true;});
+  window.EUC_DEV418_publicNavigate=function(url){
+    if(ready){window.top.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:String(url||'')},'*');return;}
+    window.top.location.href=String(url||'');
+  };
+  document.addEventListener('click',function(ev){
+    var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;
+    if(!a||!internal(a.href))return;
+    ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(a.href);
+  },true);
+  try{window.top.postMessage({type:'EUC_PFMP_WRAPPER_QUERY'},'*');}catch(e){}
+})();
+</script>
 <header class="header">
   <div class="header-inner">
     <h1 id="pageTitle"></h1>
@@ -247,13 +269,13 @@ const DATA=<?!= dataJson ?>;
 
   document.querySelectorAll('.period').forEach(function(p){
     p.onclick=function(){
-      window.location.href=
+      EUC_DEV418_publicNavigate(
         'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec'+'?page=suivi-pfmp-classe-public'+
         '&annee='+encodeURIComponent(P.annee)+
         '&famille='+encodeURIComponent(P.famille)+
         '&classe='+encodeURIComponent(p.dataset.class)+
         '&periode='+encodeURIComponent(p.dataset.period)+
-        '&origin=suivi-conventions';
+        '&origin=suivi-conventions');
     };
   });
 })();
