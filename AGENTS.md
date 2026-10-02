@@ -2,7 +2,7 @@
 
 Eucalyptus PFMP facilite le suivi opérationnel des conventions et la relation entreprise. Pronote reste le progiciel officiel ; l’application ne le remplace pas.
 
-Architecture : sources GitHub dans ce dépôt, Web App Google Apps Script unique, données Grist. La recette utilise exclusivement `j1jDArBkzi7P` ; ne jamais accéder à la production `3pnVrygfNn7c` sans autorisation explicite.
+Architecture : sources GitHub dans ce dépôt, Web App Google Apps Script unique, données Grist. La base PFMP active autorisée explicitement le 2 octobre 2026 est exclusivement `b2CyeMEdVEMS` ; ne jamais accéder à la production `3pnVrygfNn7c` sans autorisation explicite.
 
 Avant d’agir, lire `Documentation/ETAT_PROJET.md`, `Documentation/DECISIONS_METIER.md` et `Documentation/PLAN_PROCHAIN_LOT.md`. Faire normalement un audit différentiel, pas un nouvel audit complet.
 

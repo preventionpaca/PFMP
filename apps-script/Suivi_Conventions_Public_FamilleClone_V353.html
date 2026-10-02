@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<base href="<?!= baseUrl ?>" target="_top">
+<base href="<?!= baseUrl ?>" target="_self">
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -91,7 +91,7 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
 
 <main class="wrap">
 <div class="crumb">
-  <a href="<?!= baseUrl ?>?page=admin-pfmp" target="_top">Accueil PFMP</a>
+  <a href="<?!= baseUrl ?>?page=suivi-conventions-public" target="_self">Accueil PFMP</a>
   <span>›</span>
   <a id="homeLink">Suivi des conventions</a>
   <span>›</span>
@@ -247,7 +247,7 @@ const DATA=<?!= dataJson ?>;
 
   document.querySelectorAll('.period').forEach(function(p){
     p.onclick=function(){
-      window.top.location.href=
+      window.location.href=
         'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec'+'?page=suivi-pfmp-classe-public'+
         '&annee='+encodeURIComponent(P.annee)+
         '&famille='+encodeURIComponent(P.famille)+

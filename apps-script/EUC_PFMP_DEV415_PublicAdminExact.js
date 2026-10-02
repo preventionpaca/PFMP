@@ -106,6 +106,15 @@ function EUC_DEV415_publicDetail(e){
   );
 
   /*
+   * Dans les wrappers loucodi.fr, la page publique vit dans une iframe.
+   * Les anciens target=_top / window.top forçaient la navigation hors du
+   * sous-domaine.  La transformation ne concerne que le HTML PUBLIC rendu.
+   */
+  html=html.replace(/target=["']_top["']/gi,'target="_self"');
+  html=html.replace(/window\.top\.location/g,'window.location');
+  html=html.replace(/\.EUC_DEV382_fastDetail\(/g,'.EUC_DEV417_publicFastDetail(');
+
+  /*
    * Lecture seule :
    * on masque seulement les commandes ADMIN.
    */
@@ -115,6 +124,7 @@ function EUC_DEV415_publicDetail(e){
     '#assignStatus,#assignStatusV156,'+
     '#mailParams,#sendTable,#mailModal,'+
     '#retModalV162,#selectHead,'+
+    '#tbody tr>td:first-child,'+
     '#euc340SnapshotDetail,'+
     '.mail-actions,.assignbar,.assign-status,'+
     '.student-check,'+
@@ -139,4 +149,25 @@ function EUC_DEV415_publicDetail(e){
     .setXFrameOptionsMode(
       HtmlService.XFrameOptionsMode.ALLOWALL
     );
+}
+
+/* Navigation rapide publique : lecture seule, sans contrôle administrateur. */
+function EUC_DEV417_publicFastDetail(payload){
+  payload=payload||{};
+  var annee=String(payload.annee||'').trim();
+  var famille=String(payload.famille||'BACPRO').trim().toUpperCase();
+  var classe=Number(payload.classe)||0;
+  var periode=Number(payload.periode)||0;
+
+  if(!annee||!classe||!periode){
+    throw new Error('Année, classe et période obligatoires.');
+  }
+
+  var t0=Date.now();
+  var detail=EUC_DEV416_finalDetail_(annee,famille,classe,periode);
+  if(!detail||!detail.classe||!detail.periode){
+    throw new Error('Détail PFMP incomplet.');
+  }
+
+  return {ok:true,detail:detail,serverMs:Date.now()-t0};
 }

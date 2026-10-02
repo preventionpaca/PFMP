@@ -39,7 +39,7 @@ function EUC_PFMP_configurerModesDev27(autorisation) {
   if(autorisation!=='CONFIGURER_MODES_PFMP_DEV27_RECETTE')throw new Error('Autorisation explicite requise.');
   EUC_ENT_controlerCibleRecette_();
   PropertiesService.getScriptProperties().setProperties({EUC_PFMP_SUBMISSION_MODE:'DRY_RUN',EUC_PFMP_EMAIL_MODE:'DISABLED',EUC_PFMP_PRONOTE_IMPORT_MODE:'DRY_RUN',EUC_PFMP_ADMIN_MUTATION_MODE:'DRY_RUN'},false);
-  return {version:EUC_PFMP_VERSION,submission:'DRY_RUN',email:'DISABLED',pronoteImport:'DRY_RUN',adminMutation:'DRY_RUN',docId:'j1jDArBkzi7P'};
+  return {version:EUC_PFMP_VERSION,submission:'DRY_RUN',email:'DISABLED',pronoteImport:'DRY_RUN',adminMutation:'DRY_RUN',docId:'b2CyeMEdVEMS'};
 }
 function EUC_PFMP_controlerModesDev27() {
   EUC_ENT_controlerCibleRecette_();

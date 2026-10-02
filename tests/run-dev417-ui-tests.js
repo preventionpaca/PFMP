@@ -53,12 +53,38 @@ assert.match(publicExact, /createTemplateFromFile\(\s*'Suivi_PFMP_Classe_Detail_
   'PUBLIC doit utiliser le même tableau que ADMIN');
 assert.match(publicExact, /#selectHead/,
   'PUBLIC doit masquer l’en-tête de sélection sans décaler les données');
+assert.match(publicExact, /#tbody tr>td:first-child/,
+  'PUBLIC doit masquer aussi la cellule de sélection de chaque ligne');
+assert.match(publicExact, /window\\\.top\\\.location/,
+  'PUBLIC doit neutraliser les navigations qui sortent du wrapper');
+assert.match(publicExact, /EUC_DEV417_publicFastDetail/,
+  'PUBLIC doit disposer d’une navigation rapide strictement en lecture seule');
+
+const publicFamily = read('apps-script/Suivi_Conventions_Public_FamilleClone_V353.html');
+assert.match(publicFamily, /target="_self"/,
+  'famille PUBLIC: les liens doivent rester dans le wrapper');
+assert.doesNotMatch(publicFamily, /window\.top\.location/,
+  'famille PUBLIC: un clic classe sort encore du sous-domaine');
+
+const detailService = read('apps-script/EUC_SUIVI_PFMP_ClasseDetailV155.js');
+assert.match(detailService, /function EUC_V155_resoudreClasse_/,
+  'détail classe: la compatibilité avec les anciens identifiants d’offre manque');
+assert.match(detailService, /EUC_OFFRES_FORMATION/,
+  'détail classe: l’identifiant d’offre ne peut pas être ramené à Classes');
+
+for (const file of apprenticeTemplates) {
+  const html = read(file);
+  assert.match(html, /\.EUC_DEV251_dashboardDetails\(y\)/,
+    `${file}: compteur et infobulle apprentis n’utilisent pas la même source`);
+  assert.doesNotMatch(html, /\.EUC_DEV277_dashboardDetails\(y\)/,
+    `${file}: l’ancien calcul incohérent est encore appelé par l’infobulle`);
+}
 
 const entConfig = read('apps-script/EUC_ENT_Config.js');
-assert.match(entConfig, /EUC_ENT_DOC_ID_RECETTE_AUTORISE\s*=\s*'j1jDArBkzi7P'/,
-  'la garde Grist doit viser exclusivement la recette autorisée');
-assert.doesNotMatch(entConfig, /b2CyeMEdVEMS|3pnVrygfNn7c/,
-  'une cible Grist non autorisée subsiste dans la configuration active');
+assert.match(entConfig, /EUC_ENT_DOC_ID_RECETTE_AUTORISE\s*=\s*'b2CyeMEdVEMS'/,
+  'la garde Grist doit viser exclusivement la base PFMP active autorisée');
+assert.doesNotMatch(entConfig, /3pnVrygfNn7c/,
+  'la cible Grist de production interdite subsiste dans la configuration active');
 
 const auth = read('apps-script/EUC_PFMP_DEV270B_MultiDomainAuth.js');
 assert.match(auth, /EUC_DEV270B_HMAC_SECRET/,

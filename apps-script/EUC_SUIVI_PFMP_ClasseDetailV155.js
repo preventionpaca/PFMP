@@ -111,6 +111,35 @@ function EUC_V155_adresseEntreprise_(a){
   return [l1,l2].filter(Boolean).join(', ');
 }
 
+/*
+ * Les synthèses historiques ont parfois mémorisé l'identifiant de l'offre
+ * de formation à la place de l'identifiant de la table Classes.  Le détail
+ * travaille, lui, exclusivement avec Classes.  On accepte donc cet ancien
+ * identifiant en lecture et on le ramène immédiatement vers la classe
+ * canonique, sans modifier aucune donnée Grist.
+ */
+function EUC_V155_resoudreClasse_(classes,classeId){
+  classeId=Number(classeId)||0;
+  var classe=(classes||[]).filter(function(c){
+    return Number(c.id)===classeId;
+  })[0]||null;
+
+  if(classe)return classe;
+
+  try{
+    var offre=(EUC_IMPORT_lireRecords_('EUC_OFFRES_FORMATION')||[])
+      .filter(function(o){return Number(o.id)===classeId;})[0]||null;
+    var idCanonique=offre?Number(EUC_PFMP_ref_(offre.Classe))||0:0;
+    if(idCanonique){
+      return (classes||[]).filter(function(c){
+        return Number(c.id)===idCanonique;
+      })[0]||null;
+    }
+  }catch(e){}
+
+  return null;
+}
+
 function EUC_DEV394_BASE_EUC_PFMP_contexteAnneeLectureV155_(){
   var rows=[];
   try{rows=EUC_IMPORT_lireRecords_('Annees_Scolaires');}catch(e){rows=[];}
@@ -138,8 +167,9 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
   if(!(classeId>0))throw new Error('Classe invalide.');
 
   var classes=EUC_IMPORT_lireRecords_('Classes');
-  var classe=classes.filter(function(c){return Number(c.id)===classeId;})[0];
+  var classe=EUC_V155_resoudreClasse_(classes,classeId);
   if(!classe)throw new Error('Classe introuvable.');
+  classeId=Number(classe.id)||classeId;
 
   var periodes=EUC_V155_periodesClasse_(codeAnnee,classeId);
   if(!periodeId && periodes.length)periodeId=periodes[0].id;
