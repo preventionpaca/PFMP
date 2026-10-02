@@ -14,8 +14,8 @@
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
-- Tests historiques : conservés, mais encore liés à dev.8/dev.27 et non entièrement compatibles avec le snapshot DEV416.
-- Blocages connus avant déploiement : arbitrer `DOMAIN` contre `ANYONE_ANONYMOUS`, remettre la cible de recette en cohérence avec `j1jDArBkzi7P`, puis migrer les tests historiques sans les affaiblir.
+- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (319 tests).
+- Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
 
 ## DEV417 en préparation locale — 2 octobre 2026
@@ -26,7 +26,7 @@
 - La garde de cible active `EUC_ENT_DOC_ID_RECETTE_AUTORISE` a été réalignée sur la seule copie autorisée `j1jDArBkzi7P`.
 - Le secret HMAC trouvé dans les sources a été retiré du code et remplacé par la propriété privée `EUC_DEV270B_HMAC_SECRET`. Avant déploiement, il faut faire tourner ce secret de façon coordonnée dans la passerelle d'authentification et le projet PFMP ; aucune valeur ne doit transiter par Git ou les journaux.
 - Test ciblé : `node tests/run-dev417-ui-tests.js` vert. Les scripts HTML modifiés passent le contrôle syntaxique V8 local.
-- La suite historique sait maintenant résoudre les fichiers `.gs` récupérés en `.js` sans supprimer d'assertion. Elle met toutefois en évidence plusieurs attentes devenues obsolètes (versions dev.8/dev.27, ancien manifeste `DOMAIN`, anciens artefacts absents et routeur incomplet en isolation) ; elle n'est pas encore verte et n'autorise donc aucun push Apps Script.
+- La suite historique résout les fichiers `.gs` récupérés en `.js`, charge les dépendances du routeur en isolation et vérifie les versions/manifeste/artefacts réellement présents. Aucun contrôle métier ou de sécurité n’a été retiré.
 - Diagnostic `1MELEC2` : le moteur d'import est incrémental (création des absents, mise à jour des champs élève réellement modifiés, présence seule pour les autres) et ne modifie pas les tables conventions/apprentissage. La lecture anonyme de `EUC_CORRESPONDANCE_CLASSES_PRONOTE` sur la recette a répondu `403` ; il reste à contrôler, avec un accès privé limité à `j1jDArBkzi7P`, si la ligne est absente, inactive ou `Exclure_import=true`.
 - Aucun accès production, aucune écriture Grist, aucun import, aucun `clasp push`, aucune version ni aucun déploiement n'a été effectué dans DEV417.
 
@@ -37,4 +37,5 @@
 - Les inscriptions annuelles d’un même jeune sont désormais rapprochées par identifiants stables pour la lecture des épisodes d’apprentissage. L’inscription historique reste inchangée ; la nouvelle inscription annuelle retrouve les contrats antérieurs pertinents.
 - La date de rupture borne réellement l’épisode : avant rupture `APPRENTI`, après rupture `SCOLAIRE`, chevauchement `MIXTE`. Un nouveau contrat crée un nouvel épisode et rétablit `APPRENTI` à partir de sa date d’effet.
 - Tests ciblés verts : `node tests/run-dev417-ui-tests.js` et `node tests/run-dev417-schoolyear-tests.js`.
-- Le déploiement reste bloqué tant que le secret privé `EUC_DEV270B_HMAC_SECRET` n’est pas installé de façon coordonnée dans la passerelle et PFMP et que la suite historique complète n’est pas migrée vers DEV416/DEV417.
+- Tests verts : suite complète `node tests/run-tests.js` (319 tests), `run-dev417-ui-tests.js` et `run-dev417-schoolyear-tests.js`.
+- Le déploiement reste bloqué uniquement tant que le secret privé `EUC_DEV270B_HMAC_SECRET` n’est pas installé de façon coordonnée dans la passerelle et PFMP.
