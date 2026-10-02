@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:Arial,sans-serif;background:#f7fbf9;color:#17312b;margin:0}
+.wrap{max-width:1100px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid #cfe5de;border-radius:12px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;gap:4px}
+input{padding:7px;border:1px solid #cfe5de;border-radius:6px}
+button{border:0;border-radius:6px;padding:8px 10px;background:#0b8f72;color:white;font-weight:800;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stage{border:1px solid #dce9e5;border-radius:10px;padding:10px}
+.state{font-weight:800}
+pre{white-space:pre-wrap;word-break:break-word;background:#f5faf8;padding:8px;border-radius:6px;max-height:260px;overflow:auto}
+.warn{color:#b54708}
+.good{color:#08745e}
+.bad{color:#c4320a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Audit chargement — Gestion des apprentis</h1>
+
+  <div class="card">
+    <div class="row">
+      <label>Année
+        <input id="annee" value="2026-2027">
+      </label>
+      <label>ID classe
+        <input id="classeId" value="7">
+      </label>
+      <label>Nom classe
+        <input id="classeNom" value="1MP3D">
+      </label>
+      <button id="runLight">Audit léger</button>
+    </div>
+    <p>Chaque étape a son propre appel serveur. Si une étape dépasse 20 s, elle est signalée comme bloquée sans masquer les autres tests.</p>
+  </div>
+
+  <div class="grid">
+    <div class="stage">
+      <h3>1. Snapshot structure</h3>
+      <button onclick="run('structure')">Tester</button>
+      <div id="state-structure" class="state"></div>
+      <pre id="out-structure"></pre>
+    </div>
+
+    <div class="stage">
+      <h3>2. Lecture snapshot classe</h3>
+      <button onclick="run('snapshot')">Tester</button>
+      <div id="state-snapshot" class="state"></div>
+      <pre id="out-snapshot"></pre>
+    </div>
+
+    <div class="stage">
+      <h3>3. Lecture directe EUC_ELEVES_PFMP</h3>
+      <button onclick="run('students')">Tester</button>
+      <div id="state-students" class="state"></div>
+      <pre id="out-students"></pre>
+    </div>
+
+    <div class="stage">
+      <h3>4. Lecture EUC_APPRENTISSAGE_PFMP</h3>
+      <button onclick="run('app')">Tester</button>
+      <div id="state-app" class="state"></div>
+      <pre id="out-app"></pre>
+    </div>
+
+    <div class="stage">
+      <h3>5. Construction snapshot classe</h3>
+      <button onclick="run('build')">Tester</button>
+      <div id="state-build" class="state"></div>
+      <pre id="out-build"></pre>
+    </div>
+
+    <div class="stage">
+      <h3>6. Loader final</h3>
+      <button onclick="run('final')">Tester</button>
+      <div id="state-final" class="state"></div>
+      <pre id="out-final"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const methods={
+  structure:'EUC_DEV209_stageStructure',
+  snapshot:'EUC_DEV209_stageClassSnapshotRead',
+  students:'EUC_DEV209_stageDirectStudents',
+  app:'EUC_DEV209_stageApprentissage',
+  build:'EUC_DEV209_stageBuildClassSnapshot',
+  final:'EUC_DEV209_stageFinalLoader'
+};
+
+function argsFor(stage){
+  if(stage==='structure') return [annee.value];
+  if(stage==='app') return [];
+  return [annee.value,Number(classeId.value),classeNom.value];
+}
+
+function run(stage){
+  const state=document.getElementById('state-'+stage);
+  const out=document.getElementById('out-'+stage);
+
+  state.textContent='En cours…';
+  state.className='state warn';
+  out.textContent='';
+
+  let finished=false;
+  const timer=setTimeout(()=>{
+    if(!finished){
+      state.textContent='BLOQUÉ > 20 s';
+      state.className='state bad';
+    }
+  },20000);
+
+  let runner=google.script.run
+    .withSuccessHandler(r=>{
+      finished=true;
+      clearTimeout(timer);
+      state.textContent='OK';
+      state.className='state good';
+      out.textContent=JSON.stringify(r,null,2);
+    })
+    .withFailureHandler(e=>{
+      finished=true;
+      clearTimeout(timer);
+      state.textContent='ERREUR';
+      state.className='state bad';
+      out.textContent=String(e&&e.message||e);
+    });
+
+  runner[methods[stage]](...argsFor(stage));
+}
+
+runLight.onclick=function(){
+  ['structure','snapshot','students','app'].forEach(run);
+};
+</script>
+</body>
+</html>

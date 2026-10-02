@@ -1,5 +1,8 @@
 # Décisions métier permanentes
 
+- La version Apps Script immuable active est la source technique de récupération lorsqu'elle est plus récente que Git. La récupération doit conserver une preuve d'identité avant toute correction.
+- ADMIN et PUBLIC restent deux déploiements du même projet Apps Script ; toute évolution doit vérifier leur version commune et ne mettre à jour que les déploiements existants.
+
 - Pronote reste le progiciel officiel. Eucalyptus PFMP est l’outil opérationnel de suivi et de relation entreprise ; les informations utiles pourront être reportées dans Pronote.
 - Aucune signature électronique : les conventions sont imprimées et signées sur papier. L’élève saisit sa convention après signature par l’entreprise.
 - Les données 2025-2026 sont un jeu historique de test. Aucun effectif Pronote réel 2026-2027 n’est importé.

@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Suivi des conventions PFMP</title>
+<style>
+:root{
+  --b:#1B396A;
+  --b2:#3F72AF;
+  --bg:#f5f7fb;
+  --line:#dce3ee;
+  --mut:#667085;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:#172033;
+}
+.hero{
+  padding:22px 18px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--b),var(--b2));
+}
+.wrap{max-width:1180px;margin:auto}
+h1{margin:0;font-size:26px}
+.sub{margin-top:6px;opacity:.9}
+.content{padding:0 18px 30px}
+.top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  margin:18px 0;
+}
+select{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 12px;
+  background:#fff;
+}
+.family{margin:22px 0 30px}
+.family-title{
+  font-size:21px;
+  font-weight:800;
+  color:var(--b);
+  margin:0 0 12px;
+}
+.levels{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:14px;
+}
+.level{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 3px 14px rgba(31,42,68,.06);
+  overflow:hidden;
+}
+.level-button{
+  display:block;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:#fff;
+  padding:17px 16px;
+  cursor:pointer;
+  color:inherit;
+}
+.level-button:hover{background:#f7faff}
+.level-name{
+  font-size:18px;
+  font-weight:800;
+  color:var(--b);
+}
+.level-help{
+  margin-top:5px;
+  font-size:12px;
+  color:var(--mut);
+}
+.periods{
+  display:none;
+  border-top:1px solid var(--line);
+  padding:8px;
+}
+.level.open .periods{display:block}
+.period{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  border-radius:12px;
+  padding:11px 12px;
+  margin:4px 0;
+}
+.period:hover{background:#eef4ff}
+.period-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.period-name{font-weight:700}
+.count{
+  font-weight:800;
+  color:var(--b);
+  white-space:nowrap;
+}
+.dates,.missing,.loading{
+  font-size:12px;
+  color:var(--mut);
+}
+.bar{
+  height:6px;
+  background:#e7ebf2;
+  border-radius:999px;
+  margin-top:8px;
+  overflow:hidden;
+}
+.fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--b2),var(--b));
+}
+.loading{padding:13px}
+.spinner{
+  display:inline-block;
+  width:14px;height:14px;
+  border:2px solid #cdd5e1;
+  border-top-color:var(--b);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  vertical-align:-3px;
+  margin-right:7px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Suivi des conventions PFMP</h1>
+    <div class="sub">Choisissez un diplôme puis un niveau</div>
+  </div>
+</header>
+
+<main class="content">
+  <div class="wrap">
+    <div class="top">
+      <div>La navigation est disponible immédiatement.</div>
+      <label>
+        Année scolaire
+        <select id="yearSelect"></select>
+      </label>
+    </div>
+    <div id="content"></div>
+  </div>
+</main>
+
+<script>
+const C=<?!= config ?>;
+const REQUESTED_YEAR=<?!= requestedYear ?>;
+
+(function(){
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function schoolYearNow(){
+    const d=new Date();
+    const y=d.getFullYear();
+    const start=(d.getMonth()>=7)?y:y-1;
+    return start+'-'+(start+1);
+  }
+
+  const activeYear=REQUESTED_YEAR||schoolYearNow();
+
+  const start=Number(activeYear.slice(0,4))||new Date().getFullYear();
+  const years=[
+    (start-1)+'-'+start,
+    start+'-'+(start+1),
+    (start+1)+'-'+(start+2)
+  ];
+
+  const yearSelect=document.getElementById('yearSelect');
+
+  yearSelect.innerHTML=years.map(function(y){
+    return '<option value="'+y+'"'+
+      (y===activeYear?' selected':'')+
+      '>'+y+'</option>';
+  }).join('');
+
+  yearSelect.onchange=function(){
+    location.href=C.baseUrl+
+      '?page=suivi-conventions&annee='+
+      encodeURIComponent(yearSelect.value);
+  };
+
+  const groups=[
+    {famille:'CAP',familleLibelle:'CAP',niveau:'1CAP',niveauLibelle:'1re année CAP',ordre:1},
+    {famille:'CAP',familleLibelle:'CAP',niveau:'TCAP',niveauLibelle:'Terminale CAP',ordre:2},
+
+    {famille:'BACPRO',familleLibelle:'Bac professionnel',niveau:'SECD',niveauLibelle:'Seconde',ordre:1},
+    {famille:'BACPRO',familleLibelle:'Bac professionnel',niveau:'PREM',niveauLibelle:'Première',ordre:2},
+    {famille:'BACPRO',familleLibelle:'Bac professionnel',niveau:'TERM',niveauLibelle:'Terminale',ordre:3},
+
+    {famille:'BTS',familleLibelle:'BTS',niveau:'BTS1',niveauLibelle:'1re année BTS',ordre:1},
+    {famille:'BTS',familleLibelle:'BTS',niveau:'BTS2',niveauLibelle:'2e année BTS',ordre:2}
+  ];
+
+  const famOrder=['CAP','BACPRO','BTS'];
+  const famMap={};
+
+  groups.forEach(function(g){
+    if(!famMap[g.famille]){
+      famMap[g.famille]={
+        libelle:g.familleLibelle,
+        groups:[]
+      };
+    }
+    famMap[g.famille].groups.push(g);
+  });
+
+  document.getElementById('content').innerHTML=
+    famOrder.map(function(fam){
+      const f=famMap[fam];
+      return '<section class="family">'+
+        '<h2 class="family-title">'+esc(f.libelle)+'</h2>'+
+        '<div class="levels">'+
+        f.groups.sort((a,b)=>a.ordre-b.ordre).map(function(g){
+          return '<section class="level" data-fam="'+esc(g.famille)+'" data-niv="'+esc(g.niveau)+'">'+
+            '<button class="level-button" type="button">'+
+              '<div class="level-name">'+esc(g.niveauLibelle)+'</div>'+
+              '<div class="level-help">Cliquer pour afficher les périodes et les compteurs</div>'+
+            '</button>'+
+            '<div class="periods"></div>'+
+          '</section>';
+        }).join('')+
+        '</div>'+
+      '</section>';
+    }).join('');
+
+  function renderPeriods(holder,g,group){
+    const periods=(group&&group.periodes)||[];
+
+    if(!periods.length){
+      holder.innerHTML='<div class="loading">Aucune période disponible pour ce niveau.</div>';
+      return;
+    }
+
+    holder.innerHTML=periods.map(function(p){
+      const href=C.baseUrl+
+        '?page=suivi-conventions-classes'+
+        '&annee='+encodeURIComponent(activeYear)+
+        '&famille='+encodeURIComponent(g.famille)+
+        '&niveau='+encodeURIComponent(g.niveau)+
+        '&periode='+encodeURIComponent(p.key);
+
+      const dates=[p.debutFr,p.finFr].filter(Boolean).join(' → ');
+
+      return '<a class="period" href="'+href+'">'+
+        '<div class="period-row">'+
+          '<div>'+
+            '<div class="period-name">'+esc(p.libelle)+'</div>'+
+            (dates?'<div class="dates">'+esc(dates)+'</div>':'')+
+          '</div>'+
+          '<div class="count">'+p.conventions+' / '+p.total+'</div>'+
+        '</div>'+
+        ((p.pourcentage==null)?'':('<div class="bar"><div class="fill" style="width:'+Math.min(100,p.pourcentage||0)+'%"></div></div>'))+
+        ((p.manquantes==null)?'':('<div class="missing">'+
+          (p.manquantes
+            ? p.manquantes+' convention(s) restante(s)'
+            : 'Toutes les conventions sont enregistrées')+
+        '</div>'))+
+      '</a>';
+    }).join('');
+  }
+
+  Array.from(document.querySelectorAll('.level')).forEach(function(el){
+    const fam=el.dataset.fam;
+    const niv=el.dataset.niv;
+    const g=groups.find(x=>x.famille===fam&&x.niveau===niv);
+    const btn=el.querySelector('.level-button');
+    const holder=el.querySelector('.periods');
+    let loaded=false;
+
+    btn.onclick=function(){
+      el.classList.toggle('open');
+
+      if(!el.classList.contains('open') || loaded)return;
+
+      loaded=true;
+      holder.innerHTML='<div class="loading"><span class="spinner"></span>Chargement des périodes…</div>';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          renderPeriods(holder,g,{periodes:(r&&r.periodes)||[]});
+        })
+        .withFailureHandler(function(e){
+          loaded=false;
+          holder.innerHTML='<div class="loading">Erreur de chargement : '+esc(e&&e.message||e)+'</div>';
+        })
+        .EUC_SUIVI_PUBLIC_niveauV45({
+          annee:activeYear,
+          famille:fam,
+          niveau:niv
+        });
+    };
+  });
+
+  // V4.5 : un seul préchauffage global, sans appels parallèles.
+  setTimeout(function(){
+    try{
+      google.script.run
+        .withFailureHandler(function(){})
+        .EUC_SUIVI_PUBLIC_warmV45({annee:activeYear});
+    }catch(e){}
+  },250);
+
+})();
+</script>
+
+</body>
+</html>

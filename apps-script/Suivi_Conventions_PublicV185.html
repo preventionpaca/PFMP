@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085;--red:#d92d20;--orange:#e67e00;--grey:#98a2b3}
+*{box-sizing:border-box}
+
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1180px;margin:auto;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;cursor:pointer;transition:.15s}
+.card:hover{border-color:var(--g);transform:translateY(-1px)}
+.card.busy{opacity:.65}
+.card.busy .go::after{content:" · chargement…"}
+.title{font-size:22px;font-weight:800;color:#0c5f4e}
+.meta{font-size:12px;color:var(--mut);margin:6px 0 12px}
+.period{border-top:1px solid #edf2ef;padding:9px 0}
+.row{display:flex;justify-content:space-between;gap:10px}
+.count{font-weight:800}.red{color:var(--red)}.orange{color:var(--orange)}.green{color:var(--g)}.grey{color:var(--grey)}
+.go{display:inline-block;background:var(--g);color:#fff;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:800;margin-top:10px}
+select{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+<script>
+
+</script>
+
+
+
+
+
+<style id="EUC_DEV188_TOP_SPACE">
+body{scroll-padding-top:0!important;}
+main.wrap{padding-top:22px!important;}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+<label>Année scolaire <select id="year"></select></label>
+<div id="grid" class="grid"></div>
+</main>
+<script>
+const C=<?!= config ?>;
+const REQUESTED_YEAR=<?!= requestedYear ?>;
+
+(function(){
+  const TTL=600000;
+
+  function currentYear(){
+    const d=new Date(),y=d.getFullYear(),a=d.getMonth()+1>=9?y:y-1;
+    return a+'-'+(a+1);
+  }
+
+  function colorClass(p){
+    const total=Number(p.total)||0;
+    if(total<=0)return 'grey';
+    const ratio=100*(Number(p.conventions)||0)/total;
+    return ratio>=100?'green':(ratio>=65?'orange':'red');
+  }
+
+  function navigate(state,el){
+    if(el)el.classList.add('busy');
+    try{
+      window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+    }catch(e){}
+  }
+
+  const active=REQUESTED_YEAR||currentYear();
+  const y0=Number(active.slice(0,4));
+
+  year.innerHTML=[y0-1,y0,y0+1].map(function(y){
+    const code=y+'-'+(y+1);
+    return '<option value="'+code+'"'+(code===active?' selected':'')+'>'+code+'</option>';
+  }).join('');
+
+  year.onchange=function(){
+    navigate({page:'suivi-conventions-public',annee:this.value});
+  };
+
+  const families=[
+    {code:'BACPRO',label:'BAC PRO'},
+    {code:'BTS',label:'BTS'},
+    {code:'CAP',label:'CAP'}
+  ];
+
+  grid.innerHTML=families.map(function(f){
+    return '<article class="card" data-family="'+f.code+'">'+
+      '<div class="title">'+f.label+'</div>'+
+      '<div class="meta" id="meta-'+f.code+'">Décompte en attente</div>'+
+      '<div id="periods-'+f.code+'">Chargement…</div>'+
+      '<span class="go">Voir les classes</span>'+
+    '</article>';
+  }).join('');
+
+  function render(code,r){
+    document.getElementById('meta-'+code).textContent=
+      (r.classes||0)+' classe(s) · '+
+      (r.effectif||0)+' élève(s) · '+
+      (r.apprentis||0)+' apprenti(s)';
+
+    document.getElementById('periods-'+code).innerHTML=
+      (r.periodes||[]).map(function(p){
+        const c=colorClass(p);
+        return '<div class="period"><div class="row"><b>'+p.libelle+'</b>'+
+          '<span class="count '+c+'">'+p.conventions+' / '+p.total+'</span></div></div>';
+      }).join('');
+  }
+
+  function loadFamily(i){
+    if(i>=families.length)return;
+
+    const f=families[i];
+    const key='PFMP185_HOME_'+active+'_'+f.code;
+
+    try{
+      const raw=sessionStorage.getItem(key);
+      if(raw){
+        const o=JSON.parse(raw);
+        if(Date.now()-o.t<TTL)render(f.code,o.v);
+      }
+    }catch(e){}
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        render(f.code,r||{});
+        try{
+          sessionStorage.setItem(
+            key,
+            JSON.stringify({t:Date.now(),v:r||{}})
+          );
+        }catch(e){}
+        loadFamily(i+1);
+      })
+      .withFailureHandler(function(){
+        loadFamily(i+1);
+      })
+      .EUC_DEV185_resumeFamille({
+        annee:active,
+        famille:f.code
+      });
+  }
+
+  loadFamily(0);
+
+  document.querySelectorAll('.card[data-family]').forEach(function(card){
+    card.onclick=function(){
+      navigate({
+        page:'suivi-conventions-public-famille',
+        annee:active,
+        famille:card.dataset.family
+      },card);
+    };
+  });
+})();
+</script>
+</body>
+</html>

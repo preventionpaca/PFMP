@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1500px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+input{padding:9px;border:1px solid var(--line);border-radius:8px}
+button{border:0;background:var(--g);color:#fff;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+.progress{height:10px;border-radius:999px;overflow:hidden;background:#e7efec;margin-top:14px}
+.bar{height:100%;width:0;background:var(--g)}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}
+th,td{padding:7px;border-bottom:1px solid #edf2ef;text-align:left}
+th{background:#f7fbf9}
+.good{color:#08745e;font-weight:800}
+.warn{color:#b54708;font-weight:800}
+.bad{color:#d92d20;font-weight:800}
+.small{font-size:11px;color:var(--mut)}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<h1>Audit matrice PFMP</h1>
+
+<div class="card">
+  <div class="controls">
+    <label>
+      Année scolaire<br>
+      <input id="annee" value="2026-2027">
+    </label>
+
+    <button id="indexes">Mesurer accueil / familles</button>
+    <button id="run">Lancer l'audit complet</button>
+    <button id="stop">Arrêter</button>
+  </div>
+
+  <div class="progress">
+    <div id="bar" class="bar"></div>
+  </div>
+
+  <p id="status" class="small">Prêt.</p>
+<p id="pingOut" class="small">Test Apps Script : en attente…</p>
+  <pre id="indexOut"></pre>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+  <th>Famille</th>
+  <th>Classe</th>
+  <th>Période</th>
+  <th>Élèves</th>
+  <th>Snapshot</th>
+  <th>Visiteur data</th>
+  <th>Admin data</th>
+  <th>Rendu HTML</th>
+  <th>Round-trip navigateur</th>
+  <th>Erreur</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+</main>
+
+<script>
+(function(){
+
+  var pingStart=performance.now();
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      pingOut.textContent=
+        'Test Apps Script : OK · '+
+        Math.round(performance.now()-pingStart)+
+        ' ms';
+    })
+    .withFailureHandler(function(e){
+      pingOut.textContent=
+        'Test Apps Script : ERREUR · '+
+        String(e&&e.message||e);
+    })
+    .EUC_DEV190H4_ping();
+
+  var queue=[];
+  var i=0;
+  var stopped=false;
+
+  function cls(ms){
+    ms=Number(ms||0);
+    if(ms<=1000)return'good';
+    if(ms<=3000)return'warn';
+    return'bad';
+  }
+
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function addRow(r){
+    var tr=document.createElement('tr');
+
+    tr.innerHTML=
+      '<td>'+esc(r.famille)+'</td>'+
+      '<td><b>'+esc(r.classeNom)+'</b></td>'+
+      '<td>'+esc(r.periodeLibelle)+'</td>'+
+      '<td>'+Number(r.nbEleves||0)+'</td>'+
+      '<td>'+(r.snapshotExiste?'OK':'ABSENT')+'</td>'+
+      '<td class="'+cls(r.visiteurMs)+'">'+Number(r.visiteurMs||0)+' ms</td>'+
+      '<td class="'+cls(r.adminMs)+'">'+(r.adminMs==null?'—':Number(r.adminMs)+' ms')+'</td>'+
+      '<td class="'+cls(r.renduMs)+'">'+Number(r.renduMs||0)+' ms</td>'+
+      '<td class="'+cls(r.clientRoundTripMs)+'">'+Number(r.clientRoundTripMs||0)+' ms</td>'+
+      '<td>'+esc(r.visiteurErreur||r.adminErreur||r.renduErreur||'')+'</td>';
+
+    tbody.appendChild(tr);
+  }
+
+  function next(){
+    if(stopped||i>=queue.length){
+      status.textContent=
+        stopped
+          ? 'Audit arrêté à '+i+' / '+queue.length
+          : 'Audit terminé : '+queue.length+' combinaisons.';
+      return;
+    }
+
+    var item=queue[i];
+
+    status.textContent=
+      (i+1)+' / '+queue.length+
+      ' — '+item.classeNom+
+      ' — '+item.periodeLibelle;
+
+    var t0=performance.now();
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        r.clientRoundTripMs=
+          Math.round(performance.now()-t0);
+
+        addRow(r);
+        i++;
+
+        bar.style.width=
+          Math.round(i*100/queue.length)+'%';
+
+        next();
+      })
+      .withFailureHandler(function(e){
+        addRow({
+          famille:item.famille,
+          classeNom:item.classeNom,
+          periodeLibelle:item.periodeLibelle,
+          clientRoundTripMs:
+            Math.round(performance.now()-t0),
+          visiteurErreur:
+            String(e&&e.message||e)
+        });
+
+        i++;
+        next();
+      })
+      .EUC_DEV190H3_measureOne(item);
+  }
+
+  indexes.onclick=function(){
+    indexes.disabled=true;
+    indexOut.textContent='Mesure des index…';
+
+    var fams=['BACPRO','BTS','CAP'];
+    var results=[];
+    var pos=0;
+
+    function one(){
+      if(pos>=fams.length){
+        indexes.disabled=false;
+        indexOut.textContent=JSON.stringify({
+          ok:true,
+          annee:annee.value,
+          indexes:results
+        },null,2);
+        return;
+      }
+
+      var fam=fams[pos++];
+      var done=false;
+      var started=performance.now();
+
+      var timer=setTimeout(function(){
+        if(done)return;
+        done=true;
+
+        results.push({
+          famille:fam,
+          ok:false,
+          timeout:true,
+          clientWaitMs:Math.round(performance.now()-started)
+        });
+
+        indexOut.textContent=JSON.stringify({
+          progression:pos+'/'+fams.length,
+          indexes:results
+        },null,2);
+
+        one();
+      },7000);
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          if(done)return;
+          done=true;
+          clearTimeout(timer);
+
+          r.clientWaitMs=
+            Math.round(performance.now()-started);
+
+          results.push(r);
+
+          indexOut.textContent=JSON.stringify({
+            progression:pos+'/'+fams.length,
+            indexes:results
+          },null,2);
+
+          one();
+        })
+        .withFailureHandler(function(e){
+          if(done)return;
+          done=true;
+          clearTimeout(timer);
+
+          results.push({
+            famille:fam,
+            ok:false,
+            erreur:String(e&&e.message||e),
+            clientWaitMs:
+              Math.round(performance.now()-started)
+          });
+
+          indexOut.textContent=JSON.stringify({
+            progression:pos+'/'+fams.length,
+            indexes:results
+          },null,2);
+
+          one();
+        })
+        .EUC_DEV190H4_measureIndex({
+          annee:annee.value,
+          famille:fam
+        });
+    }
+
+    one();
+  };
+
+  run.onclick=function(){
+    run.disabled=true;
+    stopped=false;
+    i=0;
+    tbody.innerHTML='';
+    bar.style.width='0%';
+    status.textContent='Préparation de la matrice…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        run.disabled=false;
+        queue=r.items||[];
+        status.textContent=
+          queue.length+' combinaisons à tester.';
+        next();
+      })
+      .withFailureHandler(function(e){
+        run.disabled=false;
+        status.textContent=
+          'Erreur : '+String(e&&e.message||e);
+      })
+      .EUC_DEV190H3_queue(annee.value);
+  };
+
+  stop.onclick=function(){
+    stopped=true;
+  };
+
+})();
+</script>
+</body>
+</html>

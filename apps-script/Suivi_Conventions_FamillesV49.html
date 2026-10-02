@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_top">
+<title>Suivi des conventions PFMP</title>
+<style>
+:root{--g:#0b8f72;--g2:#dff4ed;--g3:#eef9f5;--ink:#17312b;--mut:#5f746e;--line:#cfe5de;--bg:#f7fbf9;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--ink)}
+.hero{background:var(--white);border-bottom:1px solid var(--line);padding:28px 18px}
+.wrap{max-width:1180px;margin:auto}.eyebrow{color:var(--g);font-weight:800;font-size:13px}.hero h1{margin:8px 0 5px;font-size:31px;color:#0f4035}.sub{color:var(--mut)}
+.content{padding:22px 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+select{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;box-shadow:0 3px 14px rgba(12,76,62,.05);transition:.15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(12,76,62,.10)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px}.title{font-size:22px;font-weight:800;color:#0c5f4e}
+.go{background:var(--g);color:#fff;border-radius:9px;padding:8px 11px;font-weight:800;font-size:12px}.meta{font-size:12px;color:var(--mut);margin:7px 0 12px}
+.period{padding:10px 0;border-top:1px solid #e7f1ed}.row{display:flex;justify-content:space-between;gap:12px}.label{font-weight:700}.count{font-weight:800;color:var(--g)}
+.bar{height:6px;background:#e7efec;border-radius:999px;overflow:hidden;margin-top:7px}.fill{height:100%;background:var(--g)}
+.wait{padding:12px;background:var(--g3);border-radius:10px;color:var(--mut);font-size:13px}
+.err{padding:10px;background:#fff1f1;border-radius:10px;color:#9b2c2c;font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap"><div class="eyebrow">LYCÉE LES EUCALYPTUS</div><h1>Suivi des conventions PFMP</h1><div class="sub">Synthèse par famille de formation</div></div></header>
+<main class="content"><div class="wrap">
+<div class="top"><strong id="summary"></strong><label>Année scolaire <select id="year"></select></label></div>
+<div class="grid" id="grid"></div>
+</div></main>
+<script>
+const C=<?!= config ?>;
+const REQUESTED_YEAR=<?!= requestedYear ?>;
+(function(){
+  const fams=[
+    {code:'BACPRO',libelle:'BAC PRO'},
+    {code:'BTS',libelle:'BTS'},
+    {code:'CAP',libelle:'CAP'}
+  ];
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function currentSchoolYear(){
+    const d=new Date(),y=d.getFullYear(),m=d.getMonth()+1;
+    const a=m>=9?y:y-1; return a+'-'+(a+1);
+  }
+  const active=REQUESTED_YEAR||currentSchoolYear();
+  const y0=Number(active.slice(0,4));
+  year.innerHTML=[y0-1,y0,y0+1].map(y=>'<option value="'+y+'-'+(y+1)+'"'+((y+'-'+(y+1))===active?' selected':'')+'>'+y+'-'+(y+1)+'</option>').join('');
+  year.onchange=()=>location.href=C.baseUrl+'?page=suivi-conventions&annee='+encodeURIComponent(year.value);
+  summary.textContent='Année '+active;
+
+  grid.innerHTML=fams.map(f=>{
+    const href=C.baseUrl+'?page=suivi-conventions-famille&annee='+encodeURIComponent(active)+'&famille='+encodeURIComponent(f.code);
+    return '<a class="card" id="fam-'+f.code+'" href="'+href+'"><div class="head"><div class="title">'+esc(f.libelle)+'</div><div class="go">Voir les classes</div></div><div class="meta" id="meta-'+f.code+'">Calcul du décompte…</div><div id="periods-'+f.code+'" class="wait">Chargement des périodes…</div></a>';
+  }).join('');
+
+  function renderFamily(code,f){
+    document.getElementById('meta-'+code).textContent=(f.classes||0)+' classe(s) · '+(f.effectif||0)+' élève(s)';
+    const box=document.getElementById('periods-'+code),ps=f.periodes||[];
+    if(!ps.length){box.className='wait';box.textContent='Aucune période à afficher.';return;}
+    box.className='';
+    box.innerHTML=ps.map(p=>'<div class="period"><div class="row"><div class="label">'+esc(p.libelle)+'</div><div class="count">'+p.conventions+' / '+p.total+'</div></div><div class="bar"><div class="fill" style="width:'+Math.min(100,p.pourcentage||0)+'%"></div></div></div>').join('');
+  }
+  function loadAt(i){
+    if(i>=fams.length)return;
+    const f=fams[i];
+    google.script.run.withSuccessHandler(function(r){renderFamily(f.code,r||{});loadAt(i+1);})
+      .withFailureHandler(function(e){const x=document.getElementById('periods-'+f.code);x.className='err';x.textContent='Décompte indisponible';loadAt(i+1);})
+      .EUC_SUIVI_PUBLIC_resumeFamilleV49({annee:active,famille:f.code});
+  }
+  loadAt(0);
+})();
+</script>
+</body>
+</html>

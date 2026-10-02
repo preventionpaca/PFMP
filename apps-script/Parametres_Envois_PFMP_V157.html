@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#1d2939}
+    .wrap{max-width:950px;margin:auto;padding:24px}
+    .card{background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:18px;margin-bottom:18px}
+    h1{margin-top:0}.sub{color:#667085}
+    label{font-weight:700;display:block;margin-bottom:6px}
+    input[type=text],textarea{width:100%;box-sizing:border-box;border:1px solid #b9c7d8;border-radius:9px;padding:9px 10px}
+    textarea{min-height:140px}
+    .actions{display:flex;gap:10px;justify-content:flex-end}
+    button,a.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none}
+    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec}
+    #status{display:none;padding:10px 12px;border-radius:10px;margin-bottom:14px;font-weight:700}
+    #status.show{display:block}.ok{background:#ecfdf3;color:#067647}.err{background:#fff1f2;color:#b42318}.info{background:#eef5fb;color:#164e7a}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Paramètres du mail de suivi PFMP</h1>
+  <p class="sub">Ici se règlent le sujet et le texte du mail. Les destinataires institutionnels sont gérés dans la table centrale « Destinataires & envois ».</p>
+
+  <div id="status"></div>
+
+  <div class="card">
+    <label>Objet du mail</label>
+    <input id="objet" type="text">
+    <div class="sub" style="margin-top:6px">Variables : {{CLASSE}}, {{PERIODE}}, {{ANNEE}}</div>
+  </div>
+
+  <div class="card">
+    <label>Message d’accompagnement</label>
+    <textarea id="message"></textarea>
+  </div>
+
+  <div class="actions">
+    <a id="destinataires" class="btn secondary" href="#">Destinataires & envois</a>
+    <a id="back" class="btn secondary" href="#">Retour</a>
+    <button id="save" class="primary" type="button">Enregistrer</button>
+  </div>
+</div>
+
+<script>
+const C=<?!= config ?>;
+let P=<?!= paramsJson ?>;
+const status=document.getElementById('status');
+const save=document.getElementById('save');
+
+function show(text,type){status.textContent=text||'';status.className=text?'show '+type:''}
+function render(){
+  document.getElementById('objet').value=P.objet||'';
+  document.getElementById('message').value=P.message||'';
+}
+
+save.onclick=function(){
+  const old=save.innerHTML;
+  save.disabled=true;
+  save.innerHTML='<span class="spinner"></span>Enregistrement en cours...';
+  show('Enregistrement en cours...','info');
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      P=r;render();save.disabled=false;save.innerHTML=old;show('Paramètres enregistrés.','ok');
+    })
+    .withFailureHandler(function(e){
+      save.disabled=false;save.innerHTML=old;show('Erreur : '+(e&&e.message||e),'err');
+    })
+    .EUC_V157_sauverParametres({
+      objet:document.getElementById('objet').value,
+      message:document.getElementById('message').value,
+      destinataires:[]
+    });
+};
+
+document.getElementById('back').href=C.baseUrl+'?page=suivi-pfmp-classes';
+document.getElementById('destinataires').href=C.baseUrl+'?page=destinataires-envois-pfmp';
+render();
+</script>
+<script id="PFMP_PERF_P6_1_PREFETCH">
+(function(){
+  const warmed=new Set();
+
+  const routes=[
+    ['suivi-pfmp-ent-classe','EUC_PERF_P6_prewarmSuiviEntClasse'],
+    ['suivi-pfmp-ent','EUC_PERF_P6_prewarmSuiviEnt'],
+    ['migration-jotform-pfmp','EUC_PERF_P6_prewarmMigration'],
+    ['destinataires-envois-pfmp','EUC_PERF_P6_prewarmDestinataires'],
+    ['parametres-envois-pfmp','EUC_PERF_P6_prewarmParametresEnvois']
+  ];
+
+  function link(t){
+    if(!t||!t.closest)return null;
+    return t.closest('a[href]');
+  }
+
+  function matchRoute(a){
+    if(!a||!a.href)return null;
+    for(const r of routes){
+      if(a.href.indexOf(r[0])>=0)return r;
+    }
+    return null;
+  }
+
+  function parse(a){
+    try{
+      const u=new URL(a.href,window.location.href),p={};
+      u.searchParams.forEach(function(v,k){p[k]=v;});
+      delete p.page;
+      return p;
+    }catch(e){
+      return {};
+    }
+  }
+
+  function go(a){
+    const r=matchRoute(a);
+    if(!r)return;
+
+    const key=r[0]+'|'+a.href;
+    if(warmed.has(key))return;
+    warmed.add(key);
+
+    const params=parse(a);
+    const runner=google.script.run
+      .withFailureHandler(function(){warmed.delete(key);});
+
+    runner[r[1]]({params:params});
+  }
+
+  document.addEventListener('pointerover',function(ev){
+    const a=link(ev.target);
+    if(a)setTimeout(function(){go(a);},120);
+  },true);
+
+  document.addEventListener('pointerdown',function(ev){
+    go(link(ev.target));
+  },true);
+})();
+</script>
+
+</body>
+</html>

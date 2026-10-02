@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{
+  margin:0;
+  background:#f7fbf9;
+  font-family:Arial,sans-serif;
+  color:#17312b
+}
+.wrap{
+  max-width:1500px;
+  margin:auto;
+  padding:24px
+}
+h1{margin:0 0 8px;color:#0d4539}
+.note{
+  margin-bottom:16px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#eef7f3;
+  color:#0b6b58;
+  font-weight:800
+}
+button{
+  border:0;
+  border-radius:8px;
+  padding:9px 12px;
+  background:#0b8f72;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer
+}
+.card{
+  background:#fff;
+  border:1px solid #cfe5de;
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px
+}
+.k{
+  padding:8px;
+  border-radius:8px;
+  background:#f7fbf9
+}
+.k b{display:block;font-size:18px}
+.k span{font-size:10px;color:#667085}
+pre{
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:#f7f9f8;
+  border-radius:8px;
+  padding:10px;
+  max-height:520px;
+  overflow:auto;
+  font-size:11px
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px
+}
+th,td{
+  text-align:left;
+  border-bottom:1px solid #e6efec;
+  padding:6px
+}
+th{background:#f2f8f5}
+.bad{color:#b42318;font-weight:800}
+.ok{color:#08745e;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Audit strict BTS — lecture seule</h1>
+  <div class="note">
+    Analyse uniquement. Aucune écriture Grist, aucune modification de snapshot,
+    aucune correction appliquée.
+  </div>
+
+  <button id="run">Lancer l’audit</button>
+  <div id="status"></div>
+  <div id="out"></div>
+</div>
+
+<script>
+(function(){
+  var run=document.getElementById('run');
+  var status=document.getElementById('status');
+  var out=document.getElementById('out');
+
+  function esc(v){
+    var d=document.createElement('div');
+    d.textContent=(v==null?'':String(v));
+    return d.innerHTML;
+  }
+
+  function renderClass(c){
+    var l=c.loaders||{};
+    var v=c.ventilationCodes||{};
+
+    var rows=Object.keys(v)
+      .sort()
+      .map(function(code){
+        var x=v[code]||{};
+        return (
+          '<tr>'+
+            '<td>'+esc(code)+'</td>'+
+            '<td>'+Number(x.total||0)+'</td>'+
+            '<td>'+Number(x.actifs||0)+'</td>'+
+            '<td>'+Number(x.matchRef||0)+'</td>'+
+          '</tr>'
+        );
+      }).join('');
+
+    return (
+      '<section class="card">'+
+        '<h2>'+esc(c.classeDemandee)+'</h2>'+
+        '<div><b>ID(s) classe :</b> '+esc(JSON.stringify(c.classeIds))+'</div>'+
+        '<div><b>Alias testés :</b> '+esc((c.aliases||[]).join(' · '))+'</div>'+
+        '<div class="grid">'+
+          '<div class="k"><b>'+c.compteurs.lignesCandidates+'</b><span>Lignes candidates</span></div>'+
+          '<div class="k"><b>'+c.compteurs.uniques+'</b><span>Élèves uniques</span></div>'+
+          '<div class="k"><b>'+c.compteurs.exactCode+'</b><span>Code exact</span></div>'+
+          '<div class="k"><b>'+c.compteurs.aliasOnly+'</b><span>Alias seuls</span></div>'+
+          '<div class="k"><b>'+c.compteurs.refOnly+'</b><span>Référence classe seule</span></div>'+
+        '</div>'+
+
+        '<h3>Chargeurs actuels</h3>'+
+        '<pre>'+esc(JSON.stringify(l,null,2))+'</pre>'+
+
+        '<h3>Ventilation par Code_classe_importe</h3>'+
+        '<table>'+
+          '<thead><tr><th>Code</th><th>Total</th><th>Actifs</th><th>Avec ref classe</th></tr></thead>'+
+          '<tbody>'+rows+'</tbody>'+
+        '</table>'+
+
+        '<h3>Détail des lignes candidates</h3>'+
+        '<pre>'+esc(JSON.stringify(c.lignes,null,2))+'</pre>'+
+      '</section>'
+    );
+  }
+
+  run.onclick=function(){
+    run.disabled=true;
+    status.textContent='Audit en cours…';
+    out.innerHTML='';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        run.disabled=false;
+        status.innerHTML='<span class="ok">Audit terminé.</span>';
+
+        out.innerHTML=
+          (r.classes||[])
+            .map(renderClass)
+            .join('');
+      })
+      .withFailureHandler(function(e){
+        run.disabled=false;
+        status.innerHTML=
+          '<span class="bad">Erreur : '+
+          esc(e&&e.message||e)+
+          '</span>';
+      })
+      .EUC_AUDIT_BTS_run();
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:Arial,sans-serif;background:#f7fbf9;color:#17312b;margin:0}
+.wrap{max-width:1400px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid #cfe5de;border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;gap:4px}
+select,input,button{padding:8px;border-radius:8px}
+select,input{border:1px solid #cfe5de}
+button{border:0;background:#0b8f72;color:#fff;font-weight:800;cursor:pointer}
+pre{white-space:pre-wrap;word-break:break-word;background:#f5faf8;padding:12px;border-radius:8px;max-height:520px;overflow:auto}
+.good{color:#08745e;font-weight:800}
+.bad{color:#d92d20;font-weight:800}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Audit Apprentis / Parcours différencié</h1>
+
+<section class="card">
+  <div class="row">
+    <label>Année
+      <input id="annee">
+    </label>
+    <label>Classe
+      <select id="classe"></select>
+    </label>
+    <button id="probe">Auditer cette classe</button>
+  </div>
+  <p id="status">Prêt.</p>
+</section>
+
+<section class="card">
+  <h2>Correspondance classe → élèves</h2>
+  <pre id="out"></pre>
+</section>
+
+<section class="card">
+  <h2>Résultat du chargeur actuel</h2>
+  <pre id="loader"></pre>
+</section>
+</main>
+
+<script>
+const BOOT=<?!= bootJson ?>;
+
+(function(){
+  annee.value=BOOT.annee||'';
+
+  function loadClasses(){
+    classe.innerHTML='<option>Chargement…</option>';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        classe.innerHTML=(r.classes||[]).map(function(c){
+          return '<option value="'+c.id+'">'+c.nom+'</option>';
+        }).join('');
+      })
+      .withFailureHandler(function(e){
+        status.textContent='Erreur structure : '+String(e&&e.message||e);
+      })
+      .EUC_DEV190W_structure(annee.value);
+  }
+
+  loadClasses();
+
+  probe.onclick=function(){
+    var opt=classe.options[classe.selectedIndex];
+
+    if(!opt){
+      status.textContent='Aucune classe.';
+      return;
+    }
+
+    status.textContent='Audit en cours…';
+    out.textContent='';
+    loader.textContent='';
+
+    var id=Number(classe.value);
+    var nom=opt.textContent;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        out.textContent=JSON.stringify(r,null,2);
+        status.textContent='Audit correspondance terminé.';
+      })
+      .withFailureHandler(function(e){
+        out.textContent='ERREUR : '+String(e&&e.message||e);
+      })
+      .EUC_DEV190W_probeClass(
+        annee.value,
+        id,
+        nom
+      );
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        loader.textContent=JSON.stringify(r,null,2);
+      })
+      .withFailureHandler(function(e){
+        loader.textContent='ERREUR : '+String(e&&e.message||e);
+      })
+      .EUC_DEV190W_probeExistingLoader(
+        annee.value,
+        id,
+        nom
+      );
+  };
+})();
+</script>
+</body>
+</html>

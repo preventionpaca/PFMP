@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4faf8;color:#17312b;margin:0}
+    main{max-width:1280px;margin:auto;padding:22px}
+    h1{margin:0 0 8px;color:#075f4e}
+    .box{background:#fff;border:1px solid #cfe3dd;border-radius:10px;padding:12px;margin:10px 0}
+    .ok{background:#e9f8f1}
+    .err{background:#fdeeee}
+    pre{white-space:pre-wrap;word-break:break-word;overflow:auto}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnostic P.dif. — TCAR</h1>
+  <div class="box">Lecture seule : aucune donnée Grist n'est modifiée.</div>
+  <div id="status" class="box">Lecture…</div>
+  <div id="conclusions"></div>
+  <pre id="json" class="box"></pre>
+</main>
+
+<script>
+(function(){
+  google.script.run
+    .withSuccessHandler(function(r){
+      status.className='box ok';
+      status.textContent='Diagnostic terminé.';
+
+      conclusions.innerHTML=(r.conclusions||[])
+        .map(function(x){
+          return '<div class="box">'+
+            String(x)
+              .replace(/&/g,'&amp;')
+              .replace(/</g,'&lt;')
+              .replace(/>/g,'&gt;')+
+            '</div>';
+        })
+        .join('');
+
+      json.textContent=JSON.stringify(r,null,2);
+    })
+    .withFailureHandler(function(e){
+      status.className='box err';
+      status.textContent='Erreur : '+String(e&&e.message||e);
+    })
+    .EUC_DEV283A_diag({
+      annee:'2026-2027',
+      classe:'TCAR'
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1180px;margin:auto;padding:28px 24px}
+.top{display:flex;justify-content:space-between;gap:16px}
+h1{margin:0 0 8px;color:#0d4539}
+.back{color:#0b745f;font-weight:800;text-decoration:none}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+.filters{display:flex;gap:12px;flex-wrap:wrap}
+label{display:flex;flex-direction:column;gap:5px}
+select,input{border:1px solid var(--line);border-radius:8px;padding:8px}
+select{min-width:180px}
+.status{color:var(--mut);font-size:12px;margin-top:8px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{border-bottom:1px solid #e7eeeb;padding:8px;text-align:left}
+th{font-size:12px;color:#5d6781}
+.student{font-weight:800}
+button{border:0;border-radius:8px;padding:8px 10px;background:var(--g);color:#fff;font-weight:800;cursor:pointer}
+.rem{width:100%}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="top">
+  <div>
+    <h1>Parcours différencié</h1>
+    <div>Terminales uniquement — aucune classe chargée automatiquement.</div>
+  </div>
+  <a class="back" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=admin-pfmp" target="_top">← Accueil PFMP</a>
+</div>
+
+<section class="panel">
+  <div class="filters">
+    <label>Année
+      <select id="year"></select>
+    </label>
+    <label>Classe
+      <select id="classe"></select>
+    </label>
+  </div>
+  <div id="status" class="status">Choisissez une classe.</div>
+</section>
+
+<section id="results" class="panel" hidden>
+  <table>
+    <thead>
+      <tr>
+        <th>Élève</th>
+        <th>Parcours différencié</th>
+        <th>Remarque</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</section>
+</main>
+
+<script>
+const BOOT=<?!= bootJson ?>;
+
+(function(){
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function fillYears(){
+    year.innerHTML=(BOOT.years||[]).map(function(v){
+      return '<option value="'+esc(v)+'"'+(v===BOOT.currentYear?' selected':'')+'>'+esc(v)+'</option>';
+    }).join('');
+  }
+
+  function fillClasses(classes){
+    classe.innerHTML=
+      '<option value="">— Choisir une classe —</option>'+
+      (classes||[]).map(function(c){
+        return '<option value="'+c.id+'">'+esc(c.nom)+'</option>';
+      }).join('');
+    classe.value='';
+  }
+
+  function reloadClasses(){
+    results.hidden=true;
+    tbody.innerHTML='';
+    status.textContent='Mise à jour de la liste des classes…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        fillClasses(r.classes||[]);
+        status.textContent='Choisissez une classe.';
+      })
+      .withFailureHandler(function(){
+        status.textContent='Erreur de chargement des classes.';
+      })
+      .EUC_DEV190R_getPageStructure(year.value,true);
+  }
+
+  function render(rows){
+    tbody.innerHTML=(rows||[]).map(function(x){
+      return '<tr data-id="'+x.id+'">'+
+        '<td class="student">'+esc(x.nom)+' '+esc(x.prenom)+'</td>'+
+        '<td><input class="flag" type="checkbox" '+(x.selected?'checked':'')+'></td>'+
+        '<td><input class="rem" value="'+esc(x.remarque)+'"></td>'+
+        '<td><button class="save" type="button">OK</button></td>'+
+      '</tr>';
+    }).join('');
+
+    Array.from(tbody.querySelectorAll('tr')).forEach(function(tr){
+      tr.querySelector('.save').onclick=function(){
+        var btn=this;
+        btn.disabled=true;
+
+        google.script.run
+          .withSuccessHandler(function(){
+            btn.disabled=false;
+            btn.textContent='OK ✓';
+            setTimeout(function(){btn.textContent='OK';},1200);
+          })
+          .withFailureHandler(function(){
+            btn.disabled=false;
+            btn.textContent='Erreur';
+          })
+          .EUC_DEV190U_savePdif({
+            eleveId:Number(tr.dataset.id),
+            annee:year.value,
+            selected:tr.querySelector('.flag').checked,
+            remarque:tr.querySelector('.rem').value
+          });
+      };
+    });
+  }
+
+  fillYears();
+  fillClasses(BOOT.classes||[]);
+  status.textContent='Choisissez une classe.';
+
+  year.onchange=reloadClasses;
+
+  classe.onchange=function(){
+    if(!classe.value){
+      results.hidden=true;
+      tbody.innerHTML='';
+      status.textContent='Choisissez une classe.';
+      return;
+    }
+
+    results.hidden=true;
+    tbody.innerHTML='';
+    status.textContent='Chargement des élèves…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        render(r.students||[]);
+        results.hidden=false;
+        status.textContent=(r.students||[]).length+' élève(s).';
+      })
+      .withFailureHandler(function(){
+        status.textContent='Erreur de chargement des élèves.';
+      })
+      .EUC_DEV190V1_loadPdif(
+        year.value,
+        Number(classe.value),
+        classe.options[classe.selectedIndex].text
+      );
+  };
+})();
+</script>
+</body>
+</html>

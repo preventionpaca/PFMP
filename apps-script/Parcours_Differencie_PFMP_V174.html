@@ -1,0 +1,202 @@
+<!doctype html><html lang="fr"><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between}.back{color:#0b745f;text-decoration:none;font-weight:800}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}.filters{display:flex;gap:12px}.row{display:grid;grid-template-columns:1.5fr 110px 140px 1.5fr 90px;gap:8px;align-items:center;border-top:1px solid #edf2ef;padding:9px 0}.head{font-size:11px;color:var(--mut);font-weight:800}.save{background:var(--g);color:#fff;border:0;border-radius:8px;padding:8px;font-weight:800}input,select{width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;background:#fff}</style>
+
+
+
+
+
+
+
+<style id="EUC_DEV190T_PDIF_STYLE">
+html.euc190t-waiting table,
+body.euc190t-waiting table{
+  display:none!important;
+}
+html.euc190t-waiting [class*="loading"],
+html.euc190t-waiting [id*="loading"],
+html.euc190t-waiting [class*="chargement"],
+html.euc190t-waiting [id*="chargement"],
+body.euc190t-waiting [class*="loading"],
+body.euc190t-waiting [id*="loading"],
+body.euc190t-waiting [class*="chargement"],
+body.euc190t-waiting [id*="chargement"]{
+  display:none!important;
+}
+</style>
+<script id="EUC_DEV190T_PDIF_EARLY">
+(function(){
+  document.documentElement.classList.add('euc190t-waiting');
+  window.__EUC190T_PDIF_USER=false;
+})();
+</script>
+
+</head><body><main class="wrap"><div class="top"><div><h1>Parcours différencié</h1><div>Terminales uniquement — décision annuelle.</div></div><a id="back" class="back">← Accueil PFMP</a></div><section class="card"><div class="filters"><label>Année<select id="year"></select></label><label>Classe<select id="classe"></select></label></div><div id="rows">Chargement…</div></section></main>
+<script>const C=<?!= config ?>;(function(){back.href=C.baseUrl+'?page=admin-pfmp';function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}function load(){rows.textContent='Chargement…';google.script.run.withSuccessHandler(render).withFailureHandler(e=>rows.textContent='Erreur : '+(e&&e.message||e)).EUC_DEV174_pdifData({annee:year.value,classe:classe.value})}function render(d){year.innerHTML=(d.annees||[]).map(x=>'<option value="'+x.code+'"'+(x.code===d.annee?' selected':'')+'>'+esc(x.libelle||x.code)+'</option>').join('');classe.innerHTML=(d.classes||[]).map(x=>'<option value="'+x.id+'"'+(Number(x.id)===Number(d.classeId)?' selected':'')+'>'+esc(x.nom)+'</option>').join('');rows.innerHTML='<div class="row head"><div>Élève</div><div>P.dif.</div><div>Date décision</div><div>Remarque</div><div></div></div>'+(d.eleves||[]).map(x=>'<div class="row" data-id="'+x.id+'" data-record="'+x.recordId+'"><div><b>'+esc(x.nom+' '+x.prenom)+'</b></div><div><input class="pd" type="checkbox"'+(x.pdif?' checked':'')+'></div><div><input class="date" type="date" value="'+x.date+'"></div><div><input class="rem" value="'+esc(x.remarque)+'"></div><div><button class="save">OK</button></div></div>').join('');document.querySelectorAll('.save').forEach(b=>b.onclick=function(){const r=b.closest('.row');b.disabled=true;google.script.run.withSuccessHandler(load).withFailureHandler(e=>{b.disabled=false;alert(e&&e.message||e)}).EUC_DEV174_pdifSave({annee:year.value,eleve:Number(r.dataset.id),recordId:Number(r.dataset.record),pdif:r.querySelector('.pd').checked,date:r.querySelector('.date').value,remarque:r.querySelector('.rem').value})})}year.onchange=load;classe.onchange=load;load()})();</script>
+<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
+.euc190e-snapshot-tile{
+  border:1px solid #cfe5de;
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  cursor:pointer;
+  margin-top:12px;
+}
+.euc190e-snapshot-tile:hover{
+  border-color:#0b8f72;
+}
+.euc190e-snapshot-tile strong{
+  display:block;
+  color:#0c5f4e;
+  font-size:16px;
+  margin-bottom:5px;
+}
+.euc190e-snapshot-tile span{
+  color:#667085;
+  font-size:12px;
+}
+</style>
+
+<script id="EUC_DEV190E_SNAPSHOT_TILE">
+(function(){
+
+  function addTile(){
+
+    if(document.querySelector('.euc190e-snapshot-tile')){
+      return;
+    }
+
+    var tile = document.createElement('div');
+    tile.className = 'euc190e-snapshot-tile';
+
+    tile.innerHTML =
+      '<strong>Maintenance Snapshot PFMP</strong>' +
+      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
+
+    tile.onclick = function(){
+      var u = new URL(location.href);
+      u.search = '';
+      u.searchParams.set('page','snapshot-pfmp-admin');
+      location.href = u.toString();
+    };
+
+    var host =
+      document.querySelector('.dashboard-grid') ||
+      document.querySelector('.cards-grid') ||
+      document.querySelector('.card-grid') ||
+      document.querySelector('.tiles') ||
+      document.querySelector('.modules') ||
+      document.querySelector('.grid') ||
+      document.querySelector('.cards') ||
+      document.querySelector('main') ||
+      document.body;
+
+    host.appendChild(tile);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      addTile
+    );
+  }else{
+    addTile();
+  }
+
+})();
+</script>
+
+
+
+
+
+<script id="EUC_DEV190T_PDIF">
+(function(){
+
+  function academicYearNow(){
+    var d=new Date(),y=d.getFullYear();
+    return d.getMonth()>=8 ? y+'-'+(y+1) : (y-1)+'-'+y;
+  }
+
+  function sels(){ return Array.from(document.querySelectorAll('select')); }
+  function ysel(){ return sels()[0]||null; }
+  function csel(){ return sels()[1]||null; }
+
+  function blank(){
+    var c=csel();
+    if(!c)return;
+
+    var o=Array.from(c.options).find(function(x){return x.value==='';});
+
+    if(!o){
+      o=document.createElement('option');
+      o.value='';
+      o.textContent='— Choisir une classe —';
+      c.insertBefore(o,c.firstChild);
+    }
+
+    if(!window.__EUC190T_PDIF_USER){
+      c.value='';
+      document.documentElement.classList.add('euc190t-waiting');
+      document.body.classList.add('euc190t-waiting');
+    }
+  }
+
+  function init(){
+    var y=ysel(),c=csel();
+
+    if(!y||!c){
+      setTimeout(init,25);
+      return;
+    }
+
+    var current=academicYearNow();
+    y.value=current;
+    blank();
+
+    c.addEventListener('pointerdown',function(){
+      window.__EUC190T_PDIF_POINTER=true;
+    },true);
+
+    c.addEventListener('change',function(ev){
+      if(window.__EUC190T_PDIF_POINTER||ev.isTrusted){
+        window.__EUC190T_PDIF_POINTER=false;
+        window.__EUC190T_PDIF_USER=!!c.value;
+
+        if(window.__EUC190T_PDIF_USER){
+          document.documentElement.classList.remove('euc190t-waiting');
+          document.body.classList.remove('euc190t-waiting');
+        }else{
+          blank();
+        }
+      }
+    },true);
+
+    y.addEventListener('change',function(){
+      window.__EUC190T_PDIF_USER=false;
+      blank();
+    },true);
+
+    var guard=setInterval(function(){
+      if(window.__EUC190T_PDIF_USER){
+        clearInterval(guard);
+        return;
+      }
+      blank();
+    },40);
+
+    setTimeout(function(){
+      if(!window.__EUC190T_PDIF_USER)blank();
+      clearInterval(guard);
+    },10000);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  }else{
+    init();
+  }
+
+})();
+</script>
+
+</body></html>

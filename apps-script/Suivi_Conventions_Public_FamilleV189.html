@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--g2:#dff4ed;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085;--red:#d92d20;--orange:#e67e00;--grey:#98a2b3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1180px;margin:auto;padding:24px}
+.level-nav{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 12px}
+.level-btn{border:1px solid var(--line);background:#fff;color:#0b745f;border-radius:999px;padding:8px 13px;font-weight:800;cursor:pointer}
+.level-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
+.section{margin-bottom:14px}
+.section-head{width:100%;display:flex;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:20px;font-weight:800;color:#0c5f4e;cursor:pointer}
+.section-body{display:none;padding-top:12px}
+.section.open .section-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.head{display:flex;justify-content:space-between;gap:10px;font-size:20px;font-weight:800;color:#0c5f4e}
+.badge{background:var(--g2);color:#0b745f;padding:5px 8px;border-radius:999px;font-size:12px}
+.period{padding:10px 0;border-top:1px solid #e7f1ed;cursor:pointer}
+.period.busy{background:#eef9f5;opacity:.7}
+.period.busy .label::after{content:" · chargement…";font-size:11px;color:var(--g)}
+.row{display:flex;justify-content:space-between;gap:12px}
+.label{font-weight:700}.count{font-weight:800}.red{color:var(--red)}.orange{color:var(--orange)}.green{color:var(--g)}.grey{color:var(--grey)}
+.small{font-size:12px;color:var(--mut)}.bar{height:6px;background:#e7efec;border-radius:999px;overflow:hidden;margin-top:7px}.fill{height:100%}.fill.red{background:var(--red)}.fill.orange{background:var(--orange)}.fill.green{background:var(--g)}.fill.grey{background:#d0d5dd}
+.loading,.error{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+@media(max-width:800px){.section.open .section-body{grid-template-columns:1fr}}
+</style>
+
+<style id="EUC_DEV191_TOP_GAP">
+/*
+ * DEV191
+ * Le wrapper GitHub affiche le bandeau + navigation.
+ * On réserve ici 14 px supplémentaires pour éviter que
+ * le premier bloc interne touche le bord supérieur.
+ */
+main.wrap{
+  padding-top:38px!important;
+}
+</style>
+
+
+<style id="DEV280_APP_INLINE_STYLE">
+.dev280-app-inline{
+  margin-left:6px;
+  color:#07966f;
+  font-weight:900;
+  white-space:nowrap;
+}
+</style>
+
+
+<style id="DEV283_PDIF_STYLE">
+.dev283-pdif-inline{
+  color:#a06400;
+  font-weight:900;
+  white-space:nowrap;
+}
+</style>
+
+
+<style id="DEV291_PDIF_STYLE">
+.dev291-pdif-main{
+  color:#a06400;
+  font-weight:900;
+}
+.dev291-pdif-ent{
+  margin-top:2px;
+  color:#08745f;
+  font-size:10px;
+  font-weight:800;
+}
+.dev291-pdif-wait{
+  margin-top:1px;
+  color:#a86600;
+  font-size:10px;
+  font-weight:800;
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+<div id="levelNav" class="level-nav"></div>
+<div id="sections" class="loading">Chargement des classes…</div>
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+
+(function(){
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function color(p){
+    const t=Number(p.total)||0;
+    if(t<=0)return 'grey';
+    const x=100*(Number(p.conventions)||0)/t;
+    return x>=100?'green':(x>=65?'orange':'red');
+  }
+
+  function level(name,f){
+    const n=String(name||'').toUpperCase();
+
+    if(f==='BACPRO'){
+      if(/^T/.test(n))return 'Terminale';
+      if(/^1/.test(n))return 'Première';
+      if(/^2/.test(n))return 'Seconde';
+    }
+
+    if(f==='BTS'){
+      return /^2/.test(n)?'2e année':'1re année';
+    }
+
+    if(f==='CAP'){
+      return (/^T/.test(n)||/^2/.test(n))
+        ? 'Terminale CAP'
+        : '1re année CAP';
+    }
+
+    return 'Autres';
+  }
+
+  function nav(state,el){
+    if(el)el.classList.add('busy');
+    window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+  }
+
+  window.top.postMessage({
+    type:'EUC_ATRIUM_META',
+    meta:{
+      page:'family',
+      family:P.famille,
+      classLabel:'',
+      periodLabel:''
+    }
+  },'*');
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      const groups={};
+
+      (r.classes||[]).forEach(function(c){
+        const l=level(c.classe,r.famille);
+        (groups[l]||(groups[l]=[])).push(c);
+      });
+
+      const order=
+        r.famille==='BACPRO'
+          ? ['Terminale','Première','Seconde']
+          : r.famille==='BTS'
+          ? ['1re année','2e année']
+          : ['1re année CAP','Terminale CAP'];
+
+      const levels=order.filter(function(l){
+        return groups[l]&&groups[l].length;
+      });
+
+      levelNav.innerHTML=levels.map(function(l,i){
+        return '<button class="level-btn'+
+          (i===0?' active':'')+
+          '" data-level="'+esc(l)+'">'+
+          esc(l)+
+          '</button>';
+      }).join('');
+
+      sections.className='';
+
+      sections.innerHTML=levels.map(function(l,i){
+        return '<section class="section'+
+          (i===0?' open':'')+
+          '" data-section="'+esc(l)+'">'+
+          '<button class="section-head">'+
+            '<span>'+esc(l)+'</span><span>▾</span>'+
+          '</button>'+
+          '<div class="section-body">'+
+
+          groups[l].map(function(c){
+            return '<article class="card" data-class="'+c.classeId+'">'+
+              '<div class="head">'+
+                '<span>'+esc(c.classe)+'</span>'+
+                '<span class="badge">'+
+                  (c.apprentis||0)+' apprenti(s)'+
+                '</span>'+
+              '</div>'+
+
+              (c.periodes||[]).map(function(p){
+                const co=color(p);
+                const w=(Number(p.total)||0)>0
+                  ? Math.min(100,Number(p.pourcentage)||0)
+                  : 0;
+
+                return '<div class="period" data-period="'+p.id+'">'+
+                  '<div class="row">'+
+                    '<div>'+
+                      '<div class="label">'+esc(p.libelle)+'</div>'+
+                      '<div class="small">'+
+                        esc([p.debutFr,p.finFr].filter(Boolean).join(' → '))+
+                      '</div>'+
+                    '</div>'+
+                    '<div class="count '+co+'">'+
+                      (p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':(Number(p.conventions)||0)+' / '+((Number(p.total)||0)+(Number(p.apprentis)||0))+((Number(p.apprentis)||0)?'<span class="dev280-app-inline"> + '+(Number(p.apprentis)||0)+' apprenti(s)</span>':''))+
+                    '</div>'+
+                  '</div>'+
+                  '<div class="small">'+
+                    (p.apprentis||0)+' apprenti(s)'+
+                  '</div>'+
+                  '<div class="bar">'+
+                    '<div class="fill '+co+'" style="width:'+w+'%"></div>'+
+                  '</div>'+
+                '</div>';
+              }).join('')+
+
+            '</article>';
+          }).join('')+
+
+          '</div>'+
+        '</section>';
+      }).join('');
+
+      function openLevel(l){
+        document.querySelectorAll('.section').forEach(function(s){
+          s.classList.toggle('open',s.dataset.section===l);
+        });
+
+        document.querySelectorAll('.level-btn').forEach(function(b){
+          b.classList.toggle('active',b.dataset.level===l);
+        });
+      }
+
+      document.querySelectorAll('.level-btn').forEach(function(b){
+        b.onclick=function(){
+          openLevel(b.dataset.level);
+        };
+      });
+
+      document.querySelectorAll('.section-head').forEach(function(b){
+        b.onclick=function(){
+          openLevel(b.closest('.section').dataset.section);
+        };
+      });
+
+      document.querySelectorAll('.period[data-period]').forEach(function(p){
+        p.onclick=function(){
+          const card=p.closest('.card[data-class]');
+
+          nav({
+            page:'suivi-pfmp-classe-public',
+            annee:r.annee,
+            famille:r.famille,
+            classe:card.dataset.class,
+            periode:p.dataset.period
+          },p);
+        };
+      });
+    })
+    .withFailureHandler(function(e){
+      sections.className='error';
+      sections.textContent='Erreur : '+String(e&&e.message||e);
+    })
+    .EUC_DEV291_family(P);
+})();
+</script>
+<!-- EUC_DEV276_FAMILY_UI -->
+<style id="EUC_DEV276_FAMILY_UI_STYLE">
+.dev276-period-meta{
+  margin-top:2px;
+  font-size:11px;
+  color:#667085;
+}
+.dev276-period-meta strong{
+  color:#087f70;
+}
+.dev276-pdif-count{
+  color:#7a4300!important;
+  font-weight:800;
+}
+</style>
+<script id="EUC_DEV276_FAMILY_UI_JS">
+(function(){
+  'use strict';
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
+  function params(){
+    var q=new URLSearchParams(location.search);
+    return {
+      annee:q.get('annee')||'',
+      famille:q.get('famille')||''
+    };
+  }
+
+  function exactText(text,root){
+    var wanted=norm(text);
+    return Array.from(
+      (root||document).querySelectorAll('*')
+    ).find(function(el){
+      return norm(el.textContent)===wanted;
+    })||null;
+  }
+
+  function classCard(name){
+    var el=exactText(name,document);
+    if(!el)return null;
+
+    var p=el;
+    for(var i=0;i<7&&p;i++,p=p.parentElement){
+      var t=String(p.textContent||'');
+      if(
+        /apprenti/i.test(t) &&
+        /\d+\s*\/\s*\d+/.test(t) &&
+        p.getBoundingClientRect().width>200
+      ){
+        return p;
+      }
+    }
+    return null;
+  }
+
+  function apprenticeBadge(card){
+    return Array.from(card.querySelectorAll('*')).find(function(el){
+      return /^\s*\d+\s+apprenti(?:\(s\))?\s*$/i.test(
+        String(el.textContent||'').trim()
+      );
+    })||null;
+  }
+
+  function periodBlock(card,label){
+    var n=norm(label);
+    var els=Array.from(card.querySelectorAll('*'));
+
+    var el=els.find(function(x){
+      return norm(x.textContent)===n;
+    });
+
+    if(!el){
+      el=els.find(function(x){
+        var t=norm(x.textContent);
+        return n && t.indexOf(n)>=0 && x.children.length<=4;
+      });
+    }
+
+    if(!el)return null;
+
+    var p=el;
+    for(var i=0;i<5&&p;i++,p=p.parentElement){
+      if(/\d+\s*\/\s*\d+/.test(String(p.textContent||''))){
+        return p;
+      }
+    }
+    return el.parentElement;
+  }
+
+  function fraction(block){
+    if(!block)return null;
+    return Array.from(block.querySelectorAll('*')).find(function(el){
+      return /^\s*\d+\s*\/\s*\d+\s*$/.test(
+        String(el.textContent||'')
+      );
+    })||null;
+  }
+
+  function meta(block){
+    var m=block.querySelector('.dev276-period-meta');
+    if(m)return m;
+    m=document.createElement('div');
+    m.className='dev276-period-meta';
+    block.appendChild(m);
+    return m;
+  }
+
+  function periodLabel(p){
+    return p.v50Slot||p.v51Slot||p.libelle||p.nom||'';
+  }
+
+  function applyClass(c){
+    var name=c.classe||c.nom||c.classeNom||'';
+    var card=classCard(name);
+    if(!card)return;
+
+    var badge=apprenticeBadge(card);
+    if(badge){
+      badge.textContent=(Number(c.apprentis)||0)+' apprenti(s)';
+    }
+
+    (c.periodes||[]).forEach(function(p){
+      var block=periodBlock(card,periodLabel(p));
+      if(!block)return;
+
+      var f=fraction(block);
+      var m=meta(block);
+
+      if(p.isPdif){
+        var n=Number(p.parcoursDifferencies)||0;
+        m.classList.add('dev276-pdif-count');
+        m.innerHTML='<strong>'+n+'</strong> parcours différencié(s)';
+
+        if(f){
+          f.textContent=n+' concerné(s)';
+          f.classList.remove('red','orange');
+          f.classList.add('green');
+        }
+      }else{
+        var a=Number(p.apprentis)||0;
+        m.classList.remove('dev276-pdif-count');
+        m.innerHTML='<strong>'+a+'</strong> apprenti(s)';
+
+        if(f){
+          f.textContent=
+            (Number(p.conventions)||0)+
+            ' / '+
+            (Number(p.total)||0);
+        }
+      }
+    });
+  }
+
+  function apply(r){
+    (r.classes||[]).forEach(applyClass);
+  }
+
+  function load(){
+    var p=params();
+    if(!p.annee||!p.famille)return;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        apply(r||{});
+        setTimeout(function(){apply(r||{});},250);
+        setTimeout(function(){apply(r||{});},850);
+      })
+      .withFailureHandler(function(e){
+        console.error('[DEV276] famille',e&&e.message||e);
+      })
+      .EUC_DEV291_family(p);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',load,{once:true});
+  }else{
+    load();
+  }
+})();
+</script>
+</body>
+</html>

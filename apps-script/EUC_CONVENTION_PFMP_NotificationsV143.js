@@ -1,0 +1,536 @@
+/** Eucalyptus PFMP — v1.0.0-dev.143-fix3 — sauvegarde notifications paramètre par paramètre. */
+
+var EUC_NOTIF_V143_='v1.0.0-dev.143';
+var EUC_NOTIF_TABLE_V143_='EUC_PARAMETRES_CONVENTION_PFMP';
+
+function EUC_NOTIF_txtV143_(v,n){
+  return String(v==null?'':v).trim().slice(0,n||10000);
+}
+function EUC_NOTIF_emailV143_(v){
+  var x=EUC_NOTIF_txtV143_(v,250).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)?x:'';
+}
+function EUC_NOTIF_uniqueV143_(a){
+  var seen={},out=[];
+  (a||[]).forEach(function(v){
+    var x=EUC_NOTIF_emailV143_(v);
+    if(x&&!seen[x]){seen[x]=true;out.push(x);}
+  });
+  return out;
+}
+
+function EUC_NOTIF_defaultsV143_(){
+  return {
+    NOTIF_BFE_EMAIL:'bfe@lycee-les-eucalyptus.org',
+    NOTIF_AUTO_ENVOI:'NON',
+    NOTIF_OBJET:'[PFMP] Enregistrement {{NUMERO_ENREGISTREMENT}} — {{PRENOM_ELEVE}} {{NOM_ELEVE}}',
+    NOTIF_CORPS:[
+      'Bonjour,',
+      '',
+      'La demande de convention de PFMP de {{PRENOM_ELEVE}} {{NOM_ELEVE}} auprès de {{ENTREPRISE}} a bien été enregistrée sous le numéro {{NUMERO_ENREGISTREMENT}}.',
+      '',
+      'Période prévue : {{DATE_DEBUT}} au {{DATE_FIN}}.',
+      '',
+      'L’original papier de la convention doit maintenant être déposé au Bureau des formations et des entreprises afin d’être présenté à la signature de Monsieur le Proviseur.',
+      '',
+      'Important : cet enregistrement ne vaut pas validation définitive de la PFMP. La convention signée constitue le document officiel.',
+      '',
+      'Une fois signée par Monsieur le Proviseur et par les parties concernées, la convention devra être remise à l’entreprise. La PFMP ne pourra débuter qu’après finalisation de la convention.',
+      '',
+      'Ce message confirme uniquement l’enregistrement administratif des informations transmises.'
+    ].join('\n'),
+    NOTIF_SIGNATURE:'Cordialement,\nBureau des formations et des entreprises\nLycée Les Eucalyptus'
+  };
+}
+
+function EUC_NOTIF_paramsV143_(){
+  var p=EUC_NOTIF_defaultsV143_();
+  try{
+    EUC_IMPORT_lireRecords_(EUC_NOTIF_TABLE_V143_)
+      .filter(function(r){return r.Actif!==false;})
+      .forEach(function(r){
+        var k=String(r.Cle||'').trim();
+        if(Object.prototype.hasOwnProperty.call(p,k)){
+          p[k]=String(r.Valeur==null?'':r.Valeur);
+        }
+      });
+  }catch(e){}
+  return p;
+}
+
+function EUC_CONVENTION_notificationConfigLireV143(){
+  var p=EUC_NOTIF_paramsV143_();
+  return {
+    version:EUC_NOTIF_V143_,
+    variables:[
+      '{{NUMERO_ENREGISTREMENT}}','{{PRENOM_ELEVE}}','{{NOM_ELEVE}}',
+      '{{CLASSE}}','{{ENTREPRISE}}','{{DATE_DEBUT}}','{{DATE_FIN}}',
+      '{{PROF_PRINCIPAL}}'
+    ],
+    items:[
+      {cle:'NOTIF_BFE_EMAIL',label:'Adresse destinataire BFE / information',type:'email',valeur:p.NOTIF_BFE_EMAIL},
+      {cle:'NOTIF_AUTO_ENVOI',label:'Envoi automatique après enregistrement (OUI / NON)',type:'text',valeur:p.NOTIF_AUTO_ENVOI},
+      {cle:'NOTIF_OBJET',label:'Objet du courriel',type:'text',valeur:p.NOTIF_OBJET},
+      {cle:'NOTIF_CORPS',label:'Corps du courriel',type:'textarea',valeur:p.NOTIF_CORPS},
+      {cle:'NOTIF_SIGNATURE',label:'Signature du courriel',type:'textarea',valeur:p.NOTIF_SIGNATURE}
+    ]
+  };
+}
+
+function EUC_CONVENTION_notificationConfigEnregistrerV143(items){
+  EUC_IMPORT_exigerAdminTexte_();
+  EUC_PARAM_CONV_assurerTable_();
+
+  var allowed={
+    NOTIF_BFE_EMAIL:true,
+    NOTIF_AUTO_ENVOI:true,
+    NOTIF_OBJET:true,
+    NOTIF_CORPS:true,
+    NOTIF_SIGNATURE:true
+  };
+
+  var rows=EUC_IMPORT_lireRecords_(EUC_PARAM_CONV_TABLE_),by={};
+  rows.forEach(function(r){by[String(r.Cle||'')]=r;});
+
+  var defsBy={};
+  EUC_PARAM_CONV_defs_().forEach(function(d){defsBy[d[0]]=d;});
+
+  var total=0,crees=0,misAJour=0;
+
+  (items||[]).forEach(function(x){
+    var cle=String(x.cle||'').trim();
+    if(!allowed[cle])return;
+
+    var valeur=String(x.valeur==null?'':x.valeur);
+
+    if(cle==='NOTIF_BFE_EMAIL'&&!EUC_NOTIF_emailV143_(valeur)){
+      throw new Error('Adresse BFE invalide.');
+    }
+
+    if(cle==='NOTIF_AUTO_ENVOI'){
+      valeur=/^(OUI|YES|TRUE|1)$/i.test(valeur)?'OUI':'NON';
+    }
+
+    var r=by[cle];
+    var d=defsBy[cle];
+
+    if(r){
+      // IMPORTANT : Grist accepte ces PATCH un par un,
+      // alors que le batch de 5 lignes renvoie 400.
+      EUC_ENT_grist(
+        'patch',
+        '/tables/'+encodeURIComponent(EUC_PARAM_CONV_TABLE_)+'/records',
+        {records:[{id:r.id,fields:{Valeur:valeur,Actif:true}}]}
+      );
+      misAJour++;
+      total++;
+    }else if(d){
+      EUC_ENT_grist(
+        'post',
+        '/tables/'+encodeURIComponent(EUC_PARAM_CONV_TABLE_)+'/records',
+        {records:[{fields:{Cle:cle,Valeur:valeur,Description:d[2],Ordre:d[3],Actif:true}}]}
+      );
+      crees++;
+      total++;
+    }
+  });
+
+  return {ok:true,total:total,crees:crees,misAJour:misAJour};
+}
+
+function EUC_NOTIF_assurerColonnesV143_(){
+  var t=EUC_CONVENTION_ACCES_TABLE_;
+  var cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[],have={};
+  cols.forEach(function(c){have[c.id]=true;});
+
+  var defs=[
+    ['Numero_enregistrement','Numéro d’enregistrement','Text'],
+    ['Date_enregistrement','Date d’enregistrement','DateTime'],
+    ['Statut_administratif','Statut administratif','Text'],
+    ['Etat_courriel_confirmation','État courriel confirmation','Text'],
+    ['Date_courriel_confirmation','Date courriel confirmation','DateTime'],
+    ['Erreur_courriel_confirmation','Erreur courriel confirmation','Text'],
+    ['Destinataires_courriel','Destinataires courriel','Text'],
+    ['Date_depot_BFE','Date dépôt BFE','DateTime'],
+    ['Date_signature_proviseur','Date signature Proviseur','DateTime'],
+    ['Date_remise_convention','Date remise convention','DateTime'],
+    ['Date_annulation','Date annulation','DateTime'],
+    ['Motif_annulation','Motif annulation','Text'],
+    ['Date_interruption','Date interruption','DateTime'],
+    ['Motif_interruption','Motif interruption','Text']
+  ];
+
+  var missing=defs.filter(function(d){return !have[d[0]];}).map(function(d){
+    return {id:d[0],fields:{label:d[1],type:d[2]}};
+  });
+
+  if(missing.length){
+    EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});
+  }
+  return missing.map(function(x){return x.id;});
+}
+
+function EUC_NOTIF_assurerParamsV143_(){
+  var rows=EUC_IMPORT_lireRecords_(EUC_NOTIF_TABLE_V143_),have={};
+  rows.forEach(function(r){have[String(r.Cle||'')]=true;});
+  var p=EUC_NOTIF_defaultsV143_();
+
+  var defs=[
+    ['NOTIF_BFE_EMAIL',p.NOTIF_BFE_EMAIL,'Adresse destinataire des notifications PFMP',200],
+    ['NOTIF_AUTO_ENVOI',p.NOTIF_AUTO_ENVOI,'Envoi automatique après enregistrement : OUI / NON',210],
+    ['NOTIF_OBJET',p.NOTIF_OBJET,'Objet du courriel PFMP',220],
+    ['NOTIF_CORPS',p.NOTIF_CORPS,'Corps du courriel PFMP',230],
+    ['NOTIF_SIGNATURE',p.NOTIF_SIGNATURE,'Signature du courriel PFMP',240]
+  ];
+
+  var posts=defs.filter(function(d){return !have[d[0]];}).map(function(d){
+    return {fields:{Cle:d[0],Valeur:d[1],Description:d[2],Ordre:d[3],Actif:true}};
+  });
+
+  if(posts.length){
+    EUC_ENT_grist('post','/tables/'+EUC_NOTIF_TABLE_V143_+'/records',{records:posts});
+  }
+
+  return posts.map(function(x){return x.fields.Cle;});
+}
+
+function INSTALLER_DEV143_BLOC_A(){
+  var ctx=EUC_PFMP_contexteAdmin_();
+  if(!ctx||!ctx.autorise)throw new Error('Accès administrateur requis.');
+
+  return {
+    ok:true,
+    version:EUC_NOTIF_V143_,
+    colonnesCreees:EUC_NOTIF_assurerColonnesV143_(),
+    parametresCrees:EUC_NOTIF_assurerParamsV143_(),
+    aucunMailEnvoye:true
+  };
+}
+
+function EUC_NOTIF_dossierV143_(accesId){
+  var rows=EUC_CONVENTION_lireAccesFraisV108_();
+  var a=rows.filter(function(r){return Number(r.id)===Number(accesId);})[0];
+  if(!a)throw new Error('Dossier QR '+accesId+' introuvable.');
+
+  var eleveId=Number(EUC_PFMP_ref_(a.Eleve));
+  var classeId=Number(EUC_PFMP_ref_(a.Classe_convention));
+
+  var e=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP').filter(function(x){
+    return Number(x.id)===eleveId;
+  })[0];
+
+  if(!e)throw new Error('Élève introuvable.');
+
+  var annee=String(a.Annee_scolaire||'');
+  var y=(annee.match(/20\d{2}/)||['PFMP'])[0];
+  var numero=String(a.Numero_enregistrement||'').trim()||
+    ('PFMP-'+y+'-'+String(Number(a.id)).padStart(6,'0'));
+
+  var parents=[];
+  try{
+    parents=EUC_IMPORT_lireRecords_('EUC_RESPONSABLES_ELEVES_PFMP')
+      .filter(function(r){
+        return Number(EUC_PFMP_ref_(r.Eleve))===eleveId&&r.Responsable_legal===true;
+      })
+      .map(function(r){return EUC_NOTIF_emailV143_(r.Email);})
+      .filter(Boolean);
+  }catch(err){}
+
+  var pp=[],ppNames=[];
+  try{
+    var links=EUC_IMPORT_lireRecords_('EUC_CLASSES_PROFESSEURS_PFMP');
+    var profs=EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP'),by={};
+    profs.forEach(function(p){by[Number(p.id)]=p;});
+
+    links.filter(function(l){
+      return l.Actif!==false &&
+        String(l.Role||'')==='PROFESSEUR_PRINCIPAL' &&
+        Number(EUC_PFMP_ref_(l.Classe))===classeId;
+    }).forEach(function(l){
+      var p=by[Number(EUC_PFMP_ref_(l.Professeur))];
+      if(!p)return;
+      var em=EUC_NOTIF_emailV143_(p.Email);
+      if(em)pp.push(em);
+      ppNames.push([p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' '));
+    });
+  }catch(err){}
+
+  return {
+    acces:a,
+    numero:numero,
+    eleve:{
+      nom:String(e.Nom||''),
+      prenom:String(e.Prenom_usage||e.Prenom||''),
+      email:EUC_NOTIF_emailV143_(e.Email_eleve||e.Courriel||e.Email)
+    },
+    classe:String(a.Classe_convention_nom||''),
+    entreprise:String(a.Entreprise_raison_sociale||''),
+    dateDebut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),
+    dateFin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),
+    parents:EUC_NOTIF_uniqueV143_(parents),
+    pp:EUC_NOTIF_uniqueV143_(pp),
+    ppNoms:ppNames.filter(Boolean)
+  };
+}
+
+function EUC_NOTIF_variablesV143_(d){
+  return {
+    NUMERO_ENREGISTREMENT:d.numero,
+    PRENOM_ELEVE:d.eleve.prenom,
+    NOM_ELEVE:d.eleve.nom,
+    CLASSE:d.classe,
+    ENTREPRISE:d.entreprise,
+    DATE_DEBUT:d.dateDebut,
+    DATE_FIN:d.dateFin,
+    PROF_PRINCIPAL:d.ppNoms.join(' / ')
+  };
+}
+
+function EUC_NOTIF_renderV143_(template,vars){
+  return String(template||'').replace(/\{\{([A-Z0-9_]+)\}\}/g,function(_,k){
+    return Object.prototype.hasOwnProperty.call(vars,k)?String(vars[k]||''):'';
+  });
+}
+
+function EUC_NOTIF_preparerV143_(accesId){
+  var d=EUC_NOTIF_dossierV143_(accesId);
+  var p=EUC_NOTIF_paramsV143_();
+  var vars=EUC_NOTIF_variablesV143_(d);
+
+  var bfe=EUC_NOTIF_emailV143_(p.NOTIF_BFE_EMAIL);
+  var to=d.eleve.email?[d.eleve.email]:d.parents.slice();
+  var cc=[];
+
+  if(d.eleve.email)cc=cc.concat(d.parents);
+  cc=cc.concat(d.pp);
+  if(bfe)cc.push(bfe);
+
+  to=EUC_NOTIF_uniqueV143_(to);
+  cc=EUC_NOTIF_uniqueV143_(cc).filter(function(x){return to.indexOf(x)<0;});
+
+  if(!to.length){
+    to=EUC_NOTIF_uniqueV143_(d.pp.concat(bfe?[bfe]:[]));
+    cc=[];
+  }
+
+  var body=EUC_NOTIF_renderV143_(p.NOTIF_CORPS,vars);
+  var sign=EUC_NOTIF_renderV143_(p.NOTIF_SIGNATURE,vars);
+  if(sign)body+='\n\n'+sign;
+
+  return {
+    dossier:d,
+    params:p,
+    to:to,
+    cc:cc,
+    subject:EUC_NOTIF_renderV143_(p.NOTIF_OBJET,vars),
+    body:body,
+    auto:/^(OUI|YES|TRUE|1)$/i.test(String(p.NOTIF_AUTO_ENVOI||''))
+  };
+}
+
+function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero){
+  var rows=EUC_CONVENTION_lireAccesFraisV108_();
+  var a=rows.filter(function(r){return Number(r.id)===Number(accesId);})[0];
+  if(!a)throw new Error('Dossier QR introuvable après enregistrement.');
+
+  var now=new Date().toISOString();
+  var stable=String(a.Numero_enregistrement||numero||'').trim();
+
+  if(!stable){
+    var an=String(a.Annee_scolaire||'');
+    var y=(an.match(/20\d{2}/)||['PFMP'])[0];
+    stable='PFMP-'+y+'-'+String(Number(a.id)).padStart(6,'0');
+  }
+
+  EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
+    records:[{id:a.id,fields:{
+      Numero_enregistrement:stable,
+      Date_enregistrement:a.Date_enregistrement||now,
+      Statut_administratif:a.Statut_administratif||'INFORMATIONS_ENREGISTREES'
+    }}]
+  });
+
+  if(String(a.Etat_courriel_confirmation||'')==='ENVOYE'&&a.Date_courriel_confirmation){
+    return {envoye:false,dejaEnvoye:true,numero:stable};
+  }
+
+  var n=EUC_NOTIF_preparerV143_(a.id);
+
+  if(!n.auto){
+    return {
+      envoye:false,
+      simulation:true,
+      numero:stable,
+      to:n.to,
+      cc:n.cc,
+      message:'Envoi automatique désactivé dans les paramètres.'
+    };
+  }
+
+  try{
+    MailApp.sendEmail({
+      to:n.to.join(','),
+      cc:n.cc.join(','),
+      subject:n.subject,
+      body:n.body,
+      name:'Lycée Les Eucalyptus — PFMP'
+    });
+
+    EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
+      records:[{id:a.id,fields:{
+        Etat_courriel_confirmation:'ENVOYE',
+        Date_courriel_confirmation:now,
+        Erreur_courriel_confirmation:'',
+        Destinataires_courriel:JSON.stringify({to:n.to,cc:n.cc})
+      }}]
+    });
+
+    return {envoye:true,numero:stable,to:n.to,cc:n.cc};
+
+  }catch(err){
+    var detail=String(err&&err.message?err.message:err).slice(0,1000);
+
+    try{
+      EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
+        records:[{id:a.id,fields:{
+          Etat_courriel_confirmation:'ERREUR',
+          Erreur_courriel_confirmation:detail
+        }}]
+      });
+    }catch(ignore){}
+
+    return {envoye:false,numero:stable,erreur:detail,to:n.to,cc:n.cc};
+  }
+}
+
+function DIAGNOSTIC_DEV143_PFMP_000223(){
+  var n=EUC_NOTIF_preparerV143_(223);
+
+  console.log('=== DEV.143 — DIAGNOSTIC ===');
+  console.log('Numéro : '+n.dossier.numero);
+  console.log('AUTO : '+(n.auto?'OUI':'NON'));
+  console.log('TO : '+(n.to.join(', ')||'—'));
+  console.log('CC : '+(n.cc.join(', ')||'—'));
+  console.log('OBJET : '+n.subject);
+  console.log('');
+  console.log(n.body);
+  console.log('');
+  console.log('AUCUN COURRIEL ENVOYÉ PAR CE DIAGNOSTIC.');
+
+  return n;
+}
+
+function DIAGNOSTIC_DEV143_PARAM_GRIST_400(){
+  EUC_IMPORT_exigerAdminTexte_();
+
+  var table=EUC_PARAM_CONV_TABLE_;
+  var cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(table)+'/columns').columns||[];
+  var rows=EUC_IMPORT_lireRecords_(table);
+
+  console.log('=== DEV.143 — DIAGNOSTIC GRIST 400 ===');
+  console.log('Table : '+table);
+  console.log('Colonnes : '+cols.map(function(c){return c.id+' ['+((c.fields||{}).type||'')+']';}).join(', '));
+
+  var keys=['NOTIF_BFE_EMAIL','NOTIF_AUTO_ENVOI','NOTIF_OBJET','NOTIF_CORPS','NOTIF_SIGNATURE'];
+  keys.forEach(function(k){
+    var r=rows.filter(function(x){return String(x.Cle||'')===k;})[0];
+    console.log(k+' : '+(r?('id='+r.id+' / Valeur='+String(r.Valeur||'').slice(0,120)):'ABSENT'));
+  });
+
+  var cible=rows.filter(function(x){return String(x.Cle||'')==='NOTIF_OBJET';})[0];
+  if(!cible){
+    console.log('NOTIF_OBJET absent : diagnostic arrêté avant écriture.');
+    return {ok:false,raison:'NOTIF_OBJET_ABSENT'};
+  }
+
+  var original=String(cible.Valeur||'');
+  var test='[DIAG TEMPORAIRE] '+original;
+
+  console.log('Tentative PATCH minimale sur id='+cible.id);
+
+  try{
+    EUC_ENT_grist('patch','/tables/'+encodeURIComponent(table)+'/records',{
+      records:[{id:cible.id,fields:{Valeur:test}}]
+    });
+    console.log('PATCH MINIMAL : OK');
+
+    // restauration immédiate
+    EUC_ENT_grist('patch','/tables/'+encodeURIComponent(table)+'/records',{
+      records:[{id:cible.id,fields:{Valeur:original}}]
+    });
+    console.log('RESTAURATION : OK');
+    return {ok:true,patchMinimal:true,restaure:true};
+  }catch(e){
+    console.log('PATCH MINIMAL : ECHEC');
+    console.log('ERREUR EXACTE : '+String(e&&e.stack?e.stack:(e&&e.message?e.message:e)));
+    throw e;
+  }
+}
+
+function DIAGNOSTIC_DEV143_SAUVEGARDE_COMPLETE(){
+  var cfg=EUC_CONVENTION_notificationConfigLireV143();
+  var items=(cfg.items||[]).map(function(x){
+    return {cle:x.cle,valeur:x.valeur};
+  });
+
+  console.log('=== DEV.143 — DIAGNOSTIC SAUVEGARDE COMPLETE ===');
+  console.log('Nombre de paramètres : '+items.length);
+  console.log('Clés : '+items.map(function(x){return x.cle;}).join(', '));
+
+  try{
+    var r=EUC_CONVENTION_notificationConfigEnregistrerV143(items);
+    console.log('SAUVEGARDE COMPLETE : OK');
+    console.log(JSON.stringify(r));
+    return r;
+  }catch(e){
+    console.log('SAUVEGARDE COMPLETE : ECHEC');
+    console.log(String(e&&e.stack?e.stack:(e&&e.message?e.message:e)));
+    throw e;
+  }
+}
+
+function DIAGNOSTIC_DEV143_PARAM_PAR_PARAM(){
+  EUC_IMPORT_exigerAdminTexte_();
+
+  var table=EUC_PARAM_CONV_TABLE_;
+  var rows=EUC_IMPORT_lireRecords_(table);
+  var keys=['NOTIF_BFE_EMAIL','NOTIF_AUTO_ENVOI','NOTIF_OBJET','NOTIF_CORPS','NOTIF_SIGNATURE'];
+
+  console.log('=== DEV.143 — DIAGNOSTIC PARAMETRE PAR PARAMETRE ===');
+
+  keys.forEach(function(k){
+    var r=rows.filter(function(x){return String(x.Cle||'')===k;})[0];
+    if(!r){
+      console.log(k+' : ABSENT');
+      return;
+    }
+
+    var original=String(r.Valeur==null?'':r.Valeur);
+    var test=original;
+
+    if(k==='NOTIF_OBJET') test='[DIAG] '+original;
+    else if(k==='NOTIF_BFE_EMAIL') test=original;
+    else if(k==='NOTIF_AUTO_ENVOI') test=original;
+    else if(k==='NOTIF_CORPS') test=original+'\\n';
+    else if(k==='NOTIF_SIGNATURE') test=original+'\\n';
+
+    try{
+      EUC_ENT_grist('patch','/tables/'+encodeURIComponent(table)+'/records',{
+        records:[{id:r.id,fields:{Valeur:test,Actif:true}}]
+      });
+      console.log(k+' : PATCH OK');
+
+      EUC_ENT_grist('patch','/tables/'+encodeURIComponent(table)+'/records',{
+        records:[{id:r.id,fields:{Valeur:original,Actif:true}}]
+      });
+      console.log(k+' : RESTAURATION OK');
+    }catch(e){
+      console.log(k+' : ECHEC');
+      console.log(String(e&&e.stack?e.stack:(e&&e.message?e.message:e)));
+      throw e;
+    }
+  });
+
+  console.log('=== TOUS LES PARAMETRES TESTES ===');
+  return {ok:true};
+}

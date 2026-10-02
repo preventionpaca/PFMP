@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#172033}
+.wrap{max-width:1450px;margin:auto;padding:24px}
+.period-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.period-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-weight:800;cursor:pointer}
+.period-btn.active{background:var(--g);border-color:var(--g);color:#fff}
+.period-btn.busy{opacity:.6}.period-btn.busy::after{content:" · chargement…";font-size:11px}
+h2{margin:0 0 8px}.status{margin:0 0 12px;color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line)}
+th,td{padding:9px;border-bottom:1px solid #edf2ef;text-align:left}
+th{background:#f5faf8}
+.skeleton td{padding:11px 9px}
+.shimmer{display:block;height:12px;border-radius:999px;background:linear-gradient(90deg,#edf3f1 20%,#f7faf9 40%,#edf3f1 60%);background-size:200% 100%;animation:shimmer 1.2s infinite linear}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+</style>
+
+<style id="EUC_DEV191_TOP_GAP">
+/*
+ * DEV191
+ * Le wrapper GitHub affiche le bandeau + navigation.
+ * On réserve ici 14 px supplémentaires pour éviter que
+ * le premier bloc interne touche le bord supérieur.
+ */
+main.wrap{
+  padding-top:38px!important;
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+<div id="periodNav" class="period-nav"></div>
+<h2 id="title">Chargement de la classe…</h2>
+<p id="status" class="status">Récupération des données en cours…</p>
+
+<table>
+<thead>
+<tr>
+<th>Élève</th>
+<th>Statut</th>
+<th>Entreprise</th>
+<th>Contact entreprise</th>
+<th>Tuteur</th>
+<th>Professeur principal</th>
+<th>Suivi téléphonique</th>
+<th>Professeur visiteur</th>
+</tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+
+(function(){
+  function nav(state,el){
+    if(el)el.classList.add('busy');
+    window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+  }
+
+  function skeleton(){
+    tb.innerHTML=Array.from({length:12}).map(function(){
+      return '<tr class="skeleton">'+
+        '<td><span class="shimmer" style="width:72%"></span></td>'+
+        '<td><span class="shimmer" style="width:65%"></span></td>'+
+        '<td><span class="shimmer" style="width:70%"></span></td>'+
+        '<td><span class="shimmer" style="width:70%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+        '<td><span class="shimmer" style="width:75%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  function render(r){
+    const d=r.detail||{};
+    const classe=(d.classe&&d.classe.nom)||'Classe';
+    const periodLabel=(d.periode&&d.periode.libelle)||'Période';
+
+    window.top.postMessage({
+      type:'EUC_ATRIUM_META',
+      meta:{
+        page:'detail',
+        family:P.famille,
+        classLabel:classe,
+        periodLabel:periodLabel
+      }
+    },'*');
+
+    title.textContent=classe+' — '+periodLabel;
+    status.textContent='Données à jour · '+Number(r.totalMs||0)+' ms';
+
+    periodNav.innerHTML=(r.periodes||[]).map(function(p){
+      return '<button class="period-btn'+
+        (Number(p.id)===Number(P.periode)?' active':'')+
+        '" data-period="'+p.id+'">'+
+        p.libelle+
+      '</button>';
+    }).join('');
+
+    document.querySelectorAll('.period-btn').forEach(function(b){
+      b.onclick=function(){
+        nav({
+          page:'suivi-pfmp-classe-public',
+          annee:P.annee,
+          famille:P.famille,
+          classe:P.classe,
+          periode:b.dataset.period
+        },b);
+      };
+    });
+
+    tb.innerHTML=(d.lignes||[]).map(function(x){
+      return '<tr>'+
+        '<td><b>'+x.nom+' '+x.prenom+'</b></td>'+
+        '<td>'+(x.statut||'')+'</td>'+
+        '<td>'+(x.entreprise||'—')+'</td>'+
+        '<td>'+(x.contactEntreprise||'—')+'</td>'+
+        '<td>'+(x.tuteurEntreprise||'—')+'</td>'+
+        '<td>'+(x.professeurPrincipal||'—')+'</td>'+
+        '<td>'+(x.professeurTelephone||'—')+'</td>'+
+        '<td>'+(x.professeurVisiteur||'—')+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  skeleton();
+
+  window.top.postMessage({
+    type:'EUC_ATRIUM_META',
+    meta:{
+      page:'detail',
+      family:P.famille,
+      classLabel:'Classe',
+      periodLabel:'Période'
+    }
+  },'*');
+
+  google.script.run
+    .withSuccessHandler(render)
+    .withFailureHandler(function(e){
+      status.textContent='Erreur : '+String(e&&e.message||e);
+    })
+    .EUC_DEV189_getPublicDetail(P);
+})();
+</script>
+</body>
+</html>

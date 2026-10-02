@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--g2:#dff4ed;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085;--red:#d92d20;--orange:#e67e00;--grey:#98a2b3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1180px;margin:auto;padding:22px}
+.page-title{font-size:30px;font-weight:800;color:#0f4035;margin:0 0 16px}
+.crumb{display:flex;gap:7px;align-items:center;font-size:13px;margin-bottom:16px}
+.crumb a{color:#0b745f;text-decoration:none;font-weight:800;cursor:pointer}
+.level-nav{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0}
+.level-btn{border:1px solid var(--line);background:#fff;color:#0b745f;border-radius:999px;padding:8px 13px;font-weight:800;cursor:pointer}
+.level-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
+.section{margin-bottom:14px}
+.section-head{width:100%;display:flex;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:20px;font-weight:800;color:#0c5f4e;cursor:pointer}
+.section-body{display:none;padding-top:12px}
+.section.open .section-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:.15s}
+.card:hover{border-color:var(--g);transform:translateY(-1px)}
+.card.is-loading{opacity:.7}
+.head{display:flex;justify-content:space-between;gap:10px;font-size:20px;font-weight:800;color:#0c5f4e}
+.badge{background:var(--g2);color:#0b745f;padding:5px 8px;border-radius:999px;font-size:12px}
+.period{display:block;padding:10px 0;border-top:1px solid #e7f1ed;transition:.15s}
+.period.is-loading{opacity:.65;background:#eef9f5}
+.period.is-loading .label::after{content:" · chargement…";font-size:11px;color:var(--g)}
+.row{display:flex;justify-content:space-between;gap:12px}
+.label{font-weight:700}.count{font-weight:800}
+.red{color:var(--red)}.orange{color:var(--orange)}.green{color:var(--g)}.grey{color:var(--grey)}
+.small{font-size:12px;color:var(--mut)}
+.bar{height:6px;background:#e7efec;border-radius:999px;overflow:hidden;margin-top:7px}
+.fill{height:100%}.fill.red{background:var(--red)}.fill.orange{background:var(--orange)}.fill.green{background:var(--g)}.fill.grey{background:#d0d5dd}
+.loading-box,.error{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+@media(max-width:800px){.section.open .section-body{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1 class="page-title">Point sur les stages</h1>
+<div class="crumb"><a id="back">Point sur les stages</a> › <strong id="title"></strong></div>
+<div id="levelNav" class="level-nav"></div>
+<div id="sections" class="loading-box">Chargement des classes…</div>
+</main>
+
+<script>
+const C=<?!= config ?>;
+const P=<?!= paramsJson ?>;
+
+(function(){
+  function esc(v){
+    return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function colorClass(p){
+    const total=Number(p.total)||0;
+    if(total<=0)return 'grey';
+    const ratio=100*(Number(p.conventions)||0)/total;
+    return ratio>=100?'green':(ratio>=65?'orange':'red');
+  }
+
+  function levelOf(name,fam){
+    const n=String(name||'').toUpperCase();
+    if(fam==='BACPRO'){
+      if(/^T/.test(n))return 'Terminale';
+      if(/^1/.test(n))return 'Première';
+      if(/^2/.test(n))return 'Seconde';
+    }
+    if(fam==='BTS'){
+      if(/^2/.test(n))return '2e année';
+      return '1re année';
+    }
+    if(fam==='CAP'){
+      if(/^T/.test(n)||/^2/.test(n))return 'Terminale CAP';
+      return '1re année CAP';
+    }
+    return 'Autres';
+  }
+
+  function navigate(state){
+    try{
+      window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+    }catch(e){
+      const u=new URL(C.baseUrl);
+      Object.keys(state).forEach(k=>u.searchParams.set(k,state[k]));
+      location.href=u.toString();
+    }
+  }
+
+  back.onclick=function(ev){
+    ev.preventDefault();
+    navigate({page:'suivi-conventions-public',annee:P.annee||''});
+  };
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      title.textContent=r.familleLibelle||r.famille;
+
+      const groups={};
+      (r.classes||[]).forEach(function(c){
+        const l=levelOf(c.classe,r.famille);
+        (groups[l]||(groups[l]=[])).push(c);
+      });
+
+      const order=
+        r.famille==='BACPRO'?['Terminale','Première','Seconde']:
+        r.famille==='BTS'?['1re année','2e année']:
+        ['1re année CAP','Terminale CAP'];
+
+      const levels=order.filter(function(l){return groups[l]&&groups[l].length;});
+
+      levelNav.innerHTML=levels.map(function(l,i){
+        return '<button class="level-btn'+(i===0?' active':'')+'" data-level="'+esc(l)+'">'+esc(l)+'</button>';
+      }).join('');
+
+      sections.className='';
+      sections.innerHTML=levels.map(function(l,i){
+        return '<section class="section'+(i===0?' open':'')+'" data-section="'+esc(l)+'">'+
+          '<button class="section-head"><span>'+esc(l)+'</span><span>▾</span></button>'+
+          '<div class="section-body">'+
+          groups[l].map(function(c){
+            const first=(c.periodes||[])[0]||null;
+            return '<article class="card" data-class="'+c.classeId+'" data-firstperiod="'+(first?first.id:'')+'">'+
+              '<div class="head"><span>'+esc(c.classe)+'</span><span class="badge">'+(c.apprentis||0)+' apprenti(s)</span></div>'+
+              (c.periodes||[]).map(function(p){
+                const col=colorClass(p);
+                const width=(Number(p.total)||0)>0 ? Math.min(100,Number(p.pourcentage)||0) : 0;
+                return '<div class="period" data-period="'+p.id+'">'+
+                  '<div class="row"><div><div class="label">'+esc(p.libelle)+'</div>'+
+                  '<div class="small">'+esc([p.debutFr,p.finFr].filter(Boolean).join(' → '))+'</div></div>'+
+                  '<div class="count '+col+'">'+p.conventions+' / '+p.total+'</div></div>'+
+                  '<div class="small">'+(p.apprentis||0)+' apprenti(s)'+((p.mixtes||0)?' · '+p.mixtes+' à vérifier':'')+'</div>'+
+                  '<div class="bar"><div class="fill '+col+'" style="width:'+width+'%"></div></div>'+
+                '</div>';
+              }).join('')+
+            '</article>';
+          }).join('')+
+          '</div></section>';
+      }).join('');
+
+      function goClass(card,periodId,periodEl){
+        if(!periodId)return;
+        document.querySelectorAll('.card').forEach(c=>c.classList.remove('is-loading'));
+        document.querySelectorAll('.period').forEach(p=>p.classList.remove('is-loading'));
+        card.classList.add('is-loading');
+        if(periodEl)periodEl.classList.add('is-loading');
+
+        navigate({
+          page:'suivi-pfmp-classe-public',
+          annee:r.annee,
+          famille:r.famille,
+          classe:card.dataset.class,
+          periode:periodId
+        });
+      }
+
+      document.querySelectorAll('.card[data-class]').forEach(function(card){
+        card.onclick=function(ev){
+          const period=ev.target.closest('.period[data-period]');
+          if(period){
+            goClass(card,period.dataset.period,period);
+          }else{
+            goClass(card,card.dataset.firstperiod,null);
+          }
+        };
+      });
+
+      function openLevel(level){
+        document.querySelectorAll('.section').forEach(function(s){
+          s.classList.toggle('open',s.dataset.section===level);
+        });
+        document.querySelectorAll('.level-btn').forEach(function(b){
+          b.classList.toggle('active',b.dataset.level===level);
+        });
+      }
+
+      document.querySelectorAll('.level-btn').forEach(function(b){
+        b.onclick=function(){openLevel(b.dataset.level);};
+      });
+      document.querySelectorAll('.section-head').forEach(function(b){
+        b.onclick=function(){openLevel(b.closest('.section').dataset.section);};
+      });
+    })
+    .withFailureHandler(function(e){
+      sections.className='error';
+      sections.textContent='Erreur : '+String(e&&e.message||e);
+    })
+    .EUC_DEV182_chargerFamille(P);
+})();
+</script>
+</body>
+</html>
+
+<style id="EUC_DEV183_PUBLIC_FAMILY_PATCH">
+#EUC_DEV183_PUBLIC_CRUMB{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  margin-bottom:16px;
+  font-size:13px;
+}
+#EUC_DEV183_PUBLIC_CRUMB a{
+  color:#0b745f;
+  text-decoration:none;
+  font-weight:800;
+  cursor:pointer;
+}
+#EUC_DEV183_PUBLIC_CRUMB a.euc183-loading{
+  opacity:.6;
+}
+#EUC_DEV183_PUBLIC_CRUMB a.euc183-loading::after{
+  content:" · chargement…";
+  font-size:11px;
+}
+</style>
+<script id="EUC_DEV183_PUBLIC_FAMILY_JS">
+(function(){
+  function nav(state,el){
+    if(el)el.classList.add('euc183-loading');
+    try{
+      window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+    }catch(e){}
+  }
+
+  function apply(){
+    var old=document.querySelector('.crumb');
+    if(!old)return;
+
+    old.id='EUC_DEV183_PUBLIC_CRUMB';
+    var famLabel=(typeof P!=='undefined'&&P.famille==='BACPRO')?'BAC PRO':((typeof P!=='undefined'&&P.famille)||'');
+    old.innerHTML=
+      '<a data-d183="accueil">Accueil</a>'+
+      '<span>›</span>'+
+      '<a data-d183="suivi">Suivi des conventions</a>'+
+      '<span>›</span>'+
+      '<strong>'+famLabel+'</strong>';
+
+    old.querySelector('[data-d183="accueil"]').onclick=function(ev){
+      ev.preventDefault();
+      nav({page:'suivi-conventions-public',annee:P.annee||''},this);
+    };
+    old.querySelector('[data-d183="suivi"]').onclick=function(ev){
+      ev.preventDefault();
+      nav({page:'suivi-conventions-public',annee:P.annee||''},this);
+    };
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
+  else apply();
+})();
+</script>

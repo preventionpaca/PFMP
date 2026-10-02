@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+    .wrap{max-width:900px;margin:auto;padding:24px}
+    .back{color:#0b745f;text-decoration:none;font-weight:800}
+    .card{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+    .btn{background:var(--g);color:#fff;border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+    input{padding:8px;border:1px solid var(--line);border-radius:8px}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    td,th{padding:8px;border-bottom:1px solid #edf2ef;text-align:left}
+    .muted{color:var(--mut);font-size:13px}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <a id="back" class="back">← Accueil PFMP</a>
+  <h1>Audit performance PFMP</h1>
+  <p class="muted">Mesure des principales lectures serveur utilisées par le module.</p>
+
+  <section class="card">
+    <label>Année scolaire <input id="annee" value="2026-2027"></label>
+    <button id="run" class="btn">Lancer l'audit</button>
+    <p id="status"></p>
+    <table id="tbl"></table>
+  </section>
+</main>
+
+<script>
+const C=<?!= config ?>;
+(function(){
+  document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
+
+  document.getElementById('run').onclick=function(){
+    const b=this;
+    b.disabled=true;
+    document.getElementById('status').textContent='Mesure en cours…';
+    document.getElementById('tbl').innerHTML='';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        b.disabled=false;
+        document.getElementById('status').textContent=
+          'Terminé — total mesuré : '+(r.totalMs||0)+' ms';
+
+        const m=r.mesures||{};
+        document.getElementById('tbl').innerHTML=
+          '<tr><th>Mesure</th><th>Durée</th></tr>'+
+          Object.keys(m).map(function(k){
+            return '<tr><td>'+k+'</td><td><b>'+m[k]+' ms</b></td></tr>';
+          }).join('');
+      })
+      .withFailureHandler(function(e){
+        b.disabled=false;
+        document.getElementById('status').textContent=
+          'Erreur : '+String(e&&e.message||e);
+      })
+      .EUC_DEV175C_audit({
+        annee:document.getElementById('annee').value
+      });
+  };
+})();
+</script>
+
+<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
+.euc190e-snapshot-tile{
+  border:1px solid #cfe5de;
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  cursor:pointer;
+  margin-top:12px;
+}
+.euc190e-snapshot-tile:hover{
+  border-color:#0b8f72;
+}
+.euc190e-snapshot-tile strong{
+  display:block;
+  color:#0c5f4e;
+  font-size:16px;
+  margin-bottom:5px;
+}
+.euc190e-snapshot-tile span{
+  color:#667085;
+  font-size:12px;
+}
+</style>
+
+<script id="EUC_DEV190E_SNAPSHOT_TILE">
+(function(){
+
+  function addTile(){
+
+    if(document.querySelector('.euc190e-snapshot-tile')){
+      return;
+    }
+
+    var tile = document.createElement('div');
+    tile.className = 'euc190e-snapshot-tile';
+
+    tile.innerHTML =
+      '<strong>Maintenance Snapshot PFMP</strong>' +
+      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
+
+    tile.onclick = function(){
+      var u = new URL(location.href);
+      u.search = '';
+      u.searchParams.set('page','snapshot-pfmp-admin');
+      location.href = u.toString();
+    };
+
+    var host =
+      document.querySelector('.dashboard-grid') ||
+      document.querySelector('.cards-grid') ||
+      document.querySelector('.card-grid') ||
+      document.querySelector('.tiles') ||
+      document.querySelector('.modules') ||
+      document.querySelector('.grid') ||
+      document.querySelector('.cards') ||
+      document.querySelector('main') ||
+      document.body;
+
+    host.appendChild(tile);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      addTile
+    );
+  }else{
+    addTile();
+  }
+
+})();
+</script>
+
+</body>
+</html>

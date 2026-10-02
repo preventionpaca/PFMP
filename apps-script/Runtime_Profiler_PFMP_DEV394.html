@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>PFMP — Runtime Profiler DEV394</title>
+<style>
+:root{--g:#087f70;--bg:#f5fbf8;--line:#c9e7df;--red:#c92f27}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1250px;margin:auto;padding:24px}
+h1{margin:0 0 6px;color:#0c4f42}
+.note{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+button,a.btn{border:0;border-radius:9px;padding:9px 13px;background:#079b79;color:white;font-weight:800;text-decoration:none;cursor:pointer}
+button.secondary{background:#5c6f6a}
+button.danger{background:#b64036}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:8px;border-bottom:1px solid #e3efeb;text-align:left;font-size:12px;vertical-align:top}
+th{background:#eaf7f3}
+.ms{font-weight:900;white-space:nowrap}
+.slow{color:#b64036}
+.mid{color:#9a6500}
+.fast{color:#087f70}
+details{margin:3px 0}
+pre{white-space:pre-wrap;word-break:break-word;background:#f7faf9;padding:8px;border-radius:8px;font-size:11px}
+.empty{padding:20px;text-align:center;color:#617872}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PFMP — Runtime Profiler DEV394</h1>
+  <div class="note">
+    Cette page affiche les 40 dernières navigations instrumentées.
+    Fais d'abord les parcours réels : <b>Suivi des conventions → BAC PRO → une classe → une autre classe</b>,
+    puis reviens ici et clique sur Actualiser.
+  </div>
+
+  <div class="actions">
+    <button id="refresh">Actualiser</button>
+    <button id="clear" class="danger">Effacer les traces</button>
+    <a class="btn" href="<?!= baseUrl ?>?page=suivi-conventions">Ouvrir Suivi conventions ADMIN</a>
+    <a class="btn" href="<?!= baseUrl ?>?page=suivi-conventions-public">Ouvrir Suivi conventions PUBLIC</a>
+  </div>
+
+  <div id="status"></div>
+  <div id="out"></div>
+</div>
+
+<script>
+(function(){
+  const out=document.getElementById('out');
+  const status=document.getElementById('status');
+
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function cls(ms){
+    ms=Number(ms)||0;
+    return ms>=5000?'slow':(ms>=1500?'mid':'fast');
+  }
+
+  function render(r){
+    const traces=(r&&r.traces)||[];
+    if(!traces.length){
+      out.innerHTML='<div class="empty">Aucune trace enregistrée pour le moment.</div>';
+      return;
+    }
+
+    out.innerHTML=
+      '<table><thead><tr>'+
+      '<th>Date</th><th>Route</th><th>Total</th><th>Détail</th>'+
+      '</tr></thead><tbody>'+
+      traces.map(t=>{
+        const marks=(t.marks||[]).slice().sort((a,b)=>Number(b.ms||0)-Number(a.ms||0));
+        const detail=marks.map(m=>`${m.name}: ${m.ms} ms`).join('\n');
+        return '<tr>'+
+          '<td>'+esc(t.startedAt||'')+'</td>'+
+          '<td><b>'+esc(t.route||t.top||'')+'</b><br><small>'+esc(t.top||'')+'</small></td>'+
+          '<td class="ms '+cls(t.totalMs)+'">'+Number(t.totalMs||0)+' ms</td>'+
+          '<td><details><summary>'+marks.length+' mesures</summary><pre>'+esc(detail)+'</pre></details></td>'+
+        '</tr>';
+      }).join('')+
+      '</tbody></table>';
+  }
+
+  function load(){
+    status.textContent='Chargement…';
+    google.script.run
+      .withSuccessHandler(function(r){status.textContent='';render(r);})
+      .withFailureHandler(function(e){status.textContent='Erreur : '+(e&&e.message||e);})
+      .EUC_DEV394_lireTraces();
+  }
+
+  document.getElementById('refresh').onclick=load;
+  document.getElementById('clear').onclick=function(){
+    google.script.run
+      .withSuccessHandler(function(){load();})
+      .withFailureHandler(function(e){status.textContent='Erreur : '+(e&&e.message||e);})
+      .EUC_DEV394_effacerTraces();
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

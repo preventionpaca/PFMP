@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4faf8;color:#17312b;margin:0}
+    main{max-width:1300px;margin:auto;padding:22px}
+    h1{margin:0 0 6px;color:#075f4e}
+    .note{background:#fff7df;border:1px solid #e4c36b;border-radius:9px;padding:10px 12px;margin:12px 0}
+    .ok{background:#e9f8f1;border-color:#93d4b7}
+    .err{background:#fdeeee;border-color:#efaaaa}
+    button{background:#07846c;color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
+    pre{background:#fff;border:1px solid #cfe3dd;border-radius:10px;padding:14px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+    .conclusion{background:#fff;border:1px solid #cfe3dd;border-radius:10px;padding:12px;margin:8px 0}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Diagnostic apprentissage — KIROF Adriano</h1>
+  <div class="note">
+    Lecture seule : aucune ligne Grist n’est créée, modifiée ou supprimée.
+  </div>
+
+  <button id="reload">Relire maintenant</button>
+  <div id="status" class="note">Lecture…</div>
+  <div id="conclusions"></div>
+  <pre id="json"></pre>
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+
+(function(){
+  function load(){
+    status.textContent='Lecture des lignes, chargeurs et décomptes…';
+    status.className='note';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        status.textContent='Diagnostic terminé.';
+        status.className='note ok';
+
+        conclusions.innerHTML=(r.conclusions||[])
+          .map(function(x){
+            return '<div class="conclusion">'+
+              String(x)
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')+
+              '</div>';
+          })
+          .join('');
+
+        json.textContent=JSON.stringify(r,null,2);
+      })
+      .withFailureHandler(function(e){
+        status.textContent='Erreur : '+String(e&&e.message||e);
+        status.className='note err';
+      })
+      .EUC_DEV277A_diag(P);
+  }
+
+  reload.onclick=load;
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:Arial,sans-serif;background:#f5faf8;color:#17312b;margin:0}
+.wrap{max-width:850px;margin:40px auto;padding:0 20px}
+.card{background:#fff;border:1px solid #cfe5de;border-radius:14px;padding:18px}
+button{border:0;border-radius:8px;padding:10px 14px;background:#0b8f72;color:#fff;font-weight:800;cursor:pointer;margin-right:8px}
+pre{white-space:pre-wrap;word-break:break-word;background:#f4f7f6;border-radius:8px;padding:12px;min-height:80px}
+.state{margin:12px 0;font-weight:800}
+.ok{color:#08745e}.bad{color:#b42318}.warn{color:#b54708}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Audit DEV235 — 1MP3D</h1>
+    <p>Test isolé du pont JSON sur 2026-2027 / classe 7 / 1MP3D.</p>
+
+    <button id="ping">1. Ping serveur</button>
+    <button id="test">2. Tester DEV235 pour 1MP3D</button>
+
+    <div id="state" class="state"></div>
+    <pre id="out"></pre>
+  </div>
+</div>
+
+<script>
+(function(){
+  var state=document.getElementById('state');
+  var out=document.getElementById('out');
+
+  function start(label){
+    state.className='state warn';
+    state.textContent=label+'…';
+    out.textContent='';
+
+    return setTimeout(function(){
+      state.className='state bad';
+      state.textContent='BLOQUÉ > 20 s';
+    },20000);
+  }
+
+  function ok(timer,r){
+    clearTimeout(timer);
+    state.className='state ok';
+    state.textContent='OK';
+    out.textContent=JSON.stringify(r,null,2);
+  }
+
+  function fail(timer,e){
+    clearTimeout(timer);
+    state.className='state bad';
+    state.textContent='ERREUR';
+    out.textContent=String(e&&e.message||e);
+  }
+
+  document.getElementById('ping').onclick=function(){
+    var timer=start('Ping serveur');
+
+    google.script.run
+      .withSuccessHandler(function(r){ok(timer,r);})
+      .withFailureHandler(function(e){fail(timer,e);})
+      .EUC_DEV235_AUDIT_ping();
+  };
+
+  document.getElementById('test').onclick=function(){
+    var timer=start('Test DEV235 1MP3D');
+
+    google.script.run
+      .withSuccessHandler(function(r){ok(timer,r);})
+      .withFailureHandler(function(e){fail(timer,e);})
+      .EUC_DEV235_AUDIT_test1MP3D();
+  };
+})();
+</script>
+</body>
+</html>

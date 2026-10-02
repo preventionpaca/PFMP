@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8">
+<style>
+body{margin:0;background:#f7fbf9;font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1000px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid #cfe5de;border-radius:14px;padding:18px}
+.grid{display:grid;grid-template-columns:170px 1fr 1fr auto;gap:10px;align-items:end}
+input,select{width:100%;padding:8px}button{padding:10px 14px;background:#0b8f72;color:#fff;border:0;border-radius:8px;font-weight:800}
+table{width:100%;border-collapse:collapse;margin-top:14px}td,th{padding:8px;border-bottom:1px solid #edf2ef;text-align:left}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style></head>
+<body><main class="wrap">
+<h1>Audit classe réel — DEV.186</h1>
+<section class="card">
+<div class="grid">
+<label>Année<input id="annee" value="2026-2027"></label>
+<label>Classe<select id="classe"></select></label>
+<label>Période<select id="periode"></select></label>
+<button id="go">Mesurer</button>
+</div>
+<p id="status"></p><table id="tbl"></table>
+</section>
+</main>
+<script>
+(function(){
+ function opts(){google.script.run.withSuccessHandler(function(r){classe.innerHTML=(r.classes||[]).map(function(x){return'<option value="'+x.id+'">'+x.label+'</option>'}).join('');periode.innerHTML=(r.periodes||[]).map(function(x){return'<option value="'+x.id+'">'+x.label+'</option>'}).join('')}).EUC_DEV186_auditOptions({annee:annee.value})}
+ annee.onchange=opts;opts();
+ go.onclick=function(){go.disabled=true;status.textContent='Mesure en cours…';google.script.run.withSuccessHandler(function(r){go.disabled=false;status.textContent='Froid : '+r.pipelineFroidMs+' ms — Cache : '+r.pipelineCacheMs+' ms';tbl.innerHTML='<tr><th>Phase</th><th>Durée</th></tr>'+Object.keys(r.phases||{}).map(function(k){return'<tr><td>'+k+'</td><td><b>'+r.phases[k]+' ms</b></td></tr>'}).join('')}).withFailureHandler(function(e){go.disabled=false;status.textContent='Erreur : '+String(e&&e.message||e)}).EUC_DEV186_auditClasse({annee:annee.value,classe:Number(classe.value),periode:Number(periode.value)})}
+})();
+</script></body></html>

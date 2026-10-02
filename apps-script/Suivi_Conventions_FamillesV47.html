@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Suivi des conventions PFMP</title>
+<style>
+:root{--b:#1B396A;--b2:#3F72AF;--bg:#f5f7fb;--line:#dce3ee;--mut:#667085}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172033}
+.hero{padding:22px 18px;color:#fff;background:linear-gradient(135deg,var(--b),var(--b2))}
+.wrap{max-width:1180px;margin:auto}.content{padding:18px}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+select{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;box-shadow:0 3px 14px rgba(31,42,68,.06)}
+.card:hover{transform:translateY(-1px)}.title{font-size:22px;font-weight:800;color:var(--b)}
+.meta{font-size:12px;color:var(--mut);margin-top:3px}.period{padding:11px 0;border-top:1px solid #edf0f4}
+.row{display:flex;justify-content:space-between;gap:12px}.label{font-weight:700}.count{font-weight:800;color:var(--b)}
+.bar{height:6px;background:#e7ebf2;border-radius:999px;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,var(--b2),var(--b))}
+.loading,.error{margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap"><h1>Suivi des conventions PFMP</h1><div>Vue synthétique par famille de formation</div></div></header>
+<main class="content"><div class="wrap">
+<div class="top"><div id="summary">Chargement…</div><label>Année scolaire <select id="year"></select></label></div>
+<div id="content" class="loading">Chargement des décomptes…</div>
+</div></main>
+<script>
+const C=<?!= config ?>;
+const REQUESTED_YEAR=<?!= requestedYear ?>;
+(function(){
+  const content=document.getElementById('content'),year=document.getElementById('year'),summary=document.getElementById('summary');
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function render(res){
+    const ctx=res.ctx||{}, fams=res.familles||[];
+    year.innerHTML=(ctx.annees||[]).map(y=>'<option value="'+esc(y.code)+'"'+(y.code===ctx.active?' selected':'')+'>'+esc(y.libelle||y.code)+'</option>').join('');
+    year.onchange=()=>location.href=C.baseUrl+'?page=suivi-conventions&annee='+encodeURIComponent(year.value);
+    summary.textContent='Synthèse '+(ctx.active||'');
+    content.className='grid';
+    content.innerHTML=fams.map(f=>{
+      const href=C.baseUrl+'?page=suivi-conventions-famille&annee='+encodeURIComponent(ctx.active)+'&famille='+encodeURIComponent(f.code);
+      return '<a class="card" href="'+href+'"><div class="title">'+esc(f.libelle)+'</div><div class="meta">'+f.classes+' classe(s) · '+f.effectif+' élève(s)</div>'+
+        (f.periodes||[]).map(p=>'<div class="period"><div class="row"><div class="label">'+esc(p.libelle)+'</div><div class="count">'+p.conventions+' / '+p.total+'</div></div><div class="bar"><div class="fill" style="width:'+Math.min(100,p.pourcentage||0)+'%"></div></div></div>').join('')+
+      '</a>';
+    }).join('');
+  }
+  google.script.run.withSuccessHandler(render).withFailureHandler(e=>{content.className='error';content.textContent='Erreur : '+String(e&&e.message||e)}).EUC_SUIVI_PUBLIC_bootstrapFamillesV47({annee:REQUESTED_YEAR||''});
+})();
+</script>
+</body>
+</html>

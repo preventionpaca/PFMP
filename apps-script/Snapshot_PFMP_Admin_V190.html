@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base href="<?!= baseUrl ?>" target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1050px;margin:auto;padding:24px}
+h1{margin:0 0 4px}.sub{margin:0 0 18px;color:var(--mut)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+.grid{display:grid;grid-template-columns:180px 1fr 1fr;gap:12px}
+label{font-size:12px;font-weight:700;color:#475467}
+input,select{width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+.primary{background:var(--g);color:#fff}.secondary{background:#e9f6f1;color:#086955}
+pre{white-space:pre-wrap;background:#f6f8f7;border:1px solid #e7efec;border-radius:10px;padding:12px;min-height:80px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.metric{border:1px solid var(--line);border-radius:12px;padding:12px}
+.metric b{display:block;font-size:23px;color:#0c5f4e}.metric span{font-size:11px;color:var(--mut)}
+.back{color:#0b745f;text-decoration:none;font-weight:800}
+@media(max-width:800px){.grid,.metrics{grid-template-columns:1fr}}
+</style>
+<style id="EUC_DEV190P_MAINT_CRUMB_STYLE">.euc190p-crumb{display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-size:13px;margin:0 0 14px}.euc190p-crumb a{color:#0b745f;font-weight:800;text-decoration:none}.euc190p-crumb span{color:#667085}.euc190p-crumb strong{color:#334155}</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="EUC_DEV190T_APPRENTIS_STYLE">
+html.euc190t-waiting .euc190t-results,
+body.euc190t-waiting .euc190t-results{
+  display:none!important;
+}
+.euc190t-siret-cell{min-width:205px}
+.euc190t-siret-line{display:flex;gap:5px;align-items:center}
+.euc190t-siret-line input{width:105px!important}
+.euc190t-siret-line button{
+  border:0;border-radius:7px;padding:7px 8px;
+  background:#0b8f72;color:#fff;font-weight:800;cursor:pointer
+}
+.euc190t-msg{font-size:10px;color:#667085;margin-top:3px}
+.euc190t-company input,.euc190t-contact input{width:100%!important;margin:2px 0!important}
+.euc190t-company{min-width:170px}
+.euc190t-contact{min-width:155px}
+</style>
+<script id="EUC_DEV190T_APPRENTIS_EARLY">
+(function(){
+  document.documentElement.classList.add('euc190t-waiting');
+  window.__EUC190T_USER_CLASS=false;
+})();
+</script>
+
+<style id="EUC_DEV190T_PDIF_STYLE">
+html.euc190t-waiting table,
+body.euc190t-waiting table{
+  display:none!important;
+}
+html.euc190t-waiting [class*="loading"],
+html.euc190t-waiting [id*="loading"],
+html.euc190t-waiting [class*="chargement"],
+html.euc190t-waiting [id*="chargement"],
+body.euc190t-waiting [class*="loading"],
+body.euc190t-waiting [id*="loading"],
+body.euc190t-waiting [class*="chargement"],
+body.euc190t-waiting [id*="chargement"]{
+  display:none!important;
+}
+</style>
+<script id="EUC_DEV190T_PDIF_EARLY">
+(function(){
+  document.documentElement.classList.add('euc190t-waiting');
+  window.__EUC190T_PDIF_USER=false;
+})();
+</script>
+
+</head>
+<body>
+<main class="wrap">
+<nav id="EUC_DEV190P_MAINT_CRUMB" class="euc190p-crumb"><a href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-pfmp" target="_top">Accueil PFMP</a><span>›</span><a href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=suivi-conventions" target="_top">Suivi des conventions</a><span>›</span><strong>Maintenance Snapshot PFMP</strong></nav>
+
+
+<h1>Maintenance Snapshot PFMP</h1>
+<p class="sub">Mode incrémental · historique conservé · vérification de sécurité 30 jours</p>
+
+<section class="card">
+<h2>Diagnostic</h2>
+<div class="actions"><button id="diag" class="primary">Diagnostic / vérifier la table</button></div>
+<pre id="diagOut">Prêt.</pre>
+</section>
+
+<section class="card">
+<h2>Synchronisation ciblée</h2>
+<div class="grid">
+<label>Année scolaire<input id="annee" value="2026-2027"></label>
+<label>Classe<select id="classe"></select></label>
+<label>Période<select id="periode"></select></label>
+</div>
+<div class="actions">
+<button id="statusBtn" class="secondary">Contrôler le snapshot</button>
+<button id="syncBtn" class="primary">Synchroniser cette classe / période</button>
+</div>
+<div id="metrics" class="metrics" style="display:none">
+<div class="metric"><b id="mActifs">0</b><span>Lignes actives</span></div>
+<div class="metric"><b id="mHist">0</b><span>Versions historiques</span></div>
+<div class="metric"><b id="mTotal">0</b><span>Total versions</span></div>
+<div class="metric"><b id="mAge">—</b><span>Dernière mise à jour</span></div>
+</div>
+<pre id="syncOut">Choisis une classe et une période.</pre>
+</section>
+
+<section class="card">
+<h2>Maintenance</h2>
+<p class="sub">La reconstruction globale n'est plus le fonctionnement normal. Les synchronisations se font classe/période, en conservant l'historique.</p>
+</section>
+
+<section class="card" id="EUC_DEV190E_INDEX_PANEL">
+  <h2>Index rapides des pages intermédiaires</h2>
+
+  <p class="sub">
+    Les index BAC PRO, BTS et CAP sont enregistrés dans Grist.
+    La première synchronisation peut être lente ; les consultations suivantes
+    lisent ensuite directement ces données persistantes.
+  </p>
+
+  <div class="actions">
+    <button class="secondary euc190e-family" data-family="BACPRO">
+      Synchroniser BAC PRO
+    </button>
+
+    <button class="secondary euc190e-family" data-family="BTS">
+      Synchroniser BTS
+    </button>
+
+    <button class="secondary euc190e-family" data-family="CAP">
+      Synchroniser CAP
+    </button>
+
+    <button id="indexStatusBtn" class="primary">
+      Etat des index
+    </button>
+  </div>
+
+  <pre id="indexOut">Aucun contrôle lancé.</pre>
+</section>
+
+<script id="EUC_DEV190E_INDEX_JS">
+(function(){
+
+  function runFamily(btn){
+    var fam = btn.dataset.family;
+
+    btn.disabled = true;
+    indexOut.textContent =
+      'Synchronisation ' + fam + ' en cours…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        btn.disabled = false;
+        indexOut.textContent =
+          JSON.stringify(r, null, 2);
+      })
+      .withFailureHandler(function(e){
+        btn.disabled = false;
+        indexOut.textContent =
+          'Erreur : ' +
+          String(e && e.message || e);
+      })
+      .EUC_DEV190E_syncFamilyIndex({
+        annee: annee.value,
+        famille: fam
+      });
+  }
+
+  document.querySelectorAll('.euc190e-family')
+    .forEach(function(btn){
+      btn.onclick = function(){
+        runFamily(btn);
+      };
+    });
+
+  indexStatusBtn.onclick = function(){
+    indexStatusBtn.disabled = true;
+    indexOut.textContent = 'Contrôle des index…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        indexStatusBtn.disabled = false;
+        indexOut.textContent =
+          JSON.stringify(r, null, 2);
+      })
+      .withFailureHandler(function(e){
+        indexStatusBtn.disabled = false;
+        indexOut.textContent =
+          'Erreur : ' +
+          String(e && e.message || e);
+      })
+      .EUC_DEV190E_indexStatus({
+        annee: annee.value
+      });
+  };
+
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190F_BATCH_PANEL">
+
+<h2>Amorçage progressif des snapshots détail</h2>
+
+<p class="sub">
+Prépare automatiquement toutes les classes et périodes sans lancer un gros
+rebuild monolithique. Chaque classe/période est traitée séparément :
+la progression continue dans le navigateur et peut être relancée si besoin.
+</p>
+
+<div class="actions">
+  <button class="secondary euc190f-start" data-family="BACPRO">
+    Amorcer tous les BAC PRO
+  </button>
+
+  <button class="secondary euc190f-start" data-family="BTS">
+    Amorcer tous les BTS
+  </button>
+
+  <button class="secondary euc190f-start" data-family="CAP">
+    Amorcer tous les CAP
+  </button>
+
+  <button id="startAll190F" class="primary">
+    Amorcer tout le lycée
+  </button>
+
+  <button id="stop190F" class="ghost">
+    Arrêter après l'élément en cours
+  </button>
+</div>
+
+<div style="margin-top:14px">
+  <div style="height:12px;background:#e7efec;border-radius:999px;overflow:hidden">
+    <div
+      id="bar190F"
+      style="height:100%;width:0%;background:#0b8f72;transition:width .2s"
+    ></div>
+  </div>
+
+  <p id="progress190F" class="sub" style="margin-top:8px">
+    Aucun amorçage en cours.
+  </p>
+</div>
+
+<pre id="batchOut190F">Prêt.</pre>
+
+</section>
+
+<script id="EUC_DEV190F_BATCH_JS">
+(function(){
+
+  var queue = [];
+  var index = 0;
+  var stopped = false;
+  var running = false;
+  var stats = {
+    ok: 0,
+    errors: 0,
+    changed: 0,
+    unchanged: 0
+  };
+
+  function setProgress(){
+    var total = queue.length || 0;
+    var pct = total
+      ? Math.round(index * 100 / total)
+      : 0;
+
+    bar190F.style.width = pct + '%';
+
+    progress190F.textContent =
+      total
+        ? index + ' / ' + total + ' (' + pct + '%)'
+        : 'Aucun amorçage en cours.';
+  }
+
+  function log(obj){
+    batchOut190F.textContent =
+      JSON.stringify(obj, null, 2);
+  }
+
+  function next(){
+    if (stopped || index >= queue.length) {
+      running = false;
+      setProgress();
+
+      log({
+        termine: index >= queue.length,
+        arrete: stopped,
+        progression: index + '/' + queue.length,
+        stats: stats
+      });
+
+      return;
+    }
+
+    var item = queue[index];
+
+    progress190F.textContent =
+      (index + 1) + ' / ' + queue.length +
+      ' — ' +
+      (item.classeNom || item.classe) +
+      ' — ' +
+      (item.periodeLibelle || item.periode);
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        stats.ok++;
+        stats.changed += Number(r.addedOrChanged || 0);
+        stats.unchanged += Number(r.unchanged || 0);
+
+        index++;
+        setProgress();
+
+        /*
+         * Sauvegarde locale de la progression pour reprise.
+         */
+        try{
+          localStorage.setItem(
+            'PFMP_DEV190F_PROGRESS',
+            JSON.stringify({
+              annee: annee.value,
+              queue: queue,
+              index: index,
+              stats: stats
+            })
+          );
+        }catch(e){}
+
+        next();
+      })
+      .withFailureHandler(function(e){
+        stats.errors++;
+
+        index++;
+        setProgress();
+
+        log({
+          erreur:
+            String(e && e.message || e),
+          element: item,
+          progression:
+            index + '/' + queue.length,
+          stats: stats
+        });
+
+        /*
+         * On continue avec l'élément suivant au lieu de bloquer tout le lot.
+         */
+        next();
+      })
+      .EUC_DEV190J_syncOne(item);
+  }
+
+  function startQueue(q){
+    if (running) return;
+
+    queue = q || [];
+    index = 0;
+    stopped = false;
+    running = true;
+
+    stats = {
+      ok: 0,
+      errors: 0,
+      changed: 0,
+      unchanged: 0
+    };
+
+    setProgress();
+
+    log({
+      lancement: true,
+      elements: queue.length
+    });
+
+    next();
+  }
+
+  function loadFamily(fam){
+    if (running) return;
+
+    batchOut190F.textContent =
+      'Préparation de la file ' + fam + '…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        startQueue(r.items || []);
+      })
+      .withFailureHandler(function(e){
+        batchOut190F.textContent =
+          'Erreur : ' +
+          String(e && e.message || e);
+      })
+      .EUC_DEV190F_familyQueue({
+        annee: annee.value,
+        famille: fam
+      });
+  }
+
+  document.querySelectorAll('.euc190f-start')
+    .forEach(function(btn){
+      btn.onclick = function(){
+        loadFamily(btn.dataset.family);
+      };
+    });
+
+  startAll190F.onclick = function(){
+    if (running) return;
+
+    batchOut190F.textContent =
+      'Préparation de la file complète…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        startQueue(r.items || []);
+      })
+      .withFailureHandler(function(e){
+        batchOut190F.textContent =
+          'Erreur : ' +
+          String(e && e.message || e);
+      })
+      .EUC_DEV190F_allQueue({
+        annee: annee.value
+      });
+  };
+
+  stop190F.onclick = function(){
+    stopped = true;
+  };
+
+  setProgress();
+
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190G_HOT_DIAG">
+
+<h2>Diagnostic lecture rapide</h2>
+
+<p class="sub">
+Mesure uniquement la lecture du snapshot / index persistant,
+sans lancer de reconstruction.
+</p>
+
+<div class="actions">
+
+<button id="hotDetailBtn" class="secondary">
+  Mesurer détail sélectionné
+</button>
+
+<button id="hotBacBtn" class="secondary">
+  Mesurer index BAC PRO
+</button>
+
+<button id="hotBtsBtn" class="secondary">
+  Mesurer index BTS
+</button>
+
+<button id="hotCapBtn" class="secondary">
+  Mesurer index CAP
+</button>
+
+</div>
+
+<pre id="hotOut">Prêt.</pre>
+
+</section>
+
+<script id="EUC_DEV190G_HOT_JS">
+(function(){
+
+  function run(payload){
+
+    hotOut.textContent=
+      'Mesure hot-read…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+
+        hotOut.textContent=
+          JSON.stringify(
+            r,
+            null,
+            2
+          );
+
+      })
+      .withFailureHandler(function(e){
+
+        hotOut.textContent=
+          'Erreur : '+
+          String(
+            e&&e.message||e
+          );
+
+      })
+      .EUC_DEV190G1_diagnosticHotRead(
+        payload
+      );
+
+  }
+
+  hotDetailBtn.onclick=function(){
+
+    run({
+      annee:annee.value,
+      classe:Number(classe.value),
+      periode:Number(periode.value)
+    });
+
+  };
+
+  hotBacBtn.onclick=function(){
+
+    run({
+      annee:annee.value,
+      famille:'BACPRO'
+    });
+
+  };
+
+  hotBtsBtn.onclick=function(){
+
+    run({
+      annee:annee.value,
+      famille:'BTS'
+    });
+
+  };
+
+  hotCapBtn.onclick=function(){
+
+    run({
+      annee:annee.value,
+      famille:'CAP'
+    });
+
+  };
+
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190I_STATUS_PANEL">
+  <h2>Snapshot détail V2</h2>
+  <p class="sub">
+    Une ligne JSON par classe/période. Source rapide commune visiteur / administrateur.
+  </p>
+  <div class="actions">
+    <button id="status190I" class="secondary">État Snapshot V2</button>
+  </div>
+  <pre id="out190I">Prêt.</pre>
+</section>
+
+<script id="EUC_DEV190I_STATUS_JS">
+(function(){
+  status190I.onclick=function(){
+    out190I.textContent='Contrôle…';
+    google.script.run
+      .withSuccessHandler(function(r){
+        out190I.textContent=JSON.stringify(r,null,2);
+      })
+      .withFailureHandler(function(e){
+        out190I.textContent='Erreur : '+String(e&&e.message||e);
+      })
+      .EUC_DEV190I_status();
+  };
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190J_AUDIT_PANEL">
+<h2>Performance et audits</h2>
+<p class="sub">Tous les outils de contrôle PFMP sont regroupés ici.</p>
+<div class="actions">
+  <button id="auditPerf190J" class="secondary">Audit performance PFMP</button>
+  <button id="auditMatrix190J" class="secondary">Audit matrice toutes classes / périodes</button>
+  <button id="adminPFMP190J" class="primary">Retour centre PFMP</button>
+</div>
+</section>
+
+<script id="EUC_DEV190J_AUDIT_JS">
+(function(){
+  function go(page){
+    var u=new URL(location.href);
+    u.search='';
+    u.searchParams.set('page',page);
+    location.href=u.toString();
+  }
+
+  auditPerf190J.onclick=function(){go('audit-performance-pfmp');};
+  auditMatrix190J.onclick=function(){go('audit-matrice-pfmp');};
+  adminPFMP190J.onclick=function(){go('admin-pfmp');};
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190K3_NAV_PANEL">
+  <h2>Navigation</h2>
+  <div class="actions">
+    <button id="goSuivi190K3" class="primary">
+      Ouvrir le suivi des conventions
+    </button>
+
+    <button id="goAdmin190K3" class="secondary">
+      Retour administration PFMP
+    </button>
+  </div>
+</section>
+
+<script id="EUC_DEV190K3_NAV_JS">
+(function(){
+  function go(page){
+    var u = new URL(location.href);
+    u.search = '';
+    u.searchParams.set('page', page);
+    location.href = u.toString();
+  }
+
+  goSuivi190K3.onclick = function(){
+    go('suivi-conventions');
+  };
+
+  goAdmin190K3.onclick = function(){
+    go('admin-pfmp');
+  };
+})();
+</script>
+
+
+<section class="card" id="EUC_DEV190Q_STRUCTURE_PANEL">
+
+<h2>Structure classes</h2>
+
+<p class="sub">
+Snapshot commun utilisé par Gestion des apprentis et Parcours différencié.
+</p>
+
+<div class="actions">
+  <button id="syncStructure190Q" class="primary">
+    Actualiser la structure classes
+  </button>
+
+  <button id="statusStructure190Q" class="secondary">
+    État structure
+  </button>
+</div>
+
+<pre id="outStructure190Q">Prêt.</pre>
+
+</section>
+
+
+
+<section class="card" id="EUC_DEV190R_YEARS_PANEL">
+<h2>Années scolaires</h2>
+
+<p class="sub">
+Snapshot léger de la liste des années utilisé par les modules Apprentis et Parcours différencié.
+</p>
+
+<div class="actions">
+  <button id="syncYears190R" class="primary">
+    Actualiser les années
+  </button>
+
+  <button id="statusYears190R" class="secondary">
+    État années
+  </button>
+</div>
+
+<pre id="outYears190R">Prêt.</pre>
+</section>
+
+
+
+
+<section class="card" id="EUC_DEV190S_NOTE">
+<h2>Modules Apprentis / Parcours différencié</h2>
+<p class="sub">
+Les listes Année et Classe utilisent les snapshots de structure.
+À l'ouverture, aucune classe n'est chargée automatiquement.
+</p>
+</section>
+
+</main>
+
+<script>
+(function(){
+  function loadOptions(){
+    google.script.run
+      .withSuccessHandler(function(r){
+        classe.innerHTML=(r.classes||[]).map(function(x){return '<option value="'+x.id+'">'+x.label+'</option>';}).join('');
+        periode.innerHTML=(r.periodes||[]).map(function(x){return '<option value="'+x.id+'">'+x.label+'</option>';}).join('');
+      })
+      .withFailureHandler(function(e){syncOut.textContent='Erreur options : '+String(e&&e.message||e);})
+      .EUC_DEV190D_adminOptions({annee:annee.value});
+  }
+
+  function payload(){
+    return {annee:annee.value,classe:Number(classe.value),periode:Number(periode.value)};
+  }
+
+  function showStatus(r){
+    metrics.style.display='grid';
+    mActifs.textContent=r.actifs||0;
+    mHist.textContent=r.historiques||0;
+    mTotal.textContent=r.totalVersions||0;
+    mAge.textContent=r.derniereMaj?new Date(r.derniereMaj).toLocaleString('fr-FR'):'Jamais';
+    syncOut.textContent=JSON.stringify(r,null,2);
+  }
+
+  diag.onclick=function(){
+    diag.disabled=true;diagOut.textContent='Diagnostic en cours…';
+    google.script.run.withSuccessHandler(function(r){diag.disabled=false;diagOut.textContent=JSON.stringify(r,null,2);})
+      .withFailureHandler(function(e){diag.disabled=false;diagOut.textContent='Erreur : '+String(e&&e.message||e);})
+      .EUC_DEV190D_diagnostic();
+  };
+
+  statusBtn.onclick=function(){
+    statusBtn.disabled=true;syncOut.textContent='Contrôle du snapshot…';
+    google.script.run.withSuccessHandler(function(r){statusBtn.disabled=false;showStatus(r);})
+      .withFailureHandler(function(e){statusBtn.disabled=false;syncOut.textContent='Erreur : '+String(e&&e.message||e);})
+      .EUC_DEV190D_snapshotStatus(payload());
+  };
+
+  syncBtn.onclick=function(){
+    syncBtn.disabled=true;syncOut.textContent='Synchronisation ciblée en cours…';
+    google.script.run.withSuccessHandler(function(r){syncBtn.disabled=false;syncOut.textContent='Synchronisation terminée.\n\n'+JSON.stringify(r,null,2);statusBtn.click();})
+      .withFailureHandler(function(e){syncBtn.disabled=false;syncOut.textContent='Erreur : '+String(e&&e.message||e);})
+      .EUC_DEV190D_syncTarget(payload());
+  };
+
+  annee.onchange=loadOptions;
+  loadOptions();
+})();
+</script>
+
+<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
+.euc190e-snapshot-tile{
+  border:1px solid #cfe5de;
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  cursor:pointer;
+  margin-top:12px;
+}
+.euc190e-snapshot-tile:hover{
+  border-color:#0b8f72;
+}
+.euc190e-snapshot-tile strong{
+  display:block;
+  color:#0c5f4e;
+  font-size:16px;
+  margin-bottom:5px;
+}
+.euc190e-snapshot-tile span{
+  color:#667085;
+  font-size:12px;
+}
+</style>
+
+<script id="EUC_DEV190E_SNAPSHOT_TILE">
+(function(){
+
+  function addTile(){
+
+    if(document.querySelector('.euc190e-snapshot-tile')){
+      return;
+    }
+
+    var tile = document.createElement('div');
+    tile.className = 'euc190e-snapshot-tile';
+
+    tile.innerHTML =
+      '<strong>Maintenance Snapshot PFMP</strong>' +
+      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
+
+    tile.onclick = function(){
+      var u = new URL(location.href);
+      u.search = '';
+      u.searchParams.set('page','snapshot-pfmp-admin');
+      location.href = u.toString();
+    };
+
+    var host =
+      document.querySelector('.dashboard-grid') ||
+      document.querySelector('.cards-grid') ||
+      document.querySelector('.card-grid') ||
+      document.querySelector('.tiles') ||
+      document.querySelector('.modules') ||
+      document.querySelector('.grid') ||
+      document.querySelector('.cards') ||
+      document.querySelector('main') ||
+      document.body;
+
+    host.appendChild(tile);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      addTile
+    );
+  }else{
+    addTile();
+  }
+
+})();
+</script>
+
+
+<script id="EUC_DEV190K2_BACK_BUTTON">
+(function(){
+  var back = document.querySelector('.back');
+
+  if(back){
+    back.href = '?page=snapshot-pfmp-admin';
+  }
+})();
+</script>
+
+
+<script id="EUC_DEV190O_ABSOLUTE_NAV">
+(function(){
+  var BASE_URL=<?!= JSON.stringify(baseUrl) ?>;
+
+  document.querySelectorAll('a[href^="?page="]').forEach(function(a){
+    a.href=BASE_URL+a.getAttribute('href');
+    a.target='_top';
+  });
+
+  function go(page){
+    window.top.location.href=
+      BASE_URL+'?page='+encodeURIComponent(page);
+  }
+
+  var map={
+    goSuivi190K3:'suivi-conventions',
+    goAdmin190K3:'admin-pfmp',
+    auditPerf190J:'audit-performance-pfmp',
+    auditMatrix190J:'audit-matrice-pfmp',
+    adminPFMP190J:'admin-pfmp'
+  };
+
+  Object.keys(map).forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+
+    el.addEventListener('click',function(ev){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      go(map[id]);
+    },true);
+  });
+})();
+</script>
+
+<script id="EUC_DEV190P_MAINT_ABSOLUTE_NAV">(function(){var BASE="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec";document.querySelectorAll('a[href^="?page="]').forEach(function(a){a.href=BASE+a.getAttribute("href");a.target="_top";});})();</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script id="EUC_DEV190T_APPRENTIS">
+(function(){
+
+  var BASE="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec";
+
+  function norm(v){
+    return String(v||'').replace(/\s+/g,' ').trim().toUpperCase();
+  }
+
+  function academicYearNow(){
+    var d=new Date(),y=d.getFullYear();
+    return d.getMonth()>=8 ? y+'-'+(y+1) : (y-1)+'-'+y;
+  }
+
+  function selects(){
+    return Array.from(document.querySelectorAll('select'));
+  }
+
+  function yearSelect(){ return selects()[0]||null; }
+  function classSelect(){ return selects()[1]||null; }
+
+  function currentGrid(){
+    var table=document.querySelector('table');
+    if(table){
+      table.classList.add('euc190t-results');
+      return {kind:'table',root:table};
+    }
+
+    var nodes=Array.from(document.querySelectorAll('body *'));
+
+    for(var i=0;i<nodes.length;i++){
+      var el=nodes[i];
+      var kids=Array.from(el.children||[]);
+      if(kids.length<6)continue;
+
+      var labels=kids.map(function(c){return norm(c.textContent);});
+      var hits=0;
+
+      ['ELEVE','APPRENTI','DEBUT','FIN','ENTREPRISE','TUTEUR'].forEach(function(x){
+        if(labels.some(function(v){return v===x || v.indexOf(x)>=0;}))hits++;
+      });
+
+      if(hits>=5){
+        var parent=el.parentElement;
+        if(parent){
+          parent.classList.add('euc190t-results');
+          return {kind:'grid',root:parent,header:el};
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function blankClass(){
+    var c=classSelect();
+    if(!c)return;
+
+    var o=Array.from(c.options).find(function(x){return x.value==='';});
+
+    if(!o){
+      o=document.createElement('option');
+      o.value='';
+      o.textContent='— Choisir une classe —';
+      c.insertBefore(o,c.firstChild);
+    }
+
+    if(!window.__EUC190T_USER_CLASS){
+      c.value='';
+      document.documentElement.classList.add('euc190t-waiting');
+      document.body.classList.add('euc190t-waiting');
+    }
+  }
+
+  function initSelectors(){
+    var y=yearSelect(),c=classSelect();
+
+    if(!y||!c){
+      setTimeout(initSelectors,25);
+      return;
+    }
+
+    var current=academicYearNow();
+
+    /* année courante immédiatement */
+    y.value=current;
+
+    /* classe vide au démarrage */
+    blankClass();
+
+    c.addEventListener('pointerdown',function(){
+      window.__EUC190T_POINTER=true;
+    },true);
+
+    c.addEventListener('change',function(ev){
+      if(window.__EUC190T_POINTER || ev.isTrusted){
+        window.__EUC190T_POINTER=false;
+        window.__EUC190T_USER_CLASS=!!c.value;
+
+        if(window.__EUC190T_USER_CLASS){
+          document.documentElement.classList.remove('euc190t-waiting');
+          document.body.classList.remove('euc190t-waiting');
+
+          /* laisse le moteur historique charger la classe, puis enrichit */
+          setTimeout(enhance,20);
+        }else{
+          blankClass();
+        }
+      }
+    },true);
+
+    y.addEventListener('change',function(){
+      window.__EUC190T_USER_CLASS=false;
+      blankClass();
+    },true);
+
+    /* neutralise les auto-sélections historiques */
+    var guard=setInterval(function(){
+      if(window.__EUC190T_USER_CLASS){
+        clearInterval(guard);
+        return;
+      }
+      blankClass();
+    },40);
+
+    setTimeout(function(){
+      if(!window.__EUC190T_USER_CLASS)blankClass();
+      clearInterval(guard);
+    },10000);
+  }
+
+  function makeInput(ph,type){
+    var x=document.createElement('input');
+    x.placeholder=ph||'';
+    x.type=type||'text';
+    return x;
+  }
+
+  function wireSiret(siret,search,msg,company,address,cp,city,tutor,entTel,entMail,tutTel,tutMail){
+    function run(){
+      var v=siret.value.replace(/\D/g,'').slice(0,14);
+      siret.value=v;
+
+      if(v.length!==14){
+        msg.textContent='SIRET incomplet';
+        return;
+      }
+
+      search.disabled=true;
+      msg.textContent='Recherche…';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          search.disabled=false;
+
+          if(!r||!r.found){
+            msg.textContent='Entreprise non trouvée';
+            return;
+          }
+
+          msg.textContent='Entreprise trouvée';
+
+          if(company)company.value=r.entreprise||'';
+          if(address)address.value=r.adresse||'';
+          if(cp)cp.value=r.codePostal||'';
+          if(city)city.value=r.ville||'';
+          if(tutor)tutor.value=r.tuteur||'';
+          if(entTel)entTel.value=r.telephoneEntreprise||'';
+          if(entMail)entMail.value=r.courrielEntreprise||'';
+          if(tutTel)tutTel.value=r.telephoneTuteur||'';
+          if(tutMail)tutMail.value=r.courrielTuteur||'';
+        })
+        .withFailureHandler(function(){
+          search.disabled=false;
+          msg.textContent='Erreur de recherche';
+        })
+        .EUC_DEV190S1_lookupSiret(v);
+    }
+
+    search.addEventListener('click',run);
+
+    siret.addEventListener('keydown',function(ev){
+      if(ev.key==='Enter'){
+        ev.preventDefault();
+        run();
+      }
+    });
+  }
+
+  function enhanceTable(table){
+    if(table.dataset.euc190t==='1')return true;
+
+    var heads=Array.from(table.querySelectorAll('thead th'));
+    if(!heads.length)return false;
+
+    var idxEnt=-1,idxTut=-1,idxTel=-1,idxMail=-1;
+
+    heads.forEach(function(th,i){
+      var t=norm(th.textContent);
+      if(t==='ENTREPRISE')idxEnt=i;
+      if(t==='TUTEUR')idxTut=i;
+      if(t==='TEL.'||t==='TEL')idxTel=i;
+      if(t.indexOf('COURRIEL')>=0)idxMail=i;
+    });
+
+    if(idxEnt<0||idxTut<0)return false;
+
+    heads[idxEnt].textContent='Nom commercial';
+    heads[idxTut].textContent='Tuteur';
+    if(idxTel>=0)heads[idxTel].textContent='Coordonnées entreprise';
+    if(idxMail>=0)heads[idxMail].textContent='Coordonnées tuteur';
+
+    var hS=document.createElement('th');
+    hS.textContent='SIRET';
+    heads[idxEnt].parentNode.insertBefore(hS,heads[idxEnt]);
+
+    var hA=document.createElement('th');
+    hA.textContent='Adresse / CP / Ville';
+    heads[idxEnt].parentNode.insertBefore(hA,heads[idxEnt].nextSibling);
+
+    Array.from(table.querySelectorAll('tbody tr')).forEach(function(tr){
+      var cells=Array.from(tr.children);
+      var ent=cells[idxEnt],tut=cells[idxTut];
+      var cEnt=idxTel>=0?cells[idxTel]:null;
+      var cTut=idxMail>=0?cells[idxMail]:null;
+      if(!ent||!tut)return;
+
+      var sTd=document.createElement('td');
+      sTd.className='euc190t-siret-cell';
+
+      var line=document.createElement('div');
+      line.className='euc190t-siret-line';
+
+      var siret=makeInput('14 chiffres');
+      siret.maxLength=14;
+
+      var search=document.createElement('button');
+      search.type='button';
+      search.textContent='Rechercher';
+
+      var msg=document.createElement('div');
+      msg.className='euc190t-msg';
+
+      line.appendChild(siret);
+      line.appendChild(search);
+      sTd.appendChild(line);
+      sTd.appendChild(msg);
+
+      ent.parentNode.insertBefore(sTd,ent);
+
+      ent.classList.add('euc190t-company');
+
+      var company=ent.querySelector('input')||makeInput('Nom commercial');
+      if(!company.parentNode)ent.appendChild(company);
+
+      var aTd=document.createElement('td');
+      aTd.className='euc190t-company';
+
+      var address=makeInput('Adresse');
+      var cp=makeInput('CP');
+      var city=makeInput('Ville');
+
+      aTd.appendChild(address);
+      aTd.appendChild(cp);
+      aTd.appendChild(city);
+
+      ent.parentNode.insertBefore(aTd,ent.nextSibling);
+
+      var tutor=tut.querySelector('input')||makeInput('Tuteur');
+      if(!tutor.parentNode)tut.appendChild(tutor);
+
+      var entTel=null,entMail=null,tutTel=null,tutMail=null;
+
+      if(cEnt){
+        cEnt.innerHTML='';
+        cEnt.classList.add('euc190t-contact');
+        entTel=makeInput('Téléphone');
+        entMail=makeInput('Courriel','email');
+        cEnt.appendChild(entTel);
+        cEnt.appendChild(entMail);
+      }
+
+      if(cTut){
+        cTut.innerHTML='';
+        cTut.classList.add('euc190t-contact');
+        tutTel=makeInput('Téléphone');
+        tutMail=makeInput('Courriel','email');
+        cTut.appendChild(tutTel);
+        cTut.appendChild(tutMail);
+      }
+
+      wireSiret(
+        siret,search,msg,
+        company,address,cp,city,tutor,
+        entTel,entMail,tutTel,tutMail
+      );
+    });
+
+    table.dataset.euc190t='1';
+    return true;
+  }
+
+  function enhanceGrid(g){
+    if(!g||!g.header||!g.root)return false;
+    if(g.root.dataset.euc190t==='1')return true;
+
+    var heads=Array.from(g.header.children);
+    var idxEnt=-1,idxTut=-1,idxTel=-1,idxMail=-1;
+
+    heads.forEach(function(th,i){
+      var t=norm(th.textContent);
+      if(t==='ENTREPRISE')idxEnt=i;
+      if(t==='TUTEUR')idxTut=i;
+      if(t==='TEL.'||t==='TEL')idxTel=i;
+      if(t.indexOf('COURRIEL')>=0)idxMail=i;
+    });
+
+    if(idxEnt<0||idxTut<0)return false;
+
+    heads[idxEnt].textContent='Nom commercial';
+    if(idxTel>=0)heads[idxTel].textContent='Coordonnées entreprise';
+    if(idxMail>=0)heads[idxMail].textContent='Coordonnées tuteur';
+
+    var tag=heads[0].tagName||'div';
+
+    var hs=document.createElement(tag);
+    hs.textContent='SIRET';
+    g.header.insertBefore(hs,heads[idxEnt]);
+
+    var ha=document.createElement(tag);
+    ha.textContent='Adresse / CP / Ville';
+    g.header.insertBefore(ha,heads[idxEnt].nextSibling);
+
+    Array.from(g.root.children).forEach(function(row){
+      if(row===g.header)return;
+
+      var cells=Array.from(row.children||[]);
+      if(cells.length<6)return;
+
+      var ent=cells[idxEnt],tut=cells[idxTut];
+      var cEnt=idxTel>=0?cells[idxTel]:null;
+      var cTut=idxMail>=0?cells[idxMail]:null;
+      if(!ent||!tut)return;
+
+      var sCell=document.createElement(ent.tagName||'div');
+      sCell.className='euc190t-siret-cell';
+
+      var line=document.createElement('div');
+      line.className='euc190t-siret-line';
+
+      var siret=makeInput('14 chiffres');
+      siret.maxLength=14;
+
+      var search=document.createElement('button');
+      search.type='button';
+      search.textContent='Rechercher';
+
+      var msg=document.createElement('div');
+      msg.className='euc190t-msg';
+
+      line.appendChild(siret);
+      line.appendChild(search);
+      sCell.appendChild(line);
+      sCell.appendChild(msg);
+
+      row.insertBefore(sCell,ent);
+
+      var company=ent.querySelector('input')||makeInput('Nom commercial');
+      if(!company.parentNode)ent.appendChild(company);
+
+      var aCell=document.createElement(ent.tagName||'div');
+      aCell.className='euc190t-company';
+
+      var address=makeInput('Adresse');
+      var cp=makeInput('CP');
+      var city=makeInput('Ville');
+
+      aCell.appendChild(address);
+      aCell.appendChild(cp);
+      aCell.appendChild(city);
+
+      row.insertBefore(aCell,ent.nextSibling);
+
+      var tutor=tut.querySelector('input')||makeInput('Tuteur');
+      if(!tutor.parentNode)tut.appendChild(tutor);
+
+      var entTel=null,entMail=null,tutTel=null,tutMail=null;
+
+      if(cEnt){
+        cEnt.innerHTML='';
+        entTel=makeInput('Téléphone');
+        entMail=makeInput('Courriel','email');
+        cEnt.appendChild(entTel);
+        cEnt.appendChild(entMail);
+      }
+
+      if(cTut){
+        cTut.innerHTML='';
+        tutTel=makeInput('Téléphone');
+        tutMail=makeInput('Courriel','email');
+        cTut.appendChild(tutTel);
+        cTut.appendChild(tutMail);
+      }
+
+      wireSiret(
+        siret,search,msg,
+        company,address,cp,city,tutor,
+        entTel,entMail,tutTel,tutMail
+      );
+    });
+
+    g.root.dataset.euc190t='1';
+    g.root.style.overflowX='auto';
+
+    return true;
+  }
+
+  function enhance(){
+    if(!window.__EUC190T_USER_CLASS)return false;
+
+    var g=currentGrid();
+    if(!g)return false;
+
+    return g.kind==='table'
+      ? enhanceTable(g.root)
+      : enhanceGrid(g);
+  }
+
+  function fixMaintenanceLink(){
+    Array.from(document.querySelectorAll('a,button,div,article'))
+      .forEach(function(el){
+        var t=norm(el.textContent);
+
+        if(t==='MAINTENANCE SNAPSHOT PFMP'){
+          el.addEventListener('click',function(ev){
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            window.top.location.href=
+              BASE+'?page=snapshot-pfmp-admin';
+          },true);
+        }
+      });
+  }
+
+  function start(){
+    initSelectors();
+    fixMaintenanceLink();
+
+    var obs=new MutationObserver(function(){
+      enhance();
+      fixMaintenanceLink();
+    });
+
+    obs.observe(
+      document.body,
+      {
+        childList:true,
+        subtree:true
+      }
+    );
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start);
+  }else{
+    start();
+  }
+
+})();
+</script>
+
+<script id="EUC_DEV190T_PDIF">
+(function(){
+
+  function academicYearNow(){
+    var d=new Date(),y=d.getFullYear();
+    return d.getMonth()>=8 ? y+'-'+(y+1) : (y-1)+'-'+y;
+  }
+
+  function sels(){ return Array.from(document.querySelectorAll('select')); }
+  function ysel(){ return sels()[0]||null; }
+  function csel(){ return sels()[1]||null; }
+
+  function blank(){
+    var c=csel();
+    if(!c)return;
+
+    var o=Array.from(c.options).find(function(x){return x.value==='';});
+
+    if(!o){
+      o=document.createElement('option');
+      o.value='';
+      o.textContent='— Choisir une classe —';
+      c.insertBefore(o,c.firstChild);
+    }
+
+    if(!window.__EUC190T_PDIF_USER){
+      c.value='';
+      document.documentElement.classList.add('euc190t-waiting');
+      document.body.classList.add('euc190t-waiting');
+    }
+  }
+
+  function init(){
+    var y=ysel(),c=csel();
+
+    if(!y||!c){
+      setTimeout(init,25);
+      return;
+    }
+
+    var current=academicYearNow();
+    y.value=current;
+    blank();
+
+    c.addEventListener('pointerdown',function(){
+      window.__EUC190T_PDIF_POINTER=true;
+    },true);
+
+    c.addEventListener('change',function(ev){
+      if(window.__EUC190T_PDIF_POINTER||ev.isTrusted){
+        window.__EUC190T_PDIF_POINTER=false;
+        window.__EUC190T_PDIF_USER=!!c.value;
+
+        if(window.__EUC190T_PDIF_USER){
+          document.documentElement.classList.remove('euc190t-waiting');
+          document.body.classList.remove('euc190t-waiting');
+        }else{
+          blank();
+        }
+      }
+    },true);
+
+    y.addEventListener('change',function(){
+      window.__EUC190T_PDIF_USER=false;
+      blank();
+    },true);
+
+    var guard=setInterval(function(){
+      if(window.__EUC190T_PDIF_USER){
+        clearInterval(guard);
+        return;
+      }
+      blank();
+    },40);
+
+    setTimeout(function(){
+      if(!window.__EUC190T_PDIF_USER)blank();
+      clearInterval(guard);
+    },10000);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  }else{
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>

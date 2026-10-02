@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base href="<?!= baseUrl ?>" target="_top">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085;--red:#d92d20;--orange:#b54708}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.header{background:#fff;border-bottom:1px solid var(--line)}
+.header-inner,.wrap{max-width:1180px;margin:auto;padding-left:24px;padding-right:24px}
+.header-inner{padding-top:26px;padding-bottom:24px}
+.eyebrow{color:#0b8f72;font-size:12px;font-weight:800}
+h1{margin:8px 0 4px;font-size:30px;color:#0d4539}
+.subtitle{color:#5b756f}
+.wrap{padding-top:20px;padding-bottom:40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.crumb{font-size:13px;font-weight:700;color:#0b745f}
+.year{display:flex;gap:8px;align-items:center}
+select{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;min-height:190px}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.card h2{margin:0;color:#0c5f4e;font-size:22px}
+.btn{display:inline-block;border-radius:9px;padding:9px 12px;font-weight:800;text-decoration:none;cursor:pointer}
+.primary{color:#fff;background:var(--g)}
+.secondary{color:#086955;background:#e9f6f1}
+.quick{color:var(--mut);margin-top:12px;font-size:13px}
+.count-box{display:none;border-top:1px solid #edf2ef;margin-top:14px;padding-top:10px}
+.count-box.visible{display:block}
+.meta{font-size:12px;color:var(--mut);margin-bottom:6px}
+.period{padding:8px 0;border-top:1px solid #edf2ef}
+.row{display:flex;justify-content:space-between;gap:10px}
+.count{font-weight:800}
+.red{color:var(--red)}.orange{color:var(--orange)}.green{color:var(--g)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.snapshot{margin-top:28px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;max-width:380px;text-decoration:none;display:block}
+.snapshot strong{display:block;color:#0c5f4e;margin-bottom:5px}
+.snapshot span{color:var(--mut);font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.card{min-height:0}.header-inner,.wrap{padding-left:16px;padding-right:16px}}
+</style>
+
+<style id="DEV292_GLOBAL_PDIF_STYLE">
+.dev292-global-pdif .row{
+  align-items:flex-start;
+}
+.dev292-global-pdif-count{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  text-align:right;
+  line-height:1.25;
+}
+.dev292-global-pdif-count strong{
+  color:#a06400;
+  font-weight:900;
+}
+.dev292-global-pdif-count small:nth-child(2){
+  color:#08745f;
+  font-weight:800;
+}
+.dev292-global-pdif-count small:nth-child(3){
+  color:#a86600;
+  font-weight:800;
+}
+</style>
+
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="eyebrow">LYCÉE LES EUCALYPTUS</div>
+    <h1>Suivi des conventions PFMP</h1>
+    <div class="subtitle">Accès rapide par famille de formation</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<div class="topbar">
+  <div class="crumb"><a href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-pfmp" target="_top">← Accueil PFMP</a><span style="margin:0 6px">›</span><strong>Suivi des conventions</strong></div>
+  <div class="year">
+    <label for="annee">Année scolaire</label>
+    <select id="annee"></select>
+  </div>
+</div>
+
+<div class="grid">
+  <article class="card">
+    <div class="card-top">
+      <h2>BAC PRO</h2>
+      <a id="link-BACPRO" class="btn primary">Voir les classes</a>
+    </div>
+    <div class="quick">Accès direct aux classes, PFMP et parcours différencié.</div>
+    <div class="count-box" id="count-BACPRO"></div>
+  </article>
+
+  <article class="card">
+    <div class="card-top">
+      <h2>BTS</h2>
+      <a id="link-BTS" class="btn primary">Voir les classes</a>
+    </div>
+    <div class="quick">Accès direct aux classes et stages BTS.</div>
+    <div class="count-box" id="count-BTS"></div>
+  </article>
+
+  <article class="card">
+    <div class="card-top">
+      <h2>CAP</h2>
+      <a id="link-CAP" class="btn primary">Voir les classes</a>
+    </div>
+    <div class="quick">Accès direct aux classes et PFMP CAP.</div>
+    <div class="count-box" id="count-CAP"></div>
+  </article>
+</div>
+
+<div class="toolbar">
+  <button id="toggleCounts" class="btn secondary" type="button">Afficher les décomptes</button>
+</div>
+
+<a id="snapshotLink" class="snapshot">
+  <strong>Maintenance Snapshot PFMP</strong>
+  <span>Diagnostic, synchronisation, index rapides et audits.</span>
+</a>
+
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+const BASE_URL=<?!= JSON.stringify(baseUrl) ?>;
+
+(function(){
+  var active=P.annee;
+  var y0=Number(active.slice(0,4));
+
+  function q(page, extra){
+    var params=new URLSearchParams();
+    params.set('page',page);
+    params.set('annee',annee.value||active);
+
+    Object.keys(extra||{}).forEach(function(k){
+      params.set(k,extra[k]);
+    });
+
+    return 'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'+'?'+params.toString();
+  }
+
+  annee.innerHTML=[y0-1,y0,y0+1].map(function(y){
+    var code=y+'-'+(y+1);
+    return '<option value="'+code+'"'+(code===active?' selected':'')+'>'+code+'</option>';
+  }).join('');
+
+  annee.onchange=function(){
+    location.assign(q('suivi-conventions',{}));
+  };
+
+  document.getElementById('link-BACPRO').href=q('suivi-conventions-famille',{famille:'BACPRO'});
+  document.getElementById('link-BTS').href=q('suivi-conventions-famille',{famille:'BTS'});
+  document.getElementById('link-CAP').href=q('suivi-conventions-famille',{famille:'CAP'});
+  document.getElementById('snapshotLink').href='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'+'?page=snapshot-pfmp-admin';
+
+  var visible=false;
+  var loaded=false;
+
+  function colorClass(p){
+    var total=Number(p.total)||0;
+    if(total<=0)return'';
+    var ratio=100*(Number(p.conventions)||0)/total;
+    if(ratio>=100)return'green';
+    if(ratio>=65)return'orange';
+    return'red';
+  }
+
+  window.EUC_DEV336_SUMMARY_LOCK=true;
+function renderCount(fam,r){
+    if(window.EUC_DEV336_SUMMARY_LOCK)return;
+    var box=document.getElementById('count-'+fam);
+
+    function pdifHtml(p){
+      return '<div class="period dev292-global-pdif">'+
+        '<div class="row">'+
+          '<b>'+(p.libelle||'P.dif.')+'</b>'+
+          '<span class="dev292-global-pdif-count">'+
+            '<strong>'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</strong>'+
+            '<small>'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</small>'+
+            '<small>'+(Number(p.aDefinirFinTerminale)||0)+' à définir</small>'+
+          '</span>'+
+        '</div>'+
+      '</div>';
+    }
+
+    function normalHtml(p){
+      return '<div class="period">'+
+        '<div class="row">'+
+          '<b>'+(p.libelle||'Période')+'</b>'+
+          '<span class="count '+colorClass(p)+'">'+
+            (p.conventions||0)+' / '+(p.total||0)+
+            ((Number(p.apprentis)||0)
+              ? ' · '+(Number(p.apprentis)||0)+' apprenti(s)'
+              : '')+
+          '</span>'+
+        '</div>'+
+      '</div>';
+    }
+
+    box.innerHTML=
+      '<div class="meta">'+
+        (r.classes||0)+' classe(s) · '+
+        (r.effectif||0)+' élève(s) · '+
+        '<b>'+(r.apprentis||0)+' apprenti(s)</b>'+
+      '</div>'+
+      (r.periodes||[]).map(function(p){
+        return p.isPdif
+          ? pdifHtml(p)
+          : normalHtml(p);
+      }).join('');
+  }
+
+  function loadCounts(){
+    if(loaded)return;
+    loaded=true;
+
+    var fams=['BACPRO','BTS','CAP'];
+    var pos=0;
+
+    function next(){
+      if(pos>=fams.length)return;
+      var fam=fams[pos++];
+      var box=document.getElementById('count-'+fam);
+      box.innerHTML='<div class="meta">Chargement du décompte…</div>';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          renderCount(fam,r||{});
+          next();
+        })
+        .withFailureHandler(function(){
+          box.innerHTML='<div class="meta">Décompte indisponible.</div>';
+          next();
+        })
+        .EUC_DEV321_resumeFamilleGlobal({
+          annee:annee.value,
+          famille:fam
+        });
+    }
+
+    next();
+  }
+
+  toggleCounts.onclick=function(){
+    visible=!visible;
+
+    document.querySelectorAll('.count-box').forEach(function(box){
+      box.classList.toggle('visible',visible);
+    });
+
+    toggleCounts.textContent=
+      visible?'Masquer les décomptes':'Afficher les décomptes';
+
+    if(visible)loadCounts();
+  };
+})();
+</script>
+
+<style id="EUC_DEV331_LEVEL_SUMMARY_STYLE">
+.euc331-level{border-top:1px solid #e7f1ed;padding:9px 0}.euc331-level:first-child{border-top:0}
+.euc331-level-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:5px}
+.euc331-level-name{font-weight:900;color:#0c5f4e}.euc331-level-meta{font-size:10px;color:#667085;font-weight:700}
+.euc331-period{display:flex;justify-content:space-between;gap:8px;padding:4px 0;font-size:13px}
+.euc331-period .label{font-weight:700}.euc331-appr{color:#079669;font-weight:800;font-size:11px;margin-left:5px}
+.euc331-pdif{display:grid;text-align:right;font-size:10px;color:#b66700}
+</style>
+<script id="EUC_DEV331_LEVEL_SUMMARY_UI">
+(function(){
+  var latest={},observers={};
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function color(p){var t=Number(p.total)||0;if(!t)return'';var r=100*(Number(p.conventions)||0)/t;return r>=100?'green':(r>=65?'orange':'red');}
+  function levelHtml(l){
+    var ps=(l.periodes||[]).map(function(p){
+      var app=Number(p.apprentis)||0;
+      return '<div class="euc331-period"><span class="label">'+esc(p.libelle)+'</span><span class="count '+color(p)+'">'+Number(p.conventions||0)+' / '+Number(p.total||0)+(app?'<span class="euc331-appr"> + '+app+' apprenti(s)</span>':'')+'</span></div>';
+    }).join('');
+    var pd='';
+    if(l.pdif){var p=l.pdif;pd='<div class="euc331-period"><span class="label">'+esc(p.libelle||'P.dif.')+'</span><span class="euc331-pdif"><b>'+Number(p.parcoursDifferencies||0)+' parcours différencié(s)</b><span>'+Number(p.poursuitePfmp2||0)+' poursuite PFMP2 entreprise</span><span>'+Number(p.aDefinirFinTerminale||0)+' à définir</span></span></div>';}
+    return '<div class="euc331-level"><div class="euc331-level-head"><span class="euc331-level-name">'+esc(l.niveau)+'</span><span class="euc331-level-meta">'+Number(l.effectif||0)+' élève(s) · '+Number(l.apprentis||0)+' apprenti(s)</span></div>'+ps+pd+'</div>';
+  }
+  function keep(fam,html){
+    latest[fam]=html;var box=document.getElementById('count-'+fam);if(!box)return;box.innerHTML=html;
+    if(observers[fam])return;
+    observers[fam]=new MutationObserver(function(){var b=document.getElementById('count-'+fam);if(b&&latest[fam]&&!b.querySelector('.euc331-level'))b.innerHTML=latest[fam];});
+    observers[fam].observe(box,{childList:true,subtree:true});
+  }
+  function render(fam,d){
+    d=d||{};var meta=document.getElementById('meta-'+fam);
+    if(meta)meta.textContent=Number(d.classes||0)+' classe(s) · '+Number(d.effectif||0)+' élève(s) · '+Number(d.apprentis||0)+' apprenti(s)';
+    keep(fam,(d.niveaux||[]).map(levelHtml).join('')||'<div class="wait">Aucun niveau disponible.</div>');
+  }
+  function start(){
+    var y=document.getElementById('annee'),annee=y&&y.value?y.value:'';
+    if(!annee){try{annee=new URLSearchParams(location.search).get('annee')||'';}catch(e){}}
+    google.script.run.withSuccessHandler(function(r){
+      var f=(r&&r.familles)||{};
+      ['BACPRO','BTS','CAP'].forEach(function(code){render(code,f[code]||{});});
+    }).withFailureHandler(function(e){console.log('DEV331 synthèse niveaux : '+String(e&&e.message||e));})
+      .EUC_DEV331_resumeNiveaux({annee:annee});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(start,1800);});
+  else setTimeout(start,1800);
+})();
+</script>
+<!-- EUC_DEV333_LEVEL_SUMMARY_UI -->
+<style id="EUC_DEV333_LEVEL_SUMMARY_STYLE">
+.euc333-level{padding:8px 0;border-top:1px solid #e7efec}.euc333-level:first-child{border-top:0}.euc333-title{font-size:16px;font-weight:900;color:#006b57;margin:2px 0 4px}.euc333-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:13px}.euc333-label{font-weight:800;color:#173b35}.euc333-count{font-weight:900;color:#d92d20;text-align:right}.euc333-app{color:#087f70}.euc333-pdif{font-size:10px;line-height:1.2;text-align:right}.euc333-pdif .lyc{color:#3756b5;font-weight:900}.euc333-pdif .ent{color:#087f70;font-weight:900}.euc333-pdif .wait{color:#a66200;font-weight:900}
+</style>
+<script id="EUC_DEV333_LEVEL_SUMMARY_JS">
+(function(){'use strict';var latest={},obs={};
+function esc(v){var d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;}
+function allow(f,l){if(f==='BACPRO')return l==='Terminale'||l==='Première';if(f==='BTS')return true;return false;}
+function level(f,l){var rows=(l.periodes||[]).map(function(p){var a=allow(f,l.niveau)?Number(p.apprentis||0):0;return '<div class="euc333-row"><span class="euc333-label">'+esc(p.libelle)+'</span><span class="euc333-count">'+Number(p.conventions||0)+' / '+Number(p.eleves||0)+' élèves'+(a?' <span class="euc333-app">+ '+a+' apprenti(s)</span>':'')+'</span></div>';}).join('');var pd='';if(f==='BACPRO'&&l.niveau==='Terminale'&&l.pdif){pd='<div class="euc333-row"><span class="euc333-label">P.dif.</span><span class="euc333-pdif"><span class="lyc">'+Number(l.pdif.lycee||0)+' lycée</span> · <span class="ent">'+Number(l.pdif.entreprise||0)+' entreprise</span> · <span class="wait">'+Number(l.pdif.aDefinir||0)+' à définir</span></span></div>';}return '<div class="euc333-level"><div class="euc333-title">'+esc(l.niveau)+'</div>'+rows+pd+'</div>';}
+function render(code,data){var b=document.getElementById('count-'+code);if(!b)return;var h=(data.niveaux||[]).map(function(l){return level(code,l);}).join('');latest[code]=h;b.innerHTML=h;if(obs[code])return;obs[code]=new MutationObserver(function(){var x=document.getElementById('count-'+code);if(x&&latest[code]&&!x.querySelector('.euc333-level'))x.innerHTML=latest[code];});obs[code].observe(b,{childList:true,subtree:true});}
+function start(){var y=document.getElementById('annee'),an=y&&y.value?y.value:'';if(!an){try{an=new URLSearchParams(location.search).get('annee')||'';}catch(e){}}google.script.run.withSuccessHandler(function(r){var f=(r&&r.familles)||{};render('BACPRO',f.BACPRO||{});render('BTS',f.BTS||{});render('CAP',f.CAP||{});}).withFailureHandler(function(e){console.error('[DEV333] synthèse',e&&e.message||e);}).EUC_DEV333_resumeNiveaux({annee:an});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(start,300);},{once:true});else setTimeout(start,300);
+})();
+</script>
+<!-- EUC_DEV336_SUMMARY_UI -->
+<style id="EUC_DEV336_SUMMARY_STYLE">
+.euc336-level{padding:10px 0;border-top:1px solid #e7efec}
+.euc336-level:first-child{border-top:0}
+.euc336-title{margin-bottom:5px;color:#0b6b58;font-size:15px;font-weight:900}
+.euc336-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:13px}
+.euc336-label{color:#173b35;font-weight:800}
+.euc336-count{text-align:right;color:#d92d20;font-weight:900}
+.euc336-app{color:#087f70;font-weight:900}
+.euc336-pdif{color:#a66200;font-size:11px;font-weight:800;text-align:right}
+</style>
+<script id="EUC_DEV336_SUMMARY_JS">
+(function(){
+  'use strict';
+
+  function esc(v){
+    var d=document.createElement('div');
+    d.textContent=v==null?'':String(v);
+    return d.innerHTML;
+  }
+
+  function appsAllowed(fam,level){
+    if(fam==='BACPRO')return level==='Terminale'||level==='Première';
+    if(fam==='BTS')return true;
+    return false;
+  }
+
+  function row(fam,level,p){
+    var app=appsAllowed(fam,level)?Number(p.apprentis||0):0;
+    return '<div class="euc336-row">'+
+      '<span class="euc336-label">'+esc(p.libelle)+'</span>'+
+      '<span class="euc336-count">'+
+        Number(p.conventions||0)+' / '+Number(p.eleves||0)+' élèves'+
+        (appsAllowed(fam,level)
+          ? ' <span class="euc336-app">+ '+app+' apprenti(s)</span>'
+          : '')+
+      '</span>'+
+    '</div>';
+  }
+
+  function level(fam,l){
+    var h='<div class="euc336-level"><div class="euc336-title">'+esc(l.niveau)+'</div>';
+    h+=(l.periodes||[]).map(function(p){return row(fam,l.niveau,p);}).join('');
+    if(fam==='BACPRO'&&l.niveau==='Terminale'&&l.pdif){
+      h+='<div class="euc336-row">'+
+        '<span class="euc336-label">P.dif.</span>'+
+        '<span class="euc336-pdif">'+
+          Number(l.pdif.lycee||0)+' lycée · '+
+          Number(l.pdif.entreprise||0)+' entreprise · '+
+          Number(l.pdif.aDefinir||0)+' à définir'+
+        '</span>'+
+      '</div>';
+    }
+    return h+'</div>';
+  }
+
+  function render(fam,data){
+    var box=document.getElementById('count-'+fam);
+    if(!box)return;
+    box.innerHTML=(data.niveaux||[]).map(function(l){return level(fam,l);}).join('');
+  }
+
+  function load(){
+    var y=document.getElementById('annee');
+    var annee=y&&y.value?y.value:'';
+    if(!annee){
+      try{annee=new URLSearchParams(location.search).get('annee')||'';}catch(e){}
+    }
+    google.script.run
+      .withSuccessHandler(function(r){
+        var f=(r&&r.familles)||{};
+        render('BACPRO',f.BACPRO||{});
+        render('BTS',f.BTS||{});
+        render('CAP',f.CAP||{});
+      })
+      .withFailureHandler(function(e){
+        ['BACPRO','BTS','CAP'].forEach(function(fam){
+          var box=document.getElementById('count-'+fam);
+          if(box)box.textContent='Erreur décompte : '+String(e&&e.message||e);
+        });
+      })
+      .EUC_DEV336_resumeAccueil({annee:annee});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',load,{once:true});
+  }else{
+    load();
+  }
+})();
+</script>
+
+</body>
+</html>

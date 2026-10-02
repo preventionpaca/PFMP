@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.wrap{max-width:1050px;margin:auto;padding:24px}
+.back{color:#0b745f;text-decoration:none;font-weight:800}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+.filters{display:grid;grid-template-columns:180px 1fr 1fr auto;gap:10px;align-items:end}
+select,input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+button{background:var(--g);color:#fff;border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:14px}
+td,th{padding:8px;border-bottom:1px solid #edf2ef;text-align:left}
+.note{font-size:12px;color:var(--mut)}
+@media(max-width:800px){.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a id="back" class="back">← Accueil PFMP</a>
+<h1>Audit classe précis — DEV.185</h1>
+<p class="note">
+La mesure detailF18 inclut encore les lectures/croisements professeurs et affectations encapsulés dans le moteur historique.
+</p>
+
+<section class="card">
+<div class="filters">
+<label>Année
+<input id="annee" value="2026-2027">
+</label>
+
+<label>Classe
+<select id="classe"></select>
+</label>
+
+<label>Période
+<select id="periode"></select>
+</label>
+
+<button id="run">Auditer la classe</button>
+</div>
+
+<p id="status"></p>
+<table id="tbl"></table>
+</section>
+</main>
+
+<script>
+const C=<?!= config ?>;
+
+(function(){
+  back.href=C.baseUrl+'?page=admin-pfmp';
+
+  function loadOptions(){
+    google.script.run
+      .withSuccessHandler(function(r){
+        classe.innerHTML=(r.classes||[]).map(function(x){
+          return '<option value="'+x.id+'">'+x.label+'</option>';
+        }).join('');
+
+        periode.innerHTML=(r.periodes||[]).map(function(x){
+          return '<option value="'+x.id+'">'+x.label+'</option>';
+        }).join('');
+      })
+      .EUC_DEV185_auditOptions({
+        annee:annee.value
+      });
+  }
+
+  annee.onchange=loadOptions;
+  loadOptions();
+
+  run.onclick=function(){
+    run.disabled=true;
+    status.textContent='Audit en cours…';
+    tbl.innerHTML='';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        run.disabled=false;
+
+        status.textContent=
+          'Terminé — cache '+
+          (r.cacheHit?'HIT':'MISS')+
+          ' — total des mesures : '+
+          (r.totalMesureMs||0)+
+          ' ms';
+
+        tbl.innerHTML=
+          '<tr><th>Étape</th><th>Durée</th></tr>'+
+          Object.keys(r.mesures||{}).map(function(k){
+            return '<tr><td>'+k+'</td><td><b>'+
+              r.mesures[k]+' ms</b></td></tr>';
+          }).join('');
+      })
+      .withFailureHandler(function(e){
+        run.disabled=false;
+        status.textContent=
+          'Erreur : '+
+          String(e&&e.message||e);
+      })
+      .EUC_DEV185_auditClasse({
+        annee:annee.value,
+        classe:Number(classe.value),
+        periode:Number(periode.value)
+      });
+  };
+})();
+</script>
+
+<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
+.euc190e-snapshot-tile{
+  border:1px solid #cfe5de;
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  cursor:pointer;
+  margin-top:12px;
+}
+.euc190e-snapshot-tile:hover{
+  border-color:#0b8f72;
+}
+.euc190e-snapshot-tile strong{
+  display:block;
+  color:#0c5f4e;
+  font-size:16px;
+  margin-bottom:5px;
+}
+.euc190e-snapshot-tile span{
+  color:#667085;
+  font-size:12px;
+}
+</style>
+
+<script id="EUC_DEV190E_SNAPSHOT_TILE">
+(function(){
+
+  function addTile(){
+
+    if(document.querySelector('.euc190e-snapshot-tile')){
+      return;
+    }
+
+    var tile = document.createElement('div');
+    tile.className = 'euc190e-snapshot-tile';
+
+    tile.innerHTML =
+      '<strong>Maintenance Snapshot PFMP</strong>' +
+      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
+
+    tile.onclick = function(){
+      var u = new URL(location.href);
+      u.search = '';
+      u.searchParams.set('page','snapshot-pfmp-admin');
+      location.href = u.toString();
+    };
+
+    var host =
+      document.querySelector('.dashboard-grid') ||
+      document.querySelector('.cards-grid') ||
+      document.querySelector('.card-grid') ||
+      document.querySelector('.tiles') ||
+      document.querySelector('.modules') ||
+      document.querySelector('.grid') ||
+      document.querySelector('.cards') ||
+      document.querySelector('main') ||
+      document.body;
+
+    host.appendChild(tile);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      addTile
+    );
+  }else{
+    addTile();
+  }
+
+})();
+</script>
+
+</body>
+</html>

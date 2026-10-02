@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#172033}
+.wrap{max-width:1450px;margin:auto;padding:38px 24px 30px}
+.period-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.period-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-weight:800;cursor:pointer}
+.period-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
+h2{margin:0 0 8px}.status{margin:0 0 12px;color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line)}
+th,td{padding:9px;border-bottom:1px solid #edf2ef;text-align:left}
+th{background:#f5faf8}.empty{padding:24px!important;text-align:center!important;color:var(--mut)}
+</style>
+
+<style id="EUC_DEV275B_VISUAL">
+.euc275b-a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  height:20px;
+  margin-right:6px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#d92d20;
+  color:#fff;
+  font-weight:900;
+  font-size:11px;
+  vertical-align:middle;
+}
+.s-CONTRAT_APPRENTISSAGE{
+  background:#fee4e2!important;
+  color:#d92d20!important;
+  font-weight:800;
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+<div id="periodNav" class="period-nav"></div>
+<h2 id="title"></h2>
+<p id="status" class="status"></p>
+<table>
+<thead><tr>
+<th>Élève</th><th>Statut</th><th>Entreprise</th><th>Coordonnées entreprise</th>
+<th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th>
+</tr></thead>
+<tbody id="tb"></tbody>
+</table>
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+const PRELOADED=<?!= preloadJson ?>;
+const PERIODS=<?!= periodsJson ?>;
+
+(function(){
+
+  function esc190J(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function compactContact190J(tel,mail,fallback){
+    var parts=[];
+    if(tel) parts.push('<div style="white-space:nowrap">☎ '+esc190J(tel)+'</div>');
+    if(mail) parts.push('<div style="white-space:nowrap;font-size:11px">✉ '+esc190J(mail)+'</div>');
+    if(!parts.length && fallback) parts.push('<div style="font-size:11px">'+esc190J(fallback)+'</div>');
+    return parts.length ? parts.join('') : '—';
+  }
+
+
+  function nav(state){
+    window.top.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+  }
+
+  periodNav.innerHTML=(PERIODS||[]).map(function(p){
+    return '<button class="period-btn'+
+      (Number(p.id)===Number(P.periode)?' active':'')+
+      '" data-period="'+p.id+'">'+
+      (p.libelle||p.nom||'Période')+
+      '</button>';
+  }).join('');
+
+  document.querySelectorAll('.period-btn').forEach(function(b){
+    b.onclick=function(){
+      nav({
+        page:'suivi-pfmp-classe-public',
+        annee:P.annee,
+        famille:P.famille,
+        classe:P.classe,
+        periode:b.dataset.period
+      });
+    };
+  });
+
+  if(!PRELOADED || !PRELOADED.ready || !PRELOADED.detail){
+    title.textContent='Snapshot non préparé';
+    status.textContent='Amorce cette classe / période depuis Maintenance Snapshot PFMP.';
+    tb.innerHTML='<tr><td class="empty" colspan="8">Aucune donnée Snapshot V2 disponible.</td></tr>';
+    return;
+  }
+
+  var d=PRELOADED.detail;
+  var classeNom=(d.classe&&d.classe.nom)||'Classe';
+  var periodeLibelle=(d.periode&&d.periode.libelle)||'Période';
+
+  window.top.postMessage({
+    type:'EUC_ATRIUM_META',
+    meta:{
+      page:'detail',
+      family:P.famille,
+      classLabel:classeNom,
+      periodLabel:periodeLibelle
+    }
+  },'*');
+
+  title.textContent=classeNom+' — '+periodeLibelle;
+  status.textContent='Snapshot V2 · '+Number(PRELOADED.durationMs||0)+' ms';
+
+  tb.innerHTML=(d.lignes||[]).map(function(x){
+    return '<tr>'+
+      '<td><b>'+(x.nom||'')+' '+(x.prenom||'')+'</b></td>'+
+      '<td>'+(x.statut||'')+'</td>'+
+      '<td>'+(x.entreprise||'—')+'</td>'+
+      '<td>'+compactContact190J(x.telephoneEntreprise,x.courrielEntreprise,x.coordonneesEntreprise||x.contactEntreprise)+'</td>'+
+      '<td>'+compactContact190J(x.telephoneTuteur,x.courrielTuteur,x.coordonneesTuteur||x.tuteurEntreprise)+'</td>'+
+      '<td>'+(x.professeurPrincipal||'—')+'</td>'+
+      '<td>'+(x.professeurTelephone||'—')+'</td>'+
+      '<td>'+(x.professeurVisiteur||'—')+'</td>'+
+    '</tr>';
+  }).join('');
+})();
+</script>
+<!-- EUC_DEV276_DETAIL_UI -->
+<style id="EUC_DEV276_DETAIL_UI_STYLE">
+.dev276-a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  height:20px;
+  margin-right:7px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#d92d20;
+  color:#fff;
+  font-weight:900;
+  font-size:11px;
+  vertical-align:middle;
+}
+.dev276-pdif{
+  display:inline-block;
+  margin-right:7px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#fff1cc;
+  color:#7a4300;
+  font-weight:900;
+  font-size:10px;
+  vertical-align:middle;
+}
+</style>
+<script id="EUC_DEV276_DETAIL_UI_JS">
+(function(){
+  'use strict';
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
+  function decorate(){
+    document.querySelectorAll('table tbody tr').forEach(function(tr){
+      var cells=tr.querySelectorAll('td');
+      if(cells.length<2)return;
+
+      var txt=norm(tr.textContent);
+      var first=cells[0];
+
+      /*
+       * Dans l'admin il existe parfois une colonne checkbox avant Élève.
+       */
+      var studentCell=first;
+      if(
+        first.querySelector('input[type="checkbox"]') &&
+        cells.length>2
+      ){
+        studentCell=cells[1];
+      }
+
+      if(
+        txt.indexOf('CONTRAT APPRENTISSAGE')>=0 &&
+        !studentCell.querySelector('.dev276-a') &&
+        !studentCell.querySelector('.euc275b-a')
+      ){
+        studentCell.insertAdjacentHTML(
+          'afterbegin',
+          '<span class="dev276-a">A</span>'
+        );
+      }
+
+      if(
+        txt.indexOf('PARCOURS DIFFERENCIE')>=0 &&
+        !studentCell.querySelector('.dev276-pdif')
+      ){
+        studentCell.insertAdjacentHTML(
+          'afterbegin',
+          '<span class="dev276-pdif">P.DIF.</span>'
+        );
+      }
+    });
+  }
+
+  function install(){
+    decorate();
+    var o=new MutationObserver(function(){
+      decorate();
+    });
+    o.observe(document.body,{
+      childList:true,
+      subtree:true,
+      characterData:true
+    });
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install,{once:true});
+  }else{
+    install();
+  }
+})();
+</script>
+
+<!-- EUC_DEV285C_MODE_UI -->
+<style id="EUC_DEV285C_MODE_UI_STYLE">
+.dev285c-mode{
+  display:block;
+  margin-top:4px;
+  font-size:10px;
+  line-height:1.25;
+  font-weight:900;
+}
+.dev285c-mode.lycee{color:#1e64c8}
+.dev285c-mode.ent{color:#08745f}
+.dev285c-mode.undef{color:#a86600}
+</style>
+<script id="EUC_DEV285C_MODE_UI_JS">
+(function(){
+  'use strict';
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
+  function params(){
+    var q=new URLSearchParams(location.search);
+
+    return {
+      annee:q.get('annee')||'',
+      classe:Number(q.get('classe'))||0,
+      periode:Number(q.get('periode'))||0
+    };
+  }
+
+  function headerMap(table){
+    var map={};
+
+    Array.from(
+      table.querySelectorAll('thead th')
+    ).forEach(function(th,i){
+      var t=norm(th.textContent);
+
+      if(t.indexOf('ELEVE')>=0){
+        map.eleve=i;
+      }
+
+      if(
+        t.indexOf('CONVENTION')>=0 ||
+        t==='STATUT' ||
+        t.indexOf('STATUT')>=0
+      ){
+        map.statut=i;
+      }
+    });
+
+    return map;
+  }
+
+  function rowName(cells,idx){
+    if(
+      idx===undefined ||
+      !cells[idx]
+    ){
+      return '';
+    }
+
+    return norm(cells[idx].textContent);
+  }
+
+  function labelFor(mode){
+    if(mode==='PARCOURS_DIFF_LYCEE'){
+      return {
+        cls:'lycee',
+        text:'Après PFMP2 : parcours différencié au lycée'
+      };
+    }
+
+    if(mode==='POURSUITE_PFMP2_ENTREPRISE'){
+      return {
+        cls:'ent',
+        text:'Après PFMP2 : poursuite en entreprise'
+      };
+    }
+
+    return {
+      cls:'undef',
+      text:'Fin Terminale : à définir'
+    };
+  }
+
+  function decorate(r){
+    var d=r&&r.detail;
+
+    if(!d){
+      return;
+    }
+
+    var byName={};
+
+    (d.lignes||[]).forEach(function(x){
+      var k1=norm(
+        (x.nom||'')+
+        ' '+
+        (x.prenom||'')
+      );
+
+      var k2=norm(
+        (x.prenom||'')+
+        ' '+
+        (x.nom||'')
+      );
+
+      byName[k1]=x.modeFinTerminale||'';
+      byName[k2]=x.modeFinTerminale||'';
+    });
+
+    document
+      .querySelectorAll('table')
+      .forEach(function(table){
+        var map=headerMap(table);
+
+        if(
+          map.eleve===undefined ||
+          map.statut===undefined
+        ){
+          return;
+        }
+
+        table
+          .querySelectorAll('tbody tr')
+          .forEach(function(tr){
+            var cells=tr.querySelectorAll('td');
+            var name=rowName(
+              cells,
+              map.eleve
+            );
+
+            if(!name){
+              return;
+            }
+
+            var mode;
+
+            Object.keys(byName).some(function(k){
+              if(
+                name.indexOf(k)>=0 ||
+                k.indexOf(name)>=0
+              ){
+                mode=byName[k];
+                return true;
+              }
+
+              return false;
+            });
+
+            if(mode===undefined){
+              return;
+            }
+
+            var td=cells[map.statut];
+
+            if(
+              !td ||
+              td.querySelector(
+                '.dev285c-mode'
+              )
+            ){
+              return;
+            }
+
+            var lab=labelFor(mode);
+
+            td.insertAdjacentHTML(
+              'beforeend',
+              '<span class="dev285c-mode '+
+              lab.cls+
+              '">'+
+              lab.text+
+              '</span>'
+            );
+          });
+      });
+  }
+
+  function load(){
+    var p=params();
+
+    if(
+      !p.annee ||
+      !p.classe ||
+      !p.periode
+    ){
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        decorate(r||{});
+
+        setTimeout(function(){
+          decorate(r||{});
+        },250);
+
+        setTimeout(function(){
+          decorate(r||{});
+        },850);
+      })
+      .withFailureHandler(function(e){
+        console.error(
+          '[DEV285C] mode fin terminale',
+          e&&e.message||e
+        );
+      })
+      .EUC_DEV190I_readOne(p);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      load,
+      {once:true}
+    );
+  }else{
+    load();
+  }
+})();
+</script>
+<!-- EUC_DEV289_APPRENTI_VISUAL -->
+<style id="EUC_DEV289_APPRENTI_VISUAL_STYLE">
+.euc289-a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  height:20px;
+  margin-right:7px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#d92d20;
+  color:#fff;
+  font-weight:900;
+  font-size:11px;
+  vertical-align:middle;
+}
+</style>
+
+<script id="EUC_DEV289_APPRENTI_VISUAL_JS">
+(function(){
+  'use strict';
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
+  function decorate(){
+    document
+      .querySelectorAll('table tbody tr')
+      .forEach(function(tr){
+        var txt=norm(tr.textContent);
+
+        if(
+          txt.indexOf('CONTRAT APPRENTISSAGE')<0
+        ){
+          return;
+        }
+
+        var cells=tr.querySelectorAll('td');
+
+        if(!cells.length){
+          return;
+        }
+
+        /*
+         * ADMIN : première cellule = checkbox.
+         * PUBLIC : première cellule = élève.
+         */
+        var studentCell=cells[0];
+
+        if(
+          studentCell.querySelector(
+            'input[type="checkbox"]'
+          ) &&
+          cells.length>1
+        ){
+          studentCell=cells[1];
+        }
+
+        if(
+          studentCell.querySelector('.euc289-a') ||
+          studentCell.querySelector('.euc275b-a') ||
+          studentCell.querySelector('.dev276-a')
+        ){
+          return;
+        }
+
+        studentCell.insertAdjacentHTML(
+          'afterbegin',
+          '<span class="euc289-a">A</span>'
+        );
+      });
+  }
+
+  function install(){
+    decorate();
+
+    new MutationObserver(function(){
+      decorate();
+    }).observe(
+      document.body,
+      {
+        childList:true,
+        subtree:true,
+        characterData:true
+      }
+    );
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install,
+      {once:true}
+    );
+  }else{
+    install();
+  }
+})();
+</script>
+
+</body>
+</html>

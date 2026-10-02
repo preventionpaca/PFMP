@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de}
+*{box-sizing:border-box}
+html.euc-atrium-embedded body{padding-top:0!important}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#172033}
+.wrap{max-width:1450px;margin:auto;padding:22px}
+h1{color:#0f4035}
+.crumb a{color:#0b745f;text-decoration:none;font-weight:800;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);margin-top:16px}
+th,td{padding:9px;border-bottom:1px solid #edf2ef;text-align:left}
+th{background:#f5faf8}
+.app{background:#fff7bf}.pdif{background:#efe6ff}.mix{background:#ffe6b3}
+.badge{font-size:10px;font-weight:900;padding:3px 6px;border-radius:999px;background:#dff4ed}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Point sur les stages</h1>
+<div id="crumb" class="crumb"></div>
+<h2 id="title"></h2>
+<table>
+<thead><tr>
+<th>Élève</th><th>Statut</th><th>Entreprise</th><th>Contact entreprise</th><th>Tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th>
+</tr></thead>
+<tbody id="tb"></tbody>
+</table>
+</main>
+<script>
+const C=<?!= config ?>;
+const D=<?!= detailJson ?>;
+const F=<?!= famille ?>;
+
+(function(){
+  const famLabel=F==='BACPRO'?'BAC PRO':F;
+
+  function nav(state){
+    try{
+      if(window.parent && window.parent!==window){
+        window.parent.postMessage({type:'EUC_ATRIUM_NAV',state:state},'*');
+        return;
+      }
+    }catch(e){}
+    const u=new URL(C.baseUrl);
+    Object.keys(state).forEach(k=>u.searchParams.set(k,state[k]));
+    location.href=u.toString();
+  }
+
+  crumb.innerHTML=
+    '<a id="homeLink">Point sur les stages</a> › '+
+    '<a id="famLink">'+famLabel+'</a> › '+
+    '<strong>'+D.classe.nom+'</strong>';
+
+  homeLink.onclick=function(ev){
+    ev.preventDefault();
+    nav({page:'suivi-conventions-public',annee:D.annee});
+  };
+
+  famLink.onclick=function(ev){
+    ev.preventDefault();
+    nav({page:'suivi-conventions-public-famille',annee:D.annee,famille:F});
+  };
+
+  title.textContent=D.classe.nom+' — '+(D.periode&&D.periode.libelle||'');
+
+  tb.innerHTML=(D.lignes||[]).map(function(x){
+    return '<tr class="'+(x.apprenti?'app':x.parcoursDifferencie?'pdif':x.statutMixte?'mix':'')+'">'+
+      '<td><b>'+x.nom+' '+x.prenom+'</b>'+
+      (x.apprenti?'<br><span class="badge">APPRENTI</span>':x.parcoursDifferencie?'<br><span class="badge">P.DIF.</span>':x.statutMixte?'<br><span class="badge">À VÉRIFIER</span>':'')+
+      '</td>'+
+      '<td>'+x.statut+'</td>'+
+      '<td>'+(x.entreprise||'—')+'</td>'+
+      '<td>'+(x.contactEntreprise||'—')+'</td>'+
+      '<td>'+(x.tuteurEntreprise||'—')+'</td>'+
+      '<td>'+(x.professeurPrincipal||'—')+'</td>'+
+      '<td>'+(x.professeurTelephone||'—')+'</td>'+
+      '<td>'+(x.professeurVisiteur||'—')+'</td>'+
+      '</tr>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

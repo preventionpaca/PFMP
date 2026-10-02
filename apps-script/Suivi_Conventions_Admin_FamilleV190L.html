@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base href="<?!= baseUrl ?>" target="_top">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--g:#0b8f72;--bg:#f7fbf9;--line:#cfe5de;--mut:#667085;--red:#d92d20;--orange:#b54708}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17312b}
+.header{background:#fff;border-bottom:1px solid var(--line)}
+.header-inner,.wrap{max-width:1180px;margin:auto;padding-left:24px;padding-right:24px}
+.header-inner{padding-top:24px;padding-bottom:20px}
+h1{margin:0 0 4px;color:#0d4539;font-size:28px}
+.sub{color:#5b756f}
+.wrap{padding-top:18px;padding-bottom:40px}
+.crumb{display:flex;gap:7px;flex-wrap:wrap;font-size:13px;font-weight:700;color:#0b745f;margin-bottom:14px}
+.crumb a{color:#0b745f;text-decoration:none}
+.level-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.level-btn{border:1px solid var(--line);background:#fff;color:#0b745f;border-radius:999px;padding:8px 13px;font-weight:800;cursor:pointer}
+.level-btn.active{background:var(--g);border-color:var(--g);color:#fff}
+.section{margin-bottom:14px}
+.section-head{width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;font-weight:800;color:#0c5f4e;font-size:20px;cursor:pointer}
+.section-body{display:none;padding-top:12px}
+.section.open .section-body{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.card-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.card-title{color:#0c5f4e;font-size:20px;font-weight:800}
+.badge{background:#dff4ed;color:#086955;border-radius:999px;padding:4px 7px;font-size:11px;font-weight:800}
+.period{border-top:1px solid #edf2ef;padding:10px 0;cursor:pointer}
+.period:hover{background:#f8fcfa}
+.row{display:flex;justify-content:space-between;gap:10px}
+.label{font-weight:800}
+.small{color:var(--mut);font-size:11px}
+.count{font-weight:800}
+.red{color:var(--red)}
+.orange{color:var(--orange)}
+.green{color:var(--g)}
+.empty{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--mut)}
+@media(max-width:900px){.section.open .section-body{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.section.open .section-body{grid-template-columns:1fr}.header-inner,.wrap{padding-left:14px;padding-right:14px}}
+</style>
+
+<style id="DEV280_APP_INLINE_STYLE">
+.dev280-app-inline{
+  margin-left:6px;
+  color:#07966f;
+  font-weight:900;
+  white-space:nowrap;
+}
+</style>
+
+
+<style id="DEV283_PDIF_STYLE">
+.dev283-pdif-inline{
+  color:#a06400;
+  font-weight:900;
+  white-space:nowrap;
+}
+</style>
+
+
+<style id="DEV291_PDIF_STYLE">
+.dev291-pdif-main{
+  color:#a06400;
+  font-weight:900;
+}
+.dev291-pdif-ent{
+  margin-top:2px;
+  color:#08745f;
+  font-size:10px;
+  font-weight:800;
+}
+.dev291-pdif-wait{
+  margin-top:1px;
+  color:#a86600;
+  font-size:10px;
+  font-weight:800;
+}
+</style>
+
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <h1 id="pageTitle"></h1>
+    <div class="sub">Synthèse par niveau puis par classe</div>
+  </div>
+</header>
+
+<main class="wrap">
+<div class="crumb">
+  <a href="<?!= baseUrl ?>?page=admin-pfmp" target="_top">Accueil PFMP</a>
+  <span>›</span>
+  <a id="homeLink">Suivi des conventions</a>
+  <span>›</span>
+  <strong id="familyCrumb"></strong>
+</div>
+
+<div id="levelNav" class="level-nav"></div>
+<div id="sections"></div>
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+const BASE_URL=<?!= JSON.stringify(baseUrl) ?>;
+const DATA=<?!= dataJson ?>;
+
+(function(){
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function famLabel(f){
+    return f==='BACPRO' ? 'BAC PRO' : f;
+  }
+
+  function levelOf(name,fam){
+    var n=String(name||'').toUpperCase();
+
+    if(fam==='BACPRO'){
+      if(/^T/.test(n))return'Terminale';
+      if(/^1/.test(n))return'Première';
+      if(/^2/.test(n))return'Seconde';
+    }
+
+    if(fam==='BTS'){
+      return /^2/.test(n) ? '2e année' : '1re année';
+    }
+
+    if(fam==='CAP'){
+      return (/^T/.test(n)||/^2/.test(n)) ? 'Terminale CAP' : '1re année CAP';
+    }
+
+    return'Autres';
+  }
+
+  function colorClass(p){
+    var total=Number(p.total)||0;
+    if(total<=0)return'';
+
+    var ratio=100*(Number(p.conventions)||0)/total;
+    if(ratio>=100)return'green';
+    if(ratio>=65)return'orange';
+    return'red';
+  }
+
+  pageTitle.textContent=famLabel(P.famille);
+  familyCrumb.textContent=famLabel(P.famille);
+  homeLink.href=BASE_URL+'?page=suivi-conventions&annee='+encodeURIComponent(P.annee);
+
+  if(!DATA || !DATA.ready || !(DATA.classes||[]).length){
+    sections.innerHTML=
+      '<div class="empty">'+
+      'Donnees de cette famille momentanement indisponibles.</div>';
+    return;
+  }
+
+  var groups={};
+
+  (DATA.classes||[]).forEach(function(c){
+    var l=levelOf(c.classe||c.nom,P.famille);
+    if(!groups[l])groups[l]=[];
+    groups[l].push(c);
+  });
+
+  var order=
+    P.famille==='BACPRO'
+      ? ['Terminale','Première','Seconde']
+      : P.famille==='BTS'
+      ? ['1re année','2e année']
+      : ['1re année CAP','Terminale CAP'];
+
+  var levels=order.filter(function(l){
+    return groups[l]&&groups[l].length;
+  });
+
+  levelNav.innerHTML=levels.map(function(l,i){
+    return '<button class="level-btn'+
+      (i===0?' active':'')+
+      '" data-level="'+esc(l)+'">'+
+      esc(l)+
+      '</button>';
+  }).join('');
+
+  sections.innerHTML=levels.map(function(l,i){
+    return '<section class="section'+
+      (i===0?' open':'')+
+      '" data-section="'+esc(l)+'">'+
+      '<button class="section-head"><span>'+esc(l)+'</span><span>▾</span></button>'+
+      '<div class="section-body">'+
+
+      groups[l].map(function(c){
+        var classeId=Number(c.classeId||c.id)||0;
+
+        return '<article class="card">'+
+          '<div class="card-head">'+
+            '<div class="card-title">'+esc(c.classe||c.nom)+'</div>'+
+            '<div class="badge">'+(c.apprentis||0)+' apprenti(s)</div>'+
+          '</div>'+
+
+          (c.periodes||[]).map(function(p){
+            return '<div class="period" data-class="'+classeId+'" data-period="'+p.id+'">'+
+              '<div class="row">'+
+                '<div>'+
+                  '<div class="label">'+esc(p.libelle||p.nom||'Période')+'</div>'+
+                  '<div class="small">'+esc([p.debutFr,p.finFr].filter(Boolean).join(' → '))+'</div>'+
+                '</div>'+
+                '<div class="count '+colorClass(p)+'">'+(p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':('<span class="euc390-count-main">'+((Number(p.conventions)||0)+(Number(p.apprentis)||0))+' / '+((Number(p.total)||0)+(Number(p.apprentis)||0))+'</span><div class="euc390-count-detail">'+(Number(p.conventions)||0)+' convention'+((Number(p.conventions)||0)>1?'s':'')+((Number(p.apprentis)||0)?' + '+(Number(p.apprentis)||0)+' apprenti'+((Number(p.apprentis)||0)>1?'s':''):'')+'</div><div class="euc390-count-missing">'+Math.max(0,(Number(p.total)||0)-(Number(p.conventions)||0))+' sans convention</div>'))+'</div>'+
+              '</div>'+
+            '</div>';
+          }).join('')+
+
+        '</article>';
+      }).join('')+
+
+      '</div>'+
+    '</section>';
+  }).join('');
+
+  function openLevel(level){
+    document.querySelectorAll('.section').forEach(function(s){
+      s.classList.toggle('open',s.dataset.section===level);
+    });
+
+    document.querySelectorAll('.level-btn').forEach(function(b){
+      b.classList.toggle('active',b.dataset.level===level);
+    });
+  }
+
+  document.querySelectorAll('.level-btn').forEach(function(b){
+    b.onclick=function(){
+      openLevel(b.dataset.level);
+    };
+  });
+
+  document.querySelectorAll('.section-head').forEach(function(b){
+    b.onclick=function(){
+      openLevel(b.closest('.section').dataset.section);
+    };
+  });
+
+  document.querySelectorAll('.period').forEach(function(p){
+    p.onclick=function(){
+      window.top.location.href=
+        'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'+'?page=suivi-pfmp-classe'+
+        '&annee='+encodeURIComponent(P.annee)+
+        '&famille='+encodeURIComponent(P.famille)+
+        '&classe='+encodeURIComponent(p.dataset.class)+
+        '&periode='+encodeURIComponent(p.dataset.period)+
+        '&origin=suivi-conventions';
+    };
+  });
+})();
+</script>
+<!-- EUC_DEV276_FAMILY_UI -->
+<style id="EUC_DEV276_FAMILY_UI_STYLE">
+.dev276-period-meta{
+  margin-top:2px;
+  font-size:11px;
+  color:#667085;
+}
+.dev276-period-meta strong{
+  color:#087f70;
+}
+.dev276-pdif-count{
+  color:#7a4300!important;
+  font-weight:800;
+}
+</style>
+<script id="EUC_DEV276_FAMILY_UI_JS">
+(function(){
+  'use strict';
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
+  function params(){
+    var q=new URLSearchParams(location.search);
+    return {
+      annee:q.get('annee')||'',
+      famille:q.get('famille')||''
+    };
+  }
+
+  function exactText(text,root){
+    var wanted=norm(text);
+    return Array.from(
+      (root||document).querySelectorAll('*')
+    ).find(function(el){
+      return norm(el.textContent)===wanted;
+    })||null;
+  }
+
+  function classCard(name){
+    var el=exactText(name,document);
+    if(!el)return null;
+
+    var p=el;
+    for(var i=0;i<7&&p;i++,p=p.parentElement){
+      var t=String(p.textContent||'');
+      if(
+        /apprenti/i.test(t) &&
+        /\d+\s*\/\s*\d+/.test(t) &&
+        p.getBoundingClientRect().width>200
+      ){
+        return p;
+      }
+    }
+    return null;
+  }
+
+  function apprenticeBadge(card){
+    return Array.from(card.querySelectorAll('*')).find(function(el){
+      return /^\s*\d+\s+apprenti(?:\(s\))?\s*$/i.test(
+        String(el.textContent||'').trim()
+      );
+    })||null;
+  }
+
+  function periodBlock(card,label){
+    var n=norm(label);
+    var els=Array.from(card.querySelectorAll('*'));
+
+    var el=els.find(function(x){
+      return norm(x.textContent)===n;
+    });
+
+    if(!el){
+      el=els.find(function(x){
+        var t=norm(x.textContent);
+        return n && t.indexOf(n)>=0 && x.children.length<=4;
+      });
+    }
+
+    if(!el)return null;
+
+    var p=el;
+    for(var i=0;i<5&&p;i++,p=p.parentElement){
+      if(/\d+\s*\/\s*\d+/.test(String(p.textContent||''))){
+        return p;
+      }
+    }
+    return el.parentElement;
+  }
+
+  function fraction(block){
+    if(!block)return null;
+    return Array.from(block.querySelectorAll('*')).find(function(el){
+      return /^\s*\d+\s*\/\s*\d+\s*$/.test(
+        String(el.textContent||'')
+      );
+    })||null;
+  }
+
+  function meta(block){
+    var m=block.querySelector('.dev276-period-meta');
+    if(m)return m;
+    m=document.createElement('div');
+    m.className='dev276-period-meta';
+    block.appendChild(m);
+    return m;
+  }
+
+  function periodLabel(p){
+    return p.v50Slot||p.v51Slot||p.libelle||p.nom||'';
+  }
+
+  function applyClass(c){
+    var name=c.classe||c.nom||c.classeNom||'';
+    var card=classCard(name);
+    if(!card)return;
+
+    var badge=apprenticeBadge(card);
+    if(badge){
+      badge.textContent=(Number(c.apprentis)||0)+' apprenti(s)';
+    }
+
+    (c.periodes||[]).forEach(function(p){
+      var block=periodBlock(card,periodLabel(p));
+      if(!block)return;
+
+      var f=fraction(block);
+      var m=meta(block);
+
+      if(p.isPdif){
+        var n=Number(p.parcoursDifferencies)||0;
+        m.classList.add('dev276-pdif-count');
+        m.innerHTML='<strong>'+n+'</strong> parcours différencié(s)';
+
+        if(f){
+          f.textContent=n+' concerné(s)';
+          f.classList.remove('red','orange');
+          f.classList.add('green');
+        }
+      }else{
+        var a=Number(p.apprentis)||0;
+        m.classList.remove('dev276-pdif-count');
+        m.innerHTML='<strong>'+a+'</strong> apprenti(s)';
+
+        if(f){
+          f.textContent=
+            (Number(p.conventions)||0)+
+            ' / '+
+            (Number(p.total)||0);
+        }
+      }
+    });
+  }
+
+  function apply(r){
+    (r.classes||[]).forEach(applyClass);
+  }
+
+  function load(){
+    var p=params();
+    if(!p.annee||!p.famille)return;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        apply(r||{});
+        setTimeout(function(){apply(r||{});},250);
+        setTimeout(function(){apply(r||{});},850);
+      })
+      .withFailureHandler(function(e){
+        console.error('[DEV276] famille',e&&e.message||e);
+      })
+      .EUC_DEV291_family(p);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',load,{once:true});
+  }else{
+    load();
+  }
+})();
+</script>
+
+<style id='EUC_DEV339_LOADING_STYLE'>
+#euc339Loading{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;background:rgba(247,251,249,.82)}
+#euc339Loading.show{display:flex}#euc339Loading>div{background:#fff;border:1px solid #b9ddd4;border-radius:14px;padding:16px 22px;box-shadow:0 10px 30px rgba(0,0,0,.14);font-weight:900;color:#087f70;font-size:16px}
+.euc339-busy{opacity:.72!important;cursor:wait!important}
+</style>
+<div id='euc339Loading'><div>Chargement des donnees...</div></div>
+<script id='EUC_DEV339_LOADING_JS'>(function(){function busy(el){var o=document.getElementById('euc339Loading');if(o)o.classList.add('show');if(el){el.classList.add('euc339-busy');if('disabled' in el)el.disabled=true;if(el.matches('[data-fam]'))el.textContent='Chargement...';}}document.addEventListener('click',function(ev){var b=ev.target.closest('[data-fam],.period,[data-period],article.card[data-class],a[href*="suivi-pfmp-classe"]');if(b)busy(b);},true);window.addEventListener('pageshow',function(){var o=document.getElementById('euc339Loading');if(o)o.classList.remove('show');});})();</script>
+
+<!-- EUC_DEV340_SNAPSHOT_FAMILY --><a id="euc340SnapshotFamily" href="#" style="position:fixed;right:22px;top:92px;z-index:50;background:#fff;border:1px solid #9ed6ca;border-radius:9px;padding:8px 11px;text-decoration:none;font-weight:800;color:#087f70;box-shadow:0 3px 12px rgba(0,0,0,.06)">Maintenance Snapshot</a><script id="EUC_DEV340_SNAPSHOT_FAMILY_JS">(function(){var a=document.getElementById("euc340SnapshotFamily");if(a)a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_FAMILY -->
+<!-- EUC_DEV383_PREWARM_BEGIN -->
+<script id="EUC_DEV383_PREWARM_JS">
+(function(){
+  'use strict';
+  var done={};
+
+  function warm(a){
+    if(!a||!a.href)return;
+    var u;
+    try{u=new URL(a.href,location.href);}catch(e){return;}
+    if(u.searchParams.get('page')!=='suivi-pfmp-classe')return;
+
+    var p={
+      annee:u.searchParams.get('annee')||'',
+      famille:u.searchParams.get('famille')||'BACPRO',
+      classe:Number(u.searchParams.get('classe'))||0,
+      periode:Number(u.searchParams.get('periode'))||0
+    };
+
+    var key=[p.annee,p.famille,p.classe,p.periode].join('|');
+    if(done[key]||!p.annee||!p.classe||!p.periode)return;
+    done[key]=true;
+
+    google.script.run
+      .withSuccessHandler(function(){})
+      .withFailureHandler(function(){done[key]=false;})
+      .EUC_DEV383_prewarmDetail(p);
+  }
+
+  document.addEventListener('pointerover',function(ev){
+    var a=ev.target&&ev.target.closest?ev.target.closest('a[href*="page=suivi-pfmp-classe"]'):null;
+    if(a)warm(a);
+  },true);
+
+  document.addEventListener('pointerdown',function(ev){
+    var a=ev.target&&ev.target.closest?ev.target.closest('a[href*="page=suivi-pfmp-classe"]'):null;
+    if(a)warm(a);
+  },true);
+})();
+</script>
+<!-- EUC_DEV383_PREWARM_END -->
+
+
+
+
+
+
+<!-- EUC_DEV390_FINAL_BEGIN -->
+<style id="EUC_DEV390_FINAL_STYLE">
+
+#euc390Quick{position:fixed;z-index:2147483000;display:none;width:min(760px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:#fff;border:1px solid #9fd8cb;border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.18);color:#123c34;font-family:Arial,sans-serif}
+#euc390Quick.show{display:block}.euc390-head{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;background:#eef9f6;border-bottom:1px solid #d4ebe5;position:sticky;top:0;z-index:2}
+.euc390-head strong{font-size:14px}.euc390-head span{font-size:12px;color:#53736c;font-weight:700}.euc390-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px}
+.euc390-col{border:1px solid #dce9e5;border-radius:10px;padding:9px;min-height:90px}.euc390-col h4{display:flex;justify-content:space-between;gap:8px;margin:0 0 7px;font-size:12px}
+.euc390-col h4 span{min-width:22px;text-align:center;border-radius:999px;background:#edf3f1;padding:2px 6px}.euc390-col ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
+.euc390-empty{font-size:12px;color:#788b86;font-style:italic}.euc390-col.green h4{color:#08745f}.euc390-col.red h4{color:#c82d27}.euc390-col.blue h4{color:#3159b7}.euc390-col.orange h4{color:#a96700}
+.euc390-wait,.euc390-error{grid-column:1/-1;padding:18px;text-align:center;font-size:13px}.euc390-spin{display:inline-block;width:13px;height:13px;border:2px solid #b6ddd4;border-top-color:#08745f;border-radius:50%;vertical-align:-2px;animation:euc390spin .65s linear infinite}
+@keyframes euc390spin{to{transform:rotate(360deg)}}.euc390-count-main{font-weight:900}.euc390-count-detail{font-size:10px;color:#087f70;font-weight:800;margin-top:2px}.euc390-count-missing{font-size:10px;color:#c82d27;font-weight:800;margin-top:1px}
+@media(max-width:700px){.euc390-body{grid-template-columns:1fr}}
+
+</style>
+<script id="EUC_DEV390_FINAL_JS">
+
+(function(){
+  'use strict';
+  var P390=P, cache={}, panel=null, current=null, timer=null;
+
+  function esc(v){
+    return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function ensure(){
+    if(panel)return panel;
+    panel=document.createElement('div');
+    panel.id='euc390Quick';
+    panel.innerHTML='<div class="euc390-head"><strong id="euc390Title">Contrôle rapide</strong><span id="euc390Meta"></span></div><div class="euc390-body" id="euc390Body"></div>';
+    document.body.appendChild(panel);
+    return panel;
+  }
+  function place(el){
+    var p=ensure(),r=el.getBoundingClientRect();
+    var left=Math.max(12,Math.min(window.innerWidth-p.offsetWidth-12,r.left));
+    var top=r.bottom+8;
+    if(top+p.offsetHeight>window.innerHeight-12)top=Math.max(12,r.top-p.offsetHeight-8);
+    p.style.left=left+'px'; p.style.top=top+'px';
+  }
+  function list(title,arr,cls){
+    arr=arr||[];
+    return '<section class="euc390-col '+cls+'"><h4>'+esc(title)+' <span>'+arr.length+'</span></h4>'+
+      (arr.length?'<ul>'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'<div class="euc390-empty">Aucun</div>')+
+      '</section>';
+  }
+  function loading(el){
+    ensure();
+    document.getElementById('euc390Title').textContent='Contrôle rapide';
+    document.getElementById('euc390Meta').textContent='';
+    document.getElementById('euc390Body').innerHTML='<div class="euc390-wait"><span class="euc390-spin"></span> Chargement…</div>';
+    panel.classList.add('show'); place(el);
+  }
+  function render(el,r){
+    ensure();
+    document.getElementById('euc390Title').textContent=(r.classe||'Classe')+' — '+(r.periode||'Période');
+    document.getElementById('euc390Meta').textContent=r.isPdif?'Parcours différencié':(Number(r.couverts||0)+' / '+Number(r.total||0)+' en règle');
+    document.getElementById('euc390Body').innerHTML=r.isPdif
+      ? list('Parcours lycée',r.lycee,'blue')+list('Poursuite PFMP2 entreprise',r.entreprise,'green')+list('À définir',r.indefini,'orange')
+      : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue');
+    panel.classList.add('show'); place(el);
+  }
+  function ids(el){return {classe:Number(el.dataset.class||el.dataset.c||0),periode:Number(el.dataset.period||el.dataset.p||0)};}
+  function load(el){
+    var x=ids(el),year=String((P390&&P390.annee)||'').trim(),fam=String((P390&&P390.famille)||'BACPRO').trim();
+    if(!x.classe||!x.periode)return;
+    if(!year){
+      ensure();
+      document.getElementById('euc390Body').innerHTML='<div class="euc390-error">Année scolaire non disponible.</div>';
+      panel.classList.add('show'); place(el); return;
+    }
+    var k=[year,fam,x.classe,x.periode].join('|');
+    if(cache[k]){render(el,cache[k]);return;}
+    loading(el);
+    google.script.run
+      .withSuccessHandler(function(r){
+        if(!r||!r.ok){
+          if(current===el)document.getElementById('euc390Body').innerHTML='<div class="euc390-error">Contrôle rapide indisponible.</div>';
+          return;
+        }
+        cache[k]=r;
+        if(current===el)render(el,r);
+      })
+      .withFailureHandler(function(e){
+        console.error('[DEV390 quick]',e&&e.message||e);
+        if(current===el)document.getElementById('euc390Body').innerHTML='<div class="euc390-error">Contrôle rapide indisponible : '+esc(e&&e.message||e)+'</div>';
+      })
+      .EUC_DEV388_quick({annee:year,famille:fam,classe:x.classe,periode:x.periode});
+  }
+  function periodEl(t){
+    return t&&t.closest?t.closest('.period[data-class][data-period],.period[data-c][data-p]'):null;
+  }
+  document.addEventListener('mouseover',function(ev){
+    var el=periodEl(ev.target); if(!el)return;
+    clearTimeout(timer); current=el;
+    timer=setTimeout(function(){if(current===el)load(el);},220);
+  },true);
+  document.addEventListener('mouseout',function(ev){
+    var el=periodEl(ev.target); if(!el)return;
+    if(ev.relatedTarget&&el.contains(ev.relatedTarget))return;
+    clearTimeout(timer);
+    timer=setTimeout(function(){if(panel)panel.classList.remove('show');current=null;},180);
+  },true);
+})();
+
+</script>
+<!-- EUC_DEV390_FINAL_END -->
+
+<!-- EUC_DEV416_PREWARM_BEGIN -->
+<script id="EUC_DEV416_PREWARM">
+(function(){
+  'use strict';
+  var seen={};
+  function q(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}
+  function data(el){
+    var card=el.closest('[data-class],[data-classe],.card');
+    var classe=el.dataset.class||el.dataset.classe||(card&&(card.dataset.class||card.dataset.classe))||'';
+    var periode=el.dataset.period||el.dataset.periode||el.dataset.p||'';
+    var annee=q('annee'),famille=q('famille')||'BACPRO';
+    if(!annee||!classe||!periode)return null;
+    return {annee:annee,famille:famille,classe:Number(classe),periode:Number(periode)};
+  }
+  function warm(el){
+    if(!el||!window.google||!google.script||!google.script.run)return;
+    var p=data(el); if(!p)return;
+    var k=p.annee+'|'+p.famille+'|'+p.classe+'|'+p.periode;
+    if(seen[k])return; seen[k]=1;
+    google.script.run.withFailureHandler(function(){}).EUC_DEV416_prewarm(p);
+  }
+  document.addEventListener('mouseover',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
+  document.addEventListener('focusin',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
+  function initial(){Array.from(document.querySelectorAll('.period,[data-period],[data-periode]')).slice(0,6).forEach(function(el,i){setTimeout(function(){warm(el);},300+i*250);});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initial);else initial();
+})();
+</script>
+<!-- EUC_DEV416_PREWARM_END -->
+</body>
+</html>

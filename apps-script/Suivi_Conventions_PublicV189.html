@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --g:#0b8f72;
+  --bg:#f7fbf9;
+  --line:#cfe5de;
+  --mut:#667085;
+  --red:#d92d20;
+  --orange:#e67e00;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:#17312b;
+}
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:28px 24px 36px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+}
+.title{
+  font-size:22px;
+  font-weight:800;
+  color:#0c5f4e;
+}
+.quick{
+  color:var(--mut);
+  font-size:12px;
+  margin-top:7px;
+}
+.actions{
+  margin-top:18px;
+}
+button{
+  border:0;
+  border-radius:9px;
+  padding:9px 12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.primary{
+  background:var(--g);
+  color:#fff;
+}
+.secondary{
+  background:#e9f6f1;
+  color:#086955;
+}
+.count-panel{
+  display:none;
+  margin-top:14px;
+  border-top:1px solid #edf2ef;
+  padding-top:10px;
+}
+.count-panel.visible{
+  display:block;
+}
+.meta{
+  color:var(--mut);
+  font-size:12px;
+  margin-bottom:8px;
+}
+.period{
+  border-top:1px solid #edf2ef;
+  padding:8px 0;
+}
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.count{
+  font-weight:800;
+}
+.red{color:var(--red)}
+.orange{color:var(--orange)}
+.green{color:var(--g)}
+.toolbar{
+  display:flex;
+  justify-content:center;
+  margin-top:18px;
+}
+.busy{
+  opacity:.65;
+}
+@media(max-width:800px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+
+<style id="DEV292_GLOBAL_PDIF_STYLE">
+.dev292-global-pdif .row{
+  align-items:flex-start;
+}
+.dev292-global-pdif-count{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  text-align:right;
+  line-height:1.25;
+}
+.dev292-global-pdif-count strong{
+  color:#a06400;
+  font-weight:900;
+}
+.dev292-global-pdif-count small:nth-child(2){
+  color:#08745f;
+  font-weight:800;
+}
+.dev292-global-pdif-count small:nth-child(3){
+  color:#a86600;
+  font-weight:800;
+}
+</style>
+
+</head>
+
+<body>
+<main class="wrap">
+
+<div id="grid" class="grid">
+
+  <article class="card" data-family="BACPRO">
+    <div class="title">BAC PRO</div>
+    <div class="quick">Accéder aux classes et périodes de PFMP.</div>
+    <div class="actions">
+      <button class="primary open-family">Voir les classes</button>
+    </div>
+    <div class="count-panel" id="count-BACPRO"></div>
+  </article>
+
+  <article class="card" data-family="BTS">
+    <div class="title">BTS</div>
+    <div class="quick">Accéder aux classes et stages BTS.</div>
+    <div class="actions">
+      <button class="primary open-family">Voir les classes</button>
+    </div>
+    <div class="count-panel" id="count-BTS"></div>
+  </article>
+
+  <article class="card" data-family="CAP">
+    <div class="title">CAP</div>
+    <div class="quick">Accéder aux classes et périodes de PFMP.</div>
+    <div class="actions">
+      <button class="primary open-family">Voir les classes</button>
+    </div>
+    <div class="count-panel" id="count-CAP"></div>
+  </article>
+
+</div>
+
+<div class="toolbar">
+  <button id="toggleCounts" class="secondary">
+    Afficher les décomptes
+  </button>
+</div>
+
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+
+(function(){
+
+  var countsVisible=false;
+  var countsLoaded=false;
+
+  function nav(state,el){
+    if(el)el.classList.add('busy');
+
+    window.top.postMessage(
+      {
+        type:'EUC_ATRIUM_NAV',
+        state:state
+      },
+      '*'
+    );
+  }
+
+  function colorClass(p){
+    var total=Number(p.total)||0;
+
+    if(total<=0){
+      return '';
+    }
+
+    var ratio=
+      100*
+      (Number(p.conventions)||0)/
+      total;
+
+    if(ratio>=100)return'green';
+    if(ratio>=65)return'orange';
+    return'red';
+  }
+
+  function renderCount(fam,r){
+    var box=document.getElementById('count-'+fam);
+
+    function pdifHtml(p){
+      return '<div class="period dev292-global-pdif">'+
+        '<div class="row">'+
+          '<b>'+(p.libelle||'P.dif.')+'</b>'+
+          '<span class="dev292-global-pdif-count">'+
+            '<strong>'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</strong>'+
+            '<small>'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</small>'+
+            '<small>'+(Number(p.aDefinirFinTerminale)||0)+' à définir</small>'+
+          '</span>'+
+        '</div>'+
+      '</div>';
+    }
+
+    function normalHtml(p){
+      return '<div class="period">'+
+        '<div class="row">'+
+          '<b>'+(p.libelle||'Période')+'</b>'+
+          '<span class="count '+colorClass(p)+'">'+
+            (p.conventions||0)+' / '+(p.total||0)+
+            ((Number(p.apprentis)||0)
+              ? ' · '+(Number(p.apprentis)||0)+' apprenti(s)'
+              : '')+
+          '</span>'+
+        '</div>'+
+      '</div>';
+    }
+
+    box.innerHTML=
+      '<div class="meta">'+
+        (r.classes||0)+' classe(s) · '+
+        (r.effectif||0)+' élève(s) · '+
+        '<b>'+(r.apprentis||0)+' apprenti(s)</b>'+
+      '</div>'+
+      (r.periodes||[]).map(function(p){
+        return p.isPdif
+          ? pdifHtml(p)
+          : normalHtml(p);
+      }).join('');
+  }
+
+  function loadCounts(){
+    if(countsLoaded)return;
+
+    countsLoaded=true;
+
+    var fams=['BACPRO','BTS','CAP'];
+    var pos=0;
+
+    function next(){
+      if(pos>=fams.length)return;
+
+      var fam=fams[pos++];
+
+      var box=
+        document.getElementById(
+          'count-'+fam
+        );
+
+      box.innerHTML=
+        '<div class="meta">Chargement du décompte…</div>';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          renderCount(fam,r||{});
+          next();
+        })
+        .withFailureHandler(function(e){
+          box.innerHTML=
+            '<div class="meta">Décompte indisponible.</div>';
+          next();
+        })
+        .EUC_DEV292_resumeFamille({
+          annee:P.annee,
+          famille:fam
+        });
+    }
+
+    next();
+  }
+
+  document.querySelectorAll(
+    '.card[data-family]'
+  ).forEach(function(card){
+
+    var btn=
+      card.querySelector(
+        '.open-family'
+      );
+
+    btn.onclick=function(){
+      nav(
+        {
+          page:
+            'suivi-conventions-public-famille',
+          annee:
+            P.annee,
+          famille:
+            card.dataset.family
+        },
+        btn
+      );
+    };
+
+  });
+
+  toggleCounts.onclick=function(){
+
+    countsVisible=
+      !countsVisible;
+
+    document.querySelectorAll(
+      '.count-panel'
+    ).forEach(function(box){
+      box.classList.toggle(
+        'visible',
+        countsVisible
+      );
+    });
+
+    toggleCounts.textContent=
+      countsVisible
+        ? 'Masquer les décomptes'
+        : 'Afficher les décomptes';
+
+    if(countsVisible){
+      loadCounts();
+    }
+
+  };
+
+  window.top.postMessage(
+    {
+      type:'EUC_ATRIUM_META',
+      meta:{
+        page:'home',
+        family:'',
+        classLabel:'',
+        periodLabel:''
+      }
+    },
+    '*'
+  );
+
+})();
+</script>
+
+<style id="EUC_DEV365_PUBLIC_ROOT">
+#home,[id*="home"][class*="btn"],a[href*="page=admin-pfmp"]{display:none!important}
+</style>
+<script>
+(function(){
+ function clean(){
+  document.querySelectorAll('a,button').forEach(function(el){
+   var t=String(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+   if(t==='accueil pfmp'||t==='retour à l’accueil'||t==="retour à l'accueil"||t==='retour accueil'){
+    el.style.display='none';
+   }
+  });
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',clean);else clean();
+})();
+</script>
+</body>
+</html>

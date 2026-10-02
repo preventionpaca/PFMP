@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{
+  margin:0;
+  background:#f7fbf9;
+  font-family:Arial,sans-serif;
+  color:#17312b
+}
+.wrap{
+  max-width:1650px;
+  margin:auto;
+  padding:22px
+}
+h1{margin:0 0 8px;color:#0d4539}
+.note{
+  padding:10px 12px;
+  border-radius:10px;
+  background:#eef7f3;
+  color:#0b6b58;
+  font-weight:800;
+  margin-bottom:12px
+}
+button{
+  border:0;
+  border-radius:8px;
+  padding:9px 12px;
+  background:#0b8f72;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer
+}
+.summary{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px
+}
+.metric{
+  background:#fff;
+  border:1px solid #cfe5de;
+  border-radius:10px;
+  padding:10px
+}
+.metric b{
+  display:block;
+  font-size:20px
+}
+.metric span{
+  font-size:10px;
+  color:#667085
+}
+.controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin:14px 0
+}
+.controls input{
+  flex:1 1 auto;
+  min-width:240px;
+  border:1px solid #cfe5de;
+  border-radius:8px;
+  padding:8px
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border:1px solid #cfe5de;
+  font-size:11px
+}
+th,td{
+  padding:7px 8px;
+  border-bottom:1px solid #edf2f0;
+  vertical-align:top;
+  text-align:left
+}
+th{
+  position:sticky;
+  top:0;
+  background:#eff7f4;
+  z-index:2
+}
+tr.alert{background:#fff4f2}
+tr.verify{background:#fff9e8}
+tr.empty{background:#f5f5f5}
+.badge{
+  display:inline-flex;
+  padding:3px 6px;
+  border-radius:999px;
+  font-size:9px;
+  font-weight:900
+}
+.badge.ok{background:#e8f5f0;color:#086955}
+.badge.alert{background:#fde8e8;color:#b42318}
+.badge.verify{background:#fff1d6;color:#8a5700}
+.badge.empty{background:#eceff1;color:#59636a}
+details{
+  margin-top:4px
+}
+pre{
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:#f7f9f8;
+  padding:8px;
+  border-radius:7px;
+  max-height:320px;
+  overflow:auto
+}
+.small{font-size:10px;color:#667085}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Audit global des classes — 2026-2027</h1>
+
+  <div class="note">
+    Lecture seule stricte : aucune écriture Grist, aucun rebuild de snapshot,
+    aucun appel DEV208 / DEV211 / DEV235.
+  </div>
+
+  <button id="run">Lancer l’audit global</button>
+  <div id="status"></div>
+
+  <div id="summary"></div>
+
+  <div class="controls" hidden id="controls">
+    <input
+      id="filter"
+      placeholder="Filtrer une classe, un établissement, une anomalie…"
+    >
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+(function(){
+  var run=document.getElementById('run');
+  var status=document.getElementById('status');
+  var summary=document.getElementById('summary');
+  var out=document.getElementById('out');
+  var controls=document.getElementById('controls');
+  var filter=document.getElementById('filter');
+
+  var data=null;
+
+  function esc(v){
+    var d=document.createElement('div');
+    d.textContent=(v==null?'':String(v));
+    return d.innerHTML;
+  }
+
+  function badge(a){
+    var cls=
+      a.severity==='OK'
+        ? 'ok'
+        : a.severity==='ALERTE'
+          ? 'alert'
+          : a.severity==='A_VERIFIER'
+            ? 'verify'
+            : 'empty';
+
+    return (
+      '<span class="badge '+cls+'">'+
+      esc(a.severity)+
+      '</span>'
+    );
+  }
+
+  function renderSummary(r){
+    var c=r.counts||{};
+
+    summary.innerHTML=
+      '<div class="summary">'+
+        '<div class="metric"><b>'+Number(c.totalClasses||0)+'</b><span>Classes actives</span></div>'+
+        '<div class="metric"><b>'+Number(c.ok||0)+'</b><span>OK</span></div>'+
+        '<div class="metric"><b>'+Number(c.alerte||0)+'</b><span>Alertes</span></div>'+
+        '<div class="metric"><b>'+Number(c.aVerifier||0)+'</b><span>À vérifier</span></div>'+
+        '<div class="metric"><b>'+Number(c.vide||0)+'</b><span>Classes vides</span></div>'+
+      '</div>';
+  }
+
+  function renderTable(){
+    if(!data)return;
+
+    var term=String(filter.value||'')
+      .trim()
+      .toLowerCase();
+
+    var rows=(data.classes||[])
+      .filter(function(a){
+        if(!term)return true;
+
+        var hay=[
+          a.classe,
+          a.etablissement,
+          a.typeEtab,
+          a.severity,
+          (a.reasons||[]).join(' '),
+          Object.keys(a.ventilationCodes||{}).join(' ')
+        ].join(' ').toLowerCase();
+
+        return hay.indexOf(term)>=0;
+      })
+      .map(function(a){
+        var rowClass=
+          a.severity==='ALERTE'
+            ? 'alert'
+            : a.severity==='A_VERIFIER'
+              ? 'verify'
+              : a.severity==='VIDE'
+                ? 'empty'
+                : '';
+
+        var reasons=(a.reasons||[]).join(' · ');
+
+        return (
+          '<tr class="'+rowClass+'">'+
+            '<td><b>'+esc(a.classe)+'</b><div class="small">ID '+a.id+'</div></td>'+
+            '<td>'+esc(a.typeEtab)+'<div class="small">'+esc(a.etablissement)+'</div></td>'+
+            '<td>'+Number(a.effectifReference||0)+'</td>'+
+            '<td>'+Number(a.effectifCodeExact||0)+'</td>'+
+            '<td>'+Number(a.aliasSeulement||0)+'</td>'+
+            '<td><b>'+Number(a.effectifLogiqueActuelle||0)+'</b></td>'+
+            '<td>'+Number(a.ecart||0)+'</td>'+
+            '<td>'+badge(a)+'</td>'+
+            '<td>'+
+              esc(reasons)+
+              '<details>'+
+                '<summary>Détails</summary>'+
+                '<div><b>Alias :</b> '+esc((a.aliases||[]).join(' · '))+'</div>'+
+                '<div><b>Codes :</b></div>'+
+                '<pre>'+esc(JSON.stringify(a.ventilationCodes||{},null,2))+'</pre>'+
+                '<div><b>Élèves par référence :</b></div>'+
+                '<pre>'+esc(JSON.stringify(a.elevesReference||[],null,2))+'</pre>'+
+                '<div><b>Élèves ajoutés seulement par alias :</b></div>'+
+                '<pre>'+esc(JSON.stringify(a.elevesAliasSeulement||[],null,2))+'</pre>'+
+              '</details>'+
+            '</td>'+
+          '</tr>'
+        );
+      })
+      .join('');
+
+    out.innerHTML=
+      '<table>'+
+        '<thead>'+
+          '<tr>'+
+            '<th>Classe</th>'+
+            '<th>Étab.</th>'+
+            '<th>Effectif réf.</th>'+
+            '<th>Code exact</th>'+
+            '<th>Alias seuls</th>'+
+            '<th>Logique actuelle</th>'+
+            '<th>Écart</th>'+
+            '<th>État</th>'+
+            '<th>Diagnostic</th>'+
+          '</tr>'+
+        '</thead>'+
+        '<tbody>'+rows+'</tbody>'+
+      '</table>';
+  }
+
+  filter.addEventListener('input',renderTable);
+
+  run.onclick=function(){
+    run.disabled=true;
+    status.textContent='Audit global en cours…';
+    out.innerHTML='';
+    summary.innerHTML='';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        run.disabled=false;
+        data=r||{};
+        status.textContent=
+          'Audit terminé · '+
+          Number(r.studentCount||0)+
+          ' élève(s) actifs analysés.';
+
+        controls.hidden=false;
+        renderSummary(r);
+        renderTable();
+      })
+      .withFailureHandler(function(e){
+        run.disabled=false;
+        status.textContent=
+          'Erreur : '+String(e&&e.message||e);
+      })
+      .EUC_AUDIT_GLOBAL_run();
+  };
+})();
+</script>
+</body>
+</html>

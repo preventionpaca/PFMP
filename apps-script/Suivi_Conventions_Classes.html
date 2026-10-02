@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base target="_top">
+<title>Suivi des conventions — classes</title>
+<style>
+:root{--b:#1B396A;--b2:#3F72AF;--bg:#f5f7fb;--line:#dce3ee;--mut:#667085}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172033}
+.hero{padding:20px 18px;color:#fff;background:linear-gradient(135deg,var(--b),var(--b2))}
+.wrap{max-width:1180px;margin:auto}h1{font-size:24px;margin:0}.sub{margin-top:6px;opacity:.92}.content{padding:18px}
+.back{display:inline-block;margin-bottom:15px;text-decoration:none;color:var(--b);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:14px}
+.card{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(31,42,68,.06)}
+.name{display:flex;justify-content:space-between;gap:10px;font-size:19px;font-weight:800;color:var(--b)}.badge,.label,.dates{font-size:12px;color:var(--mut)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.stat{background:#f6f8fc;border-radius:10px;padding:9px}.value{font-size:20px;font-weight:800}
+.bar{height:7px;background:#e7ebf2;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--b2),var(--b))}.dates{margin-top:10px}
+.loading,.error{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #cdd5e1;border-top-color:var(--b);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap"><h1 id="title">Suivi des conventions</h1><div class="sub" id="subtitle">Chargement…</div></div></header>
+<main class="content"><div class="wrap">
+<a id="back" class="back" href="#">← Retour au suivi des conventions</a>
+<div id="grid" class="loading"><span class="spinner"></span>Chargement des classes…</div>
+</div></main>
+
+<script>
+const C=<?!= config ?>;
+const PARAMS=<?!= paramsJson ?>;
+
+(function(){
+  const grid=document.getElementById('grid');
+
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('back').href=
+    C.baseUrl+'?page=suivi-conventions&annee='+
+    encodeURIComponent(PARAMS.annee||'');
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      const CTX=res.ctx||{},G=res.group||{},P=res.periode||{},ROWS=res.classes||[];
+
+      document.getElementById('title').textContent=
+        (G.familleLibelle||'Suivi')+' — '+(G.niveauLibelle||'');
+
+      const dates=[P.debutFr,P.finFr].filter(Boolean).join(' → ');
+      document.getElementById('subtitle').textContent=
+        (P.libelle||'PFMP')+(dates?' · '+dates:'')+' · '+(CTX.active||'');
+
+      if(!ROWS.length){
+        grid.className='error';
+        grid.textContent='Aucune classe pour cette sélection.';
+        return;
+      }
+
+      grid.className='grid';
+      grid.innerHTML=ROWS.map(function(r){
+        const href=C.baseUrl+
+          '?page=suivi-pfmp-classe'+
+          '&annee='+encodeURIComponent(CTX.active||'')+
+          '&classe='+encodeURIComponent(r.classeId)+
+          '&periode='+encodeURIComponent(r.periodeId)+'&origine=suivi-conventions&famille='+encodeURIComponent(PARAMS.famille||'')+'&niveau='+encodeURIComponent(PARAMS.niveau||'')+'&periodeKey='+encodeURIComponent(PARAMS.periode||'');
+
+        return '<a class="card" href="'+href+'">'+
+          '<div class="name"><span>'+esc(r.classe)+'</span><span class="badge">'+r.effectif+' élève(s)</span></div>'+
+          '<div class="stats">'+
+            '<div class="stat"><div class="value">'+r.conventions+' / '+r.total+'</div><div class="label">conventions enregistrées</div></div>'+
+            '<div class="stat"><div class="value">'+r.manquantes+'</div><div class="label">restante(s)</div></div>'+
+          '</div>'+
+          '<div class="bar"><div class="fill" style="width:'+Math.min(100,r.pourcentage||0)+'%"></div></div>'+
+          '<div class="dates">'+esc([r.debutFr,r.finFr].filter(Boolean).join(' → '))+'</div>'+
+        '</a>';
+      }).join('');
+    })
+    .withFailureHandler(function(e){
+      grid.className='error';
+      grid.textContent='Erreur de chargement : '+String(e&&e.message||e);
+      document.getElementById('subtitle').textContent='Chargement impossible';
+    })
+    .EUC_SUIVI_PUBLIC_classesV45(PARAMS);
+})();
+</script>
+</body>
+</html>

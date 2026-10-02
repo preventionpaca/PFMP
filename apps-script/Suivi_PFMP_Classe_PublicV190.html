@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+:root{
+  --g:#0b8f72;
+  --bg:#f7fbf9;
+  --line:#cfe5de;
+  --mut:#667085;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:#172033;
+}
+.wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:24px;
+}
+h2{
+  margin:0 0 8px;
+}
+.status{
+  margin:0 0 12px;
+  color:var(--mut);
+  font-size:13px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border:1px solid var(--line);
+}
+th,td{
+  padding:9px;
+  border-bottom:1px solid #edf2ef;
+  text-align:left;
+}
+th{
+  background:#f5faf8;
+}
+.skeleton td{
+  padding:11px 9px;
+}
+.shimmer{
+  display:block;
+  height:12px;
+  border-radius:999px;
+  background:linear-gradient(
+    90deg,
+    #edf3f1 20%,
+    #f7faf9 40%,
+    #edf3f1 60%
+  );
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite linear;
+}
+@keyframes shimmer{
+  from{background-position:100% 0}
+  to{background-position:-100% 0}
+}
+</style>
+</head>
+
+<body>
+<main class="wrap">
+
+<h2 id="title">Chargement de la classe…</h2>
+
+<p id="status" class="status">
+Lecture du snapshot…
+</p>
+
+<table>
+<thead>
+<tr>
+  <th>Élève</th>
+  <th>Statut</th>
+  <th>Entreprise</th>
+  <th>Contact entreprise</th>
+  <th>Tuteur</th>
+  <th>Professeur principal</th>
+  <th>Suivi téléphonique</th>
+  <th>Professeur visiteur</th>
+</tr>
+</thead>
+
+<tbody id="tb"></tbody>
+</table>
+
+</main>
+
+<script>
+const P = (() => {
+  const q = new URLSearchParams(location.search);
+  return {
+    annee: q.get('annee') || '',
+    famille: q.get('famille') || '',
+    classe: Number(q.get('classe')) || 0,
+    periode: Number(q.get('periode')) || 0
+  };
+})();
+
+(function(){
+
+  function skeleton(){
+    tb.innerHTML =
+      Array.from({length:12})
+        .map(function(){
+          return '<tr class="skeleton">'+
+            '<td><span class="shimmer" style="width:72%"></span></td>'+
+            '<td><span class="shimmer" style="width:65%"></span></td>'+
+            '<td><span class="shimmer" style="width:70%"></span></td>'+
+            '<td><span class="shimmer" style="width:70%"></span></td>'+
+            '<td><span class="shimmer" style="width:55%"></span></td>'+
+            '<td><span class="shimmer" style="width:75%"></span></td>'+
+            '<td><span class="shimmer" style="width:55%"></span></td>'+
+            '<td><span class="shimmer" style="width:55%"></span></td>'+
+          '</tr>';
+        })
+        .join('');
+  }
+
+  function render(r){
+    const d = r.detail || {};
+
+    title.textContent =
+      ((d.classe && d.classe.nom) || 'Classe') +
+      ' — ' +
+      ((d.periode && d.periode.libelle) || '');
+
+    status.textContent =
+      'Source : ' +
+      (r.source || 'snapshot') +
+      ' · ' +
+      Number(r.totalMs || 0) +
+      ' ms';
+
+    tb.innerHTML =
+      (d.lignes || [])
+        .map(function(x){
+          return '<tr>'+
+            '<td><b>'+
+              (x.nom || '')+' '+(x.prenom || '')+
+            '</b></td>'+
+            '<td>'+(x.statut || '')+'</td>'+
+            '<td>'+(x.entreprise || '—')+'</td>'+
+            '<td>'+(x.contactEntreprise || '—')+'</td>'+
+            '<td>'+(x.tuteurEntreprise || '—')+'</td>'+
+            '<td>'+(x.professeurPrincipal || '—')+'</td>'+
+            '<td>'+(x.professeurTelephone || '—')+'</td>'+
+            '<td>'+(x.professeurVisiteur || '—')+'</td>'+
+          '</tr>';
+        })
+        .join('');
+
+    /*
+     * Si le snapshot est vieux, la page reste affichée.
+     * L'actualisation se fait ensuite, sans bloquer l'utilisateur.
+     */
+    if (r.stale) {
+      google.script.run
+        .withFailureHandler(function(){})
+        .EUC_DEV190_refreshIfStale(P);
+    }
+  }
+
+  skeleton();
+
+  google.script.run
+    .withSuccessHandler(render)
+    .withFailureHandler(function(e){
+      status.textContent =
+        'Erreur snapshot : ' +
+        String(e && e.message || e);
+    })
+    .EUC_DEV190_getPublicDetail(P);
+
+})();
+</script>
+
+</body>
+</html>

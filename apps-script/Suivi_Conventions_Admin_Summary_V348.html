@@ -1,0 +1,156 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:Arial,sans-serif;background:#f5fbf8;color:#16342e;margin:0}.wrap{max-width:1100px;margin:auto;padding:34px 18px}.head{display:flex;align-items:center;gap:20px;margin-bottom:18px}.head h1{margin:0}.actions{margin-left:auto;display:flex;gap:9px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:#fff;border:1px solid #bfe4da;border-radius:16px;padding:18px}.card h2{color:#08705d}.btn{display:inline-flex;align-items:center;gap:7px;background:#079b79;color:#fff;border:0;text-decoration:none;padding:9px 13px;border-radius:9px;font-weight:800;cursor:pointer}.count-panel{display:none;margin-top:12px;border-top:1px solid #e5efec;padding-top:9px}.count-panel.visible{display:block}.row{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin:4px 0}.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}.loading{pointer-events:none;opacity:.9}</style></head><body><main class="wrap"><div class="head"><h1>Suivi des conventions PFMP</h1><div class="actions"><button class="btn" id="toggle">Afficher les décomptes</button><a class="btn" id="home">Accueil PFMP</a></div></div><div class="grid" id="grid"></div></main>
+<script>
+(function(){const P=<?!= paramsJson ?>,BASE=<?!= JSON.stringify(baseUrl) ?>;function busy(b,t){b.classList.add('loading');b.innerHTML='<span class="spin"></span>'+t}function url(f){return BASE+'?page=suivi-conventions-famille&annee='+encodeURIComponent(P.annee)+'&famille='+f}function card(f,l){return '<section class="card"><h2>'+l+'</h2><button class="btn fam" data-f="'+f+'">Voir les classes</button><div class="count-panel" id="c-'+f+'"></div></section>'}grid.innerHTML=card('BACPRO','BAC PRO')+card('BTS','BTS')+card('CAP','CAP');home.href=BASE+'?page=admin-pfmp&annee='+encodeURIComponent(P.annee||'');home.onclick=null;document.querySelectorAll('.fam').forEach(function(b){b.onclick=function(){busy(b,'Chargement…');location.href=url(b.dataset.f)}});let loaded=false,visible=false;function render(D){
+ ['BACPRO','BTS','CAP'].forEach(function(f){
+  var fam=(D.familles&&D.familles[f])||{},box=document.getElementById('c-'+f);
+  box.innerHTML=(fam.niveaux||[]).map(function(l){
+   var h='<div><b>'+l.niveau+'</b>';
+   h+=(l.periodes||[]).map(function(p){
+    return '<div class="row"><span>'+p.libelle+'</span><strong>'+Number(p.conventions||0)+' / '+Number(p.eleves||0)+(Number(p.apprentis||0)?' + '+Number(p.apprentis)+' apprenti(s)':'')+'</strong></div>';
+   }).join('');
+   if(f==='BACPRO'&&l.niveau==='Terminale'&&l.pdif){
+    h+='<div class="row"><span>P.dif.</span><strong>'+Number(l.pdif.lycee||0)+' lycée · '+Number(l.pdif.entreprise||0)+' entreprise · '+Number(l.pdif.aDefinir||0)+' à définir</strong></div>';
+   }
+   return h+'</div>';
+  }).join('');
+ });
+}toggle.onclick=function(){visible=!visible;document.querySelectorAll('.count-panel').forEach(function(x){x.classList.toggle('visible',visible)});if(!visible){toggle.textContent='Afficher les décomptes';return}if(loaded){toggle.textContent='Masquer les décomptes';return}document.querySelectorAll('.count-panel').forEach(function(x){x.innerHTML='<em>Chargement du décompte…</em>'});busy(toggle,'Chargement…');google.script.run.withSuccessHandler(function(r){loaded=true;render(r||{});toggle.classList.remove('loading');toggle.textContent='Masquer les décomptes'}).withFailureHandler(function(e){toggle.classList.remove('loading');toggle.textContent='Réessayer';alert(String(e&&e.message||e))}).EUC_DEV385_resumeAccueil({annee:P.annee})}})();
+</script><!-- EUC_DEV386_ADMIN_HOME_BEGIN -->
+<script id="EUC_DEV386_ADMIN_HOME_JS">
+(function(){
+  'use strict';
+
+  function url(){
+    var u=new URL(BASE);
+    u.searchParams.set('page','admin-pfmp');
+    if(P&&P.annee)u.searchParams.set('annee',P.annee);
+    return u.toString();
+  }
+
+  function fix(){
+    var h=document.getElementById('home');
+    if(!h)return;
+    h.href=url();
+    h.target='_top';
+  }
+
+  document.addEventListener('click',function(ev){
+    var h=ev.target&&ev.target.closest
+      ? ev.target.closest('#home')
+      : null;
+    if(!h)return;
+
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+
+    try{window.top.location.href=url();}
+    catch(e){location.href=url();}
+  },true);
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',fix);
+  }else{
+    fix();
+  }
+
+  setTimeout(fix,100);
+})();
+</script>
+<!-- EUC_DEV386_ADMIN_HOME_END -->
+
+<!-- EUC_DEV390_ADMIN_HOME_BEGIN -->
+<script id="EUC_DEV390_ADMIN_HOME_JS">
+
+(function(){
+  'use strict';
+  var ADMIN='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+  function target(){return ADMIN+'?page=admin-pfmp';}
+  function fix(){
+    var h=document.getElementById('home');
+    if(!h)return;
+    h.href=target();
+    h.target='_top';
+    h.onclick=null;
+  }
+  document.addEventListener('click',function(ev){
+    var h=ev.target&&ev.target.closest?ev.target.closest('#home'):null;
+    if(!h)return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    window.top.location.href=target();
+  },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();
+  setTimeout(fix,100);
+})();
+
+</script>
+<!-- EUC_DEV390_ADMIN_HOME_END -->
+
+
+
+
+
+
+
+<!-- EUC_DEV400_HOME_BEGIN -->
+<style>
+.euc400-spin{
+  display:inline-block;
+  width:12px;height:12px;
+  margin-right:7px;
+  border:2px solid rgba(255,255,255,.55);
+  border-top-color:#fff;
+  border-radius:50%;
+  vertical-align:-2px;
+  animation:euc400spin .65s linear infinite
+}
+#periodTabs a .euc400-spin{
+  border-color:rgba(8,127,112,.25);
+  border-top-color:#087f70;
+}
+.euc400-busy{pointer-events:none;opacity:.72}
+#periodTabs a{
+  text-decoration:none;
+  color:inherit;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center
+}
+@keyframes euc400spin{to{transform:rotate(360deg)}}
+</style>
+<script id="EUC_DEV400_HOME_JS">
+(function(){
+  'use strict';
+  var ADMIN='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+
+  function install(){
+    var old=document.getElementById('home')||document.getElementById('home400');
+    if(!old)return;
+
+    if(old.id==='home400')return;
+
+    var a=document.createElement('a');
+    a.id='home400';
+    a.className=old.className||'btn';
+    a.href=ADMIN+'?page=admin-pfmp';
+    a.target='_top';
+    a.textContent='Accueil PFMP';
+
+    a.addEventListener('click',function(){
+      a.classList.add('euc400-busy');
+      a.innerHTML='<span class="euc400-spin"></span>Accueil PFMP';
+    },false);
+
+    old.replaceWith(a);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){setTimeout(install,0);});
+  }else{
+    setTimeout(install,0);
+  }
+})();
+</script>
+<!-- EUC_DEV400_HOME_END -->
+</body></html>

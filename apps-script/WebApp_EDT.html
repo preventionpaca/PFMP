@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PFMP — fallback technique</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f7fbf9;color:#17312b;margin:0}
+main{max-width:760px;margin:70px auto;padding:24px;background:#fff;border:1px solid #cfe5de;border-radius:14px}
+code{background:#f2f5f4;padding:2px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<main>
+<h2>PFMP — fallback technique actif</h2>
+<p>Le fichier <code>WebApp_EDT.html</code> est bien présent dans la version déployée.</p>
+<p id="route"></p>
+<script>
+(function(){
+  var p='';
+  try{p=new URL(location.href).searchParams.get('page')||'';}catch(e){}
+  document.getElementById('route').textContent='Route reçue : '+(p||'(aucune)');
+})();
+</script>
+</main>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_self">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --g:#0b8f72;
+  --bg:#f7fbf9;
+  --line:#cfe5de;
+  --mut:#667085;
+}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:#172033;
+}
+.wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:18px 22px 30px;
+}
+.crumb{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+  font-size:13px;
+  margin-bottom:14px;
+}
+.crumb a{
+  color:#0b745f;
+  text-decoration:none;
+  font-weight:800;
+  cursor:pointer;
+}
+.crumb a.busy{opacity:.6}
+.crumb a.busy::after{
+  content:" · chargement…";
+  font-size:11px;
+}
+h2{
+  margin:8px 0 14px;
+  color:#172033;
+}
+.status{
+  margin:0 0 12px;
+  color:var(--mut);
+  font-size:13px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border:1px solid var(--line);
+}
+th,td{
+  padding:9px;
+  border-bottom:1px solid #edf2ef;
+  text-align:left;
+}
+th{background:#f5faf8}
+.app{background:#fff7bf}
+.pdif{background:#efe6ff}
+.mix{background:#ffe6b3}
+.badge{
+  font-size:10px;
+  font-weight:900;
+  padding:3px 6px;
+  border-radius:999px;
+  background:#dff4ed;
+}
+.skeleton td{padding:11px 9px}
+.shimmer{
+  display:block;
+  height:12px;
+  border-radius:999px;
+  background:linear-gradient(
+    90deg,
+    #edf3f1 20%,
+    #f7faf9 40%,
+    #edf3f1 60%
+  );
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite linear;
+}
+@keyframes shimmer{
+  from{background-position:100% 0}
+  to{background-position:-100% 0}
+}
+</style>
+
+
+<style id="EUC_DEV188_TOP_SPACE">
+body{scroll-padding-top:0!important;}
+main.wrap{padding-top:22px!important;}
+</style>
+
+
+<style id="EUC_DEV188_CRUMB_DETAIL">
+#crumb{
+  position:relative!important;
+  z-index:5!important;
+  min-height:24px;
+  margin-top:0!important;
+  margin-bottom:14px!important;
+}
+#title{margin-top:0!important;}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+
+<div class="crumb" id="crumb">
+  <a id="homeLink">Accueil</a>
+  <span>›</span>
+  <a id="suiviLink">Suivi des conventions</a>
+  <span>›</span>
+  <a id="famLink">Famille</a>
+  <span>›</span>
+  <strong id="classeCrumb">Classe…</strong>
+  <span>›</span>
+  <strong id="periodeCrumb">Période…</strong>
+</div>
+
+<h2 id="title">Chargement de la classe…</h2>
+<p id="status" class="status">
+  Affichage immédiat de la structure — récupération des données en cours…
+</p>
+
+<table>
+<thead>
+<tr>
+  <th>Élève</th>
+  <th>Statut</th>
+  <th>Entreprise</th>
+  <th>Contact entreprise</th>
+  <th>Tuteur</th>
+  <th>Professeur principal</th>
+  <th>Suivi téléphonique</th>
+  <th>Professeur visiteur</th>
+</tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+
+</main>
+
+<script>
+const P=<?!= paramsJson ?>;
+
+(function(){
+  const STORAGE_TTL=12*60*60*1000;
+
+  function famLabel(){
+    return P.famille==='BACPRO'?'BAC PRO':P.famille;
+  }
+
+  function nav(state,el){
+    if(el)el.classList.add('busy');
+    window.top.postMessage(
+      {type:'EUC_ATRIUM_NAV',state:state},
+      '*'
+    );
+  }
+
+  function skeleton(){
+    tb.innerHTML=Array.from({length:12}).map(function(){
+      return '<tr class="skeleton">'+
+        '<td><span class="shimmer" style="width:72%"></span></td>'+
+        '<td><span class="shimmer" style="width:65%"></span></td>'+
+        '<td><span class="shimmer" style="width:70%"></span></td>'+
+        '<td><span class="shimmer" style="width:70%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+        '<td><span class="shimmer" style="width:75%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+        '<td><span class="shimmer" style="width:55%"></span></td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  function render(d,source,totalMs){
+    if(!d)return;
+
+    const fl=P.famille==='BACPRO'?'BAC PRO':P.famille;
+    famLink.textContent=fl;
+    classeCrumb.textContent=(d.classe&&d.classe.nom)||'Classe';
+    periodeCrumb.textContent=(d.periode&&d.periode.libelle)||'Période';
+
+    title.textContent=
+      ((d.classe&&d.classe.nom)||'Classe')+
+      ' — '+
+      ((d.periode&&d.periode.libelle)||'');
+
+    status.textContent=
+      source==='local'
+        ? 'Affichage depuis le cache local — actualisation en arrière-plan…'
+        : 'Données à jour · '+Number(totalMs||0)+' ms';
+
+    tb.innerHTML=(d.lignes||[]).map(function(x){
+      return '<tr class="'+
+        (x.apprenti
+          ? 'app'
+          : x.parcoursDifferencie
+          ? 'pdif'
+          : x.statutMixte
+          ? 'mix'
+          : '')+
+        '">'+
+
+        '<td><b>'+x.nom+' '+x.prenom+'</b>'+
+          (x.apprenti
+            ? '<br><span class="badge">APPRENTI</span>'
+            : x.parcoursDifferencie
+            ? '<br><span class="badge">P.DIF.</span>'
+            : x.statutMixte
+            ? '<br><span class="badge">À VÉRIFIER</span>'
+            : '')+
+        '</td>'+
+        '<td>'+(x.statut||'')+'</td>'+
+        '<td>'+(x.entreprise||'—')+'</td>'+
+        '<td>'+(x.contactEntreprise||'—')+'</td>'+
+        '<td>'+(x.tuteurEntreprise||'—')+'</td>'+
+        '<td>'+(x.professeurPrincipal||'—')+'</td>'+
+        '<td>'+(x.professeurTelephone||'—')+'</td>'+
+        '<td>'+(x.professeurVisiteur||'—')+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  famLink.textContent=famLabel();
+
+  homeLink.onclick=function(e){
+    e.preventDefault();
+    nav(
+      {
+        page:'suivi-conventions-public',
+        annee:P.annee
+      },
+      homeLink
+    );
+  };
+
+  suiviLink.onclick=function(e){
+    e.preventDefault();
+    nav(
+      {
+        page:'suivi-conventions-public',
+        annee:P.annee
+      },
+      suiviLink
+    );
+  };
+
+  famLink.onclick=function(e){
+    e.preventDefault();
+    nav(
+      {
+        page:'suivi-conventions-public-famille',
+        annee:P.annee,
+        famille:P.famille
+      },
+      famLink
+    );
+  };
+
+  const key=
+    'DEV187_DETAIL_'+
+    P.annee+'_'+
+    P.classe+'_'+
+    P.periode;
+
+  let hadLocal=false;
+
+  try{
+    const raw=localStorage.getItem(key);
+    if(raw){
+      const obj=JSON.parse(raw);
+      if(obj && Date.now()-obj.t<STORAGE_TTL){
+        hadLocal=true;
+        render(obj.v,'local',0);
+      }
+    }
+  }catch(e){}
+
+  if(!hadLocal){
+    skeleton();
+  }
+
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(!r||!r.ok)return;
+
+      render(
+        r.detail,
+        'server',
+        r.totalMs
+      );
+
+      try{
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            t:Date.now(),
+            v:r.detail
+          })
+        );
+      }catch(e){}
+    })
+    .withFailureHandler(function(e){
+      status.textContent=
+        'Erreur de chargement : '+
+        String(e&&e.message||e);
+    })
+    .EUC_DEV187_getPublicDetail(P);
+
+})();
+</script>
+</body>
+</html>
