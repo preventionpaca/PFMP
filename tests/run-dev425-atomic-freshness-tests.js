@@ -27,6 +27,10 @@ assert.match(atomic,/status:'DIRTY',synced:end-start,next:end,total:targets\.len
   'un lot intermédiaire doit laisser la famille DIRTY');
 assert.match(atomic,/syncAll:false/,'le dernier lot doit publier sans refaire toutes les lectures');
 assert.match(atomic,/props\.deleteProperty\(key\)/,'la progression ne doit être supprimée qu’après publication finale');
+assert.match(atomic,/function EUC_DEV426_finalizeRecovery\(\)/,
+  'une reprise déjà synchronisée doit pouvoir être finalisée sans recalcul');
+assert.match(atomic,/typeof EUC_DEV190I_allRows_==='function'\?EUC_DEV190I_allRows_\(\)/,
+  'la maintenance finale doit relire fiablement tous les détails actifs');
 assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-\(result\.status==='READY'\?1:0\)\)/,
   'un lot intermédiaire doit compter la famille courante parmi les reprises restantes');
 assert.doesNotMatch(scheduled,/EUC_DEV425_beginMutation_/,

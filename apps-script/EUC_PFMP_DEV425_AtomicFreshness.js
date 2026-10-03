@@ -203,7 +203,12 @@ function EUC_DEV425_buildFamily_(token,famille){
   var annee=token.annee,base=EUC_DEV424_clone_(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]});
   var synced=EUC_DEV425_syncTargets_(token,famille,base);
   var classIds={};(base.classes||[]).forEach(function(c){var id=Number(c.classeId||c.id)||0;if(id)classIds[String(id)]=c;});
-  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[];
+  /* En maintenance, la lecture filtrée sur la seule année peut être vidée par
+   * la couche de compatibilité Grist alors que les lectures classe+période
+   * fonctionnent. Une lecture unique de la table, filtrée ensuite par
+   * hydrateFamily_, est plus fiable et reste hors du chemin utilisateur. */
+  var rows=typeof EUC_DEV190I_allRows_==='function'?EUC_DEV190I_allRows_():
+    (EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[]);
   var newest=EUC_DEV424_newestActiveDetails_(rows),batch=EUC_DEV422_batchSources_(annee,classIds),details=[];
   var hydrated=EUC_DEV422_hydrateFamily_(base,annee,famille,{batch:batch,rows:rows,onDetail:function(x){
     x.sourceRow=newest[EUC_DEV424_detailKey_(famille,x.classe,x.periode)]||x.sourceRow;
@@ -317,6 +322,24 @@ function EUC_DEV425_refreshScheduled(){
     var result=EUC_DEV426_recoverBatch_(annee,item.famille,revision,'filet-securite-15-min');
     return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-(result.status==='READY'?1:0)),durationMs:Date.now()-t0};
   }finally{try{lock.releaseLock();}catch(e2){}}
+}
+
+function EUC_DEV426_finalizeRecovery(){
+  EUC_DEV424_assertTarget_();
+  var annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active),item=null;
+  EUC_DEV425_FAMILIES_.some(function(f){
+    var s=EUC_DEV425_readState_(annee,f);
+    if(s&&s.status==='DIRTY'&&s.revision){item={famille:f,state:s};return true;}
+    return false;
+  });
+  if(!item)return {ok:true,skipped:'no-dirty-family',annee:annee};
+  /* Cette finalisation ne synchronise rien : elle ne peut réussir que si la
+   * totalité des détails actifs existe déjà. buildFamily_ vérifie le compte
+   * exact avant toute publication READY. */
+  return EUC_DEV425_finishMutation_({
+    annee:annee,families:[item.famille],targets:[],revision:item.state.revision,
+    reason:'finalisation-reprise',syncAll:false
+  });
 }
 
 function EUC_DEV425_status(){
