@@ -128,10 +128,11 @@ function EUC_DEV415_publicDetail(e){
     'if(p==="suivi-pfmp-classe")u.searchParams.set("page","suivi-pfmp-classe-public");'+
     'if(p==="suivi-conventions-famille")u.searchParams.set("page","suivi-conventions-public-famille");'+
     'if(p==="suivi-conventions")u.searchParams.set("page","suivi-conventions-public");'+
+    'if(!u.searchParams.get("annee")){var y=new URLSearchParams(location.search).get("annee")||((typeof detail!=="undefined"&&detail&&detail.annee)||"");if(y)u.searchParams.set("annee",y);}'+
     'if((u.searchParams.get("page")||"").indexOf("suivi-")!==0)return "";if(ready)u.searchParams.set("wrapper","1");return u.toString();}catch(e){return "";}}'+
     'addEventListener("message",function(ev){if(ev.data&&ev.data.type==="EUC_PFMP_WRAPPER_READY")ready=true;});'+
     'window.EUC_DEV418_publicNavigate=function(raw,el,label){var url=normalized(raw);if(!url)return;busy(el,label||"Chargement…");'+
-    'if(ready){sendToWrapper({type:"EUC_PFMP_WRAPPER_NAVIGATE",url:url});return;}top.location.href=url;};'+
+    'if(ready||window.top!==window.self){var framed=new URL(url,location.href);framed.searchParams.set("wrapper","1");sendToWrapper({type:"EUC_PFMP_WRAPPER_NAVIGATE",url:framed.toString()});return;}top.location.href=url;};'+
     'document.addEventListener("click",function(ev){var a=ev.target&&ev.target.closest?ev.target.closest("a[href]"):null;'+
     'var url=a&&normalized(a.href);if(!url)return;if(url.indexOf("page=suivi-pfmp-classe-public")>=0&&typeof window.EUC_DEV418_detailFastNavigate==="function"){ev.preventDefault();ev.stopImmediatePropagation();busy(a,"Chargement de la classe…");window.EUC_DEV418_detailFastNavigate(url,"Chargement de la classe…",a);return;}'+
     'ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(url,a,"Chargement…");},true);'+

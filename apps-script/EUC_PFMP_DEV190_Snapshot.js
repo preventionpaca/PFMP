@@ -2696,6 +2696,11 @@ function EUC_DEV190I_syncOne(payload) {
     }
   );
 
+  if(typeof EUC_DEV421_familyCacheInvalidate_==='function'){
+    EUC_DEV421_familyCacheInvalidate_(annee,famille);
+  }
+  try{CacheService.getScriptCache().remove(['DEV392_QUICK',annee,famille,classe,periode].join('_'));}catch(eCache){}
+
   return {
     ok: true,
     changed: true,
@@ -3021,6 +3026,11 @@ function EUC_DEV190J_syncOne(payload) {
       }]
     }
   );
+
+  if(typeof EUC_DEV421_familyCacheInvalidate_==='function'){
+    EUC_DEV421_familyCacheInvalidate_(annee,famille);
+  }
+  try{CacheService.getScriptCache().remove(['DEV392_QUICK',annee,famille,classe,periode].join('_'));}catch(eCache){}
 
   return {
     ok: true,

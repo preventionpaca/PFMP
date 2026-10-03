@@ -80,10 +80,11 @@ function EUC_DEV291_modeFor_(eleveId,annee){
 }
 
 function EUC_DEV291_familyRaw_(annee,famille){
-  return EUC_DEV190G1_chargerFamille({
-    annee:annee,
-    famille:famille||'BACPRO'
-  });
+  if(typeof EUC_DEV421_fastFamilySnapshot_==='function'){
+    var fast=EUC_DEV421_fastFamilySnapshot_({annee:annee,famille:famille||'BACPRO'});
+    if(fast&&fast.ready&&fast.payload)return fast.payload;
+  }
+  return EUC_DEV190G1_chargerFamille({annee:annee,famille:famille||'BACPRO'});
 }
 
 function EUC_DEV291_classFamily_(annee,famille,classeId){

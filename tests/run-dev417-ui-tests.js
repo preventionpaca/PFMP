@@ -124,10 +124,18 @@ assert.match(publicFamily, /searchParams\.set\('wrapper','1'\)/,
   'famille PUBLIC: le marqueur du wrapper doit être conservé');
 assert.match(publicFamily, /panel\.addEventListener\('pointerenter'/,
   'famille PUBLIC: la bulle de contrôle rapide doit rester ouverte au survol');
+assert.match(publicFamily, /cache=window\.EUC_DEV422_QUICK\|\|\{\}/,
+  'famille PUBLIC: le survol doit réutiliser les listes pré-calculées');
+assert.doesNotMatch(publicFamily, /id=['"]euc339Loading['"]/,
+  'famille PUBLIC: le voile plein écran de navigation doit être supprimé');
 
 const adminFamily = read('apps-script/Suivi_Conventions_Admin_FamilleV190L.html');
 assert.match(adminFamily, /panel\.addEventListener\('pointerenter'/,
   'famille ADMIN: la bulle de contrôle rapide doit rester ouverte au survol');
+assert.match(adminFamily, /cache=window\.EUC_DEV422_QUICK\|\|\{\}/,
+  'famille ADMIN: le survol doit réutiliser les listes pré-calculées');
+assert.doesNotMatch(adminFamily, /id=['"]euc339Loading['"]/,
+  'famille ADMIN: le voile plein écran de navigation doit être supprimé');
 
 const publicSummary = read('apps-script/Suivi_Conventions_Public_Clone_V353.html');
 assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
@@ -140,6 +148,8 @@ assert.match(publicWrapper, /page=suivi-conventions-public&amp;wrapper=1/,
   'wrapper public: le mode wrapper doit être annoncé à Apps Script');
 assert.match(publicWrapper, /EUC_PFMP_WRAPPER_NAVIGATE/,
   'wrapper public: réception de navigation absente');
+assert.match(publicWrapper, /target\.searchParams\.set\('wrapper','1'\)/,
+  'wrapper public: chaque navigation interne doit rester explicitement encapsulée');
 assert.match(publicWrapper, /u\.hostname===host&&u\.pathname===path/,
   'wrapper public: les destinations Apps Script ne sont pas strictement filtrées');
 assert.match(publicWrapper, /ev\.origin!==['"]null['"]/,
@@ -249,8 +259,10 @@ assert.match(baseDetailCache, /return 'DEV418_DETAIL_'/,
   'détail classe: le cache de base DEV418 n’est pas isolé');
 assert.match(classFastNav, /EUC_DEV416_finalDetail_/,
   'navigation rapide: le détail final en cache doit être réutilisé');
-assert.match(quickCheck, /EUC_DEV416_finalDetail_/,
-  'contrôle rapide: le détail final préchauffé doit être réutilisé');
+assert.match(quickCheck, /EUC_DEV422_readDetailSnapshot_/,
+  'contrôle rapide: la lecture directe du snapshot détaillé doit être utilisée');
+assert.doesNotMatch(quickCheck, /EUC_DEV416_finalDetail_/,
+  'contrôle rapide: le survol ne doit pas reconstruire le détail final enrichi');
 
 const familyLive = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
 const familyUx = read('apps-script/EUC_PFMP_DEV339_FamilleUX.js');
@@ -271,6 +283,12 @@ assert.match(familyUx, /EUC_DEV421_FAMILY_TTL_=300/,
   'liste des classes: le snapshot de famille doit être réutilisé pendant la navigation');
 assert.match(familyUx, /Payload_JSON/,
   'liste des classes: le chemin rapide doit lire directement le payload persistant');
+assert.match(familyUx, /EUC_DEV422_hydrateFamily_/,
+  'liste des classes: les compteurs doivent être réconciliés avec les snapshots détaillés');
+assert.match(familyUx, /EUC_DEV190I_TABLE_/,
+  'liste des classes: la réconciliation doit lire les détails en une requête groupée');
+assert.match(familyUx, /p\.quick=quick/,
+  'liste des classes: le contrôle rapide doit être pré-calculé avec les cartes');
 assert.doesNotMatch(
   familyUx.slice(familyUx.indexOf('function EUC_DEV421_fastFamilySnapshot_'), familyUx.indexOf('function EUC_DEV394_BASE_EUC_DEV339_familyData_')),
   /EUC_DEV276_enrichFamilyPayload_/,

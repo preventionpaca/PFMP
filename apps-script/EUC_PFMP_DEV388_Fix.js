@@ -131,35 +131,13 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
     catch(e2){}
   }
 
-  var rr=null;
-  var detail=null;
-  var detailFinal=false;
-
-  try{
-    if(typeof EUC_DEV416_finalDetail_==='function'){
-      detail=EUC_DEV416_finalDetail_(
-        annee,
-        famille,
-        classe,
-        periode
-      );
-      detailFinal=!!detail;
-    }
-  }catch(e0){}
-
-  if(!detail){
-    rr=EUC_DEV190I_readOne({
-      annee:annee,
-      famille:famille,
-      classe:classe,
-      periode:periode
-    });
-
-    detail=
-      rr&&rr.ready&&rr.detail
-        ? rr.detail
-        : null;
-  }
+  var rr=EUC_DEV422_readDetailSnapshot_({
+    annee:annee,
+    famille:famille,
+    classe:classe,
+    periode:periode
+  });
+  var detail=rr&&rr.exists&&rr.detail?rr.detail:null;
 
   if(!detail){
     throw new Error(
@@ -167,19 +145,15 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
     );
   }
 
-  /*
-   * DEV392 :
-   * le snapshot donne la liste des élèves mais ne porte pas toujours
-   * conventionId/convention. On enrichit donc uniquement cette classe
-   * et cette période depuis la source réelle des accès.
-   */
-  if(!detailFinal&&typeof EUC_V50_enrichirDetail_==='function'){
-    detail=EUC_V50_enrichirDetail_(
-      detail,
-      annee,
-      classe,
-      periode
-    );
+  if(typeof EUC_DEV422_quickFromDetail_==='function'){
+    var direct=EUC_DEV422_quickFromDetail_(detail);
+    direct.annee=annee;
+    direct.famille=famille;
+    direct.classeId=classe;
+    direct.periodeId=periode;
+    direct.durationMs=Number(rr&&rr.durationMs)||0;
+    try{cache.put(key,JSON.stringify(direct),180);}catch(eDirect){}
+    return direct;
   }
 
   var p=detail.periode||{};
@@ -195,10 +169,7 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
 
   var out={
     ok:true,
-    source:
-      rr&&rr.ready
-        ? 'snapshot-readOne'
-        : 'fallback-detail',
+    source:'snapshot-direct',
     durationMs:
       Number(rr&&rr.durationMs)||0,
     annee:annee,

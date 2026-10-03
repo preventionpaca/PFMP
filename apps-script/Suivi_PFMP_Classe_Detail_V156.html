@@ -2014,7 +2014,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function target(){
     var u=new URL(C.baseUrl);
     u.searchParams.set('page','suivi-conventions-famille');
-    u.searchParams.set('annee',(typeof detail!=='undefined'&&detail&&detail.annee)?detail.annee:qs('annee'));
+    u.searchParams.set('annee',qs('annee')||(typeof detail!=='undefined'&&detail&&detail.annee)||String((document.getElementById('yearSelect')||{}).value||''));
     u.searchParams.set('famille',family());
     return u.toString();
   }

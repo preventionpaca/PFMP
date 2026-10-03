@@ -102,3 +102,14 @@
 - Version Apps Script immuable `737`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Après `clasp push`, les 344 fichiers distants ont été relus et comparés sans divergence.
 - Tests verts : suite complète `node tests/run-tests.js` (334 tests), contrôles ciblés DEV417 et DEV420, puis contrôles visuels en lecture seule du détail TCAR et du champ responsable entreprise. Aucune écriture Grist, aucun import, aucun courriel, aucun ordre de mission, aucun déclencheur et aucun nouveau Web App n’ont été exécutés pendant ce lot.
 - Snapshot : il est confirmé comme le principal levier de performance. La consultation doit servir le snapshot immédiatement; sa reconstruction doit rester séparée. Aucun déclencheur périodique n’est activé dans DEV421. Une automatisation future devra être bornée, observable et invalidée après les seules mutations autorisées.
+
+## DEV422 — correction différentielle des compteurs et du chemin froid
+
+- La régression des cartes à `0 / effectif` provenait de l’index de famille persistant, incomplet ou périmé, alors que la bulle et le détail relisaient une autre source détaillée correcte. La grille réconcilie désormais ses cartes avec les snapshots détaillés actifs de l’année, chargés en une seule requête groupée.
+- Cartes et contrôles rapides partagent désormais exactement le même calcul. Les listes de l’infobulle sont préparées avec la page : aucun appel serveur ni enrichissement Grist n’est déclenché par le survol.
+- Les apprentis, situations administratives et conventions annulées/interrompues sont isolés avant le calcul `Sans convention`, afin d’éviter les doubles comptes.
+- Le voile plein écran `Chargement des donnees...` est supprimé. Seul le contrôle effectivement cliqué affiche un petit indicateur rotatif.
+- Le wrapper PUBLIC conserve explicitement `wrapper=1` à chaque navigation interne ; l’année est restaurée lorsqu’un lien historique l’omet. Le retour aux classes privilégie l’année de l’URL active.
+- Après une synchronisation autorisée d’un snapshot détaillé, les caches de famille et de contrôle rapide correspondants sont invalidés. Le flux de maintenance préparé reconstruit aussi l’index persistant de famille ; aucun déclencheur n’est activé par ce lot.
+- Tests locaux verts : `node tests/run-tests.js` (335 tests), dont un scénario DEV422 reproduisant TCIEL avec 24 conventions, 1 apprenti et 1 sans convention sur 26 élèves.
+- Aucun accès à la production, aucune écriture Grist, aucun import, aucun courriel, aucun ordre de mission et aucune activation LIVE/ENABLED n’ont été exécutés pendant la préparation du lot.

@@ -1,4 +1,16 @@
-## DEV421 R2 déployée — prochaine étape performance et automatisation contrôlée
+## DEV422 — validation réelle et mesures froides avant conclusion
+
+Le correctif DEV422 réunit les compteurs de cartes, les listes d’infobulle et les détails de classe sur les mêmes snapshots détaillés persistants. Le survol ne lance plus de calcul serveur et le voile plein écran est retiré. La validation finale doit mesurer séparément le premier passage et les passages répétés, sans présenter un résultat réchauffé comme une performance froide.
+
+Ordre de validation :
+
+1. vérifier PUBLIC et ADMIN sur TCAR, TCIEL et TCL : cartes, infobulles, ouverture de période et retour aux classes ;
+2. mesurer accueil, famille, détail et retour, en distinguant temps HTTP Apps Script et temps visible dans le wrapper ;
+3. vérifier que toutes les navigations PUBLIC restent sous `pfmp.loucodi.fr` et n’exposent pas l’URL Apps Script ;
+4. contrôler les deux vues apprentis principales sans mutation ;
+5. ne proposer l’activation d’un rafraîchissement périodique qu’après ces mesures, avec autorisation explicite, quotas et mécanisme d’arrêt documentés.
+
+## Historique DEV421 R2 — performance et automatisation contrôlée
 
 DEV421 R2 est déployée en version immuable `737` sur les déploiements ADMIN et PUBLIC existants. La grille de classes et la navigation utilisent maintenant le snapshot persistant comme source première, avec un cache de cinq minutes invalidé lors des mises à jour connues. Les temps mesurés à chaud sont de `3,86 s` pour BAC PRO et `3,74–3,90 s` pour le détail TCAR.
 

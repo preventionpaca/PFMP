@@ -92,7 +92,7 @@ function EUC_DEV311_syncTargets_(targets){
     }
   });
 
-  if(typeof EUC_DEV190G1_fastFamilyIndex==='function'){
+  if(typeof EUC_DEV190E_syncFamilyIndex==='function'){
     var years={};
 
     Object.keys(targets||{}).forEach(function(k){
@@ -107,11 +107,9 @@ function EUC_DEV311_syncTargets_(targets){
     Object.keys(years).forEach(function(annee){
       ['BACPRO','BTS','CAP'].forEach(function(famille){
         try{
-          EUC_DEV190G1_fastFamilyIndex({
+          EUC_DEV190E_syncFamilyIndex({
             annee:annee,
-            famille:famille,
-            force:true,
-            refresh:true
+            famille:famille
           });
         }catch(eWarm){}
       });
