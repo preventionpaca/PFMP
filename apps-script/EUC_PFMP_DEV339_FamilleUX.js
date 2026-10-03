@@ -10,7 +10,7 @@ function EUC_DEV339_year_(e){var y=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.a
  * explicitement cette entrée. */
 var EUC_DEV421_FAMILY_TTL_=300;
 function EUC_DEV421_familyKey_(annee,famille){
-  return 'DEV422R2_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
+  return 'DEV422R3_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
 }
 function EUC_DEV421_familyCacheGet_(annee,famille){
   var raw=null;
@@ -91,9 +91,16 @@ function EUC_DEV422_readDetailSnapshot_(payload){
   }
 }
 function EUC_DEV422_batchSources_(annee,classIds){
-  var out={access:{},accessAvailable:false,apps:[],appsAvailable:false};
+  var out={access:{},accessAvailable:false,apps:[],appsAvailable:false},byPeriod={};
   try{
-    var rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
+    var rows=[];
+    if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_CONVENTION_ACCES_TABLE_!=='undefined'){
+      rows=(EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{Annee_scolaire:[annee]})||[]).map(function(r){
+        var x={id:Number(r.id)||0},f=r.fields||{};Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
+      });
+    }else{
+      rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
+    }
     out.accessAvailable=true;
     rows.forEach(function(a){
       var y=EUC_DEV339_txt_(a.Annee_scolaire);
@@ -103,8 +110,16 @@ function EUC_DEV422_batchSources_(annee,classIds){
       if((y&&y!==annee)||!classIds[String(cid)]||!pid||!eid)return;
       var k=cid+'|'+pid+'|'+eid;
       (out.access[k]=out.access[k]||[]).push(a);
+      (byPeriod[cid+'|'+pid]=byPeriod[cid+'|'+pid]||[]).push(typeof EUC_DEV340_compactAccess_==='function'?EUC_DEV340_compactAccess_(a):a);
     });
     Object.keys(out.access).forEach(function(k){out.access[k].sort(function(a,b){return Number(b.id||0)-Number(a.id||0);});});
+    if(typeof EUC_DEV340_accessKey_==='function'){
+      var cache=CacheService.getScriptCache();
+      Object.keys(byPeriod).forEach(function(k){
+        var p=k.split('|');
+        try{cache.put(EUC_DEV340_accessKey_(annee,Number(p[0]),Number(p[1])),JSON.stringify(byPeriod[k]),180);}catch(ePrime){}
+      });
+    }
   }catch(eAccess){}
   try{
     out.apps=typeof EUC_DEV340_appRows_==='function'?EUC_DEV340_appRows_():(typeof EUC_DEV275B_rows_==='function'?EUC_DEV275B_rows_():[]);
