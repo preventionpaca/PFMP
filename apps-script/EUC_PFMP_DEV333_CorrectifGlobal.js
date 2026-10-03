@@ -53,7 +53,9 @@ function EUC_DEV333_isPdif_(p){
   return n.indexOf('PDIF')>=0||n.indexOf('PARCOURSDIFFERENCIE')>=0;
 }
 function EUC_DEV333_fast_(annee,fam){
-  var r=EUC_DEV190G1_fastFamilyIndex({annee:annee,famille:fam});
+  var r=typeof EUC_DEV421_fastFamilySnapshot_==='function'
+    ?EUC_DEV421_fastFamilySnapshot_({annee:annee,famille:fam})
+    :EUC_DEV190G1_fastFamilyIndex({annee:annee,famille:fam});
   return r&&r.ready&&r.payload?r.payload:{ok:true,ready:false,annee:annee,famille:fam,classes:[]};
 }
 function EUC_DEV333_apps_(annee,fam){
@@ -244,4 +246,3 @@ function EUC_DEV333_nav(payload){
   });
   return {ok:true,annee:annee,famille:fam,niveau:level,items:items};
 }
-

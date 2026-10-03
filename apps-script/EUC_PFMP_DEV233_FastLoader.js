@@ -118,6 +118,7 @@ function EUC_DEV234_student_(s) {
 
     telEntreprise: EUC_DEV234_str_(s.telEntreprise),
     mailEntreprise: EUC_DEV234_str_(s.mailEntreprise),
+    responsableEntreprise: EUC_DEV234_str_(s.responsableEntreprise),
 
     tuteur: EUC_DEV234_str_(s.tuteur),
     telTuteur: EUC_DEV234_str_(s.telTuteur),

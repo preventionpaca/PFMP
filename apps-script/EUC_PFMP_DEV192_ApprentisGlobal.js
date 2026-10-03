@@ -191,6 +191,13 @@ function EUC_DEV192_normalizeEntreprise_(raw, siret) {
       'mail'
     ], 0),
 
+    responsableEntreprise: EUC_DEV192_deepPick_(raw, [
+      'responsable_nom',
+      'responsableNom',
+      'nom_responsable',
+      'responsable'
+    ], 0),
+
     tuteur: EUC_DEV192_deepPick_(raw, [
       'tuteur_nom',
       'nom_tuteur',
@@ -495,6 +502,7 @@ function EUC_DEV192_ensureAppCols_() {
     { id: 'Ville', type: 'Text' },
     { id: 'Entreprise_telephone', type: 'Text' },
     { id: 'Entreprise_courriel', type: 'Text' },
+    { id: 'Responsable_nom', type: 'Text' },
 
     { id: 'Dossier_distribue', type: 'Bool' },
     { id: 'Date_distribution_dossier', type: 'Date' },
@@ -637,6 +645,7 @@ function EUC_DEV192_saveApprenti(p) {
   set(['Ville'], p.ville || '');
   set(['Entreprise_telephone', 'Telephone_entreprise'], p.telEntreprise || '');
   set(['Entreprise_courriel', 'Courriel_entreprise'], p.mailEntreprise || '');
+  set(['Responsable_nom', 'Responsable'], p.responsableEntreprise || '');
 
   set(['Tuteur_nom', 'Tuteur'], p.tuteur || '');
   set(['Tuteur_telephone', 'Telephone_tuteur'], p.telTuteur || '');

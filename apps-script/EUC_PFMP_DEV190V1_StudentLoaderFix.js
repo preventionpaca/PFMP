@@ -174,6 +174,7 @@ function EUC_DEV190V1_loadApprentis(annee,classeId,classeNom){
       ville:pick(['Ville']),
       telEntreprise:pick(['Entreprise_telephone','Telephone_entreprise']),
       mailEntreprise:pick(['Entreprise_courriel','Courriel_entreprise']),
+      responsableEntreprise:pick(['Responsable_nom','Responsable']),
       tuteur:pick(['Tuteur_nom','Tuteur']),
       telTuteur:pick(['Tuteur_telephone','Telephone_tuteur']),
       mailTuteur:pick(['Tuteur_courriel','Courriel_tuteur'])

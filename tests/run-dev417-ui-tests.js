@@ -29,7 +29,19 @@ for (const file of apprenticeTemplates) {
     `${file}: la bulle n'est pas maintenue au pointeur`);
   assert.match(html, /focusin/,
     `${file}: la bulle n'est pas utilisable au clavier`);
+  assert.match(html, /responsable-ent/,
+    `${file}: le nom du responsable d'entreprise n'est pas affiché`);
 }
+
+const apprenticeLoader = read('apps-script/EUC_PFMP_DEV208_ClassDetailSnapshot.js');
+const apprenticeBridge = read('apps-script/EUC_PFMP_DEV235_JsonBridge.js');
+const apprenticeSave = read('apps-script/EUC_PFMP_DEV192_ApprentisGlobal.js');
+assert.match(apprenticeLoader, /responsableEntreprise:val\(f,\['Responsable_nom','Responsable'\]\)/,
+  'apprentis: le responsable entreprise n’est pas relu depuis Grist');
+assert.match(apprenticeBridge, /responsableEntreprise:\s*txt\(s\.responsableEntreprise\)/,
+  'apprentis: le responsable entreprise est perdu dans le pont JSON');
+assert.match(apprenticeSave, /set\(\['Responsable_nom', 'Responsable'\], p\.responsableEntreprise \|\| ''\)/,
+  'apprentis: le responsable entreprise n’est pas enregistré');
 
 const detail = read('apps-script/Suivi_PFMP_Classe_Detail_V156.html');
 assert.match(detail, /EUC_DEV417_DETAIL_KPI_LISTS/,
@@ -40,14 +52,22 @@ assert.match(detail, /data-dev417-list="avec"/,
   'détail classe: compteur avec convention non interactif');
 assert.match(detail, /data-dev417-list="sans"/,
   'détail classe: compteur sans convention non interactif');
+assert.match(detail, /data-dev417-list="incidents"/,
+  'détail classe: compteur annulées/interrompues non interactif');
+assert.match(detail, /if\(key==='incidents'\)return incident\(x\)/,
+  'détail classe: la liste annulées/interrompues ne filtre pas les incidents');
 
 const header = detail.match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/);
 assert.ok(header, 'détail classe: en-tête du tableau introuvable');
 assert.strictEqual((header[1].match(/<th\b/g) || []).length, 10,
   'détail classe: le tableau doit conserver exactement 10 colonnes');
 assert.match(detail,
-  /return '<tr><td>'\+check\+'<\/td><td><div class="student">/,
+  /return '<tr><td class="select-cell">'\+check\+'<\/td><td><div class="student">/,
   'détail classe: la cellule Élève doit suivre immédiatement la sélection');
+assert.match(detail, /class="select-cell"/,
+  'détail classe: les cellules de sélection ne sont pas identifiables');
+assert.match(detail, /\.detail-readonly \.select-cell/,
+  'détail classe: la sélection vide n’est pas masquée en lecture seule');
 assert.match(detail, /min-width:1680px/,
   'détail classe: le tableau reste trop étroit pour les coordonnées entreprise');
 assert.match(detail, /function contactVal\(v\)/,
@@ -233,6 +253,8 @@ assert.match(quickCheck, /EUC_DEV416_finalDetail_/,
   'contrôle rapide: le détail final préchauffé doit être réutilisé');
 
 const familyLive = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
+const familyUx = read('apps-script/EUC_PFMP_DEV339_FamilleUX.js');
+const globalCorrection = read('apps-script/EUC_PFMP_DEV333_CorrectifGlobal.js');
 const primeAccess = familyLive.slice(
   familyLive.indexOf('function EUC_DEV340_primeAccessIndex_'),
   familyLive.indexOf('function EUC_DEV398_BASE_EUC_DEV340_accessRows_')
@@ -241,6 +263,26 @@ assert.match(primeAccess, /EUC_DEV394_BASE_EUC_DEV340_primeAccessIndex_/,
   'liste des classes: le préchauffage doit remplir les caches classe/période');
 assert.doesNotMatch(primeAccess, /return EUC_DEV340_accessRows_\.apply/,
   'liste des classes: le préchauffage ne doit pas appeler une lecture de classe 0');
+assert.ok(
+  familyUx.indexOf('EUC_DEV421_fastFamilySnapshot_') < familyUx.indexOf('EUC_APP172_chargerFamille'),
+  'liste des classes: le snapshot indexé doit être essayé avant le recalcul métier complet'
+);
+assert.match(familyUx, /EUC_DEV421_FAMILY_TTL_=300/,
+  'liste des classes: le snapshot de famille doit être réutilisé pendant la navigation');
+assert.match(familyUx, /Payload_JSON/,
+  'liste des classes: le chemin rapide doit lire directement le payload persistant');
+assert.doesNotMatch(
+  familyUx.slice(familyUx.indexOf('function EUC_DEV421_fastFamilySnapshot_'), familyUx.indexOf('function EUC_DEV394_BASE_EUC_DEV339_familyData_')),
+  /EUC_DEV276_enrichFamilyPayload_/,
+  'liste des classes: le chemin snapshot ne doit pas relancer les enrichissements métier lourds'
+);
+assert.match(globalCorrection, /EUC_DEV421_fastFamilySnapshot_/,
+  'navigation entre classes: la liste doit réutiliser le snapshot mis en cache');
+assert.doesNotMatch(
+  familyLive.slice(familyLive.indexOf('function EUC_DEV394_BASE_EUC_DEV340_afficherFamille'), familyLive.indexOf('function EUC_DEV340_afficherAdminClasse')),
+  /EUC_DEV340_primeAccessIndex_\(/,
+  'liste des classes: le préchauffage global ne doit plus bloquer le rendu HTML'
+);
 
 const snapshotSource = read('apps-script/EUC_PFMP_DEV190_Snapshot.js');
 const activeRows = snapshotSource.slice(snapshotSource.indexOf('function EUC_DEV190I_activeRows_'), snapshotSource.indexOf('function EUC_DEV190I_familyCode_'));

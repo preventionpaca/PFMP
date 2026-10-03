@@ -1406,6 +1406,10 @@ function EUC_DEV190E_writeFamilyIndex_(annee, famille, payload) {
     }
   );
 
+  if (typeof EUC_DEV421_familyCacheInvalidate_ === 'function') {
+    EUC_DEV421_familyCacheInvalidate_(annee, famille);
+  }
+
   return { ok: true };
 }
 

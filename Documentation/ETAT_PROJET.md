@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV420 R2, version Apps Script immuable `735`.
+- Version active déployée le 3 octobre 2026 : DEV421 R2, version Apps Script immuable `737`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `735`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `737`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420 a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
@@ -14,7 +14,7 @@
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
-- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (319 tests).
+- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (334 tests).
 - Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
 
@@ -91,3 +91,14 @@
 - Version Apps Script immuable `735`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Le distant relu contient exactement les 344 fichiers locaux ; les contrôles HTTP directs ADMIN et PUBLIC répondent à `200`.
 - Tests verts : `node tests/run-dev420-situations-tests.js` (14 tests) et suite complète `node tests/run-tests.js` (333 tests).
 - Protections confirmées : aucun accès production, aucun import Pronote réel, aucune écriture de convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
+
+## DEV421 R2 déployée — affichage apprentis et lecture snapshot directe
+
+- Le nom du responsable de l’entreprise est maintenant transporté, affiché et sauvegardé avec le téléphone et le courriel dans les cartes apprentis ADMIN et PUBLIC. Lors de la première sauvegarde concernée, la colonne `Responsable_nom` est créée uniquement si elle manque.
+- Le tableau de détail classe ADMIN/PUBLIC aligne à nouveau l’élève sous l’en-tête `Élève`; la cellule de sélection vide est masquée en lecture seule. Le compteur `Annulées / interrompues` ouvre aussi sa liste, y compris lorsque le total vaut zéro.
+- La grille des classes lit directement le payload persistant `EUC_SUIVI_PFMP_INDEX`, sans rejouer les enrichissements apprentissage/P.dif. sur le chemin d’affichage. Le résultat est conservé cinq minutes dans `CacheService`; une synchronisation du snapshot ou une modification de situation administrative invalide explicitement cette entrée.
+- Les préchauffages concurrents de détail ont été supprimés. Le contrôle rapide reste ouvert lorsque le pointeur entre dans la bulle et ne se repositionne plus après réception des données, ce qui supprime le clignotement observé.
+- Mesures HTTP PUBLIC après déploiement : accueil familles `3,43 s`; grille BAC PRO `6,98 s` à froid puis `3,86 s` avec snapshot en cache; détail TCAR `3,74–3,90 s` après amorçage. La cible de 3 à 4 secondes est atteinte sur la navigation courante; le premier accès après expiration du cache reste le prochain levier d’optimisation.
+- Version Apps Script immuable `737`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Après `clasp push`, les 344 fichiers distants ont été relus et comparés sans divergence.
+- Tests verts : suite complète `node tests/run-tests.js` (334 tests), contrôles ciblés DEV417 et DEV420, puis contrôles visuels en lecture seule du détail TCAR et du champ responsable entreprise. Aucune écriture Grist, aucun import, aucun courriel, aucun ordre de mission, aucun déclencheur et aucun nouveau Web App n’ont été exécutés pendant ce lot.
+- Snapshot : il est confirmé comme le principal levier de performance. La consultation doit servir le snapshot immédiatement; sa reconstruction doit rester séparée. Aucun déclencheur périodique n’est activé dans DEV421. Une automatisation future devra être bornée, observable et invalidée après les seules mutations autorisées.

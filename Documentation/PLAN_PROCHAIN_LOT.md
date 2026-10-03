@@ -1,4 +1,16 @@
-## DEV419 R1 déployée — prochain lot performance et situations administratives
+## DEV421 R2 déployée — prochaine étape performance et automatisation contrôlée
+
+DEV421 R2 est déployée en version immuable `737` sur les déploiements ADMIN et PUBLIC existants. La grille de classes et la navigation utilisent maintenant le snapshot persistant comme source première, avec un cache de cinq minutes invalidé lors des mises à jour connues. Les temps mesurés à chaud sont de `3,86 s` pour BAC PRO et `3,74–3,90 s` pour le détail TCAR.
+
+Ordre proposé pour le prochain lot :
+
+1. mesurer le premier accès après expiration du cache sur TCAR, TCIEL et TCL, en séparant lecture Grist, rendu Apps Script et affichage dans le wrapper ;
+2. préparer un rafraîchissement ciblé du snapshot après chaque mutation autorisée, sans recalcul global dans le chemin de consultation ;
+3. proposer, sans l’activer, un déclencheur périodique borné qui met à jour uniquement les familles et périodes modifiées, journalise seulement les durées et conserve le dernier snapshot valide en cas d’échec ;
+4. soumettre l’activation de ce déclencheur à une autorisation explicite et documenter sa fréquence, son quota Apps Script et son mécanisme d’arrêt ;
+5. poursuivre ensuite les ordres de mission et le document d’organisation/bilan des déplacements, sans courriel ni création documentaire avant nouvelle autorisation.
+
+## Historique DEV419 — performance et situations administratives
 
 DEV419 R1 est déployée en version immuable `733` sur les déploiements ADMIN et PUBLIC existants. Le retrait de Snapshot des vues publiques, les indicateurs de navigation, la coque persistante du détail et les réparations de préchauffage/cache sont actifs.
 

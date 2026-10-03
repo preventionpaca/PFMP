@@ -220,7 +220,10 @@ function EUC_DEV394_BASE_EUC_DEV340_familyData_(annee,famille){
 function EUC_DEV394_BASE_EUC_DEV340_afficherFamille(e){
   var annee=EUC_DEV340_year_(e),famille=EUC_DEV340_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO';
   var data=EUC_DEV340_familyData_(annee,famille);
-  try{EUC_DEV340_primeAccessIndex_(annee,data);}catch(err){console.log(String(err));}
+  /* La page famille doit être rendue dès que son snapshot est prêt.
+   * Le préchauffage global relisait tous les accès avant le premier octet et
+   * ajoutait plusieurs secondes. Le contrôle rapide charge désormais une
+   * seule classe à la demande et réutilise le cache final. */
   var t=HtmlService.createTemplateFromFile('Suivi_Conventions_Admin_FamilleV190L');
   t.paramsJson=JSON.stringify({annee:annee,famille:famille});t.dataJson=JSON.stringify(data||{});t.baseUrl=EUC_DEV340_ADMIN_URL_;
   return t.evaluate().setTitle('Suivi des conventions — '+(famille==='BACPRO'?'BAC PRO':famille)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

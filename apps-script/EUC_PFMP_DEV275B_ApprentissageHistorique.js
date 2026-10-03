@@ -187,6 +187,11 @@ function EUC_DEV275B_contract_(r){
       'Courriel_entreprise'
     ]),
 
+    responsableEntreprise:EUC_DEV275B_pick_(r,[
+      'Responsable_nom',
+      'Responsable'
+    ]),
+
     tuteur:EUC_DEV275B_pick_(r,[
       'Tuteur_nom',
       'Tuteur'

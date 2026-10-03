@@ -328,6 +328,10 @@ function EUC_DEV190V_loadApprentis(
           'Entreprise_courriel',
           'Courriel_entreprise'
         ]),
+        responsableEntreprise: pick([
+          'Responsable_nom',
+          'Responsable'
+        ]),
         tuteur: pick([
           'Tuteur_nom',
           'Tuteur'

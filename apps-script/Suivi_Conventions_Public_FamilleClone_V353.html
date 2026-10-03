@@ -596,7 +596,16 @@ const DATA=<?!= dataJson ?>;
 
 (function(){
   'use strict';
-  var P390=P, cache={}, panel=null, current=null, timer=null;
+  var P390=P, cache={}, panel=null, current=null, timer=null, anchorInside=false, panelInside=false;
+
+  function scheduleClose(delay){
+    clearTimeout(timer);
+    timer=setTimeout(function(){
+      if(anchorInside||panelInside)return;
+      if(panel)panel.classList.remove('show');
+      current=null;
+    },delay||260);
+  }
 
   function esc(v){
     return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -606,10 +615,10 @@ const DATA=<?!= dataJson ?>;
     panel=document.createElement('div');
     panel.id='euc390Quick';
     panel.innerHTML='<div class="euc390-head"><strong id="euc390Title">Contrôle rapide</strong><span id="euc390Meta"></span></div><div class="euc390-body" id="euc390Body"></div>';
-    panel.addEventListener('pointerenter',function(){clearTimeout(timer);});
+    panel.addEventListener('pointerenter',function(){panelInside=true;clearTimeout(timer);});
     panel.addEventListener('pointerleave',function(){
-      clearTimeout(timer);
-      timer=setTimeout(function(){panel.classList.remove('show');current=null;},220);
+      panelInside=false;
+      scheduleClose(320);
     });
     panel.addEventListener('wheel',function(){clearTimeout(timer);},{passive:true});
     document.body.appendChild(panel);
@@ -642,7 +651,7 @@ const DATA=<?!= dataJson ?>;
     document.getElementById('euc390Body').innerHTML=r.isPdif
       ? list('Parcours lycée',r.lycee,'blue')+list('Poursuite PFMP2 entreprise',r.entreprise,'green')+list('À définir',r.indefini,'orange')
       : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue')+list('Situation administrative',r.situations,'orange');
-    panel.classList.add('show'); place(el);
+    panel.classList.add('show');
   }
   function ids(el){return {classe:Number(el.dataset.class||el.dataset.c||0),periode:Number(el.dataset.period||el.dataset.p||0)};}
   function load(el){
@@ -676,14 +685,16 @@ const DATA=<?!= dataJson ?>;
   }
   document.addEventListener('mouseover',function(ev){
     var el=periodEl(ev.target); if(!el)return;
+    if(ev.relatedTarget&&el.contains(ev.relatedTarget))return;
+    anchorInside=true;
     clearTimeout(timer); current=el;
     timer=setTimeout(function(){if(current===el)load(el);},220);
   },true);
   document.addEventListener('mouseout',function(ev){
     var el=periodEl(ev.target); if(!el)return;
     if(ev.relatedTarget&&el.contains(ev.relatedTarget))return;
-    clearTimeout(timer);
-    timer=setTimeout(function(){if(panel)panel.classList.remove('show');current=null;},180);
+    anchorInside=false;
+    scheduleClose(320);
   },true);
 })();
 
@@ -711,10 +722,8 @@ const DATA=<?!= dataJson ?>;
     if(seen[k])return; seen[k]=1;
     google.script.run.withFailureHandler(function(){}).EUC_DEV416_prewarm(p);
   }
-  document.addEventListener('mouseover',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
-  document.addEventListener('focusin',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
-  function initial(){Array.from(document.querySelectorAll('.period,[data-period],[data-periode]')).slice(0,6).forEach(function(el,i){setTimeout(function(){warm(el);},300+i*250);});}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initial);else initial();
+  /* Le contrôle rapide remplit lui-même le cache final. Ne pas lancer en
+   * parallèle six appels Apps Script invisibles au chargement de la page. */
 })();
 </script>
 <!-- EUC_DEV416_PREWARM_END -->

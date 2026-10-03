@@ -2,7 +2,11 @@
 var EUC_DEV420_MOTIFS_TABLE_='EUC_STATUTS_SUIVI_ELEVE_PFMP';
 var EUC_DEV420_SITUATIONS_TABLE_='EUC_SITUATIONS_ELEVES_PFMP';
 var EUC_DEV420_INSTALL_TOKEN_='AUTORISATION_SITUATIONS_ELEVES_DEV420';
-var EUC_DEV420_CACHE_TTL_=60;
+/* Ces deux tables changent uniquement depuis les écrans administratifs qui
+ * invalident explicitement le cache. Un TTL de 60 s imposait deux lectures
+ * Grist presque à chaque navigation ; six heures gardent la lecture rapide
+ * tout en laissant un filet de sécurité en cas de modification extérieure. */
+var EUC_DEV420_CACHE_TTL_=21600;
 
 function EUC_DEV420_txt_(v,max){
   var s=String(v==null?'':v).trim();
@@ -58,11 +62,22 @@ function EUC_DEV420_readRows_(table){
   try{return EUC_IMPORT_lireRecords_(table)||[];}catch(e){return [];}
 }
 function EUC_DEV420_cache_(){try{return CacheService.getScriptCache();}catch(e){return null;}}
+function EUC_DEV420_compactRow_(table,r){
+  r=r||{};
+  if(table===EUC_DEV420_MOTIFS_TABLE_)return{
+    id:Number(r.id)||0,Code:r.Code||'',Libelle:r.Libelle||'',Ordre:Number(r.Ordre)||0,
+    Actif:r.Actif!==false,Exclure_sans_convention:r.Exclure_sans_convention!==false
+  };
+  return{
+    id:Number(r.id)||0,Annee_scolaire:r.Annee_scolaire||'',Classe:r.Classe,
+    Periode:r.Periode,Eleve:r.Eleve,Statut:r.Statut,Actif:r.Actif!==false
+  };
+}
 function EUC_DEV420_cachedRows_(table){
   var cache=EUC_DEV420_cache_(),key='DEV420_ROWS_'+table,raw=null;
   try{raw=cache&&cache.get(key);}catch(e){}
   if(raw){try{return JSON.parse(raw);}catch(e2){}}
-  var rows=EUC_DEV420_readRows_(table);
+  var rows=EUC_DEV420_readRows_(table).map(function(r){return EUC_DEV420_compactRow_(table,r);});
   try{if(cache)cache.put(key,JSON.stringify(rows),EUC_DEV420_CACHE_TTL_);}catch(e3){}
   return rows;
 }
@@ -190,6 +205,7 @@ function EUC_DEV420_invalidate_(annee,famille,classe,periode){
     EUC_DEV416_key_(annee,famille||'BACPRO',classe,periode)+'_M',
     ['DEV392_QUICK',annee,famille||'BACPRO',classe,periode].join('_')];
   try{if(cache)cache.removeAll(keys);}catch(e){try{keys.forEach(function(k){cache.remove(k);});}catch(e2){}}
+  if(typeof EUC_DEV421_familyCacheInvalidate_==='function')EUC_DEV421_familyCacheInvalidate_(annee,famille||'BACPRO');
 }
 function EUC_DEV420_sauverSituation(payload){
   var ctx=EUC_DEV420_adminWrite_(),p=payload||{},annee=EUC_DEV420_txt_(p.annee,20),famille=EUC_DEV420_txt_(p.famille||'BACPRO',20),

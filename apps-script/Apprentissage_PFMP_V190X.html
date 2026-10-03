@@ -1768,6 +1768,7 @@ function setKpis(s){
           <div>
             <span class="compact-title">Coordonnées entreprise</span>
             <div class="contact-stack">
+              <input class="responsable-ent" placeholder="Nom du responsable" value="${esc(x.responsableEntreprise||'')}">
               <input class="tel-ent" placeholder="Téléphone" value="${esc(x.telEntreprise||'')}">
               <input class="mail-ent" type="email" placeholder="Courriel" value="${esc(x.mailEntreprise||'')}">
             </div>
@@ -2590,6 +2591,7 @@ function setKpis(s){
       ville:v('.ville'),
       telEntreprise:v('.tel-ent'),
       mailEntreprise:v('.mail-ent'),
+      responsableEntreprise:v('.responsable-ent'),
       tuteur:v('.tuteur-input'),
       telTuteur:v('.tel-tut'),
       mailTuteur:v('.mail-tut')
@@ -2858,6 +2860,7 @@ function setKpis(s){
       q(card,'.ville').value=r.ville||'';
       q(card,'.tel-ent').value=r.telephoneEntreprise||'';
       q(card,'.mail-ent').value=r.courrielEntreprise||'';
+      q(card,'.responsable-ent').value=r.responsableEntreprise||r.responsable||'';
       q(card,'.tuteur-input').value=r.tuteur||'';
       q(card,'.tel-tut').value=r.telephoneTuteur||'';
       q(card,'.mail-tut').value=r.courrielTuteur||'';
@@ -2938,7 +2941,7 @@ function setKpis(s){
       '<div class="dev249-right"><button type="button" class="save dev249-save">Enregistrer</button><span class="dev248-saved">Prêt</span>'+
         '<div class="dev249-col dev249-company-box"><div class="dev249-title">Entreprise</div><label class="dev249-field"><span>Raison sociale</span><input class="nom-ent" value="'+esc(x.nomEntreprise||x.entreprise)+'"></label><label class="dev249-field"><span>Nom commercial / enseigne</span><input class="nom-com" value="'+esc(x.nomCommercial)+'"></label><div class="dev249-search"><label class="dev249-field"><span>SIRET</span><input class="siret-input" maxlength="14" value="'+esc(x.siret)+'"></label><button type="button" class="search">Rechercher</button></div><div class="dev249-msg msg"></div></div>'+
         '<div class="dev249-col"><div class="dev249-title">Adresse</div><label class="dev249-field"><span>Adresse</span><input class="adresse" value="'+esc(x.adresse)+'"></label><div style="display:grid;grid-template-columns:70px 1fr;gap:8px"><label class="dev249-field"><span>CP</span><input class="cp" value="'+esc(x.cp)+'"></label><label class="dev249-field"><span>Ville</span><input class="ville" value="'+esc(x.ville)+'"></label></div></div>'+
-        '<div class="dev249-col"><div class="dev249-title">Coordonnées entreprise</div><label class="dev249-field"><span>Téléphone</span><input class="tel-ent" value="'+esc(x.telEntreprise)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-ent" type="email" value="'+esc(x.mailEntreprise)+'"></label></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Coordonnées entreprise</div><label class="dev249-field"><span>Nom du responsable</span><input class="responsable-ent" value="'+esc(x.responsableEntreprise)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-ent" value="'+esc(x.telEntreprise)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-ent" type="email" value="'+esc(x.mailEntreprise)+'"></label></div>'+
         '<div class="dev249-col"><div class="dev249-title">Tuteur</div><label class="dev249-field"><span>Nom du tuteur</span><input class="tuteur-input" value="'+esc(x.tuteur)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-tut" value="'+esc(x.telTuteur)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-tut" type="email" value="'+esc(x.mailTuteur)+'"></label></div>'+
       '</div>'+
     '</div>';
@@ -2970,7 +2973,7 @@ function setKpis(s){
 
     card.addEventListener('blur',function(ev){
       if(ev.target.matches(
-        '.nom-ent,.nom-com,.adresse,.cp,.ville,.tel-ent,.mail-ent,.tuteur-input,.tel-tut,.mail-tut'
+        '.nom-ent,.nom-com,.adresse,.cp,.ville,.responsable-ent,.tel-ent,.mail-ent,.tuteur-input,.tel-tut,.mail-tut'
       )){
         schedule();
       }

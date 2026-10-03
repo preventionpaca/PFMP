@@ -162,7 +162,7 @@ body{background:#f7fbf9!important}
       <div class="metric" data-dev417-list="apprentis" tabindex="0"><span>Apprenti</span><b id="mApprenti">0</b></div>
       <div class="metric" data-dev417-list="avec" tabindex="0"><span>Avec convention</span><b id="mAvec">0</b></div>
       <div class="metric" data-dev417-list="sans" tabindex="0"><span>Sans convention</span><b id="mSans">0</b></div>
-      <div class="metric"><span>Annulées / interrompues</span><b id="mIncident">0</b></div>
+      <div class="metric" data-dev417-list="incidents" tabindex="0"><span>Annulées / interrompues</span><b id="mIncident">0</b></div>
     </div>
   </div>
 
@@ -354,9 +354,10 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
 
     tbody.innerHTML=(detail.lignes||[]).map(function(x){
       const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
-      return '<tr><td>'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+contactVal(x.contactEntreprise)+'</td><td>'+contactVal(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
+      return '<tr><td class="select-cell">'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+contactVal(x.contactEntreprise)+'</td><td>'+contactVal(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
     }).join('');
 
+    document.body.classList.toggle('detail-readonly',!detail.peutModifier);
     toolbar.style.display=detail.peutModifier?'grid':'none';document.getElementById('selectHead').style.display=detail.peutModifier?'table-cell':'none';sendTable.style.display=detail.peutModifier?'inline-block':'none';mailParams.style.display=detail.peutModifier?'inline-block':'none';bindChecks();
   }
 
@@ -372,6 +373,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
 <style id="EUC_DEV417_DETAIL_KPI_LISTS_STYLE">
 [data-dev417-list]{cursor:pointer;outline:none}
 [data-dev417-list]:focus{box-shadow:0 0 0 3px rgba(11,143,114,.18);border-radius:8px}
+.detail-readonly #selectHead,.detail-readonly .select-cell{display:none!important}
 #eucDev417DetailTip{
   position:fixed;z-index:1000001;display:none;
   width:min(360px,calc(100vw - 24px));max-height:min(430px,70vh);
@@ -402,6 +404,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   function list(key){
     return rows().filter(function(x){
       if(key==='apprentis')return !!x.apprenti;
+      if(key==='incidents')return incident(x);
       if(x.apprenti||incident(x))return false;
       if(key==='avec')return Number(x.conventionId)>0;
       if(x.exclureSansConvention===true)return false;

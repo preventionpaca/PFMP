@@ -29,6 +29,11 @@ test('aucune suppression physique n’est possible',()=>assert.doesNotMatch(sour
 test('les trois motifs initiaux sont présents',()=>{
   assert.match(source,/Dossier géré par avis scolaire/);assert.match(source,/Démissionnaire/);assert.match(source,/Absentéiste/);
 });
+test('les situations sont mises en cache durablement sous forme compacte',()=>{
+  assert.match(source,/EUC_DEV420_CACHE_TTL_=21600/);
+  assert.match(source,/function EUC_DEV420_compactRow_/);
+  assert.match(source,/cache\.put\(key,JSON\.stringify\(rows\),EUC_DEV420_CACHE_TTL_\)/);
+});
 test('toute écriture exige cible active et droit de modification',()=>{
   assert.match(source,/EUC_ENT_controlerCibleRecette_/);assert.match(source,/ctx\.peutModifier!==true/);assert.match(source,/ctx\.lectureSeule===true/);
 });

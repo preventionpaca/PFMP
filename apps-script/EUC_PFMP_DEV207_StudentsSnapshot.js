@@ -268,6 +268,7 @@ function EUC_DEV207_loadApprentis(annee,classeId,classeNom){
         ville:val(f,['Ville']),
         telEntreprise:val(f,['Entreprise_telephone','Telephone_entreprise']),
         mailEntreprise:val(f,['Entreprise_courriel','Courriel_entreprise']),
+        responsableEntreprise:val(f,['Responsable_nom','Responsable']),
         tuteur:val(f,['Tuteur_nom','Tuteur']),
         telTuteur:val(f,['Tuteur_telephone','Telephone_tuteur']),
         mailTuteur:val(f,['Tuteur_courriel','Courriel_tuteur']),

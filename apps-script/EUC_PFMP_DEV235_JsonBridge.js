@@ -123,6 +123,7 @@ function EUC_DEV235_loadStudentsJson(annee, classeId, classeNom) {
 
       telEntreprise: txt(s.telEntreprise),
       mailEntreprise: txt(s.mailEntreprise),
+      responsableEntreprise: txt(s.responsableEntreprise),
 
       tuteur: txt(s.tuteur),
       telTuteur: txt(s.telTuteur),
