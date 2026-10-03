@@ -6,7 +6,7 @@
  * famille technique. Une révision DIRTY interdit toute lecture de l'ancien
  * payload. La révision READY n'est publiée qu'après les détails et l'index.
  */
-var EUC_DEV425_VERSION_='1.0.0-dev.426';
+var EUC_DEV425_VERSION_='1.0.1-dev.426';
 var EUC_DEV425_STATE_PREFIX_='__DEV425_STATE__';
 var EUC_DEV425_STATE_TTL_=21600;
 var EUC_DEV425_FAMILIES_=['BACPRO','BTS','CAP'];
@@ -273,7 +273,11 @@ function EUC_DEV425_refreshScheduled(){
       if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
       var result=EUC_DEV425_finishMutation_({
         annee:annee,families:[item.famille],targets:[],revision:revision,
-        reason:'filet-securite-15-min',syncAll:true
+        /* La reconstruction groupée ci-dessous relit déjà les sources et
+         * republie tous les détails de la famille. Resynchroniser chaque
+         * classe/période avant cela multiplierait inutilement les appels
+         * Grist et pourrait monopoliser Apps Script plusieurs minutes. */
+        reason:'filet-securite-15-min',syncAll:false
       });
       repaired.push(result);
     });
