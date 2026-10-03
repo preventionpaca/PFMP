@@ -366,6 +366,11 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
   yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
   render();
+  /* Les optimisations de navigation sont chargées dans un second script.
+   * Elles doivent pouvoir remplacer l'état détenu par cette fermeture sans
+   * perdre les fonctions de rendu. */
+  window.detail=detail;
+  window.render=function(){detail=window.detail||detail;render()};
 })();
 </script>
 
@@ -1729,6 +1734,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function fallback(url){
     state(true,'Chargement…');
+    if(typeof window.EUC_DEV418_publicNavigate==='function'){
+      window.EUC_DEV418_publicNavigate(url,null,'Chargement…');
+      return;
+    }
     try{
       window.top.location.href=url;
     }catch(e){
