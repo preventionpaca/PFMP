@@ -1663,6 +1663,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 <!-- EUC_DEV382_FAST_NAV_BEGIN -->
 <style id="EUC_DEV382_FAST_NAV_STYLE">
+.euc186-crumb,#EUC_DEV175C_CRUMB{display:none!important}
 #euc382FastState{
   position:fixed;
   left:50%;
@@ -1988,10 +1989,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     fastGo(raw,'Chargement de la classe…');
   },true);
 
+  function initNavigationContext(){updateBreadcrumb();updateBackToFamily();}
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',updateBackToFamily);
+    document.addEventListener('DOMContentLoaded',initNavigationContext);
   }else{
-    updateBackToFamily();
+    initNavigationContext();
   }
 
 })();

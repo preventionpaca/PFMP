@@ -92,6 +92,10 @@ assert.match(detail, /window\.detail=detail;[\s\S]*window\.render=function\(\)\{
   'détail classe: la navigation rapide ne peut pas remplacer l’état détenu par le rendu initial');
 assert.doesNotMatch(detail, /history\.pushState/,
   'détail PUBLIC: l’iframe ne doit pas pousser une URL Apps Script d’une autre origine');
+assert.match(detail, /\.euc186-crumb,#EUC_DEV175C_CRUMB\{display:none!important\}/,
+  'détail classe: les anciens fils d’Ariane dupliqués doivent être masqués');
+assert.match(detail, /function initNavigationContext\(\)\{updateBreadcrumb\(\);updateBackToFamily\(\);\}/,
+  'détail classe: le fil d’Ariane unique doit être initialisé avant toute navigation rapide');
 assert.match(detail, /typeof window\.EUC_DEV418_publicNavigate===['"]function['"][\s\S]*EUC_DEV418_publicNavigate\(url,null,['"]Chargement…['"]\)/,
   'détail PUBLIC: le repli rapide peut encore sortir du sous-domaine');
 
