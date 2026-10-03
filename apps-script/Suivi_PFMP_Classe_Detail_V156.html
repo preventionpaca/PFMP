@@ -1643,7 +1643,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    var sel=document.createElement('select');sel.id='euc357Jump';
    var current=Number(qs('classe'))||0;
    sel.innerHTML='<option value="">— Changer de classe —</option>'+(JUMP||[]).map(function(x){
-     var url=BASE+'?page='+ROUTE+'&annee='+encodeURIComponent(qs('annee'))+'&famille='+encodeURIComponent(x.famille)+'&classe='+encodeURIComponent(x.id)+'&periode='+encodeURIComponent(x.periode);
+     var year=(typeof detail!=='undefined'&&detail&&detail.annee)||qs('annee')||String((document.getElementById('yearSelect')||{}).value||'');
+     var family=(typeof detail!=='undefined'&&detail&&detail.famille)||x.famille||qs('famille')||'BACPRO';
+     var url=BASE+'?page='+ROUTE+'&annee='+encodeURIComponent(year)+'&famille='+encodeURIComponent(family)+'&classe='+encodeURIComponent(x.id)+'&periode='+encodeURIComponent(x.periode);
      return '<option value="'+encodeURIComponent(url)+'"'+(Number(x.id)===current?' selected':'')+'>'+String(x.nom||'')+'</option>';
    }).join('');
    back.parentNode.insertBefore(sel,back);

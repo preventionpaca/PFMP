@@ -246,6 +246,7 @@ const accessCache = read('apps-script/EUC_PFMP_DEV398_Performance.js');
 const liveDetail = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
 const finalCache = read('apps-script/EUC_PFMP_DEV416_Performance.js');
 const adminSummary = read('apps-script/Suivi_Conventions_Admin_Summary_V348.html');
+const classDetailHtml = read('apps-script/Suivi_PFMP_Classe_Detail_V156.html');
 const baseDetailCache = read('apps-script/EUC_PFMP_DEV356_Finitions.js');
 const classFastNav = read('apps-script/EUC_PFMP_DEV382_Performance.js');
 const quickCheck = read('apps-script/EUC_PFMP_DEV388_Fix.js');
@@ -269,6 +270,10 @@ assert.match(finalCache, /detail\.annee=String\(annee\|\|detail\.annee/,
   'navigation rapide: l’année ne doit jamais disparaître du détail persistant');
 assert.match(adminSummary, /window\.top\.location\.href=url\(b\.dataset\.f\)/,
   'accueil admin: la navigation ne doit pas empiler des iframes Apps Script');
+assert.match(classDetailHtml, /detail&&detail\.annee\)\|\|qs\('annee'\)/,
+  'navigation rapide: le sélecteur de classe doit conserver l’année du détail rendu');
+assert.match(classDetailHtml, /detail&&detail\.famille\)\|\|x\.famille/,
+  'navigation rapide: le sélecteur de classe doit conserver la famille du détail rendu');
 const buildFinal = finalCache.slice(finalCache.indexOf('function EUC_DEV416_buildFinal_'), finalCache.indexOf('function EUC_DEV416_finalDetail_'));
 assert.doesNotMatch(buildFinal, /EUC_V50_enrichirDetail_|EUC_APP172_enrichirDetail/,
   'détail classe: les enrichissements conventions/apprentis sont encore rejoués deux fois');
