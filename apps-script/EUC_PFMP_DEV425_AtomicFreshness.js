@@ -317,6 +317,7 @@ function EUC_DEV425_buildFamily_(token,famille){
     var detail=EUC_DEV190_buildHistoricalDetail_(annee,t.classe,t.periode);
     detail=EUC_DEV190J_enrichContacts_(detail);
     detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,t.classe,t.periode,batch,t.p);
+    detail.annee=annee;detail.famille=famille;
     detail.__dev425Revision=token.revision;detail.__dev425FreshAt=new Date().toISOString();
     EUC_DEV426_applyQuick_(t.p,EUC_DEV422_quickFromDetail_(detail));built++;
     details.push({classe:t.classe,periode:t.periode,detail:detail});

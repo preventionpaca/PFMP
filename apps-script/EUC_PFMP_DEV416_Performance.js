@@ -39,6 +39,17 @@ function EUC_DEV416_cachePut_(key,obj){
   }catch(e2){return false;}
 }
 
+function EUC_DEV428_withContext_(detail,annee,famille){
+  detail=detail||{};
+  /* Les vues persistantes DEV427 sont construites hors requête HTTP. Elles
+   * n'avaient donc pas toujours l'année au niveau racine. Or la navigation
+   * rapide construit les URL du sélecteur depuis detail.annee : une valeur
+   * vide forçait son repli vers un rechargement Apps Script complet. */
+  detail.annee=String(annee||detail.annee||'').trim();
+  detail.famille=String(famille||detail.famille||'BACPRO').trim().toUpperCase();
+  return detail;
+}
+
 function EUC_DEV416_buildFinal_(annee,famille,classe,periode){
   var d=
     typeof EUC_DEV356_detail_==='function'
@@ -59,6 +70,7 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
     typeof EUC_DEV425_payloadFresh_!=='function'||
     EUC_DEV425_payloadFresh_(annee,famille,hit)
   )){
+    hit=EUC_DEV428_withContext_(hit,annee,famille);
     hit.__dev416Cache=true;
     return typeof EUC_DEV420_enrichDetail_==='function'
       ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
@@ -71,6 +83,7 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
     if(typeof EUC_DEV427_readDetail_==='function'){
       hit=EUC_DEV427_readDetail_(annee,famille,classe,periode);
       if(hit){
+        hit=EUC_DEV428_withContext_(hit,annee,famille);
         hit.__dev416Cache=false;hit.__dev427Persistent=true;
         EUC_DEV416_cachePut_(key,hit);
         return typeof EUC_DEV420_enrichDetail_==='function'
@@ -87,6 +100,7 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
     if(typeof EUC_DEV424_readEnrichedDetail_==='function'){
       hit=EUC_DEV424_readEnrichedDetail_(annee,famille,classe,periode);
       if(hit){
+        hit=EUC_DEV428_withContext_(hit,annee,famille);
         hit.__dev416Cache=false;hit.__dev424Persistent=true;
         EUC_DEV416_cachePut_(key,hit);
         return typeof EUC_DEV420_enrichDetail_==='function'
@@ -105,6 +119,7 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
       typeof EUC_DEV425_payloadFresh_!=='function'||
       EUC_DEV425_payloadFresh_(annee,famille,hit)
     )){
+      hit=EUC_DEV428_withContext_(hit,annee,famille);
       hit.__dev416Cache=true;
       return typeof EUC_DEV420_enrichDetail_==='function'
         ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
@@ -113,7 +128,7 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
   }
 
   try{
-    var d=EUC_DEV416_buildFinal_(annee,famille,classe,periode);
+    var d=EUC_DEV428_withContext_(EUC_DEV416_buildFinal_(annee,famille,classe,periode),annee,famille);
     d.__dev416Cache=false;
     EUC_DEV416_cachePut_(key,d);
     return typeof EUC_DEV420_enrichDetail_==='function'
