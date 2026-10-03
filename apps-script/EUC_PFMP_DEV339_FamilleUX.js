@@ -222,14 +222,17 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
   detail.stats.scolairesAttendus=Math.max(0,quick.total-quick.apprentis.length);
   return detail;
 }
-function EUC_DEV422_hydrateFamily_(data,annee,famille){
+function EUC_DEV422_hydrateFamily_(data,annee,famille,prepared){
   data=data||{};
+  prepared=prepared||{};
   var classIds={};
   (data.classes||[]).forEach(function(c){classIds[String(Number(c.classeId||c.id)||0)]=c;});
   if(!Object.keys(classIds).length)return data;
-  var batch=EUC_DEV422_batchSources_(annee,classIds);
-  var rows=[];
-  try{rows=EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[];}catch(e){return data;}
+  var batch=prepared.batch||EUC_DEV422_batchSources_(annee,classIds);
+  var rows=prepared.rows||[];
+  if(!prepared.rows){
+    try{rows=EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[];}catch(e){return data;}
+  }
   var newest={};
   rows.forEach(function(r){
     var f=r.fields||{},cid=Number(f.Classe_id)||0,pid=Number(f.Periode_id)||0;
@@ -246,6 +249,10 @@ function EUC_DEV422_hydrateFamily_(data,annee,famille){
     var p=(c.periodes||[]).filter(function(x){return Number(x.id||x.periodeId)===pid;})[0];
     if(!p)return;
     detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,p);
+    if(typeof prepared.onDetail==='function')prepared.onDetail({
+      annee:annee,famille:famille,classe:cid,periode:pid,
+      detail:detail,sourceRow:newest[key]
+    });
     /* La grille vient de construire exactement le détail que la route de
      * classe redemanderait. Le conserver dans les deux caches serveur évite
      * une seconde série de lectures Grist au clic. CacheService est partagé
@@ -296,6 +303,10 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
   if(!rows.length)return {ok:true,ready:false,payload:null,source:'SNAPSHOT_ABSENT'};
   var data=null;
   try{data=JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e){return {ok:false,ready:false,payload:null,source:'SNAPSHOT_INVALIDE'};}
+  if(data&&data.__dev424Enriched===true){
+    EUC_DEV421_familyCachePut_(annee,famille,data);
+    return {ok:true,ready:true,payload:data,source:'SNAPSHOT_ENRICHI'};
+  }
   data=EUC_DEV422_hydrateFamily_(data,annee,famille);
   EUC_DEV421_familyCachePut_(annee,famille,data);
   return {ok:true,ready:!!data,payload:data,source:'SNAPSHOT'};

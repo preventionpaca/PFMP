@@ -62,6 +62,22 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
       :hit;
   }
 
+  /* DEV424 : le déclencheur a déjà effectué les jointures conventions,
+   * apprentissage, situations et affectations. Le premier visiteur ne les
+   * rejoue plus : une seule lecture ciblée du snapshot suffit. */
+  try{
+    if(typeof EUC_DEV424_readEnrichedDetail_==='function'){
+      hit=EUC_DEV424_readEnrichedDetail_(annee,famille,classe,periode);
+      if(hit){
+        hit.__dev416Cache=false;hit.__dev424Persistent=true;
+        EUC_DEV416_cachePut_(key,hit);
+        return typeof EUC_DEV420_enrichDetail_==='function'
+          ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
+          :hit;
+      }
+    }
+  }catch(ePersistent){}
+
   var lock=LockService.getScriptLock(),got=false;
   try{got=lock.tryLock(1200);}catch(e){}
   if(!got){
