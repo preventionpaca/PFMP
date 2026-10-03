@@ -1,5 +1,7 @@
 // PFMP DEV.416 — cache final du détail enrichi + préchauffage.
-var EUC_DEV416_TTL_=180;
+/* Aligné sur le cache famille : tant que la grille est réutilisable, les
+ * détails qu'elle vient de préparer doivent l'être aussi. */
+var EUC_DEV416_TTL_=300;
 var EUC_DEV416_CHUNK_=70000;
 
 function EUC_DEV416_key_(a,f,c,p){
