@@ -79,6 +79,7 @@ function EUC_DEV422_quickFromDetail_(detail){
   out.couverts=out.avec.length+out.apprentis.length+out.situationsCouvertes;
   out.scolairesAttendus=Math.max(0,out.total-out.apprentis.length);
   out.sansConvention=out.sans.length;
+  if(detail.__dev425Revision)out.__dev425Revision=detail.__dev425Revision;
   return out;
 }
 function EUC_DEV422_readDetailSnapshot_(payload){
@@ -295,7 +296,10 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
   var annee=EUC_DEV339_txt_(payload.annee),famille=EUC_DEV339_txt_(payload.famille).toUpperCase();
   if(!annee||!famille)throw new Error('DEV421 : année et famille obligatoires.');
   var cached=EUC_DEV421_familyCacheGet_(annee,famille);
-  if(cached)return {ok:true,ready:true,payload:cached,source:'CACHE'};
+  if(cached&&(
+    typeof EUC_DEV425_payloadFresh_!=='function'||
+    EUC_DEV425_payloadFresh_(annee,famille,cached)
+  ))return {ok:true,ready:true,payload:cached,source:'CACHE'};
   var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[annee],Famille:[famille]})||[];
   rows=rows.filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
     return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
@@ -303,9 +307,15 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
   if(!rows.length)return {ok:true,ready:false,payload:null,source:'SNAPSHOT_ABSENT'};
   var data=null;
   try{data=JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e){return {ok:false,ready:false,payload:null,source:'SNAPSHOT_INVALIDE'};}
-  if(data&&data.__dev424Enriched===true){
+  if(data&&data.__dev424Enriched===true&&(
+    typeof EUC_DEV425_payloadFresh_!=='function'||
+    EUC_DEV425_payloadFresh_(annee,famille,data)
+  )){
     EUC_DEV421_familyCachePut_(annee,famille,data);
     return {ok:true,ready:true,payload:data,source:'SNAPSHOT_ENRICHI'};
+  }
+  if(typeof EUC_DEV425_payloadFresh_==='function'&&!EUC_DEV425_payloadFresh_(annee,famille,data)){
+    try{data=EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||data;}catch(eLive){}
   }
   data=EUC_DEV422_hydrateFamily_(data,annee,famille);
   EUC_DEV421_familyCachePut_(annee,famille,data);

@@ -44,6 +44,7 @@ function EUC_SUIVI_DESAFFECTER_F24(payload){
       message:'Aucune affectation active trouvée pour la sélection.'
     };
   }
+  var token=EUC_DEV425_beginMutation_({annee:annee,classeId:classeId,periodeId:periodeId,reason:'desaffectation-professeur'});
 
   var now=new Date().toISOString();
 
@@ -62,9 +63,9 @@ function EUC_SUIVI_DESAFFECTER_F24(payload){
     );
   });
 
-  return {
+  return EUC_DEV425_finishResult_(token,{
     ok:true,
     count:matches.length,
     message:matches.length+' affectation(s) retirée(s).'
-  };
+  });
 }

@@ -326,6 +326,7 @@ function EUC_DEV190U_saveApprenti(p){
 
 function EUC_DEV190U_savePdif(p){
   p=p||{};
+  var token=EUC_DEV425_beginMutation_({annee:p.annee,eleveId:p.eleveId,reason:'parcours-differencie'});
   var table=EUC_DEV190U_findTable_(['EUC_PARCOURS_DIFFERENCIE_PFMP']);
   if(!table) throw new Error('DEV190U : table EUC_PARCOURS_DIFFERENCIE_PFMP introuvable.');
 
@@ -364,7 +365,7 @@ function EUC_DEV190U_savePdif(p){
     );
   }
 
-  return {ok:true};
+  return EUC_DEV425_finishResult_(token,{ok:true});
 }
 
 function EUC_DEV190U_lookupSiret(siret){

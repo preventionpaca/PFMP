@@ -122,6 +122,11 @@ function EUC_APP172_snapshot(annee){
 
 
 function EUC_APP172_save(p){
+  var token=EUC_DEV425_beginMutation_({
+    annee:p&&p.annee,
+    eleveId:p&&(p.eleve||p.eleveId||p.id),
+    reason:'saisie-apprentissage-v172'
+  });
   var r=
     EUC_DEV396_BASE_EUC_APP172_save
       .apply(this,arguments);
@@ -132,5 +137,5 @@ function EUC_APP172_save(p){
     );
   }catch(e){}
 
-  return r;
+  return EUC_DEV425_finishResult_(token,r);
 }

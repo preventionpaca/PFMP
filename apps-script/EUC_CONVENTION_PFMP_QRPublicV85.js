@@ -420,6 +420,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Statut:'ENTREPRISE_SAISIE',
     Date_derniere_utilisation:new Date().toISOString()
   };
+  var freshToken=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'saisie-entreprise-convention'});
 
   EUC_ENT_grist(
     'patch',
@@ -434,6 +435,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
       console.log('MONACO_REF_WARNING '+String(monacoErr&&monacoErr.message||monacoErr));
     }
   }
+  var freshSnapshot=EUC_DEV425_finishMutation_(freshToken);
 
   var notif={};
   try{
@@ -450,7 +452,8 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     reference:a.Reference_convention||'',
     numeroEnregistrement:numeroEnregistrement,
     message:'Informations entreprise enregistrées.',
-    notification:notif
+    notification:notif,
+    snapshot:freshSnapshot
   };
 }
 

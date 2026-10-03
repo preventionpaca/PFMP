@@ -158,6 +158,7 @@ function EUC_DEV424_buildAll_(annee){
 }
 
 function EUC_DEV424_refreshScheduled(){
+  if(typeof EUC_DEV425_refreshScheduled==='function')return EUC_DEV425_refreshScheduled();
   var started=new Date().toISOString(),t0=Date.now(),lock=LockService.getScriptLock(),got=false,annee='';
   try{got=lock.tryLock(1000);}catch(e){}
   if(!got)return {ok:true,skipped:'overlap'};
@@ -187,7 +188,10 @@ function EUC_DEV424_readEnrichedDetail_(annee,famille,classe,periode){
   for(var i=0;i<rows.length;i++){
     try{
       var d=JSON.parse((rows[i].fields||{}).Payload_JSON||'{}');
-      if(d&&d.__dev424Enriched===true)return d;
+      if(d&&d.__dev424Enriched===true&&(
+        typeof EUC_DEV425_payloadFresh_!=='function'||
+        EUC_DEV425_payloadFresh_(annee,famille,d)
+      ))return d;
     }catch(e){}
   }
   return null;

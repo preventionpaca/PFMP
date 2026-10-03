@@ -626,6 +626,7 @@ function EUC_DEV322_importerNouveaux(){
       pre.items.filter(function(x){
         return x.statut==='NOUVELLE_PRETE';
       });
+    var freshTokens=EUC_DEV425_beginImportItems_(ready,'import-jotform-differentiel');
 
     var accessCols=
       EUC_DEV315_columns_(
@@ -790,6 +791,7 @@ function EUC_DEV322_importerNouveaux(){
         touchedYears
       );
     }catch(eCache){}
+    var freshSnapshots=EUC_DEV425_finishMany_(freshTokens);
 
     /*
      * Contrôle final : le même analyseur doit maintenant classer
@@ -809,6 +811,7 @@ function EUC_DEV322_importerNouveaux(){
       creees:created,
       dejaCreeesPendantImport:skippedRace,
       erreurs:errors,
+      snapshots:freshSnapshots,
       restantesPretes:stillReady,
       anciennesIgnorees:after.anciennesIgnorees,
       counts:after.counts,

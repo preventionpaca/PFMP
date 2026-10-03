@@ -687,19 +687,14 @@ window.EUC_DEV422_QUICK={};
   function periodEl(t){
     return t&&t.closest?t.closest('.period[data-class][data-period],.period[data-c][data-p]'):null;
   }
-  document.addEventListener('mouseover',function(ev){
-    var el=periodEl(ev.target); if(!el)return;
-    if(ev.relatedTarget&&el.contains(ev.relatedTarget))return;
+  document.querySelectorAll('.period[data-class][data-period],.period[data-c][data-p]').forEach(function(el){
+    el.addEventListener('pointerenter',function(){
     anchorInside=true;
     clearTimeout(timer); current=el;
-    timer=setTimeout(function(){if(current===el)load(el);},220);
-  },true);
-  document.addEventListener('mouseout',function(ev){
-    var el=periodEl(ev.target); if(!el)return;
-    if(ev.relatedTarget&&el.contains(ev.relatedTarget))return;
-    anchorInside=false;
-    scheduleClose(320);
-  },true);
+    timer=setTimeout(function(){if(current===el)load(el);},80);
+    });
+    el.addEventListener('pointerleave',function(){anchorInside=false;scheduleClose(320);});
+  });
 })();
 
 </script>

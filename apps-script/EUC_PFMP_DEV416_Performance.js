@@ -55,7 +55,10 @@ function EUC_DEV416_buildFinal_(annee,famille,classe,periode){
 function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
   var key=EUC_DEV416_key_(annee,famille,classe,periode);
   var hit=EUC_DEV416_cacheGet_(key);
-  if(hit){
+  if(hit&&(
+    typeof EUC_DEV425_payloadFresh_!=='function'||
+    EUC_DEV425_payloadFresh_(annee,famille,hit)
+  )){
     hit.__dev416Cache=true;
     return typeof EUC_DEV420_enrichDetail_==='function'
       ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
@@ -83,7 +86,10 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
   if(!got){
     Utilities.sleep(350);
     hit=EUC_DEV416_cacheGet_(key);
-    if(hit){
+    if(hit&&(
+      typeof EUC_DEV425_payloadFresh_!=='function'||
+      EUC_DEV425_payloadFresh_(annee,famille,hit)
+    )){
       hit.__dev416Cache=true;
       return typeof EUC_DEV420_enrichDetail_==='function'
         ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)

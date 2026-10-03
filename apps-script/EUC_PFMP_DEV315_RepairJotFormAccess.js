@@ -775,6 +775,7 @@ function EUC_DEV315_reparerImporter(){
   var seen={};
   var targets={};
   var touchedYears={};
+  var freshTokens={};
 
   var out={
     ok:true,
@@ -902,6 +903,10 @@ function EUC_DEV315_reparerImporter(){
       }
 
       seen[uniqueKey]=true;
+      if(!freshTokens[yearCode]){
+        freshTokens[yearCode]=EUC_DEV425_beginMutation_({annee:yearCode,allFamilies:true,reason:'reparation-import-jotform'});
+      }
+      freshTokens[yearCode].targets.push({classe:classId,periode:periodId,famille:''});
 
       var companyFields=
         EUC_DEV315_companyFields_(
@@ -1087,6 +1092,8 @@ function EUC_DEV315_reparerImporter(){
     targets,
     touchedYears
   );
+  out.snapshots=[];
+  Object.keys(freshTokens).forEach(function(year){out.snapshots.push(EUC_DEV425_finishMutation_(freshTokens[year]));});
 
   var after=EUC_DEV315_flat_(
     'EUC_ACCES_FORMULAIRES_PFMP'

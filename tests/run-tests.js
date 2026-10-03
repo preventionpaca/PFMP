@@ -158,4 +158,5 @@ const dev27Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev27-
 const dev420Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev420-situations-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev420Out);const dev420Count=Number((dev420Out.match(/(\d+) tests DEV420 situations réussis/)||[])[1]||0);if(!dev420Count)process.exitCode=1;else n+=dev420Count;
 const dev422Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev422-family-snapshot-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev422Out);if(!/✓ DEV422/.test(dev422Out))process.exitCode=1;else n+=1;
 const dev424Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev424-snapshot-trigger-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev424Out);if(!/✓ DEV424/.test(dev424Out))process.exitCode=1;else n+=1;
+const dev425Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev425-atomic-freshness-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev425Out);if(!/✓ DEV425/.test(dev425Out))process.exitCode=1;else n+=1;
 if(!process.exitCode)console.log(`\n${n} tests réussis.`);

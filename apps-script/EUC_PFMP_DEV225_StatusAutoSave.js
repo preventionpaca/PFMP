@@ -63,6 +63,11 @@ function EUC_DEV396_BASE_EUC_DEV225_saveApprenti(p){
 }
 
 function EUC_DEV225_saveApprenti(payload){
+  var token=EUC_DEV425_beginMutation_({
+    annee:payload&&payload.annee,
+    eleveId:payload&&(payload.eleveId||payload.eleve||payload.id),
+    reason:'saisie-apprentissage'
+  });
   var r=
     EUC_DEV396_BASE_EUC_DEV225_saveApprenti
       .apply(this,arguments);
@@ -73,5 +78,5 @@ function EUC_DEV225_saveApprenti(payload){
     );
   }catch(e){}
 
-  return r;
+  return EUC_DEV425_finishResult_(token,r);
 }

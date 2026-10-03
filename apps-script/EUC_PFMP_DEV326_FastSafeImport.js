@@ -63,6 +63,7 @@ function EUC_DEV326_importerNouveauxRapide(){
         message:'Aucune nouvelle convention à créer.'
       };
     }
+    var freshTokens=EUC_DEV425_beginImportItems_(ready,'import-jotform-rapide');
 
     var accessTable=
       'EUC_ACCES_FORMULAIRES_PFMP';
@@ -270,6 +271,7 @@ function EUC_DEV326_importerNouveauxRapide(){
         years
       );
     }catch(eCache){}
+    var freshSnapshots=EUC_DEV425_finishMany_(freshTokens);
 
     /*
      * UN SEUL audit final.
@@ -293,6 +295,7 @@ function EUC_DEV326_importerNouveauxRapide(){
       lignesManquantes:missing,
       dureeMs:Date.now()-started,
       counts:finalAudit.counts,
+      snapshots:freshSnapshots,
       lignes:finalAudit.items.map(function(x){
         return {
           ligne:x.ligne,

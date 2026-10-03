@@ -216,6 +216,7 @@ function EUC_DEV420_sauverSituation(payload){
   var motif=statut?EUC_DEV420_motifs_(false).filter(function(x){return x.id===statut;})[0]:null;
   if(statut&&!motif)throw new Error('Situation administrative inactive ou introuvable.');
   if(statut&&(row.apprenti||EUC_DEV420_hasConvention_(row)||EUC_DEV420_incident_(row)))throw new Error('Une situation administrative ne peut être affectée qu’à un élève actuellement sans convention.');
+  var token=typeof EUC_DEV425_beginMutation_==='function'?EUC_DEV425_beginMutation_({annee:annee,famille:famille,classeId:classe,periodeId:periode,reason:'situation-administrative'}):null;
   var lock=LockService.getScriptLock();if(!lock.tryLock(10000))throw new Error('Une autre modification est en cours.');
   try{
     var key=EUC_DEV420_situationKey_(annee,classe,periode,eleve),all=EUC_DEV420_readRows_(EUC_DEV420_SITUATIONS_TABLE_).filter(function(r){return EUC_DEV420_txt_(r.Cle_situation)===key;}).sort(function(a,b){return Number(b.id)-Number(a.id);}),now=new Date().toISOString(),author=EUC_DEV420_txt_(ctx.email,250);
@@ -231,6 +232,7 @@ function EUC_DEV420_sauverSituation(payload){
       }else{fields.Date_creation=now;EUC_ENT_grist('post','/tables/'+EUC_DEV420_SITUATIONS_TABLE_+'/records',{records:[{fields:fields}]});}
     }
     EUC_DEV420_clearRowsCache_();EUC_DEV420_invalidate_(annee,famille,classe,periode);
-    return {ok:true,actif:!!statut,eleveId:eleve,statutId:statut};
+    var result={ok:true,actif:!!statut,eleveId:eleve,statutId:statut};
+    return token&&typeof EUC_DEV425_finishResult_==='function'?EUC_DEV425_finishResult_(token,result):result;
   }finally{try{lock.releaseLock();}catch(e){}}
 }

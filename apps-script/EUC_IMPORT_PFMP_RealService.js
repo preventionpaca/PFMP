@@ -103,6 +103,9 @@ function EUC_IMPORT_importerReelTexte(payload){
       payload.correspondances||{},
       payload.classesExclues||[]
     );
+    var affectedClassIds=[];
+    parsed.rows.forEach(function(r){var id=Number(r.classeGristId)||0;if(id&&affectedClassIds.indexOf(id)<0)affectedClassIds.push(id);});
+    var freshToken=EUC_DEV425_beginMutation_({annee:preview.annee,classIds:affectedClassIds,reason:'import-pronote-eleves'});
 
     var classesById={};
     var classesByNom={};
@@ -370,7 +373,7 @@ function EUC_IMPORT_importerReelTexte(payload){
       respPatches
     );
 
-    return {
+    return EUC_DEV425_finishResult_(freshToken,{
       ok:true,
       sourcePronote:source,
       annee:preview.annee,
@@ -389,7 +392,7 @@ function EUC_IMPORT_importerReelTexte(payload){
       aucuneSuppression:true,
       auteur:ctx.email||'',
       mode:'FAST_DEV273K'
-    };
+    });
 
   }finally{
     lock.releaseLock();

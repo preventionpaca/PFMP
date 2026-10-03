@@ -265,6 +265,7 @@ function EUC_ADMIN_WORKFLOW_validerEtapeV144(accesId,code,options){
     commentaire:EUC_ADMIN_WORKFLOW_txtV144_(options.commentaire,1000)
   });
   fields.Historique_admin_JSON=JSON.stringify(h);
+  var token=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'validation-convention'});
 
   EUC_ENT_grist(
     'patch',
@@ -272,7 +273,7 @@ function EUC_ADMIN_WORKFLOW_validerEtapeV144(accesId,code,options){
     {records:[{id:Number(a.id),fields:fields}]}
   );
 
-  return EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  return EUC_DEV425_finishResult_(token,EUC_ADMIN_WORKFLOW_vueV144(a.id));
 }
 
 function EUC_ADMIN_WORKFLOW_annulerV144(accesId,motif){
@@ -292,6 +293,7 @@ function EUC_ADMIN_WORKFLOW_annulerV144(accesId,motif){
     statut:'ANNULEE_AVANT_DEMARRAGE',
     motif:motif
   });
+  var token=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'annulation-convention'});
 
   EUC_ENT_grist(
     'patch',
@@ -305,7 +307,7 @@ function EUC_ADMIN_WORKFLOW_annulerV144(accesId,motif){
     }}]}
   );
 
-  return EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  return EUC_DEV425_finishResult_(token,EUC_ADMIN_WORKFLOW_vueV144(a.id));
 }
 
 function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
@@ -329,6 +331,7 @@ function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
     dateFinReelle:fin,
     motif:motif
   });
+  var token=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'interruption-convention'});
 
   EUC_ENT_grist(
     'patch',
@@ -343,7 +346,7 @@ function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
     }}]}
   );
 
-  return EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  return EUC_DEV425_finishResult_(token,EUC_ADMIN_WORKFLOW_vueV144(a.id));
 }
 
 function DIAGNOSTIC_DEV144_PFMP_000223(){
@@ -839,9 +842,10 @@ function EUC_ADMIN_WORKFLOW_corrigerV149(accesId,changements,motif){
   var h=EUC_ADMIN_WORKFLOW_historiqueV144_(a);
   h.push({date:now,auteur:ctx.email||'',action:'CORRECTION_ADMINISTRATIVE',motif:motif,avant:avant,apres:apres});
   fields.Historique_admin_JSON=JSON.stringify(h);
+  var token=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'correction-convention'});
 
   EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{id:Number(a.id),fields:fields}]});
-  return EUC_ADMIN_WORKFLOW_vueV146(a.id);
+  return EUC_DEV425_finishResult_(token,EUC_ADMIN_WORKFLOW_vueV146(a.id));
 }
 
 function EUC_ADMIN_WORKFLOW_supprimerV149(accesId,motif){
@@ -858,6 +862,7 @@ function EUC_ADMIN_WORKFLOW_supprimerV149(accesId,motif){
 
   var h=EUC_ADMIN_WORKFLOW_historiqueV144_(a);
   h.push({date:now,auteur:ctx.email||'',action:'SUPPRESSION_CONVENTION',motif:motif,numero:EUC_ADMIN_WORKFLOW_numeroV144_(a)});
+  var token=EUC_DEV425_beginMutation_({annee:a.Annee_scolaire,classeId:EUC_PFMP_ref_(a.Classe_convention),periodeId:EUC_PFMP_ref_(a.Periode),reason:'suppression-logique-convention'});
 
   EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{id:Number(a.id),fields:{
     Supprimee_admin:true,Date_suppression_admin:now,Auteur_suppression_admin:ctx.email||'',
@@ -865,7 +870,7 @@ function EUC_ADMIN_WORKFLOW_supprimerV149(accesId,motif){
     Statut_administratif:'SUPPRIMEE_ADMIN',Historique_admin_JSON:JSON.stringify(h)
   }}]});
 
-  return {ok:true,id:Number(a.id),numero:EUC_ADMIN_WORKFLOW_numeroV144_(a),statut:'SUPPRIMEE_ADMIN',date:now,auteur:ctx.email||'',motif:motif};
+  return EUC_DEV425_finishResult_(token,{ok:true,id:Number(a.id),numero:EUC_ADMIN_WORKFLOW_numeroV144_(a),statut:'SUPPRIMEE_ADMIN',date:now,auteur:ctx.email||'',motif:motif});
 }
 
 function DIAGNOSTIC_DEV151_SCHEMA_SUPPRESSION(){

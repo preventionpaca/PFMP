@@ -167,6 +167,7 @@ function EUC_DEV415_publicDetail(e){
     'a[href*="admin-pfmp"],'+
     'a[href*="snapshot-pfmp-admin"]'+
     '{display:none!important}'+
+    '#EUC_DEV183_BREADCRUMB{display:none!important}'+
     '</style>';
 
   html=html.replace(

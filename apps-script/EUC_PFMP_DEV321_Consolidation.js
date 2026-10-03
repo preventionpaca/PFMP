@@ -548,6 +548,7 @@ function EUC_DEV321_importerLotSecurise(){
         x.statut==='PRETE_MAJ'
       );
     });
+    var freshTokens=EUC_DEV425_beginImportItems_(ready,'import-jotform-consolide');
 
     var accessCols=
       EUC_DEV315_columns_(
@@ -741,6 +742,7 @@ function EUC_DEV321_importerLotSecurise(){
         years
       );
     }catch(eCache){}
+    var freshSnapshots=EUC_DEV425_finishMany_(freshTokens);
 
     var after=EUC_DEV321_preflight_();
 
@@ -750,6 +752,7 @@ function EUC_DEV321_importerLotSecurise(){
       misesAJour:updated,
       preflight:pre.counts,
       finalCounts:after.counts,
+      snapshots:freshSnapshots,
       total:after.total,
       lignes:after.items.map(function(x){
         return {

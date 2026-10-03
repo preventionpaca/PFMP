@@ -90,6 +90,7 @@ function EUC_SUIVI_AFFECTER_V156(payload){
   EUC_V156_assurerTable_();
   var prof=EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP').filter(function(p){return Number(p.id)===profId&&p.Actif!==false;})[0];
   if(!prof)throw new Error('Professeur introuvable.');
+  var token=EUC_DEV425_beginMutation_({annee:annee,classeId:classeId,periodeId:periodeId,reason:'affectation-professeur'});
   var profNom=[prof.Civilite,prof.Prenom,prof.Nom].filter(Boolean).join(' '),profMail=EUC_V156_txt_(prof.Email),now=new Date().toISOString();
   var existing=EUC_IMPORT_lireRecords_(EUC_V156_TABLE_);
   eleveIds.forEach(function(eid){
@@ -98,7 +99,7 @@ function EUC_SUIVI_AFFECTER_V156(payload){
     if(ex)EUC_ENT_grist('patch','/tables/'+EUC_V156_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});
     else EUC_ENT_grist('post','/tables/'+EUC_V156_TABLE_+'/records',{records:[{fields:fields}]});
   });
-  return EUC_SUIVI_CLASSE_detailV156(annee,classeId,periodeId);
+  return EUC_DEV425_finishResult_(token,EUC_SUIVI_CLASSE_detailV156(annee,classeId,periodeId));
 }
 
 function EUC_SUIVI_CLASSE_afficherV156(e){

@@ -124,6 +124,7 @@ function EUC_DEV174_pdifSave(p){
   var ctx=EUC_ADMIN_WORKFLOW_ctxV144_();EUC_DEV174_assurerPdif_();p=p||{};
   var eid=Number(p.eleve)||0,annee=EUC_DEV174_txt_(p.annee),rid=Number(p.recordId)||0,now=new Date().toISOString();
   if(!eid||!annee)throw new Error('Élève ou année manquant.');
+  var token=EUC_DEV425_beginMutation_({annee:annee,eleveId:eid,reason:'parcours-differencie'});
   var fields={
     Eleve:eid,Annee_scolaire:annee,Parcours_differencie:!!p.pdif,
     Date_decision:EUC_DEV174_date_(p.date)||null,Remarque:EUC_DEV174_txt_(p.remarque),
@@ -131,7 +132,7 @@ function EUC_DEV174_pdifSave(p){
   };
   if(rid)EUC_ENT_grist('patch','/tables/'+EUC_DEV174_PDIF_TABLE_+'/records',{records:[{id:rid,fields:fields}]});
   else{fields.Date_creation=now;EUC_ENT_grist('post','/tables/'+EUC_DEV174_PDIF_TABLE_+'/records',{records:[{fields:fields}]});}
-  return {ok:true};
+  return EUC_DEV425_finishResult_(token,{ok:true});
 }
 
 /* ---------- générateur : éligibilité centralisée ---------- */

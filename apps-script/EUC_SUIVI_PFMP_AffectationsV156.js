@@ -131,6 +131,7 @@ function EUC_SUIVI_AFFECTER_V156(payload){
     return Number(p.id)===profId&&p.Actif!==false;
   })[0];
   if(!prof)throw new Error('Professeur introuvable.');
+  var token=EUC_DEV425_beginMutation_({annee:annee,classeId:classeId,periodeId:periodeId,reason:'affectation-professeur'});
 
   var profNom=[prof.Civilite,prof.Prenom,prof.Nom].filter(Boolean).join(' ');
   var profMail=EUC_V156_txt_(prof.Email);
@@ -169,5 +170,5 @@ function EUC_SUIVI_AFFECTER_V156(payload){
     }
   });
 
-  return EUC_SUIVI_CLASSE_detailV156(annee,classeId,periodeId);
+  return EUC_DEV425_finishResult_(token,EUC_SUIVI_CLASSE_detailV156(annee,classeId,periodeId));
 }

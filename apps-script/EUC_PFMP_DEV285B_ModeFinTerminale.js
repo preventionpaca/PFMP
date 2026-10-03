@@ -253,6 +253,7 @@ function EUC_DEV285B_saveChoice(p){
   if(!annee||!eleveId){
     throw new Error('Année et élève obligatoires.');
   }
+  var token=EUC_DEV425_beginMutation_({annee:annee,eleveId:eleveId,reason:'mode-fin-terminale'});
 
   EUC_DEV285B_ensureSchema_();
 
@@ -310,10 +311,10 @@ function EUC_DEV285B_saveChoice(p){
 
   EUC_DEV285B_MEMO_={};
 
-  return {
+  return EUC_DEV425_finishResult_(token,{
     ok:true,
     mode:mode
-  };
+  });
 }
 
 function EUC_DEV285B_isPdif_(p){
