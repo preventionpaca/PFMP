@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV421 R2, version Apps Script immuable `737`.
+- Version active déployée le 3 octobre 2026 : DEV423 R2, version Apps Script immuable `746`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `737`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `746`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420 a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
@@ -14,7 +14,7 @@
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
-- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (334 tests).
+- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (335 tests).
 - Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
 
@@ -113,3 +113,14 @@
 - Après une synchronisation autorisée d’un snapshot détaillé, les caches de famille et de contrôle rapide correspondants sont invalidés. Le flux de maintenance préparé reconstruit aussi l’index persistant de famille ; aucun déclencheur n’est activé par ce lot.
 - Tests locaux verts : `node tests/run-tests.js` (335 tests), dont un scénario DEV422 reproduisant TCIEL avec 24 conventions, 1 apprenti et 1 sans convention sur 26 élèves.
 - Aucun accès à la production, aucune écriture Grist, aucun import, aucun courriel, aucun ordre de mission et aucune activation LIVE/ENABLED n’ont été exécutés pendant la préparation du lot.
+
+## DEV423 R2 déployée — cohérence, navigation et mesure froide
+
+- Les cartes de famille, les contrôles rapides et les détails de classe reposent sur le même détail enrichi. Contrôle réel TCIEL PFMP n°1 : `24 conventions + 1 apprenti + 1 sans convention` sur 26 élèves ; TCAR PFMP n°1 : `16 conventions + 3 apprentis`, aucun sans convention.
+- Le survol de contrôle rapide ne déclenche plus d’appel serveur : les listes sont incluses dans la réponse de famille. Le voile plein écran a été retiré et seul l’élément cliqué porte un indicateur rotatif.
+- Le détail préchargé conserve désormais toutes les informations de convention, notamment entreprise, adresse, responsable, téléphone, courriel et tuteur. Un test de non-régression couvre explicitement ce point.
+- La navigation rapide ne tente plus de pousser une URL Apps Script absolue dans l’historique de l’iframe `googleusercontent`. Le changement TCIEL PFMP n°1 vers PFMP n°2 reste sous `pfmp.loucodi.fr` ; mesure navigateur : `149 ms` serveur et `3 336 ms` au total.
+- Mesure froide différentielle : la famille BAC PRO n’était pas encore visible après environ 22 secondes et l’était avant 34 secondes. Cette valeur, très au-dessus de la cible, provient de la reconstruction synchrone de toutes les classes/périodes à partir de plusieurs lectures Grist successives. Le cache Apps Script partagé ramène ensuite la famille et le détail dans une fenêtre contrôlée inférieure à environ 6 secondes, mais il expire au bout de cinq minutes et ne constitue donc pas la solution du premier accès quotidien.
+- Conclusion de performance : atteindre durablement 2 à 3 secondes à froid exige de servir un snapshot enrichi déjà construit, commun à tous les appareils, et de le rafraîchir hors du chemin de consultation. Le code de maintenance existe, mais aucun déclencheur n’a été activé : son activation et les écritures de snapshot doivent faire l’objet d’une autorisation explicite et d’un choix de cible conforme aux règles de recette.
+- Version Apps Script immuable `746`, appliquée aux seuls déploiements PUBLIC et ADMIN existants. Après `clasp push`, les 344 fichiers ont été relus : aucune divergence avec les sources locales.
+- Suite complète verte : `node tests/run-tests.js`, 335 tests. Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune écriture élève/convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.

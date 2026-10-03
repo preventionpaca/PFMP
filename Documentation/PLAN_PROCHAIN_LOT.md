@@ -10,6 +10,20 @@ Ordre de validation :
 4. contrôler les deux vues apprentis principales sans mutation ;
 5. ne proposer l’activation d’un rafraîchissement périodique qu’après ces mesures, avec autorisation explicite, quotas et mécanisme d’arrêt documentés.
 
+## DEV423 — priorité absolue : snapshot enrichi partagé
+
+DEV423 R2 est déployée en version immuable `746`. Les compteurs sont cohérents, les contrôles rapides sont préchargés, le détail conserve les coordonnées et la navigation rapide reste sous le sous-domaine. Le changement de période mesuré après amorçage prend `149 ms` côté serveur et `3 336 ms` au total. En revanche, la famille BAC PRO à froid reste entre environ 22 et 34 secondes : le chemin de consultation reconstruit encore toutes les périodes depuis plusieurs tables Grist.
+
+Ordre proposé, soumis à autorisation avant toute écriture ou activation :
+
+1. choisir formellement la base de recette autorisée pour le snapshot, sans jamais utiliser `3pnVrygfNn7c` ;
+2. construire hors consultation un snapshot enrichi versionné contenant les cartes et contrôles rapides déjà cohérents ;
+3. déclencher sa mise à jour après les mutations autorisées, puis proposer un déclencheur périodique borné comme filet de sécurité ;
+4. conserver le dernier snapshot valide en cas d’échec, journaliser uniquement les durées et rendre le déclencheur désactivable ;
+5. mesurer ensuite les vrais premiers accès sur un autre appareil pour PUBLIC, ADMIN et apprentis, avec une cible de 2 à 3 secondes et un plafond de 4 secondes.
+
+Tant que cette autorisation n’est pas donnée, ne pas activer de déclencheur, ne pas écrire de snapshot supplémentaire et ne pas présenter la performance réchauffée comme la performance froide.
+
 ## Historique DEV421 R2 — performance et automatisation contrôlée
 
 DEV421 R2 est déployée en version immuable `737` sur les déploiements ADMIN et PUBLIC existants. La grille de classes et la navigation utilisent maintenant le snapshot persistant comme source première, avec un cache de cinq minutes invalidé lors des mises à jour connues. Les temps mesurés à chaud sont de `3,86 s` pour BAC PRO et `3,74–3,90 s` pour le détail TCAR.
