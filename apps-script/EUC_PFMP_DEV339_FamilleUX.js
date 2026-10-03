@@ -10,7 +10,7 @@ function EUC_DEV339_year_(e){var y=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.a
  * explicitement cette entrée. */
 var EUC_DEV421_FAMILY_TTL_=300;
 function EUC_DEV421_familyKey_(annee,famille){
-  return 'DEV422R3_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
+  return 'DEV422R4_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
 }
 function EUC_DEV421_familyCacheGet_(annee,famille){
   var raw=null;
@@ -91,7 +91,11 @@ function EUC_DEV422_readDetailSnapshot_(payload){
   }
 }
 function EUC_DEV422_batchSources_(annee,classIds){
-  var out={access:{},accessAvailable:false,apps:[],appsAvailable:false},byPeriod={};
+  var out={
+    access:{},accessAvailable:false,
+    apps:[],appsAvailable:false,
+    affectations:{},affectationsAvailable:false
+  },byPeriod={};
   try{
     var rows=[];
     if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_CONVENTION_ACCES_TABLE_!=='undefined'){
@@ -125,6 +129,27 @@ function EUC_DEV422_batchSources_(annee,classIds){
     out.apps=typeof EUC_DEV340_appRows_==='function'?EUC_DEV340_appRows_():(typeof EUC_DEV275B_rows_==='function'?EUC_DEV275B_rows_():[]);
     out.appsAvailable=true;
   }catch(eApps){}
+  try{
+    var affectRows=[];
+    if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_V156_TABLE_!=='undefined'){
+      affectRows=(EUC_DEV190G_fastRecords_(EUC_V156_TABLE_,{Annee_scolaire:[annee]})||[]).map(function(r){
+        var x={id:Number(r.id)||0},f=r.fields||{};Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
+      });
+    }else if(typeof EUC_IMPORT_lireRecords_==='function'&&typeof EUC_V156_TABLE_!=='undefined'){
+      affectRows=EUC_IMPORT_lireRecords_(EUC_V156_TABLE_)||[];
+    }
+    out.affectationsAvailable=true;
+    affectRows.forEach(function(a){
+      if(a.Actif===false||EUC_DEV339_txt_(a.Annee_scolaire)!==annee)return;
+      var cid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe):Number(a.Classe)||0;
+      var pid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Periode):Number(a.Periode)||0;
+      var eid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):Number(a.Eleve)||0;
+      var type=EUC_DEV422_normStatus_(a.Type_suivi);
+      if(!classIds[String(cid)]||!pid||!eid||(type!=='TELEPHONE'&&type!=='VISITE'))return;
+      var key=cid+'|'+pid+'|'+eid+'|'+type,old=out.affectations[key];
+      if(!old||Number(a.id||0)>Number(old.id||0))out.affectations[key]=a;
+    });
+  }catch(eAffectations){}
   return out;
 }
 function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,periodCard){
@@ -147,6 +172,18 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
       var app=EUC_APP172_eval(batch.apps,eid,debut,fin)||{code:'SCOLAIRE'};
       x.statutApprentissage=app.code;x.apprenti=app.code==='APPRENTI';x.statutMixte=app.code==='MIXTE';
       if(x.apprenti){x.conventionId=0;x.convention=false;x.statutCode='APPRENTI';x.statut='APPRENTI';}
+    }
+    if(batch.affectationsAvailable){
+      var tel=batch.affectations[cid+'|'+pid+'|'+eid+'|TELEPHONE'];
+      var vis=batch.affectations[cid+'|'+pid+'|'+eid+'|VISITE'];
+      if(tel){
+        x.professeurTelephone=EUC_DEV339_txt_(tel.Nom_professeur_snapshot)||EUC_DEV339_txt_(x.professeurTelephone);
+        x.affectationTelephoneId=Number(tel.id)||Number(x.affectationTelephoneId)||0;
+      }
+      if(vis){
+        x.professeurVisiteur=EUC_DEV339_txt_(vis.Nom_professeur_snapshot)||EUC_DEV339_txt_(x.professeurVisiteur);
+        x.affectationVisiteId=Number(vis.id)||Number(x.affectationVisiteId)||0;
+      }
     }
   });
   if(typeof EUC_DEV420_enrichDetail_==='function'){
@@ -178,6 +215,23 @@ function EUC_DEV422_hydrateFamily_(data,annee,famille){
     var p=(c.periodes||[]).filter(function(x){return Number(x.id||x.periodeId)===pid;})[0];
     if(!p)return;
     detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,p);
+    /* La grille vient de construire exactement le détail que la route de
+     * classe redemanderait. Le conserver dans les deux caches serveur évite
+     * une seconde série de lectures Grist au clic. CacheService est partagé
+     * entre les appareils : il ne s'agit pas du cache du navigateur. */
+    try{
+      if(typeof EUC_DEV383_cacheKey_==='function'){
+        CacheService.getScriptCache().put(
+          EUC_DEV383_cacheKey_(annee,famille,cid,pid),JSON.stringify(detail),
+          typeof EUC_DEV416_TTL_!=='undefined'?EUC_DEV416_TTL_:180
+        );
+      }
+    }catch(eBaseCache){}
+    try{
+      if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function'){
+        EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),detail);
+      }
+    }catch(eFinalCache){}
     var quick=EUC_DEV422_quickFromDetail_(detail),apps=quick.apprentis||[];
     p.quick=quick;p.__detailSnapshotVerified=true;
     if(!quick.isPdif){

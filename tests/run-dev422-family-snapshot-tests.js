@@ -40,6 +40,7 @@ const records = [{
   }
 }];
 
+const finalCache = {};
 const context = {
   console,
   CacheService: {getScriptCache: () => ({get: () => null, put: () => {}, remove: () => {}})},
@@ -51,7 +52,9 @@ const context = {
     ? {code: 'CONVENTION_ENREGISTREE', libelle: 'Convention enregistrée', active: true}
     : {code: 'SANS_CONVENTION', libelle: 'Sans convention', active: false},
   EUC_DEV340_appRows_: () => [{Eleve: 26}],
-  EUC_APP172_eval: (rows, eleveId) => ({code: eleveId === 26 ? 'APPRENTI' : 'SCOLAIRE'})
+  EUC_APP172_eval: (rows, eleveId) => ({code: eleveId === 26 ? 'APPRENTI' : 'SCOLAIRE'}),
+  EUC_DEV416_key_: (annee, famille, classe, periode) => [annee, famille, classe, periode].join('|'),
+  EUC_DEV416_cachePut_: (key, value) => { finalCache[key] = JSON.parse(JSON.stringify(value)); }
 };
 vm.createContext(context);
 vm.runInContext(source, context);
@@ -75,6 +78,11 @@ assert.equal(period.sansConvention, 1, 'le sans convention doit être cohérent 
 assert.equal(family.classes[0].apprentis, 1, 'le badge classe doit être cohérent');
 assert.equal(period.quick.avec.length, 24, 'la bulle pré-calculée doit reprendre les 24 conventions');
 assert.equal(period.quick.sans.length, 1, 'la bulle pré-calculée doit reprendre le sans convention');
+assert.equal(
+  finalCache['2026-2027|BACPRO|25|61'].lignes.filter(x => x.conventionId > 0).length,
+  24,
+  'le détail enrichi doit être amorcé dans le cache serveur partagé'
+);
 
 const incident = context.EUC_DEV422_quickFromDetail_({
   classe: {nom: 'TEST'},
