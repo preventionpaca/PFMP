@@ -90,11 +90,61 @@ function EUC_DEV422_readDetailSnapshot_(payload){
     return {ok:false,exists:false,durationMs:Date.now()-t0,detail:null,error:String(e&&e.message||e)};
   }
 }
+function EUC_DEV422_batchSources_(annee,classIds){
+  var out={access:{},accessAvailable:false,apps:[],appsAvailable:false};
+  try{
+    var rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
+    out.accessAvailable=true;
+    rows.forEach(function(a){
+      var y=EUC_DEV339_txt_(a.Annee_scolaire);
+      var cid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe_convention):Number(a.Classe_convention)||0;
+      var pid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Periode):Number(a.Periode)||0;
+      var eid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):Number(a.Eleve)||0;
+      if((y&&y!==annee)||!classIds[String(cid)]||!pid||!eid)return;
+      var k=cid+'|'+pid+'|'+eid;
+      (out.access[k]=out.access[k]||[]).push(a);
+    });
+    Object.keys(out.access).forEach(function(k){out.access[k].sort(function(a,b){return Number(b.id||0)-Number(a.id||0);});});
+  }catch(eAccess){}
+  try{
+    out.apps=typeof EUC_DEV340_appRows_==='function'?EUC_DEV340_appRows_():(typeof EUC_DEV275B_rows_==='function'?EUC_DEV275B_rows_():[]);
+    out.appsAvailable=true;
+  }catch(eApps){}
+  return out;
+}
+function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,periodCard){
+  detail=detail||{};batch=batch||{};
+  var period=detail.periode||{},debut=period.debut||period.Date_debut||period.debutFr||(periodCard&&periodCard.debutFr)||'';
+  var fin=period.fin||period.Date_fin||period.finFr||(periodCard&&periodCard.finFr)||'';
+  (detail.lignes||[]).forEach(function(x){
+    var eid=Number(x.eleveId)||0;
+    if(batch.accessAvailable){
+      var list=(batch.access[cid+'|'+pid+'|'+eid]||[]),actif=null;
+      for(var i=0;i<list.length;i++){
+        var candidate=typeof EUC_DEV340_status_==='function'?EUC_DEV340_status_(list[i]):null;
+        if(candidate&&candidate.active){actif=list[i];break;}
+      }
+      var dernier=actif||list[0]||null;
+      var st=typeof EUC_DEV340_status_==='function'?EUC_DEV340_status_(dernier):(dernier?{code:'AVEC_CONVENTION',libelle:'Avec convention',active:true}:{code:'SANS_CONVENTION',libelle:'Sans convention',active:false});
+      x.conventionId=actif?Number(actif.id)||0:0;x.convention=!!actif;x.statutCode=st.code;x.statut=st.libelle;
+    }
+    if(batch.appsAvailable&&typeof EUC_APP172_eval==='function'){
+      var app=EUC_APP172_eval(batch.apps,eid,debut,fin)||{code:'SCOLAIRE'};
+      x.statutApprentissage=app.code;x.apprenti=app.code==='APPRENTI';x.statutMixte=app.code==='MIXTE';
+      if(x.apprenti){x.conventionId=0;x.convention=false;x.statutCode='APPRENTI';x.statut='APPRENTI';}
+    }
+  });
+  if(typeof EUC_DEV420_enrichDetail_==='function'){
+    try{detail=EUC_DEV420_enrichDetail_(detail,annee,famille,cid,pid)||detail;}catch(eSituations){}
+  }
+  return detail;
+}
 function EUC_DEV422_hydrateFamily_(data,annee,famille){
   data=data||{};
   var classIds={};
   (data.classes||[]).forEach(function(c){classIds[String(Number(c.classeId||c.id)||0)]=c;});
   if(!Object.keys(classIds).length)return data;
+  var batch=EUC_DEV422_batchSources_(annee,classIds);
   var rows=[];
   try{rows=EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[];}catch(e){return data;}
   var newest={};
@@ -112,6 +162,7 @@ function EUC_DEV422_hydrateFamily_(data,annee,famille){
     if(!c)return;
     var p=(c.periodes||[]).filter(function(x){return Number(x.id||x.periodeId)===pid;})[0];
     if(!p)return;
+    detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,p);
     var quick=EUC_DEV422_quickFromDetail_(detail),apps=quick.apprentis||[];
     p.quick=quick;p.__detailSnapshotVerified=true;
     if(!quick.isPdif){

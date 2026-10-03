@@ -14,10 +14,19 @@ const detail = {
 };
 
 for (let i = 1; i <= 24; i++) {
-  detail.lignes.push({eleveId: i, nom: `ELEVE${i}`, statut: 'Convention enregistrée'});
+  detail.lignes.push({eleveId: i, nom: `ELEVE${i}`, statut: 'Sans convention'});
 }
 detail.lignes.push({eleveId: 25, nom: 'SANS', statut: 'Sans convention'});
-detail.lignes.push({eleveId: 26, nom: 'APPRENTI', statut: 'Apprenti', apprenti: true});
+detail.lignes.push({eleveId: 26, nom: 'APPRENTI', statut: 'Sans convention', apprenti: false});
+
+const accessRows = Array.from({length: 24}, (_, i) => ({
+  id: 1000 + i,
+  Eleve: i + 1,
+  Classe_convention: 25,
+  Periode: 61,
+  Annee_scolaire: '2026-2027',
+  Statut: 'Enregistrée'
+}));
 
 const records = [{
   fields: {
@@ -35,7 +44,14 @@ const context = {
   console,
   CacheService: {getScriptCache: () => ({get: () => null, put: () => {}, remove: () => {}})},
   EUC_DEV190I_TABLE_: 'EUC_SUIVI_PFMP_DETAIL_SNAPSHOT',
-  EUC_DEV190G_fastRecords_: () => records
+  EUC_DEV190G_fastRecords_: () => records,
+  EUC_CONVENTION_lireAccesFraisV108_: () => accessRows,
+  EUC_DEV340_ref_: value => Number(value) || 0,
+  EUC_DEV340_status_: row => row
+    ? {code: 'CONVENTION_ENREGISTREE', libelle: 'Convention enregistrée', active: true}
+    : {code: 'SANS_CONVENTION', libelle: 'Sans convention', active: false},
+  EUC_DEV340_appRows_: () => [{Eleve: 26}],
+  EUC_APP172_eval: (rows, eleveId) => ({code: eleveId === 26 ? 'APPRENTI' : 'SCOLAIRE'})
 };
 vm.createContext(context);
 vm.runInContext(source, context);
