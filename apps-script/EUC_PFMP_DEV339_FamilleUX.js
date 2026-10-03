@@ -285,7 +285,10 @@ function EUC_DEV422_hydrateFamily_(data,annee,famille,prepared){
       p.couverts=quick.couverts;
     }
     appByClass[String(cid)]=appByClass[String(cid)]||{};
-    (detail.lignes||[]).forEach(function(x){if(x.apprenti===true)appByClass[String(cid)][String(Number(x.eleveId)||EUC_DEV422_studentName_(x))]=1;});
+    /* quick est la source commune des cartes et des infobulles. Utiliser sa
+     * liste évite qu'un ancien booléen apprenti du détail mette le badge à 0
+     * alors que le décompte de période est déjà correct. */
+    (quick.apprentis||[]).forEach(function(nom){appByClass[String(cid)][EUC_DEV339_txt_(nom)]=1;});
   });
   (data.classes||[]).forEach(function(c){c.apprentis=Object.keys(appByClass[String(Number(c.classeId||c.id)||0)]||{}).length;});
   data.__dev422=true;data.__source='detail-snapshot-batch';

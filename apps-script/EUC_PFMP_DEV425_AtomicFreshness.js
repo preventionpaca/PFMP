@@ -6,10 +6,11 @@
  * famille technique. Une révision DIRTY interdit toute lecture de l'ancien
  * payload. La révision READY n'est publiée qu'après les détails et l'index.
  */
-var EUC_DEV425_VERSION_='1.0.0-dev.425';
+var EUC_DEV425_VERSION_='1.0.0-dev.426';
 var EUC_DEV425_STATE_PREFIX_='__DEV425_STATE__';
 var EUC_DEV425_STATE_TTL_=21600;
 var EUC_DEV425_FAMILIES_=['BACPRO','BTS','CAP'];
+var EUC_DEV426_STATE_PROP_PREFIX_='EUC_DEV426_STATE_';
 
 function EUC_DEV425_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV425_family_(v){
@@ -21,6 +22,7 @@ function EUC_DEV425_family_(v){
 }
 function EUC_DEV425_stateFamily_(famille){return EUC_DEV425_STATE_PREFIX_+EUC_DEV425_family_(famille);}
 function EUC_DEV425_stateKey_(annee,famille){return 'DEV425_STATE_'+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
+function EUC_DEV426_statePropKey_(annee,famille){return EUC_DEV426_STATE_PROP_PREFIX_+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
 function EUC_DEV425_revision_(){
   var suffix='';try{suffix=Utilities.getUuid().replace(/-/g,'').slice(0,12);}catch(e){suffix=String(Math.random()).slice(2,14);}
   return Date.now().toString(36)+'-'+suffix;
@@ -33,6 +35,18 @@ function EUC_DEV425_readState_(annee,famille){
   var cache=CacheService.getScriptCache(),key=EUC_DEV425_stateKey_(annee,famille),raw=null;
   try{raw=cache.get(key);}catch(e){}
   if(raw){try{return JSON.parse(raw);}catch(e2){}}
+  /* Un pointeur minuscule et partagé évite une lecture Grist supplémentaire
+   * à chaque requête lorsque le cache Apps Script a expiré. Toutes les
+   * écritures d'état passent par EUC_DEV425_writeState_, donc ce miroir ne
+   * peut pas rester READY pendant qu'une mutation est DIRTY. */
+  try{raw=PropertiesService.getScriptProperties().getProperty(EUC_DEV426_statePropKey_(annee,famille));}catch(e3){raw=null;}
+  if(raw){
+    try{
+      var mirrored=JSON.parse(raw);
+      cache.put(key,raw,EUC_DEV425_STATE_TTL_);
+      return mirrored;
+    }catch(e4){}
+  }
   var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{
     Annee_scolaire:[annee],Famille:[EUC_DEV425_stateFamily_(famille)]
   }).filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
@@ -40,8 +54,12 @@ function EUC_DEV425_readState_(annee,famille){
     return d||((Number(b.id)||0)-(Number(a.id)||0));
   });
   var state=null;
-  if(rows.length){try{state=JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e3){state=null;}}
-  if(state){try{cache.put(key,JSON.stringify(state),EUC_DEV425_STATE_TTL_);}catch(e4){}}
+  if(rows.length){try{state=JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e5){state=null;}}
+  if(state){
+    var encoded=JSON.stringify(state);
+    try{cache.put(key,encoded,EUC_DEV425_STATE_TTL_);}catch(e6){}
+    try{PropertiesService.getScriptProperties().setProperty(EUC_DEV426_statePropKey_(annee,famille),encoded);}catch(e7){}
+  }
   return state;
 }
 
@@ -60,7 +78,12 @@ function EUC_DEV425_writeState_(annee,famille,state){
   /* DIRTY doit être visible avant la première écriture métier. Si Grist
    * échoue ensuite, le cache reste volontairement conservateur. */
   if(safe.status==='DIRTY'){
-    try{CacheService.getScriptCache().put(EUC_DEV425_stateKey_(annee,famille),JSON.stringify(safe),EUC_DEV425_STATE_TTL_);}catch(e0){}
+    var dirtyEncoded=JSON.stringify(safe);
+    try{CacheService.getScriptCache().put(EUC_DEV425_stateKey_(annee,famille),dirtyEncoded,EUC_DEV425_STATE_TTL_);}catch(e0){}
+    /* Une mutation ne démarre pas si le pointeur partagé ne peut pas devenir
+     * DIRTY : mieux vaut refuser l'écriture que servir ensuite un ancien
+     * pointeur READY. */
+    PropertiesService.getScriptProperties().setProperty(EUC_DEV426_statePropKey_(annee,famille),dirtyEncoded);
   }
   EUC_DEV190_api_('post','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:[{fields:{
     Annee_scolaire:annee,Famille:tech,Payload_JSON:JSON.stringify(safe),Updated_at:now,Actif:true
@@ -68,7 +91,9 @@ function EUC_DEV425_writeState_(annee,famille,state){
   if(old.length)EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:old.map(function(r){
     return {id:Number(r.id),fields:{Actif:false,Updated_at:now}};
   })});
-  try{CacheService.getScriptCache().put(EUC_DEV425_stateKey_(annee,famille),JSON.stringify(safe),EUC_DEV425_STATE_TTL_);}catch(e){}
+  var safeEncoded=JSON.stringify(safe);
+  try{CacheService.getScriptCache().put(EUC_DEV425_stateKey_(annee,famille),safeEncoded,EUC_DEV425_STATE_TTL_);}catch(e){}
+  try{PropertiesService.getScriptProperties().setProperty(EUC_DEV426_statePropKey_(annee,famille),safeEncoded);}catch(e2){}
   return safe;
 }
 
@@ -234,11 +259,25 @@ function EUC_DEV425_refreshScheduled(){
   var lock=LockService.getScriptLock(),got=false,t0=Date.now();try{got=lock.tryLock(1000);}catch(e){}
   if(!got)return {ok:true,skipped:'overlap'};
   try{
-    var annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active),dirty=false;
-    EUC_DEV425_FAMILIES_.forEach(function(f){var s=EUC_DEV425_readState_(annee,f);if(s&&s.status==='DIRTY')dirty=true;});
-    var token=EUC_DEV425_beginMutation_({annee:annee,allFamilies:true,reason:'filet-securite-15-min'});
-    token.syncAll=dirty;
-    var result=EUC_DEV425_finishMutation_(token);result.durationMs=Date.now()-t0;return result;
+    var annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active),pending=[];
+    EUC_DEV425_FAMILIES_.forEach(function(f){
+      var s=EUC_DEV425_readState_(annee,f);
+      if(!s||s.status==='DIRTY')pending.push({famille:f,state:s});
+    });
+    /* Le déclencheur est un filet de sécurité, pas une mutation. Un snapshot
+     * READY reste donc disponible et n'est jamais invalidé périodiquement. */
+    if(!pending.length)return {ok:true,skipped:'all-ready',annee:annee,durationMs:Date.now()-t0};
+    var repaired=[];
+    pending.forEach(function(item){
+      var state=item.state,revision=EUC_DEV425_txt_(state&&state.revision)||EUC_DEV425_revision_();
+      if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
+      var result=EUC_DEV425_finishMutation_({
+        annee:annee,families:[item.famille],targets:[],revision:revision,
+        reason:'filet-securite-15-min',syncAll:true
+      });
+      repaired.push(result);
+    });
+    return {ok:true,annee:annee,repaired:repaired,durationMs:Date.now()-t0};
   }finally{try{lock.releaseLock();}catch(e2){}}
 }
 

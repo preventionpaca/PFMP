@@ -14,6 +14,16 @@ assert.match(atomic,/EUC_DEV425_writeState_\(token\.annee,fam,\{revision:revisio
 assert.match(atomic,/EUC_DEV425_writeState_\(token\.annee,fam,\{revision:token\.revision,status:'READY'/);
 assert.match(atomic,/EUC_DEV190J_syncOne/,'les détails touchés doivent être resynchronisés');
 assert.match(atomic,/EUC_DEV424_writeDetails_\(details\);EUC_DEV424_writeFamily_/,'les détails précèdent la publication de l’index');
+assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.getProperty\(EUC_DEV426_statePropKey_/,
+  'la lecture rapide doit utiliser le pointeur de fraîcheur partagé');
+assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.setProperty\(EUC_DEV426_statePropKey_/,
+  'chaque transition DIRTY ou READY doit mettre à jour le pointeur partagé');
+const scheduled=atomic.slice(atomic.indexOf('function EUC_DEV425_refreshScheduled'),atomic.indexOf('function EUC_DEV425_status'));
+assert.match(scheduled,/skipped:'all-ready'/,'le filet de sécurité doit ignorer les snapshots READY');
+assert.doesNotMatch(scheduled,/EUC_DEV425_beginMutation_/,
+  'le filet de sécurité ne doit plus invalider toutes les familles toutes les quinze minutes');
+assert.match(scheduled,/families:\[item\.famille\]/,
+  'le filet de sécurité doit réparer uniquement chaque famille réellement DIRTY');
 
 const ctx={console,Date,JSON,Math,Utilities:{getUuid:()=> 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'}};
 vm.createContext(ctx);vm.runInContext(atomic,ctx);
@@ -55,9 +65,20 @@ assert.doesNotMatch(atomic,/3pnVrygfNn7c/);
 
 for(const file of ['apps-script/Suivi_Conventions_Public_FamilleClone_V353.html','apps-script/Suivi_Conventions_Admin_FamilleV190L.html']){
   const source=read(file);
-  assert.match(source,/querySelectorAll\('\.period\[data-class\]\[data-period\]/);
+  assert.match(source,/querySelectorAll\('\.period\[data-class\]\[data-period\] \.count/,
+    'le survol doit être limité à la zone des chiffres');
   assert.match(source,/addEventListener\('pointerenter'/);
   assert.match(source,/if\(cache\[k\]\)\{render\(el,cache\[k\]\);return;\}/,'la bulle préchargée doit rester instantanée');
+  assert.match(source,/var periodeId=Number\(p\.id\|\|p\.periodeId\)\|\|0;/,
+    'la clé DOM doit utiliser le même identifiant de période que la bulle préchargée');
+  assert.match(source,/if\(DATA&&DATA\.__dev422===true\)return;/,
+    'un snapshot déjà enrichi ne doit pas déclencher une seconde lecture serveur');
+}
+const familyUx=read('apps-script/EUC_PFMP_DEV339_FamilleUX.js');
+assert.match(familyUx,/\(quick\.apprentis\|\|\[\]\)\.forEach/,
+  'le badge classe doit partager le décompte apprenti de la bulle');
+for(const file of ['apps-script/Suivi_PFMP_Classe_PublicClone_V353.html','apps-script/Suivi_PFMP_Classe_Detail_V156.html']){
+  assert.match(read(file),/Suivi PFMP : /,'le titre de détail doit utiliser les deux-points');
 }
 const publicDetail=read('apps-script/EUC_PFMP_DEV415_PublicAdminExact.js');
 assert.match(publicDetail,/#EUC_DEV183_BREADCRUMB\{display:none!important\}/);

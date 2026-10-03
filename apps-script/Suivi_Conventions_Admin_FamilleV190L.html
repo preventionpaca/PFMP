@@ -218,7 +218,8 @@ window.EUC_DEV422_QUICK={};
           '</div>'+
 
           (c.periodes||[]).map(function(p){
-            return '<div class="period" data-class="'+classeId+'" data-period="'+p.id+'">'+
+            var periodeId=Number(p.id||p.periodeId)||0;
+            return '<div class="period" data-class="'+classeId+'" data-period="'+periodeId+'">'+
               '<div class="row">'+
                 '<div>'+
                   '<div class="label">'+esc(p.libelle||p.nom||'Période')+'</div>'+
@@ -437,6 +438,7 @@ window.EUC_DEV422_QUICK={};
   }
 
   function load(){
+    if(DATA&&DATA.__dev422===true)return;
     var p=params();
     if(!p.annee||!p.famille)return;
 
@@ -582,7 +584,11 @@ window.EUC_DEV422_QUICK={};
       : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue')+list('Situation administrative',r.situations,'orange');
     panel.classList.add('show');
   }
-  function ids(el){return {classe:Number(el.dataset.class||el.dataset.c||0),periode:Number(el.dataset.period||el.dataset.p||0)};}
+  function ids(el){
+    var host=el&&el.closest?el.closest('.period[data-class][data-period],.period[data-c][data-p]'):el;
+    host=host||{};var data=host.dataset||{};
+    return {classe:Number(data.class||data.c||0),periode:Number(data.period||data.p||0)};
+  }
   function load(el){
     var x=ids(el),year=String((P390&&P390.annee)||'').trim(),fam=String((P390&&P390.famille)||'BACPRO').trim();
     if(!x.classe||!x.periode)return;
@@ -612,7 +618,7 @@ window.EUC_DEV422_QUICK={};
   function periodEl(t){
     return t&&t.closest?t.closest('.period[data-class][data-period],.period[data-c][data-p]'):null;
   }
-  document.querySelectorAll('.period[data-class][data-period],.period[data-c][data-p]').forEach(function(el){
+  document.querySelectorAll('.period[data-class][data-period] .count,.period[data-c][data-p] .count').forEach(function(el){
     el.addEventListener('pointerenter',function(){
     anchorInside=true;
     clearTimeout(timer); current=el;

@@ -339,7 +339,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   function render(){
     window.EUC_DEV417_DETAIL_CURRENT=detail;
     back.href=C.baseUrl+'?page=suivi-conventions';mailParams.href=C.baseUrl+'?page=parametres-envois-pfmp';
-    pageTitle.textContent='Suivi PFMP — '+(detail.classe&&detail.classe.nom||'Classe');
+    pageTitle.textContent='Suivi PFMP : '+(detail.classe&&detail.classe.nom||'Classe');
     pageSub.textContent=detail.periode?[detail.periode.libelle,detail.periode.debut,detail.periode.fin].filter(Boolean).join(' · '):'Aucune période sélectionnée';
     classLabel.textContent=(detail.classe&&detail.classe.nom||'')+' — '+detail.annee;
     ppLabel.textContent='Professeur principal : '+((detail.professeursPrincipaux||[]).map(p=>p.nom).join(' / ')||'non renseigné');
@@ -1908,7 +1908,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           cleanupLoading();
 
           document.title=
-            'Suivi PFMP — '+
+            'Suivi PFMP : '+
             ((detail.classe&&detail.classe.nom)||'Classe');
 
           var total=Math.round(performance.now()-started);
