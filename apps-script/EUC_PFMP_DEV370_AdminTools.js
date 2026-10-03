@@ -83,9 +83,10 @@ function EUC_DEV371_detailCorrect_(y,c,p){
   return d||{lignes:[]};
 }
 function EUC_DEV371_sansConvention(q){
-  EUC_DEV368_admin();var out=[],targets=EUC_DEV371_targets_(q);
+  EUC_DEV368_admin();var out=[],targets=EUC_DEV371_targets_(q),managed=0;
   targets.forEach(function(t){
     var d=EUC_DEV371_detailCorrect_(t.annee,t.classeId,t.periode.id);
+    if(typeof EUC_DEV420_enrichDetail_==='function')d=EUC_DEV420_enrichDetail_(d,t.annee,t.famille,t.classeId,t.periode.id);
     (d.lignes||[]).forEach(function(x){
       /* apprentis = considérés comme couverts PFMP : jamais dans "sans convention" */
       if(x.apprenti)return;
@@ -93,15 +94,21 @@ function EUC_DEV371_sansConvention(q){
       if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return;
       if(EUC_DEV368_n(x.conventionId)>0)return;
       out.push({
-        niveau:t.niveau,classe:t.classe,classeId:t.classeId,
+        niveau:t.niveau,famille:t.famille,classe:t.classe,classeId:t.classeId,
         periode:t.periode.libelle,periodeId:t.periode.id,
+        eleveId:EUC_DEV368_n(x.eleveId),
         eleve:[x.nom,x.prenom].filter(Boolean).join(' '),
-        professeurPrincipal:EUC_DEV368_t(x.professeurPrincipal)
+        professeurPrincipal:EUC_DEV368_t(x.professeurPrincipal),
+        situationId:EUC_DEV368_n(x.situationAdministrativeId),
+        situationCode:EUC_DEV368_t(x.situationAdministrativeCode),
+        situationLibelle:EUC_DEV368_t(x.situationAdministrativeLibelle),
+        exclureSansConvention:x.exclureSansConvention===true
       });
+      if(x.exclureSansConvention===true)managed++;
     });
   });
   out.sort(function(a,b){var c=a.classe.localeCompare(b.classe,'fr');return c||a.eleve.localeCompare(b.eleve,'fr')});
-  return {ok:true,total:out.length,lignes:out};
+  return {ok:true,total:out.length-managed,managed:managed,allTotal:out.length,lignes:out,motifs:typeof EUC_DEV420_motifs_==='function'?EUC_DEV420_motifs_(true):[]};
 }
 function EUC_DEV371_pdfSans(q){
   var d=EUC_DEV371_sansConvention(q),lv=EUC_DEV371_levelLabel_(EUC_DEV368_t(q&&q.niveau));
@@ -110,8 +117,8 @@ function EUC_DEV371_pdfSans(q){
     b.appendParagraph('Année scolaire : '+EUC_DEV368_year(q&&q.annee));
     if(lv)b.appendParagraph('Niveau : '+lv);
     if(q&&q.periodeKind)b.appendParagraph('Période : '+EUC_DEV368_t(q.periodeKind));
-    var rows=[['Classe','Période','Élève','Professeur principal']];
-    d.lignes.forEach(function(x){rows.push([x.classe,x.periode,x.eleve,x.professeurPrincipal||''])});
+    var rows=[['Classe','Période','Élève','Situation administrative','Professeur principal']];
+    d.lignes.forEach(function(x){rows.push([x.classe,x.periode,x.eleve,x.situationLibelle||'Sans convention',x.professeurPrincipal||''])});
     b.appendTable(rows);
   });
 }
@@ -162,4 +169,3 @@ function EUC_DEV374_pdfMission(q){
     b.appendParagraph('* Les visites en visio n’ouvrent pas droit à des frais de déplacement.').setItalic(true);
   });
 }
-

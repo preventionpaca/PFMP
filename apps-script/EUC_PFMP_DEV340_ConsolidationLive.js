@@ -248,7 +248,10 @@ function EUC_DEV340_afficherAdminClasse(e){
 function EUC_DEV340_familyData_(){
   var __t=Date.now();
   try{
-    return EUC_DEV394_BASE_EUC_DEV340_familyData_.apply(this,arguments);
+    var d=EUC_DEV394_BASE_EUC_DEV340_familyData_.apply(this,arguments);
+    return typeof EUC_DEV420_enrichFamily_==='function'
+      ?EUC_DEV420_enrichFamily_(d,arguments[0],arguments[1])
+      :d;
   } finally {
     EUC_DEV394_mark_('EUC_DEV340_familyData_',Date.now()-__t);
   }

@@ -216,6 +216,8 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
     avec:[],
     sans:[],
     apprentis:[],
+    situations:[],
+    situationsCouvertes:0,
     lycee:[],
     entreprise:[],
     indefini:[]
@@ -252,6 +254,11 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
       return;
     }
 
+    if(x.situationAdministrativeLibelle){
+      out.situations.push(nom+' — '+x.situationAdministrativeLibelle);
+      if(x.exclureSansConvention===true){out.situationsCouvertes++;return;}
+    }
+
     var code=EUC_DEV387_txt_(
       x.statutCode||x.statut
     ).toUpperCase();
@@ -276,7 +283,7 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
   });
 
   [
-    'avec','sans','apprentis',
+    'avec','sans','apprentis','situations',
     'lycee','entreprise','indefini'
   ].forEach(function(k){
     out[k].sort(function(a,b){
@@ -286,7 +293,8 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
 
   out.couverts=
     out.avec.length+
-    out.apprentis.length;
+    out.apprentis.length+
+    out.situationsCouvertes;
 
   out.scolairesAttendus=
     Math.max(

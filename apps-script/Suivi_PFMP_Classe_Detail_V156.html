@@ -404,6 +404,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
       if(key==='apprentis')return !!x.apprenti;
       if(x.apprenti||incident(x))return false;
       if(key==='avec')return Number(x.conventionId)>0;
+      if(x.exclureSansConvention===true)return false;
       return Number(x.conventionId)<=0;
     }).map(function(x){
       return [x.nom,x.prenom].filter(Boolean).join(' ');

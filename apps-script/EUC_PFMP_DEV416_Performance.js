@@ -53,21 +53,33 @@ function EUC_DEV416_buildFinal_(annee,famille,classe,periode){
 function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
   var key=EUC_DEV416_key_(annee,famille,classe,periode);
   var hit=EUC_DEV416_cacheGet_(key);
-  if(hit){hit.__dev416Cache=true;return hit;}
+  if(hit){
+    hit.__dev416Cache=true;
+    return typeof EUC_DEV420_enrichDetail_==='function'
+      ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
+      :hit;
+  }
 
   var lock=LockService.getScriptLock(),got=false;
   try{got=lock.tryLock(1200);}catch(e){}
   if(!got){
     Utilities.sleep(350);
     hit=EUC_DEV416_cacheGet_(key);
-    if(hit){hit.__dev416Cache=true;return hit;}
+    if(hit){
+      hit.__dev416Cache=true;
+      return typeof EUC_DEV420_enrichDetail_==='function'
+        ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
+        :hit;
+    }
   }
 
   try{
     var d=EUC_DEV416_buildFinal_(annee,famille,classe,periode);
     d.__dev416Cache=false;
     EUC_DEV416_cachePut_(key,d);
-    return d;
+    return typeof EUC_DEV420_enrichDetail_==='function'
+      ?EUC_DEV420_enrichDetail_(d,annee,famille,classe,periode)
+      :d;
   } finally {
     if(got){try{lock.releaseLock();}catch(e2){}}
   }

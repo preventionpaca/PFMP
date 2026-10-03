@@ -13,13 +13,13 @@ Ordre proposé pour le prochain lot :
 
 Le sous-domaine administratif `alternance.loucodi.fr` reste une redirection vers la passerelle d’authentification ; conserver une URL longue après authentification est le comportement retenu. Ne pas transformer l’administration en iframe sans décision explicite, car l’authentification Google peut être affectée.
 
-## DEV419 — situation administrative des élèves sans convention
+## DEV420 R2 déployée — situation administrative des élèves sans convention
 
-Après validation explicite des écritures dans la base Grist active `b2CyeMEdVEMS`, créer un référentiel administrable de motifs et une table d’affectation annuelle par élève et période. Le référentiel doit permettre d’ajouter ou désactiver un motif sans modifier le code, et indiquer si ce motif retire l’élève du compteur `Sans convention`.
+L’autorisation explicite a été reçue et le lot est déployé en version immuable `735`. Le référentiel administrable et la table d’affectation annuelle par élève, classe et période sont installés dans la seule base active `b2CyeMEdVEMS`.
 
-Premiers motifs proposés, à confirmer avant création : `Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`. La vue administrative `Élèves sans convention` portera la saisie ; les vues classe et contrôle rapide afficheront le motif et conserveront une égalité de compteurs explicitement documentée. Aucune table, ligne ou valeur Grist ne doit être créée avant cette autorisation et cette confirmation métier.
+Les trois motifs initiaux sont créés et excluants. La vue administrative `Élèves sans convention` porte la saisie ; les vues classe, famille et contrôle rapide affichent le motif et conservent les compteurs cohérents. Aucun élève n’a été affecté automatiquement.
 
-Les ordres de mission et le futur document d’organisation/bilan des déplacements restent hors de ce lot et seront repris au tour suivant.
+Prochaine reprise fonctionnelle : finaliser les ordres de mission et concevoir le document d’organisation/bilan des déplacements. Ce chantier reste hors de DEV420 et ne doit provoquer aucun courriel ni création de document sans nouvelle autorisation explicite.
 
 ## Historique du plan DEV417
 

@@ -173,10 +173,19 @@ const DATA=<?!= dataJson ?>;
     var total=Number(p.total)||0;
     if(total<=0)return'';
 
-    var ratio=100*(Number(p.conventions)||0)/total;
+    var ratio=100*((Number(p.conventions)||0)+(Number(p.situationsAdministratives)||0))/total;
     if(ratio>=100)return'green';
     if(ratio>=65)return'orange';
     return'red';
+  }
+  function coveredCount(p){return (Number(p.conventions)||0)+(Number(p.apprentis)||0)+(Number(p.situationsAdministratives)||0)}
+  function expectedCount(p){return (Number(p.total)||0)+(Number(p.apprentis)||0)}
+  function missingCount(p){return Math.max(0,(Number(p.total)||0)-(Number(p.conventions)||0)-(Number(p.situationsAdministratives)||0))}
+  function coveredDetail(p){
+    var parts=[(Number(p.conventions)||0)+' convention'+((Number(p.conventions)||0)>1?'s':'')];
+    if(Number(p.apprentis)||0)parts.push((Number(p.apprentis)||0)+' apprenti'+((Number(p.apprentis)||0)>1?'s':''));
+    if(Number(p.situationsAdministratives)||0)parts.push((Number(p.situationsAdministratives)||0)+' situation'+((Number(p.situationsAdministratives)||0)>1?'s':'')+' administrative'+((Number(p.situationsAdministratives)||0)>1?'s':''));
+    return parts.join(' + ');
   }
 
   pageTitle.textContent=famLabel(P.famille);
@@ -240,7 +249,7 @@ const DATA=<?!= dataJson ?>;
                   '<div class="label">'+esc(p.libelle||p.nom||'Période')+'</div>'+
                   '<div class="small">'+esc([p.debutFr,p.finFr].filter(Boolean).join(' → '))+'</div>'+
                 '</div>'+
-                '<div class="count '+colorClass(p)+'">'+(p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':('<span class="euc390-count-main">'+((Number(p.conventions)||0)+(Number(p.apprentis)||0))+' / '+((Number(p.total)||0)+(Number(p.apprentis)||0))+'</span><div class="euc390-count-detail">'+(Number(p.conventions)||0)+' convention'+((Number(p.conventions)||0)>1?'s':'')+((Number(p.apprentis)||0)?' + '+(Number(p.apprentis)||0)+' apprenti'+((Number(p.apprentis)||0)>1?'s':''):'')+'</div><div class="euc390-count-missing">'+Math.max(0,(Number(p.total)||0)-(Number(p.conventions)||0))+' sans convention</div>'))+'</div>'+
+                '<div class="count '+colorClass(p)+'">'+(p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':('<span class="euc390-count-main">'+coveredCount(p)+' / '+expectedCount(p)+'</span><div class="euc390-count-detail">'+coveredDetail(p)+'</div><div class="euc390-count-missing">'+missingCount(p)+' sans convention</div>'))+'</div>'+
               '</div>'+
             '</div>';
           }).join('')+
@@ -574,7 +583,7 @@ const DATA=<?!= dataJson ?>;
 
 #euc390Quick{position:fixed;z-index:2147483000;display:none;width:min(760px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:#fff;border:1px solid #9fd8cb;border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.18);color:#123c34;font-family:Arial,sans-serif}
 #euc390Quick.show{display:block}.euc390-head{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;background:#eef9f6;border-bottom:1px solid #d4ebe5;position:sticky;top:0;z-index:2}
-.euc390-head strong{font-size:14px}.euc390-head span{font-size:12px;color:#53736c;font-weight:700}.euc390-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px}
+.euc390-head strong{font-size:14px}.euc390-head span{font-size:12px;color:#53736c;font-weight:700}.euc390-body{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px}
 .euc390-col{border:1px solid #dce9e5;border-radius:10px;padding:9px;min-height:90px}.euc390-col h4{display:flex;justify-content:space-between;gap:8px;margin:0 0 7px;font-size:12px}
 .euc390-col h4 span{min-width:22px;text-align:center;border-radius:999px;background:#edf3f1;padding:2px 6px}.euc390-col ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
 .euc390-empty{font-size:12px;color:#788b86;font-style:italic}.euc390-col.green h4{color:#08745f}.euc390-col.red h4{color:#c82d27}.euc390-col.blue h4{color:#3159b7}.euc390-col.orange h4{color:#a96700}
@@ -632,7 +641,7 @@ const DATA=<?!= dataJson ?>;
     document.getElementById('euc390Meta').textContent=r.isPdif?'Parcours différencié':(Number(r.couverts||0)+' / '+Number(r.total||0)+' en règle');
     document.getElementById('euc390Body').innerHTML=r.isPdif
       ? list('Parcours lycée',r.lycee,'blue')+list('Poursuite PFMP2 entreprise',r.entreprise,'green')+list('À définir',r.indefini,'orange')
-      : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue');
+      : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue')+list('Situation administrative',r.situations,'orange');
     panel.classList.add('show'); place(el);
   }
   function ids(el){return {classe:Number(el.dataset.class||el.dataset.c||0),periode:Number(el.dataset.period||el.dataset.p||0)};}

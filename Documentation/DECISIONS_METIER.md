@@ -15,3 +15,6 @@
 - Toute modification administrative est historisée. Une annulation est logique, jamais une suppression physique.
 - Suivi téléphonique et visite en entreprise sont deux affectations distinctes. Aucun enseignant n’est codé en dur.
 - Ordres de mission et remboursements relèvent d’un lot futur. Les finitions graphiques détaillées de la fiche administrative sont différées.
+- Une situation administrative PFMP est liée à une année, une classe, une période et un élève. Elle ne remplace ni Pronote ni une convention et ne peut être appliquée qu’à un élève actuellement sans convention, non apprenti et sans incident de convention.
+- Le référentiel de situations est administrable. La désactivation empêche les nouvelles affectations mais conserve l’historique ; le retrait d’une affectation est logique, jamais une suppression physique.
+- Un motif peut être configuré pour retirer ou non l’élève du compteur `Sans convention`. Les trois motifs initiaux (`Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`) retirent l’élève de ce compteur.

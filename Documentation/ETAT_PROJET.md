@@ -1,18 +1,18 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV419 R1, version Apps Script immuable `733`.
+- Version active déployée le 3 octobre 2026 : DEV420 R2, version Apps Script immuable `735`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `733`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `735`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
-- Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement, après confirmation explicite du 2 octobre 2026. Production `3pnVrygfNn7c` interdite.
+- Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420 a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
 - Web App PUBLIC : `https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec`.
 - Déploiement ADMIN : `AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA`.
 - Routes : `pfmp`, `suivi-pfmp`, `import-pronote-pfmp`, `gestion-pfmp`, `entreprises` ; routeur EDT historique conservé.
 - Modes exigés : soumissions `DRY_RUN`, courriels `DISABLED`, import Pronote `DRY_RUN`, mutations administratives `DRY_RUN`, Turnstile désactivé. Le snapshot distant déclare actuellement `ANYONE_ANONYMOUS`, en contradiction avec l'exigence historique `DOMAIN` ; aucune correction ou redéploiement n'a encore été effectué.
 - Actif : formulaire PFMP, recherche entreprise, suivi paginé et multiannuel, import Pronote en prévisualisation, gestion administrative consultable.
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
-- Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`.
+- Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
 - Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (319 tests).
 - Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
@@ -81,3 +81,13 @@
 - Le besoin de statuts administratifs extensibles pour les élèves sans convention (`Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`, etc.) est spécifié mais non implémenté : il nécessite de nouvelles tables et des écritures dans Grist, non autorisées à ce stade.
 - Les 343 fichiers distants ont été relus après `clasp push` et sont identiques aux sources locales. La version immuable `733` a été appliquée aux deux seuls déploiements historiques ADMIN et PUBLIC ; contrôles HTTP directs à `200`.
 - Aucun accès à la production, aucune écriture Grist, aucun import, aucun courriel et aucune mutation métier n’ont été effectués. Le certificat HTTPS de `pfmp.loucodi.fr` reste invalide pour ce nom ; le point d’accès HTTP répond à `200`, sans contournement du contrôle TLS.
+
+## DEV420 R2 déployée — situations administratives des élèves
+
+- L’utilisateur a autorisé explicitement l’écriture limitée dans la base PFMP active `b2CyeMEdVEMS`. Deux tables ont été créées de façon idempotente : le référentiel `EUC_STATUTS_SUIVI_ELEVE_PFMP` et les affectations annuelles par classe, période et élève `EUC_SITUATIONS_ELEVES_PFMP`.
+- Trois motifs initiaux actifs et excluants ont été créés : `Dossier géré par avis scolaire`, `Démissionnaire` et `Absentéiste`. Aucune affectation élève n’a été créée automatiquement.
+- La page administrative « Élèves sans convention » permet d’affecter ou retirer logiquement une situation, d’ajouter un motif et de désactiver/réactiver un motif sans suppression physique. Une situation n’est enregistrable que pour un élève encore sans convention, non apprenti et sans convention annulée/interrompue.
+- Le détail classe, les compteurs de famille et le contrôle rapide affichent les situations et retirent uniquement les motifs configurés comme excluants du compteur `Sans convention`. Un motif désactivé reste visible sur ses affectations historiques mais n’est plus proposé pour une nouvelle affectation.
+- Version Apps Script immuable `735`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Le distant relu contient exactement les 344 fichiers locaux ; les contrôles HTTP directs ADMIN et PUBLIC répondent à `200`.
+- Tests verts : `node tests/run-dev420-situations-tests.js` (14 tests) et suite complète `node tests/run-tests.js` (333 tests).
+- Protections confirmées : aucun accès production, aucun import Pronote réel, aucune écriture de convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
