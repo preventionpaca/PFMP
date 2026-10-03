@@ -10,7 +10,7 @@ function EUC_DEV339_year_(e){var y=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.a
  * explicitement cette entrée. */
 var EUC_DEV421_FAMILY_TTL_=300;
 function EUC_DEV421_familyKey_(annee,famille){
-  return 'DEV422R5_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
+  return 'DEV423R1_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
 }
 function EUC_DEV421_familyCacheGet_(annee,famille){
   var raw=null;
@@ -93,7 +93,7 @@ function EUC_DEV422_readDetailSnapshot_(payload){
 function EUC_DEV422_batchSources_(annee,classIds){
   var out={
     access:{},accessAvailable:false,
-    apps:[],appsAvailable:false,
+    apps:[],appsByEleve:{},appsAvailable:false,
     affectations:{},affectationsAvailable:false
   },byPeriod={};
   try{
@@ -127,6 +127,10 @@ function EUC_DEV422_batchSources_(annee,classIds){
   }catch(eAccess){}
   try{
     out.apps=typeof EUC_DEV340_appRows_==='function'?EUC_DEV340_appRows_():(typeof EUC_DEV275B_rows_==='function'?EUC_DEV275B_rows_():[]);
+    out.apps.forEach(function(a){
+      var eid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):Number(a.Eleve)||0;
+      if(eid&&(!out.appsByEleve[eid]||Number(a.id||0)>Number(out.appsByEleve[eid].id||0)))out.appsByEleve[eid]=a;
+    });
     out.appsAvailable=true;
   }catch(eApps){}
   try{
@@ -166,12 +170,30 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
       }
       var dernier=actif||list[0]||null;
       var st=typeof EUC_DEV340_status_==='function'?EUC_DEV340_status_(dernier):(dernier?{code:'AVEC_CONVENTION',libelle:'Avec convention',active:true}:{code:'SANS_CONVENTION',libelle:'Sans convention',active:false});
+      x.historiqueConventions=[];
       x.conventionId=actif?Number(actif.id)||0:0;x.convention=!!actif;x.statutCode=st.code;x.statut=st.libelle;
+      x.numero=actif?(typeof EUC_ADMIN_WORKFLOW_numeroV144_==='function'?EUC_ADMIN_WORKFLOW_numeroV144_(actif):EUC_DEV339_txt_(actif.Numero_enregistrement||actif.Reference_convention)):'';
+      if(dernier){
+        x.entreprise=EUC_DEV339_txt_(dernier.Entreprise_raison_sociale)||EUC_DEV339_txt_(dernier.Entreprise_enseigne);
+        x.adresseEntreprise=typeof EUC_DEV340_address_==='function'?EUC_DEV340_address_(dernier):EUC_DEV339_txt_(dernier.Entreprise_adresse);
+        x.contactEntreprise=typeof EUC_DEV340_contact_==='function'?EUC_DEV340_contact_(dernier):'';
+        x.tuteurEntreprise=typeof EUC_DEV340_tuteur_==='function'?EUC_DEV340_tuteur_(dernier):'';
+        x.telephoneEntreprise=EUC_DEV339_txt_(dernier.Entreprise_telephone)||EUC_DEV339_txt_(dernier.Responsable_telephone)||EUC_DEV339_txt_(dernier.Tuteur_telephone);
+        x.courrielEntreprise=EUC_DEV339_txt_(dernier.Entreprise_courriel)||EUC_DEV339_txt_(dernier.Responsable_courriel)||EUC_DEV339_txt_(dernier.Tuteur_courriel);
+        x.telephoneTuteur=EUC_DEV339_txt_(dernier.Tuteur_telephone);
+        x.courrielTuteur=EUC_DEV339_txt_(dernier.Tuteur_courriel);
+      }else{
+        x.entreprise='';x.adresseEntreprise='';x.contactEntreprise='';x.tuteurEntreprise='';
+        x.telephoneEntreprise='';x.courrielEntreprise='';x.telephoneTuteur='';x.courrielTuteur='';
+      }
     }
     if(batch.appsAvailable&&typeof EUC_APP172_eval==='function'){
       var app=EUC_APP172_eval(batch.apps,eid,debut,fin)||{code:'SCOLAIRE'};
       x.statutApprentissage=app.code;x.apprenti=app.code==='APPRENTI';x.statutMixte=app.code==='MIXTE';
       if(x.apprenti){x.conventionId=0;x.convention=false;x.statutCode='APPRENTI';x.statut='APPRENTI';}
+      if(x.apprenti&&typeof EUC_DEV347_enrichA==='function'){
+        try{EUC_DEV347_enrichA(x,batch.appsByEleve);}catch(eAppCompany){}
+      }
     }
     if(batch.affectationsAvailable){
       var tel=batch.affectations[cid+'|'+pid+'|'+eid+'|TELEPHONE'];
@@ -189,6 +211,15 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
   if(typeof EUC_DEV420_enrichDetail_==='function'){
     try{detail=EUC_DEV420_enrichDetail_(detail,annee,famille,cid,pid)||detail;}catch(eSituations){}
   }
+  var quick=EUC_DEV422_quickFromDetail_(detail);
+  detail.stats=detail.stats||{};
+  detail.stats.total=quick.total;
+  detail.stats.apprentis=quick.apprentis.length;
+  detail.stats.avecConvention=quick.avec.length;
+  detail.stats.sansConvention=quick.sans.length;
+  detail.stats.annulees=quick.annuleesInterrompues.length;
+  detail.stats.interrompues=0;
+  detail.stats.scolairesAttendus=Math.max(0,quick.total-quick.apprentis.length);
   return detail;
 }
 function EUC_DEV422_hydrateFamily_(data,annee,famille){

@@ -254,13 +254,13 @@ assert.match(liveDetail, /EUC_DEV418_ACC_/,
   'détail classe: le cache court peut encore réutiliser les zéros de DEV417');
 assert.match(liveDetail, /EUC_DEV418_APP_ROWS/,
   'détail classe: le cache apprentis peut encore réutiliser les zéros de DEV417');
-assert.match(finalCache, /return 'D418_'/,
-  'détail classe: le cache final DEV418 n’est pas isolé');
+assert.match(finalCache, /return 'D423_'/,
+  'détail classe: le cache final DEV423 n’est pas isolé');
 const buildFinal = finalCache.slice(finalCache.indexOf('function EUC_DEV416_buildFinal_'), finalCache.indexOf('function EUC_DEV416_finalDetail_'));
 assert.doesNotMatch(buildFinal, /EUC_V50_enrichirDetail_|EUC_APP172_enrichirDetail/,
   'détail classe: les enrichissements conventions/apprentis sont encore rejoués deux fois');
-assert.match(baseDetailCache, /return 'DEV418_DETAIL_'/,
-  'détail classe: le cache de base DEV418 n’est pas isolé');
+assert.match(baseDetailCache, /return 'DEV423_DETAIL_'/,
+  'détail classe: le cache de base DEV423 n’est pas isolé');
 assert.match(classFastNav, /EUC_DEV416_finalDetail_/,
   'navigation rapide: le détail final en cache doit être réutilisé');
 assert.match(quickCheck, /EUC_DEV422_readDetailSnapshot_/,

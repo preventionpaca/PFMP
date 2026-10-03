@@ -25,7 +25,15 @@ const accessRows = Array.from({length: 24}, (_, i) => ({
   Classe_convention: 25,
   Periode: 61,
   Annee_scolaire: '2026-2027',
-  Statut: 'Enregistrée'
+  Statut: 'Enregistrée',
+  Entreprise_raison_sociale: `ENTREPRISE ${i + 1}`,
+  Entreprise_adresse: `${i + 1} rue du Test`,
+  Responsable_prenom: 'Rita',
+  Responsable_nom: 'Responsable',
+  Responsable_telephone: '0102030405',
+  Responsable_courriel: 'responsable@example.test',
+  Tuteur_prenom: 'Tom',
+  Tuteur_nom: 'Tuteur'
 }));
 
 const records = [{
@@ -51,6 +59,9 @@ const context = {
   EUC_DEV340_status_: row => row
     ? {code: 'CONVENTION_ENREGISTREE', libelle: 'Convention enregistrée', active: true}
     : {code: 'SANS_CONVENTION', libelle: 'Sans convention', active: false},
+  EUC_DEV340_address_: row => row.Entreprise_adresse || '',
+  EUC_DEV340_contact_: row => [[row.Responsable_prenom, row.Responsable_nom].filter(Boolean).join(' '), row.Responsable_telephone, row.Responsable_courriel].filter(Boolean).join(' · '),
+  EUC_DEV340_tuteur_: row => [row.Tuteur_prenom, row.Tuteur_nom].filter(Boolean).join(' '),
   EUC_DEV340_appRows_: () => [{Eleve: 26}],
   EUC_APP172_eval: (rows, eleveId) => ({code: eleveId === 26 ? 'APPRENTI' : 'SCOLAIRE'}),
   EUC_DEV416_key_: (annee, famille, classe, periode) => [annee, famille, classe, periode].join('|'),
@@ -83,6 +94,10 @@ assert.equal(
   24,
   'le détail enrichi doit être amorcé dans le cache serveur partagé'
 );
+assert.equal(finalCache['2026-2027|BACPRO|25|61'].lignes[0].entreprise, 'ENTREPRISE 1',
+  'le préchargement final ne doit pas perdre l’entreprise');
+assert.match(finalCache['2026-2027|BACPRO|25|61'].lignes[0].contactEntreprise, /Rita Responsable/,
+  'le préchargement final ne doit pas perdre le responsable entreprise');
 
 const incident = context.EUC_DEV422_quickFromDetail_({
   classe: {nom: 'TEST'},
