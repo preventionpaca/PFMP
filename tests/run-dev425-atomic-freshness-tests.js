@@ -21,11 +21,17 @@ assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.setProperty\(EU
 const scheduled=atomic.slice(atomic.indexOf('function EUC_DEV425_refreshScheduled'),atomic.indexOf('function EUC_DEV425_status'));
 assert.match(scheduled,/skipped:'all-ready'/,'le filet de sécurité doit ignorer les snapshots READY');
 assert.match(scheduled,/var item=pending\[0\]/,'le filet de sécurité doit reprendre une seule famille par passage');
-assert.match(scheduled,/syncAll:true/,'une famille DIRTY doit être reconstruite exhaustivement avant publication READY');
-assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-1\)/,'le résultat doit signaler les familles restant à reprendre');
+assert.match(atomic,/EUC_DEV426_RECOVERY_BATCH_SIZE_=6/,'la reprise planifiée doit être bornée');
+assert.match(atomic,/function EUC_DEV426_recoverBatch_/,'la reprise doit mémoriser sa progression');
+assert.match(atomic,/status:'DIRTY',synced:end-start,next:end,total:targets\.length/,
+  'un lot intermédiaire doit laisser la famille DIRTY');
+assert.match(atomic,/syncAll:false/,'le dernier lot doit publier sans refaire toutes les lectures');
+assert.match(atomic,/props\.deleteProperty\(key\)/,'la progression ne doit être supprimée qu’après publication finale');
+assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-\(result\.status==='READY'\?1:0\)\)/,
+  'un lot intermédiaire doit compter la famille courante parmi les reprises restantes');
 assert.doesNotMatch(scheduled,/EUC_DEV425_beginMutation_/,
   'le filet de sécurité ne doit plus invalider toutes les familles toutes les quinze minutes');
-assert.match(scheduled,/families:\[item\.famille\]/,
+assert.match(scheduled,/EUC_DEV426_recoverBatch_\(annee,item\.famille,revision/,
   'le filet de sécurité doit réparer uniquement chaque famille réellement DIRTY');
 
 const ctx={console,Date,JSON,Math,Utilities:{getUuid:()=> 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'}};

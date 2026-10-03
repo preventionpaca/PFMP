@@ -6,11 +6,13 @@
  * famille technique. Une révision DIRTY interdit toute lecture de l'ancien
  * payload. La révision READY n'est publiée qu'après les détails et l'index.
  */
-var EUC_DEV425_VERSION_='1.0.2-dev.426';
+var EUC_DEV425_VERSION_='1.0.3-dev.426';
 var EUC_DEV425_STATE_PREFIX_='__DEV425_STATE__';
 var EUC_DEV425_STATE_TTL_=21600;
 var EUC_DEV425_FAMILIES_=['BACPRO','BTS','CAP'];
 var EUC_DEV426_STATE_PROP_PREFIX_='EUC_DEV426_STATE_';
+var EUC_DEV426_RECOVERY_PROP_PREFIX_='EUC_DEV426_RECOVERY_';
+var EUC_DEV426_RECOVERY_BATCH_SIZE_=6;
 
 function EUC_DEV425_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV425_family_(v){
@@ -23,6 +25,7 @@ function EUC_DEV425_family_(v){
 function EUC_DEV425_stateFamily_(famille){return EUC_DEV425_STATE_PREFIX_+EUC_DEV425_family_(famille);}
 function EUC_DEV425_stateKey_(annee,famille){return 'DEV425_STATE_'+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
 function EUC_DEV426_statePropKey_(annee,famille){return EUC_DEV426_STATE_PROP_PREFIX_+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
+function EUC_DEV426_recoveryPropKey_(annee,famille){return EUC_DEV426_RECOVERY_PROP_PREFIX_+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
 function EUC_DEV425_revision_(){
   var suffix='';try{suffix=Utilities.getUuid().replace(/-/g,'').slice(0,12);}catch(e){suffix=String(Math.random()).slice(2,14);}
   return Date.now().toString(36)+'-'+suffix;
@@ -255,6 +258,43 @@ function EUC_DEV425_initialize(){
   token.syncAll=false;return EUC_DEV425_finishMutation_(token);
 }
 
+function EUC_DEV426_recoveryTargets_(base){
+  var out=[],seen={};
+  (base&&base.classes||[]).forEach(function(c){
+    var cid=Number(c.classeId||c.id)||0;
+    (c.periodes||[]).forEach(function(p){
+      var pid=Number(p.id||p.periodeId)||0,key=cid+'|'+pid;
+      if(cid&&pid&&!seen[key]){seen[key]=1;out.push({classe:cid,periode:pid});}
+    });
+  });
+  return out;
+}
+
+function EUC_DEV426_recoverBatch_(annee,famille,revision,reason){
+  var props=PropertiesService.getScriptProperties();
+  var key=EUC_DEV426_recoveryPropKey_(annee,famille),progress=null;
+  try{progress=JSON.parse(props.getProperty(key)||'null');}catch(e){progress=null;}
+  if(!progress||EUC_DEV425_txt_(progress.revision)!==revision){progress={revision:revision,next:0};}
+  var base=EUC_DEV424_clone_(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]});
+  var targets=EUC_DEV426_recoveryTargets_(base),start=Math.max(0,Number(progress.next)||0);
+  if(start>targets.length)start=0;
+  var end=Math.min(targets.length,start+EUC_DEV426_RECOVERY_BATCH_SIZE_);
+  for(var i=start;i<end;i++){
+    EUC_DEV190J_syncOne({annee:annee,famille:famille,classe:targets[i].classe,periode:targets[i].periode});
+  }
+  progress.next=end;progress.total=targets.length;progress.updatedAt=new Date().toISOString();
+  props.setProperty(key,JSON.stringify(progress));
+  if(end<targets.length)return {ok:true,famille:famille,status:'DIRTY',synced:end-start,next:end,total:targets.length};
+  /* Tous les détails ont été resynchronisés au fil des lots. La publication
+   * finale reste atomique : hydratation complète, index, puis seulement READY. */
+  var result=EUC_DEV425_finishMutation_({
+    annee:annee,families:[famille],targets:[],revision:revision,
+    reason:reason,syncAll:false
+  });
+  props.deleteProperty(key);
+  return {ok:true,famille:famille,status:'READY',synced:end-start,next:end,total:targets.length,result:result};
+}
+
 function EUC_DEV425_refreshScheduled(){
   var lock=LockService.getScriptLock(),got=false,t0=Date.now();try{got=lock.tryLock(1000);}catch(e){}
   if(!got)return {ok:true,skipped:'overlap'};
@@ -267,19 +307,15 @@ function EUC_DEV425_refreshScheduled(){
     /* Le déclencheur est un filet de sécurité, pas une mutation. Un snapshot
      * READY reste donc disponible et n'est jamais invalidé périodiquement. */
     if(!pending.length)return {ok:true,skipped:'all-ready',annee:annee,durationMs:Date.now()-t0};
-    /* Une reprise exhaustive est nécessaire après une mutation interrompue :
-     * l'ancien détail ne peut pas être republié comme frais. Pour rester sous
-     * la durée maximale Apps Script, le filet de sécurité ne reprend qu'une
-     * famille à chaque passage. Les suivantes seront traitées aux passages
-     * de 15 minutes suivants. */
+    /* Une reprise exhaustive est nécessaire après une mutation interrompue.
+     * Elle est découpée en lots persistants afin de respecter la durée Apps
+     * Script. La famille reste DIRTY jusqu'au dernier lot et à la publication
+     * atomique finale. */
     var item=pending[0],state=item.state;
     var revision=EUC_DEV425_txt_(state&&state.revision)||EUC_DEV425_revision_();
     if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
-    var result=EUC_DEV425_finishMutation_({
-      annee:annee,families:[item.famille],targets:[],revision:revision,
-      reason:'filet-securite-15-min',syncAll:true
-    });
-    return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-1),durationMs:Date.now()-t0};
+    var result=EUC_DEV426_recoverBatch_(annee,item.famille,revision,'filet-securite-15-min');
+    return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-(result.status==='READY'?1:0)),durationMs:Date.now()-t0};
   }finally{try{lock.releaseLock();}catch(e2){}}
 }
 
