@@ -1,7 +1,7 @@
 // PFMP DEV.416 — cache final du détail enrichi + préchauffage.
 /* Aligné sur le cache famille : tant que la grille est réutilisable, les
  * détails qu'elle vient de préparer doivent l'être aussi. */
-var EUC_DEV416_TTL_=300;
+var EUC_DEV416_TTL_=21600;
 var EUC_DEV416_CHUNK_=70000;
 
 function EUC_DEV416_key_(a,f,c,p){
@@ -64,6 +64,21 @@ function EUC_DEV416_finalDetail_(annee,famille,classe,periode){
       ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
       :hit;
   }
+
+  /* DEV427 : détail enrichi durable, partagé par tous les appareils et lié à
+   * la même révision atomique que la synthèse familiale. */
+  try{
+    if(typeof EUC_DEV427_readDetail_==='function'){
+      hit=EUC_DEV427_readDetail_(annee,famille,classe,periode);
+      if(hit){
+        hit.__dev416Cache=false;hit.__dev427Persistent=true;
+        EUC_DEV416_cachePut_(key,hit);
+        return typeof EUC_DEV420_enrichDetail_==='function'
+          ?EUC_DEV420_enrichDetail_(hit,annee,famille,classe,periode)
+          :hit;
+      }
+    }
+  }catch(eDev427){}
 
   /* DEV424 : le déclencheur a déjà effectué les jointures conventions,
    * apprentissage, situations et affectations. Le premier visiteur ne les

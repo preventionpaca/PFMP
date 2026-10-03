@@ -289,8 +289,10 @@ assert.ok(
   familyUx.indexOf('EUC_DEV421_fastFamilySnapshot_') < familyUx.indexOf('EUC_APP172_chargerFamille'),
   'liste des classes: le snapshot indexé doit être essayé avant le recalcul métier complet'
 );
-assert.match(familyUx, /EUC_DEV421_FAMILY_TTL_=300/,
-  'liste des classes: le snapshot de famille doit être réutilisé pendant la navigation');
+assert.match(familyUx, /EUC_DEV421_FAMILY_TTL_=21600/,
+  'liste des classes: le snapshot partagé doit rester réutilisable pendant la demi-journée');
+assert.match(familyUx, /EUC_DEV421_FAMILY_CHUNK_=70000/,
+  'liste des classes: un gros snapshot ne doit pas dépasser la limite d’une entrée de cache');
 assert.match(familyUx, /Payload_JSON/,
   'liste des classes: le chemin rapide doit lire directement le payload persistant');
 assert.match(familyUx, /EUC_DEV422_hydrateFamily_/,

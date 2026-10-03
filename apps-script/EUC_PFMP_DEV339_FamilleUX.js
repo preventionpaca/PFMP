@@ -8,26 +8,42 @@ function EUC_DEV339_year_(e){var y=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.a
  * données nécessaires ; on le lit donc sans recalcul et on le garde 5 minutes
  * en cache Apps Script. Les écritures de snapshot et de situation invalident
  * explicitement cette entrée. */
-var EUC_DEV421_FAMILY_TTL_=300;
+var EUC_DEV421_FAMILY_TTL_=21600;
+var EUC_DEV421_FAMILY_CHUNK_=70000;
 function EUC_DEV421_familyKey_(annee,famille){
   return 'DEV423R1_FAMILY_'+EUC_DEV339_txt_(annee)+'_'+EUC_DEV339_txt_(famille).toUpperCase();
 }
 function EUC_DEV421_familyCacheGet_(annee,famille){
-  var raw=null;
-  try{raw=CacheService.getScriptCache().get(EUC_DEV421_familyKey_(annee,famille));}catch(e){}
+  var cache=CacheService.getScriptCache(),key=EUC_DEV421_familyKey_(annee,famille),raw=null,meta=null;
+  try{meta=cache.get(key+'_M');}catch(e){}
+  if(meta){
+    var n=Number(meta)||0,parts=[],chunkKeys=[];
+    if(n<=0||n>20)return null;
+    for(var k=0;k<n;k++)chunkKeys.push(key+'_C'+k);
+    try{parts=cache.getAll(chunkKeys);}catch(e2){return null;}
+    raw='';for(var i=0;i<n;i++){var part=parts[key+'_C'+i];if(part==null)return null;raw+=part;}
+  }else{
+    try{raw=cache.get(key);}catch(e3){}
+  }
   if(!raw)return null;
   try{return JSON.parse(raw);}catch(e2){return null;}
 }
 function EUC_DEV421_familyCachePut_(annee,famille,data){
+  var raw='',cache=CacheService.getScriptCache(),key=EUC_DEV421_familyKey_(annee,famille);
+  try{raw=JSON.stringify(data);}catch(e){return data;}
+  var n=Math.ceil(raw.length/EUC_DEV421_FAMILY_CHUNK_);if(n<=0||n>20)return data;
   try{
-    CacheService.getScriptCache().put(
-      EUC_DEV421_familyKey_(annee,famille),JSON.stringify(data),EUC_DEV421_FAMILY_TTL_
-    );
-  }catch(e){}
+    for(var i=0;i<n;i++)cache.put(key+'_C'+i,raw.slice(i*EUC_DEV421_FAMILY_CHUNK_,(i+1)*EUC_DEV421_FAMILY_CHUNK_),EUC_DEV421_FAMILY_TTL_);
+    cache.put(key+'_M',String(n),EUC_DEV421_FAMILY_TTL_);
+    cache.remove(key);
+  }catch(e2){}
   return data;
 }
 function EUC_DEV421_familyCacheInvalidate_(annee,famille){
-  try{CacheService.getScriptCache().remove(EUC_DEV421_familyKey_(annee,famille));}catch(e){}
+  var cache=CacheService.getScriptCache(),key=EUC_DEV421_familyKey_(annee,famille),meta=null,keys=[key,key+'_M'];
+  try{meta=cache.get(key+'_M');}catch(e){}
+  for(var i=0;i<(Number(meta)||20);i++)keys.push(key+'_C'+i);
+  try{cache.removeAll(keys);}catch(e2){keys.forEach(function(k){try{cache.remove(k);}catch(e3){}});}
 }
 
 /* DEV422 — une seule lecture groupée des snapshots détaillés alimente les

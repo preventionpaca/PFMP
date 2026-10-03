@@ -6,13 +6,12 @@
  * famille technique. Une révision DIRTY interdit toute lecture de l'ancien
  * payload. La révision READY n'est publiée qu'après les détails et l'index.
  */
-var EUC_DEV425_VERSION_='1.0.3-dev.426';
+var EUC_DEV425_VERSION_='1.2.0-dev.427';
 var EUC_DEV425_STATE_PREFIX_='__DEV425_STATE__';
+var EUC_DEV427_DETAIL_PREFIX_='__DEV427_DETAIL__';
 var EUC_DEV425_STATE_TTL_=21600;
 var EUC_DEV425_FAMILIES_=['BACPRO','BTS','CAP'];
 var EUC_DEV426_STATE_PROP_PREFIX_='EUC_DEV426_STATE_';
-var EUC_DEV426_RECOVERY_PROP_PREFIX_='EUC_DEV426_RECOVERY_';
-var EUC_DEV426_RECOVERY_BATCH_SIZE_=6;
 
 function EUC_DEV425_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV425_family_(v){
@@ -25,7 +24,9 @@ function EUC_DEV425_family_(v){
 function EUC_DEV425_stateFamily_(famille){return EUC_DEV425_STATE_PREFIX_+EUC_DEV425_family_(famille);}
 function EUC_DEV425_stateKey_(annee,famille){return 'DEV425_STATE_'+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
 function EUC_DEV426_statePropKey_(annee,famille){return EUC_DEV426_STATE_PROP_PREFIX_+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
-function EUC_DEV426_recoveryPropKey_(annee,famille){return EUC_DEV426_RECOVERY_PROP_PREFIX_+EUC_DEV425_txt_(annee)+'_'+EUC_DEV425_family_(famille);}
+function EUC_DEV427_detailFamily_(famille,classe,periode){
+  return EUC_DEV427_DETAIL_PREFIX_+EUC_DEV425_family_(famille)+'_'+(Number(classe)||0)+'_'+(Number(periode)||0);
+}
 function EUC_DEV425_revision_(){
   var suffix='';try{suffix=Utilities.getUuid().replace(/-/g,'').slice(0,12);}catch(e){suffix=String(Math.random()).slice(2,14);}
   return Date.now().toString(36)+'-'+suffix;
@@ -76,7 +77,10 @@ function EUC_DEV425_writeState_(annee,famille,state){
   var now=new Date().toISOString(),safe={
     version:EUC_DEV425_VERSION_,annee:annee,famille:famille,
     revision:EUC_DEV425_txt_(state.revision),status:state.status==='READY'?'READY':'DIRTY',
-    reason:EUC_DEV425_txt_(state.reason).slice(0,120),updatedAt:now
+    reason:EUC_DEV425_txt_(state.reason).slice(0,120),updatedAt:now,
+    targets:(state.targets||[]).map(function(t){return {
+      classe:Number(t.classe)||0,periode:Number(t.periode)||0,famille:EUC_DEV425_family_(t.famille||famille)
+    };}).filter(function(t){return t.classe>0;}).slice(0,100)
   };
   /* DIRTY doit être visible avant la première écriture métier. Si Grist
    * échoue ensuite, le cache reste volontairement conservateur. */
@@ -176,53 +180,164 @@ function EUC_DEV425_beginMutation_(payload){
   if(!token.annee)throw new Error('DEV425 : année scolaire introuvable.');
   token.families.forEach(function(fam){
     var current=null;try{current=EUC_DEV421_fastFamilySnapshot_({annee:token.annee,famille:fam});}catch(e){}
-    EUC_DEV425_writeState_(token.annee,fam,{revision:revision,status:'DIRTY',reason:token.reason});
+    EUC_DEV425_writeState_(token.annee,fam,{revision:revision,status:'DIRTY',reason:token.reason,
+      targets:(token.targets||[]).filter(function(t){return !t.famille||t.famille===fam;})});
     EUC_DEV425_invalidateFamily_(token.annee,fam,current&&current.payload);
   });
   return token;
 }
 
-function EUC_DEV425_syncTargets_(token,famille,base){
-  var selected=(token.targets||[]).filter(function(t){return !t.famille||t.famille===famille;}),seen={};
-  if(!selected.length&&token.syncAll!==true)return 0;
+function EUC_DEV426_rawFamilySnapshot_(annee,famille){
+  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{
+    Annee_scolaire:[annee],Famille:[famille]
+  }).filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
+    return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+  });
+  if(!rows.length)return null;
+  try{return JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e){return null;}
+}
+
+/* DEV427 — le détail enrichi est conservé dans la table d'index fiable.
+ * La table historique EUC_SUIVI_PFMP_DETAIL_SNAPSHOT peut être absente selon
+ * la base ; elle ne doit donc plus forcer un recalcul métier à chaque clic. */
+function EUC_DEV427_readDetail_(annee,famille,classe,periode){
+  annee=EUC_DEV425_txt_(annee);famille=EUC_DEV425_family_(famille);
+  classe=Number(classe)||0;periode=Number(periode)||0;
+  if(!annee||!famille||!classe||!periode)return null;
+  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{
+    Annee_scolaire:[annee],Famille:[EUC_DEV427_detailFamily_(famille,classe,periode)]
+  }).filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
+    return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+  });
+  if(!rows.length)return null;
+  var detail=null;try{detail=JSON.parse((rows[0].fields||{}).Payload_JSON||'{}');}catch(e){return null;}
+  return EUC_DEV425_payloadFresh_(annee,famille,detail)?detail:null;
+}
+
+function EUC_DEV427_rawDetailMap_(annee,famille){
+  var prefix=EUC_DEV427_DETAIL_PREFIX_+EUC_DEV425_family_(famille)+'_',out={};
+  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[annee]})||[];
+  rows.filter(function(r){var f=r.fields||{};return f.Actif!==false&&EUC_DEV425_txt_(f.Famille).indexOf(prefix)===0;})
+    .sort(function(a,b){return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);})
+    .forEach(function(r){
+      var f=r.fields||{},tail=EUC_DEV425_txt_(f.Famille).slice(prefix.length).split('_'),key=(Number(tail[0])||0)+'|'+(Number(tail[1])||0);
+      if(out[key])return;try{out[key]=JSON.parse(f.Payload_JSON||'{}');}catch(e){}
+    });
+  return out;
+}
+
+function EUC_DEV427_writeDetails_(annee,famille,items){
+  items=items||[];if(!items.length)return 0;
+  EUC_DEV424_assertTarget_();
+  var all=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[annee]})||[],oldByFamily={};
+  all.forEach(function(r){var f=r.fields||{};if(f.Actif!==false)oldByFamily[EUC_DEV425_txt_(f.Famille)]=(oldByFamily[EUC_DEV425_txt_(f.Famille)]||[]).concat([r]);});
+  var now=new Date().toISOString(),records=[],old=[];
+  items.forEach(function(item){
+    var tech=EUC_DEV427_detailFamily_(famille,item.classe,item.periode);
+    records.push({fields:{Annee_scolaire:annee,Famille:tech,Payload_JSON:JSON.stringify(item.detail),Updated_at:now,Actif:true}});
+    (oldByFamily[tech]||[]).forEach(function(r){old.push({id:Number(r.id),fields:{Actif:false,Updated_at:now}});});
+  });
+  EUC_DEV424_chunks_(records,10).forEach(function(chunk){
+    EUC_DEV190_api_('post','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:chunk});
+  });
+  EUC_DEV424_chunks_(old,20).forEach(function(chunk){
+    EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:chunk});
+  });
+  return records.length;
+}
+
+function EUC_DEV426_periodMap_(data){
+  var out={};
+  (data&&data.classes||[]).forEach(function(c){
+    var cid=Number(c.classeId||c.id)||0;
+    (c.periodes||[]).forEach(function(p){var pid=Number(p.id||p.periodeId)||0;if(cid&&pid)out[cid+'|'+pid]=p;});
+  });
+  return out;
+}
+
+function EUC_DEV426_applyQuick_(p,quick){
+  if(!p||!quick)return;
+  p.quick=quick;p.__detailSnapshotVerified=true;
+  if(quick.isPdif)return;
+  var apps=quick.apprentis||[];
+  p.effectifTotal=Number(quick.total)||0;p.apprentis=apps.length;
+  p.total=Math.max(0,p.effectifTotal-apps.length);p.conventions=(quick.avec||[]).length;
+  p.situationsAdministratives=Number(quick.situationsCouvertes)||0;
+  p.annuleesInterrompues=(quick.annuleesInterrompues||[]).length;
+  p.manquantes=(quick.sans||[]).length;p.sansConvention=p.manquantes;
+  p.couverts=Number(quick.couverts)||0;
+}
+
+function EUC_DEV426_targetsForBuild_(token,famille,base){
+  var asked=(token.targets||[]).filter(function(t){return !t.famille||t.famille===famille;}),out=[],seen={};
   (base.classes||[]).forEach(function(c){
     var cid=Number(c.classeId||c.id)||0;
-    var matches=token.syncAll===true||selected.some(function(t){return Number(t.classe)===cid;});
-    if(!matches)return;
     (c.periodes||[]).forEach(function(p){
-      var pid=Number(p.id||p.periodeId)||0;
-      var exact=token.syncAll===true||selected.some(function(t){return Number(t.classe)===cid&&(!Number(t.periode)||Number(t.periode)===pid);});
-      var key=cid+'|'+pid;if(!cid||!pid||!exact||seen[key])return;seen[key]=1;
-      EUC_DEV190J_syncOne({annee:token.annee,famille:famille,classe:cid,periode:pid});
+      var pid=Number(p.id||p.periodeId)||0,key=cid+'|'+pid;
+      var wanted=token.syncAll===true||asked.some(function(t){return Number(t.classe)===cid&&(!Number(t.periode)||Number(t.periode)===pid);});
+      if(cid&&pid&&wanted&&!seen[key]){seen[key]=1;out.push({classe:cid,periode:pid,p:p});}
     });
   });
-  return Object.keys(seen).length;
+  return out;
 }
 
 function EUC_DEV425_buildFamily_(token,famille){
   var annee=token.annee,base=EUC_DEV424_clone_(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]});
-  var synced=EUC_DEV425_syncTargets_(token,famille,base);
   var classIds={};(base.classes||[]).forEach(function(c){var id=Number(c.classeId||c.id)||0;if(id)classIds[String(id)]=c;});
-  /* En maintenance, la lecture filtrée sur la seule année peut être vidée par
-   * la couche de compatibilité Grist alors que les lectures classe+période
-   * fonctionnent. Une lecture unique de la table, filtrée ensuite par
-   * hydrateFamily_, est plus fiable et reste hors du chemin utilisateur. */
-  var rows=typeof EUC_DEV190I_allRows_==='function'?EUC_DEV190I_allRows_():
-    (EUC_DEV190G_fastRecords_(EUC_DEV190I_TABLE_,{Annee_scolaire:[annee]})||[]);
-  var newest=EUC_DEV424_newestActiveDetails_(rows),batch=EUC_DEV422_batchSources_(annee,classIds),details=[];
-  var hydrated=EUC_DEV422_hydrateFamily_(base,annee,famille,{batch:batch,rows:rows,onDetail:function(x){
-    x.sourceRow=newest[EUC_DEV424_detailKey_(famille,x.classe,x.periode)]||x.sourceRow;
-    x.detail.__dev425Revision=token.revision;x.detail.__dev425FreshAt=new Date().toISOString();details.push(x);
-  }});
-  var expected=0,enriched=0;(hydrated.classes||[]).forEach(function(c){(c.periodes||[]).forEach(function(p){
-    if(Number(p.id||p.periodeId)){expected++;if(p.quick)enriched++;}
+  var previous=EUC_DEV426_rawFamilySnapshot_(annee,famille),previousPeriods=EUC_DEV426_periodMap_(previous);
+  var previousDetails=EUC_DEV427_rawDetailMap_(annee,famille);
+  var hydrated=base,batch=EUC_DEV422_batchSources_(annee,classIds),built=0,details=[];
+  (hydrated.classes||[]).forEach(function(c){
+    var cid=Number(c.classeId||c.id)||0;
+    (c.periodes||[]).forEach(function(p){
+      var pid=Number(p.id||p.periodeId)||0,old=previousPeriods[cid+'|'+pid];
+      if(old&&old.quick)EUC_DEV426_applyQuick_(p,EUC_DEV425_clone_(old.quick));
+    });
+  });
+  var wanted=EUC_DEV426_targetsForBuild_(token,famille,hydrated);
+  /* Si un ancien snapshot n'est pas encore enrichi, seules ses périodes
+   * manquantes sont reconstruites. Le cas normal d'une mutation ne recalcule
+   * que les cibles enregistrées dans l'état DIRTY. */
+  (hydrated.classes||[]).forEach(function(c){var cid=Number(c.classeId||c.id)||0;(c.periodes||[]).forEach(function(p){
+    var pid=Number(p.id||p.periodeId)||0;if(cid&&pid&&!p.quick&&!wanted.some(function(t){return t.classe===cid&&t.periode===pid;}))wanted.push({classe:cid,periode:pid,p:p});
   });});
+  /* Une nouvelle révision familiale couvre toutes ses périodes. Les détails
+   * inchangés sont recopiés avec cette révision ; s'ils n'existent pas encore,
+   * ils sont construits une seule fois. */
+  (hydrated.classes||[]).forEach(function(c){var cid=Number(c.classeId||c.id)||0;(c.periodes||[]).forEach(function(p){
+    var pid=Number(p.id||p.periodeId)||0,key=cid+'|'+pid;
+    if(!cid||!pid||wanted.some(function(t){return t.classe===cid&&t.periode===pid;}))return;
+    var oldDetail=previousDetails[key];
+    if(!oldDetail){wanted.push({classe:cid,periode:pid,p:p});return;}
+    var copy=EUC_DEV425_clone_(oldDetail);copy.__dev425Revision=token.revision;copy.__dev425FreshAt=new Date().toISOString();
+    details.push({classe:cid,periode:pid,detail:copy});
+    try{if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),copy);}catch(eCopyCache){}
+  });});
+  wanted.forEach(function(t){
+    var detail=EUC_DEV190_buildHistoricalDetail_(annee,t.classe,t.periode);
+    detail=EUC_DEV190J_enrichContacts_(detail);
+    detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,t.classe,t.periode,batch,t.p);
+    detail.__dev425Revision=token.revision;detail.__dev425FreshAt=new Date().toISOString();
+    EUC_DEV426_applyQuick_(t.p,EUC_DEV422_quickFromDetail_(detail));built++;
+    details.push({classe:t.classe,periode:t.periode,detail:detail});
+    try{if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,t.classe,t.periode),detail);}catch(eCache){}
+  });
+  var expected=0,enriched=0;(hydrated.classes||[]).forEach(function(c){
+    var appNames={};
+    (c.periodes||[]).forEach(function(p){
+      if(Number(p.id||p.periodeId)){expected++;if(p.quick)enriched++;}
+      ((p.quick&&p.quick.apprentis)||[]).forEach(function(n){if(EUC_DEV425_txt_(n))appNames[EUC_DEV425_txt_(n)]=1;});
+    });
+    c.apprentis=Object.keys(appNames).length;
+  });
   if(expected&&enriched!==expected)throw new Error('DEV425 : snapshot '+famille+' incomplet ('+enriched+'/'+expected+').');
   hydrated.__dev424Enriched=true;hydrated.__dev424Version=EUC_DEV424_DETAIL_VERSION_;
   hydrated.__dev425Revision=token.revision;hydrated.__dev425FreshAt=new Date().toISOString();hydrated.__source='snapshot-atomique-immediat';
-  var changed=EUC_DEV424_writeDetails_(details);EUC_DEV424_writeFamily_(annee,famille,hydrated);
-  EUC_DEV425_invalidateFamily_(annee,famille,hydrated);
-  return {famille:famille,details:details.length,changedDetails:changed,syncedTargets:synced};
+  /* Les détails et la synthèse portent la même révision. Tant que l'état est
+   * DIRTY aucun lecteur ne peut les présenter comme à jour. */
+  EUC_DEV427_writeDetails_(annee,famille,details);
+  EUC_DEV424_writeFamily_(annee,famille,hydrated);
+  return {famille:famille,detailsRecalcules:built,periodes:expected,_payload:hydrated};
 }
 
 function EUC_DEV425_finishMutation_(token){
@@ -235,6 +350,10 @@ function EUC_DEV425_finishMutation_(token){
     var state=EUC_DEV425_readState_(token.annee,fam);
     if(!state||state.status!=='DIRTY'||state.revision!==token.revision)return;
     EUC_DEV425_writeState_(token.annee,fam,{revision:token.revision,status:'READY',reason:token.reason});
+  });
+  out.forEach(function(x){
+    try{if(x&&x._payload&&typeof EUC_DEV421_familyCachePut_==='function')EUC_DEV421_familyCachePut_(token.annee,x.famille,x._payload);}catch(e){}
+    if(x)delete x._payload;
   });
   return {ok:true,annee:token.annee,revision:token.revision,families:out};
 }
@@ -263,41 +382,13 @@ function EUC_DEV425_initialize(){
   token.syncAll=false;return EUC_DEV425_finishMutation_(token);
 }
 
-function EUC_DEV426_recoveryTargets_(base){
-  var out=[],seen={};
-  (base&&base.classes||[]).forEach(function(c){
-    var cid=Number(c.classeId||c.id)||0;
-    (c.periodes||[]).forEach(function(p){
-      var pid=Number(p.id||p.periodeId)||0,key=cid+'|'+pid;
-      if(cid&&pid&&!seen[key]){seen[key]=1;out.push({classe:cid,periode:pid});}
-    });
-  });
-  return out;
-}
-
-function EUC_DEV426_recoverBatch_(annee,famille,revision,reason){
-  var props=PropertiesService.getScriptProperties();
-  var key=EUC_DEV426_recoveryPropKey_(annee,famille),progress=null;
-  try{progress=JSON.parse(props.getProperty(key)||'null');}catch(e){progress=null;}
-  if(!progress||EUC_DEV425_txt_(progress.revision)!==revision){progress={revision:revision,next:0};}
-  var base=EUC_DEV424_clone_(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]});
-  var targets=EUC_DEV426_recoveryTargets_(base),start=Math.max(0,Number(progress.next)||0);
-  if(start>targets.length)start=0;
-  var end=Math.min(targets.length,start+EUC_DEV426_RECOVERY_BATCH_SIZE_);
-  for(var i=start;i<end;i++){
-    EUC_DEV190J_syncOne({annee:annee,famille:famille,classe:targets[i].classe,periode:targets[i].periode});
-  }
-  progress.next=end;progress.total=targets.length;progress.updatedAt=new Date().toISOString();
-  props.setProperty(key,JSON.stringify(progress));
-  if(end<targets.length)return {ok:true,famille:famille,status:'DIRTY',synced:end-start,next:end,total:targets.length};
-  /* Tous les détails ont été resynchronisés au fil des lots. La publication
-   * finale reste atomique : hydratation complète, index, puis seulement READY. */
-  var result=EUC_DEV425_finishMutation_({
-    annee:annee,families:[famille],targets:[],revision:revision,
-    reason:reason,syncAll:false
-  });
-  props.deleteProperty(key);
-  return {ok:true,famille:famille,status:'READY',synced:end-start,next:end,total:targets.length,result:result};
+/* Initialisation ponctuelle de la famille la plus consultée. Elle ne modifie
+ * que les vues matérialisées autorisées, jamais les élèves ni conventions. */
+function EUC_DEV427_initializeBacproDetails(){
+  EUC_DEV424_assertTarget_();
+  var annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active);
+  var token=EUC_DEV425_beginMutation_({annee:annee,famille:'BACPRO',reason:'initialisation-details-dev427'});
+  token.syncAll=true;return EUC_DEV425_finishMutation_(token);
 }
 
 function EUC_DEV425_refreshScheduled(){
@@ -312,15 +403,17 @@ function EUC_DEV425_refreshScheduled(){
     /* Le déclencheur est un filet de sécurité, pas une mutation. Un snapshot
      * READY reste donc disponible et n'est jamais invalidé périodiquement. */
     if(!pending.length)return {ok:true,skipped:'all-ready',annee:annee,durationMs:Date.now()-t0};
-    /* Une reprise exhaustive est nécessaire après une mutation interrompue.
-     * Elle est découpée en lots persistants afin de respecter la durée Apps
-     * Script. La famille reste DIRTY jusqu'au dernier lot et à la publication
-     * atomique finale. */
+    /* Les cibles touchées sont conservées dans l'état DIRTY. La reprise
+     * reconstruit uniquement ces périodes à partir du moteur métier et réutilise
+     * les détails vérifiés du snapshot familial pour le reste. */
     var item=pending[0],state=item.state;
     var revision=EUC_DEV425_txt_(state&&state.revision)||EUC_DEV425_revision_();
     if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
-    var result=EUC_DEV426_recoverBatch_(annee,item.famille,revision,'filet-securite-15-min');
-    return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-(result.status==='READY'?1:0)),durationMs:Date.now()-t0};
+    var result=EUC_DEV425_finishMutation_({
+      annee:annee,families:[item.famille],targets:(state&&state.targets)||[],revision:revision,
+      reason:'filet-securite-15-min',syncAll:false
+    });
+    return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-1),durationMs:Date.now()-t0};
   }finally{try{lock.releaseLock();}catch(e2){}}
 }
 
@@ -333,11 +426,10 @@ function EUC_DEV426_finalizeRecovery(){
     return false;
   });
   if(!item)return {ok:true,skipped:'no-dirty-family',annee:annee};
-  /* Cette finalisation ne synchronise rien : elle ne peut réussir que si la
-   * totalité des détails actifs existe déjà. buildFamily_ vérifie le compte
-   * exact avant toute publication READY. */
+  /* Cette finalisation recalcule seulement les cibles conservées dans l'état
+   * DIRTY, puis publie détails, index et READY dans cet ordre. */
   return EUC_DEV425_finishMutation_({
-    annee:annee,families:[item.famille],targets:[],revision:item.state.revision,
+    annee:annee,families:[item.famille],targets:item.state.targets||[],revision:item.state.revision,
     reason:'finalisation-reprise',syncAll:false
   });
 }

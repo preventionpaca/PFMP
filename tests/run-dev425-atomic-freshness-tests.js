@@ -12,8 +12,10 @@ assert.match(atomic,/__DEV425_STATE__/);
 assert.match(atomic,/status==='DIRTY'/);
 assert.match(atomic,/EUC_DEV425_writeState_\(token\.annee,fam,\{revision:revision,status:'DIRTY'/);
 assert.match(atomic,/EUC_DEV425_writeState_\(token\.annee,fam,\{revision:token\.revision,status:'READY'/);
-assert.match(atomic,/EUC_DEV190J_syncOne/,'les détails touchés doivent être resynchronisés');
-assert.match(atomic,/EUC_DEV424_writeDetails_\(details\);EUC_DEV424_writeFamily_/,'les détails précèdent la publication de l’index');
+assert.match(atomic,/function EUC_DEV427_writeDetails_/,'les détails touchés doivent être matérialisés durablement');
+assert.match(atomic,/EUC_DEV427_DETAIL_PREFIX_/,'les détails doivent utiliser un espace technique distinct');
+assert.match(atomic,/EUC_DEV424_writeFamily_\(annee,famille,hydrated\)/,
+  'le snapshot familial doit être écrit avant la transition READY');
 assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.getProperty\(EUC_DEV426_statePropKey_/,
   'la lecture rapide doit utiliser le pointeur de fraîcheur partagé');
 assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.setProperty\(EUC_DEV426_statePropKey_/,
@@ -21,21 +23,25 @@ assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.setProperty\(EU
 const scheduled=atomic.slice(atomic.indexOf('function EUC_DEV425_refreshScheduled'),atomic.indexOf('function EUC_DEV425_status'));
 assert.match(scheduled,/skipped:'all-ready'/,'le filet de sécurité doit ignorer les snapshots READY');
 assert.match(scheduled,/var item=pending\[0\]/,'le filet de sécurité doit reprendre une seule famille par passage');
-assert.match(atomic,/EUC_DEV426_RECOVERY_BATCH_SIZE_=6/,'la reprise planifiée doit être bornée');
-assert.match(atomic,/function EUC_DEV426_recoverBatch_/,'la reprise doit mémoriser sa progression');
-assert.match(atomic,/status:'DIRTY',synced:end-start,next:end,total:targets\.length/,
-  'un lot intermédiaire doit laisser la famille DIRTY');
-assert.match(atomic,/syncAll:false/,'le dernier lot doit publier sans refaire toutes les lectures');
-assert.match(atomic,/props\.deleteProperty\(key\)/,'la progression ne doit être supprimée qu’après publication finale');
+assert.match(atomic,/targets:\(state\.targets\|\|\[\]\)\.map/,
+  'les périodes touchées doivent être conservées dans l’état partagé');
+assert.match(atomic,/function EUC_DEV426_rawFamilySnapshot_/,
+  'la reconstruction doit réutiliser le snapshot familial durable');
+assert.match(atomic,/EUC_DEV190_buildHistoricalDetail_\(annee,t\.classe,t\.periode\)/,
+  'seules les périodes touchées ou manquantes doivent être recalculées');
+assert.doesNotMatch(atomic.slice(atomic.indexOf('function EUC_DEV425_buildFamily_'),atomic.indexOf('function EUC_DEV425_finishMutation_')),
+  /EUC_DEV190J_syncOne/,'la publication ne doit plus dépendre de la table de détails fantôme');
 assert.match(atomic,/function EUC_DEV426_finalizeRecovery\(\)/,
   'une reprise déjà synchronisée doit pouvoir être finalisée sans recalcul');
-assert.match(atomic,/typeof EUC_DEV190I_allRows_==='function'\?EUC_DEV190I_allRows_\(\)/,
-  'la maintenance finale doit relire fiablement tous les détails actifs');
-assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-\(result\.status==='READY'\?1:0\)\)/,
-  'un lot intermédiaire doit compter la famille courante parmi les reprises restantes');
+assert.match(atomic,/EUC_DEV427_writeDetails_\(annee,famille,details\)[\s\S]*EUC_DEV424_writeFamily_\(annee,famille,hydrated\)/,
+  'les détails doivent être écrits avant l’index familial');
+assert.doesNotMatch(atomic.slice(atomic.indexOf('function EUC_DEV425_buildFamily_'),atomic.indexOf('function EUC_DEV425_finishMutation_')),
+  /EUC_DEV425_invalidateFamily_\(/,'la publication ne doit pas effacer les caches qu’elle vient de produire');
+assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-1\)/,
+  'la reprise doit signaler les familles restant à traiter');
 assert.doesNotMatch(scheduled,/EUC_DEV425_beginMutation_/,
   'le filet de sécurité ne doit plus invalider toutes les familles toutes les quinze minutes');
-assert.match(scheduled,/EUC_DEV426_recoverBatch_\(annee,item\.famille,revision/,
+assert.match(scheduled,/families:\[item\.famille\]/,
   'le filet de sécurité doit réparer uniquement chaque famille réellement DIRTY');
 
 const ctx={console,Date,JSON,Math,Utilities:{getUuid:()=> 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'}};
@@ -88,8 +94,11 @@ for(const file of ['apps-script/Suivi_Conventions_Public_FamilleClone_V353.html'
     'un snapshot déjà enrichi ne doit pas déclencher une seconde lecture serveur');
 }
 const familyUx=read('apps-script/EUC_PFMP_DEV339_FamilleUX.js');
+assert.match(familyUx,/EUC_DEV421_FAMILY_CHUNK_/,'le cache familial doit être découpé pour dépasser la limite par entrée');
 assert.match(familyUx,/\(quick\.apprentis\|\|\[\]\)\.forEach/,
   'le badge classe doit partager le décompte apprenti de la bulle');
+const finalDetail=read('apps-script/EUC_PFMP_DEV416_Performance.js');
+assert.match(finalDetail,/EUC_DEV427_readDetail_/,'la page de classe doit lire le détail durable avant tout recalcul');
 for(const file of ['apps-script/Suivi_PFMP_Classe_PublicClone_V353.html','apps-script/Suivi_PFMP_Classe_Detail_V156.html']){
   assert.match(read(file),/Suivi PFMP : /,'le titre de détail doit utiliser les deux-points');
 }
