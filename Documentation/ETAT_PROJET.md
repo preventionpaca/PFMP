@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV424 R1, version Apps Script immuable `748`.
+- Version active déployée le 3 octobre 2026 : DEV425 R2, version Apps Script immuable `750`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `748`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `750`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
@@ -14,7 +14,7 @@
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
-- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (336 tests).
+- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (337 tests).
 - Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
 
@@ -137,3 +137,14 @@
 - Version Apps Script immuable `748`, appliquée aux deux seuls déploiements historiques ADMIN et PUBLIC. Après `clasp push`, les sources distantes ont été relues et comparées sans divergence avec `apps-script/`.
 - Tests verts : `node tests/run-dev424-snapshot-trigger-tests.js` et suite complète `node tests/run-tests.js` (336 tests). Commit applicatif poussé : `078d7e1`.
 - Protections confirmées : aucun accès à `3pnVrygfNn7c`, aucun import Pronote réel, aucune écriture élève/convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
+
+## DEV425 R2 déployée — fraîcheur atomique et finitions publiques
+
+- Toute mutation métier autorisée ou tout import réellement lancé par un utilisateur marque d’abord la famille concernée `DIRTY`, incrémente sa révision, reconstruit immédiatement les snapshots détaillés puis l’index de famille, et ne publie l’état `READY` qu’après réussite complète. Les consultations refusent un snapshot `DIRTY`, incohérent ou de révision ancienne et basculent alors sur la lecture directe : aucun snapshot périmé n’est présenté comme à jour.
+- Le déclencheur `EUC_DEV424_refreshScheduled` toutes les 15 minutes reste le filet de sécurité. L’initialisation DEV425 a reconstruit les familles actives le 3 octobre 2026 de 15 h 18 min 58 s à 15 h 21 min 17 s ; le déclencheur planifié suivant a également terminé normalement.
+- Les seules nouvelles écritures automatiques concernent les snapshots, leurs révisions et leur état de fraîcheur dans `EUC_SUIVI_PFMP_INDEX`, sous les enregistrements techniques `__DEV425_STATE__<FAMILLE>`. Aucun import réel de test et aucune mutation élève ou convention n’ont été exécutés pendant le lot.
+- Les contrôles rapides de la grille ADMIN et PUBLIC réutilisent le contenu déjà préchargé et répondent aux événements directs du pointeur, sans nouvel appel Grist au survol. Les cartes et les listes détaillées conservent la même révision de snapshot.
+- La consultation publique masque durablement le fil administratif `Accueil PFMP`, y compris lorsqu’un ancien script le recrée après chargement. Contrôle réel sous `pfmp.loucodi.fr` : seul `Suivi des conventions › BAC PRO › TCAR › PFMP n°1` reste exposé ; TCAR affiche `19 / 3 / 16 / 0 / 0`.
+- Version Apps Script immuable `750`, appliquée uniquement aux déploiements PUBLIC `AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg` et ADMIN `AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA` existants. Après `clasp push`, les 346 fichiers distants ont été relus et sont identiques aux sources locales.
+- Tests verts : `node tests/run-dev424-snapshot-trigger-tests.js`, `node tests/run-dev425-atomic-freshness-tests.js` et suite complète `node tests/run-tests.js` (337 tests). Commits applicatifs poussés : `2b1eaa8` et `5b6f3d2`.
+- Protections confirmées : aucune lecture ni écriture sur `3pnVrygfNn7c`, aucun import Pronote réel de test, aucune mutation élève/convention hors action utilisateur, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
