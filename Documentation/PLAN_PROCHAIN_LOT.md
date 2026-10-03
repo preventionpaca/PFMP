@@ -1,4 +1,16 @@
-## DEV422 — validation réelle et mesures froides avant conclusion
+## DEV424 R1 — snapshot partagé actif, surveillance du premier cycle
+
+DEV424 R1 est déployée en version immuable `748`. Le déclencheur `EUC_DEV424_refreshScheduled` est installé toutes les 15 minutes et limité à la base active autorisée `b2CyeMEdVEMS`. La première reconstruction complète a duré environ 29 secondes en tâche de fond. Les parcours contrôlés sont revenus dans la fenêtre de 3 à 4 secondes : PUBLIC accueil `3,23 s`, famille BAC PRO `3,71 s`, détail TMVA2 environ `3,6 s`; ADMIN détail TCAR `3,91 s`.
+
+Ordre de suivi :
+
+1. vérifier dans l’historique Apps Script le premier cycle réellement lancé par le déclencheur, sa durée et l’absence d’erreur, sans journaliser de donnée nominative ;
+2. mesurer le lendemain un vrai premier accès depuis un autre appareil sur PUBLIC, ADMIN et apprentis, sans confondre cache navigateur et snapshot partagé ;
+3. surveiller le quota d’exécution et conserver un seul déclencheur `EUC_DEV424_refreshScheduled` ;
+4. invalider ou reconstruire de façon ciblée après les seules mutations déjà autorisées, sans remettre de calcul global dans le chemin de consultation ;
+5. reprendre ensuite les ordres de mission et le document d’organisation/bilan des déplacements, sans courriel ni création documentaire avant nouvelle autorisation explicite.
+
+## Historique DEV422 — validation réelle et mesures froides avant conclusion
 
 Le correctif DEV422 réunit les compteurs de cartes, les listes d’infobulle et les détails de classe sur les mêmes snapshots détaillés persistants. Le survol ne lance plus de calcul serveur et le voile plein écran est retiré. La validation finale doit mesurer séparément le premier passage et les passages répétés, sans présenter un résultat réchauffé comme une performance froide.
 

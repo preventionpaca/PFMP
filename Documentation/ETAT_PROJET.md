@@ -1,11 +1,11 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV423 R3, version Apps Script immuable `747`.
+- Version active déployée le 3 octobre 2026 : DEV424 R1, version Apps Script immuable `748`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `747`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `748`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
-- Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420 a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
+- Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
 - Web App PUBLIC : `https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec`.
 - Déploiement ADMIN : `AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA`.
 - Routes : `pfmp`, `suivi-pfmp`, `import-pronote-pfmp`, `gestion-pfmp`, `entreprises` ; routeur EDT historique conservé.
@@ -14,7 +14,7 @@
 - Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
-- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (335 tests).
+- Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (336 tests).
 - Accès du Web App unique : `ANYONE_ANONYMOUS` conservé car les routes publiques et administratives partagent le même projet ; les routes administratives restent protégées par l’authentification applicative.
 - Reprise exacte : préparer DEV417 à partir de cette branche récupérée, en commençant par les corrections d'affichage et les tests ciblés, sans activer les mutations.
 
@@ -125,3 +125,15 @@
 - Conclusion de performance : atteindre durablement 2 à 3 secondes à froid exige de servir un snapshot enrichi déjà construit, commun à tous les appareils, et de le rafraîchir hors du chemin de consultation. Le code de maintenance existe, mais aucun déclencheur n’a été activé : son activation et les écritures de snapshot doivent faire l’objet d’une autorisation explicite et d’un choix de cible conforme aux règles de recette.
 - Version Apps Script immuable `747`, appliquée aux seuls déploiements PUBLIC et ADMIN existants. Après `clasp push`, les 344 fichiers ont été relus : aucune divergence avec les sources locales.
 - Suite complète verte : `node tests/run-tests.js`, 335 tests. Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune écriture élève/convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
+
+## DEV424 R1 déployée — snapshots enrichis planifiés
+
+- Les consultations famille et détail servent désormais en priorité un snapshot enrichi partagé déjà construit. Les lectures multi-tables Grist, jointures des élèves, conventions, apprentis, situations et affectations ne sont plus rejouées dans le chemin du premier utilisateur.
+- Le rafraîchissement `EUC_DEV424_refreshScheduled` est installé comme unique déclencheur temporel toutes les 15 minutes. Il est verrouillé, observable, strictement limité à `b2CyeMEdVEMS`, conserve le dernier snapshot valide en cas d’échec et n’écrit que les snapshots modifiés.
+- La première reconstruction complète manuelle a abouti en environ 29 secondes en tâche de fond, sans erreur. Ce coût est désormais payé hors navigation et partagé entre les appareils.
+- Mesures visibles après alimentation : accueil PUBLIC `3 229 ms`, grille BAC PRO PUBLIC `3 710 ms`, retour aux classes PUBLIC environ `3,4 s`, détail TMVA2 PUBLIC environ `3,6 s`, détail TCAR ADMIN `3 906 ms`. La cible de 3 à 4 secondes est atteinte sur les parcours contrôlés.
+- Données contrôlées : TCAR `19 / 3 / 16 / 0 / 0` et TMVA2 `25 / 5 / 18 / 2 / 0` pour effectif, apprentis, avec convention, sans convention et annulées/interrompues. Les cartes, le détail et les contrôles rapides lisent les mêmes données persistées.
+- La navigation PUBLIC reste sous `pfmp.loucodi.fr`; le détail et le retour ne font pas sortir l’utilisateur vers l’URL Apps Script visible. Le parcours ADMIN conserve volontairement son URL authentifiée Apps Script historique.
+- Version Apps Script immuable `748`, appliquée aux deux seuls déploiements historiques ADMIN et PUBLIC. Après `clasp push`, les sources distantes ont été relues et comparées sans divergence avec `apps-script/`.
+- Tests verts : `node tests/run-dev424-snapshot-trigger-tests.js` et suite complète `node tests/run-tests.js` (336 tests). Commit applicatif poussé : `078d7e1`.
+- Protections confirmées : aucun accès à `3pnVrygfNn7c`, aucun import Pronote réel, aucune écriture élève/convention, aucun courriel, aucun ordre de mission, aucune activation LIVE/ENABLED et aucun nouveau Web App.
