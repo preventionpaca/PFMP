@@ -90,6 +90,8 @@ assert.match(detail, /page!==['"]suivi-pfmp-classe['"]&&page!==['"]suivi-pfmp-cl
   'détail classe: la navigation rapide ne prend pas en charge la route publique');
 assert.match(detail, /window\.detail=detail;[\s\S]*window\.render=function\(\)\{detail=window\.detail\|\|detail;render\(\)\}/,
   'détail classe: la navigation rapide ne peut pas remplacer l’état détenu par le rendu initial');
+assert.doesNotMatch(detail, /history\.pushState/,
+  'détail PUBLIC: l’iframe ne doit pas pousser une URL Apps Script d’une autre origine');
 assert.match(detail, /typeof window\.EUC_DEV418_publicNavigate===['"]function['"][\s\S]*EUC_DEV418_publicNavigate\(url,null,['"]Chargement…['"]\)/,
   'détail PUBLIC: le repli rapide peut encore sortir du sous-domaine');
 

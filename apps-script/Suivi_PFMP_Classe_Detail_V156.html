@@ -1897,12 +1897,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           detail=r.detail;
           render();
 
-          history.pushState(
-            {euc382:true},
-            '',
-            u.toString()
-          );
-
+          /* Le wrapper conserve l'URL publique pfmp.loucodi.fr. L'iframe
+           * googleusercontent ne peut pas pousser une URL Apps Script d'une
+           * autre origine dans son propre historique. */
           updateBreadcrumb();
           updateBackToFamily();
           updateClassNav();
@@ -1997,10 +1994,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     updateBackToFamily();
   }
 
-  window.addEventListener('popstate',function(){
-    if(active)return;
-    location.reload();
-  });
 })();
 </script>
 <!-- EUC_DEV382_FAST_NAV_END -->
