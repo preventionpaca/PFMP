@@ -6,7 +6,7 @@
  * famille technique. Une révision DIRTY interdit toute lecture de l'ancien
  * payload. La révision READY n'est publiée qu'après les détails et l'index.
  */
-var EUC_DEV425_VERSION_='1.0.1-dev.426';
+var EUC_DEV425_VERSION_='1.0.2-dev.426';
 var EUC_DEV425_STATE_PREFIX_='__DEV425_STATE__';
 var EUC_DEV425_STATE_TTL_=21600;
 var EUC_DEV425_FAMILIES_=['BACPRO','BTS','CAP'];
@@ -267,21 +267,19 @@ function EUC_DEV425_refreshScheduled(){
     /* Le déclencheur est un filet de sécurité, pas une mutation. Un snapshot
      * READY reste donc disponible et n'est jamais invalidé périodiquement. */
     if(!pending.length)return {ok:true,skipped:'all-ready',annee:annee,durationMs:Date.now()-t0};
-    var repaired=[];
-    pending.forEach(function(item){
-      var state=item.state,revision=EUC_DEV425_txt_(state&&state.revision)||EUC_DEV425_revision_();
-      if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
-      var result=EUC_DEV425_finishMutation_({
-        annee:annee,families:[item.famille],targets:[],revision:revision,
-        /* La reconstruction groupée ci-dessous relit déjà les sources et
-         * republie tous les détails de la famille. Resynchroniser chaque
-         * classe/période avant cela multiplierait inutilement les appels
-         * Grist et pourrait monopoliser Apps Script plusieurs minutes. */
-        reason:'filet-securite-15-min',syncAll:false
-      });
-      repaired.push(result);
+    /* Une reprise exhaustive est nécessaire après une mutation interrompue :
+     * l'ancien détail ne peut pas être republié comme frais. Pour rester sous
+     * la durée maximale Apps Script, le filet de sécurité ne reprend qu'une
+     * famille à chaque passage. Les suivantes seront traitées aux passages
+     * de 15 minutes suivants. */
+    var item=pending[0],state=item.state;
+    var revision=EUC_DEV425_txt_(state&&state.revision)||EUC_DEV425_revision_();
+    if(!state)EUC_DEV425_writeState_(annee,item.famille,{revision:revision,status:'DIRTY',reason:'filet-securite-15-min'});
+    var result=EUC_DEV425_finishMutation_({
+      annee:annee,families:[item.famille],targets:[],revision:revision,
+      reason:'filet-securite-15-min',syncAll:true
     });
-    return {ok:true,annee:annee,repaired:repaired,durationMs:Date.now()-t0};
+    return {ok:true,annee:annee,repaired:[result],remaining:Math.max(0,pending.length-1),durationMs:Date.now()-t0};
   }finally{try{lock.releaseLock();}catch(e2){}}
 }
 

@@ -20,8 +20,9 @@ assert.match(atomic,/PropertiesService\.getScriptProperties\(\)\.setProperty\(EU
   'chaque transition DIRTY ou READY doit mettre à jour le pointeur partagé');
 const scheduled=atomic.slice(atomic.indexOf('function EUC_DEV425_refreshScheduled'),atomic.indexOf('function EUC_DEV425_status'));
 assert.match(scheduled,/skipped:'all-ready'/,'le filet de sécurité doit ignorer les snapshots READY');
-assert.match(scheduled,/syncAll:false/,'le filet de sécurité doit reconstruire par lots sans resynchroniser chaque classe/période');
-assert.doesNotMatch(scheduled,/syncAll:true/,'le filet de sécurité ne doit jamais relancer une synchronisation globale détaillée');
+assert.match(scheduled,/var item=pending\[0\]/,'le filet de sécurité doit reprendre une seule famille par passage');
+assert.match(scheduled,/syncAll:true/,'une famille DIRTY doit être reconstruite exhaustivement avant publication READY');
+assert.match(scheduled,/remaining:Math\.max\(0,pending\.length-1\)/,'le résultat doit signaler les familles restant à reprendre');
 assert.doesNotMatch(scheduled,/EUC_DEV425_beginMutation_/,
   'le filet de sécurité ne doit plus invalider toutes les familles toutes les quinze minutes');
 assert.match(scheduled,/families:\[item\.famille\]/,
