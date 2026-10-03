@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV418 R6, version Apps Script immuable `730`.
+- Version active déployée le 3 octobre 2026 : DEV418 R8, version Apps Script immuable `732`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `730`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `732`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement, après confirmation explicite du 2 octobre 2026. Production `3pnVrygfNn7c` interdite.
@@ -60,4 +60,12 @@
 - Les données de contrôle sont cohérentes : TCAR `19 / 3 / 16 / 0` et TCIEL `26 / 1 / 24 / 1` pour effectif, apprentis, conventions et sans convention.
 - Le temps de calcul serveur est désormais dans la cible de 3 à 4 secondes. Le temps perçu complet peut rester supérieur lors d’un chargement froid à cause de la création des iframes et du bac à sable Google Apps Script ; ce reliquat devient le premier chantier du prochain lot.
 - Suite complète finale verte : `node tests/run-tests.js`, 319 tests. Aucun accès à `3pnVrygfNn7c`, aucune écriture Grist, aucun import Pronote, aucun courriel et aucune mutation métier n’ont été exécutés.
-- Audit du parcours `alternance.loucodi.fr` : la passerelle reconnaît le compte Google et cible correctement le déploiement ADMIN `730`, mais PFMP revient à l’écran de connexion. La comparaison privée des propriétés, sans afficher leur valeur, confirme que la passerelle possède `EUC_DEV270B_HMAC_SECRET` (longueur valide) tandis que cette propriété est absente du projet PFMP. L’administration par passerelle reste bloquée jusqu’à la recopie explicitement autorisée de ce secret dans les propriétés privées PFMP.
+- L’audit initial du parcours `alternance.loucodi.fr` a isolé un défaut de secret partagé. Un diagnostic limité à des codes non sensibles a été ajouté en version `731`, sans jamais rendre l’erreur brute, le courriel ou le jeton.
+
+## DEV418 R8 déployée — passerelle administrative rétablie
+
+- La version Apps Script immuable `732` est appliquée aux deux seuls déploiements historiques ADMIN et PUBLIC, avec leurs URL inchangées. Le distant Apps Script a été relu : 343 fichiers identiques aux sources locales.
+- Le projet PFMP ne pouvait pas recevoir une propriété supplémentaire : son magasin de propriétés contient déjà de volumineux instantanés de cache. Aucun cache ni aucune propriété n’a été supprimé sans autorisation.
+- Le secret d’authentification est désormais dérivé par HMAC-SHA256, avec le domaine dédié `EUC_DEV270B_AUTH_V1`, depuis une propriété privée PFMP existante. La passerelle ne conserve que la valeur dérivée ; aucun secret n’est présent dans Git ou dans les journaux.
+- Parcours réel vérifié : `alternance.loucodi.fr` reconnaît le compte, ouvre le centre d’administration puis la gestion des apprentis sans retour à l’écran de connexion. Compteurs contrôlés en lecture seule : 18 apprentis, 18 dossiers remis, 18 transmis CFA, 18 contrats valides et 0 rupture.
+- Dette technique identifiée : les instantanés de performance et les lignes d’accès ne doivent plus être stockés durablement dans `PropertiesService`. Leur migration vers un cache borné, puis la purge contrôlée des anciennes clés, nécessitera un lot séparé et une autorisation explicite avant toute suppression.

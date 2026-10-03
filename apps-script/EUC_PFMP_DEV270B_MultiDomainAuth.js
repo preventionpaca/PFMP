@@ -1,5 +1,7 @@
 /** Eucalyptus PFMP - v1.0.0-dev.270b - authentification multi-domaines. */
 var EUC_DEV270B_SECRET_PROPERTY_='EUC_DEV270B_HMAC_SECRET';
+var EUC_DEV270B_FALLBACK_SECRET_PROPERTY_='EUC_PFMP_QR_HMAC_SECRET';
+var EUC_DEV270B_SECRET_DERIVATION_='EUC_DEV270B_AUTH_V1';
 var EUC_DEV270B_GATEWAY_BASE_='https://script.google.com/macros/s/AKfycbyQ34i64GObLXSFFd9ixCks_16OAPdv2IUNoPq6SRMUiWWxxfli_fXQmrG_z8GZr-0Q/exec';
 var EUC_DEV270B_ADMIN_BASE_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV270B_SESSION_TTL_=21600;
@@ -16,11 +18,22 @@ function EUC_DEV270B_b64u_(bytes){
   return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/,'');
 }
 function EUC_DEV270B_secret_(){
-  var value=String(
-    PropertiesService.getScriptProperties().getProperty(
-      EUC_DEV270B_SECRET_PROPERTY_
-    )||''
-  ).trim();
+  var properties=PropertiesService.getScriptProperties();
+  var value=String(properties.getProperty(EUC_DEV270B_SECRET_PROPERTY_)||'').trim();
+  if(value.length<32){
+    var base=String(
+      properties.getProperty(EUC_DEV270B_FALLBACK_SECRET_PROPERTY_)||''
+    ).trim();
+    if(base.length>=32){
+      value=EUC_DEV270B_b64u_(
+        Utilities.computeHmacSha256Signature(
+          EUC_DEV270B_SECRET_DERIVATION_,
+          base,
+          Utilities.Charset.UTF_8
+        )
+      );
+    }
+  }
   if(value.length<32){
     throw new Error('Secret d’authentification PFMP absent ou invalide.');
   }
@@ -121,10 +134,7 @@ function EUC_DEV270B_startSession_(token){
 
   var ctx=EUC_DEV270B_lookupUser_(data.email);
   if(!ctx){
-    throw new Error(
-      'Compte Google authentifié mais non autorisé dans PFMP : '+
-      String(data.email||'')
-    );
+    throw new Error('Compte Google authentifié mais non autorisé dans PFMP.');
   }
 
   var sk=EUC_DEV270B_sessionKey_();
@@ -138,12 +148,28 @@ function EUC_DEV270B_startSession_(token){
 
   return ctx;
 }
-function EUC_DEV270B_loginPage_(){
+function EUC_DEV270B_failureCode_(err){
+  var message=String(err&&err.message||err||'');
+  if(/secret/i.test(message))return 'AUTH_SECRET';
+  if(/signature/i.test(message))return 'AUTH_SIGNATURE';
+  if(/session navigateur/i.test(message))return 'AUTH_SESSION';
+  if(/compte google|non autoris/i.test(message))return 'AUTH_ACCOUNT';
+  if(/grist|recette|cible/i.test(message))return 'AUTH_DATA';
+  if(/jeton|authentification pfmp|expir/i.test(message))return 'AUTH_TOKEN';
+  return 'AUTH_UNKNOWN';
+}
+function EUC_DEV270B_loginPage_(failureCode){
   var u=String(EUC_DEV270B_GATEWAY_BASE_||'')
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+  var code=/^AUTH_[A-Z]+$/.test(String(failureCode||''))
+    ?String(failureCode)
+    :'';
+  var diagnostic=code
+    ?'<p id="authDiag" role="status">Diagnostic : <strong>'+code+'</strong></p>'
+    :'';
 
   return HtmlService.createHtmlOutput(
     '<!doctype html><html lang="fr"><head><meta charset="utf-8">'+
@@ -155,6 +181,7 @@ function EUC_DEV270B_loginPage_(){
     '</head><body><div class="card">'+
     '<h2>Administration PFMP</h2>'+
     '<p>Une authentification Google est nécessaire.</p>'+
+    diagnostic+
     '<a class="btn" target="_top" href="'+u+'">Se connecter avec Google</a>'+
     '</div></body></html>'
   ).setTitle('Connexion administration PFMP');

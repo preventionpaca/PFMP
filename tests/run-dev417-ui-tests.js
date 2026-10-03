@@ -124,8 +124,28 @@ assert.doesNotMatch(entConfig, /3pnVrygfNn7c/,
 const auth = read('apps-script/EUC_PFMP_DEV270B_MultiDomainAuth.js');
 assert.match(auth, /EUC_DEV270B_HMAC_SECRET/,
   'le secret HMAC doit provenir des propriétés privées Apps Script');
+assert.match(auth, /EUC_PFMP_QR_HMAC_SECRET/,
+  'l’authentification doit pouvoir dériver un secret depuis la propriété privée PFMP existante');
+assert.match(auth, /EUC_DEV270B_AUTH_V1/,
+  'la dérivation de secours doit être séparée du domaine cryptographique QR');
+assert.match(auth, /computeHmacSha256Signature\(\s*EUC_DEV270B_SECRET_DERIVATION_/,
+  'le secret de secours ne doit pas être réutilisé directement pour l’authentification');
 assert.doesNotMatch(auth, /var\s+EUC_DEV270B_SECRET_\s*=\s*['"][0-9a-f]{32,}/i,
   'un secret HMAC est encore codé en dur');
+assert.match(auth, /function EUC_DEV270B_failureCode_\(err\)/,
+  'authentification: le diagnostic non sensible des échecs manque');
+assert.match(auth, /\^AUTH_\[A-Z\]\+\$/,
+  'authentification: le code affiché doit être limité à une liste lexicale sûre');
+assert.match(auth, /id="authDiag"/,
+  'authentification: le diagnostic sûr n’est pas exposé dans la page de connexion');
+assert.doesNotMatch(auth, /non autorisé dans PFMP\s*:\s*['"]?\s*\+/,
+  'authentification: le courriel ne doit pas être concaténé dans une erreur');
+
+const adminWebApp = read('apps-script/EUC_CENTRE_ADMIN_PFMP_WebApp.js');
+assert.match(adminWebApp, /authFailure=EUC_DEV270B_failureCode_\(__expired\)/,
+  'centre admin: l’échec de passerelle n’est pas converti en diagnostic sûr');
+assert.match(adminWebApp, /EUC_DEV270B_loginPage_\(authFailure\)/,
+  'centre admin: le diagnostic sûr n’est pas transmis à la page de connexion');
 
 const admin = read('apps-script/Admin_PFMP.html');
 assert.match(admin, /id="euc-dev417-pronote-classes"/,
