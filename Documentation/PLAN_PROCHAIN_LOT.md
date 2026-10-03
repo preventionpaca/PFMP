@@ -12,7 +12,7 @@ Ordre de validation :
 
 ## DEV423 — priorité absolue : snapshot enrichi partagé
 
-DEV423 R2 est déployée en version immuable `746`. Les compteurs sont cohérents, les contrôles rapides sont préchargés, le détail conserve les coordonnées et la navigation rapide reste sous le sous-domaine. Le changement de période mesuré après amorçage prend `149 ms` côté serveur et `3 336 ms` au total. En revanche, la famille BAC PRO à froid reste entre environ 22 et 34 secondes : le chemin de consultation reconstruit encore toutes les périodes depuis plusieurs tables Grist.
+DEV423 R3 est déployée en version immuable `747`. Les compteurs sont cohérents, les contrôles rapides sont préchargés, le détail conserve les coordonnées, un seul fil d’Ariane reste visible et la navigation rapide reste sous le sous-domaine. Le changement de période mesuré après amorçage prend `149 ms` côté serveur et `3 336 ms` au total. En revanche, la famille BAC PRO à froid reste entre environ 22 et 34 secondes : le chemin de consultation reconstruit encore toutes les périodes depuis plusieurs tables Grist.
 
 Ordre proposé, soumis à autorisation avant toute écriture ou activation :
 
