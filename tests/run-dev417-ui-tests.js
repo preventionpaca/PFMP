@@ -52,6 +52,22 @@ assert.match(detail, /min-width:1680px/,
   'détail classe: le tableau reste trop étroit pour les coordonnées entreprise');
 assert.match(detail, /function contactVal\(v\)/,
   'détail classe: les coordonnées ne sont pas structurées sur plusieurs lignes');
+assert.doesNotMatch(detail, /EUC_DEV340_SNAPSHOT_DETAIL|EUC_DEV190E_SNAPSHOT_TILE|snapshot-pfmp-admin/,
+  'détail classe: la maintenance Snapshot ne doit jamais être injectée dans la liste des élèves');
+assert.match(detail, /const incidents=\(detail\.lignes\|\|\[\]\)\.filter/,
+  'détail classe: le compteur annulées/interrompues doit être recalculé depuis les lignes visibles');
+assert.match(detail, /window\.EUC_DEV419_beginNavigation/,
+  'détail classe: l’indicateur commun de navigation est absent');
+assert.match(detail, /beginNavigation\(back,'Retour aux classes…'\)/,
+  'détail classe: le retour aux classes ne matérialise pas le chargement');
+assert.match(detail, /beginNavigation\(tab,'Chargement de la période…'\)/,
+  'détail classe: le changement de période ne matérialise pas le chargement');
+assert.match(detail, /beginNavigation\(el,'Chargement de la classe…'\)/,
+  'détail classe: la liste déroulante ne matérialise pas le chargement');
+assert.match(detail, /\.euc419-nav-busy[\s\S]*removeAttribute\('aria-busy'\)[\s\S]*disabled=false/,
+  'détail classe: la navigation rapide ne réactive pas le contrôle après chargement');
+assert.match(detail, /page!==['"]suivi-pfmp-classe['"]&&page!==['"]suivi-pfmp-classe-public['"]/,
+  'détail classe: la navigation rapide ne prend pas en charge la route publique');
 
 const publicExact = read('apps-script/EUC_PFMP_DEV415_PublicAdminExact.js');
 assert.match(publicExact, /createTemplateFromFile\(\s*'Suivi_PFMP_Classe_Detail_V156'\s*\)/,
@@ -68,6 +84,14 @@ assert.doesNotMatch(publicExact, /replace\(\/window\\\.top\\\.location/,
   'PUBLIC ne doit plus convertir une navigation en iframe Apps Script imbriquée');
 assert.match(publicExact, /EUC_DEV417_publicFastDetail/,
   'PUBLIC doit disposer d’une navigation rapide strictement en lecture seule');
+assert.match(publicExact, /EUC_DEV418_detailFastNavigate/,
+  'PUBLIC doit conserver la coque de détail lors d’un changement de classe ou de période');
+assert.match(publicExact, /\.euc190e-snapshot-tile/,
+  'PUBLIC doit masquer par défense en profondeur toute ancienne tuile Snapshot');
+
+const publicApprentices = read('apps-script/Apprentissage_PFMP_PublicClone_V353.html');
+assert.doesNotMatch(publicApprentices, /snapshot-pfmp-admin|Maintenance Snapshot PFMP/,
+  'apprentis PUBLIC: aucun accès à la maintenance Snapshot ne doit être rendu');
 
 const publicFamily = read('apps-script/Suivi_Conventions_Public_FamilleClone_V353.html');
 assert.match(publicFamily, /target="_self"/,
@@ -78,6 +102,12 @@ assert.match(publicFamily, /EUC_PFMP_WRAPPER_NAVIGATE/,
   'famille PUBLIC: le message de navigation vers le wrapper manque');
 assert.match(publicFamily, /searchParams\.set\('wrapper','1'\)/,
   'famille PUBLIC: le marqueur du wrapper doit être conservé');
+assert.match(publicFamily, /panel\.addEventListener\('pointerenter'/,
+  'famille PUBLIC: la bulle de contrôle rapide doit rester ouverte au survol');
+
+const adminFamily = read('apps-script/Suivi_Conventions_Admin_FamilleV190L.html');
+assert.match(adminFamily, /panel\.addEventListener\('pointerenter'/,
+  'famille ADMIN: la bulle de contrôle rapide doit rester ouverte au survol');
 
 const publicSummary = read('apps-script/Suivi_Conventions_Public_Clone_V353.html');
 assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
@@ -176,6 +206,8 @@ const accessCache = read('apps-script/EUC_PFMP_DEV398_Performance.js');
 const liveDetail = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
 const finalCache = read('apps-script/EUC_PFMP_DEV416_Performance.js');
 const baseDetailCache = read('apps-script/EUC_PFMP_DEV356_Finitions.js');
+const classFastNav = read('apps-script/EUC_PFMP_DEV382_Performance.js');
+const quickCheck = read('apps-script/EUC_PFMP_DEV388_Fix.js');
 assert.match(accessCache, /DEV418_ACCESS_ROWS_/,
   'détail classe: le cache persistant DEV418 n’est pas isolé des anciennes valeurs');
 assert.match(accessCache, /accessSignature_\(annee,classe,periode\)/,
@@ -195,6 +227,20 @@ assert.doesNotMatch(buildFinal, /EUC_V50_enrichirDetail_|EUC_APP172_enrichirDeta
   'détail classe: les enrichissements conventions/apprentis sont encore rejoués deux fois');
 assert.match(baseDetailCache, /return 'DEV418_DETAIL_'/,
   'détail classe: le cache de base DEV418 n’est pas isolé');
+assert.match(classFastNav, /EUC_DEV416_finalDetail_/,
+  'navigation rapide: le détail final en cache doit être réutilisé');
+assert.match(quickCheck, /EUC_DEV416_finalDetail_/,
+  'contrôle rapide: le détail final préchauffé doit être réutilisé');
+
+const familyLive = read('apps-script/EUC_PFMP_DEV340_ConsolidationLive.js');
+const primeAccess = familyLive.slice(
+  familyLive.indexOf('function EUC_DEV340_primeAccessIndex_'),
+  familyLive.indexOf('function EUC_DEV398_BASE_EUC_DEV340_accessRows_')
+);
+assert.match(primeAccess, /EUC_DEV394_BASE_EUC_DEV340_primeAccessIndex_/,
+  'liste des classes: le préchauffage doit remplir les caches classe/période');
+assert.doesNotMatch(primeAccess, /return EUC_DEV340_accessRows_\.apply/,
+  'liste des classes: le préchauffage ne doit pas appeler une lecture de classe 0');
 
 const snapshotSource = read('apps-script/EUC_PFMP_DEV190_Snapshot.js');
 const activeRows = snapshotSource.slice(snapshotSource.indexOf('function EUC_DEV190I_activeRows_'), snapshotSource.indexOf('function EUC_DEV190I_familyCode_'));

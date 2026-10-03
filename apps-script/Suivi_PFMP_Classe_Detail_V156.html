@@ -140,7 +140,7 @@ body{background:#f7fbf9!important}
 <body>
 <?!= dev186BreadcrumbHtml ?>
 <div id="EUC_DEV175C_CRUMB"></div>
-<style id="EUC_V51_UI">#EUC_V51_CRUMB{max-width:1400px;margin:0 auto;padding:12px 24px 0;font-size:13px}#EUC_V51_CRUMB a{color:#0b745f;text-decoration:none;font-weight:800}#EUC_V51_CRUMB span{margin:0 7px;color:#667085}.tab{transition:.15s}.tab.euc-loading{background:#dff4ed!important;color:#0b745f!important;border-color:#0b8f72!important}.tab.euc-loading:after{content:' · chargement…';font-size:11px}</style><div id="EUC_V51_CRUMB"></div><script>(function(){function qs(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}function init(){if(qs('origine')!=='suivi-conventions')return;const famLabel=qs('familleLibelle')||(qs('famille')==='BACPRO'?'BAC PRO':qs('famille'));const home=new URL(C.baseUrl);home.searchParams.set('page','snapshot-pfmp-admin');home.searchParams.set('annee',detail.annee);const fam=new URL(C.baseUrl);fam.searchParams.set('page','suivi-conventions-famille');fam.searchParams.set('annee',detail.annee);fam.searchParams.set('famille',qs('famille'));const bc=document.getElementById('EUC_V51_CRUMB');bc.innerHTML='<a href="'+home+'">Suivi des conventions</a><span>›</span><a href="'+fam+'">'+famLabel+'</a><span>›</span><strong>'+((detail.classe&&detail.classe.nom)||'Classe')+'</strong><span>›</span><strong>'+((detail.periode&&detail.periode.libelle)||'Période')+'</strong>';const back=document.getElementById('back');if(back){back.href=fam;back.textContent='← Retour '+famLabel;back.onclick=function(ev){ev.preventDefault();location.href=fam.toString();};}document.querySelectorAll('#periodTabs [data-p]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopImmediatePropagation();ev.preventDefault();btn.classList.add('euc-loading');const u=new URL(C.baseUrl);u.searchParams.set('page','suivi-pfmp-classe');u.searchParams.set('annee',detail.annee);u.searchParams.set('classe',detail.classe.id);u.searchParams.set('periode',btn.dataset.p);u.searchParams.set('origine','suivi-conventions');u.searchParams.set('famille',qs('famille'));u.searchParams.set('familleLibelle',famLabel);location.href=u.toString();},true);});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,0);});else setTimeout(init,0);})();</script>
+<style id="EUC_V51_UI">#EUC_V51_CRUMB{max-width:1400px;margin:0 auto;padding:12px 24px 0;font-size:13px}#EUC_V51_CRUMB a{color:#0b745f;text-decoration:none;font-weight:800}#EUC_V51_CRUMB span{margin:0 7px;color:#667085}.tab{transition:.15s}.tab.euc-loading{background:#dff4ed!important;color:#0b745f!important;border-color:#0b8f72!important}.tab.euc-loading:after{content:' · chargement…';font-size:11px}</style><div id="EUC_V51_CRUMB"></div><script>(function(){function qs(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}function init(){if(qs('origine')!=='suivi-conventions')return;const famLabel=qs('familleLibelle')||(qs('famille')==='BACPRO'?'BAC PRO':qs('famille'));const home=new URL(C.baseUrl);home.searchParams.set('page','suivi-conventions');home.searchParams.set('annee',detail.annee);const fam=new URL(C.baseUrl);fam.searchParams.set('page','suivi-conventions-famille');fam.searchParams.set('annee',detail.annee);fam.searchParams.set('famille',qs('famille'));const bc=document.getElementById('EUC_V51_CRUMB');bc.innerHTML='<a href="'+home+'">Suivi des conventions</a><span>›</span><a href="'+fam+'">'+famLabel+'</a><span>›</span><strong>'+((detail.classe&&detail.classe.nom)||'Classe')+'</strong><span>›</span><strong>'+((detail.periode&&detail.periode.libelle)||'Période')+'</strong>';const back=document.getElementById('back');if(back){back.href=fam;back.textContent='← Retour '+famLabel;back.onclick=function(ev){ev.preventDefault();location.href=fam.toString();};}document.querySelectorAll('#periodTabs [data-p]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopImmediatePropagation();ev.preventDefault();btn.classList.add('euc-loading');const u=new URL(C.baseUrl);u.searchParams.set('page','suivi-pfmp-classe');u.searchParams.set('annee',detail.annee);u.searchParams.set('classe',detail.classe.id);u.searchParams.set('periode',btn.dataset.p);u.searchParams.set('origine','suivi-conventions');u.searchParams.set('famille',qs('famille'));u.searchParams.set('familleLibelle',famLabel);location.href=u.toString();},true);});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,0);});else setTimeout(init,0);})();</script>
 <div id="EUC_V50_BREADCRUMB"></div>
 <div class="wrap">
   <div class="top">
@@ -344,7 +344,13 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     classLabel.textContent=(detail.classe&&detail.classe.nom||'')+' — '+detail.annee;
     ppLabel.textContent='Professeur principal : '+((detail.professeursPrincipaux||[]).map(p=>p.nom).join(' / ')||'non renseigné');
     renderYears();renderTabs();
-    const st=detail.stats||{};document.getElementById('mTotal').textContent=st.total||0;document.getElementById('mApprenti').textContent=st.apprentis||0;document.getElementById('mAvec').textContent=st.avecConvention||0;document.getElementById('mSans').textContent=st.sansConvention||0;document.getElementById('mIncident').textContent=(st.annulees||0)+(st.interrompues||0);
+    const st=detail.stats||{};
+    const incidents=(detail.lignes||[]).filter(function(x){
+      const code=String((x&&x.statutCode)||'')+' '+String((x&&x.statut)||'');
+      const normalized=code.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      return normalized.indexOf('ANNULE')>=0||normalized.indexOf('INTERROMP')>=0;
+    }).length;
+    document.getElementById('mTotal').textContent=st.total||0;document.getElementById('mApprenti').textContent=st.apprentis||0;document.getElementById('mAvec').textContent=st.avecConvention||0;document.getElementById('mSans').textContent=st.sansConvention||0;document.getElementById('mIncident').textContent=incidents;
 
     tbody.innerHTML=(detail.lignes||[]).map(function(x){
       const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
@@ -692,7 +698,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     if(back){
       try{
         var u=new URL(back.href,window.location.href);
-        u.searchParams.set('page','snapshot-pfmp-admin');
+        u.searchParams.set('page','suivi-pfmp-ent');
         u.searchParams.set('mode','ent');
         back.href=u.toString();
       }catch(e){}
@@ -882,7 +888,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     if(!bc)return;
 
     var home=new URL(C.baseUrl);
-    home.searchParams.set('page','snapshot-pfmp-admin');
+    home.searchParams.set('page','suivi-conventions');
     home.searchParams.set('annee',detail.annee||qs('annee'));
 
     var fam=new URL(C.baseUrl);
@@ -950,7 +956,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     var famLabel=fam==='BACPRO'?'BAC PRO':fam;
 
     var home=new URL(C.baseUrl);
-    home.searchParams.set('page','snapshot-pfmp-admin');
+    home.searchParams.set('page','suivi-conventions');
     home.searchParams.set('annee',detail.annee);
 
     var famUrl=new URL(C.baseUrl);
@@ -1012,80 +1018,6 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   }else{
     setTimeout(apply,0);
   }
-})();
-</script>
-
-
-<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
-.euc190e-snapshot-tile{
-  border:1px solid #cfe5de;
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  cursor:pointer;
-  margin-top:12px;
-}
-.euc190e-snapshot-tile:hover{
-  border-color:#0b8f72;
-}
-.euc190e-snapshot-tile strong{
-  display:block;
-  color:#0c5f4e;
-  font-size:16px;
-  margin-bottom:5px;
-}
-.euc190e-snapshot-tile span{
-  color:#667085;
-  font-size:12px;
-}
-</style>
-
-<script id="EUC_DEV190E_SNAPSHOT_TILE">
-(function(){
-
-  function addTile(){
-
-    if(document.querySelector('.euc190e-snapshot-tile')){
-      return;
-    }
-
-    var tile = document.createElement('div');
-    tile.className = 'euc190e-snapshot-tile';
-
-    tile.innerHTML =
-      '<strong>Maintenance Snapshot PFMP</strong>' +
-      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
-
-    tile.onclick = function(){
-      var u = new URL(location.href);
-      u.search = '';
-      u.searchParams.set('page','snapshot-pfmp-admin');
-      location.href = u.toString();
-    };
-
-    var host =
-      document.querySelector('.dashboard-grid') ||
-      document.querySelector('.cards-grid') ||
-      document.querySelector('.card-grid') ||
-      document.querySelector('.tiles') ||
-      document.querySelector('.modules') ||
-      document.querySelector('.grid') ||
-      document.querySelector('.cards') ||
-      document.querySelector('main') ||
-      document.body;
-
-    host.appendChild(tile);
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener(
-      'DOMContentLoaded',
-      addTile
-    );
-  }else{
-    addTile();
-  }
-
 })();
 </script>
 
@@ -1684,8 +1616,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<!-- EUC_DEV340_SNAPSHOT_DETAIL --><a id="euc340SnapshotDetail" href="#" style="position:fixed;right:20px;bottom:18px;z-index:1000;background:#087f70;color:#fff;border-radius:999px;padding:9px 13px;text-decoration:none;font-size:12px;font-weight:900;box-shadow:0 5px 18px rgba(0,0,0,.16)">Snapshot</a><script id="EUC_DEV340_SNAPSHOT_DETAIL_JS">(function(){var a=document.getElementById("euc340SnapshotDetail");if(a)a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_DETAIL -->
-
 <!-- EUC_DEV357_CLASS_JUMP_BEGIN -->
 <style>
 #euc357Jump{margin-right:10px;border:1px solid #bcded4;border-radius:8px;padding:8px 10px;background:#fff;min-width:240px}
@@ -1742,6 +1672,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   box-shadow:0 5px 18px rgba(0,0,0,.12)
 }
 #euc382FastState.show{display:flex}
+.euc419-nav-busy{opacity:.72!important;pointer-events:none!important;cursor:wait!important}
+.euc419-nav-busy:not(select)::before{
+  content:"";display:inline-block;width:12px;height:12px;margin-right:7px;
+  border:2px solid rgba(8,112,93,.24);border-top-color:#08705d;border-radius:50%;
+  vertical-align:-2px;animation:euc382spin .65s linear infinite
+}
 #euc382FastState .spin{
   width:13px;height:13px;border:2px solid #a9d8cd;
   border-top-color:#08705d;border-radius:50%;
@@ -1778,8 +1714,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     box.classList.toggle('show',!!on);
   }
 
+  window.EUC_DEV419_beginNavigation=function(el,text){
+    state(true,text||'Chargement…');
+    if(el){
+      el.classList.add('euc419-nav-busy');
+      el.setAttribute('aria-busy','true');
+      if('disabled' in el)el.disabled=true;
+    }
+  };
+
   function fallback(url){
-    state(false);
+    state(true,'Chargement…');
     try{
       window.top.location.href=url;
     }catch(e){
@@ -1832,6 +1777,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       back.textContent='← Retour '+famLabel;
       back.onclick=function(ev){
         ev.preventDefault();
+        window.EUC_DEV419_beginNavigation(back,'Retour aux classes…');
         try{window.top.location.href=u.toString();}
         catch(e){location.href=u.toString();}
       };
@@ -1875,14 +1821,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function cleanupLoading(){
     document.querySelectorAll(
       '#periodTabs .euc-loading,#periodTabs .dev175c-loading,'+
-      '.euc357-loading,.euc183-loading'
+      '.euc357-loading,.euc183-loading,.euc419-nav-busy'
     ).forEach(function(x){
       x.classList.remove(
         'euc-loading',
         'dev175c-loading',
         'euc357-loading',
-        'euc183-loading'
+        'euc183-loading',
+        'euc419-nav-busy'
       );
+      x.removeAttribute('aria-busy');
+      if('disabled' in x)x.disabled=false;
     });
   }
 
@@ -1897,7 +1846,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       return;
     }
 
-    if(u.searchParams.get('page')!=='suivi-pfmp-classe'){
+    var page=u.searchParams.get('page')||'';
+    if(page!=='suivi-pfmp-classe'&&page!=='suivi-pfmp-classe-public'){
       fallback(u.toString());
       return;
     }
@@ -1972,6 +1922,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       .EUC_DEV382_fastDetail(payload);
   }
 
+  window.EUC_DEV418_detailFastNavigate=fastGo;
+
   document.addEventListener('click',function(ev){
     var tab=ev.target&&ev.target.closest
       ? ev.target.closest('#periodTabs [data-p]')
@@ -1988,6 +1940,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       u.searchParams.set('periode',tab.dataset.p);
 
       tab.classList.add('euc-loading');
+      window.EUC_DEV419_beginNavigation(tab,'Chargement de la période…');
       fastGo(u.toString(),'Chargement de la période…');
       return;
     }
@@ -1999,6 +1952,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(nav){
       ev.preventDefault();
       ev.stopImmediatePropagation();
+      window.EUC_DEV419_beginNavigation(nav,'Chargement de la classe…');
       fastGo(nav.href,'Chargement de la classe…');
     }
   },true);
@@ -2020,6 +1974,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
     ev.preventDefault();
     ev.stopImmediatePropagation();
+    window.EUC_DEV419_beginNavigation(el,'Chargement de la classe…');
     fastGo(raw,'Chargement de la classe…');
   },true);
 
@@ -2072,6 +2027,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     ev.preventDefault();
     ev.stopImmediatePropagation();
     var url=target();
+    if(typeof window.EUC_DEV419_beginNavigation==='function'){
+      window.EUC_DEV419_beginNavigation(back,'Retour aux classes…');
+    }
     try{window.top.location.href=url;}catch(e){location.href=url;}
   },true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();

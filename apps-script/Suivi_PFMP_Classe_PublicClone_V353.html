@@ -135,7 +135,7 @@ body{background:#f7fbf9!important}
 <body>
 <?!= dev186BreadcrumbHtml ?>
 <div id="EUC_DEV175C_CRUMB"></div>
-<style id="EUC_V51_UI">#EUC_V51_CRUMB{max-width:1400px;margin:0 auto;padding:12px 24px 0;font-size:13px}#EUC_V51_CRUMB a{color:#0b745f;text-decoration:none;font-weight:800}#EUC_V51_CRUMB span{margin:0 7px;color:#667085}.tab{transition:.15s}.tab.euc-loading{background:#dff4ed!important;color:#0b745f!important;border-color:#0b8f72!important}.tab.euc-loading:after{content:' · chargement…';font-size:11px}</style><div id="EUC_V51_CRUMB"></div><script>(function(){function qs(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}function init(){if(qs('origine')!=='suivi-conventions')return;const famLabel=qs('familleLibelle')||(qs('famille')==='BACPRO'?'BAC PRO':qs('famille'));const home=new URL(C.baseUrl);home.searchParams.set('page','snapshot-pfmp-admin');home.searchParams.set('annee',detail.annee);const fam=new URL(C.baseUrl);fam.searchParams.set('page','suivi-conventions-famille');fam.searchParams.set('annee',detail.annee);fam.searchParams.set('famille',qs('famille'));const bc=document.getElementById('EUC_V51_CRUMB');bc.innerHTML='<a href="'+home+'">Suivi des conventions</a><span>›</span><a href="'+fam+'">'+famLabel+'</a><span>›</span><strong>'+((detail.classe&&detail.classe.nom)||'Classe')+'</strong><span>›</span><strong>'+((detail.periode&&detail.periode.libelle)||'Période')+'</strong>';const back=document.getElementById('back');if(back){back.href=fam;back.textContent='← Retour '+famLabel;back.onclick=function(ev){ev.preventDefault();location.href=fam.toString();};}document.querySelectorAll('#periodTabs [data-p]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopImmediatePropagation();ev.preventDefault();btn.classList.add('euc-loading');const u=new URL(C.baseUrl);u.searchParams.set('page','suivi-pfmp-classe');u.searchParams.set('annee',detail.annee);u.searchParams.set('classe',detail.classe.id);u.searchParams.set('periode',btn.dataset.p);u.searchParams.set('origine','suivi-conventions');u.searchParams.set('famille',qs('famille'));u.searchParams.set('familleLibelle',famLabel);location.href=u.toString();},true);});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,0);});else setTimeout(init,0);})();</script>
+<style id="EUC_V51_UI">#EUC_V51_CRUMB{max-width:1400px;margin:0 auto;padding:12px 24px 0;font-size:13px}#EUC_V51_CRUMB a{color:#0b745f;text-decoration:none;font-weight:800}#EUC_V51_CRUMB span{margin:0 7px;color:#667085}.tab{transition:.15s}.tab.euc-loading{background:#dff4ed!important;color:#0b745f!important;border-color:#0b8f72!important}.tab.euc-loading:after{content:' · chargement…';font-size:11px}</style><div id="EUC_V51_CRUMB"></div><script>(function(){function qs(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}function init(){if(qs('origine')!=='suivi-conventions')return;const famLabel=qs('familleLibelle')||(qs('famille')==='BACPRO'?'BAC PRO':qs('famille'));const home=new URL(C.baseUrl);home.searchParams.set('page','suivi-conventions-public');home.searchParams.set('annee',detail.annee);const fam=new URL(C.baseUrl);fam.searchParams.set('page','suivi-conventions-public-famille');fam.searchParams.set('annee',detail.annee);fam.searchParams.set('famille',qs('famille'));const bc=document.getElementById('EUC_V51_CRUMB');bc.innerHTML='<a href="'+home+'">Suivi des conventions</a><span>›</span><a href="'+fam+'">'+famLabel+'</a><span>›</span><strong>'+((detail.classe&&detail.classe.nom)||'Classe')+'</strong><span>›</span><strong>'+((detail.periode&&detail.periode.libelle)||'Période')+'</strong>';const back=document.getElementById('back');if(back){back.href=fam;back.textContent='← Retour '+famLabel;back.onclick=function(ev){ev.preventDefault();location.href=fam.toString();};}document.querySelectorAll('#periodTabs [data-p]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopImmediatePropagation();ev.preventDefault();btn.classList.add('euc-loading');const u=new URL(C.baseUrl);u.searchParams.set('page','suivi-pfmp-classe-public');u.searchParams.set('annee',detail.annee);u.searchParams.set('classe',detail.classe.id);u.searchParams.set('periode',btn.dataset.p);u.searchParams.set('origine','suivi-conventions');u.searchParams.set('famille',qs('famille'));u.searchParams.set('familleLibelle',famLabel);location.href=u.toString();},true);});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,0);});else setTimeout(init,0);})();</script>
 <div id="EUC_V50_BREADCRUMB"></div>
 <div class="wrap">
   <div class="top">
@@ -556,7 +556,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     if(back){
       try{
         var u=new URL(back.href,window.location.href);
-        u.searchParams.set('page','snapshot-pfmp-admin');
+        u.searchParams.set('page','suivi-conventions-public');
         u.searchParams.set('mode','ent');
         back.href=u.toString();
       }catch(e){}
@@ -746,7 +746,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     if(!bc)return;
 
     var home=new URL(C.baseUrl);
-    home.searchParams.set('page','snapshot-pfmp-admin');
+    home.searchParams.set('page','suivi-conventions-public');
     home.searchParams.set('annee',detail.annee||qs('annee'));
 
     var fam=new URL(C.baseUrl);
@@ -814,7 +814,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     var famLabel=fam==='BACPRO'?'BAC PRO':fam;
 
     var home=new URL(C.baseUrl);
-    home.searchParams.set('page','snapshot-pfmp-admin');
+    home.searchParams.set('page','suivi-conventions-public');
     home.searchParams.set('annee',detail.annee);
 
     var famUrl=new URL(C.baseUrl);
@@ -876,80 +876,6 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   }else{
     setTimeout(apply,0);
   }
-})();
-</script>
-
-
-<style id="EUC_DEV190E_SNAPSHOT_TILE_STYLE">
-.euc190e-snapshot-tile{
-  border:1px solid #cfe5de;
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  cursor:pointer;
-  margin-top:12px;
-}
-.euc190e-snapshot-tile:hover{
-  border-color:#0b8f72;
-}
-.euc190e-snapshot-tile strong{
-  display:block;
-  color:#0c5f4e;
-  font-size:16px;
-  margin-bottom:5px;
-}
-.euc190e-snapshot-tile span{
-  color:#667085;
-  font-size:12px;
-}
-</style>
-
-<script id="EUC_DEV190E_SNAPSHOT_TILE">
-(function(){
-
-  function addTile(){
-
-    if(document.querySelector('.euc190e-snapshot-tile')){
-      return;
-    }
-
-    var tile = document.createElement('div');
-    tile.className = 'euc190e-snapshot-tile';
-
-    tile.innerHTML =
-      '<strong>Maintenance Snapshot PFMP</strong>' +
-      '<span>Diagnostic, synchronisation ciblée et index rapides BAC PRO / BTS / CAP.</span>';
-
-    tile.onclick = function(){
-      var u = new URL(location.href);
-      u.search = '';
-      u.searchParams.set('page','snapshot-pfmp-admin');
-      location.href = u.toString();
-    };
-
-    var host =
-      document.querySelector('.dashboard-grid') ||
-      document.querySelector('.cards-grid') ||
-      document.querySelector('.card-grid') ||
-      document.querySelector('.tiles') ||
-      document.querySelector('.modules') ||
-      document.querySelector('.grid') ||
-      document.querySelector('.cards') ||
-      document.querySelector('main') ||
-      document.body;
-
-    host.appendChild(tile);
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener(
-      'DOMContentLoaded',
-      addTile
-    );
-  }else{
-    addTile();
-  }
-
 })();
 </script>
 
@@ -1538,7 +1464,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<!-- EUC_DEV340_SNAPSHOT_DETAIL --><a id="euc340SnapshotDetail" href="#" style="position:fixed;right:20px;bottom:18px;z-index:1000;background:#087f70;color:#fff;border-radius:999px;padding:9px 13px;text-decoration:none;font-size:12px;font-weight:900;box-shadow:0 5px 18px rgba(0,0,0,.16)">Snapshot</a><script id="EUC_DEV340_SNAPSHOT_DETAIL_JS">(function(){var a=document.getElementById("euc340SnapshotDetail");if(a)a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_DETAIL -->
 <!-- EUC_DEV357_CLASS_JUMP_BEGIN -->
 <style>
 #euc357Jump{margin-right:10px;border:1px solid #bcded4;border-radius:8px;padding:8px 10px;background:#fff;min-width:240px}

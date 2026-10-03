@@ -133,15 +133,17 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
 
   var rr=null;
   var detail=null;
+  var detailFinal=false;
 
   try{
-    if(typeof EUC_DEV356_detail_==='function'){
-      detail=EUC_DEV356_detail_(
+    if(typeof EUC_DEV416_finalDetail_==='function'){
+      detail=EUC_DEV416_finalDetail_(
         annee,
         famille,
         classe,
         periode
       );
+      detailFinal=!!detail;
     }
   }catch(e0){}
 
@@ -171,7 +173,7 @@ function EUC_DEV394_BASE_EUC_DEV388_quick(payload){
    * conventionId/convention. On enrichit donc uniquement cette classe
    * et cette période depuis la source réelle des accès.
    */
-  if(typeof EUC_V50_enrichirDetail_==='function'){
+  if(!detailFinal&&typeof EUC_V50_enrichirDetail_==='function'){
     detail=EUC_V50_enrichirDetail_(
       detail,
       annee,

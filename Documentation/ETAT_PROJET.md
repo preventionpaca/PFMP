@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV418 R8, version Apps Script immuable `732`.
+- Version active déployée le 3 octobre 2026 : DEV419 R1, version Apps Script immuable `733`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `732`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `733`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement, après confirmation explicite du 2 octobre 2026. Production `3pnVrygfNn7c` interdite.
@@ -69,3 +69,15 @@
 - Le secret d’authentification est désormais dérivé par HMAC-SHA256, avec le domaine dédié `EUC_DEV270B_AUTH_V1`, depuis une propriété privée PFMP existante. La passerelle ne conserve que la valeur dérivée ; aucun secret n’est présent dans Git ou dans les journaux.
 - Parcours réel vérifié : `alternance.loucodi.fr` reconnaît le compte, ouvre le centre d’administration puis la gestion des apprentis sans retour à l’écran de connexion. Compteurs contrôlés en lecture seule : 18 apprentis, 18 dossiers remis, 18 transmis CFA, 18 contrats valides et 0 rupture.
 - Dette technique identifiée : les instantanés de performance et les lignes d’accès ne doivent plus être stockés durablement dans `PropertiesService`. Leur migration vers un cache borné, puis la purge contrôlée des anciennes clés, nécessitera un lot séparé et une autorisation explicite avant toute suppression.
+
+## DEV419 R1 déployée — navigation et maintenance publique
+
+- La commande de maintenance Snapshot a été retirée du détail de classe partagé et des vues publiques apprentis/PFMP. Les anciennes occurrences sont en plus masquées par la garde publique ; les accès administratifs de maintenance utilisent désormais l’URL ADMIN explicite.
+- Chaque changement de classe, période ou retour à la liste déclenche un indicateur de chargement visible. La navigation rapide réactive correctement le contrôle après réception des données.
+- En mode PUBLIC, le détail classe réutilise maintenant la coque déjà affichée au lieu de reconstruire l’iframe Apps Script. La navigation reste sous `pfmp.loucodi.fr`.
+- Deux causes de lenteur ont été corrigées : le préchauffage de la liste appelait par erreur une lecture sur la classe `0`, et le détail rapide comme le contrôle rapide ignoraient le cache final déjà enrichi.
+- Les bulles de contrôle rapide restent ouvertes lorsque le pointeur entre dans leur contenu ; leurs listes longues peuvent donc être parcourues sans disparition de la bulle.
+- Le compteur `Annulées / interrompues` est recalculé depuis les lignes effectivement rendues dans le détail de classe.
+- Le besoin de statuts administratifs extensibles pour les élèves sans convention (`Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`, etc.) est spécifié mais non implémenté : il nécessite de nouvelles tables et des écritures dans Grist, non autorisées à ce stade.
+- Les 343 fichiers distants ont été relus après `clasp push` et sont identiques aux sources locales. La version immuable `733` a été appliquée aux deux seuls déploiements historiques ADMIN et PUBLIC ; contrôles HTTP directs à `200`.
+- Aucun accès à la production, aucune écriture Grist, aucun import, aucun courriel et aucune mutation métier n’ont été effectués. Le certificat HTTPS de `pfmp.loucodi.fr` reste invalide pour ce nom ; le point d’accès HTTP répond à `200`, sans contournement du contrôle TLS.

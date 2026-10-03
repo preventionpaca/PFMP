@@ -36,7 +36,7 @@ function EUC_DEV382_fastDetail(payload){
 
   var t0=Date.now();
 
-  var detail=EUC_DEV356_detail_(
+  var detail=EUC_DEV416_finalDetail_(
     annee,
     famille,
     classe,

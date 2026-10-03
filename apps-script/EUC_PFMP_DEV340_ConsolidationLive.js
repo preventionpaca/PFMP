@@ -259,7 +259,7 @@ function EUC_DEV340_primeAccessIndex_(){
   // EUC_DEV395_CACHE_AWARE_ACCESS_BEGIN
   var __t=Date.now();
   try{
-    return EUC_DEV340_accessRows_.apply(this,arguments);
+    return EUC_DEV394_BASE_EUC_DEV340_primeAccessIndex_.apply(this,arguments);
   } finally {
     EUC_DEV394_mark_(
       'EUC_DEV340_primeAccessIndex_',

@@ -1,6 +1,6 @@
-## DEV418 déployée — prochain lot performance perçue
+## DEV419 R1 déployée — prochain lot performance et situations administratives
 
-DEV418 R8 est déployée en version immuable `732` sur les déploiements ADMIN et PUBLIC existants. La correction fonctionnelle, la première réduction du coût serveur et la remise en service de la passerelle administrative sont terminées.
+DEV419 R1 est déployée en version immuable `733` sur les déploiements ADMIN et PUBLIC existants. Le retrait de Snapshot des vues publiques, les indicateurs de navigation, la coque persistante du détail et les réparations de préchauffage/cache sont actifs.
 
 Ordre proposé pour le prochain lot :
 
@@ -12,6 +12,14 @@ Ordre proposé pour le prochain lot :
 6. ne traiter HTTPS des sous-domaines qu’au niveau hébergement/DNS, sans contourner les avertissements du navigateur.
 
 Le sous-domaine administratif `alternance.loucodi.fr` reste une redirection vers la passerelle d’authentification ; conserver une URL longue après authentification est le comportement retenu. Ne pas transformer l’administration en iframe sans décision explicite, car l’authentification Google peut être affectée.
+
+## DEV419 — situation administrative des élèves sans convention
+
+Après validation explicite des écritures dans la base Grist active `b2CyeMEdVEMS`, créer un référentiel administrable de motifs et une table d’affectation annuelle par élève et période. Le référentiel doit permettre d’ajouter ou désactiver un motif sans modifier le code, et indiquer si ce motif retire l’élève du compteur `Sans convention`.
+
+Premiers motifs proposés, à confirmer avant création : `Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`. La vue administrative `Élèves sans convention` portera la saisie ; les vues classe et contrôle rapide afficheront le motif et conserveront une égalité de compteurs explicitement documentée. Aucune table, ligne ou valeur Grist ne doit être créée avant cette autorisation et cette confirmation métier.
+
+Les ordres de mission et le futur document d’organisation/bilan des déplacements restent hors de ce lot et seront repris au tour suivant.
 
 ## Historique du plan DEV417
 

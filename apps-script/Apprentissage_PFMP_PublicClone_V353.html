@@ -1451,11 +1451,6 @@ button{
   <div id="studentList" class="list"></div>
 </section>
 
-<section class="panel">
-  <a id="maintLink" class="back">
-    Maintenance Snapshot PFMP
-  </a>
-</section>
 
 <div
   id="historyModal"
@@ -1540,12 +1535,6 @@ BOOT.webappUrl='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AK
     '?page=admin-pfmp';
 
   homeLink.target='_top';
-
-  maintLink.href=
-    BOOT.webappUrl+
-    '?page=snapshot-pfmp-admin';
-
-  maintLink.target='_top';
 
   closeHistory.onclick=function(){
     historyModal.hidden=true;

@@ -122,6 +122,7 @@ function EUC_DEV415_publicDetail(e){
   var wrapperNav=
     '<script id="EUC_DEV418_WRAPPER_NAV">(function(){'+
     'var ready='+(wrapperMode?'true':'false')+',BASE="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec";'+
+    'function busy(el,label){if(typeof window.EUC_DEV419_beginNavigation==="function"){window.EUC_DEV419_beginNavigation(el,label);return;}if(el){el.classList.add("euc419-nav-busy");el.setAttribute("aria-busy","true");}}'+
     'function sendToWrapper(message){var w=window;for(var i=0;i<6;i++){try{w=w.parent;w.postMessage(message,"*");}catch(e){break;}}}'+
     'function normalized(raw){try{var u=new URL(raw,location.href),p=u.searchParams.get("page")||"";'+
     'if(p==="suivi-pfmp-classe")u.searchParams.set("page","suivi-pfmp-classe-public");'+
@@ -129,12 +130,13 @@ function EUC_DEV415_publicDetail(e){
     'if(p==="suivi-conventions")u.searchParams.set("page","suivi-conventions-public");'+
     'if((u.searchParams.get("page")||"").indexOf("suivi-")!==0)return "";if(ready)u.searchParams.set("wrapper","1");return u.toString();}catch(e){return "";}}'+
     'addEventListener("message",function(ev){if(ev.data&&ev.data.type==="EUC_PFMP_WRAPPER_READY")ready=true;});'+
-    'window.EUC_DEV418_publicNavigate=function(raw){var url=normalized(raw);if(!url)return;'+
+    'window.EUC_DEV418_publicNavigate=function(raw,el,label){var url=normalized(raw);if(!url)return;busy(el,label||"Chargement…");'+
     'if(ready){sendToWrapper({type:"EUC_PFMP_WRAPPER_NAVIGATE",url:url});return;}top.location.href=url;};'+
     'document.addEventListener("click",function(ev){var a=ev.target&&ev.target.closest?ev.target.closest("a[href]"):null;'+
-    'if(!a||!normalized(a.href))return;ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(a.href);},true);'+
+    'var url=a&&normalized(a.href);if(!url)return;if(url.indexOf("page=suivi-pfmp-classe-public")>=0&&typeof window.EUC_DEV418_detailFastNavigate==="function"){ev.preventDefault();ev.stopImmediatePropagation();busy(a,"Chargement de la classe…");window.EUC_DEV418_detailFastNavigate(url,"Chargement de la classe…",a);return;}'+
+    'ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(url,a,"Chargement…");},true);'+
     'document.addEventListener("change",function(ev){var t=ev.target;if(!t)return;'+
-    'if(t.id==="euc357Jump"&&t.value){ev.preventDefault();ev.stopImmediatePropagation();EUC_DEV418_publicNavigate(decodeURIComponent(t.value));return;}'+
+    'if(t.id==="euc357Jump"&&t.value){ev.preventDefault();ev.stopImmediatePropagation();var jump=decodeURIComponent(t.value);if(typeof window.EUC_DEV418_detailFastNavigate==="function"){busy(t,"Chargement de la classe…");window.EUC_DEV418_detailFastNavigate(jump,"Chargement de la classe…",t);return;}EUC_DEV418_publicNavigate(jump,t,"Chargement de la classe…");return;}'+
     'if(t.id==="yearSelect"&&typeof detail!=="undefined"){ev.preventDefault();ev.stopImmediatePropagation();var u=new URL(BASE);'+
     'u.searchParams.set("page","suivi-pfmp-classe-public");u.searchParams.set("annee",t.value);'+
     'u.searchParams.set("famille","BACPRO");u.searchParams.set("classe",detail.classe.id);u.searchParams.set("periode",detail.periode.id);EUC_DEV418_publicNavigate(u.toString());}},true);'+
@@ -156,6 +158,7 @@ function EUC_DEV415_publicDetail(e){
     '#retModalV162,#selectHead,'+
     '#tbody tr>td:first-child,'+
     '#euc340SnapshotDetail,'+
+    '.euc190e-snapshot-tile,'+
     '.mail-actions,.assignbar,.assign-status,'+
     '.student-check,'+
     'input[type="checkbox"].rowcheck,'+

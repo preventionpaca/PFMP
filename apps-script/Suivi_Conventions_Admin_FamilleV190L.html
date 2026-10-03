@@ -451,11 +451,12 @@ const DATA=<?!= dataJson ?>;
 #euc339Loading{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;background:rgba(247,251,249,.82)}
 #euc339Loading.show{display:flex}#euc339Loading>div{background:#fff;border:1px solid #b9ddd4;border-radius:14px;padding:16px 22px;box-shadow:0 10px 30px rgba(0,0,0,.14);font-weight:900;color:#087f70;font-size:16px}
 .euc339-busy{opacity:.72!important;cursor:wait!important}
+.euc419-inline-spin{display:inline-block;width:12px;height:12px;margin-right:7px;border:2px solid rgba(8,127,112,.25);border-top-color:#087f70;border-radius:50%;vertical-align:-2px;animation:euc419spin .65s linear infinite}@keyframes euc419spin{to{transform:rotate(360deg)}}
 </style>
 <div id='euc339Loading'><div>Chargement des donnees...</div></div>
-<script id='EUC_DEV339_LOADING_JS'>(function(){function busy(el){var o=document.getElementById('euc339Loading');if(o)o.classList.add('show');if(el){el.classList.add('euc339-busy');if('disabled' in el)el.disabled=true;if(el.matches('[data-fam]'))el.textContent='Chargement...';}}document.addEventListener('click',function(ev){var b=ev.target.closest('[data-fam],.period,[data-period],article.card[data-class],a[href*="suivi-pfmp-classe"]');if(b)busy(b);},true);window.addEventListener('pageshow',function(){var o=document.getElementById('euc339Loading');if(o)o.classList.remove('show');});})();</script>
+<script id='EUC_DEV339_LOADING_JS'>(function(){function busy(el){var o=document.getElementById('euc339Loading');if(o)o.classList.add('show');if(el){el.classList.add('euc339-busy');el.setAttribute('aria-busy','true');if('disabled' in el)el.disabled=true;if(!el.querySelector('.euc419-inline-spin'))el.insertAdjacentHTML('afterbegin','<span class="euc419-inline-spin" aria-hidden="true"></span>');if(el.matches('[data-fam]'))el.appendChild(document.createTextNode(' Chargement…'));}}document.addEventListener('click',function(ev){var b=ev.target.closest('[data-fam],.period,[data-period],article.card[data-class],a[href*="suivi-pfmp-classe"]');if(b)busy(b);},true);window.addEventListener('pageshow',function(){var o=document.getElementById('euc339Loading');if(o)o.classList.remove('show');});})();</script>
 
-<!-- EUC_DEV340_SNAPSHOT_FAMILY --><a id="euc340SnapshotFamily" href="#" style="position:fixed;right:22px;top:92px;z-index:50;background:#fff;border:1px solid #9ed6ca;border-radius:9px;padding:8px 11px;text-decoration:none;font-weight:800;color:#087f70;box-shadow:0 3px 12px rgba(0,0,0,.06)">Maintenance Snapshot</a><script id="EUC_DEV340_SNAPSHOT_FAMILY_JS">(function(){var a=document.getElementById("euc340SnapshotFamily");if(a)a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_FAMILY -->
+<!-- EUC_DEV340_SNAPSHOT_FAMILY --><a id="euc340SnapshotFamily" href="<?!= baseUrl ?>?page=snapshot-pfmp-admin" target="_top" style="position:fixed;right:22px;top:92px;z-index:50;background:#fff;border:1px solid #9ed6ca;border-radius:9px;padding:8px 11px;text-decoration:none;font-weight:800;color:#087f70;box-shadow:0 3px 12px rgba(0,0,0,.06)">Maintenance Snapshot</a><!-- /EUC_DEV340_SNAPSHOT_FAMILY -->
 <!-- EUC_DEV383_PREWARM_BEGIN -->
 <script id="EUC_DEV383_PREWARM_JS">
 (function(){
@@ -531,6 +532,12 @@ const DATA=<?!= dataJson ?>;
     panel=document.createElement('div');
     panel.id='euc390Quick';
     panel.innerHTML='<div class="euc390-head"><strong id="euc390Title">Contrôle rapide</strong><span id="euc390Meta"></span></div><div class="euc390-body" id="euc390Body"></div>';
+    panel.addEventListener('pointerenter',function(){clearTimeout(timer);});
+    panel.addEventListener('pointerleave',function(){
+      clearTimeout(timer);
+      timer=setTimeout(function(){panel.classList.remove('show');current=null;},220);
+    });
+    panel.addEventListener('wheel',function(){clearTimeout(timer);},{passive:true});
     document.body.appendChild(panel);
     return panel;
   }
