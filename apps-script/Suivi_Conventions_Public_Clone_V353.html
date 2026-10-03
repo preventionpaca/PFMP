@@ -11,8 +11,9 @@
   }
   window.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY')ready=true;});
   window.EUC_DEV418_publicNavigate=function(url){
-    if(ready||window.top!==window.self){var u=new URL(String(url||''),location.href);u.searchParams.set('wrapper','1');sendToWrapper({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:u.toString()});return;}
-    window.top.location.href=String(url||'');
+    var u=new URL(String(url||''),location.href);
+    if(ready)u.searchParams.set('wrapper','1');
+    window.location.href=u.toString();
   };
   function ping(){sendToWrapper({type:'EUC_PFMP_WRAPPER_QUERY'});}
   ping();setTimeout(ping,100);setTimeout(ping,500);setTimeout(ping,1500);

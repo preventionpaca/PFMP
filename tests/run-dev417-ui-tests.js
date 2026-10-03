@@ -106,8 +106,10 @@ assert.match(publicExact, /#selectHead/,
   'PUBLIC doit masquer l’en-tête de sélection sans décaler les données');
 assert.match(publicExact, /#tbody tr>td:first-child/,
   'PUBLIC doit masquer aussi la cellule de sélection de chaque ligne');
-assert.match(publicExact, /EUC_PFMP_WRAPPER_NAVIGATE/,
-  'PUBLIC doit demander au wrapper de changer sa propre iframe');
+assert.match(publicExact, /if\(ready\)framed\.searchParams\.set\("wrapper","1"\);location\.href=framed\.toString\(\)/,
+  'PUBLIC doit naviguer directement dans l’iframe Apps Script déjà ouverte');
+assert.doesNotMatch(publicExact, /sendToWrapper\(\{type:"EUC_PFMP_WRAPPER_NAVIGATE"/,
+  'PUBLIC ne doit plus demander au wrapper de recréer son iframe à chaque clic');
 assert.match(publicExact, /wrapperMode[\s\S]*searchParams\.set\("wrapper","1"\)/,
   'PUBLIC doit conserver le marqueur du wrapper dans le détail classe');
 assert.doesNotMatch(publicExact, /replace\(\/window\\\.top\\\.location/,
@@ -128,8 +130,10 @@ assert.match(publicFamily, /target="_self"/,
   'famille PUBLIC: les liens doivent rester dans le wrapper');
 assert.match(publicFamily, /EUC_DEV418_publicNavigate/,
   'famille PUBLIC: le clic classe ne dialogue pas avec le wrapper');
-assert.match(publicFamily, /EUC_PFMP_WRAPPER_NAVIGATE/,
-  'famille PUBLIC: le message de navigation vers le wrapper manque');
+assert.match(publicFamily, /window\.location\.href=u\.toString\(\)/,
+  'famille PUBLIC: la navigation doit réutiliser l’iframe déjà ouverte');
+assert.doesNotMatch(publicFamily, /sendToWrapper\(\{type:'EUC_PFMP_WRAPPER_NAVIGATE'/,
+  'famille PUBLIC: le wrapper ne doit plus recréer l’iframe au clic');
 assert.match(publicFamily, /searchParams\.set\('wrapper','1'\)/,
   'famille PUBLIC: le marqueur du wrapper doit être conservé');
 assert.match(publicFamily, /panel\.addEventListener\('pointerenter'/,
@@ -150,6 +154,8 @@ assert.doesNotMatch(adminFamily, /id=['"]euc339Loading['"]/,
 const publicSummary = read('apps-script/Suivi_Conventions_Public_Clone_V353.html');
 assert.match(publicSummary, /EUC_DEV418_publicNavigate/,
   'accueil PUBLIC: le clic famille ne dialogue pas avec le wrapper');
+assert.match(publicSummary, /window\.location\.href=u\.toString\(\)/,
+  'accueil PUBLIC: la navigation doit réutiliser l’iframe déjà ouverte');
 
 const publicWrapper = read('Atri/suivi-stages-atrium.html');
 assert.match(publicWrapper, /id="pfmpApp"/,
