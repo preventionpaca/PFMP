@@ -175,6 +175,24 @@ function EUC_DEV415_publicDetail(e){
     lock+'</head>'
   );
 
+  /*
+   * DEV425 R2 — le fil DEV183 est aussi (re)créé tardivement par le
+   * JavaScript historique du template ADMIN. Le CSS suffit en principe,
+   * mais on le neutralise également à chaque insertion DOM afin qu'aucun
+   * fil « Accueil PFMP » ne puisse réapparaître dans la consultation
+   * publique, y compris après une navigation rapide sans rechargement.
+   */
+  var publicBreadcrumbGuard=
+    '<script id="EUC_DEV425_PUBLIC_BREADCRUMB_GUARD">(function(){'+
+    'function hideAdminBreadcrumb(){var el=document.getElementById("EUC_DEV183_BREADCRUMB");if(!el)return;el.hidden=true;el.setAttribute("aria-hidden","true");el.style.setProperty("display","none","important");}'+
+    'hideAdminBreadcrumb();'+
+    'if(document.documentElement&&typeof MutationObserver!=="undefined"){new MutationObserver(hideAdminBreadcrumb).observe(document.documentElement,{childList:true,subtree:true});}'+
+    'document.addEventListener("DOMContentLoaded",hideAdminBreadcrumb,{once:true});'+
+    'setTimeout(hideAdminBreadcrumb,0);setTimeout(hideAdminBreadcrumb,250);'+
+    '})();<\/script>';
+
+  html=html.replace(/<\/body>/i,publicBreadcrumbGuard+'</body>');
+
   return HtmlService
     .createHtmlOutput(html)
     .setTitle(

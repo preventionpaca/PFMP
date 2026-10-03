@@ -59,6 +59,10 @@ for(const file of ['apps-script/Suivi_Conventions_Public_FamilleClone_V353.html'
   assert.match(source,/addEventListener\('pointerenter'/);
   assert.match(source,/if\(cache\[k\]\)\{render\(el,cache\[k\]\);return;\}/,'la bulle préchargée doit rester instantanée');
 }
-assert.match(read('apps-script/EUC_PFMP_DEV415_PublicAdminExact.js'),/#EUC_DEV183_BREADCRUMB\{display:none!important\}/);
+const publicDetail=read('apps-script/EUC_PFMP_DEV415_PublicAdminExact.js');
+assert.match(publicDetail,/#EUC_DEV183_BREADCRUMB\{display:none!important\}/);
+assert.match(publicDetail,/EUC_DEV425_PUBLIC_BREADCRUMB_GUARD/);
+assert.match(publicDetail,/new MutationObserver\(hideAdminBreadcrumb\)/,'le fil admin recréé tardivement doit rester masqué');
+assert.match(publicDetail,/el\.hidden=true/);
 
 console.log('✓ DEV425 : fraîcheur atomique, mutations, bulles et fil d’Ariane public');
