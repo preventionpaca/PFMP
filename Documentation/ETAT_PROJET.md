@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## DEV436 en préparation — finitions de suivi et ordres de mission
+## DEV436 déployée — finitions de suivi et ordres de mission
 
 - La grille ADMIN/PUBLIC conserve son chemin rapide. Lorsqu'une mutation vient d'invalider un détail, le contrôle rapide affiche désormais « Mise à jour en cours » et réessaie brièvement au lieu d'exposer une erreur technique ; aucun appel n'est ajouté lorsque les données préchargées sont disponibles.
 - Les pages de classes et les détails de classe proposent un export PDF via la mise en page d'impression locale, sans lecture Grist supplémentaire. Les élèves suivis par une situation administrative sont signalés en orange. Le statut apprenti affiche la date de début de contrat et le badge `APPRENTI` redondant sous le nom est retiré.
@@ -8,6 +8,7 @@
 - Le modèle d'ordre de mission fourni a été converti en Google Docs fusionnable, sans être ajouté au dépôt. La page ADMIN permet de sélectionner un modèle par famille et d'enregistrer de futurs modèles Google Docs ; la génération produit la discipline du professeur, la classe, la période, les dates et la liste des élèves.
 - Les raccourcis dupliqués `Classes Pronote` et `Maintenance Snapshot PFMP` sont retirés de l'accueil ADMIN ; leurs accès uniques restent dans `Paramétrage`.
 - L'accès d'affectation par professeur principal est cadré mais non activé : il nécessite un jeton temporaire, haché, limité à sa classe et aux seules affectations téléphone/visite. Cette évolution de sécurité fera l'objet d'un lot séparé.
+- Version Apps Script immuable `768`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Le distant relu contient exactement les 346 fichiers locaux et la suite complète compte 348 tests verts. La migration ciblée du motif reste à déclencher depuis une session ADMIN authentifiée ; le code et le bouton sont déployés, mais aucune donnée n'a été modifiée sans cette session.
 
 ## DEV435 R2 déployée — réparations sans régression de performance
 
