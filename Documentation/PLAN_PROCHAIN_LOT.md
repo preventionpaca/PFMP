@@ -1,3 +1,10 @@
+## Après DEV440 — prochains lots séparés
+
+1. Accès professeur principal : créer une autorisation année + classe + professeur, un code aléatoire dont seule l’empreinte est stockée, une session courte et révocable, et limiter strictement les mutations à `TELEPHONE` et `VISITE`. L’annuaire et le formulaire ne seront chargés qu’après déverrouillage afin de ne pas ralentir la consultation ordinaire.
+2. Géocodage : valider le fournisseur et les règles de confidentialité avant tout appel externe. Pour les adresses françaises, privilégier le service officiel BAN/Géoplateforme ; persister dans une table dédiée l’adresse normalisée, son empreinte, latitude, longitude, score, précision, fournisseur, état et date. Ne recalculer que si l’empreinte d’adresse change.
+3. Cartographie : construire ensuite une page dédiée lisant uniquement les coordonnées persistées, avec une vue classe/période et une vue globale filtrable. Ne jamais charger le moteur de carte ni géocoder dans le chemin des grilles et détails actuels.
+4. Ordres de mission : mesurer plusieurs premières générations après inactivité. La génération chaude est `7,9 s`, mais le premier démarrage de la version contrôlée est `22,1 s`; l’objectif suivant est de réduire ce coût froid sans modifier le modèle ni supprimer les coordonnées hors connexion.
+
 ## DEV424 R1 — snapshot partagé actif, surveillance du premier cycle
 
 DEV424 R1 est déployée en version immuable `748`. Le déclencheur `EUC_DEV424_refreshScheduled` est installé toutes les 15 minutes et limité à la base active autorisée `b2CyeMEdVEMS`. La première reconstruction complète a duré environ 29 secondes en tâche de fond. Les parcours contrôlés sont revenus dans la fenêtre de 3 à 4 secondes : PUBLIC accueil `3,23 s`, famille BAC PRO `3,71 s`, détail TMVA2 environ `3,6 s`; ADMIN détail TCAR `3,91 s`.

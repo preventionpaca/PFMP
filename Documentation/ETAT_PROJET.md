@@ -1,6 +1,16 @@
 # État du projet Eucalyptus PFMP
 
-## DEV439 préparée — apprentis dans les ordres de mission
+## DEV440 R5 déployée — ordre de mission terrain et demande de transport
+
+- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `782`, sans changement d’URL ni création de Web App.
+- Les apprentis affectés à un professeur visiteur figurent dans les ordres de mission au même titre que les élèves scolaires couverts. Le contrôle réel TMP3D / PFMP n°1 confirme qu’un apprenti est bien présent dans le tableau de préparation et dans les deux pages du PDF.
+- Un moyen de transport absent est présenté par défaut comme `Véhicule personnel`, sans écriture automatique. Une modification explicite reste enregistrée individuellement.
+- Chaque professeur dispose d’un bouton `Envoyer par e-mail`. Le serveur résout son adresse depuis le référentiel, prépare un message avec classe, période et dates, affiche une confirmation complète, puis envoie seulement après validation. La réponse est dirigée vers l’administrateur connecté ; aucun courriel réel n’a été envoyé pendant la recette.
+- Le PDF réel contrôlé contient exactement deux pages : page 1 A4 portrait avec l’ordre de mission et l’apprenti ; page 2 A4 paysage avec entreprise, adresse, contacts entreprise et tuteur, date, arrivée, départ, lieu de départ, kilomètres, transport, consigne de tournée, six lignes de précisions et les deux signatures. Le rendu PNG et l’extraction texte confirment qu’aucune colonne ni signature n’est coupée.
+- Génération mesurée sur la version déployée : `22,1 s` au tout premier démarrage de la version, puis `7,9 s` sur la génération suivante, contre environ une minute avant optimisation.
+- Tests ciblés et suite complète verts : `node tests/run-tests.js` (351 tests). Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune écriture élève/convention, aucun courriel réel et aucun nouveau Web App.
+
+## DEV439 déployée — apprentis dans les ordres de mission
 
 - Les apprentis affectés à un professeur visiteur sont désormais inclus dans la préparation et le PDF de l’ordre de mission, même s’ils n’ont pas de convention PFMP : leur contrat d’apprentissage constitue leur couverture pour la visite en entreprise.
 - Les élèves scolaires restent admis uniquement avec une convention valide ; les conventions annulées ou interrompues restent exclues.
@@ -48,18 +58,18 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV437, version Apps Script immuable `771`.
+- Version active déployée le 4 octobre 2026 : DEV440 R5, version Apps Script immuable `782`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `771`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `782`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
 - Web App PUBLIC : `https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec`.
 - Déploiement ADMIN : `AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA`.
 - Routes : `pfmp`, `suivi-pfmp`, `import-pronote-pfmp`, `gestion-pfmp`, `entreprises` ; routeur EDT historique conservé.
-- Modes exigés : soumissions `DRY_RUN`, courriels `DISABLED`, import Pronote `DRY_RUN`, mutations administratives `DRY_RUN`, Turnstile désactivé. Le snapshot distant déclare actuellement `ANYONE_ANONYMOUS`, en contradiction avec l'exigence historique `DOMAIN` ; aucune correction ou redéploiement n'a encore été effectué.
+- Modes exigés : soumissions `DRY_RUN`, courriels automatiques `DISABLED`, import Pronote `DRY_RUN`, mutations administratives `DRY_RUN`, Turnstile désactivé. Seule la demande de moyen de transport d’un ordre de mission peut être envoyée sur clic ADMIN explicitement confirmé ; aucun envoi de recette n’a été effectué.
 - Actif : formulaire PFMP, recherche entreprise, suivi paginé et multiannuel, import Pronote en prévisualisation, gestion administrative consultable.
-- Préparé mais désactivé : import réel, mutations de convention, annulation, affectations, courriels et ordres de mission.
+- Préparé mais désactivé : import réel, mutations de convention, annulation et affectations non autorisées. Les ordres de mission sont générables et leur demande de transport est envoyable uniquement par action ADMIN confirmée.
 - Tables PFMP principales : `EUC_OFFRES_FORMATION`, `EUC_OFFRES_PERIODES`, `EUC_ELEVES_PFMP`, `EUC_SOUMISSIONS_PFMP`, `EUC_SYNTHESE_SUIVI_PFMP`, `EUC_UTILISATEURS_PFMP`, `EUC_IMPORTS_PRONOTE_PFMP`, `EUC_HISTORIQUE_SOUMISSIONS_PFMP`, `EUC_PERSONNELS_PFMP`, `EUC_AFFECTATIONS_PFMP`, `EUC_STATUTS_SUIVI_ELEVE_PFMP`, `EUC_SITUATIONS_ELEVES_PFMP`.
 - Tests de récupération : `node tests/run-dev416-recovery-tests.js`.
 - Tests historiques : migrés vers l’état DEV416/DEV417 sans suppression de contrôle ; suite complète verte (337 tests).
