@@ -387,6 +387,10 @@ function EUC_DEV440_sendMissionTransportEmail(q){
   return{ok:true,to:prepared.to,subject:prepared.subject};
 }
 function EUC_DEV440_docsRequest_(documentId,suffix,method,payload){
+  if(typeof Docs!=='undefined'&&Docs.Documents){
+    if(suffix===':batchUpdate')return Docs.Documents.batchUpdate(payload,documentId);
+    return Docs.Documents.get(documentId);
+  }
   var options={method:method||'get',muteHttpExceptions:true,headers:{Authorization:'Bearer '+ScriptApp.getOAuthToken()}};
   if(payload!=null){options.contentType='application/json';options.payload=JSON.stringify(payload)}
   var response=UrlFetchApp.fetch('https://docs.googleapis.com/v1/documents/'+encodeURIComponent(documentId)+(suffix||''),options),status=response.getResponseCode();

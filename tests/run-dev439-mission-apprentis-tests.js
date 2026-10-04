@@ -6,6 +6,7 @@ const path=require('path');
 const vm=require('vm');
 
 const source=fs.readFileSync(path.join(__dirname,'..','apps-script','EUC_PFMP_DEV370_AdminTools.js'),'utf8');
+const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','apps-script','appsscript.json'),'utf8'));
 const ctx={console,JSON,String,Number,Boolean,Array,Object,Math,Date};
 vm.createContext(ctx);
 vm.runInContext(source,ctx,{filename:'EUC_PFMP_DEV370_AdminTools.js'});
@@ -49,5 +50,8 @@ assert.equal(mail.to,'visiteur@lycee-les-eucalyptus.org');
 assert.match(mail.subject,/TCAR.*PFMP n°1/);
 assert.match(mail.body,/véhicule personnel[\s\S]*28\/09\/2026[\s\S]*16\/10\/2026|28\/09\/2026[\s\S]*16\/10\/2026[\s\S]*véhicule personnel/);
 assert.equal(mail.replyTo,'rudy@lycee-les-eucalyptus.org');
+
+assert.ok((manifest.dependencies.enabledAdvancedServices||[]).some(service=>service.serviceId==='docs'&&service.userSymbol==='Docs'),
+  'le service avancé Google Docs doit être activé pour créer la section paysage');
 
 console.log('✓ DEV439 apprentis inclus dans les ordres de mission');
