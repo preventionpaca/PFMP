@@ -1,16 +1,19 @@
 # État du projet Eucalyptus PFMP
 
-## DEV435 en préparation — réparations sans régression de performance
+## DEV435 R2 déployée — réparations sans régression de performance
 
 - Les contrôles rapides ADMIN et PUBLIC utilisent toujours les 53 blocs déjà préchargés dans la grille. La fenêtre est maintenant repositionnée même lorsque son contenu vient du cache local ; aucun appel Grist n'est ajouté au survol.
 - Le détail ADMIN réaffiche les sélections et la barre d'affectation téléphone/visite. L'annuaire des professeurs n'est lu qu'au premier focus dans un champ de professeur, jamais pendant l'ouverture de la classe.
 - La page « Élèves sans convention » exige désormais un niveau, une période et une classe. Elle lit un seul snapshot détaillé au lieu de reconstruire toutes les classes et périodes du lycée.
 - Les moyens de transport des ordres de mission restent enregistrables individuellement, ligne par ligne. Un retour visible `Enregistrement…`, `Enregistré` ou `Échec` confirme l'opération sans recharger la classe.
-- Tests ciblés : `node tests/run-dev435-fast-ui-tests.js`, `node tests/run-dev420-situations-tests.js` et `node tests/run-dev417-ui-tests.js` verts. Aucun appel métier ou écriture Grist n'a été exécuté par ces tests.
+- Vérifications réelles en lecture seule : la grille publique livre 53 zones de contrôle rapide avec leur contenu préchargé ; le détail TCIEL ADMIN affiche 26 cases et les deux champs d'affectation, puis 15 suggestions au premier chargement différé ; la requête ciblée TCAR / PFMP n°1 aboutit sans élève restant sans convention.
+- Mesures HTTP PUBLIC après déploiement : grille BAC PRO `3,55 s` et détail TCAR PFMP n°1 `3,19 s`. Le chemin de consultation rapide DEV434 est conservé.
+- Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
+- Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV434 R3, version Apps Script immuable `765`.
+- Version active déployée le 4 octobre 2026 : DEV435 R2, version Apps Script immuable `767`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `765`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `767`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
