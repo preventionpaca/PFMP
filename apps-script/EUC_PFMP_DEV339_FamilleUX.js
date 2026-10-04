@@ -228,6 +228,29 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
   if(typeof EUC_DEV420_enrichDetail_==='function'){
     try{detail=EUC_DEV420_enrichDetail_(detail,annee,famille,cid,pid)||detail;}catch(eSituations){}
   }
+  /* DEV432 — un élève affecté au parcours différencié appartient à la vue
+   * P.dif. uniquement. Les anciens enrichissements DEV174 conservaient le
+   * drapeau sur toutes les PFMP de la classe ; il ne doit ni être rendu ni
+   * entrer dans leurs compteurs. La période P.dif. reste inchangée. */
+  var isPdif=typeof EUC_DEV387_isPdifPeriod_==='function'
+    ?EUC_DEV387_isPdifPeriod_(period)
+    :EUC_DEV422_normStatus_(period.libelle||period.nom).indexOf('P_DIF')>=0;
+  if(!isPdif){
+    detail.lignes=(detail.lignes||[]).filter(function(x){
+      var authoritativeMode='';
+      try{
+        authoritativeMode=typeof EUC_DEV285B_modeFor_==='function'
+          ?EUC_DEV285B_modeFor_(Number(x&&x.eleveId)||0,annee)
+          :'';
+      }catch(eMode){}
+      var mode=EUC_DEV422_normStatus_(authoritativeMode||(x&&(
+        x.modeFinTerminale||x.statutCode||x.statut
+      )));
+      if(mode.indexOf('POURSUITE_PFMP2')>=0)return true;
+      return mode.indexOf('PARCOURS_DIFF_LYCEE')<0&&!(x&&x.parcoursDifferencie===true);
+    });
+    detail.__dev434PdifFiltered=true;
+  }
   var quick=EUC_DEV422_quickFromDetail_(detail);
   detail.stats=detail.stats||{};
   detail.stats.total=quick.total;
@@ -321,7 +344,8 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
   ))return {ok:true,ready:true,payload:cached,source:'CACHE'};
   var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[annee],Famille:[famille]})||[];
   rows=rows.filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
-    return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+    var d=(Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+    return d||((Number(b.id)||0)-(Number(a.id)||0));
   });
   if(!rows.length)return {ok:true,ready:false,payload:null,source:'SNAPSHOT_ABSENT'};
   var data=null;

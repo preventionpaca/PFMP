@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-- Version active déployée le 3 octobre 2026 : DEV425 R2, version Apps Script immuable `750`.
+- Version active déployée le 4 octobre 2026 : DEV434 R3, version Apps Script immuable `765`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `750`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `765`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
@@ -158,3 +158,14 @@
 - L'écart est donc hors calcul métier : le wrapper demande actuellement à la page parente de recréer entièrement l'iframe Apps Script à chaque navigation. La préparation DEV430 remplace ce trajet par une navigation dans l'iframe déjà ouverte ; le sous-domaine reste affiché et le chemin mesuré directement est déjà dans la cible de 3 à 4 secondes.
 - DEV429 corrige aussi les URL du sélecteur de classe en reprenant l'année et la famille du détail rendu. DEV430 est testé localement mais non déployé : le projet Apps Script a atteint sa limite de 200 versions immuables. Aucune version n'a été supprimée sans autorisation explicite.
 - Suite complète finale verte : `node tests/run-tests.js` (337 tests). Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune mutation élève/convention, aucun courriel, aucun ordre de mission et aucun nouveau Web App.
+
+## DEV434 R3 déployée — snapshots déterministes et séparation stricte P.dif.
+
+- Les lectures du snapshot familial et des détails départagent désormais deux lignes actives au même horodatage par l’identifiant Grist décroissant. Lors d’une republication identique, les doublons actifs plus anciens sont désactivés afin qu’une enveloppe vide ou ancienne ne puisse plus reprendre la priorité.
+- La reconstruction BAC PRO est groupée : une lecture de chaque table structurante produit les 53 détails et les 53 contrôles rapides, puis publie détails, famille et état `READY` dans cet ordre. Le contrôle après migration confirme `53/53`, révision `mut6hfp8-f37f8773237f`, état frais et source `snapshot-groupe-dev432`.
+- Les élèves dont le mode autoritaire est `PARCOURS_DIFF_LYCEE` sont exclus des PFMP ordinaires et restent visibles uniquement dans la période P.dif. Le détail TCAR PFMP n°1 contrôlé après déploiement affiche 17 élèves : 3 apprentis, 14 conventions, 0 sans convention et 0 annulée/interrompue.
+- Les 53 contrôles rapides BAC PRO sont inclus directement dans le HTML de la grille publique : le survol de la seule zone chiffrée n’effectue plus de lecture Grist et ne dépend plus du repli « détail de classe indisponible ».
+- Mesures navigateur finales sous le sous-domaine PUBLIC : accueil `4,02 s`, grille BAC PRO `3,60 s`, détail TCAR PFMP n°1 `4,32 s`. Le même détail en ADMIN s’affiche en `4,24 s`. Le sous-domaine reste visible sur tout le parcours ; le wrapper remplace son iframe sans empiler les cadres de sécurité Apps Script.
+- Version Apps Script immuable `765`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Aucun nouveau Web App n’a été créé ; les URL historiques, `DOMAIN` et `USER_DEPLOYING` sont conservés.
+- Suite complète finale verte : `node tests/run-tests.js` (337 tests). Après le dernier `clasp push`, les 346 fichiers distants ont été relus et comparés : aucune divergence avec `apps-script/`.
+- Écritures effectuées uniquement dans `b2CyeMEdVEMS` et limitées aux snapshots, détails techniques, révisions et états de fraîcheur autorisés. Aucun accès à `3pnVrygfNn7c`, aucun import Pronote réel, aucune écriture élève/convention, aucun courriel et aucun ordre de mission.

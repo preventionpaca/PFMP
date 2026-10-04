@@ -107,10 +107,22 @@ function EUC_DEV424_writeDetails_(items){
 function EUC_DEV424_writeFamily_(annee,famille,payload){
   var old=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[annee],Famille:[famille]})
     .filter(function(r){return (r.fields||{}).Actif!==false;}).sort(function(a,b){
-      return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+      var d=(Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+      return d||((Number(b.id)||0)-(Number(a.id)||0));
     });
   var json=JSON.stringify(payload);
   if(old.length&&EUC_DEV424_txt_((old[0].fields||{}).Payload_JSON)===json){
+    /* Une interruption ancienne peut avoir laissé plusieurs lignes actives
+     * avec le même horodatage. Conserver uniquement l'identifiant le plus
+     * récent évite qu'une lecture ultérieure reprenne l'enveloppe vide. */
+    if(old.length>1){
+      var sameNow=new Date().toISOString();
+      EUC_DEV424_chunks_(old.slice(1),20).forEach(function(chunk){
+        EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:chunk.map(function(r){
+          return {id:Number(r.id),fields:{Actif:false,Updated_at:sameNow}};
+        })});
+      });
+    }
     if(typeof EUC_DEV421_familyCacheInvalidate_==='function')EUC_DEV421_familyCacheInvalidate_(annee,famille);
     return false;
   }

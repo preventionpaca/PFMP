@@ -39,6 +39,13 @@ function EUC_DEV416_cachePut_(key,obj){
   }catch(e2){return false;}
 }
 
+function EUC_DEV416_cacheDrop_(key){
+  var cache=CacheService.getScriptCache(),n=0,keys=[key+'_M'];
+  try{n=Number(cache.get(key+'_M'))||0;}catch(e){}
+  for(var i=0;i<n&&i<20;i++)keys.push(key+'_C'+i);
+  try{cache.removeAll(keys);}catch(e2){keys.forEach(function(k){try{cache.remove(k);}catch(e3){}});}
+}
+
 function EUC_DEV428_withContext_(detail,annee,famille){
   detail=detail||{};
   /* Les vues persistantes DEV427 sont construites hors requête HTTP. Elles
@@ -47,6 +54,34 @@ function EUC_DEV428_withContext_(detail,annee,famille){
    * vide forçait son repli vers un rechargement Apps Script complet. */
   detail.annee=String(annee||detail.annee||'').trim();
   detail.famille=String(famille||detail.famille||'BACPRO').trim().toUpperCase();
+  /* DEV434 : les anciens détails mis en cache peuvent précéder l'ajout du
+   * marqueur P.dif. La table métier de fin de Terminale reste autoritaire :
+   * une PFMP ordinaire ne doit jamais rendre ces élèves, même si le payload
+   * historique ne porte plus le drapeau. */
+  var period=detail.periode||{},isPdif=false;
+  try{
+    isPdif=typeof EUC_DEV387_isPdifPeriod_==='function'
+      ?EUC_DEV387_isPdifPeriod_(period)
+      :String(period.libelle||period.nom||'').toUpperCase().indexOf('P.DIF')>=0;
+  }catch(ePdif){}
+  if(!isPdif&&Array.isArray(detail.lignes)&&detail.__dev434PdifFiltered!==true){
+    var modes={},authoritative=false;
+    try{modes=(EUC_DEV285B_state_(detail.annee)||{}).modes||{};authoritative=true;}catch(eModes){}
+    detail.lignes=detail.lignes.filter(function(x){
+      var mode=String(modes[Number(x&&x.eleveId)||0]||(x&&x.modeFinTerminale)||'').toUpperCase();
+      if(mode.indexOf('POURSUITE_PFMP2')>=0)return true;
+      return mode.indexOf('PARCOURS_DIFF_LYCEE')<0&&!(x&&x.parcoursDifferencie===true);
+    });
+    try{
+      if(typeof EUC_DEV422_quickFromDetail_==='function'){
+        var q=EUC_DEV422_quickFromDetail_(detail);detail.stats=detail.stats||{};
+        detail.stats.total=q.total;detail.stats.apprentis=q.apprentis.length;
+        detail.stats.avecConvention=q.avec.length;detail.stats.sansConvention=q.sans.length;
+        detail.stats.annulees=q.annuleesInterrompues.length;detail.stats.interrompues=0;
+      }
+    }catch(eStats){}
+    if(authoritative)detail.__dev434PdifFiltered=true;
+  }
   return detail;
 }
 
