@@ -35,7 +35,7 @@ assert.match(missions,/\['N°','Élève','Entreprise','Adresse','Contact\\nentre
 assert.match(missions,/Précisions complémentaires/);assert.match(missions,/Signature du professeur/);assert.match(missions,/Signature du directeur délégué aux formations/);
 assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
 assert.match(missionUi,/Chaque PDF comprend l’ordre de mission puis le récapitulatif horaire/);
-assert.match(missionUi,/missionToken:g\.pdfToken/);assert.match(missionUi,/PDF généré en/);
+assert.match(missionUi,/missionToken:g\.pdfToken/);assert.match(missionUi,/PDF généré en/);assert.match(missionUi,/id='last-pdf'/);assert.match(missionUi,/Télécharger à nouveau/);
 assert.match(missionUi,/Envoyer par e-mail/);assert.match(missionUi,/EUC_DEV440_prepareMissionTransportEmail/);assert.match(missionUi,/EUC_DEV440_sendMissionTransportEmail/);
 assert.match(missions,/MailApp\.sendEmail/);assert.match(missions,/replyTo/);assert.match(missions,/Véhicule personnel/);
 assert.match(situations,/EUC_DEV436_migrerVieScolaire/);assert.match(situations,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);
