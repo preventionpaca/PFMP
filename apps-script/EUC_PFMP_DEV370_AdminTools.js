@@ -278,7 +278,7 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   title.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(13).setSpacingAfter(6);
   var meta=body.appendParagraph((g.classe||'')+' — '+(g.periode||'')+' — '+(g.debut||'')+' au '+(g.fin||''));
   meta.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(9).setSpacingAfter(8);
-  var rows=[['N°\nd’ordre','Élève','Entreprise','Adresse de l’entreprise','Date','Heure\nd’arrivée','Heure\nde départ','Lieu de\ndépart']];
+  var rows=[['N°','Élève','Entreprise','Adresse de l’entreprise','Date','Heure\nd’arrivée','Heure\nde départ','Lieu de\ndépart']];
   (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'','','','',''])});
   var table=body.appendTable(rows);table.setBorderColor('#6f9f95');
   for(var c=0;c<8;c++)table.getCell(0,c).setBackgroundColor('#e7f5f1');

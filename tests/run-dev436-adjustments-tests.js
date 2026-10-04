@@ -30,7 +30,7 @@ assert.match(missions,/EUC_DEV436_pdfMission/);assert.match(missions,/LISTE_ELEV
 assert.match(missions,/RÉCAPITULATIF HORAIRE DES VISITES EN ENTREPRISE/);
 assert.match(missions,/Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus/);
 assert.match(missions,/EUC_DEV438_compactMissionPage_/);assert.match(missions,/appendPageBreak\(\)/);
-assert.match(missions,/\['N°\\nd’ordre','Élève','Entreprise','Adresse de l’entreprise','Date','Heure\\nd’arrivée','Heure\\nde départ','Lieu de\\ndépart'\]/);
+assert.match(missions,/\['N°','Élève','Entreprise','Adresse de l’entreprise','Date','Heure\\nd’arrivée','Heure\\nde départ','Lieu de\\ndépart'\]/);
 assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
 assert.match(missionUi,/Chaque PDF comprend l’ordre de mission puis le récapitulatif horaire/);
 assert.match(situations,/EUC_DEV436_migrerVieScolaire/);assert.match(situations,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);
