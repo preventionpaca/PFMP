@@ -31,6 +31,8 @@ assert.match(missions,/RÉCAPITULATIF HORAIRE DES VISITES EN ENTREPRISE/);
 assert.match(missions,/Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus/);
 assert.match(missions,/EUC_DEV438_compactMissionPage_/);assert.doesNotMatch(missions,/EUC_DEV438_appendVisitRecap_\(body,g\)\{\s*body\.appendPageBreak\(\)/);
 assert.match(missions,/insertSectionBreak/);assert.match(missions,/flipPageOrientation:true/);
+assert.match(missions,/function EUC_DEV440_styleLandscapeSection_/);assert.match(missions,/sectionBreakIndex\)\+1/);
+assert.match(missions,/EUC_DEV440_styleLandscapeSection_\(id,landscapeSectionIndex\)/);
 assert.match(missions,/\['N°','Élève','Entreprise','Adresse','Contact\\nentreprise','Contact\\ntuteur','Date','Arrivée','Départ','Lieu de\\ndépart','Km','Transport'\]/);
 assert.match(missions,/Précisions complémentaires/);assert.match(missions,/Signature du professeur/);assert.match(missions,/Signature du directeur délégué aux formations/);
 assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
