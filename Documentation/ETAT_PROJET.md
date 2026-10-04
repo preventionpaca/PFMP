@@ -1,8 +1,8 @@
 # État du projet Eucalyptus PFMP
 
-## DEV444 déployée — accès PP intégré et campagnes par période
+## DEV444 R2 déployée — accès PP intégré et campagnes par période
 
-- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `788`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` contient les mêmes `351` fichiers que le local.
+- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `789`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` contient les mêmes `351` fichiers que le local.
 - Les détails de classe ADMIN et PUBLIC proposent maintenant `Accès professeur principal` à côté de `Exporter PDF`. Le formulaire et l’annuaire des professeurs ne sont chargés qu’après un clic volontaire puis la validation d’un code ; le chemin rapide de consultation ne reçoit aucun appel serveur supplémentaire.
 - Le code est vérifié contre l’année, la classe et la période actuellement affichées. Après déverrouillage, le professeur principal peut uniquement affecter les suivis `VISITE` et `TELEPHONE` aux élèves de ce périmètre ; chaque mutation reconstruit immédiatement le snapshot concerné.
 - L’administration peut préparer une campagne à partir d’une classe/période de référence. Le lot regroupe uniquement les classes de la même famille ayant exactement le même libellé et les mêmes dates, puis affiche tous les professeurs principaux et les éventuels blocages avant toute génération.
@@ -98,9 +98,9 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV444, version Apps Script immuable `788`.
+- Version active déployée le 4 octobre 2026 : DEV444 R2, version Apps Script immuable `789`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `788`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `789`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
