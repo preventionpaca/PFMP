@@ -49,15 +49,17 @@ function EUC_DEV203_findGlobalComplete(siret){
       };
     }
 
-    var useful=0;
-
-    if(r.nomEntreprise) useful++;
-    if(r.nomCommercial) useful++;
-    if(r.adresse) useful++;
-    if(r.codePostal) useful++;
-    if(r.ville) useful++;
-
-    if(useful>=3){
+    /*
+     * Une fiche sans voie n'est pas exploitable pour le géocodage. Le
+     * précédent seuil (trois champs quelconques) déclarait à tort une fiche
+     * complète avec seulement nom + code postal + ville et empêchait alors
+     * l'appel à l'Annuaire des Entreprises qui fournit la rue.
+     */
+    if(
+      EUC_DEV203_txt_(r.adresse) &&
+      (EUC_DEV203_txt_(r.nomEntreprise)||EUC_DEV203_txt_(r.nomCommercial)) &&
+      (EUC_DEV203_txt_(r.codePostal)||EUC_DEV203_txt_(r.ville))
+    ){
       return r;
     }
 
@@ -147,6 +149,15 @@ function EUC_DEV203_normalizePfmpResult_(raw,siret){
         e.courriel ||
         e.email ||
         e.courrielEntreprise ||
+        ''
+      ),
+
+    responsableEntreprise:
+      EUC_DEV203_txt_(
+        e.responsableEntreprise ||
+        e.responsable ||
+        e.responsableNom ||
+        e.responsable_nom ||
         ''
       ),
 

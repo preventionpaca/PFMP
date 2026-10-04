@@ -7,6 +7,14 @@
 // CONFIG est defini dans Install_EDT.gs.
 
 function doGet(e) {
+  // EUC_DEV441_PP_GEO_ROUTES_BEGIN
+  var __p441=String(e&&e.parameter&&e.parameter.page||'');
+  if(__p441==='acces-pp-admin') return EUC_DEV441_afficherPpAdmin(e);
+  if(__p441==='acces-pp-pfmp') return EUC_DEV441_afficherPp(e);
+  if(__p441==='geocodage-pfmp-admin') return EUC_DEV441_afficherGeoAdmin(e);
+  if(__p441==='cartographie-pfmp') return EUC_DEV441_afficherCarte(e);
+  // EUC_DEV441_PP_GEO_ROUTES_END
+
   // EUC_DEV415_PRIORITY_BEGIN
   var __p415=String(
     e&&e.parameter&&e.parameter.page||''

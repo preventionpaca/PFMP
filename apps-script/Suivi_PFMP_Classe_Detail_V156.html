@@ -43,7 +43,7 @@
     .modal-card h3{margin-top:0}.modal-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;max-height:180px;overflow:auto;font-size:13px}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
     @media(max-width:900px){.context,.summary,.assignbar{grid-template-columns:1fr}}
-    @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#exportPdf,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
+    @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#mapPfmp,#exportPdf,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
   
     .hist-v162{margin-top:5px;color:#b42318;font-size:11px}.hist-v162 summary{cursor:pointer;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a}.hist-v162 span{font-weight:400}
     .retire-v162{background:#fff;color:#b42318!important;border:1px solid #f1aeb5!important}
@@ -171,6 +171,7 @@ body{background:#f7fbf9!important}
 
   <div class="card">
     <div class="mail-actions">
+      <button id="mapPfmp" class="secondary" type="button">Carte des lieux de stage</button>
       <button id="exportPdf" class="secondary" type="button">Exporter PDF</button>
       <a id="mailParams" class="secondary" href="#">Paramètres des envois</a>
       <button id="sendTable" class="primary" type="button">Envoyer le tableau par email</button>
@@ -396,6 +397,7 @@ function statusPill(x){
   phoneAssignBtn.onclick=function(){assign('TELEPHONE',selectedProfPhone,phoneAssignBtn)};visitAssignBtn.onclick=function(){assign('VISITE',selectedProfVisit,visitAssignBtn)};
   sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
   document.getElementById('exportPdf').onclick=function(){window.print()};
+  document.getElementById('mapPfmp').onclick=function(){var u=C.baseUrl+'?page=cartographie-pfmp&annee='+encodeURIComponent(detail.annee||'')+'&famille='+encodeURIComponent(new URLSearchParams(location.search).get('famille')||'')+'&classe='+encodeURIComponent(detail.classe&&detail.classe.id||'')+'&periode='+encodeURIComponent(detail.periode&&detail.periode.id||'');window.open(u,'_blank','noopener')};
   yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
   render();
   /* Les optimisations de navigation sont chargées dans un second script.

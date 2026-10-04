@@ -2858,17 +2858,20 @@ function setKpis(s){
         return;
       }
 
-      q(card,'.nom-ent').value=r.nomEntreprise||'';
-      q(card,'.nom-com').value=r.nomCommercial||'';
-      q(card,'.adresse').value=r.adresse||'';
-      q(card,'.cp').value=r.codePostal||'';
-      q(card,'.ville').value=r.ville||'';
-      q(card,'.tel-ent').value=r.telephoneEntreprise||'';
-      q(card,'.mail-ent').value=r.courrielEntreprise||'';
-      q(card,'.responsable-ent').value=r.responsableEntreprise||r.responsable||'';
-      q(card,'.tuteur-input').value=r.tuteur||'';
-      q(card,'.tel-tut').value=r.telephoneTuteur||'';
-      q(card,'.mail-tut').value=r.courrielTuteur||'';
+      function setIfPresent(selector,value){
+        if(String(value==null?'':value).trim())q(card,selector).value=value;
+      }
+      setIfPresent('.nom-ent',r.nomEntreprise);
+      setIfPresent('.nom-com',r.nomCommercial);
+      setIfPresent('.adresse',r.adresse);
+      setIfPresent('.cp',r.codePostal);
+      setIfPresent('.ville',r.ville);
+      setIfPresent('.tel-ent',r.telephoneEntreprise);
+      setIfPresent('.mail-ent',r.courrielEntreprise);
+      setIfPresent('.responsable-ent',r.responsableEntreprise||r.responsable);
+      setIfPresent('.tuteur-input',r.tuteur);
+      setIfPresent('.tel-tut',r.telephoneTuteur);
+      setIfPresent('.mail-tut',r.courrielTuteur);
 
       msg.textContent=
         'Trouvée via '+(r.source||'base Entreprises');

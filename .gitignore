@@ -33,3 +33,4 @@ proposals/audit-*.json
 tests/.*.tmp.html
 tests/.*.tmp.json
 tests/*.dom.tmp
+output/pdf/

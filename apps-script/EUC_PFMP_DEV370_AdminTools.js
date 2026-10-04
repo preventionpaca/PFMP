@@ -310,6 +310,20 @@ function EUC_DEV438_compactMissionPage_(body,table){
     var el=body.getChild(i);if(el.getType()===DocumentApp.ElementType.PARAGRAPH)EUC_DEV438_compactParagraph_(el.asParagraph());
   }
 }
+function EUC_DEV441_formatMissionSignature_(body){
+  var fait=null,proviseur=null,after=false;
+  for(var i=0;i<body.getNumChildren();i++){
+    var el=body.getChild(i);if(el.getType()!==DocumentApp.ElementType.PARAGRAPH)continue;
+    var p=el.asParagraph(),text=EUC_DEV368_t(p.getText());
+    if(text.indexOf('Fait à Nice')===0)fait=p;
+    if(/^Le Proviseur\b/i.test(text)){proviseur=p;after=true;continue;}
+    if(after&&text){try{p.setSpacingBefore(24).setSpacingAfter(0).setLineSpacing(1)}catch(e0){}after=false;}
+  }
+  /* Les deux mentions doivent commencer sur le même axe, à droite du
+     tableau, plutôt que d'être centrées indépendamment selon leur longueur. */
+  [fait,proviseur].forEach(function(p){if(!p)return;try{p.setAlignment(DocumentApp.HorizontalAlignment.LEFT).setIndentStart(260).setIndentEnd(0)}catch(e1){}});
+  if(proviseur)try{proviseur.setSpacingBefore(8).setSpacingAfter(28)}catch(e2){}
+}
 var EUC_DEV440_MISSION_CACHE_PREFIX_='DEV440_MISSION_';
 var EUC_DEV440_TRANSPORT_CACHE_KEY_='DEV440_TRANSPORTS';
 function EUC_DEV440_transportMap_(){
@@ -444,7 +458,7 @@ function EUC_DEV436_pdfMission(q){
     EUC_DEV436_replace_(body,'PERIODE',g.periode);EUC_DEV436_replace_(body,'DEBUT',g.debut||'');EUC_DEV436_replace_(body,'FIN',g.fin||'');EUC_DEV436_replace_(body,'DATE',date);
     var range=body.findText('\\{\\{LISTE_ELEVES\\}\\}'),rows=[['Élève','Entreprise','Adresse','Transport']];
     g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport||''])});
-    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table)}
+    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table);EUC_DEV441_formatMissionSignature_(body)}
     else EUC_DEV436_replace_(body,'LISTE_ELEVES',g.lignes.map(function(x){return x.eleve}).join(' · '));
     doc.saveAndClose();
     var landscapeSectionIndex=EUC_DEV440_insertLandscapeSection_(id);

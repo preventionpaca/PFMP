@@ -1,9 +1,10 @@
-## Après DEV440 — prochains lots séparés
+## Après DEV441 — contrôles et optimisations séparés
 
-1. Accès professeur principal : créer une autorisation année + classe + professeur, un code aléatoire dont seule l’empreinte est stockée, une session courte et révocable, et limiter strictement les mutations à `TELEPHONE` et `VISITE`. L’annuaire et le formulaire ne seront chargés qu’après déverrouillage afin de ne pas ralentir la consultation ordinaire.
-2. Géocodage : valider le fournisseur et les règles de confidentialité avant tout appel externe. Pour les adresses françaises, privilégier le service officiel BAN/Géoplateforme ; persister dans une table dédiée l’adresse normalisée, son empreinte, latitude, longitude, score, précision, fournisseur, état et date. Ne recalculer que si l’empreinte d’adresse change.
-3. Cartographie : construire ensuite une page dédiée lisant uniquement les coordonnées persistées, avec une vue classe/période et une vue globale filtrable. Ne jamais charger le moteur de carte ni géocoder dans le chemin des grilles et détails actuels.
-4. Ordres de mission : mesurer plusieurs premières générations après inactivité. La génération chaude est `7,9 s`, mais le premier démarrage de la version contrôlée est `22,1 s`; l’objectif suivant est de réduire ce coût froid sans modifier le modèle ni supprimer les coordonnées hors connexion.
+1. Recette PP : générer volontairement un premier code sur une classe/période de test métier, vérifier l’expiration au dernier jour, l’affectation téléphone/visite et la reconstruction atomique du snapshot. Aucun code n’a été créé pendant DEV441.
+2. Recette géocodage : lancer depuis l’administration un petit lot France, contrôler les scores et valider manuellement les résultats ambigus. Monaco et les autres pays restent hors traitement automatique.
+3. Recherche SIRET : effectuer une recherche explicite sur une fiche apprenti autorisée et vérifier la voie avant l’enregistrement. Le test automatique couvre la régression, mais la recette n’a pas cliqué sur le bouton car le parcours actuel autosauvegarde la fiche.
+4. Performance missions : la génération PDF finale mesurée est `10,2 s`, mais la préparation initiale des groupes après chargement complet reste sensiblement plus longue. Profiler séparément cette préparation sans modifier le modèle, les coordonnées hors connexion ni le chemin rapide des pages de suivi.
+5. Cartographie : compléter progressivement la table de coordonnées validées, puis contrôler la carte classe/période et le tableau global avec des points réels. Ne jamais géocoder en série sur le chemin d’affichage.
 
 ## DEV424 R1 — snapshot partagé actif, surveillance du premier cycle
 

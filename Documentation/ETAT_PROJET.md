@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## DEV441 R2 déployée — accès PP, géocodage et recherche SIRET
+
+- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `784`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` est identique aux sources locales.
+- L’administration peut générer un code professeur principal limité à une année, une classe et une période. Le code clair n’est jamais stocké : seule une empreinte salée est persistée. L’accès expire à la fin du dernier jour de la PFMP/PFP et ne permet que les affectations `TELEPHONE` et `VISITE`, avec contrôle serveur du périmètre et reconstruction immédiate du snapshot concerné.
+- Le géocodage automatique est réservé aux adresses françaises et au service officiel Géoplateforme/BAN. Les résultats validés sont persistés dans une table séparée et réutilisable ; Monaco et les autres adresses étrangères restent à valider manuellement. Aucun géocodage n’est lancé sur le chemin d’affichage.
+- Une carte publique/administrative filtrable et un accès `Carte des lieux de stage` depuis le détail d’une classe/période lisent uniquement les coordonnées déjà validées.
+- La recherche SIRET des apprentis ne considère plus une fiche comme complète si la voie est absente. Elle interroge alors l’Annuaire, remonte l’adresse postale et conserve le responsable déjà saisi si la réponse n’en fournit pas. Le contrôle réel s’est limité à constater la fiche TMP3D incomplète ; le bouton n’a pas été actionné car il autosauvegarde la fiche apprenti.
+- Le PDF d’ordre de mission généré sur TMP3D / PFMP n°1 contient toujours l’apprenti et ses deux pages A4. La génération mesurée sur la version finale est `10,2 s`. L’alignement de `Fait à Nice` et `Le Proviseur` repose désormais sur le même retrait gauche, avec l’espace renforcé avant les recommandations.
+- Tests ciblés et suite complète verts : `node tests/run-tests.js` (`367` tests). Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune écriture élève/convention, aucun courriel, aucun code PP généré et aucun géocodage réel pendant la recette.
+
 ## DEV440 R5 déployée — ordre de mission terrain et demande de transport
 
 - Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `782`, sans changement d’URL ni création de Web App.
@@ -58,9 +68,9 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV440 R5, version Apps Script immuable `782`.
+- Version active déployée le 4 octobre 2026 : DEV441 R2, version Apps Script immuable `784`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `782`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `784`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
