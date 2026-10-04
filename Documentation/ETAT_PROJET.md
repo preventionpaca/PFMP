@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## DEV436 en préparation — finitions de suivi et ordres de mission
+
+- La grille ADMIN/PUBLIC conserve son chemin rapide. Lorsqu'une mutation vient d'invalider un détail, le contrôle rapide affiche désormais « Mise à jour en cours » et réessaie brièvement au lieu d'exposer une erreur technique ; aucun appel n'est ajouté lorsque les données préchargées sont disponibles.
+- Les pages de classes et les détails de classe proposent un export PDF via la mise en page d'impression locale, sans lecture Grist supplémentaire. Les élèves suivis par une situation administrative sont signalés en orange. Le statut apprenti affiche la date de début de contrat et le badge `APPRENTI` redondant sous le nom est retiré.
+- Le contresens `Dossier géré par avis scolaire` est remplacé par `Dossier géré par la vie scolaire`. Une migration ciblée conserve ses affectations, reconstruit les snapshots concernés puis supprime uniquement l'ancien référentiel erroné.
+- Le modèle d'ordre de mission fourni a été converti en Google Docs fusionnable, sans être ajouté au dépôt. La page ADMIN permet de sélectionner un modèle par famille et d'enregistrer de futurs modèles Google Docs ; la génération produit la discipline du professeur, la classe, la période, les dates et la liste des élèves.
+- Les raccourcis dupliqués `Classes Pronote` et `Maintenance Snapshot PFMP` sont retirés de l'accueil ADMIN ; leurs accès uniques restent dans `Paramétrage`.
+- L'accès d'affectation par professeur principal est cadré mais non activé : il nécessite un jeton temporaire, haché, limité à sa classe et aux seules affectations téléphone/visite. Cette évolution de sécurité fera l'objet d'un lot séparé.
+
 ## DEV435 R2 déployée — réparations sans régression de performance
 
 - Les contrôles rapides ADMIN et PUBLIC utilisent toujours les 53 blocs déjà préchargés dans la grille. La fenêtre est maintenant repositionnée même lorsque son contenu vient du cache local ; aucun appel Grist n'est ajouté au survol.
@@ -96,7 +105,7 @@
 ## DEV420 R2 déployée — situations administratives des élèves
 
 - L’utilisateur a autorisé explicitement l’écriture limitée dans la base PFMP active `b2CyeMEdVEMS`. Deux tables ont été créées de façon idempotente : le référentiel `EUC_STATUTS_SUIVI_ELEVE_PFMP` et les affectations annuelles par classe, période et élève `EUC_SITUATIONS_ELEVES_PFMP`.
-- Trois motifs initiaux actifs et excluants ont été créés : `Dossier géré par avis scolaire`, `Démissionnaire` et `Absentéiste`. Aucune affectation élève n’a été créée automatiquement.
+- Trois motifs initiaux actifs et excluants ont été créés : `Dossier géré par la vie scolaire`, `Démissionnaire` et `Absentéiste`. Aucune affectation élève n’a été créée automatiquement.
 - La page administrative « Élèves sans convention » permet d’affecter ou retirer logiquement une situation, d’ajouter un motif et de désactiver/réactiver un motif sans suppression physique. Une situation n’est enregistrable que pour un élève encore sans convention, non apprenti et sans convention annulée/interrompue.
 - Le détail classe, les compteurs de famille et le contrôle rapide affichent les situations et retirent uniquement les motifs configurés comme excluants du compteur `Sans convention`. Un motif désactivé reste visible sur ses affectations historiques mais n’est plus proposé pour une nouvelle affectation.
 - Version Apps Script immuable `735`, appliquée aux seuls déploiements ADMIN et PUBLIC existants. Le distant relu contient exactement les 344 fichiers locaux ; les contrôles HTTP directs ADMIN et PUBLIC répondent à `200`.

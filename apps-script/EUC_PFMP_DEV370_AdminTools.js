@@ -14,7 +14,7 @@ function EUC_DEV368_missions(q){EUC_DEV368_admin();var tm=EUC_DEV368_mapTranspor
 function EUC_DEV368_sauverTransport(q){EUC_DEV368_admin();q=q||{};var allowed=['','Bus','Tram','Train','Véhicule personnel','Visio'],mode=EUC_DEV368_t(q.transport);if(allowed.indexOf(mode)<0)throw new Error('Transport invalide');EUC_DEV368_ensure();var y=EUC_DEV368_year(q.annee),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),eid=EUC_DEV368_n(q.eleveId),rows=EUC_IMPORT_lireRecords_(EUC_DEV368_TABLE_)||[],ex=rows.filter(function(r){return EUC_DEV368_t(r.Annee_scolaire)===y&&EUC_DEV368_n(r.Classe_id)===cid&&EUC_DEV368_n(r.Periode_id)===pid&&EUC_DEV368_n(r.Eleve_id)===eid})[0],fields={Annee_scolaire:y,Classe_id:cid,Classe_nom:EUC_DEV368_t(q.classe),Periode_id:pid,Periode_libelle:EUC_DEV368_t(q.periode),Eleve_id:eid,Eleve_nom:EUC_DEV368_t(q.eleve),Professeur_visiteur:EUC_DEV368_t(q.professeur),Moyen_transport:mode,Date_modification:new Date().toISOString()};if(ex)EUC_ENT_grist('patch','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{fields:fields}]});return{ok:true}}
 function EUC_DEV368_pdf(title,fn){var d=DocumentApp.create(title),b=d.getBody();fn(b);d.saveAndClose();var f=DriveApp.getFileById(d.getId()),pdf=f.getAs(MimeType.PDF).setName(title+'.pdf'),r={ok:true,name:title+'.pdf',mime:'application/pdf',base64:Utilities.base64Encode(pdf.getBytes())};f.setTrashed(true);return r}
 function EUC_DEV368_pdfSans(q){var d=EUC_DEV368_sansConvention(q);return EUC_DEV368_pdf('Eleves_sans_convention_'+EUC_DEV368_year(q&&q.annee),function(b){b.appendParagraph('ÉLÈVES SANS CONVENTION').setHeading(DocumentApp.ParagraphHeading.HEADING1);b.appendParagraph('Année scolaire : '+EUC_DEV368_year(q&&q.annee));var rows=[['Classe','Période','Élève','Professeur principal']];d.lignes.forEach(function(x){rows.push([x.classe,x.periode,x.eleve,x.professeurPrincipal||''])});b.appendTable(rows)})}
-function EUC_DEV368_prof(name){var n=EUC_DEV368_t(name).toUpperCase(),p=(EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP')||[]).filter(function(x){return [x.Civilite,x.Prenom,x.Nom].filter(Boolean).join(' ').trim().toUpperCase()===n})[0]||{},disc=EUC_DEV368_t(p.Discipline);return{nom:name,fonction:disc?'Professeur — '+disc:'Professeur'}}
+function EUC_DEV368_prof(name){var n=EUC_DEV368_t(name).toUpperCase(),p=(EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP')||[]).filter(function(x){return [x.Civilite,x.Prenom,x.Nom].filter(Boolean).join(' ').trim().toUpperCase()===n})[0]||{},disc=EUC_DEV368_t(p.Discipline);return{nom:EUC_DEV368_t(p.Nom)||name,prenom:EUC_DEV368_t(p.Prenom),civilite:EUC_DEV368_t(p.Civilite),discipline:disc,fonction:disc?'Professeur — '+disc:'Professeur'}}
 function EUC_DEV368_pdfMission(q){q=q||{};var g=EUC_DEV368_missions(q).groups.filter(function(x){return x.key===EUC_DEV368_t(q.groupKey)})[0];if(!g)throw new Error('Groupe introuvable');if(g.lignes.some(function(x){return !x.transport}))throw new Error('Choisissez un moyen de transport pour chaque élève.');var p=EUC_DEV368_prof(g.professeur),safe=(g.professeur+'_'+g.classe+'_'+g.periode).replace(/[^A-Za-z0-9À-ÿ_-]+/g,'_');return EUC_DEV368_pdf('Ordre_de_mission_'+safe,function(b){b.appendParagraph('LYCÉE LES EUCALYPTUS').setBold(true);b.appendParagraph('ORDRE DE MISSION').setHeading(DocumentApp.ParagraphHeading.HEADING1);b.appendParagraph('NOM / PRÉNOM : '+p.nom);b.appendParagraph('FONCTION : '+p.fonction);b.appendParagraph('MOTIF : Visites en entreprise des élèves en PFMP');b.appendParagraph('CLASSE : '+g.classe);b.appendParagraph('PÉRIODE DE MISSION : '+(g.debut||'')+' au '+(g.fin||'')+' — '+g.periode);var rows=[['Élève','Entreprise','Adresse','Moyen de transport']];g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport])});b.appendTable(rows);b.appendParagraph('Fait à Nice, le '+Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy'));b.appendParagraph('Le Proviseur').setBold(true);b.appendParagraph('* Les visites en visio n’ouvrent pas droit à des frais de déplacement.').setItalic(true)})}
 function EUC_DEV368_boot(){var c=EUC_PFMP_contexteAnneeLectureV155_(),ys=(c.annees||[]).map(function(x){return x.code||x}).filter(Boolean);if(c.active&&ys.indexOf(c.active)<0)ys.unshift(c.active);return{current:c.active||'',years:ys,baseUrl:'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'}}
 function EUC_DEV368_afficherSans(e){EUC_DEV368_admin();var t=HtmlService.createTemplateFromFile('Sans_Convention_PFMP_V368');t.bootJson=JSON.stringify(EUC_DEV368_boot());return t.evaluate().setTitle('Élèves sans convention').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)}
@@ -159,7 +159,7 @@ function EUC_DEV374_missions(q){
       if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return;
       if(!(EUC_DEV368_n(x.conventionId)>0))return;
       var k=prof+'|'+t.classeId+'|'+t.periode.id;
-      if(!g[k])g[k]={key:k,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};
+      if(!g[k])g[k]={key:k,famille:t.famille,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};
       var mk=t.annee+'|'+t.classeId+'|'+t.periode.id+'|'+EUC_DEV368_n(x.eleveId);
       g[k].lignes.push({eleveId:EUC_DEV368_n(x.eleveId),eleve:[x.nom,x.prenom].filter(Boolean).join(' '),entreprise:EUC_DEV368_t(x.entreprise),adresse:EUC_DEV368_t(x.adresseEntreprise),transport:tm[mk]?tm[mk].mode:''});
     });
@@ -181,4 +181,68 @@ function EUC_DEV374_pdfMission(q){
     b.appendParagraph('Fait à Nice, le '+Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy'));b.appendParagraph('Le Proviseur').setBold(true);
     b.appendParagraph('* Les visites en visio n’ouvrent pas droit à des frais de déplacement.').setItalic(true);
   });
+}
+
+/* DEV436 — modèles d'ordres de mission fusionnables.
+ * Le document source reste dans Drive. Seul son identifiant est versionné ici ;
+ * les modèles supplémentaires sont enregistrés dans les propriétés du script. */
+var EUC_DEV436_MISSION_MODEL_DEFAULT_='1UYL-QMQpTvR1XsijWNsyLjcDrOr2K6S_nQEk2ZYDKKI';
+var EUC_DEV436_MISSION_MODELS_KEY_='EUC_DEV436_MISSION_MODELS';
+function EUC_DEV436_extractDriveId_(v){
+  var s=EUC_DEV368_t(v),m=s.match(/[-\w]{25,}/);return m?m[0]:'';
+}
+function EUC_DEV436_models_(){
+  var base=[{id:'eucalyptus-standard',label:'Modèle Eucalyptus standard',famille:'TOUS',documentId:EUC_DEV436_MISSION_MODEL_DEFAULT_,defaut:true}];
+  try{
+    var raw=PropertiesService.getScriptProperties().getProperty(EUC_DEV436_MISSION_MODELS_KEY_),extra=raw?JSON.parse(raw):[];
+    if(Array.isArray(extra))base=base.concat(extra);
+  }catch(e){}
+  return base;
+}
+function EUC_DEV436_listMissionModels(){EUC_DEV368_admin();return{ok:true,models:EUC_DEV436_models_()}}
+function EUC_DEV436_saveMissionModel(q){
+  EUC_DEV368_admin();q=q||{};
+  var documentId=EUC_DEV436_extractDriveId_(q.documentId),label=EUC_DEV368_t(q.label),fam=EUC_DEV368_t(q.famille).toUpperCase()||'TOUS';
+  if(!documentId||!label)throw new Error('Nom du modèle et lien Google Docs requis.');
+  if(['TOUS','BACPRO','BTS','CAP'].indexOf(fam)<0)throw new Error('Famille de modèle invalide.');
+  var file=DriveApp.getFileById(documentId);
+  if(file.getMimeType()!=='application/vnd.google-apps.document')throw new Error('Le modèle doit être un document Google Docs éditable.');
+  var props=PropertiesService.getScriptProperties(),raw=props.getProperty(EUC_DEV436_MISSION_MODELS_KEY_),models=[];
+  try{models=raw?JSON.parse(raw):[]}catch(e){models=[]}
+  if(!Array.isArray(models))models=[];
+  if(q.defaut)models.forEach(function(x){if(x.famille===fam)x.defaut=false});
+  var id='modele-'+Utilities.getUuid(),item={id:id,label:label,famille:fam,documentId:documentId,defaut:q.defaut!==false};
+  models.push(item);props.setProperty(EUC_DEV436_MISSION_MODELS_KEY_,JSON.stringify(models));
+  return{ok:true,model:item,models:EUC_DEV436_models_()};
+}
+function EUC_DEV436_model_(id,famille){
+  var models=EUC_DEV436_models_(),wanted=EUC_DEV368_t(id),fam=EUC_DEV368_t(famille).toUpperCase();
+  var selected=models.filter(function(x){return x.id===wanted&&(x.famille==='TOUS'||x.famille===fam)})[0];
+  if(!selected)selected=models.filter(function(x){return x.defaut&&x.famille===fam})[0];
+  if(!selected)selected=models.filter(function(x){return x.defaut&&x.famille==='TOUS'})[0]||models[0];
+  return selected;
+}
+function EUC_DEV436_replace_(body,key,value){
+  var pattern='\\{\\{'+key+'\\}\\}',replacement=String(value==null?'':value).replace(/\\/g,'\\\\').replace(/\$/g,'$$$$');
+  body.replaceText(pattern,replacement);
+}
+function EUC_DEV436_pdfMission(q){
+  q=q||{};var g=EUC_DEV374_missions(q).groups.filter(function(x){return x.key===EUC_DEV368_t(q.groupKey)})[0];
+  if(!g)throw new Error('Groupe de mission introuvable.');
+  if(g.lignes.some(function(x){return !EUC_DEV368_t(x.transport)}))throw new Error('Choisissez un moyen de transport pour chaque élève avant de générer le PDF.');
+  var model=EUC_DEV436_model_(q.modelId,g.famille),p=EUC_DEV368_prof(g.professeur),safe=(g.professeur+'_'+g.classe+'_'+g.periode).replace(/[^A-Za-z0-9À-ÿ_-]+/g,'_');
+  var copy=DriveApp.getFileById(model.documentId).makeCopy('TEMP_Ordre_de_mission_'+safe),id=copy.getId();
+  try{
+    var doc=DocumentApp.openById(id),body=doc.getBody(),date=Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy');
+    EUC_DEV436_replace_(body,'NOM',p.nom||g.professeur);EUC_DEV436_replace_(body,'PRENOM',p.prenom||'');
+    EUC_DEV436_replace_(body,'DISCIPLINE',p.discipline||'Professeur');EUC_DEV436_replace_(body,'CLASSE',g.classe);
+    EUC_DEV436_replace_(body,'PERIODE',g.periode);EUC_DEV436_replace_(body,'DEBUT',g.debut||'');EUC_DEV436_replace_(body,'FIN',g.fin||'');EUC_DEV436_replace_(body,'DATE',date);
+    var range=body.findText('\\{\\{LISTE_ELEVES\\}\\}'),rows=[['Élève','Entreprise','Adresse','Transport']];
+    g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport||''])});
+    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}for(var r=0;r<table.getNumRows();r++){for(var k=0;k<table.getRow(r).getNumCells();k++){table.getCell(r,k).editAsText().setFontSize(r===0?9:8)}}}
+    else EUC_DEV436_replace_(body,'LISTE_ELEVES',g.lignes.map(function(x){return x.eleve}).join(' · '));
+    doc.saveAndClose();
+    var pdf=copy.getAs(MimeType.PDF).setName('Ordre_de_mission_'+safe+'.pdf');
+    return{ok:true,name:pdf.getName(),mime:'application/pdf',base64:Utilities.base64Encode(pdf.getBytes()),modele:model.label};
+  }finally{copy.setTrashed(true)}
 }

@@ -14,7 +14,9 @@
 - Les blocs `ENT.` et l’alternance ne deviennent jamais automatiquement des PFMP scolaires.
 - Toute modification administrative est historisée. Une annulation est logique, jamais une suppression physique.
 - Suivi téléphonique et visite en entreprise sont deux affectations distinctes. Aucun enseignant n’est codé en dur.
-- Ordres de mission et remboursements relèvent d’un lot futur. Les finitions graphiques détaillées de la fiche administrative sont différées.
+- Les ordres de mission utilisent un modèle Google Docs fusionnable choisi par famille. Le PDF fourni sert de référence visuelle ; les futurs modèles doivent rester éditables pour garantir le remplacement fiable des champs et de la liste d'élèves.
 - Une situation administrative PFMP est liée à une année, une classe, une période et un élève. Elle ne remplace ni Pronote ni une convention et ne peut être appliquée qu’à un élève actuellement sans convention, non apprenti et sans incident de convention.
 - Le référentiel de situations est administrable. La désactivation empêche les nouvelles affectations mais conserve l’historique ; le retrait d’une affectation est logique, jamais une suppression physique.
-- Un motif peut être configuré pour retirer ou non l’élève du compteur `Sans convention`. Les trois motifs initiaux (`Dossier géré par avis scolaire`, `Démissionnaire`, `Absentéiste`) retirent l’élève de ce compteur.
+- Un motif peut être configuré pour retirer ou non l’élève du compteur `Sans convention`. Les trois motifs initiaux (`Dossier géré par la vie scolaire`, `Démissionnaire`, `Absentéiste`) retirent l’élève de ce compteur.
+- L'ancien motif erroné `Dossier géré par avis scolaire` constitue une exception explicitement autorisée à la conservation logique : ses affectations sont migrées vers `Dossier géré par la vie scolaire`, puis ce seul référentiel inutilisé est supprimé physiquement.
+- Un accès futur des professeurs principaux aux affectations doit être limité à leur classe et à l'année active, aux seules actions `TELEPHONE` et `VISITE`, avec jeton temporaire haché et révocable. Aucun secret en clair, annuaire complet ou droit administrateur ne doit être exposé sur la page publique.

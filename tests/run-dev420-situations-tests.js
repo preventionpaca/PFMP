@@ -25,9 +25,11 @@ test('les deux tables métier sont déclarées avec des références Grist',()=>
   assert.match(source,/EUC_STATUTS_SUIVI_ELEVE_PFMP/);assert.match(source,/EUC_SITUATIONS_ELEVES_PFMP/);
   assert.match(source,/Ref:Classes/);assert.match(source,/Ref:Planning_Periodes/);assert.match(source,/Ref:EUC_ELEVES_PFMP/);assert.match(source,/Ref:EUC_STATUTS_SUIVI_ELEVE_PFMP/);
 });
-test('aucune suppression physique n’est possible',()=>assert.doesNotMatch(source,/EUC_ENT_grist\(\s*['"]delete/i));
+test('la seule suppression physique est la migration ciblée autorisée',()=>{
+  const deletes=source.match(/\/records\/delete/gi)||[];assert.equal(deletes.length,1);assert.match(source,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);assert.match(source,/AUTORISATION_CORRECTION_VIE_SCOLAIRE_DEV436/);
+});
 test('les trois motifs initiaux sont présents',()=>{
-  assert.match(source,/Dossier géré par avis scolaire/);assert.match(source,/Démissionnaire/);assert.match(source,/Absentéiste/);
+  assert.match(source,/Dossier géré par la vie scolaire/);assert.doesNotMatch(source,/\{Code:'AVIS_SCOLAIRE',Libelle:'Dossier géré par avis scolaire'/);assert.match(source,/Démissionnaire/);assert.match(source,/Absentéiste/);
 });
 test('les situations sont mises en cache durablement sous forme compacte',()=>{
   assert.match(source,/EUC_DEV420_CACHE_TTL_=21600/);
@@ -49,7 +51,7 @@ test('le compteur détail ne remet pas une situation excluante dans sans convent
 test('la page administrative permet affectation ajout et désactivation logique',()=>{
   assert.match(noConventionUi,/EUC_DEV420_sauverSituation/);assert.match(noConventionUi,/EUC_DEV420_ajouterMotif/);assert.match(noConventionUi,/EUC_DEV420_definirMotifActif/);
   assert.match(noConventionUi,/EUC_DEV420_installer\('AUTORISATION_SITUATIONS_ELEVES_DEV420'\)/);
-  assert.match(noConventionUi,/Aucune suppression physique/);assert.match(adminTools,/situationLibelle/);
+  assert.match(noConventionUi,/reste normalement dans l’historique/);assert.match(noConventionUi,/EUC_DEV436_migrerVieScolaire/);assert.match(adminTools,/situationLibelle/);
 });
 
 function memoryContext(){
@@ -58,6 +60,9 @@ function memoryContext(){
     EUC_ENT_controlerCibleRecette_:()=>true,
     EUC_V156_contexteAdmin_:()=>({autorise:true,peutModifier:true,lectureSeule:false,email:'admin@example.test'}),
     EUC_DEV368_admin:()=>({autorise:true}),
+    EUC_DEV368_catalog:()=>({classes:[{classeId:4,famille:'BACPRO'}]}),
+    EUC_DEV425_beginMutation_:x=>x,
+    EUC_DEV425_finishResult_:(token,result)=>result,
     EUC_PFMP_ref_:v=>Array.isArray(v)?Number(v[1]||v[0]):Number(v),
     EUC_DEV416_key_:(a,f,c,p)=>['D418',a,f,c,p].join('_'),
     LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock:()=>{}})},
@@ -76,6 +81,9 @@ function memoryContext(){
       body.tables.forEach(t=>{tables[t.id]={columns:t.columns.slice(),rows:[]};});return{};
     }
     if(method==='post'&&part==='columns'){tables[id].columns.push(...body.columns);return{};}
+    if(method==='post'&&url.endsWith('/records/delete')){
+      const ids=new Set(body.map(Number));tables[id].rows=tables[id].rows.filter(x=>!ids.has(Number(x.id)));return{};
+    }
     if(method==='post'&&part==='records'){
       body.records.forEach(r=>tables[id].rows.push(Object.assign({id:next++},r.fields)));return{};
     }
@@ -96,6 +104,16 @@ test('l’installateur est idempotent et crée exactement trois motifs initiaux'
   const second=ctx.EUC_DEV420_installer('AUTORISATION_SITUATIONS_ELEVES_DEV420');
   assert.equal(second.motifsCrees,0);assert.equal(tables.EUC_STATUTS_SUIVI_ELEVE_PFMP.rows.length,3);
 });
+test('la migration vie scolaire conserve les affectations puis supprime uniquement l’ancien motif',()=>{
+  const {ctx,tables}=memoryContext();ctx.EUC_DEV420_installer('AUTORISATION_SITUATIONS_ELEVES_DEV420');
+  tables.EUC_STATUTS_SUIVI_ELEVE_PFMP.rows.push({id:99,Code:'AVIS_SCOLAIRE',Libelle:'Dossier géré par avis scolaire',Actif:false,Exclure_sans_convention:true});
+  tables.EUC_SITUATIONS_ELEVES_PFMP.rows.push({id:90,Cle_situation:'2026-2027|4|5|7',Annee_scolaire:'2026-2027',Classe:4,Periode:5,Eleve:7,Statut:99,Actif:true});
+  const out=ctx.EUC_DEV436_migrerVieScolaire('AUTORISATION_CORRECTION_VIE_SCOLAIRE_DEV436');
+  assert.equal(out.migrees,1);assert.equal(out.supprimees,1);
+  assert.equal(tables.EUC_SITUATIONS_ELEVES_PFMP.rows[0].Statut,1);
+  assert.equal(tables.EUC_SITUATIONS_ELEVES_PFMP.rows[0].Libelle_statut_snapshot,'Dossier géré par la vie scolaire');
+  assert.equal(tables.EUC_STATUTS_SUIVI_ELEVE_PFMP.rows.some(x=>x.id===99),false);
+});
 test('l’enrichissement détail remplace sans convention et conserve l’égalité des compteurs',()=>{
   const {ctx,tables}=memoryContext();ctx.EUC_DEV420_installer('AUTORISATION_SITUATIONS_ELEVES_DEV420');
   tables.EUC_SITUATIONS_ELEVES_PFMP.rows.push({id:90,Cle_situation:'2026-2027|4|5|7',Annee_scolaire:'2026-2027',Classe:4,Periode:5,Eleve:7,Statut:1,Actif:true});
@@ -107,7 +125,7 @@ test('l’enrichissement détail remplace sans convention et conserve l’égali
   ]};
   const out=ctx.EUC_DEV420_enrichDetail_(d,'2026-2027','BACPRO',4,5);
   assert.equal(out.stats.situationsAdministratives,1);assert.equal(out.stats.sansConvention,1);assert.equal(out.stats.avecConvention,1);assert.equal(out.stats.apprentis,1);
-  assert.equal(out.lignes[0].exclureSansConvention,true);assert.match(out.lignes[0].statut,/avis scolaire/);
+  assert.equal(out.lignes[0].exclureSansConvention,true);assert.match(out.lignes[0].statut,/vie scolaire/);
 });
 test('l’affectation refuse un élève couvert et la désactivation reste logique',()=>{
   const m=memoryContext(),{ctx,tables,calls}=m;ctx.EUC_DEV420_installer('AUTORISATION_SITUATIONS_ELEVES_DEV420');

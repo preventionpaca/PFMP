@@ -38,6 +38,8 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
 .orange{color:var(--orange)}
 .green{color:var(--g)}
 .empty{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;color:var(--mut)}
+.print-btn{float:right;margin-top:-40px;border:1px solid var(--line);background:#fff;color:#0b745f;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer}
+@media print{.print-btn,.crumb,.level-nav{display:none!important}.header-inner,.wrap{max-width:none;padding-left:0;padding-right:0}.section-body{display:grid!important}.section{break-inside:avoid}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
 @media(max-width:900px){.section.open .section-body{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.section.open .section-body{grid-template-columns:1fr}.header-inner,.wrap{padding-left:14px;padding-right:14px}}
 </style>
@@ -120,6 +122,7 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
   <div class="header-inner">
     <h1 id="pageTitle"></h1>
     <div class="sub">Synthèse par niveau puis par classe</div>
+    <button class="print-btn" type="button" onclick="window.print()">Exporter PDF</button>
   </div>
 </header>
 
@@ -669,7 +672,17 @@ window.EUC_DEV422_QUICK={};
     host=host||{};var data=host.dataset||{};
     return {classe:Number(data.class||data.c||0),periode:Number(data.period||data.p||0)};
   }
-  function load(el){
+  function pending(el,k,attempt){
+    if(current!==el)return;
+    ensure();
+    document.getElementById('euc390Title').textContent='Contrôle rapide';
+    document.getElementById('euc390Meta').textContent='';
+    document.getElementById('euc390Body').innerHTML='<div class="euc390-wait"><span class="euc390-spin"></span> Mise à jour en cours… Les informations sont en train d’être recalculées.</div>';
+    panel.classList.add('show');place(el);
+    if(attempt<4)setTimeout(function(){if(current===el)load(el,attempt+1);},1800);
+  }
+  function load(el,attempt){
+    attempt=Number(attempt)||0;
     var x=ids(el),year=String((P390&&P390.annee)||'').trim(),fam=String((P390&&P390.famille)||'BACPRO').trim();
     if(!x.classe||!x.periode)return;
     if(!year){
@@ -683,7 +696,7 @@ window.EUC_DEV422_QUICK={};
     google.script.run
       .withSuccessHandler(function(r){
         if(!r||!r.ok){
-          if(current===el)document.getElementById('euc390Body').innerHTML='<div class="euc390-error">Contrôle rapide indisponible.</div>';
+          pending(el,k,attempt);
           return;
         }
         cache[k]=r;
@@ -691,7 +704,7 @@ window.EUC_DEV422_QUICK={};
       })
       .withFailureHandler(function(e){
         console.error('[DEV390 quick]',e&&e.message||e);
-        if(current===el)document.getElementById('euc390Body').innerHTML='<div class="euc390-error">Contrôle rapide indisponible : '+esc(e&&e.message||e)+'</div>';
+        pending(el,k,attempt);
       })
       .EUC_DEV388_quick({annee:year,famille:fam,classe:x.classe,periode:x.periode});
   }

@@ -450,6 +450,7 @@ function EUC_DEV275B_enrichDetail_(d){
 
       x.statutCode='CONTRAT_APPRENTISSAGE';
       x.statut='Contrat apprentissage';
+      x.dateContrat=r.debut||'';
       x.numero='';
       x.convention=false;
 

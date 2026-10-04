@@ -1,0 +1,32 @@
+const assert=require('assert');
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..','apps-script');
+const read=n=>fs.readFileSync(path.join(root,n),'utf8');
+
+const pub=read('Suivi_Conventions_Public_FamilleClone_V353.html');
+const adm=read('Suivi_Conventions_Admin_FamilleV190L.html');
+const detail=read('Suivi_PFMP_Classe_Detail_V156.html');
+const admin=read('Admin_PFMP.html');
+const missions=read('EUC_PFMP_DEV370_AdminTools.js');
+const missionUi=read('Ordres_Mission_PFMP_V368.html');
+const situations=read('EUC_PFMP_DEV420_SituationsEleves.js');
+const apprentis=read('EUC_PFMP_DEV275B_ApprentissageHistorique.js');
+
+assert.match(pub,/Mise à jour en cours… Les informations sont en train d’être recalculées/);
+assert.match(adm,/Mise à jour en cours… Les informations sont en train d’être recalculées/);
+assert.doesNotMatch(pub,/Contrôle rapide indisponible :/);
+assert.doesNotMatch(adm,/Contrôle rapide indisponible :/);
+assert.match(pub,/Exporter PDF/);assert.match(adm,/Exporter PDF/);assert.match(detail,/Exporter PDF/);
+assert.match(pub,/@media print/);assert.match(adm,/@media print/);assert.match(detail,/@media print/);
+assert.match(detail,/row-situation-admin/);assert.match(detail,/Début du contrat/);
+assert.match(apprentis,/x\.dateContrat=r\.debut/);
+assert.doesNotMatch(detail,/insertAdjacentHTML\('beforeend','<div class="app172b">APPRENTI<\/div>'/);
+assert.doesNotMatch(admin,/id="euc340-snapshot-home"/);
+assert.doesNotMatch(admin,/id="euc-dev417-pronote-classes"/);
+assert.equal((admin.match(/page=snapshot-pfmp-admin/g)||[]).length,1);
+assert.doesNotMatch(adm,/euc340SnapshotFamily|Maintenance Snapshot/);
+assert.match(missions,/EUC_DEV436_pdfMission/);assert.match(missions,/LISTE_ELEVES/);assert.match(missions,/application\/vnd\.google-apps\.document/);
+assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
+assert.match(situations,/EUC_DEV436_migrerVieScolaire/);assert.match(situations,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);
+console.log('✓ DEV436 ajustements UI, PDF et modèles');

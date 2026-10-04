@@ -89,7 +89,7 @@ function EUC_DEV420_clearRowsCache_(){
 }
 function EUC_DEV420_seedMotifs_(ctx){
   var seeds=[
-    {Code:'AVIS_SCOLAIRE',Libelle:'Dossier géré par avis scolaire',Ordre:10},
+    {Code:'VIE_SCOLAIRE',Libelle:'Dossier géré par la vie scolaire',Ordre:10},
     {Code:'DEMISSIONNAIRE',Libelle:'Démissionnaire',Ordre:20},
     {Code:'ABSENTEISTE',Libelle:'Absentéiste',Ordre:30}
   ],rows=EUC_DEV420_readRows_(EUC_DEV420_MOTIFS_TABLE_),have={},now=new Date().toISOString(),posts=[];
@@ -149,6 +149,34 @@ function EUC_DEV420_definirMotifActif(payload){
   EUC_ENT_grist('patch','/tables/'+EUC_DEV420_MOTIFS_TABLE_+'/records',{records:[{id:id,fields:{Actif:p.actif===true,
     Date_modification:new Date().toISOString(),Auteur_modification:EUC_DEV420_txt_(ctx.email,250)}}]});
   EUC_DEV420_clearRowsCache_();return EUC_DEV420_motifsAdmin();
+}
+
+/** Migration ciblée explicitement demandée : corrige l'ancien contresens
+ * « avis scolaire », conserve les affectations et supprime uniquement ce
+ * référentiel erroné lorsqu'il n'est plus référencé. */
+function EUC_DEV436_migrerVieScolaire(autorisation){
+  if(autorisation!=='AUTORISATION_CORRECTION_VIE_SCOLAIRE_DEV436')throw new Error('Autorisation explicite requise.');
+  var ctx=EUC_DEV420_adminWrite_(),motifs=EUC_DEV420_readRows_(EUC_DEV420_MOTIFS_TABLE_),old=motifs.filter(function(x){
+    return EUC_DEV420_txt_(x.Code).toUpperCase()==='AVIS_SCOLAIRE'||EUC_DEV420_txt_(x.Libelle).toLowerCase()==='dossier géré par avis scolaire';
+  }),correct=motifs.filter(function(x){return EUC_DEV420_txt_(x.Code).toUpperCase()==='VIE_SCOLAIRE'||EUC_DEV420_txt_(x.Libelle).toLowerCase()==='dossier géré par la vie scolaire';})[0];
+  if(!old.length)return{ok:true,migrees:0,supprimees:0,dejaCorrige:true};
+  if(!correct)throw new Error('Le motif correct « Dossier géré par la vie scolaire » doit exister avant la migration.');
+  var oldIds={};old.forEach(function(x){oldIds[Number(x.id)]=true});
+  var rows=EUC_DEV420_readRows_(EUC_DEV420_SITUATIONS_TABLE_).filter(function(x){return oldIds[EUC_DEV420_ref_(x.Statut)]}),targets={},tokens=[];
+  rows.forEach(function(x){
+    var y=EUC_DEV420_txt_(x.Annee_scolaire),c=EUC_DEV420_ref_(x.Classe),p=EUC_DEV420_ref_(x.Periode),key=[y,c,p].join('|');
+    if(!targets[key])targets[key]={annee:y,classeId:c,periodeId:p,famille:'BACPRO'};
+  });
+  var lock=LockService.getScriptLock();if(!lock.tryLock(10000))throw new Error('Une autre modification est en cours.');
+  try{
+    Object.keys(targets).forEach(function(k){var t=targets[k];try{var cat=EUC_DEV368_catalog(t.annee),cl=(cat.classes||[]).filter(function(x){return Number(x.classeId)===Number(t.classeId)})[0];if(cl)t.famille=cl.famille||'BACPRO'}catch(e){}if(typeof EUC_DEV425_beginMutation_==='function')tokens.push(EUC_DEV425_beginMutation_({annee:t.annee,famille:t.famille,classeId:t.classeId,periodeId:t.periodeId,reason:'migration-vie-scolaire'}));});
+    var now=new Date().toISOString(),author=EUC_DEV420_txt_(ctx.email,250);
+    if(rows.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV420_SITUATIONS_TABLE_+'/records',{records:rows.map(function(x){return{id:Number(x.id),fields:{Statut:Number(correct.id),Code_statut_snapshot:'VIE_SCOLAIRE',Libelle_statut_snapshot:'Dossier géré par la vie scolaire',Date_modification:now,Auteur_modification:author}}})});
+    EUC_ENT_grist('post','/tables/'+EUC_DEV420_MOTIFS_TABLE_+'/records/delete',old.map(function(x){return Number(x.id)}));
+    EUC_DEV420_clearRowsCache_();Object.keys(targets).forEach(function(k){var t=targets[k];EUC_DEV420_invalidate_(t.annee,t.famille,t.classeId,t.periodeId)});
+    tokens.forEach(function(token){if(token&&typeof EUC_DEV425_finishResult_==='function')EUC_DEV425_finishResult_(token,{ok:true,migration:'vie-scolaire'});});
+    return{ok:true,migrees:rows.length,supprimees:old.length,dejaCorrige:false};
+  }finally{try{lock.releaseLock();}catch(e){}}
 }
 
 function EUC_DEV420_situationKey_(annee,classe,periode,eleve){return [EUC_DEV420_txt_(annee),Number(classe)||0,Number(periode)||0,Number(eleve)||0].join('|');}

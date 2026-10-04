@@ -89,3 +89,11 @@ Décisions acquises : suite complète verte (319 tests) et maintien de `ANYONE_A
 4. Pour les cartes, créer un cache de géocodage séparé et réutilisable. Le choix du fournisseur, les quotas, la précision diffusée et la gestion des adresses personnelles ou ambiguës doivent être validés avant tout appel externe.
 5. Une fois ces choix acquis, proposer deux vues : carte filtrable des partenaires du lycée et carte des lieux de stage pour une classe/période. Les cartes consultent les coordonnées déjà géocodées et ne doivent jamais géocoder en série sur le chemin d'affichage.
 6. Conserver comme contrainte de recette les temps actuels de DEV434/DEV435 : les nouvelles fonctions seront accessibles depuis des pages ADMIN dédiées et ne devront ajouter aucun travail aux grilles et détails existants.
+
+## Après DEV436 — accès professeur principal (lot de sécurité séparé)
+
+1. Ajouter une table d'autorisations liée à l'année, la classe et le professeur principal, sans modifier les droits du Web App public.
+2. Générer depuis l'administration un code aléatoire à usage limité ; ne stocker que son empreinte et permettre sa révocation. Aucun courriel automatique n'est prévu.
+3. Après validation, créer une session courte strictement limitée à la classe et aux actions d'affectation `TELEPHONE` et `VISITE` ; refuser toute mutation d'élève, convention, situation ou paramétrage.
+4. Ne charger le formulaire d'affectation et l'annuaire filtré qu'après ouverture volontaire de l'accès professeur principal. Le chemin de consultation ordinaire doit rester identique et sans appel supplémentaire.
+5. Journaliser l'auteur, la classe, le type d'affectation et l'heure, sans consigner le code ni une liste nominative dans les journaux techniques.
