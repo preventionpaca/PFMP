@@ -162,4 +162,5 @@ const dev425Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev42
 const dev435Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev435-fast-ui-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev435Out);const dev435Count=Number((dev435Out.match(/(\d+) tests DEV435 interface rapide réussis/)||[])[1]||0);if(!dev435Count)process.exitCode=1;else n+=dev435Count;
 const dev436Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev436-adjustments-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev436Out);if(!/✓ DEV436/.test(dev436Out))process.exitCode=1;else n+=1;
 const dev437Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev437-apprentissage-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev437Out);if(!/✓ DEV437/.test(dev437Out))process.exitCode=1;else n+=1;
+const dev439Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev439-mission-apprentis-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev439Out);if(!/✓ DEV439/.test(dev439Out))process.exitCode=1;else n+=1;
 if(!process.exitCode)console.log(`\n${n} tests réussis.`);

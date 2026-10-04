@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## DEV439 préparée — apprentis dans les ordres de mission
+
+- Les apprentis affectés à un professeur visiteur sont désormais inclus dans la préparation et le PDF de l’ordre de mission, même s’ils n’ont pas de convention PFMP : leur contrat d’apprentissage constitue leur couverture pour la visite en entreprise.
+- Les élèves scolaires restent admis uniquement avec une convention valide ; les conventions annulées ou interrompues restent exclues.
+- La règle est commune au chemin historique et au générateur fusionnable actuel. Elle ne modifie ni les élèves, ni les conventions, ni les affectations, ni les moyens de transport.
+- Test ciblé DEV439 et suite complète verts : `node tests/run-tests.js` (350 tests).
+
 ## DEV438 déployée — ordre de mission et récapitulatif horaire
 
 - Chaque PDF d’ordre de mission, quel que soit le modèle Google Docs sélectionné, ajoute désormais une seconde page A4 intitulée `Récapitulatif horaire des visites en entreprise`.

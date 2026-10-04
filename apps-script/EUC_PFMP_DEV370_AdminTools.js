@@ -10,7 +10,7 @@ function EUC_DEV368_sansConvention(q){EUC_DEV368_admin();var o=[];EUC_DEV368_tar
 function EUC_DEV368_col(id,label,type){return{id:id,fields:{label:label,type:type||'Text'}}}
 function EUC_DEV368_ensure(){var ts=EUC_ENT_grist('get','/tables').tables||[],ex=ts.some(function(t){return t.id===EUC_DEV368_TABLE_}),c=EUC_DEV368_col;var cols=[c('Annee_scolaire','Année scolaire'),c('Classe_id','Classe ID','Int'),c('Classe_nom','Classe'),c('Periode_id','Période ID','Int'),c('Periode_libelle','Période'),c('Eleve_id','Élève ID','Int'),c('Eleve_nom','Élève'),c('Professeur_visiteur','Professeur visiteur'),c('Moyen_transport','Moyen de transport'),c('Date_modification','Date modification','DateTime')];if(!ex)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV368_TABLE_,columns:cols}]})}
 function EUC_DEV368_mapTransport(){EUC_DEV368_ensure();var m={};(EUC_IMPORT_lireRecords_(EUC_DEV368_TABLE_)||[]).forEach(function(r){m[EUC_DEV368_t(r.Annee_scolaire)+'|'+EUC_DEV368_n(r.Classe_id)+'|'+EUC_DEV368_n(r.Periode_id)+'|'+EUC_DEV368_n(r.Eleve_id)]={id:EUC_DEV368_n(r.id),mode:EUC_DEV368_t(r.Moyen_transport)}});return m}
-function EUC_DEV368_missions(q){EUC_DEV368_admin();var tm=EUC_DEV368_mapTransport(),g={};EUC_DEV368_targets(q).forEach(function(t){var d=EUC_DEV368_detail(t.annee,t.classeId,t.periode.id);(d.lignes||[]).forEach(function(x){var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||x.apprenti||!(EUC_DEV368_n(x.conventionId)>0))return;var k=prof+'|'+t.classeId+'|'+t.periode.id;if(!g[k])g[k]={key:k,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};var mk=t.annee+'|'+t.classeId+'|'+t.periode.id+'|'+EUC_DEV368_n(x.eleveId);g[k].lignes.push({eleveId:EUC_DEV368_n(x.eleveId),eleve:[x.nom,x.prenom].filter(Boolean).join(' '),entreprise:EUC_DEV368_t(x.entreprise),adresse:EUC_DEV368_t(x.adresseEntreprise),transport:tm[mk]?tm[mk].mode:''})})});return{ok:true,groups:Object.keys(g).map(function(k){return g[k]})}}
+function EUC_DEV368_missions(q){EUC_DEV368_admin();var tm=EUC_DEV368_mapTransport(),g={};EUC_DEV368_targets(q).forEach(function(t){var d=EUC_DEV368_detail(t.annee,t.classeId,t.periode.id);(d.lignes||[]).forEach(function(x){var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||!EUC_DEV374_missionEligible_(x))return;var k=prof+'|'+t.classeId+'|'+t.periode.id;if(!g[k])g[k]={key:k,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};var mk=t.annee+'|'+t.classeId+'|'+t.periode.id+'|'+EUC_DEV368_n(x.eleveId);g[k].lignes.push({eleveId:EUC_DEV368_n(x.eleveId),eleve:[x.nom,x.prenom].filter(Boolean).join(' '),entreprise:EUC_DEV368_t(x.entreprise),adresse:EUC_DEV368_t(x.adresseEntreprise),transport:tm[mk]?tm[mk].mode:''})})});return{ok:true,groups:Object.keys(g).map(function(k){return g[k]})}}
 function EUC_DEV368_sauverTransport(q){EUC_DEV368_admin();q=q||{};var allowed=['','Bus','Tram','Train','Véhicule personnel','Visio'],mode=EUC_DEV368_t(q.transport);if(allowed.indexOf(mode)<0)throw new Error('Transport invalide');EUC_DEV368_ensure();var y=EUC_DEV368_year(q.annee),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),eid=EUC_DEV368_n(q.eleveId),rows=EUC_IMPORT_lireRecords_(EUC_DEV368_TABLE_)||[],ex=rows.filter(function(r){return EUC_DEV368_t(r.Annee_scolaire)===y&&EUC_DEV368_n(r.Classe_id)===cid&&EUC_DEV368_n(r.Periode_id)===pid&&EUC_DEV368_n(r.Eleve_id)===eid})[0],fields={Annee_scolaire:y,Classe_id:cid,Classe_nom:EUC_DEV368_t(q.classe),Periode_id:pid,Periode_libelle:EUC_DEV368_t(q.periode),Eleve_id:eid,Eleve_nom:EUC_DEV368_t(q.eleve),Professeur_visiteur:EUC_DEV368_t(q.professeur),Moyen_transport:mode,Date_modification:new Date().toISOString()};if(ex)EUC_ENT_grist('patch','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{fields:fields}]});return{ok:true}}
 function EUC_DEV368_pdf(title,fn){var d=DocumentApp.create(title),b=d.getBody();fn(b);d.saveAndClose();var f=DriveApp.getFileById(d.getId()),pdf=f.getAs(MimeType.PDF).setName(title+'.pdf'),r={ok:true,name:title+'.pdf',mime:'application/pdf',base64:Utilities.base64Encode(pdf.getBytes())};f.setTrashed(true);return r}
 function EUC_DEV368_pdfSans(q){var d=EUC_DEV368_sansConvention(q);return EUC_DEV368_pdf('Eleves_sans_convention_'+EUC_DEV368_year(q&&q.annee),function(b){b.appendParagraph('ÉLÈVES SANS CONVENTION').setHeading(DocumentApp.ParagraphHeading.HEADING1);b.appendParagraph('Année scolaire : '+EUC_DEV368_year(q&&q.annee));var rows=[['Classe','Période','Élève','Professeur principal']];d.lignes.forEach(function(x){rows.push([x.classe,x.periode,x.eleve,x.professeurPrincipal||''])});b.appendTable(rows)})}
@@ -139,6 +139,18 @@ function EUC_DEV371_pdfSans(q){
 
 
 /* DEV374 MISSIONS FIABLES */
+function EUC_DEV374_isApprenti_(x){
+  x=x||{};
+  if(x.apprenti===true||x.apprenti===1)return true;
+  var flag=EUC_DEV368_t(x.apprenti).toUpperCase(),code=EUC_DEV368_t(x.statutCode||x.statut).toUpperCase();
+  return ['1','TRUE','VRAI','OUI','YES'].indexOf(flag)>=0||code.indexOf('APPRENT')>=0||code==='MIXTE';
+}
+function EUC_DEV374_missionEligible_(x){
+  if(EUC_DEV374_isApprenti_(x))return true;
+  var code=EUC_DEV368_t((x||{}).statutCode||(x||{}).statut).toUpperCase();
+  if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return false;
+  return EUC_DEV368_n((x||{}).conventionId)>0;
+}
 function EUC_DEV374_missionDetail_(y,c,p){
   var d=EUC_DEV190_buildHistoricalDetail_(y,c,p);
   try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e){}
@@ -154,10 +166,7 @@ function EUC_DEV374_missions(q){
   EUC_DEV368_targets(q).forEach(function(t){
     var d=EUC_DEV374_missionDetail_(t.annee,t.classeId,t.periode.id);
     (d.lignes||[]).forEach(function(x){
-      var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||x.apprenti)return;
-      var code=EUC_DEV368_t(x.statutCode||x.statut).toUpperCase();
-      if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return;
-      if(!(EUC_DEV368_n(x.conventionId)>0))return;
+      var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||!EUC_DEV374_missionEligible_(x))return;
       var k=prof+'|'+t.classeId+'|'+t.periode.id;
       if(!g[k])g[k]={key:k,famille:t.famille,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};
       var mk=t.annee+'|'+t.classeId+'|'+t.periode.id+'|'+EUC_DEV368_n(x.eleveId);

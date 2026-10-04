@@ -15,6 +15,7 @@
 - Toute modification administrative est historisée. Une annulation est logique, jamais une suppression physique.
 - Suivi téléphonique et visite en entreprise sont deux affectations distinctes. Aucun enseignant n’est codé en dur.
 - Les ordres de mission utilisent un modèle Google Docs fusionnable choisi par famille. Le PDF fourni sert de référence visuelle ; les futurs modèles doivent rester éditables pour garantir le remplacement fiable des champs et de la liste d'élèves.
+- Un apprenti affecté à un professeur visiteur figure dans l’ordre de mission de la période, même sans convention PFMP. Les élèves scolaires n’y figurent qu’avec une convention valide ; une convention annulée ou interrompue reste exclue.
 - Une situation administrative PFMP est liée à une année, une classe, une période et un élève. Elle ne remplace ni Pronote ni une convention et ne peut être appliquée qu’à un élève actuellement sans convention, non apprenti et sans incident de convention.
 - Le référentiel de situations est administrable. La désactivation empêche les nouvelles affectations mais conserve l’historique ; le retrait d’une affectation est logique, jamais une suppression physique.
 - Un motif peut être configuré pour retirer ou non l’élève du compteur `Sans convention`. Les trois motifs initiaux (`Dossier géré par la vie scolaire`, `Démissionnaire`, `Absentéiste`) retirent l’élève de ce compteur.
