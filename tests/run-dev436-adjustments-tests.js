@@ -33,12 +33,15 @@ assert.match(missions,/EUC_DEV438_compactMissionPage_/);assert.doesNotMatch(miss
 assert.match(missions,/insertSectionBreak/);assert.match(missions,/flipPageOrientation:true/);
 assert.match(missions,/function EUC_DEV440_styleLandscapeSection_/);assert.match(missions,/sectionBreakIndex\)\+1/);
 assert.match(missions,/EUC_DEV440_styleLandscapeSection_\(id,landscapeSectionIndex\)/);
-assert.match(missions,/\['N°','Élève','Entreprise','Adresse','Contact\\nentreprise','Contact\\ntuteur','Date','Arrivée','Départ','Lieu de\\ndépart','Km','Transport'\]/);
+assert.match(missions,/\['N°','Élève','Entreprise','Adresse','Contact\\nentreprise','Contact\\ntuteur','Date','Lieu de\\ndépart','Heure\\nd’arrivée','Nombre de\\nkilomètres','Heure de\\ndépart','Moyen de\\ntransport'\]/);
+assert.match(missions,/Justificatifs : joindre tous les justificatifs nécessaires/);
 assert.match(missions,/Précisions complémentaires/);assert.match(missions,/Signature du professeur/);assert.match(missions,/Signature du directeur délégué aux formations/);
 assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
 assert.match(missionUi,/Chaque PDF comprend l’ordre de mission puis le récapitulatif horaire/);
 assert.match(missionUi,/missionToken:g\.pdfToken/);assert.match(missionUi,/PDF généré en/);assert.match(missionUi,/id='last-pdf'/);assert.match(missionUi,/Télécharger à nouveau/);
 assert.match(missionUi,/Envoyer par e-mail/);assert.match(missionUi,/EUC_DEV440_prepareMissionTransportEmail/);assert.match(missionUi,/EUC_DEV440_sendMissionTransportEmail/);
 assert.match(missions,/MailApp\.sendEmail/);assert.match(missions,/replyTo/);assert.match(missions,/Véhicule personnel/);
+assert.match(missions,/attachments:\[attachment\]/);assert.match(missions,/EUC_DEV442_validateMissionTemplate_/);
+assert.doesNotMatch(missions,/setMarginLeft\(125\)/);assert.match(missions,/EUC_DEV442_insertMissionTable_/);
 assert.match(situations,/EUC_DEV436_migrerVieScolaire/);assert.match(situations,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);
 console.log('✓ DEV436 ajustements UI, PDF et modèles');

@@ -49,6 +49,10 @@ const mail=ctx.EUC_DEV440_prepareMissionTransportEmail({groupKey:'x'});
 assert.equal(mail.to,'visiteur@lycee-les-eucalyptus.org');
 assert.match(mail.subject,/TCAR.*PFMP n°1/);
 assert.match(mail.body,/véhicule personnel[\s\S]*28\/09\/2026[\s\S]*16\/10\/2026|28\/09\/2026[\s\S]*16\/10\/2026[\s\S]*véhicule personnel/);
+assert.match(mail.body,/Vous trouverez en pièce jointe l’ordre de mission/);
+assert.match(mail.body,/bus, tramway, à pied/);
+assert.match(mail.body,/Sans retour de votre part/);
+assert.match(mail.body,/Sincères salutations,[\s\S]*Rudy Test/);
 assert.equal(mail.replyTo,'rudy@lycee-les-eucalyptus.org');
 
 assert.ok((manifest.dependencies.enabledAdvancedServices||[]).some(service=>service.serviceId==='docs'&&service.userSymbol==='Docs'),

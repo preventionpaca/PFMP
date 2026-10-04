@@ -11,7 +11,7 @@ function EUC_DEV368_col(id,label,type){return{id:id,fields:{label:label,type:typ
 function EUC_DEV368_ensure(){var ts=EUC_ENT_grist('get','/tables').tables||[],ex=ts.some(function(t){return t.id===EUC_DEV368_TABLE_}),c=EUC_DEV368_col;var cols=[c('Annee_scolaire','Année scolaire'),c('Classe_id','Classe ID','Int'),c('Classe_nom','Classe'),c('Periode_id','Période ID','Int'),c('Periode_libelle','Période'),c('Eleve_id','Élève ID','Int'),c('Eleve_nom','Élève'),c('Professeur_visiteur','Professeur visiteur'),c('Moyen_transport','Moyen de transport'),c('Date_modification','Date modification','DateTime')];if(!ex)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV368_TABLE_,columns:cols}]})}
 function EUC_DEV368_mapTransport(){return EUC_DEV440_transportMap_()}
 function EUC_DEV368_missions(q){EUC_DEV368_admin();var tm=EUC_DEV368_mapTransport(),g={};EUC_DEV368_targets(q).forEach(function(t){var d=EUC_DEV368_detail(t.annee,t.classeId,t.periode.id);(d.lignes||[]).forEach(function(x){var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||!EUC_DEV374_missionEligible_(x))return;var k=prof+'|'+t.classeId+'|'+t.periode.id;if(!g[k])g[k]={key:k,professeur:prof,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,lignes:[]};var mk=t.annee+'|'+t.classeId+'|'+t.periode.id+'|'+EUC_DEV368_n(x.eleveId);g[k].lignes.push({eleveId:EUC_DEV368_n(x.eleveId),eleve:[x.nom,x.prenom].filter(Boolean).join(' '),entreprise:EUC_DEV368_t(x.entreprise),adresse:EUC_DEV368_t(x.adresseEntreprise),transport:tm[mk]?tm[mk].mode:''})})});return{ok:true,groups:Object.keys(g).map(function(k){return g[k]})}}
-function EUC_DEV368_sauverTransport(q){EUC_DEV368_admin();q=q||{};var allowed=['','Bus','Tram','Train','Véhicule personnel','Visio'],mode=EUC_DEV368_t(q.transport);if(allowed.indexOf(mode)<0)throw new Error('Transport invalide');EUC_DEV368_ensure();var y=EUC_DEV368_year(q.annee),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),eid=EUC_DEV368_n(q.eleveId),rows=EUC_IMPORT_lireRecords_(EUC_DEV368_TABLE_)||[],ex=rows.filter(function(r){return EUC_DEV368_t(r.Annee_scolaire)===y&&EUC_DEV368_n(r.Classe_id)===cid&&EUC_DEV368_n(r.Periode_id)===pid&&EUC_DEV368_n(r.Eleve_id)===eid})[0],fields={Annee_scolaire:y,Classe_id:cid,Classe_nom:EUC_DEV368_t(q.classe),Periode_id:pid,Periode_libelle:EUC_DEV368_t(q.periode),Eleve_id:eid,Eleve_nom:EUC_DEV368_t(q.eleve),Professeur_visiteur:EUC_DEV368_t(q.professeur),Moyen_transport:mode,Date_modification:new Date().toISOString()};if(ex)EUC_ENT_grist('patch','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{fields:fields}]});EUC_DEV440_updateCachedTransport_(q.missionToken,eid,mode);return{ok:true}}
+function EUC_DEV368_sauverTransport(q){EUC_DEV368_admin();q=q||{};var allowed=['','Bus','Tram','Tramway','Train','À pied','Véhicule personnel','Visio','Visioconférence'],mode=EUC_DEV368_t(q.transport);if(allowed.indexOf(mode)<0)throw new Error('Transport invalide');EUC_DEV368_ensure();var y=EUC_DEV368_year(q.annee),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),eid=EUC_DEV368_n(q.eleveId),rows=EUC_IMPORT_lireRecords_(EUC_DEV368_TABLE_)||[],ex=rows.filter(function(r){return EUC_DEV368_t(r.Annee_scolaire)===y&&EUC_DEV368_n(r.Classe_id)===cid&&EUC_DEV368_n(r.Periode_id)===pid&&EUC_DEV368_n(r.Eleve_id)===eid})[0],fields={Annee_scolaire:y,Classe_id:cid,Classe_nom:EUC_DEV368_t(q.classe),Periode_id:pid,Periode_libelle:EUC_DEV368_t(q.periode),Eleve_id:eid,Eleve_nom:EUC_DEV368_t(q.eleve),Professeur_visiteur:EUC_DEV368_t(q.professeur),Moyen_transport:mode,Date_modification:new Date().toISOString()};if(ex)EUC_ENT_grist('patch','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_DEV368_TABLE_+'/records',{records:[{fields:fields}]});EUC_DEV440_updateCachedTransport_(q.missionToken,eid,mode);return{ok:true}}
 function EUC_DEV368_pdf(title,fn){var d=DocumentApp.create(title),b=d.getBody();fn(b);d.saveAndClose();var f=DriveApp.getFileById(d.getId()),pdf=f.getAs(MimeType.PDF).setName(title+'.pdf'),r={ok:true,name:title+'.pdf',mime:'application/pdf',base64:Utilities.base64Encode(pdf.getBytes())};f.setTrashed(true);return r}
 function EUC_DEV368_pdfSans(q){var d=EUC_DEV368_sansConvention(q);return EUC_DEV368_pdf('Eleves_sans_convention_'+EUC_DEV368_year(q&&q.annee),function(b){b.appendParagraph('ÉLÈVES SANS CONVENTION').setHeading(DocumentApp.ParagraphHeading.HEADING1);b.appendParagraph('Année scolaire : '+EUC_DEV368_year(q&&q.annee));var rows=[['Classe','Période','Élève','Professeur principal']];d.lignes.forEach(function(x){rows.push([x.classe,x.periode,x.eleve,x.professeurPrincipal||''])});b.appendTable(rows)})}
 function EUC_DEV368_prof(name){var n=EUC_DEV368_t(name).toUpperCase(),p=(EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP')||[]).filter(function(x){return [x.Civilite,x.Prenom,x.Nom].filter(Boolean).join(' ').trim().toUpperCase()===n})[0]||{},disc=EUC_DEV368_t(p.Discipline);return{nom:EUC_DEV368_t(p.Nom)||name,prenom:EUC_DEV368_t(p.Prenom),civilite:EUC_DEV368_t(p.Civilite),discipline:disc,fonction:disc?'Professeur — '+disc:'Professeur'}}
@@ -294,9 +294,12 @@ function EUC_DEV438_compactMissionPage_(body,table){
      seulement la largeur du tableau et sa marge droite : toucher aux marges
      haute/basse déplacerait le titre sous le logo, et une marge gauche trop
      faible ferait chevaucher le tableau avec le cartouche. */
-  try{body.setMarginLeft(125).setMarginRight(24)}catch(e){}
+  /* Conserver impérativement la marge gauche du modèle : le cartouche et le
+     logo sont positionnés relativement à cette marge. La changer après la
+     copie décale l'image hors de la page. Seule la marge droite est resserrée. */
+  try{body.setMarginRight(24)}catch(e){}
   EUC_DEV438_formatTable_(table,[88,92,152,88],8,7);
-  var index=body.getChildIndex(table),removed=0;
+  var anchor=arguments.length>2&&arguments[2]?arguments[2]:table,index=body.getChildIndex(anchor),removed=0;
   /* Le modèle officiel contient des paragraphes de placement entre le
      tableau et les signatures. Ils faisaient basculer « Le Proviseur » et
      les deux mentions sur une seconde page. On ne retire que les lignes
@@ -309,6 +312,16 @@ function EUC_DEV438_compactMissionPage_(body,table){
   for(var i=Math.max(0,index+1);i<body.getNumChildren();i++){
     var el=body.getChild(i);if(el.getType()===DocumentApp.ElementType.PARAGRAPH)EUC_DEV438_compactParagraph_(el.asParagraph());
   }
+}
+function EUC_DEV442_insertMissionTable_(body,index,rows){
+  /* Un tableau extérieur invisible crée le retrait nécessaire sans toucher à
+     la marge globale du modèle et donc sans déplacer le logo flottant. */
+  var layout=body.insertTable(index,[['','']]);
+  try{layout.setBorderWidth(0).setColumnWidth(0,50).setColumnWidth(1,420)}catch(e){}
+  for(var c=0;c<2;c++)try{layout.getCell(0,c).setPaddingTop(0).setPaddingBottom(0).setPaddingLeft(0).setPaddingRight(0)}catch(e2){}
+  var holder=layout.getCell(0,1);try{holder.clear()}catch(e3){}
+  var table=holder.appendTable(rows);
+  return{layout:layout,table:table};
 }
 function EUC_DEV441_formatMissionSignature_(body){
   var fait=null,proviseur=null,after=false;
@@ -385,8 +398,8 @@ function EUC_DEV440_prepareMissionTransportEmail(q){
   var ctx=EUC_DEV368_admin(),g=EUC_DEV440_groupForPdf_(q),sender=EUC_DEV368_t(ctx.nom||ctx.email),replyTo=EUC_DEV368_t(ctx.email);
   if(!g)throw new Error('Groupe de mission introuvable.');
   var recipient=EUC_DEV440_profEmail_(g.professeur);if(!recipient)throw new Error('Aucune adresse électronique valide pour ce professeur.');
-  var subject='[PFMP] Moyen de transport — '+g.classe+' — '+g.periode;
-  var body='Bonjour '+g.professeur+',\n\nDans le cadre des visites en entreprise de la classe '+g.classe+' pendant la période '+g.periode+' ('+(g.debut||'date de début à préciser')+' au '+(g.fin||'date de fin à préciser')+'), le véhicule personnel est retenu par défaut pour établir votre ordre de mission.\n\nMerci de nous répondre par retour de courriel si vous utilisez un autre moyen de transport, en nous indiquant lequel.\n\nCordialement,\n'+(sender||'Bureau des entreprises');
+  var subject='[PFMP] Ordre de mission — '+g.classe+' — '+g.periode;
+  var body='Bonjour,\n\nVous trouverez en pièce jointe l’ordre de mission concernant la classe '+g.classe+' pour la période '+g.periode+' ('+(g.debut||'date de début à préciser')+' au '+(g.fin||'date de fin à préciser')+').\n\nLe véhicule personnel est retenu par défaut pour l’ensemble de vos visites. Si vous effectuez les visites avec un autre moyen de transport (bus, tramway, à pied ou, par nécessité, en visioconférence), merci de nous le signaler par retour de courriel, en précisant les visites concernées et la modalité choisie pour chacune.\n\nSans retour de votre part, le véhicule personnel restera le mode de déplacement retenu pour toutes vos visites.\n\nSincères salutations,\n\n'+(sender||'Bureau des entreprises');
   return{ok:true,to:recipient,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,professeur:g.professeur,classe:g.classe,periode:g.periode};
 }
 function EUC_DEV440_sendMissionTransportEmail(q){
@@ -394,11 +407,12 @@ function EUC_DEV440_sendMissionTransportEmail(q){
   try{
     var duplicateKey='DEV440_MAIL_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,[prepared.to,prepared.subject,prepared.replyTo].join('|'))).slice(0,24),cache=CacheService.getScriptCache();
     if(cache.get(duplicateKey))throw new Error('Ce message vient déjà d’être envoyé. Patientez une minute avant un nouvel envoi.');
-    var options={to:prepared.to,subject:prepared.subject,body:prepared.body,name:'PFMP — Lycée Les Eucalyptus'};
+    var mission=EUC_DEV436_pdfMission(q),attachment=Utilities.newBlob(Utilities.base64Decode(mission.base64),mission.mime,mission.name);
+    var options={to:prepared.to,subject:prepared.subject,body:prepared.body,name:'PFMP — Lycée Les Eucalyptus',attachments:[attachment]};
     if(prepared.replyTo)options.replyTo=prepared.replyTo;
     MailApp.sendEmail(options);cache.put(duplicateKey,'1',60);
   }finally{lock.releaseLock()}
-  return{ok:true,to:prepared.to,subject:prepared.subject};
+  return{ok:true,to:prepared.to,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs};
 }
 function EUC_DEV440_docsRequest_(documentId,suffix,method,payload){
   if(typeof Docs!=='undefined'&&Docs.Documents){
@@ -428,14 +442,16 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   title.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(12).setSpacingAfter(4);
   var meta=body.appendParagraph((g.classe||'')+' — '+(g.periode||'')+' — '+(g.debut||'')+' au '+(g.fin||''));
   meta.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8).setSpacingAfter(5);
-  var rows=[['N°','Élève','Entreprise','Adresse','Contact\nentreprise','Contact\ntuteur','Date','Arrivée','Départ','Lieu de\ndépart','Km','Transport']];
+  var rows=[['N°','Élève','Entreprise','Adresse','Contact\nentreprise','Contact\ntuteur','Date','Lieu de\ndépart','Heure\nd’arrivée','Nombre de\nkilomètres','Heure de\ndépart','Moyen de\ntransport']];
   (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'',x.contactEntreprise||'',x.contactTuteur||'','','','','','',x.transport||''])});
   var table=body.appendTable(rows);table.setBorderColor('#6f9f95');
   for(var c=0;c<12;c++)table.getCell(0,c).setBackgroundColor('#e7f5f1');
   /* 630 pt : marge de sécurité pour éviter toute coupe lors de l'export PDF. */
-  EUC_DEV438_formatTable_(table,[18,50,55,90,98,98,32,32,32,40,25,60],6,6);
+  EUC_DEV438_formatTable_(table,[18,45,50,82,93,93,28,38,32,30,32,89],6,6);
   var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
-  help.setFontSize(7).setItalic(true).setSpacingBefore(5).setSpacingAfter(4);
+  help.setFontSize(7).setItalic(true).setSpacingBefore(5).setSpacingAfter(2);
+  var receipts=body.appendParagraph('Justificatifs : joindre tous les justificatifs nécessaires pour bénéficier d’une prise en charge financière.');
+  receipts.setFontSize(7).setItalic(true).setSpacingBefore(0).setSpacingAfter(4);
   var precisionTitle=body.appendParagraph('Précisions complémentaires');
   precisionTitle.setBold(true).setFontSize(8).setSpacingBefore(0).setSpacingAfter(2);
   var precision=body.appendTable([[''],[''],[''],[''],[''],['']]);precision.setBorderColor('#6f9f95');
@@ -445,6 +461,11 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   try{signatures.setColumnWidth(0,312).setColumnWidth(1,312);signatures.getRow(0).setMinimumHeight(42)}catch(e4){}
   for(var s=0;s<2;s++){try{signatures.getCell(0,s).setPaddingTop(3).setPaddingLeft(4).editAsText().setBold(true).setFontSize(8)}catch(e5){}}
 }
+function EUC_DEV442_validateMissionTemplate_(body){
+  var text=body.getText(),required=['NOM','PRENOM','DISCIPLINE','CLASSE','PERIODE','DEBUT','FIN','DATE','LISTE_ELEVES'];
+  var missing=required.filter(function(key){return text.indexOf('{{'+key+'}}')<0});
+  if(missing.length)throw new Error('Le modèle d’ordre de mission est incomplet. Champs de fusion manquants : '+missing.map(function(x){return'{{'+x+'}}'}).join(', '));
+}
 function EUC_DEV436_pdfMission(q){
   var started=new Date().getTime();q=q||{};var g=EUC_DEV440_groupForPdf_(q);
   if(!g)throw new Error('Groupe de mission introuvable.');
@@ -453,12 +474,13 @@ function EUC_DEV436_pdfMission(q){
   var copy=DriveApp.getFileById(model.documentId).makeCopy('TEMP_Ordre_de_mission_'+safe),id=copy.getId();
   try{
     var doc=DocumentApp.openById(id),body=doc.getBody(),date=Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy');
+    EUC_DEV442_validateMissionTemplate_(body);
     EUC_DEV436_replace_(body,'NOM',p.nom||g.professeur);EUC_DEV436_replace_(body,'PRENOM',p.prenom||'');
     EUC_DEV436_replace_(body,'DISCIPLINE',p.discipline||'Professeur');EUC_DEV436_replace_(body,'CLASSE',g.classe);
     EUC_DEV436_replace_(body,'PERIODE',g.periode);EUC_DEV436_replace_(body,'DEBUT',g.debut||'');EUC_DEV436_replace_(body,'FIN',g.fin||'');EUC_DEV436_replace_(body,'DATE',date);
     var range=body.findText('\\{\\{LISTE_ELEVES\\}\\}'),rows=[['Élève','Entreprise','Adresse','Transport']];
     g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport||''])});
-    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table);EUC_DEV441_formatMissionSignature_(body)}
+    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var inserted=EUC_DEV442_insertMissionTable_(body,index,rows),table=inserted.table;table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table,inserted.layout);EUC_DEV441_formatMissionSignature_(body)}
     else EUC_DEV436_replace_(body,'LISTE_ELEVES',g.lignes.map(function(x){return x.eleve}).join(' · '));
     doc.saveAndClose();
     var landscapeSectionIndex=EUC_DEV440_insertLandscapeSection_(id);

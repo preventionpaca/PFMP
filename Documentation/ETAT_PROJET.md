@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## DEV442 déployée — courriel avec ordre de mission et récapitulatif final
+
+- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `785`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` est identique aux sources locales.
+- Le bouton d’envoi prépare désormais le message demandé, signé par l’administrateur connecté, et joint le PDF d’ordre de mission réellement généré avec le modèle sélectionné. L’aperçu et la confirmation restent obligatoires avant tout envoi ; aucun courriel n’a été envoyé pendant la recette.
+- La page 2 paysage suit l’ordre `Date`, `Lieu de départ`, `Heure d’arrivée`, `Nombre de kilomètres`, `Heure de départ`, puis `Moyen de transport`, tout en conservant les contacts entreprise et tuteur. La consigne de justificatifs, six lignes de précisions complémentaires et les deux signatures sont présentes.
+- La génération ne modifie plus la marge gauche globale du modèle Google Docs : le logo et le cartouche restent à leur position de modèle. Le tableau des élèves est décalé au moyen d’un conteneur local, sans pousser l’ensemble de la page hors zone imprimable.
+- Avant fusion, le générateur vérifie les marqueurs `{{NOM}}`, `{{PRENOM}}`, `{{DISCIPLINE}}`, `{{CLASSE}}`, `{{PERIODE}}`, `{{DEBUT}}`, `{{FIN}}`, `{{DATE}}` et `{{LISTE_ELEVES}}`. Le texte statique autour de ces marqueurs, notamment `Période n°`, peut être modifié librement.
+- Contrôle réel ADMIN : TMP3D / PFMP n°1 charge deux ordres, inclut l’apprenti et génère le PDF avec le modèle actif en `34,8 s`, sans erreur de fusion. La suite complète est verte : `node tests/run-tests.js` (`368` tests).
+- Aucun accès à `3pnVrygfNn7c`, aucun import Pronote, aucune écriture élève/convention, aucun courriel, aucun code PP généré et aucun géocodage réel pendant la recette.
+
 ## DEV441 R2 déployée — accès PP, géocodage et recherche SIRET
 
 - Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `784`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` est identique aux sources locales.
@@ -68,9 +78,9 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV441 R2, version Apps Script immuable `784`.
+- Version active déployée le 4 octobre 2026 : DEV442, version Apps Script immuable `785`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `784`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `785`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.

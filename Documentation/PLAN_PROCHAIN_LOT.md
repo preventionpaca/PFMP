@@ -1,3 +1,11 @@
+## Après DEV442 — recettes contrôlées et optimisations séparées
+
+1. Modèle : après modification du Google Docs par l’utilisateur, conserver les neuf marqueurs de fusion puis générer un ordre de mission réel. Le validateur doit refuser clairement un modèle incomplet avant toute copie ou envoi.
+2. Courriel : effectuer un premier envoi réel seulement sur action ADMIN explicitement confirmée, après contrôle du destinataire, du texte, de la pièce jointe et du nom de signature. Aucun test automatique ne doit envoyer de message.
+3. Performance missions : la génération réelle DEV442 est fonctionnelle mais mesurée à `34,8 s`. Profiler séparément copie Google Docs, insertion de section paysage et export PDF ; ne pas dégrader le chemin rapide des pages de suivi.
+4. Recette PP : générer volontairement un premier code sur une classe/période choisie, vérifier son expiration au dernier jour et les seules affectations téléphone/visite. Aucun code n’a encore été créé.
+5. Recette géocodage : lancer depuis l’administration un petit lot France, contrôler les scores et valider manuellement les résultats ambigus. Monaco et les autres pays restent hors traitement automatique.
+
 ## Après DEV441 — contrôles et optimisations séparés
 
 1. Recette PP : générer volontairement un premier code sur une classe/période de test métier, vérifier l’expiration au dernier jour, l’affectation téléphone/visite et la reconstruction atomique du snapshot. Aucun code n’a été créé pendant DEV441.
