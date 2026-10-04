@@ -225,6 +225,7 @@ const DETAIL_INIT=<?!= detailJson ?>;
   const sendTable=document.getElementById('sendTable'),mailParams=document.getElementById('mailParams'),mailModal=document.getElementById('mailModal'),mailModalText=document.getElementById('mailModalText'),mailTo=document.getElementById('mailTo'),mailCc=document.getElementById('mailCc'),mailCancel=document.getElementById('mailCancel'),mailConfirm=document.getElementById('mailConfirm');
 
   let yearContext=ANNEE_CTX||{annees:[],active:''},detail=DETAIL_INIT||{},selectedProfPhone=null,selectedProfVisit=null,pendingMail=null;
+  let professeursLoading=false,professeursWaiters=[];
 
   function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
   function fmtPfmpDate(v){const m=String(v||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'').trim()}
@@ -291,15 +292,37 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
     refreshAssignButtons();
   }
 
+  function ensureProfesseurs(done){
+    if(detail.professeursDisponiblesCharges){done();return}
+    professeursWaiters.push(done);
+    if(professeursLoading)return;
+    professeursLoading=true;
+    google.script.run.withSuccessHandler(function(r){
+      detail.professeursDisponibles=(r&&r.professeurs)||[];
+      detail.professeursDisponiblesCharges=true;
+      professeursLoading=false;
+      const q=professeursWaiters.splice(0);q.forEach(function(fn){fn()});
+    }).withFailureHandler(function(e){
+      professeursLoading=false;professeursWaiters=[];
+      showStatus('Erreur de chargement des professeurs : '+(e&&e.message||e),'err');
+    }).EUC_DEV435_professeursDisponibles();
+  }
+
   function bindProfAutocomplete(input,box,setter){
-    input.oninput=function(){
+    function search(){
       setter(null);refreshAssignButtons();const q=norm(input.value).trim();
       if(!q){box.style.display='none';return}
+      if(!detail.professeursDisponiblesCharges){
+        box.innerHTML='<div class="prof-option">Chargement des professeurs…</div>';box.style.display='block';
+        ensureProfesseurs(search);return;
+      }
       const found=(detail.professeursDisponibles||[]).filter(p=>norm(p.nom+' '+p.email+' '+p.discipline).includes(q)).slice(0,15);
       box.innerHTML=found.length?found.map(p=>'<div class="prof-option" data-prof="'+p.id+'"><b>'+esc(p.nom)+'</b><div class="small">'+esc([p.discipline,p.email].filter(Boolean).join(' · '))+'</div></div>').join(''):'<div class="prof-option">Aucun professeur trouvé</div>';
       box.style.display='block';
       Array.from(box.querySelectorAll('[data-prof]')).forEach(function(el){el.onclick=function(){const p=(detail.professeursDisponibles||[]).find(x=>String(x.id)===String(el.dataset.prof));if(!p)return;setter(p);input.value=p.nom;box.style.display='none';showStatus('Professeur sélectionné : '+p.nom,'info');refreshAssignButtons()}});
-    };
+    }
+    input.oninput=search;
+    input.onfocus=function(){if(detail.peutModifier&&!detail.professeursDisponiblesCharges)ensureProfesseurs(function(){if(input.value.trim())search()})};
   }
 
   function assign(type,prof,btn){

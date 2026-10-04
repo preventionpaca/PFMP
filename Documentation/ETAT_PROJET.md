@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## DEV435 en préparation — réparations sans régression de performance
+
+- Les contrôles rapides ADMIN et PUBLIC utilisent toujours les 53 blocs déjà préchargés dans la grille. La fenêtre est maintenant repositionnée même lorsque son contenu vient du cache local ; aucun appel Grist n'est ajouté au survol.
+- Le détail ADMIN réaffiche les sélections et la barre d'affectation téléphone/visite. L'annuaire des professeurs n'est lu qu'au premier focus dans un champ de professeur, jamais pendant l'ouverture de la classe.
+- La page « Élèves sans convention » exige désormais un niveau, une période et une classe. Elle lit un seul snapshot détaillé au lieu de reconstruire toutes les classes et périodes du lycée.
+- Les moyens de transport des ordres de mission restent enregistrables individuellement, ligne par ligne. Un retour visible `Enregistrement…`, `Enregistré` ou `Échec` confirme l'opération sans recharger la classe.
+- Tests ciblés : `node tests/run-dev435-fast-ui-tests.js`, `node tests/run-dev420-situations-tests.js` et `node tests/run-dev417-ui-tests.js` verts. Aucun appel métier ou écriture Grist n'a été exécuté par ces tests.
+
 - Version active déployée le 4 octobre 2026 : DEV434 R3, version Apps Script immuable `765`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
 - Déploiements ADMIN et PUBLIC : tous deux positionnés sur `765`, avec leurs identifiants et URL historiques conservés.

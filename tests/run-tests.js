@@ -159,4 +159,5 @@ const dev420Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev42
 const dev422Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev422-family-snapshot-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev422Out);if(!/✓ DEV422/.test(dev422Out))process.exitCode=1;else n+=1;
 const dev424Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev424-snapshot-trigger-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev424Out);if(!/✓ DEV424/.test(dev424Out))process.exitCode=1;else n+=1;
 const dev425Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev425-atomic-freshness-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev425Out);if(!/✓ DEV425/.test(dev425Out))process.exitCode=1;else n+=1;
+const dev435Out=cp.execFileSync(process.execPath,[path.join(__dirname,'run-dev435-fast-ui-tests.js')],{encoding:'utf8'});process.stdout.write('\n'+dev435Out);const dev435Count=Number((dev435Out.match(/(\d+) tests DEV435 interface rapide réussis/)||[])[1]||0);if(!dev435Count)process.exitCode=1;else n+=dev435Count;
 if(!process.exitCode)console.log(`\n${n} tests réussis.`);

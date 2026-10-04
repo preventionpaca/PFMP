@@ -40,6 +40,11 @@ function EUC_DEV401_adminDetail(e){
     var periode=Number(e&&e.parameter&&e.parameter.periode)||0;
     if(!annee||!classe||!periode)throw new Error('Contexte détail incomplet.');
     var d=EUC_DEV416_finalDetail_(annee,famille,classe,periode);
+    /* Le snapshot détaillé reste le chemin rapide. Les droits admin sont
+       ajoutés sans relire la table des professeurs au chargement initial. */
+    d.peutModifier=!!EUC_V156_contexteAdmin_();
+    d.professeursDisponibles=[];
+    d.professeursDisponiblesCharges=false;
     var tpl=HtmlService.createTemplateFromFile('Suivi_PFMP_Classe_Detail_V156');
     tpl.config=JSON.stringify({baseUrl:typeof EUC_DEV347_ADMIN_URL_!=='undefined'?EUC_DEV347_ADMIN_URL_:ScriptApp.getService().getUrl()});
     tpl.anneeContextJson=JSON.stringify(ctx||{});
@@ -81,4 +86,9 @@ function EUC_DEV401_adminDetail(e){
   } finally {
     if(trace)EUC_DEV394_finish_('EUC_DEV401_adminDetail',Date.now()-t0);
   }
+}
+
+function EUC_DEV435_professeursDisponibles(){
+  if(!EUC_V156_contexteAdmin_())throw new Error('Accès administrateur requis.');
+  return {ok:true,professeurs:EUC_V156_professeurs_()||[]};
 }

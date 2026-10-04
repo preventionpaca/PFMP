@@ -662,7 +662,7 @@ window.EUC_DEV422_QUICK={};
     document.getElementById('euc390Body').innerHTML=r.isPdif
       ? list('Parcours lycée',r.lycee,'blue')+list('Poursuite PFMP2 entreprise',r.entreprise,'green')+list('À définir',r.indefini,'orange')
       : list('Avec convention',r.avec,'green')+list('Sans convention',r.sans,'red')+list('Apprentis',r.apprentis,'blue')+list('Situation administrative',r.situations,'orange');
-    panel.classList.add('show');
+    panel.classList.add('show'); place(el);
   }
   function ids(el){
     var host=el&&el.closest?el.closest('.period[data-class][data-period],.period[data-c][data-p]'):el;

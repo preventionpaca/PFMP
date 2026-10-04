@@ -51,11 +51,14 @@ function EUC_DEV371_catalog(y){
   (d.classes||[]).forEach(function(c){
     var lv=EUC_DEV371_levelOf_(c.classe,c.famille);
     if(!lv)return;
-    if(!levels[lv])levels[lv]={code:lv,label:EUC_DEV371_levelLabel_(lv),famille:c.famille,periods:{}};
+    if(!levels[lv])levels[lv]={code:lv,label:EUC_DEV371_levelLabel_(lv),famille:c.famille,periods:{},classes:[]};
+    var classe={famille:c.famille,classeId:c.classeId,classe:c.classe,periodes:[]};
     (c.periodes||[]).forEach(function(p){
       var k=EUC_DEV371_periodKind_(p.libelle);
       if(!levels[lv].periods[k])levels[lv].periods[k]={kind:k,label:p.libelle};
+      classe.periodes.push({id:p.id,kind:k,label:p.libelle});
     });
+    levels[lv].classes.push(classe);
   });
   var order=['TBAC','1BAC','2NDE','1BTS','2BTS','1CAP','TCAP'];
   return {annee:d.annee,levels:order.filter(function(k){return levels[k]}).map(function(k){
@@ -63,13 +66,16 @@ function EUC_DEV371_catalog(y){
   })};
 }
 function EUC_DEV371_targets_(q){
-  q=q||{};var y=EUC_DEV368_year(q.annee),level=EUC_DEV368_t(q.niveau),pk=EUC_DEV368_t(q.periodeKind),out=[];
+  q=q||{};var y=EUC_DEV368_year(q.annee),level=EUC_DEV368_t(q.niveau),pk=EUC_DEV368_t(q.periodeKind),famille=EUC_DEV368_t(q.famille),classeId=EUC_DEV368_n(q.classeId),periodeId=EUC_DEV368_n(q.periodeId),out=[];
   EUC_DEV368_catalog(y).classes.forEach(function(c){
     var lv=EUC_DEV371_levelOf_(c.classe,c.famille);
     if(level&&lv!==level)return;
+    if(famille&&c.famille!==famille)return;
+    if(classeId&&c.classeId!==classeId)return;
     (c.periodes||[]).forEach(function(p){
       var kind=EUC_DEV371_periodKind_(p.libelle);
       if(pk&&kind!==pk)return;
+      if(periodeId&&p.id!==periodeId)return;
       out.push({annee:y,famille:c.famille,niveau:lv,classeId:c.classeId,classe:c.classe,periode:p});
     });
   });return out;
@@ -82,11 +88,18 @@ function EUC_DEV371_detailCorrect_(y,c,p){
   try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e){}
   return d||{lignes:[]};
 }
+function EUC_DEV435_detailSans_(y,f,c,p){
+  var d=null,fast=false;
+  try{d=EUC_DEV416_finalDetail_(y,f,c,p);fast=!!d}catch(e){}
+  if(!d)d=EUC_DEV371_detailCorrect_(y,c,p);
+  d=d||{lignes:[]};d.__dev435Fast=fast;
+  return d;
+}
 function EUC_DEV371_sansConvention(q){
   EUC_DEV368_admin();var out=[],targets=EUC_DEV371_targets_(q),managed=0;
   targets.forEach(function(t){
-    var d=EUC_DEV371_detailCorrect_(t.annee,t.classeId,t.periode.id);
-    if(typeof EUC_DEV420_enrichDetail_==='function')d=EUC_DEV420_enrichDetail_(d,t.annee,t.famille,t.classeId,t.periode.id);
+    var d=EUC_DEV435_detailSans_(t.annee,t.famille,t.classeId,t.periode.id);
+    if(!d.__dev435Fast&&typeof EUC_DEV420_enrichDetail_==='function')d=EUC_DEV420_enrichDetail_(d,t.annee,t.famille,t.classeId,t.periode.id);
     (d.lignes||[]).forEach(function(x){
       /* apprentis = considérés comme couverts PFMP : jamais dans "sans convention" */
       if(x.apprenti)return;

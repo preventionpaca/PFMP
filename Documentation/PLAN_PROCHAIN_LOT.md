@@ -81,3 +81,11 @@ DEV417 est préparé localement depuis le snapshot DEV416 : chargeur apprentis p
 4. tester visuellement TMP3D et TMVA2 en recette, puis mesurer le détail classe et le générateur de conventions.
 
 Décisions acquises : suite complète verte (319 tests) et maintien de `ANYONE_ANONYMOUS` pour le Web App unique qui sert aussi les pages publiques ; l’administration reste protégée par l’authentification applicative.
+## Après DEV435 — annuaire entreprises et cartographie (lot séparé)
+
+1. Créer d'abord un book entreprises ADMIN strictement en lecture seule, dérivé des conventions et snapshots existants, avec filtres année, famille, niveau, classe et période. Regrouper prioritairement par SIRET ; à défaut, utiliser une identité normalisée raison sociale + adresse et signaler les doublons incertains.
+2. Prévoir une fiche entreprise en vignette avec coordonnées, classes/périodes associées et historique d'accueil. Cette première phase ne doit ni créer ni modifier la future base partenaires.
+3. Soumettre ensuite les règles de rapprochement avec les autres listes Grist : priorité des sources, fusion des doublons, conservation de l'historique et champs que l'administration pourra corriger. Ce rapprochement constitue une décision métier structurante et un lot d'écriture distinct.
+4. Pour les cartes, créer un cache de géocodage séparé et réutilisable. Le choix du fournisseur, les quotas, la précision diffusée et la gestion des adresses personnelles ou ambiguës doivent être validés avant tout appel externe.
+5. Une fois ces choix acquis, proposer deux vues : carte filtrable des partenaires du lycée et carte des lieux de stage pour une classe/période. Les cartes consultent les coordonnées déjà géocodées et ne doivent jamais géocoder en série sur le chemin d'affichage.
+6. Conserver comme contrainte de recette les temps actuels de DEV434/DEV435 : les nouvelles fonctions seront accessibles depuis des pages ADMIN dédiées et ne devront ajouter aucun travail aux grilles et détails existants.
