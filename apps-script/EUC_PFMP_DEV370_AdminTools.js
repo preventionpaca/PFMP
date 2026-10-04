@@ -252,10 +252,12 @@ function EUC_DEV438_formatTable_(table,widths,headerSize,rowSize){
   }
 }
 function EUC_DEV438_compactMissionPage_(body,table){
-  /* Des marges équilibrées replacent le tableau dans la zone réellement
-     imprimable, y compris sur les imprimantes qui rognent le bord droit. */
-  try{body.setMarginLeft(28).setMarginRight(28).setMarginTop(24).setMarginBottom(24)}catch(e){}
-  EUC_DEV438_formatTable_(table,[105,112,190,100],8,7);
+  /* Le modèle officiel conserve un cartouche flottant à gauche. On réduit
+     seulement la largeur du tableau et sa marge droite : toucher aux marges
+     haute/basse déplacerait le titre sous le logo, et une marge gauche trop
+     faible ferait chevaucher le tableau avec le cartouche. */
+  try{body.setMarginLeft(125).setMarginRight(24)}catch(e){}
+  EUC_DEV438_formatTable_(table,[88,92,152,88],8,7);
   var index=body.getChildIndex(table),removed=0;
   /* Le modèle officiel contient des paragraphes de placement entre le
      tableau et les signatures. Ils faisaient basculer « Le Proviseur » et
