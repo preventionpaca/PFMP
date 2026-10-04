@@ -1,3 +1,11 @@
+## Après DEV443 — recettes contrôlées et optimisations séparées
+
+1. Géocodage : depuis une session ADMIN, lancer volontairement un premier petit lot français, contrôler les propositions de faible confiance et saisir manuellement les coordonnées étrangères. Les lignes validées doivent quitter `À traiter` et rester consultables dans `Traitées` ou `Toutes`.
+2. Canonicalisation : vérifier sur quelques SIRET présents dans plusieurs flux que la cartographie ne conserve qu’un point et que l’adresse la plus complète est affichée. Toute fusion incertaine sans SIRET doit rester contrôlable, jamais écrite dans les fiches élève ou convention.
+3. Missions : générer un prévisionnel puis un définitif avec le même modèle et vérifier visuellement le filigrane, les deux orientations de page et la pièce jointe. Le premier courriel réel reste une action ADMIN explicitement confirmée ; aucun test automatique ne doit envoyer de message.
+4. Accès PP : générer volontairement un premier code sur une classe/période choisie, vérifier son expiration au dernier jour et les seules affectations téléphone/visite. Aucun code n’a encore été créé pendant DEV443.
+5. Performance : profiler séparément la copie Google Docs, le filigrane, l’insertion de la section paysage et l’export PDF ; ne pas modifier le chemin rapide des pages de suivi.
+
 ## Après DEV442 — recettes contrôlées et optimisations séparées
 
 1. Modèle : après modification du Google Docs par l’utilisateur, conserver les neuf marqueurs de fusion puis générer un ordre de mission réel. Le validateur doit refuser clairement un modèle incomplet avant toute copie ou envoi.

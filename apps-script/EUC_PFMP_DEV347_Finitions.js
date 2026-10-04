@@ -29,7 +29,7 @@ function EUC_DEV347_enrichA(x,appsByEleve){
   var te=EUC_DEV347_pick(r,['Entreprise_telephone','Telephone_entreprise'])||EUC_DEV347_pick(c,['telephoneEntreprise']),me=EUC_DEV347_pick(r,['Entreprise_courriel','Courriel_entreprise'])||EUC_DEV347_pick(c,['courrielEntreprise']);
   var rn=EUC_DEV347_pick(r,['Responsable_nom','Responsable']),rp=EUC_DEV347_pick(r,['Responsable_prenom']),rt=EUC_DEV347_pick(r,['Responsable_telephone'])||te,rm=EUC_DEV347_pick(r,['Responsable_courriel'])||me;
   var tn=EUC_DEV347_pick(r,['Tuteur_nom','Tuteur'])||EUC_DEV347_pick(c,['tuteur']),tp=EUC_DEV347_pick(r,['Tuteur_prenom']),tt=EUC_DEV347_pick(r,['Tuteur_telephone'])||EUC_DEV347_pick(c,['telephoneTuteur']),tm=EUC_DEV347_pick(r,['Tuteur_courriel'])||EUC_DEV347_pick(c,['courrielTuteur']);
-  x.entreprise=ent||x.entreprise||'';x.adresseEntreprise=[adr,[cp,ville].filter(Boolean).join(' ')].filter(Boolean).join(' · ');x.contactEntreprise=[[rp,rn].filter(Boolean).join(' ').trim(),rt,rm].filter(Boolean).join(' · ');x.tuteurEntreprise=[[tp,tn].filter(Boolean).join(' ').trim(),tt,tm].filter(Boolean).join(' · ');return x;
+  x.entreprise=ent||x.entreprise||'';x.siretEntreprise=s||x.siretEntreprise||'';x.adresseEntreprise=[adr,[cp,ville].filter(Boolean).join(' ')].filter(Boolean).join(' · ');x.contactEntreprise=[[rp,rn].filter(Boolean).join(' ').trim(),rt,rm].filter(Boolean).join(' · ');x.tuteurEntreprise=[[tp,tn].filter(Boolean).join(' ').trim(),tt,tm].filter(Boolean).join(' · ');return x;
 }
 function EUC_DEV394_BASE_EUC_DEV347_detail(a,f,c,p){
   var q=EUC_DEV190I_readOne({annee:a,famille:f,classe:c,periode:p}),d=(q&&q.ready&&q.detail)?q.detail:EUC_SUIVI_CLASSE_detailF18_(a,c,p);

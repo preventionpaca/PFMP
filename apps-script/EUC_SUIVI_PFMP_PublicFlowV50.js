@@ -365,6 +365,7 @@ function EUC_DEV394_BASE_EUC_V50_enrichirDetail_(detail,annee,classeId,periodeId
 
     // Les coordonnées restent visibles pour un incident, mais il ne compte pas actif.
     x.entreprise=src?EUC_V50_txt_(src.Entreprise_raison_sociale):'';
+    x.siretEntreprise=src?EUC_V50_txt_(src.Entreprise_siret):'';
     x.adresseEntreprise=src?EUC_V155_adresseEntreprise_(src):'';
     x.contactEntreprise=src?EUC_V155_contactEntreprise_(src):'';
     x.tuteurEntreprise=src?EUC_V50_tuteur_(src):'';

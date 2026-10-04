@@ -39,8 +39,10 @@ assert.match(missions,/Précisions complémentaires/);assert.match(missions,/Sig
 assert.match(missionUi,/Gérer les modèles d’ordre de mission/);assert.match(missionUi,/EUC_DEV436_saveMissionModel/);
 assert.match(missionUi,/Chaque PDF comprend l’ordre de mission puis le récapitulatif horaire/);
 assert.match(missionUi,/missionToken:g\.pdfToken/);assert.match(missionUi,/PDF généré en/);assert.match(missionUi,/id='last-pdf'/);assert.match(missionUi,/Télécharger à nouveau/);
-assert.match(missionUi,/Envoyer par e-mail/);assert.match(missionUi,/EUC_DEV440_prepareMissionTransportEmail/);assert.match(missionUi,/EUC_DEV440_sendMissionTransportEmail/);
+assert.match(missionUi,/Envoyer le prévisionnel/);assert.match(missionUi,/Envoyer le définitif/);assert.match(missionUi,/PDF prévisionnel/);assert.match(missionUi,/PDF définitif/);assert.match(missionUi,/EUC_DEV440_prepareMissionTransportEmail/);assert.match(missionUi,/EUC_DEV440_sendMissionTransportEmail/);
 assert.match(missions,/MailApp\.sendEmail/);assert.match(missions,/replyTo/);assert.match(missions,/Véhicule personnel/);
+assert.match(missions,/ORDRE_DE_MISSION|WATERMARK_PNG_BASE64/);assert.match(missions,/addPositionedImage/);assert.match(missions,/PositionedLayout\.ABOVE_TEXT/);
+assert.match(missions,/Le remboursement se fait sur la base des justificatifs transmis/);
 assert.match(missions,/attachments:\[attachment\]/);assert.match(missions,/EUC_DEV442_validateMissionTemplate_/);
 assert.doesNotMatch(missions,/setMarginLeft\(125\)/);assert.match(missions,/EUC_DEV442_insertMissionTable_/);
 assert.match(situations,/EUC_DEV436_migrerVieScolaire/);assert.match(situations,/EUC_ENT_grist\('post','\/tables\/'\+EUC_DEV420_MOTIFS_TABLE_\+'\/records\/delete'/);

@@ -52,6 +52,13 @@ assert.match(mail.body,/véhicule personnel[\s\S]*28\/09\/2026[\s\S]*16\/10\/202
 assert.match(mail.body,/Vous trouverez en pièce jointe l’ordre de mission/);
 assert.match(mail.body,/bus, tramway, à pied/);
 assert.match(mail.body,/Sans retour de votre part/);
+assert.match(mail.body,/Le remboursement se fait sur la base des justificatifs transmis/);
+assert.equal(mail.kind,'PREVISIONNEL');
+assert.match(mail.subject,/prévisionnel/);
+const definitive=ctx.EUC_DEV440_prepareMissionTransportEmail({groupKey:'x',missionKind:'DEFINITIF'});
+assert.equal(definitive.kind,'DEFINITIF');
+assert.match(definitive.subject,/définitif/);
+assert.doesNotMatch(definitive.body,/Sans retour de votre part/);
 assert.match(mail.body,/Sincères salutations,[\s\S]*Rudy Test/);
 assert.equal(mail.replyTo,'rudy@lycee-les-eucalyptus.org');
 

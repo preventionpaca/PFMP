@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## DEV443 R2 déployée — géocodage fiabilisé et ordres de mission prévisionnels
+
+- Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `787`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` est identique aux huit fichiers applicatifs modifiés.
+- Les pages ADMIN `Accès temporaires des professeurs principaux` et `Géocodage des entreprises PFMP` disposent maintenant d’un fil d’Ariane jusqu’à l’accueil PFMP, sans ajout sur les pages publiques.
+- Le code postal est traité comme une chaîne et un code français de quatre chiffres est complété à gauche par `0`. La perte provenait des sources où le code postal avait été interprété comme un nombre. Le rapprochement privilégie désormais le SIRET ; à défaut, il utilise l’identité normalisée entreprise + adresse, et retient l’adresse complète la plus exploitable pour éviter plusieurs points cartographiques d’un même établissement.
+- Le géocodeur accepte les voies sans numéro, interroge la BAN avec le code postal séparé et propose les résultats de faible confiance à contrôler. L’écran distingue `À géocoder`, `À contrôler` et `Coordonnées à renseigner`, refuse une validation vide, permet d’afficher les lignes traitées et retire les coordonnées validées de la vue `À traiter`. Les filtres vides couvrent toutes les classes et toutes les périodes ; le traitement reste découpé en lots serveur bornés.
+- Contrôles réels en lecture seule sur la BAN : `2720 ROUTE DES DOLINES, 06560 VALBONNE` retourne un point de type numéro avec un score de `0,964` ; `AVENUE PIERRE ET MARIE CURIE, 06700 SAINT-LAURENT-DU-VAR`, sans numéro, retourne un point de type voie avec un score de `0,969`.
+- Les ordres de mission proposent séparément le PDF/courriel `prévisionnel` et `définitif`. Le prévisionnel reçoit un filigrane diagonal, le définitif reste sans filigrane. Le courriel rappelle désormais que le remboursement repose sur les justificatifs transmis ; aucun envoi réel n’a été effectué.
+- Tests ciblés et suite complète verts : `node tests/run-tests.js` (`371` tests). Aucun accès à `3pnVrygfNn7c`, aucun géocodage ou courriel réel, aucun import Pronote et aucune écriture élève/convention pendant la recette.
+
 ## DEV442 déployée — courriel avec ordre de mission et récapitulatif final
 
 - Les deux déploiements historiques ADMIN et PUBLIC utilisent la version Apps Script immuable `785`, sans changement d’URL ni création de Web App. Le distant relu après `clasp push` est identique aux sources locales.
@@ -78,9 +88,9 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV442, version Apps Script immuable `785`.
+- Version active déployée le 4 octobre 2026 : DEV443 R2, version Apps Script immuable `787`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `785`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `787`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.

@@ -232,6 +232,7 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
       statut:statut.libelle,
 
       entreprise:d?EUC_V155_txt_(d.Entreprise_raison_sociale):'',
+      siretEntreprise:d?EUC_V155_txt_(d.Entreprise_siret):'',
       adresseEntreprise:EUC_V155_adresseEntreprise_(d),
       contactEntreprise:EUC_V155_contactEntreprise_(d),
 
