@@ -1,3 +1,11 @@
+## Après DEV444 — première campagne PP contrôlée
+
+1. Depuis une session ADMIN, choisir une classe/période de référence, prévisualiser le lot et vérifier que seules les classes réellement concomitantes de la même famille sont proposées.
+2. Renseigner puis enregistrer pour chaque classe le proviseur adjoint et le DDF responsables. Contrôler les adresses des professeurs principaux et l’adresse de réponse avant de lever les blocages.
+3. Le premier envoi réel reste une action ADMIN explicitement confirmée : commencer par une campagne métier choisie, vérifier un courriel reçu, la double signature, le code, son expiration et le point d’entrée `Accès professeur principal` intégré au détail de classe.
+4. Vérifier qu’un code ne déverrouille aucune autre classe ou période et qu’une affectation téléphone/visite reconstruit immédiatement le snapshot ciblé. Ne jamais utiliser de test automatique pour envoyer les messages.
+5. Surveiller le quota Apps Script et l’état `ENVOYE`/`ERREUR` des accès. En cas d’échec, conserver l’accès révoqué et corriger le courriel avant de relancer la campagne.
+
 ## Après DEV443 — recettes contrôlées et optimisations séparées
 
 1. Géocodage : depuis une session ADMIN, lancer volontairement un premier petit lot français, contrôler les propositions de faible confiance et saisir manuellement les coordonnées étrangères. Les lignes validées doivent quitter `À traiter` et rester consultables dans `Traitées` ou `Toutes`.

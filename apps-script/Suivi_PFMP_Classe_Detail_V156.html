@@ -407,6 +407,40 @@ function statusPill(x){
   window.render=function(){detail=window.detail||detail;render()};
 })();
 </script>
++
+<style id="EUC_DEV444_PP_STYLE">
+#euc444PpAccess{background:#fff;color:#087f70;border:1px solid #8bcabb}
+#euc444PpModal{position:fixed;inset:0;background:rgba(10,34,30,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10020}
+#euc444PpModal.show{display:flex}#euc444PpCard{background:#fff;border-radius:14px;max-width:1180px;width:100%;max-height:92vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+#euc444PpLogin{display:flex;gap:10px;align-items:end}#euc444PpLogin label{flex:1}#euc444PpCode{width:100%;padding:10px;border:1px solid #aacfc5;border-radius:8px;font:700 18px monospace;text-transform:uppercase}
+#euc444PpTools{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:14px 0}#euc444PpTools label{flex:1;min-width:220px}#euc444PpTools select{width:100%;padding:9px}
+#euc444PpTable{width:100%;border-collapse:collapse}#euc444PpTable th,#euc444PpTable td{padding:9px;border-bottom:1px solid #e8efed;text-align:left}
+#euc444PpFoot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}.euc444-hidden{display:none!important}
+@media(max-width:700px){#euc444PpLogin{align-items:stretch;flex-direction:column}}@media print{#euc444PpAccess,#euc444PpModal{display:none!important}}
+</style>
+<script id="EUC_DEV444_PP_SCRIPT">
+(function(){
+  function h(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function scope(){return{annee:String(detail&&detail.annee||''),classeId:Number(detail&&detail.classe&&detail.classe.id||0),periodeId:Number(detail&&detail.periode&&detail.periode.id||0)}}
+  function install(){
+    if(document.getElementById('euc444PpAccess')||typeof detail==='undefined')return;
+    var exp=document.getElementById('exportPdf');if(!exp)return;
+    var btn=document.createElement('button');btn.id='euc444PpAccess';btn.type='button';btn.textContent='Accès professeur principal';exp.parentNode.insertBefore(btn,exp.nextSibling);
+    document.body.insertAdjacentHTML('beforeend','<div id="euc444PpModal" role="dialog" aria-modal="true" aria-labelledby="euc444PpTitle"><div id="euc444PpCard"><h2 id="euc444PpTitle">Accès professeur principal</h2><p id="euc444PpScope"></p><div id="euc444PpLogin"><label>Code temporaire<input id="euc444PpCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label><button id="euc444PpUnlock" type="button">Déverrouiller</button></div><p id="euc444PpStatus"></p><div id="euc444PpWorkspace" class="euc444-hidden"><div id="euc444PpTools"><label>Type de suivi<select id="euc444PpType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label><label>Professeur<select id="euc444PpProf"></select></label><button id="euc444PpAssign" type="button">Affecter aux élèves sélectionnés</button></div><div style="overflow:auto"><table id="euc444PpTable"></table></div></div><div id="euc444PpFoot"><button id="euc444PpClose" type="button">Fermer</button><button id="euc444PpLogout" class="euc444-hidden" type="button">Fermer l’accès PP</button></div></div></div>');
+    var modal=document.getElementById('euc444PpModal'),code=document.getElementById('euc444PpCode'),status=document.getElementById('euc444PpStatus'),workspace=document.getElementById('euc444PpWorkspace'),data=null;
+    function render(d){data=d;sessionStorage.setItem('eucPpCode',code.value.trim());workspace.classList.remove('euc444-hidden');document.getElementById('euc444PpLogout').classList.remove('euc444-hidden');document.getElementById('euc444PpScope').textContent=d.scope.classe+' — '+d.scope.periode+' · accès de '+d.scope.professeurPrincipal+' · expiration : '+d.scope.expiration;document.getElementById('euc444PpProf').innerHTML=(d.professeurs||[]).map(function(p){return'<option value="'+p.id+'">'+h(p.nom)+(p.discipline?' — '+h(p.discipline):'')+'</option>'}).join('');document.getElementById('euc444PpTable').innerHTML='<thead><tr><th><input id="euc444All" type="checkbox"></th><th>Élève</th><th>Statut</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+(d.lignes||[]).map(function(x){return'<tr><td><input class="euc444Student" type="checkbox" value="'+x.eleveId+'"></td><td><b>'+h(x.eleve)+'</b></td><td>'+h(x.statut)+'</td><td>'+h(x.telephone||'—')+'</td><td>'+h(x.visite||'—')+'</td></tr>'}).join('')+'</tbody>';document.getElementById('euc444All').onchange=function(){document.querySelectorAll('.euc444Student').forEach(function(x){x.checked=this.checked},this)};status.textContent='Accès ouvert.';btn.textContent='Accès PP actif'}
+    function unlock(){var s=scope();if(!s.periodeId){status.textContent='Sélectionnez une période.';return}var b=document.getElementById('euc444PpUnlock');b.disabled=true;status.textContent='Vérification du code…';google.script.run.withSuccessHandler(function(d){b.disabled=false;render(d)}).withFailureHandler(function(e){b.disabled=false;status.textContent='Accès refusé : '+(e&&e.message||e)}).EUC_DEV444_unlockPpForScope(Object.assign({code:code.value.trim()},s))}
+    btn.onclick=function(){var s=scope();document.getElementById('euc444PpScope').textContent=(detail.classe&&detail.classe.nom||'Classe')+' — '+(detail.periode&&detail.periode.libelle||'Période');code.value=sessionStorage.getItem('eucPpCode')||'';modal.classList.add('show');status.textContent='';workspace.classList.add('euc444-hidden');setTimeout(function(){code.focus()},0)};
+    document.getElementById('euc444PpUnlock').onclick=unlock;code.onkeydown=function(e){if(e.key==='Enter')unlock()};
+    document.getElementById('euc444PpAssign').onclick=function(){var ids=Array.from(document.querySelectorAll('.euc444Student:checked')).map(function(x){return Number(x.value)});if(!ids.length){status.textContent='Sélectionnez au moins un élève.';return}var b=this,s=scope();b.disabled=true;status.textContent='Affectation et mise à jour des données…';google.script.run.withSuccessHandler(function(d){b.disabled=false;status.textContent='Affectation enregistrée et données mises à jour.';render(d)}).withFailureHandler(function(e){b.disabled=false;status.textContent='Erreur : '+(e&&e.message||e)}).EUC_DEV444_affecterPpForScope(Object.assign({code:code.value.trim(),type:document.getElementById('euc444PpType').value,profId:Number(document.getElementById('euc444PpProf').value),eleveIds:ids},s))};
+    document.getElementById('euc444PpClose').onclick=function(){modal.classList.remove('show')};
+    document.getElementById('euc444PpLogout').onclick=function(){sessionStorage.removeItem('eucPpCode');code.value='';data=null;workspace.classList.add('euc444-hidden');this.classList.add('euc444-hidden');btn.textContent='Accès professeur principal';modal.classList.remove('show')};
+    modal.onclick=function(e){if(e.target===modal)modal.classList.remove('show')};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+</script>
+
 
 <!-- EUC_DEV417_DETAIL_KPI_LISTS -->
 <style id="EUC_DEV417_DETAIL_KPI_LISTS_STYLE">

@@ -5,6 +5,8 @@
 var EUC_DEV441_PP_TABLE_='EUC_ACCES_PP_PFMP';
 var EUC_DEV441_GEO_TABLE_='EUC_GEO_ENTREPRISES_PFMP';
 var EUC_DEV441_GEO_URL_='https://data.geopf.fr/geocodage/search';
+var EUC_DEV444_PP_SIGN_TABLE_='EUC_RESPONSABLES_CAMPAGNES_PP_PFMP';
+var EUC_DEV444_PUBLIC_SITE_='https://pfmp.loucodi.fr/';
 
 function EUC_DEV441_t_(v){return String(v==null?'':v).trim();}
 function EUC_DEV441_n_(v){return Number(v)||0;}
@@ -46,7 +48,8 @@ function EUC_DEV441_ensurePpTable_(){
   var tables=EUC_ENT_grist('get','/tables').tables||[],c=EUC_DEV441_col_,cols=[
     c('Annee_scolaire','Année scolaire'),c('Famille','Famille'),c('Classe_id','Classe ID','Int'),c('Classe_nom','Classe'),c('Periode_id','Période ID','Int'),c('Periode_libelle','Période'),c('Date_fin','Date de fin'),
     c('Professeur_id','Professeur principal ID','Int'),c('Professeur_nom','Professeur principal'),c('Professeur_email','Courriel professeur'),c('Code_salt','Sel du code'),c('Code_hash','Empreinte du code'),
-    c('Actif','Actif','Bool'),c('Date_creation','Date de création','DateTime'),c('Expiration','Expiration','DateTime'),c('Cree_par','Créé par'),c('Date_revocation','Date de révocation','DateTime')
+    c('Actif','Actif','Bool'),c('Date_creation','Date de création','DateTime'),c('Expiration','Expiration','DateTime'),c('Cree_par','Créé par'),c('Date_revocation','Date de révocation','DateTime'),
+    c('Campagne_id','Campagne'),c('Etat_courriel','État courriel'),c('Date_courriel','Date courriel','DateTime'),c('Erreur_courriel','Erreur courriel')
   ],exists=tables.some(function(t){return t.id===EUC_DEV441_PP_TABLE_;});
   if(!exists)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV441_PP_TABLE_,columns:cols}]});
   else{var current=EUC_ENT_grist('get','/tables/'+EUC_DEV441_PP_TABLE_+'/columns').columns||[],have={};current.forEach(function(x){have[x.id]=true;});var missing=cols.filter(function(x){return!have[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+EUC_DEV441_PP_TABLE_+'/columns',{columns:missing});}
@@ -82,6 +85,11 @@ function EUC_DEV441_ppScope_(access){
   return{ok:true,scope:{annee:y,famille:EUC_DEV441_t_(access.Famille),classeId:cid,classe:EUC_DEV441_t_(access.Classe_nom),periodeId:pid,periode:EUC_DEV441_t_(access.Periode_libelle),expiration:EUC_DEV441_t_(access.Expiration),professeurPrincipal:EUC_DEV441_t_(access.Professeur_nom)},professeurs:EUC_V156_professeurs_(),lignes:lignes};
 }
 function EUC_DEV441_unlockPp(q){return EUC_DEV441_ppScope_(EUC_DEV441_lookupPp_(q&&q.code));}
+function EUC_DEV444_assertPpPageScope_(access,q){
+  q=q||{};if(EUC_DEV441_t_(access.Annee_scolaire)!==EUC_DEV441_t_(q.annee)||EUC_DEV441_n_(access.Classe_id)!==EUC_DEV441_n_(q.classeId)||EUC_DEV441_n_(access.Periode_id)!==EUC_DEV441_n_(q.periodeId))throw new Error('Ce code appartient à une autre classe ou à une autre période.');
+}
+function EUC_DEV444_unlockPpForScope(q){var access=EUC_DEV441_lookupPp_(q&&q.code);EUC_DEV444_assertPpPageScope_(access,q);return EUC_DEV441_ppScope_(access);}
+function EUC_DEV444_affecterPpForScope(q){var access=EUC_DEV441_lookupPp_(q&&q.code);EUC_DEV444_assertPpPageScope_(access,q);return EUC_DEV441_affecterPp(q);}
 function EUC_DEV441_affecterPp(q){
   q=q||{};var access=EUC_DEV441_lookupPp_(q.code),type=EUC_DEV441_t_(q.type).toUpperCase(),profId=EUC_DEV441_n_(q.profId),ids=(q.eleveIds||[]).map(EUC_DEV441_n_).filter(function(x){return x>0;});
   if(['TELEPHONE','VISITE'].indexOf(type)<0)throw new Error('Type de suivi invalide.');if(!profId||!ids.length)throw new Error('Professeur et élèves requis.');
@@ -90,6 +98,45 @@ function EUC_DEV441_affecterPp(q){
   EUC_V156_assurerTable_();var y=EUC_DEV441_t_(access.Annee_scolaire),cid=EUC_DEV441_n_(access.Classe_id),pid=EUC_DEV441_n_(access.Periode_id),existing=EUC_IMPORT_lireRecords_(EUC_V156_TABLE_)||[],now=new Date().toISOString(),profNom=[prof.Civilite,prof.Prenom,prof.Nom].filter(Boolean).join(' '),token=EUC_DEV425_beginMutation_({annee:y,classeId:cid,periodeId:pid,reason:'affectation-professeur-principal'});
   ids.forEach(function(eid){var ex=existing.filter(function(r){return r.Actif!==false&&EUC_DEV441_t_(r.Annee_scolaire)===y&&EUC_DEV441_n_(EUC_PFMP_ref_(r.Classe))===cid&&EUC_DEV441_n_(EUC_PFMP_ref_(r.Periode))===pid&&EUC_DEV441_n_(EUC_PFMP_ref_(r.Eleve))===eid&&EUC_DEV441_t_(r.Type_suivi).toUpperCase()===type;})[0],fields={Annee_scolaire:y,Classe:cid,Periode:pid,Eleve:eid,Type_suivi:type,Professeur:profId,Nom_professeur_snapshot:profNom,Email_professeur_snapshot:EUC_DEV441_t_(prof.Email),Date_affectation:now,Affecte_par:'PP_TEMP:'+EUC_DEV441_n_(access.Professeur_id),Actif:true,Date_modification:now};if(ex)EUC_ENT_grist('patch','/tables/'+EUC_V156_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_V156_TABLE_+'/records',{records:[{fields:fields}]});});
   var snapshot=EUC_DEV425_finishMutation_(token),result=EUC_DEV441_ppScope_(access);result.snapshot=snapshot;return result;
+}
+
+function EUC_DEV444_email_(value){var s=EUC_DEV441_t_(value).toLowerCase();return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)?s:'';}
+function EUC_DEV444_periodKey_(p){return[EUC_DEV441_t_(p&&p.libelle).toUpperCase(),EUC_DEV441_dateIso_(p&&p.debut),EUC_DEV441_dateIso_(p&&p.fin)].join('|');}
+function EUC_DEV444_ensureSignTable_(){
+  var tables=EUC_ENT_grist('get','/tables').tables||[],c=EUC_DEV441_col_,cols=[c('Annee_scolaire','Année scolaire'),c('Classe_id','Classe ID','Int'),c('Classe_nom','Classe'),c('Adjoint_nom','Proviseur adjoint'),c('Adjoint_email','Courriel proviseur adjoint'),c('Ddf_nom','Direction déléguée'),c('Ddf_email','Courriel direction déléguée'),c('Actif','Actif','Bool'),c('Date_modification','Date modification','DateTime'),c('Modifie_par','Modifié par')],exists=tables.some(function(t){return t.id===EUC_DEV444_PP_SIGN_TABLE_;});
+  if(!exists)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV444_PP_SIGN_TABLE_,columns:cols}]});
+  else{var current=EUC_ENT_grist('get','/tables/'+EUC_DEV444_PP_SIGN_TABLE_+'/columns').columns||[],have={};current.forEach(function(x){have[x.id]=true;});var missing=cols.filter(function(x){return!have[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+EUC_DEV444_PP_SIGN_TABLE_+'/columns',{columns:missing});}
+}
+function EUC_DEV444_signRows_(){try{return EUC_IMPORT_lireRecords_(EUC_DEV444_PP_SIGN_TABLE_)||[];}catch(e){return[];}}
+function EUC_DEV444_campaignTargets_(q){
+  var anchor=EUC_DEV441_target_(q,false),key=EUC_DEV444_periodKey_(anchor.periode),classes=EUC_DEV441_catalog_(anchor.annee,false).classes.filter(function(c){return c.famille===anchor.famille;}),out=[];
+  classes.forEach(function(c){(c.periodes||[]).forEach(function(p){if(EUC_DEV444_periodKey_(p)===key)out.push({annee:anchor.annee,famille:c.famille,classeId:c.classeId,classe:c.classe,periode:p});});});
+  return{anchor:anchor,targets:out};
+}
+function EUC_DEV444_campaignPreview(q){
+  EUC_DEV441_admin_();var campaign=EUC_DEV444_campaignTargets_(q),saved=EUC_DEV444_signRows_(),by={};
+  saved.forEach(function(r){if(r.Actif!==false)by[EUC_DEV441_t_(r.Annee_scolaire)+'|'+EUC_DEV441_n_(r.Classe_id)]=r;});
+  var classes=campaign.targets.map(function(t){var s=by[t.annee+'|'+t.classeId]||{},pp=EUC_V155_professeursPrincipaux_(t.classeId)||[];return{annee:t.annee,famille:t.famille,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,principaux:pp.map(function(p){return{id:EUC_DEV441_n_(p.id),nom:EUC_DEV441_t_(p.nom),email:EUC_DEV444_email_(p.email)};}),adjointNom:EUC_DEV441_t_(s.Adjoint_nom),adjointEmail:EUC_DEV444_email_(s.Adjoint_email),ddfNom:EUC_DEV441_t_(s.Ddf_nom),ddfEmail:EUC_DEV444_email_(s.Ddf_email)};});
+  var recipients=0,blocking=[];classes.forEach(function(c){if(!c.principaux.length)blocking.push(c.classe+' : aucun professeur principal');c.principaux.forEach(function(p){if(p.email)recipients++;else blocking.push(c.classe+' : courriel manquant pour '+p.nom);});if(!c.adjointNom||!c.adjointEmail||!c.ddfNom)blocking.push(c.classe+' : signataires incomplets');});
+  return{ok:true,anchor:campaign.anchor,classes:classes,recipients:recipients,blocking:blocking,siteUrl:EUC_DEV444_PUBLIC_SITE_};
+}
+function EUC_DEV444_saveCampaignSignatures(q){
+  var ctx=EUC_DEV441_admin_(),items=q&&q.classes||[];if(!items.length)throw new Error('Aucune classe à configurer.');EUC_DEV444_ensureSignTable_();var rows=EUC_DEV444_signRows_(),now=new Date().toISOString();
+  items.forEach(function(x){var y=EUC_DEV368_year(x.annee),cid=EUC_DEV441_n_(x.classeId),nom=EUC_DEV441_t_(x.classe),adj=EUC_DEV441_t_(x.adjointNom),adjMail=EUC_DEV444_email_(x.adjointEmail),ddf=EUC_DEV441_t_(x.ddfNom),ddfMail=EUC_DEV444_email_(x.ddfEmail);if(!cid||!adj||!adjMail||!ddf)throw new Error(nom+' : renseignez le proviseur adjoint, son courriel et la direction déléguée.');var fields={Annee_scolaire:y,Classe_id:cid,Classe_nom:nom,Adjoint_nom:adj,Adjoint_email:adjMail,Ddf_nom:ddf,Ddf_email:ddfMail,Actif:true,Date_modification:now,Modifie_par:EUC_DEV441_t_(ctx.email)},ex=rows.filter(function(r){return r.Actif!==false&&EUC_DEV441_t_(r.Annee_scolaire)===y&&EUC_DEV441_n_(r.Classe_id)===cid;})[0];if(ex)EUC_ENT_grist('patch','/tables/'+EUC_DEV444_PP_SIGN_TABLE_+'/records',{records:[{id:ex.id,fields:fields}]});else EUC_ENT_grist('post','/tables/'+EUC_DEV444_PP_SIGN_TABLE_+'/records',{records:[{fields:fields}]});});return EUC_DEV444_campaignPreview(q);
+}
+function EUC_DEV444_ppMailBody_(c,p,access){
+  return['Bonjour '+EUC_DEV441_t_(p.nom)+',','','Dans le cadre de la préparation des visites en entreprise, il vous appartient de compléter les affectations des professeurs visiteurs et des suivis téléphoniques pour la classe '+c.classe+'.','','Période : '+c.periode+' — du '+c.debut+' au '+c.fin,'Code temporaire : '+access.code,'Ce code est valable jusqu’au '+Utilities.formatDate(new Date(access.expiration),'Europe/Paris','dd/MM/yyyy à HH:mm')+'.','','Pour l’utiliser :','1. Rendez-vous sur '+EUC_DEV444_PUBLIC_SITE_,'2. Ouvrez '+c.classe+' puis '+c.periode+'.','3. Cliquez sur « Accès professeur principal » et saisissez le code ci-dessus.','','Cet accès est strictement limité à cette classe, à cette période et aux affectations de suivi téléphonique ou de visite.','','Cordialement,','',c.adjointNom,'Proviseur adjoint','',c.ddfNom,'Direction déléguée aux formations professionnelles et technologiques'].join('\n');
+}
+function EUC_DEV444_sendCampaign(q){
+  var ctx=EUC_DEV441_admin_(),preview=EUC_DEV444_campaignPreview(q);if(preview.blocking.length)throw new Error('Campagne incomplète : '+preview.blocking.join(' ; '));if(!preview.recipients)throw new Error('Aucun destinataire.');if(MailApp.getRemainingDailyQuota()<preview.recipients)throw new Error('Quota de courriels insuffisant pour cette campagne.');
+  var lock=LockService.getScriptLock();if(!lock.tryLock(5000))throw new Error('Une campagne est déjà en cours.');var campaignId='PP-'+Utilities.formatDate(new Date(),'Europe/Paris','yyyyMMdd-HHmmss')+'-'+Utilities.getUuid().slice(0,8),sent=[],failed=[];
+  try{
+    EUC_DEV441_ensurePpTable_();var existing=EUC_DEV441_ppRows_(),now=new Date().toISOString(),jobs=[],revocations=[];
+    preview.classes.forEach(function(c){var expiration=EUC_DEV441_expiration_(c.fin);if(expiration.getTime()<=Date.now())throw new Error(c.classe+' : la période est terminée.');c.principaux.forEach(function(p){existing.filter(function(r){return r.Actif!==false&&EUC_DEV441_t_(r.Annee_scolaire)===c.annee&&EUC_DEV441_n_(r.Classe_id)===c.classeId&&EUC_DEV441_n_(r.Periode_id)===c.periodeId&&EUC_DEV441_n_(r.Professeur_id)===p.id;}).forEach(function(r){revocations.push({id:r.id,fields:{Actif:false,Date_revocation:now}});});var code=EUC_DEV441_newCode_(),salt=Utilities.getUuid(),fields={Annee_scolaire:c.annee,Famille:c.famille,Classe_id:c.classeId,Classe_nom:c.classe,Periode_id:c.periodeId,Periode_libelle:c.periode,Date_fin:EUC_DEV441_dateIso_(c.fin),Professeur_id:p.id,Professeur_nom:p.nom,Professeur_email:p.email,Code_salt:salt,Code_hash:EUC_DEV441_codeHash_(code,salt),Actif:true,Date_creation:now,Expiration:expiration.toISOString(),Cree_par:EUC_DEV441_t_(ctx.email),Campagne_id:campaignId,Etat_courriel:'EN_COURS'};jobs.push({classe:c,professeur:p,code:code,expiration:fields.Expiration,fields:fields,id:0});});});
+    if(revocations.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV441_PP_TABLE_+'/records',{records:revocations});var created=EUC_ENT_grist('post','/tables/'+EUC_DEV441_PP_TABLE_+'/records',{records:jobs.map(function(j){return{fields:j.fields};})}),createdRows=created&&created.records||[];if(createdRows.length!==jobs.length){var partial=createdRows.map(function(r){return{id:EUC_DEV441_n_(r.id),fields:{Actif:false,Date_revocation:new Date().toISOString(),Etat_courriel:'ERREUR',Erreur_courriel:'Création de campagne incomplète'}};}).filter(function(r){return r.id;});if(partial.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV441_PP_TABLE_+'/records',{records:partial});throw new Error('Création incomplète des codes : aucun courriel n’a été envoyé.');}createdRows.forEach(function(r,i){jobs[i].id=EUC_DEV441_n_(r.id);});
+    var finalPatches=[];jobs.forEach(function(j){try{MailApp.sendEmail({to:j.professeur.email,replyTo:j.classe.adjointEmail,name:'Lycée Les Eucalyptus — PFMP',subject:'[PFMP] Affectations à compléter — '+j.classe.classe+' — '+j.classe.periode,body:EUC_DEV444_ppMailBody_(j.classe,j.professeur,j)});finalPatches.push({id:j.id,fields:{Etat_courriel:'ENVOYE',Date_courriel:new Date().toISOString(),Erreur_courriel:''}});sent.push({classe:j.classe.classe,professeur:j.professeur.nom,email:j.professeur.email});}catch(e){finalPatches.push({id:j.id,fields:{Actif:false,Date_revocation:new Date().toISOString(),Etat_courriel:'ERREUR',Erreur_courriel:String(e&&e.message||e).slice(0,500)}});failed.push({classe:j.classe.classe,professeur:j.professeur.nom,error:String(e&&e.message||e)});}});if(finalPatches.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV441_PP_TABLE_+'/records',{records:finalPatches});
+  }finally{lock.releaseLock();}
+  return{ok:failed.length===0,campaignId:campaignId,envoyes:sent,echecs:failed,declenchePar:EUC_DEV441_t_(ctx.email)};
 }
 
 function EUC_DEV443_postal_(value){var s=EUC_DEV441_t_(value).replace(/\s+/g,'');return /^\d{4}$/.test(s)?'0'+s:s;}
