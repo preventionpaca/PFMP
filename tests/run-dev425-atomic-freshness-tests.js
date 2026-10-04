@@ -8,6 +8,7 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const atomic=read('apps-script/EUC_PFMP_DEV425_AtomicFreshness.js');
 const family=read('apps-script/EUC_PFMP_DEV339_FamilleUX.js');
+const maintenance=read('apps-script/Snapshot_PFMP_Admin_V190.html');
 
 assert.match(atomic,/__DEV425_STATE__/);
 assert.match(atomic,/status==='DIRTY'/);
@@ -18,6 +19,10 @@ assert.match(atomic,/function EUC_DEV432_repairBacproSnapshot\(\)/,
   'la réparation groupée BAC PRO doit être disponible');
 assert.match(atomic,/function EUC_DEV434_rebuildBacproSnapshot\(\)/,
   'la maintenance doit pouvoir forcer la reconstruction groupée des détails BAC PRO');
+assert.match(maintenance,/id="rebuildBacpro190I"/,
+  'la maintenance doit exposer la reconstruction atomique BAC PRO');
+assert.match(maintenance,/\.EUC_DEV434_rebuildBacproSnapshot\(\)/,
+  'le bouton de maintenance doit appeler la reconstruction atomique');
 assert.match(atomic,/function EUC_DEV434_sanitizeBacproDetails\(\)/,
   'les détails BAC PRO existants doivent pouvoir être assainis atomiquement');
 const sanitize=atomic.slice(atomic.indexOf('function EUC_DEV434_sanitizeBacproDetails'),atomic.indexOf('/* DEV433'));

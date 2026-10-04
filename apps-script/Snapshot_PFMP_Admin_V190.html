@@ -571,6 +571,9 @@ sans lancer de reconstruction.
   </p>
   <div class="actions">
     <button id="status190I" class="secondary">État Snapshot V2</button>
+    <button id="rebuildBacpro190I" class="primary">
+      Reconstruire BAC PRO (atomique)
+    </button>
   </div>
   <pre id="out190I">Prêt.</pre>
 </section>
@@ -587,6 +590,21 @@ sans lancer de reconstruction.
         out190I.textContent='Erreur : '+String(e&&e.message||e);
       })
       .EUC_DEV190I_status();
+  };
+
+  rebuildBacpro190I.onclick=function(){
+    rebuildBacpro190I.disabled=true;
+    out190I.textContent='Reconstruction atomique BAC PRO…';
+    google.script.run
+      .withSuccessHandler(function(r){
+        rebuildBacpro190I.disabled=false;
+        out190I.textContent=JSON.stringify(r,null,2);
+      })
+      .withFailureHandler(function(e){
+        rebuildBacpro190I.disabled=false;
+        out190I.textContent='Erreur : '+String(e&&e.message||e);
+      })
+      .EUC_DEV434_rebuildBacproSnapshot();
   };
 })();
 </script>
