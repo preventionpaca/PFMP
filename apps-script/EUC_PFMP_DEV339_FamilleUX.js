@@ -207,7 +207,12 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
     if(batch.appsAvailable&&typeof EUC_APP172_eval==='function'){
       var app=EUC_APP172_eval(batch.apps,eid,debut,fin)||{code:'SCOLAIRE'};
       x.statutApprentissage=app.code;x.apprenti=app.code==='APPRENTI';x.statutMixte=app.code==='MIXTE';
-      if(x.apprenti){x.conventionId=0;x.convention=false;x.statutCode='APPRENTI';x.statut='APPRENTI';}
+      if(x.apprenti){
+        x.conventionId=0;x.convention=false;x.statutCode='APPRENTI';x.statut='APPRENTI';
+        /* La vue matérialisée doit embarquer la date : la page publique ne
+         * doit jamais relire Grist au moment de l'affichage. */
+        x.dateContrat=EUC_DEV339_txt_(app.record&&app.record.debut)||x.dateContrat||'';
+      }
       if(x.apprenti&&typeof EUC_DEV347_enrichA==='function'){
         try{EUC_DEV347_enrichA(x,batch.appsByEleve);}catch(eAppCompany){}
       }

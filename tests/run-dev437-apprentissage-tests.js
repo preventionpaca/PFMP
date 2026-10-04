@@ -9,6 +9,8 @@ const coherence=read('EUC_PFMP_DEV277_CoherenceApprentissage.js');
 const details=read('EUC_PFMP_DEV251_DashboardDetails.js');
 const legacy=read('EUC_PFMP_DEV192_ApprentisGlobal.js');
 const live=read('EUC_PFMP_DEV340_ConsolidationLive.js');
+const publicExact=read('EUC_PFMP_DEV415_PublicAdminExact.js');
+const familyBatch=read('EUC_PFMP_DEV339_FamilleUX.js');
 const pub=read('Suivi_PFMP_Classe_PublicClone_V353.html');
 const adminApp=read('Apprentissage_PFMP_V190X.html');
 const publicApp=read('Apprentissage_PFMP_PublicClone_V353.html');
@@ -41,6 +43,9 @@ assert.match(adminApp,/pipe\.dossier/);
 assert.match(publicApp,/pipe\.dossier/);
 
 assert.match(live,/x\.dateContrat=EUC_DEV340_txt_\(st\.record\.debut\)/);
+assert.match(familyBatch,/x\.dateContrat=EUC_DEV339_txt_\(app\.record&&app\.record\.debut\)/);
+assert.doesNotMatch(publicExact,/['"]\.mail-actions,\.assignbar,\.assign-status,/);
+assert.match(publicExact,/#mailParams,#sendTable,#mailModal/);
 assert.match(pub,/id="exportPdf"/);
 assert.match(pub,/document\.getElementById\('exportPdf'\)\.onclick=function\(\)\{window\.print\(\)\}/);
 assert.match(pub,/Début du contrat/);

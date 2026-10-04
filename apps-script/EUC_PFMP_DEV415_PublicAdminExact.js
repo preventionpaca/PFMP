@@ -160,7 +160,7 @@ function EUC_DEV415_publicDetail(e){
     '#tbody tr>td:first-child,'+
     '#euc340SnapshotDetail,'+
     '.euc190e-snapshot-tile,'+
-    '.mail-actions,.assignbar,.assign-status,'+
+    '.assignbar,.assign-status,'+
     '.student-check,'+
     'input[type="checkbox"].rowcheck,'+
     'button[id^="retire"],'+
