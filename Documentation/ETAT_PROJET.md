@@ -7,7 +7,7 @@
 - La page « Élèves sans convention » exige désormais un niveau, une période et une classe. Elle lit un seul snapshot détaillé au lieu de reconstruire toutes les classes et périodes du lycée.
 - Les moyens de transport des ordres de mission restent enregistrables individuellement, ligne par ligne. Un retour visible `Enregistrement…`, `Enregistré` ou `Échec` confirme l'opération sans recharger la classe.
 - Vérifications réelles en lecture seule : la grille publique livre 53 zones de contrôle rapide avec leur contenu préchargé ; le détail TCIEL ADMIN affiche 26 cases et les deux champs d'affectation, puis 15 suggestions au premier chargement différé ; la requête ciblée TCAR / PFMP n°1 aboutit sans élève restant sans convention.
-- Mesures HTTP PUBLIC après déploiement : grille BAC PRO `3,55 s` et détail TCAR PFMP n°1 `3,19 s`. Le chemin de consultation rapide DEV434 est conservé.
+- Mesures HTTP PUBLIC sur la version finale 767 : grille BAC PRO `3,26 s` et détail TCAR PFMP n°1 `4,21 s`. Le chemin de consultation rapide DEV434 est conservé.
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
