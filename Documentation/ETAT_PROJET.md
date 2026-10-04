@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## DEV438 déployée — ordre de mission et récapitulatif horaire
+
+- Chaque PDF d’ordre de mission, quel que soit le modèle Google Docs sélectionné, ajoute désormais une seconde page A4 intitulée `Récapitulatif horaire des visites en entreprise`.
+- Le tableau comporte `N°`, élève, entreprise, adresse, date, heure d’arrivée, heure de départ et lieu de départ. La légende précise `D` pour le domicile, `EK` pour le lycée Les Eucalyptus, ou le numéro de la visite précédente dans une tournée.
+- Le modèle officiel a été resserré sans déplacer son cartouche : tableau replacé dans la zone imprimable, signature du proviseur et deux mentions maintenues sur la première page.
+- Recette réelle ADMIN sur TMP3D / PFMP n°1 : le PDF obtenu compte exactement deux pages A4 ; les deux pages ont été rendues en image et contrôlées, sans colonne coupée. Aucun transport, élève ou convention n’a été modifié par ce contrôle.
+- La migration confirmée du motif erroné est effective : `Dossier géré par avis scolaire` n’est plus proposé et `Dossier géré par la vie scolaire` reste le seul libellé correspondant, avec les affectations conservées.
+- Version Apps Script immuable `776`, appliquée uniquement aux déploiements ADMIN et PUBLIC existants. Aucun nouveau Web App, aucun courriel et aucun accès à `3pnVrygfNn7c`.
+- La cartographie n’est pas encore implémentée : aucune route carte, aucune coordonnée persistée et aucun cache de géocodage n’existent dans la version déployée. Les vues demandées restent un lot distinct afin de ne pas ralentir les pages actuelles ni transmettre des adresses à un fournisseur externe sans décision explicite.
+
 ## DEV437 déployée — dates, PDF public et pipeline apprentissage
 
 - Le détail PUBLIC affiche désormais la date de début de contrat dans le statut des apprentis et propose l'export PDF local déjà disponible côté ADMIN. Les situations administratives y reprennent aussi le signalement orange, sans lecture Grist supplémentaire.
