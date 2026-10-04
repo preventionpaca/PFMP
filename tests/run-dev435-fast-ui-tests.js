@@ -40,6 +40,10 @@ test('la recherche sans convention lit prioritairement le snapshot détaillé',(
 });
 test('le moyen de transport individuel affiche son état de sauvegarde',()=>{
   assert.match(missionsUi,/data-save=/);assert.match(missionsUi,/Enregistrement…/);assert.match(missionsUi,/Enregistré/);
+  assert.match(missionsUi,/const statusEl=document\.getElementById\('status'\)/);
+});
+test('la page sans convention utilise un état visible et non window.status',()=>{
+  assert.match(noConventionUi,/const statusEl=document\.getElementById\('status'\)/);assert.doesNotMatch(noConventionUi,/\bstatus\.textContent/);
 });
 
 function serverContext(){
