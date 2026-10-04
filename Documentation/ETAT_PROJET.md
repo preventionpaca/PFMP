@@ -1,11 +1,13 @@
 # État du projet Eucalyptus PFMP
 
-## DEV437 préparée — dates, PDF public et pipeline apprentissage
+## DEV437 déployée — dates, PDF public et pipeline apprentissage
 
 - Le détail PUBLIC affiche désormais la date de début de contrat dans le statut des apprentis et propose l'export PDF local déjà disponible côté ADMIN. Les situations administratives y reprennent aussi le signalement orange, sans lecture Grist supplémentaire.
 - Les indicateurs `Dossiers remis` et `Transmis CFA` deviennent des étapes exclusives : `Dossiers remis` ne conserve que les dossiers effectivement remis, non transmis et sans contrat/rupture/nouveau contrat ; `Transmis CFA` exige à la fois remise et transmission, tout en excluant ces situations aval. `Dossier distribué` reste une étape distincte et n'est plus compté comme dossier remis.
 - Les mêmes règles sont appliquées au dashboard global, aux détails d'infobulle et aux synthèses de classe ADMIN/PUBLIC. Aucune donnée métier n'est modifiée par ce lot.
-- Tests ciblés et suite complète verts : `node tests/run-tests.js` (349 tests). Le déploiement immuable et les contrôles réels restent à effectuer.
+- La maintenance expose désormais une reconstruction BAC PRO explicitement atomique. Elle a publié avec succès 53 périodes et 53 détails dans une même révision `READY`, sans modifier les élèves ni les conventions.
+- Contrôle réel PUBLIC après reconstruction : le détail TCIEL PFMP n°1 affiche le bouton `Exporter PDF` et la date de début du contrat de l'apprenti ; l'ouverture froide contrôlée est d'environ `4,6 s`.
+- Tests ciblés et suite complète verts : `node tests/run-tests.js` (349 tests). Les versions Apps Script immuables `769`, `770` puis finale `771` ont été créées ; seuls les deux déploiements historiques ADMIN et PUBLIC ont été mis à jour. Les 346 fichiers distants sont identiques aux sources locales.
 - Les cartes et l'accès d'affectation des professeurs principaux restent volontairement deux lots séparés : le premier exige une décision de géocodage/confidentialité, le second une autorisation temporaire limitée et révocable.
 
 ## DEV436 déployée — finitions de suivi et ordres de mission
@@ -29,9 +31,9 @@
 - Version Apps Script immuable `767`, appliquée uniquement aux déploiements PUBLIC et ADMIN existants. Les 346 fichiers distants ont été relus après le dernier `clasp push` et sont identiques aux sources locales.
 - Tests ciblés verts et suite complète `node tests/run-tests.js` verte (346 tests). Aucun import réel, aucune écriture élève/convention, aucun courriel, aucune génération de PDF ni aucune mutation métier n'a été exécuté pendant la recette.
 
-- Version active déployée le 4 octobre 2026 : DEV435 R2, version Apps Script immuable `767`.
+- Version active déployée le 4 octobre 2026 : DEV437, version Apps Script immuable `771`.
 - Version locale récupérée : copie exacte de la version Apps Script immuable `722`, soit 343 fichiers dans `apps-script/`.
-- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `767`, avec leurs identifiants et URL historiques conservés.
+- Déploiements ADMIN et PUBLIC : tous deux positionnés sur `771`, avec leurs identifiants et URL historiques conservés.
 - Référence Git de récupération : branche `codex/recover-dev416`, créée depuis `main` au commit `e5377d3`.
 - Preuve d'identité : `Documentation/snapshots/apps-script-v722.sha256` et `node tests/run-dev416-recovery-tests.js`.
 - Grist autorisé : base PFMP active `b2CyeMEdVEMS` uniquement. L’écriture des structures et affectations de situations administratives DEV420, puis des snapshots DEV424, a été autorisée explicitement le 3 octobre 2026 ; la production `3pnVrygfNn7c` reste interdite.
