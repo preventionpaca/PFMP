@@ -282,7 +282,9 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'','','','',''])});
   var table=body.appendTable(rows);table.setBorderColor('#6f9f95');
   for(var c=0;c<8;c++)table.getCell(0,c).setBackgroundColor('#e7f5f1');
-  EUC_DEV438_formatTable_(table,[30,68,78,119,48,50,50,72],7,7);
+  /* 407 pt : largeur volontairement inférieure à la zone utile du modèle
+     officiel, afin que la colonne « Lieu de départ » reste imprimable. */
+  EUC_DEV438_formatTable_(table,[25,50,55,90,40,46,46,55],7,7);
   var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
   help.setFontSize(8).setItalic(true).setSpacingBefore(7).setSpacingAfter(0);
 }
