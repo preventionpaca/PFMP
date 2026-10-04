@@ -42,6 +42,13 @@ test('le moyen de transport individuel affiche son état de sauvegarde',()=>{
   assert.match(missionsUi,/data-save=/);assert.match(missionsUi,/Enregistrement…/);assert.match(missionsUi,/Enregistré/);
   assert.match(missionsUi,/const statusEl=document\.getElementById\('status'\)/);
 });
+test('les missions réutilisent le détail et le groupe déjà chargés pour accélérer le PDF',()=>{
+  assert.match(adminTools,/EUC_DEV416_finalDetail_\(y,f,c,p\)/);
+  assert.match(adminTools,/function EUC_DEV440_groupForPdf_/);
+  assert.match(adminTools,/CacheService\.getScriptCache\(\)/);
+  assert.match(adminTools,/generationMs:new Date\(\)\.getTime\(\)-started/);
+  assert.match(missionsUi,/missionToken:g\.pdfToken/);
+});
 test('la page sans convention utilise un état visible et non window.status',()=>{
   assert.match(noConventionUi,/const statusEl=document\.getElementById\('status'\)/);assert.doesNotMatch(noConventionUi,/\bstatus\.textContent/);
 });
