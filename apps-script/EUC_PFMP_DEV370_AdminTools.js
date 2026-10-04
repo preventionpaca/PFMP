@@ -226,6 +226,64 @@ function EUC_DEV436_replace_(body,key,value){
   var pattern='\\{\\{'+key+'\\}\\}',replacement=String(value==null?'':value).replace(/\\/g,'\\\\').replace(/\$/g,'$$$$');
   body.replaceText(pattern,replacement);
 }
+/* DEV438 — la seconde page est ajoutée après la fusion, donc elle est
+ * commune au modèle Eucalyptus et à tous les futurs modèles enregistrés. */
+function EUC_DEV438_emptyParagraph_(p){
+  if(!p||p.getType()!==DocumentApp.ElementType.PARAGRAPH)return false;
+  var text=EUC_DEV368_t(p.getText()).replace(/[\u200B-\u200D\uFEFF]/g,'').trim(),hasUsefulChild=false;
+  for(var i=0;i<p.getNumChildren();i++){
+    var type=p.getChild(i).getType();
+    if(type!==DocumentApp.ElementType.TEXT&&type!==DocumentApp.ElementType.PAGE_BREAK){hasUsefulChild=true;break}
+  }
+  return !text&&!hasUsefulChild;
+}
+function EUC_DEV438_compactParagraph_(p){
+  try{p.setSpacingBefore(0).setSpacingAfter(0).setLineSpacing(1)}catch(e){}
+}
+function EUC_DEV438_formatTable_(table,widths,headerSize,rowSize){
+  for(var c=0;c<widths.length;c++)try{table.setColumnWidth(c,widths[c])}catch(e){}
+  for(var r=0;r<table.getNumRows();r++){
+    var row=table.getRow(r);try{row.setMinimumHeight(r===0?20:18)}catch(e2){}
+    for(var k=0;k<row.getNumCells();k++){
+      var cell=row.getCell(k);try{cell.setPaddingTop(2).setPaddingBottom(2).setPaddingLeft(3).setPaddingRight(3)}catch(e3){}
+      try{cell.editAsText().setFontSize(r===0?headerSize:rowSize).setBold(r===0)}catch(e4){}
+      for(var p=0;p<cell.getNumChildren();p++)if(cell.getChild(p).getType()===DocumentApp.ElementType.PARAGRAPH)EUC_DEV438_compactParagraph_(cell.getChild(p).asParagraph());
+    }
+  }
+}
+function EUC_DEV438_compactMissionPage_(body,table){
+  /* Des marges équilibrées replacent le tableau dans la zone réellement
+     imprimable, y compris sur les imprimantes qui rognent le bord droit. */
+  try{body.setMarginLeft(28).setMarginRight(28).setMarginTop(24).setMarginBottom(24)}catch(e){}
+  EUC_DEV438_formatTable_(table,[105,112,190,100],8,7);
+  var index=body.getChildIndex(table),removed=0;
+  /* Le modèle officiel contient des paragraphes de placement entre le
+     tableau et les signatures. Ils faisaient basculer « Le Proviseur » et
+     les deux mentions sur une seconde page. On ne retire que les lignes
+     réellement vides (ou constituées d'un saut de page), jamais du texte. */
+  while(index>=0&&index+1<body.getNumChildren()&&removed<40){
+    var next=body.getChild(index+1);
+    if(!EUC_DEV438_emptyParagraph_(next))break;
+    next.removeFromParent();removed++;
+  }
+  for(var i=Math.max(0,index+1);i<body.getNumChildren();i++){
+    var el=body.getChild(i);if(el.getType()===DocumentApp.ElementType.PARAGRAPH)EUC_DEV438_compactParagraph_(el.asParagraph());
+  }
+}
+function EUC_DEV438_appendVisitRecap_(body,g){
+  body.appendPageBreak();
+  var title=body.appendParagraph('RÉCAPITULATIF HORAIRE DES VISITES EN ENTREPRISE');
+  title.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(13).setSpacingAfter(6);
+  var meta=body.appendParagraph((g.classe||'')+' — '+(g.periode||'')+' — '+(g.debut||'')+' au '+(g.fin||''));
+  meta.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(9).setSpacingAfter(8);
+  var rows=[['Ordre','Élève','Entreprise','Adresse de l’entreprise','Date','Heure\nd’arrivée','Heure\nde départ','Lieu de\ndépart']];
+  (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'','','','',''])});
+  var table=body.appendTable(rows);table.setBorderColor('#6f9f95');
+  for(var c=0;c<8;c++)table.getCell(0,c).setBackgroundColor('#e7f5f1');
+  EUC_DEV438_formatTable_(table,[30,68,78,119,48,50,50,72],7,7);
+  var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
+  help.setFontSize(8).setItalic(true).setSpacingBefore(7).setSpacingAfter(0);
+}
 function EUC_DEV436_pdfMission(q){
   q=q||{};var g=EUC_DEV374_missions(q).groups.filter(function(x){return x.key===EUC_DEV368_t(q.groupKey)})[0];
   if(!g)throw new Error('Groupe de mission introuvable.');
@@ -239,8 +297,9 @@ function EUC_DEV436_pdfMission(q){
     EUC_DEV436_replace_(body,'PERIODE',g.periode);EUC_DEV436_replace_(body,'DEBUT',g.debut||'');EUC_DEV436_replace_(body,'FIN',g.fin||'');EUC_DEV436_replace_(body,'DATE',date);
     var range=body.findText('\\{\\{LISTE_ELEVES\\}\\}'),rows=[['Élève','Entreprise','Adresse','Transport']];
     g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport||''])});
-    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}for(var r=0;r<table.getNumRows();r++){for(var k=0;k<table.getRow(r).getNumCells();k++){table.getCell(r,k).editAsText().setFontSize(r===0?9:8)}}}
+    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var table=body.insertTable(index,rows);table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table)}
     else EUC_DEV436_replace_(body,'LISTE_ELEVES',g.lignes.map(function(x){return x.eleve}).join(' · '));
+    EUC_DEV438_appendVisitRecap_(body,g);
     doc.saveAndClose();
     var pdf=copy.getAs(MimeType.PDF).setName('Ordre_de_mission_'+safe+'.pdf');
     return{ok:true,name:pdf.getName(),mime:'application/pdf',base64:Utilities.base64Encode(pdf.getBytes()),modele:model.label};
