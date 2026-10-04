@@ -2605,17 +2605,22 @@ function setKpis(s){
       ruptures:0
     };
 
+    function pipeline(card){
+      var remis=chk(card,'.dossier-remis');
+      var transmis=chk(card,'.transmis-cfa');
+      var contrat=!!val(card,'.date-contrat')&&!!val(card,'.debut')&&!!val(card,'.fin')&&!val(card,'.date-rupture');
+      var autre=!!val(card,'.date-rupture')||chk(card,'.nouveau-contrat');
+      return {dossier:remis&&!transmis&&!contrat&&!autre,cfa:remis&&transmis&&!contrat&&!autre,contrat:contrat};
+    }
+
     cards.forEach(function(card){
       var st=stateFromValues(card);
+      var pipe=pipeline(card);
       if(st.code==='future')count.future++;
       if(st.code==='apprentice')count.apprentices++;
-      if(chk(card,'.dossier-remis'))count.dossier++;
-      if(chk(card,'.transmis-cfa'))count.cfa++;
-      if(
-        val(card,'.date-contrat') &&
-        val(card,'.debut') &&
-        val(card,'.fin')
-      )count.contrats++;
+      if(pipe.dossier)count.dossier++;
+      if(pipe.cfa)count.cfa++;
+      if(pipe.contrat)count.contrats++;
       if(val(card,'.date-rupture'))count.ruptures++;
     });
 

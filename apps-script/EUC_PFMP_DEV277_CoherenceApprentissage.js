@@ -66,12 +66,33 @@ function EUC_DEV277_episode_(row,cols){
     fin:fin,
     rupture:rupture,
     actif:EUC_DEV277_boolCol_(f,cols,['Actif']),
+    dossierDistribue:
+      EUC_DEV277_boolCol_(f,cols,['Dossier_distribue']) ||
+      !!EUC_DEV277_val_(f,cols,['Date_distribution_dossier']),
     dossierRemis:
-      EUC_DEV277_boolCol_(f,cols,['Dossier_remis','Dossier_distribue']) ||
-      !!EUC_DEV277_val_(f,cols,['Date_remise_dossier','Date_dossier','Date_distribution_dossier']),
+      EUC_DEV277_boolCol_(f,cols,['Dossier_remis']) ||
+      !!EUC_DEV277_val_(f,cols,['Date_remise_dossier','Date_dossier']),
     transmisCfa:
       EUC_DEV277_boolCol_(f,cols,['Dossier_transmis_CFA']) ||
-      !!EUC_DEV277_val_(f,cols,['Date_transmission_CFA'])
+      !!EUC_DEV277_val_(f,cols,['Date_transmission_CFA']),
+    nouveauContrat:EUC_DEV277_boolCol_(f,cols,['Nouveau_contrat'])
+  };
+}
+/**
+ * Étapes exclusives du circuit apprentissage.
+ * - « remis » : reçu par le lycée, pas encore transmis et sans événement aval ;
+ * - « CFA » : remis puis transmis, en attente du contrat signé.
+ * La distribution du dossier est une étape amont et ne remplace jamais la remise.
+ */
+function EUC_DEV437_pipeline_(ep){
+  ep=ep||{};
+  var contratValide=!!ep.contrat && !!ep.debut && !!ep.fin && !ep.rupture;
+  var autreSituation=!!ep.rupture || !!ep.nouveauContrat;
+  return {
+    dossier:!!ep.dossierRemis && !ep.transmisCfa && !contratValide && !autreSituation,
+    cfa:!!ep.dossierRemis && !!ep.transmisCfa && !contratValide && !autreSituation,
+    contrat:contratValide,
+    rupture:!!ep.rupture
   };
 }
 function EUC_DEV277_today_(){
@@ -89,7 +110,7 @@ function EUC_DEV277_score_(ep,today){
   if(current)score+=10000000;
   else if(future)score+=7000000;
   else if(full&&!ep.rupture)score+=5000000;
-  else if(ep.dossierRemis||ep.transmisCfa)score+=2000000;
+  else if(ep.dossierDistribue||ep.dossierRemis||ep.transmisCfa)score+=2000000;
   if(ep.actif)score+=100000;
   if(ep.contrat)score+=30000;
   if(ep.debut)score+=20000;
@@ -164,7 +185,7 @@ function EUC_DEV277_status_(ep){
   if(full && ep.debut>today){
     return {code:'FUTUR_APPRENTI',apprenti:false,futur:true};
   }
-  if(ep.dossierRemis||ep.transmisCfa||ep.contrat||ep.debut){
+  if(ep.dossierDistribue||ep.dossierRemis||ep.transmisCfa||ep.contrat||ep.debut){
     return {code:'FUTUR_APPRENTI',apprenti:false,futur:true};
   }
   return {code:'SCOLAIRE',apprenti:false,futur:false};
@@ -201,10 +222,13 @@ function EUC_DEV277_overlay_(s,annee){
   s.telTuteur=v(['Tuteur_telephone','Telephone_tuteur'])||s.telTuteur||'';
   s.mailTuteur=v(['Tuteur_courriel','Courriel_tuteur'])||s.mailTuteur||'';
 
-  s.dossierRemis=b(['Dossier_remis','Dossier_distribue'])||s.dossierRemis||false;
-  s.dateDossier=v(['Date_remise_dossier','Date_dossier','Date_distribution_dossier'])||s.dateDossier||'';
-  s.transmisCfa=b(['Dossier_transmis_CFA'])||s.transmisCfa||false;
-  s.dateCfa=v(['Date_transmission_CFA'])||s.dateCfa||'';
+  s.dossierDistribue=b(['Dossier_distribue']);
+  s.dateDistribution=v(['Date_distribution_dossier']);
+  s.dossierRemis=b(['Dossier_remis'])||!!v(['Date_remise_dossier','Date_dossier']);
+  s.dateDossier=v(['Date_remise_dossier','Date_dossier']);
+  s.transmisCfa=b(['Dossier_transmis_CFA'])||!!v(['Date_transmission_CFA']);
+  s.dateCfa=v(['Date_transmission_CFA']);
+  s.nouveauContrat=b(['Nouveau_contrat']);
 
   return s;
 }
@@ -307,16 +331,17 @@ function EUC_DEV277_dashboardDetails(annee){
       if(!ep)return;
 
       var st=EUC_DEV277_status_(ep);
+      var pipeline=EUC_DEV437_pipeline_(ep);
 
       if(st.apprenti){
         lists.total.push(item);
         appByClass[classe]=(appByClass[classe]||0)+1;
       }
       if(st.futur)lists.future.push(item);
-      if(ep.dossierRemis)lists.dossier.push(item);
-      if(ep.transmisCfa)lists.cfa.push(item);
-      if(ep.contrat&&ep.debut&&ep.fin&&!ep.rupture)lists.contrats.push(item);
-      if(ep.rupture)lists.ruptures.push(item);
+      if(pipeline.dossier)lists.dossier.push(item);
+      if(pipeline.cfa)lists.cfa.push(item);
+      if(pipeline.contrat)lists.contrats.push(item);
+      if(pipeline.rupture)lists.ruptures.push(item);
     });
 
   lists.total.forEach(function(item){
@@ -357,4 +382,3 @@ function EUC_DEV279_dashboardDetailsCached(annee){
     return EUC_DEV277_dashboardDetails(annee);
   }
 }
-

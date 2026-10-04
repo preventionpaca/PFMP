@@ -869,8 +869,10 @@ function EUC_DEV192_loadApprentis(
       s.mailTuteur ||
       '';
 
-    s.dossierRemis = bool(['Dossier_distribue']);
-    s.dateDossier = val(['Date_distribution_dossier']);
+    s.dossierDistribue = bool(['Dossier_distribue']);
+    s.dateDistribution = val(['Date_distribution_dossier']);
+    s.dossierRemis = bool(['Dossier_remis']) || !!val(['Date_remise_dossier','Date_dossier']);
+    s.dateDossier = val(['Date_remise_dossier','Date_dossier']);
     s.transmisCfa = bool(['Dossier_transmis_CFA']);
     s.dateCfa = val(['Date_transmission_CFA']);
     s.dateContrat = val(['Date_contrat_officielle', 'Date_debut']);
@@ -939,17 +941,24 @@ function EUC_DEV192_addStats_(stats, f, cols) {
 
   stats.suivis++;
 
-  if (bool(['Dossier_distribue'])) stats.dossierRemis++;
-  if (bool(['Dossier_transmis_CFA'])) stats.transmisCFA++;
+  var pipeline=EUC_DEV437_pipeline_({
+    dossierRemis:bool(['Dossier_remis']) || !!txt(['Date_remise_dossier','Date_dossier']),
+    transmisCfa:bool(['Dossier_transmis_CFA']) || !!txt(['Date_transmission_CFA']),
+    contrat:txt(['Date_contrat_officielle','Date_contrat']),
+    debut:txt(['Date_debut','Debut']),
+    fin:txt(['Date_fin','Fin']),
+    rupture:txt(['Date_rupture_contrat','Date_rupture']),
+    nouveauContrat:bool(['Nouveau_contrat'])
+  });
 
-  if (
-    txt(['Date_contrat_officielle', 'Date_debut']) &&
-    !txt(['Date_rupture_contrat'])
-  ) {
+  if (pipeline.dossier) stats.dossierRemis++;
+  if (pipeline.cfa) stats.transmisCFA++;
+
+  if (pipeline.contrat) {
     stats.contratsValides++;
   }
 
-  if (txt(['Date_rupture_contrat'])) stats.ruptures++;
+  if (pipeline.rupture) stats.ruptures++;
   if (bool(['Nouveau_contrat'])) stats.nouveauxContrats++;
 
   if (

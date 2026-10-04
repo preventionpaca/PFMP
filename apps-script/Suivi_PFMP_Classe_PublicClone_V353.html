@@ -31,11 +31,15 @@
     .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
     .s-SANS_CONVENTION{background:#fff1f2;color:#b42318}.s-ENREGISTREE,.s-DEPOSEE,.s-SIGNEE{background:#fff7ed;color:#b45309}
     .s-FINALISEE,.s-REMISE,.s-AUTORISEE{background:#ecfdf3;color:#067647}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}
+    tr.row-situation-admin{background:#fff0db!important}tr.row-situation-admin td{border-bottom-color:#f7c77e!important}
+    .status-date{display:block;margin-top:3px;font-size:10px;font-weight:700;opacity:.82}
+    .export-actions{display:flex;justify-content:flex-end;margin:0 0 14px}
     .modal{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
     .modal.show{display:flex}.modal-card{background:#fff;width:min(720px,96vw);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
     .modal-card h3{margin-top:0}.modal-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;max-height:180px;overflow:auto;font-size:13px}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
     @media(max-width:900px){.context,.summary,.assignbar{grid-template-columns:1fr}}
+    @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#exportPdf,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
   
     .hist-v162{margin-top:5px;color:#b42318;font-size:11px}.hist-v162 summary{cursor:pointer;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a}.hist-v162 span{font-weight:400}
     .retire-v162{background:#fff;color:#b42318!important;border:1px solid #f1aeb5!important}
@@ -162,6 +166,9 @@ body{background:#f7fbf9!important}
   </div>
 
   <div class="card">
+    <div class="export-actions">
+      <button id="exportPdf" class="secondary" type="button">Exporter PDF</button>
+    </div>
     <div class="mail-actions">
       <a id="mailParams" class="secondary" href="#">Paramètres des envois</a>
       <button id="sendTable" class="primary" type="button">Envoyer le tableau par email</button>
@@ -229,7 +236,10 @@ const DETAIL_INIT=<?!= detailJson ?>;
   function selectedIds(){return Array.from(document.querySelectorAll('.student-check:checked')).map(x=>Number(x.value))}
     function historyNoteV161(x){return '';}
 
-function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'">'+esc(x.statut)+'</span>'}
+function statusPill(x){
+  var date=(x&&x.apprenti&&x.dateContrat)?'<span class="status-date">Début du contrat : '+esc(fmtPfmpDate(x.dateContrat))+'</span>':'';
+  return '<span class="status-pill s-'+esc(x.statutCode)+'">'+esc(x.statut)+date+'</span>';
+}
 
   function renderYears(){yearSelect.innerHTML=(yearContext.annees||[]).map(y=>'<option value="'+esc(y.code)+'"'+(y.code===detail.annee?' selected':'')+'>'+esc(y.libelle||y.code)+'</option>').join('')}
   function renderTabs(){
@@ -301,7 +311,8 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
 
     tbody.innerHTML=(detail.lignes||[]).map(function(x){
       const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
-      return '<tr><td>'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+val(x.contactEntreprise)+'</td><td>'+val(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
+      const rowClass=x.situationAdministrativeLibelle?' class="row-situation-admin"':'';
+      return '<tr'+rowClass+'><td>'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+val(x.contactEntreprise)+'</td><td>'+val(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
     }).join('');
 
     toolbar.style.display=detail.peutModifier?'grid':'none';document.getElementById('selectHead').style.display=detail.peutModifier?'table-cell':'none';sendTable.style.display=detail.peutModifier?'inline-block':'none';mailParams.style.display=detail.peutModifier?'inline-block':'none';bindChecks();
@@ -310,6 +321,7 @@ function statusPill(x){return '<span class="status-pill s-'+esc(x.statutCode)+'"
   bindProfAutocomplete(phoneProfInput,phoneProfSuggestions,p=>selectedProfPhone=p);bindProfAutocomplete(visitProfInput,visitProfSuggestions,p=>selectedProfVisit=p);
   phoneAssignBtn.onclick=function(){assign('TELEPHONE',selectedProfPhone,phoneAssignBtn)};visitAssignBtn.onclick=function(){assign('VISITE',selectedProfVisit,visitAssignBtn)};
   sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
+  document.getElementById('exportPdf').onclick=function(){window.print()};
   yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe-public&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
   render();
 })();

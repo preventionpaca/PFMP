@@ -1,4 +1,9 @@
 function EUC_DEV211_txt_(v){ return String(v==null?'':v).trim(); }
+function EUC_DEV211_boolValue_(v){
+  if(v===true||v===false)return v;
+  var s=EUC_DEV211_txt_(v).toLowerCase();
+  return s==='true'||s==='1'||s==='oui'||s==='yes'||s==='x';
+}
 function EUC_DEV211_norm_(v){
   return EUC_DEV211_txt_(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 }
@@ -198,8 +203,10 @@ function EUC_DEV211_loadApprentis(annee,classeId,classeNom){
         tuteur:val(f,['Tuteur_nom','Tuteur']),
         telTuteur:val(f,['Tuteur_telephone','Telephone_tuteur']),
         mailTuteur:val(f,['Tuteur_courriel','Courriel_tuteur']),
-        dossierRemis:bool(f,['Dossier_distribue']),
-        dateDossier:val(f,['Date_distribution_dossier']),
+        dossierDistribue:bool(f,['Dossier_distribue']),
+        dateDistribution:val(f,['Date_distribution_dossier']),
+        dossierRemis:bool(f,['Dossier_remis']),
+        dateDossier:val(f,['Date_remise_dossier','Date_dossier']),
         transmisCfa:bool(f,['Dossier_transmis_CFA']),
         dateCfa:val(f,['Date_transmission_CFA']),
         dateContrat:val(f,['Date_contrat_officielle','Date_debut']),
@@ -239,10 +246,15 @@ function EUC_DEV211_getDashboard(annee){
 
     var cEleve=EUC_DEV211_col_(aCols,['Eleve','Élève','Eleve_id']);
     var cAActif=EUC_DEV211_col_(aCols,['Actif']);
-    var cDossier=EUC_DEV211_col_(aCols,['Dossier_distribue']);
+    var cDossier=EUC_DEV211_col_(aCols,['Dossier_remis']);
+    var cDateDossier=EUC_DEV211_col_(aCols,['Date_remise_dossier','Date_dossier']);
     var cCfa=EUC_DEV211_col_(aCols,['Dossier_transmis_CFA']);
-    var cDebut=EUC_DEV211_col_(aCols,['Date_contrat_officielle','Date_debut']);
+    var cDateCfa=EUC_DEV211_col_(aCols,['Date_transmission_CFA']);
+    var cContrat=EUC_DEV211_col_(aCols,['Date_contrat_officielle','Date_contrat']);
+    var cDebut=EUC_DEV211_col_(aCols,['Date_debut','Debut']);
+    var cFin=EUC_DEV211_col_(aCols,['Date_fin','Fin']);
     var cRupture=EUC_DEV211_col_(aCols,['Date_rupture_contrat']);
+    var cNouveau=EUC_DEV211_col_(aCols,['Nouveau_contrat']);
 
     var latest={};
     aRows.forEach(function(r){
@@ -253,10 +265,19 @@ function EUC_DEV211_getDashboard(annee){
 
     Object.keys(latest).forEach(function(k){
       var f=latest[k].fields||{}, id=Number(k);
-      if(cDossier && f[cDossier]) dossier++;
-      if(cCfa && f[cCfa]) cfa++;
-      if(cDebut && EUC_DEV211_txt_(f[cDebut]) && !(cRupture && EUC_DEV211_txt_(f[cRupture]))) valides++;
-      if(cRupture && EUC_DEV211_txt_(f[cRupture])) ruptures++;
+      var pipeline=EUC_DEV437_pipeline_({
+        dossierRemis:!!(cDossier&&EUC_DEV211_boolValue_(f[cDossier]))||!!(cDateDossier&&EUC_DEV211_txt_(f[cDateDossier])),
+        transmisCfa:!!(cCfa&&EUC_DEV211_boolValue_(f[cCfa]))||!!(cDateCfa&&EUC_DEV211_txt_(f[cDateCfa])),
+        contrat:cContrat?EUC_DEV211_txt_(f[cContrat]):'',
+        debut:cDebut?EUC_DEV211_txt_(f[cDebut]):'',
+        fin:cFin?EUC_DEV211_txt_(f[cFin]):'',
+        rupture:cRupture?EUC_DEV211_txt_(f[cRupture]):'',
+        nouveauContrat:!!(cNouveau&&EUC_DEV211_boolValue_(f[cNouveau]))
+      });
+      if(pipeline.dossier)dossier++;
+      if(pipeline.cfa)cfa++;
+      if(pipeline.contrat)valides++;
+      if(pipeline.rupture)ruptures++;
       if(!fullIds[id] && cAActif && f[cAActif]!==false) mixite++;
     });
   }catch(e){}

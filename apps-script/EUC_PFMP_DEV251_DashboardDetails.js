@@ -110,6 +110,15 @@ function EUC_DEV251_dashboardDetails(annee){
     var contrat=txt(f,['Date_contrat_officielle','Date_contrat']);
     var debut=txt(f,['Date_debut','Debut']);
     var fin=txt(f,['Date_fin','Fin']);
+    var pipeline=EUC_DEV437_pipeline_({
+      dossierRemis:boo(f,['Dossier_remis']) || !!txt(f,['Date_remise_dossier','Date_dossier']),
+      transmisCfa:boo(f,['Dossier_transmis_CFA']) || !!txt(f,['Date_transmission_CFA']),
+      contrat:contrat,
+      debut:debut,
+      fin:fin,
+      rupture:rupture,
+      nouveauContrat:boo(f,['Nouveau_contrat'])
+    });
 
     var apprenti=
       !rupture &&
@@ -143,10 +152,10 @@ function EUC_DEV251_dashboardDetails(annee){
       item:item,
       apprenti:apprenti,
       futur:futur,
-      dossier:boo(f,['Dossier_remis']) || !!txt(f,['Date_remise_dossier','Date_dossier']),
-      cfa:boo(f,['Dossier_transmis_CFA']) || !!txt(f,['Date_transmission_CFA']),
-      contrat:!!contrat && !!debut && !!fin && !rupture,
-      rupture:!!rupture
+      dossier:pipeline.dossier,
+      cfa:pipeline.cfa,
+      contrat:pipeline.contrat,
+      rupture:pipeline.rupture
     };
   }
 

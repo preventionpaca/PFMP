@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## DEV437 préparée — dates, PDF public et pipeline apprentissage
+
+- Le détail PUBLIC affiche désormais la date de début de contrat dans le statut des apprentis et propose l'export PDF local déjà disponible côté ADMIN. Les situations administratives y reprennent aussi le signalement orange, sans lecture Grist supplémentaire.
+- Les indicateurs `Dossiers remis` et `Transmis CFA` deviennent des étapes exclusives : `Dossiers remis` ne conserve que les dossiers effectivement remis, non transmis et sans contrat/rupture/nouveau contrat ; `Transmis CFA` exige à la fois remise et transmission, tout en excluant ces situations aval. `Dossier distribué` reste une étape distincte et n'est plus compté comme dossier remis.
+- Les mêmes règles sont appliquées au dashboard global, aux détails d'infobulle et aux synthèses de classe ADMIN/PUBLIC. Aucune donnée métier n'est modifiée par ce lot.
+- Tests ciblés et suite complète verts : `node tests/run-tests.js` (349 tests). Le déploiement immuable et les contrôles réels restent à effectuer.
+- Les cartes et l'accès d'affectation des professeurs principaux restent volontairement deux lots séparés : le premier exige une décision de géocodage/confidentialité, le second une autorisation temporaire limitée et révocable.
+
 ## DEV436 déployée — finitions de suivi et ordres de mission
 
 - La grille ADMIN/PUBLIC conserve son chemin rapide. Lorsqu'une mutation vient d'invalider un détail, le contrôle rapide affiche désormais « Mise à jour en cours » et réessaie brièvement au lieu d'exposer une erreur technique ; aucun appel n'est ajouté lorsque les données préchargées sont disponibles.

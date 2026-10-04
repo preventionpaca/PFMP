@@ -181,6 +181,7 @@ function EUC_DEV394_BASE_EUC_DEV340_enrichApprentis_(detail){
     if(x.apprenti){
       ap++;x.statutCode='APPRENTI';x.statut='APPRENTI';x.convention=false;x.conventionId=0;
       if(st.record){
+        x.dateContrat=EUC_DEV340_txt_(st.record.debut)||x.dateContrat||'';
         if(!EUC_DEV340_txt_(x.entreprise))x.entreprise=EUC_DEV340_txt_(st.record.entreprise);
         if(!EUC_DEV340_txt_(x.tuteurEntreprise))x.tuteurEntreprise=[st.record.tuteur,st.record.tel,st.record.mail].filter(Boolean).join(' · ');
       }
