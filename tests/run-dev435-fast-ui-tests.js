@@ -46,6 +46,8 @@ test('les missions réutilisent le détail et le groupe déjà chargés pour acc
   assert.match(adminTools,/EUC_DEV416_finalDetail_\(y,f,c,p\)/);
   assert.match(adminTools,/function EUC_DEV440_groupForPdf_/);
   assert.match(adminTools,/CacheService\.getScriptCache\(\)/);
+  assert.match(adminTools,/function EUC_DEV440_transportMap_/);
+  assert.match(adminTools,/function EUC_DEV440_missionTargets_/);
   assert.match(adminTools,/generationMs:new Date\(\)\.getTime\(\)-started/);
   assert.match(missionsUi,/missionToken:g\.pdfToken/);
 });

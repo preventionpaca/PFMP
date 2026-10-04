@@ -25,6 +25,7 @@ ctx.EUC_DEV368_mapTransport=()=>({
   '2026-2027|10|101|8':{mode:'Train'}
 });
 ctx.EUC_DEV368_targets=()=>[{annee:'2026-2027',famille:'BACPRO',classeId:10,classe:'TCAR',periode:{id:101,libelle:'PFMP n°1',debut:'28/09/2026',fin:'16/10/2026'}}];
+ctx.EUC_DEV440_missionTargets_=ctx.EUC_DEV368_targets;
 ctx.EUC_DEV374_missionDetail_=()=>({lignes:[
   {eleveId:7,nom:'APPRENTI',prenom:'Test',apprenti:true,statutCode:'APPRENTI',conventionId:0,professeurVisiteur:'M. VISITEUR',entreprise:'GARAGE ÉCOLE',adresseEntreprise:'1 rue Exemple',responsableEntreprise:'Mme Responsable',telephoneEntreprise:'01 02 03 04 05',courrielEntreprise:'responsable@example.fr',tuteur:'M. Tuteur',telephoneTuteur:'06 07 08 09 10',courrielTuteur:'tuteur@example.fr'},
   {eleveId:8,nom:'SCOLAIRE',prenom:'Test',apprenti:false,statutCode:'AVEC_CONVENTION',conventionId:8,professeurVisiteur:'M. VISITEUR',entreprise:'ATELIER ÉCOLE',adresseEntreprise:'2 rue Exemple'},
