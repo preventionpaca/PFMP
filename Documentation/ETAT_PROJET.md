@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 5 octobre 2026 — DEV447
+
+- Version Apps Script immuable active : `798` sur les déploiements public et administrateur existants ; URL, `DOMAIN` et déployeur conservés.
+- Nouvelle entrée `Paramétrage → Consommation API Grist`, réservée à l’administration.
+- Le compteur est conservé dans les propriétés Apps Script, jamais dans Grist : total quotidien PFMP, succès, erreurs, erreurs `429`, durée moyenne, répartition fonctionnelle et historique glissant de 31 jours.
+- Périmètre explicite : uniquement les appels effectués par PFMP depuis DEV447. Il ne reconstitue pas les appels antérieurs et ne compte pas les autres applications utilisant le même document Grist.
+- Le plafond affiché est le quota configuré de `40 000` appels. L’heure de renouvellement reste indiquée « non vérifiée » tant que Grist ne la documente pas.
+- Contrôle réel après déploiement : le chargement de TMP3D dans la gestion des apprentis a produit `26` appels comptés, dont `6` classés Apprentis, `4` Snapshots et `2` Imports/élèves ; aucune erreur ni `429` pendant ce contrôle.
+- Afficher ou actualiser le tableau de consommation ne déclenche aucun appel Grist.
+- Tests DEV447 : 23 réussis, couvrant le comptage, la passerelle Entreprises, l’absence de donnée métier enregistrée et le contrôle d’accès administrateur. La passerelle PFMP a en plus été vérifiée sur le déploiement réel par le chargement de TMP3D.
+- Grist autorisé inchangé : recette `j1jDArBkzi7P` uniquement ; production `3pnVrygfNn7c` non consultée.
+
 ## Mise à jour du 5 octobre 2026 — DEV446
 
 - Version Apps Script immuable active : `795` sur les déploiements public et administrateur existants.
