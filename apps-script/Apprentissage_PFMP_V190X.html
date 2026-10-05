@@ -2439,6 +2439,7 @@ function setKpis(s){
       ville:v('.ville'),
       telEntreprise:v('.tel-ent'),
       mailEntreprise:v('.mail-ent'),
+      responsableEntreprise:v('.responsable-ent'),
       tuteur:v('.tuteur-input'),
       telTuteur:v('.tel-tut'),
       mailTuteur:v('.mail-tut')
@@ -2710,6 +2711,7 @@ function setKpis(s){
       q(card,'.ville').value=r.ville||'';
       q(card,'.tel-ent').value=r.telephoneEntreprise||'';
       q(card,'.mail-ent').value=r.courrielEntreprise||'';
+      q(card,'.responsable-ent').value=r.responsableEntreprise||r.nomResponsableEntreprise||'';
       q(card,'.tuteur-input').value=r.tuteur||'';
       q(card,'.tel-tut').value=r.telephoneTuteur||'';
       q(card,'.mail-tut').value=r.courrielTuteur||'';
@@ -2779,15 +2781,15 @@ function setKpis(s){
     return ''+
     '<div class="student-card dev248-card" data-id="'+esc(x.id)+'">'+
       '<div class="dev249-left">'+
-        '<div class="dev249-col"><div class="dev249-title">Élève</div><div class="dev249-name">'+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="dev249-title">Statut</div><div class="dev249-status-line"><input class="apprenti check" type="checkbox" disabled><div class="dev248-status">Scolaire</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="dev249-field"><span>Début</span><input class="debut" type="date" value="'+esc(x.debut)+'"></label><label class="dev249-field"><span>Fin</span><input class="fin" type="date" value="'+esc(x.fin)+'"></label></div></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Élève</div><div class="dev249-name">'+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="dev249-title">Statut</div><div class="dev249-status-line"><input class="apprenti check" type="checkbox" disabled><div class="dev248-status">Scolaire</div></div><div class="dev463-contract-dates"><label class="dev249-field"><span>Début</span><input class="debut" type="date" value="'+esc(x.debut)+'"></label><label class="dev249-field"><span>Fin</span><input class="fin" type="date" value="'+esc(x.fin)+'"></label></div></div>'+
         '<div class="dev249-col"><div class="dev249-title">Circuit du dossier</div><div class="dev249-circuit-row"><input class="dossier-distribue" type="checkbox" '+(x.dossierDistribue?'checked':'')+'><span>Dossier distribué</span><input class="date-distribution" type="date" value="'+esc(x.dateDistribution)+'"></div><div class="dev249-circuit-row"><input class="dossier-remis" type="checkbox" '+(x.dossierRemis?'checked':'')+'><span>Dossier remis</span><input class="date-dossier" type="date" value="'+esc(x.dateDossier||x.dateRemise)+'"></div><div class="dev249-circuit-row"><input class="transmis-cfa" type="checkbox" '+(x.transmisCfa?'checked':'')+'><span>Transmis au CFA</span><input class="date-transmission-cfa" type="date" value="'+esc(x.dateTransmissionCfa||x.dateCfa)+'"></div></div>'+
         '<div class="dev249-col dev249-contract"><div class="dev249-title">Contrat</div><div class="dev249-history"><button type="button" class="history-btn">Historique</button></div><label class="dev249-field"><span>Contrat officiel</span><input class="date-contrat" type="date" value="'+esc(x.dateContrat)+'"></label><label class="dev249-field"><span>Rupture</span><input class="date-rupture" type="date" value="'+esc(x.dateRupture)+'"></label><label class="dev249-check"><input class="nouveau-contrat" type="checkbox" '+(x.nouveauContrat?'checked':'')+'><span>Nouveau contrat</span></label><input class="date-cfa" type="date" value="'+esc(x.dateCfa)+'" style="display:none"></div>'+
       '</div>'+
       '<div class="dev249-right"><button type="button" class="save dev249-save">Enregistrer</button><span class="dev248-saved">Prêt</span>'+
         '<div class="dev249-col dev249-company-box"><div class="dev249-title">Entreprise</div><label class="dev249-field"><span>Raison sociale</span><input class="nom-ent" value="'+esc(x.nomEntreprise||x.entreprise)+'"></label><label class="dev249-field"><span>Nom commercial / enseigne</span><input class="nom-com" value="'+esc(x.nomCommercial)+'"></label><div class="dev249-search"><label class="dev249-field"><span>SIRET</span><input class="siret-input" maxlength="14" value="'+esc(x.siret)+'"></label><button type="button" class="search">Rechercher</button></div><div class="dev249-msg msg"></div></div>'+
         '<div class="dev249-col"><div class="dev249-title">Adresse</div><label class="dev249-field"><span>Adresse</span><input class="adresse" value="'+esc(x.adresse)+'"></label><div style="display:grid;grid-template-columns:70px 1fr;gap:8px"><label class="dev249-field"><span>CP</span><input class="cp" value="'+esc(x.cp)+'"></label><label class="dev249-field"><span>Ville</span><input class="ville" value="'+esc(x.ville)+'"></label></div></div>'+
-        '<div class="dev249-col"><div class="dev249-title">Coordonnées entreprise</div><label class="dev249-field"><span>Téléphone</span><input class="tel-ent" value="'+esc(x.telEntreprise)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-ent" type="email" value="'+esc(x.mailEntreprise)+'"></label></div>'+
-        '<div class="dev249-col"><div class="dev249-title">Tuteur</div><label class="dev249-field"><span>Nom du tuteur</span><input class="tuteur-input" value="'+esc(x.tuteur)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-tut" value="'+esc(x.telTuteur)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-tut" type="email" value="'+esc(x.mailTuteur)+'"></label></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Responsable entreprise</div><label class="dev249-field"><span>Nom du responsable</span><input class="responsable-ent" value="'+esc(x.responsableEntreprise)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-ent" value="'+esc(x.telEntreprise)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-ent" type="email" value="'+esc(x.mailEntreprise)+'"></label></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Tuteur</div><label class="dev463-same-contact"><input class="same-contact" type="checkbox" '+((x.responsableEntreprise||x.telEntreprise||x.mailEntreprise)&&x.responsableEntreprise===x.tuteur&&x.telEntreprise===x.telTuteur&&x.mailEntreprise===x.mailTuteur?'checked':'')+'><span>Tuteur identique au responsable</span></label><label class="dev249-field"><span>Nom du tuteur</span><input class="tuteur-input" value="'+esc(x.tuteur)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-tut" value="'+esc(x.telTuteur)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-tut" type="email" value="'+esc(x.mailTuteur)+'"></label></div>'+
       '</div>'+
     '</div>';
   }
@@ -2801,6 +2803,11 @@ function setKpis(s){
     }
 
     card.addEventListener('change',function(ev){
+      if(ev.target.matches('.same-contact')&&ev.target.checked){
+        q(card,'.tuteur-input').value=val(card,'.responsable-ent');
+        q(card,'.tel-tut').value=val(card,'.tel-ent');
+        q(card,'.mail-tut').value=val(card,'.mail-ent');
+      }
       if(ev.target.matches('.apprenti')){
         ev.preventDefault();
         normalizeDatesAndStatus(card,ev.target);
@@ -2814,8 +2821,13 @@ function setKpis(s){
 
     card.addEventListener('blur',function(ev){
       if(ev.target.matches(
-        '.nom-ent,.nom-com,.adresse,.cp,.ville,.tel-ent,.mail-ent,.tuteur-input,.tel-tut,.mail-tut'
+        '.nom-ent,.nom-com,.adresse,.cp,.ville,.responsable-ent,.tel-ent,.mail-ent,.tuteur-input,.tel-tut,.mail-tut'
       )){
+        if(q(card,'.same-contact')&&q(card,'.same-contact').checked&&ev.target.matches('.responsable-ent,.tel-ent,.mail-ent')){
+          q(card,'.tuteur-input').value=val(card,'.responsable-ent');
+          q(card,'.tel-tut').value=val(card,'.tel-ent');
+          q(card,'.mail-tut').value=val(card,'.mail-ent');
+        }
         schedule();
       }
     },true);
@@ -5114,6 +5126,69 @@ body.dev252-readonly .dev259-maint-hidden{
     install();
   }
 
+})();
+</script>
+
+
+<style id="DEV463_APPRENTIS_CONTACTS_DATES">
+/* La date reste lisible à côté de l'icône native du calendrier. */
+.dev249-left{
+  grid-template-columns:minmax(205px,30%) minmax(290px,42%) minmax(185px,28%)!important;
+}
+.dev463-contract-dates{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+}
+.dev463-contract-dates input[type=date],
+.dev249-circuit-row input[type=date],
+.dev249-contract input[type=date]{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  padding-right:24px!important;
+  font-size:10px!important;
+}
+/* L'entreprise rend un peu de largeur aux deux blocs de contacts. */
+.dev249-right{
+  grid-template-columns:32% 21% 24% 23%!important;
+}
+.dev463-same-contact{
+  display:flex;
+  align-items:flex-start;
+  gap:5px;
+  margin:0 0 3px;
+  font-size:8px;
+  line-height:1.15;
+  color:#47645d;
+  font-weight:700;
+}
+.dev463-same-contact input{width:auto!important;margin:1px 0 0!important;flex:0 0 auto}
+@media(max-width:1450px){
+  .dev248-card{grid-template-columns:1fr!important}
+  .dev249-left{grid-template-columns:minmax(210px,30%) minmax(300px,42%) minmax(190px,28%)!important}
+  .dev249-right{grid-template-columns:1.25fr .9fr 1fr 1fr!important}
+}
+</style>
+
+<script>
+/* DEV463_APPRENTIS_ROUTES_EXPLICITES */
+(function(){
+  var ADMIN='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
+  var PUBLIC='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+  function readonly(){
+    if(new URLSearchParams(location.search).get('page')==='apprentissage-public-pfmp')return true;
+    try{return typeof BOOT!=='undefined'&&!!BOOT.readonly;}catch(e){return false;}
+  }
+  function apply(){
+    var ro=readonly(),home=document.getElementById('homeLink'),maint=document.getElementById('maintLink');
+    if(home){home.href=ro?PUBLIC+'?page=suivi-conventions-public':ADMIN+'?page=admin-pfmp';home.target='_top';}
+    if(maint){maint.href=ADMIN+'?page=snapshot-pfmp-admin';maint.target='_top';}
+    ['dev252PublicLink','dev253PublicLink'].forEach(function(id){var link=document.getElementById(id);if(link){link.href=PUBLIC+'?page=apprentissage-public-pfmp';link.target='_top';}});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){apply();setTimeout(apply,250);});
+  else{apply();setTimeout(apply,250);}
 })();
 </script>
 

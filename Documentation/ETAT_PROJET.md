@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 5 octobre 2026 — DEV463 (routage administrateur, codes PP et fiche apprenti)
+
+- Cause de la disparition des affectations : le centre administrateur injectait encore l’URL du Web App public dans ses liens dynamiques. L’écran ressemblait à l’administration, mais le détail était réellement rendu par le déploiement public, donc sans commandes de mutation. Le centre et tous les outils administratifs utilisent maintenant explicitement le Web App administrateur ; les navigations famille/période sortent de l’iframe avec `target="_top"`.
+- Cause des codes PP neufs annoncés comme expirés : une date Grist numérique en secondes Unix était interprétée par JavaScript comme un nombre de millisecondes et retombait en 1970. Le lecteur accepte désormais secondes, millisecondes, chaîne numérique et ISO, avec repli sur la date de fin de PFMP. La règle métier reste inchangée : expiration le dernier jour de la période.
+- La fiche apprenti affiche de nouveau le nom du responsable entreprise, son téléphone et son courriel, séparément du nom, du téléphone et du courriel du tuteur. La case « Tuteur identique au responsable » recopie les trois champs et les maintient synchronisés pendant la saisie.
+- Les colonnes de la fiche sont rééquilibrées : largeur garantie pour les dates de début/fin et espace réservé à l’icône calendrier ; le bloc entreprise cède de la place aux deux blocs de contacts. Le responsable est transporté du chargeur Grist jusqu’au JSON puis à la sauvegarde ciblée.
+- Le géocodage conserve l’architecture incrémentale DEV445 : comparaison SIRET/adresse en mémoire, BAN uniquement pour les adresses françaises nouvelles ou modifiées, puis écritures Grist groupées. La correction de routage rend également son retour Administration cohérent. Aucun géocodage réel n’a été lancé pendant ce lot.
+- Tests ciblés : `6/6` DEV463, `10/10` DEV462, `16/16` DEV445, `10/10` DEV448 et `5/5` DEV449. La suite complète conserve exactement les sept échecs historiques déjà documentés ; aucun nouveau test n’échoue.
+- Déploiement : version Apps Script immuable `848` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante est identique pour tous les fichiers du lot. Contrôle navigateur réel : le détail TCAR administrateur affiche les deux barres d’affectation ; la fiche Apprentis TMVA1 affiche les dates sans recouvrement ainsi que les deux contacts complets et la case de recopie. Le chargement TMVA1 mesuré après publication est de `9,137 s` : nette amélioration par rapport aux `35 s` signalées, mais l’objectif de `3 à 5 s` reste à traiter séparément.
+- Aucune écriture élève/convention/affectation, aucun courriel, aucun ordre de mission et aucun géocodage réel n’ont été déclenchés ; la production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 5 octobre 2026 — DEV462 (navigation, apprentis et rendu canonique)
 
 - Le fil d’Ariane est désormais déterministe : en administration, `Accueil PFMP` cible explicitement le Web App administrateur et ouvre le centre d’administration ; en consultation publique, ce cran n’est pas rendu et `Suivi des conventions` reste sur le déploiement public. Le choix ne dépend plus de `ScriptApp.getService().getUrl()`, ambigu avec deux déploiements du même projet.

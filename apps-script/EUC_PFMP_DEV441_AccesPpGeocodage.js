@@ -27,6 +27,26 @@ function EUC_DEV441_expiration_(fin){
   try{return Utilities.parseDate(iso+' 23:59:59','Europe/Paris','yyyy-MM-dd HH:mm:ss');}
   catch(e){return new Date(iso+'T23:59:59+02:00');}
 }
+function EUC_DEV463_dateMs_(value){
+  var v=value;
+  if(Array.isArray(v)){
+    for(var i=0;i<v.length;i++){
+      if(typeof v[i]==='number'||typeof v[i]==='string'){v=v[i];break;}
+    }
+  }
+  if(v&&typeof v==='object'){
+    if(v.value!==undefined)v=v.value;
+    else if(v.timestamp!==undefined)v=v.timestamp;
+  }
+  if(typeof v==='number'&&isFinite(v))return Math.abs(v)<1000000000000?v*1000:v;
+  var s=EUC_DEV441_t_(v);
+  if(!s)return NaN;
+  if(/^\d+(?:\.\d+)?$/.test(s)){
+    var n=Number(s);
+    return Math.abs(n)<1000000000000?n*1000:n;
+  }
+  return Date.parse(s);
+}
 function EUC_DEV441_catalog_(year,requireAdmin){
   if(requireAdmin)EUC_DEV441_admin_();
   year=EUC_DEV368_year(year);var out=[];
@@ -76,7 +96,7 @@ function EUC_DEV441_revokePpAccess(q){EUC_DEV441_admin_();var id=EUC_DEV441_n_(q
 function EUC_DEV441_lookupPp_(code){
   var canonical=EUC_DEV441_codeCanon_(code);if(canonical.length<16)throw new Error('Code invalide.');
   var now=new Date().getTime(),row=EUC_DEV441_ppRows_().filter(function(r){return r.Actif!==false&&EUC_DEV441_codeHash_(canonical,r.Code_salt)===EUC_DEV441_t_(r.Code_hash);})[0];
-  if(!row)throw new Error('Code inconnu ou révoqué.');if(!row.Expiration||new Date(row.Expiration).getTime()<now)throw new Error('Ce code a expiré à la fin de la période.');return row;
+  if(!row)throw new Error('Code inconnu ou révoqué.');var expires=EUC_DEV463_dateMs_(row.Expiration);if(!isFinite(expires)&&row.Date_fin)expires=EUC_DEV441_expiration_(row.Date_fin).getTime();if(!isFinite(expires)||expires<now)throw new Error('Ce code a expiré à la fin de la période.');return row;
 }
 function EUC_DEV441_ppScope_(access){
   var y=EUC_DEV441_t_(access.Annee_scolaire),cid=EUC_DEV441_n_(access.Classe_id),pid=EUC_DEV441_n_(access.Periode_id),d=EUC_DEV368_detail(y,cid,pid),aff=EUC_V156_affectations_(y,cid,pid)||[],by={};
