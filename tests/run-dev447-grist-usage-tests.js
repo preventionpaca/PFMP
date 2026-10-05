@@ -44,6 +44,9 @@ assert.strictEqual(dashboard.today.total,2);
 assert.strictEqual(dashboard.today.success,1);
 assert.strictEqual(dashboard.today.errors,1);
 assert.strictEqual(dashboard.today.error429,1);
+assert.ok(dashboard.today.firstCall);
+assert.ok(dashboard.hours.length>=1);
+assert.ok(dashboard.origins.length>=1);
 assert.strictEqual(dashboard.remaining,39998);
 assert.strictEqual(dashboard.resetTimeVerified,false);
 assert.deepStrictEqual(Array.from(dashboard.categories,x=>x.name),['Entreprises / SIRET','Snapshots']);
@@ -58,6 +61,8 @@ assert.match(page.getContent(),/Consommation_API_Grist_DEV447/);
 assert.match(html,/Historique quotidien — 31 jours/);
 assert.match(html,/uniquement les appels Grist observés par PFMP/);
 assert.match(html,/horaire non vérifié/);
+assert.match(html,/Chronologie horaire/);
+assert.match(html,/Origines techniques principales/);
 assert.doesNotMatch(html,/api\/docs\/[A-Za-z0-9_-]+/,'le tableau ne doit exposer aucun identifiant de document Grist');
 assert.match(enterpriseBridge,/EUC_DEV447_call_\(appel/,'la passerelle Entreprises doit instrumenter chaque appel réel');
 

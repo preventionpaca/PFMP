@@ -190,6 +190,10 @@ function EUC_DEV424_refreshScheduled(){
       families:result.families,details:result.details,changedDetails:result.changedDetails};
   }catch(err){
     EUC_DEV424_statusWrite_({ok:false,startedAt:started,finishedAt:new Date().toISOString(),durationMs:Date.now()-t0,year:annee,error:String(err&&err.message||err)});
+    /* DEV448 : une réponse 429/backlog ne doit pas être rejouée toutes les
+     * quinze minutes. Le déclencheur est suspendu et pourra être réinstallé
+     * explicitement après correction de la consommation. */
+    try{if(typeof EUC_DEV448_autoPauseOnGristError_==='function')EUC_DEV448_autoPauseOnGristError_(err);}catch(ignore448){}
     throw err;
   }finally{try{lock.releaseLock();}catch(e2){}}
 }

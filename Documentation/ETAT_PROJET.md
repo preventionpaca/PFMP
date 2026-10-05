@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 5 octobre 2026 — DEV448/DEV449 (urgence saturation Grist)
+
+- Diagnostic différentiel sur les exécutions réelles Apps Script : une affectation `EUC_SUIVI_AFFECTER_V156` a duré `814,797 s`; le déclencheur `EUC_DEV424_refreshScheduled` lancé à 08:42 a duré `1 383,047 s`; l'interface Apprentis a ensuite lancé simultanément de nombreuses exécutions `EUC_DEV225_saveApprenti`, dont plusieurs ont duré de 12 à 16 minutes. Cette concurrence explique le `429 Too many backlogged requests` et la consommation anormale.
+- Mesure d'urgence : déclencheur automatique de snapshots supprimé (réinstallation possible par la fonction dédiée), deux reconstructions en cours et quatre sauvegardes Apprentis bloquées interrompues. Aucun déclencheur Apps Script ne reste actif.
+- `DEV448` remplace l'affectation élève par élève par une écriture groupée : 4 à 6 appels Grist pour dix élèves, sans reconstruction générale synchrone. Le même point rapide est utilisé par l'administration et l'accès PP.
+- `DEV449` supprime les sauvegardes automatiques sur chaque modification/blur de la page Apprentis. Une sauvegarde explicite lit seulement l'épisode ciblé et réalise une seule écriture, avec verrou court et dédoublonnage de 60 secondes; elle conserve notamment le code postal sous forme de texte.
+- `DEV447` ajoute un coupe-circuit local : 2 minutes après un backlog, 15 minutes après un quota quotidien, sans nouvel appel Grist pendant l'ouverture du circuit; un `429` suspend aussi le déclencheur snapshot.
+- Tests ciblés : 5 DEV449, 9 DEV448 et 23 DEV447 réussis. Suite complète : aucune nouvelle régression; sept échecs de référence préexistants et déjà documentés subsistent.
+- Sources Apps Script distantes relues après `clasp push` : contrôles SHA-256 identiques pour les six fichiers critiques. Version immuable `799` créée, mais déploiements public et administrateur laissés sur `798` : l'application active renvoie le document Grist `b2CyeMEdVEMSsLZgmQcP6D`, tandis que les consignes du dépôt imposent la recette `j1jDArBkzi7P`. Aucun test d'écriture ni activation de la version 799 ne doit être effectué avant résolution explicite de cette divergence de cible.
+
 ## Mise à jour du 5 octobre 2026 — DEV447
 
 - Version Apps Script immuable active : `798` sur les déploiements public et administrateur existants ; URL, `DOMAIN` et déployeur conservés.
