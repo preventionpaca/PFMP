@@ -10,6 +10,7 @@
 - Validation réelle de l'affectation : premier passage de compatibilité réussi en `6,178 s`; après suppression de la relecture snapshot, retour fonctionnel affiché en `2,924 s` côté serveur (`7,579 s` navigateur, latence Web App comprise).
 - DEV452 : la page Apprentis ne lance plus en parallèle `EUC_DEV192_getDashboard`, `EUC_DEV251_dashboardDetails` et `EUC_DEV348_dashboard`. Un seul chargement consolidé du tableau de bord est conservé; la sélection d'une classe ne relit plus ce tableau de bord.
 - Mesure réelle TMP3D après DEV452 : `12` élèves chargés en `5,586 s` affichés par l'application (`5,946 s` bout en bout), contre `19,943 s` avant correction. Le journal d'exécution confirme une seule exécution `EUC_DEV348_dashboard` au démarrage puis une seule `EUC_DEV235_loadStudentsJson` lors du choix de TMP3D.
+- Mesures publiques complémentaires avec URL anti-cache : liste BAC PRO affichée en `5,743 s`; détail TMP3D / PFMP n°1 affiché en `5,655 s`. Les deux parcours sont revenus très loin des 12 à 20 secondes observées pendant la saturation, mais restent légèrement au-dessus de l'objectif strict de cinq secondes à froid.
 - Contrôle du distant après `clasp push` : les empreintes SHA-256 des modules DEV448, de la page Apprentis active et de la page détail de classe sont identiques entre la copie relue et le projet Apps Script.
 - Tests ciblés : `10` DEV448, `5` DEV449 et `23` DEV447 réussis. Aucun courriel ni ordre de mission n'a été envoyé ou généré pendant les validations.
 
