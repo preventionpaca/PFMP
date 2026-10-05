@@ -13,5 +13,6 @@
 - Toute modification administrative est historisée. Une annulation est logique, jamais une suppression physique.
 - Suivi téléphonique et visite en entreprise sont deux affectations distinctes. Aucun enseignant n’est codé en dur.
 - Ordres de mission et remboursements relèvent d’un lot futur. Les finitions graphiques détaillées de la fiche administrative sont différées.
+- Le dossier de demande d’apprentissage reprend les huit pages des annexes 11, 12d et du positionnement dans cet ordre. Il préremplit uniquement les données réellement disponibles, distingue l’INE du NIR, ajoute la date d’impression sur chaque page et ne conserve pas d’historique d’impression.
 - La convention PFMP de référence doit tenir strictement sur un recto-verso A4, sans page blanche ni grandes zones vides, avec une mise en page compacte mais lisible.
 - Lorsque le modèle de convention sera stabilisé, il devra être exportable au format Word `.docx` modifiable afin de pouvoir être corrigé ultérieurement puis réintégré comme modèle de référence.

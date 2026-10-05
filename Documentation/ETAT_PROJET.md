@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV464 (navigation canonique et dossier d’apprentissage)
+
+- Cause de la divergence lors d’un changement de classe par la liste déroulante : la navigation rapide appelait encore `EUC_DEV416_finalDetail_`, alors que l’ouverture directe utilisait la vue canonique DEV455/DEV459. La navigation rapide utilise désormais `EUC_DEV455_fastDetail_`, applique le même nettoyage périodique et conserve la séparation stricte administration/public. L’URL interne est synchronisée après le changement afin qu’un rafraîchissement conserve la classe réellement affichée.
+- La rapidité des cartes et infobulles n’est pas modifiée : elles continuent à consommer le résumé familial canonique préparé et mémorisé, sans reconstruction Grist au survol. Les mutations prises en charge invalident les caches ciblés ; aucune durée supplémentaire n’a été ajoutée à ce chemin.
+- Nouvelle entrée administrateur `Dossier de demande d’apprentissage`. L’autocomplétion charge une seule fois un index minimal nom/prénom/classe, puis le dossier sélectionné rassemble les coordonnées élève, deux responsables légaux au maximum, les identifiants disponibles et le dernier épisode d’apprentissage.
+- Le numéro national/INE et le NIR restent deux champs distincts : aucune valeur n’est copiée de l’un vers l’autre. Les données absentes restent vides et peuvent être complétées dans l’interface avant génération.
+- Le PDF fusionné fourni sert de modèle local de huit pages, dans l’ordre annexe 11, annexe 12d puis positionnement. Le navigateur superpose les valeurs sans téléverser le modèle, ajoute la date d’impression sur chaque page et ne crée aucun historique d’impression, conformément à la demande finale.
+- Contrôle visuel hors ligne avec des valeurs fictives : les zones principales des pages 1 à 4 et 7 sont calées sur le PDF fourni, et le pied de page daté reste dans la marge sur les huit pages.
+- Tests ciblés : `15/15` DEV459, `6/6` DEV463 et `9/9` DEV464. La suite complète exécutée depuis l’état publié conserve six échecs historiques (routeur ancien, versions dev.8/dev.27 et audit dev.9 manquant) ; aucun nouveau test du lot n’échoue.
+- Déploiement : version Apps Script immuable `851` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante est identique pour les six fichiers du lot et le manifeste conserve `USER_DEPLOYING` / `ANYONE_ANONYMOUS`.
+- Aucune donnée Grist, aucun élève, aucune convention, aucun courriel et aucun ordre de mission n’ont été modifiés pendant ce lot. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 5 octobre 2026 — DEV463 (routage administrateur, codes PP et fiche apprenti)
 
 - Cause de la disparition des affectations : le centre administrateur injectait encore l’URL du Web App public dans ses liens dynamiques. L’écran ressemblait à l’administration, mais le détail était réellement rendu par le déploiement public, donc sans commandes de mutation. Le centre et tous les outils administratifs utilisent maintenant explicitement le Web App administrateur ; les navigations famille/période sortent de l’iframe avec `target="_top"`.

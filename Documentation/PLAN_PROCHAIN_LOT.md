@@ -1,5 +1,7 @@
 # Prochain lot après DEV452
 
+0. Réaliser une recette visuelle authentifiée du dossier de demande d’apprentissage avec le PDF fusionné de huit pages : contrôler l’alignement des champs sur les trois modèles et compléter la carte de coordonnées pour les prochains champs métier demandés, sans créer d’historique d’impression.
+
 1. Observer une journée complète dans `Paramétrage → Consommation API Grist` et comparer le total PFMP aux informations que pourra fournir le support Grist; ne pas assimiler l'estimation PFMP au compteur officiel du document.
 2. Conserver le déclencheur de snapshots désinstallé tant que son remplacement incrémental n'est pas prêt. Le futur traitement doit être différentiel, plafonné et interrompu immédiatement par le coupe-circuit.
 3. Valider l'affectation par code PP sur un lot réel limité. L'affectation administrateur est validée; le chemin PP est couvert par les tests mais n'a pas utilisé de code nominatif réel pendant DEV452.

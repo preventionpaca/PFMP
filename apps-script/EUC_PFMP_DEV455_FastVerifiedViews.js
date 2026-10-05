@@ -232,6 +232,7 @@ function EUC_DEV455_adminDetail(e){
 }
 function EUC_DEV455_routeDetail_(e){
   var page=EUC_DEV455_t_(e&&e.parameter&&e.parameter.page);
+  if(page==='dossier-apprentissage-pfmp'&&typeof EUC_DEV464_afficherDossierApprentissage==='function')return EUC_DEV464_afficherDossierApprentissage(e);
   if(page==='suivi-conventions-famille'&&typeof EUC_DEV459_family_==='function')return EUC_DEV459_family_(e,false);
   if(page==='suivi-conventions-public-famille'&&typeof EUC_DEV459_family_==='function')return EUC_DEV459_family_(e,true);
   if(page==='suivi-conventions-public-famille'&&typeof EUC_DEV456_publicFamily==='function')return EUC_DEV456_publicFamily(e);
