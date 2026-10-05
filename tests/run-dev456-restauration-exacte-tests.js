@@ -1,0 +1,22 @@
+const assert=require('assert');
+const fs=require('fs');
+const path=require('path');
+const root=path.resolve(__dirname,'..');
+const code=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV456_RestaurationExacte.js'),'utf8');
+let passed=0;
+function test(name,fn){try{fn();passed++;console.log('OK',name);}catch(e){console.error('KO',name,e);process.exitCode=1;}}
+test('public et administration partagent exactement le tableau V156',()=>{assert.match(code,/createTemplateFromFile\('Suivi_PFMP_Classe_Detail_V156'\)/);});
+test('le public masque seulement les commandes de mutation',()=>{assert.match(code,/EUC_DEV456_READONLY/);assert.match(code,/#assignToolbar/);assert.doesNotMatch(code,/#exportPdf/);});
+test('le contrat de navigation du wrapper est restauré',()=>{assert.match(code,/EUC_PFMP_WRAPPER_NAVIGATE/);assert.match(code,/EUC_PFMP_WRAPPER_QUERY/);assert.match(code,/EUC_ATRIUM_META/);});
+test('la famille publique réutilise le snapshot enrichi sans appeler directement les recalculs lourds',()=>{assert.match(code,/EUC_DEV421_fastFamilySnapshot_/);assert.doesNotMatch(code,/EUC_DEV190E_heavyFamily_/);assert.doesNotMatch(code,/EUC_DEV422_hydrateFamily_/);});
+test('la lecture exacte est conservée hors Grist et invalidable par les mutations',()=>{assert.match(code,/DEV456R13_FAMILY_/);assert.match(code,/familyPersistentGet_/);assert.match(code,/familyCacheDrop_/);});
+test('les compteurs enrichis sont recroisés avec l effectif courant',()=>{assert.match(code,/EUC_DEV456_reconcileRosters_/);assert.match(code,/EUC_DEV456_rosters_/);assert.match(code,/q\.sansConvention/);});
+test('le badge apprenti et la période différenciée sont recalculés explicitement',()=>{assert.match(code,/p\.isPdif=!!isPdif/);assert.match(code,/reduce\(function\(max,p\)/);});
+test('la période différenciée utilise les choix de fin année sans toucher aux PFMP ordinaires',()=>{assert.match(code,/EUC_DEV456_applyPdifModes_/);assert.match(code,/PARCOURS_DIFF_LYCEE/);assert.match(code,/POURSUITE_PFMP2_ENTREPRISE/);assert.match(code,/preparedRosters/);});
+test('les apprentis actifs sont exclus de la période différenciée même si le snapshot famille est compact',()=>{assert.match(code,/EUC_DEV277_bestCurrent_/);assert.match(code,/EUC_DEV277_status_/);assert.match(code,/if\(st&&st\.apprenti\)apprentis/);});
+test('l effectif courant est lu sans filtre d année absent de la table élèves',()=>{assert.match(code,/EUC_DEV190G_fastRecords_\('EUC_ELEVES_PFMP',\{\}\)/);assert.doesNotMatch(code,/EUC_ELEVES_PFMP',\{Annee_scolaire/);});
+test('les liens publics ciblent le déploiement public et naviguent dans le cadre hors wrapper',()=>{assert.match(code,/split\(EUC_DEV456_ADMIN_URL_\)\.join\(EUC_DEV455_PUBLIC_URL_\)/);assert.match(code,/else window\.location\.href=url/);});
+test('la navigation publique est injectée après les anciens scripts du modèle',()=>{assert.ok(code.includes(".replace(/<\\/body>/i,nav+periods+'</body>')"));assert.match(code,/EUC_DEV456_PERIOD_NAV/);});
+test('la grille de famille reçoit elle aussi la surcharge de navigation',()=>{assert.match(code,/EUC_DEV456_publicShell_\(t\.evaluate\(\)\.getContent\(\),\{classe:\{\},periode:\{\}\}/);});
+test('le tableau public utilise le détail rapide exhaustif',()=>{assert.match(code,/EUC_DEV455_fastDetail_/);assert.doesNotMatch(code,/EUC_DEV416_finalDetail_/);});
+process.on('exit',()=>{if(!process.exitCode)console.log(passed+' tests DEV456 restauration exacte réussis.');});

@@ -1,0 +1,10 @@
+const fs=require('fs'),assert=require('assert');
+const code=fs.readFileSync('apps-script/EUC_PFMP_DEV370_AdminTools.js','utf8');
+assert.match(code,/setColumnWidth\(0,12\)\.setColumnWidth\(1,425\)/,'le tableau de page 1 doit être décalé à gauche');
+assert.match(code,/EUC_DEV438_formatTable_\(table,\[82,86,169,88\],8,7\)/,'les colonnes de page 1 doivent tenir dans 425 pt');
+assert.match(code,/insertSectionBreak:\{sectionType:'NEXT_PAGE'/,'la page récapitulative doit commencer dans une section distincte');
+assert.match(code,/flipPageOrientation:true/,'la page 2 doit être en paysage réel');
+for(const label of ["'Contact\\nentreprise'","'Contact\\ntuteur'","'Nombre de\\nkilomètres'","'Moyen de\\ntransport'"])assert.ok(code.includes(label),'colonne manquante '+label);
+assert.match(code,/Justificatifs : joindre tous les justificatifs nécessaires/,'consigne justificatifs absente');
+assert.match(code,/Signature du professeur.*Signature du directeur délégué aux formations/s,'signatures absentes');
+console.log('7 tests DEV461 ordre de mission réussis.');
