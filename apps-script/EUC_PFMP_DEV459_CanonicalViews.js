@@ -1,6 +1,7 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.459';
-var EUC_DEV459_CANONICAL_='DEV459-C3';
+var EUC_DEV459_VERSION_='1.0.0-dev.462';
+var EUC_DEV459_CANONICAL_='DEV462-C5';
+var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}
 function EUC_DEV459_n_(v){return Number(v)||0;}
@@ -119,8 +120,24 @@ function EUC_DEV459_jump_(detail,p){
 function EUC_DEV459_family_(e,isPublic){
   var p=EUC_DEV455_params_(e),data=EUC_DEV459_familyData_(p.annee,p.famille),t=HtmlService.createTemplateFromFile('Suivi_Conventions_Famille_DEV459');
   t.paramsJson=JSON.stringify({annee:p.annee,famille:p.famille,publicMode:!!isPublic});t.dataJson=JSON.stringify(data);
-  t.baseUrl=isPublic?EUC_DEV455_PUBLIC_URL_:ScriptApp.getService().getUrl();
+  /* Deux déploiements partagent le même projet. ScriptApp.getService().getUrl()
+   * ne permet pas de déterminer de façon fiable lequel sert la requête. */
+  t.baseUrl=isPublic?EUC_DEV455_PUBLIC_URL_:EUC_DEV459_ADMIN_URL_;
   return t.evaluate().setTitle('Suivi des conventions — '+p.famille).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+function EUC_DEV459_adminBreadcrumb_(detail,p){
+  var fam=EUC_DEV459_t_(p.famille).toUpperCase()||'BACPRO',fl=fam==='BACPRO'?'BAC PRO':fam;
+  function esc(v){return EUC_DEV459_t_(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function url(page,extra){var q=['page='+encodeURIComponent(page),'annee='+encodeURIComponent(p.annee)];Object.keys(extra||{}).forEach(function(k){q.push(encodeURIComponent(k)+'='+encodeURIComponent(extra[k]));});return EUC_DEV459_ADMIN_URL_+'?'+q.join('&');}
+  return '<nav id="EUC_DEV183_BREADCRUMB" aria-label="Fil d’Ariane">'+
+    '<a target="_top" href="'+url('admin-pfmp',{})+'">Accueil PFMP</a><span>›</span>'+
+    '<a target="_top" href="'+url('suivi-conventions',{})+'">Suivi des conventions</a><span>›</span>'+
+    '<a target="_top" href="'+url('suivi-conventions-famille',{famille:fam})+'">'+esc(fl)+'</a><span>›</span>'+
+    '<strong>'+esc(detail&&detail.classe&&detail.classe.nom||'Classe')+'</strong><span>›</span>'+
+    '<strong>'+esc(detail&&detail.periode&&detail.periode.libelle||'Période')+'</strong></nav>';
+}
+function EUC_DEV459_navigationFeedback_(){
+  return '<style id="EUC_DEV462_NAV_FEEDBACK">a.euc462-busy{pointer-events:none;opacity:.72}a.euc462-busy:after{content:"";display:inline-block;width:14px;height:14px;margin-left:7px;border:2px solid #b9ded6;border-top-color:#07856f;border-radius:50%;vertical-align:middle;animation:euc462spin .7s linear infinite}@keyframes euc462spin{to{transform:rotate(360deg)}}</style><script id="EUC_DEV462_NAV_FEEDBACK_JS">document.addEventListener("click",function(ev){var a=ev.target&&ev.target.closest?ev.target.closest("a[href]"):null;if(!a)return;a.classList.add("euc462-busy");a.setAttribute("aria-busy","true");},true);<\/script>';
 }
 function EUC_DEV459_detail_(e,isPublic){
   var p=EUC_DEV455_params_(e),detail;
@@ -130,10 +147,10 @@ function EUC_DEV459_detail_(e,isPublic){
   if(!isPublic){try{detail.peutModifier=!!EUC_V156_contexteAdmin_();}catch(eAdmin){detail.peutModifier=false;}}
   detail.professeursDisponibles=[];detail.professeursDisponiblesCharges=false;
   var t=HtmlService.createTemplateFromFile('Suivi_PFMP_Classe_Detail_V156');
-  t.config=JSON.stringify({baseUrl:isPublic?EUC_DEV455_PUBLIC_URL_:ScriptApp.getService().getUrl(),readonly:!!isPublic,publicMode:!!isPublic});
+  t.config=JSON.stringify({baseUrl:isPublic?EUC_DEV455_PUBLIC_URL_:EUC_DEV459_ADMIN_URL_,readonly:!!isPublic,publicMode:!!isPublic});
   t.anneeContextJson=JSON.stringify({active:p.annee,annees:[{code:p.annee,libelle:p.annee}]});
   t.detailJson=JSON.stringify(detail);t.jumpClassesJson=JSON.stringify(EUC_DEV459_jump_(detail,p));
-  t.dev186BreadcrumbHtml=isPublic?'':(typeof EUC_DEV186_breadcrumbHtml_==='function'?EUC_DEV186_breadcrumbHtml_(detail,p.annee):'');
+  t.dev186BreadcrumbHtml=isPublic?'':EUC_DEV459_adminBreadcrumb_(detail,p);
   var html=t.evaluate().getContent();
   if(isPublic){
     /* Le modèle historique construit plusieurs URL après le chargement. La
@@ -145,6 +162,7 @@ function EUC_DEV459_detail_(e,isPublic){
     /* Un seul fil en administration : celui qui commence par Accueil PFMP. */
     html=html.replace(/<\/head>/i,'<style id="EUC_DEV459_ADMIN_CRUMB">#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB,#EUC_DEV175C_CRUMB,.euc186-crumb{display:none!important}</style></head>');
   }
+  html=html.replace(/<\/body>/i,EUC_DEV459_navigationFeedback_()+'</body>');
   return HtmlService.createHtmlOutput(html).setTitle((isPublic?'Point sur les stages — ':'Suivi PFMP — ')+EUC_DEV459_t_(detail.classe&&detail.classe.nom)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 function EUC_DEV459_auditAll(q){

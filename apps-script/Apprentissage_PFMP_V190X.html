@@ -1,0 +1,5121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --g:#0b8f72;
+  --bg:#f7fbf9;
+  --line:#d6e7e1;
+  --mut:#667085;
+  --text:#17312b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:var(--text);
+}
+.wrap{
+  max-width:1760px;
+  margin:auto;
+  padding:18px 16px 30px;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+}
+h1{
+  margin:0 0 4px;
+  color:#0d4539;
+}
+.back{
+  color:#0b745f;
+  font-weight:800;
+  text-decoration:none;
+}
+.panel{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  margin-top:10px;
+}
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(100px,1fr));
+  gap:6px;
+}
+.kpi{
+  padding:5px 7px;
+  border-right:1px solid #e5eeeb;
+}
+.kpi:last-child{border-right:0}
+.kpi b{
+  font-size:20px;
+  color:#0d5b4b;
+}
+.kpi span{
+  display:block;
+  font-size:10px;
+  color:var(--mut);
+}
+.filters{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+label{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+select{
+  border:1px solid #bcded4;
+  border-radius:6px;
+  padding:7px 8px;
+  min-width:185px;
+  background:#fff;
+}
+.status{
+  color:var(--mut);
+  font-size:11px;
+  margin-top:6px;
+}
+.class-stats{
+  font-size:11px;
+  color:#47645d;
+  padding-bottom:8px;
+}
+.list{
+  display:flex;
+  flex-direction:column;
+}
+.student-card{
+  border-bottom:1px solid #dfe9e6;
+  padding:10px 0 12px;
+}
+.student-card:last-child{
+  border-bottom:0;
+}
+.line-main{
+  display:grid;
+  grid-template-columns:
+    minmax(150px,1.3fr)
+    62px
+    110px
+    110px
+    minmax(210px,1.4fr)
+    90px
+    195px;
+  gap:8px;
+  align-items:center;
+}
+.line-company{
+  display:grid;
+  grid-template-columns:
+    minmax(160px,1.2fr)
+    minmax(145px,1fr)
+    minmax(190px,1.5fr)
+    68px
+    110px
+    minmax(160px,1.1fr)
+    minmax(145px,1fr)
+    minmax(160px,1.1fr)
+    52px;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+}
+.student{
+  font-weight:800;
+  color:#0b4035;
+}
+.caption{
+  display:block;
+  font-size:9px;
+  color:#667085;
+  margin-bottom:2px;
+}
+input{
+  width:100%;
+  border:0;
+  border-bottom:1px solid #c7d8d3;
+  background:transparent;
+  padding:4px 2px;
+  outline:none;
+}
+input:focus{
+  border-bottom:2px solid var(--g);
+}
+.check{
+  width:auto;
+}
+.workflow{
+  display:grid;
+  grid-template-columns:auto 1fr auto 1fr;
+  gap:3px 5px;
+  font-size:10px;
+  align-items:center;
+}
+.workflow input[type=checkbox]{
+  width:auto;
+}
+.siret-wrap{
+  display:flex;
+  gap:5px;
+  align-items:center;
+}
+.siret-wrap input{
+  min-width:112px;
+}
+button{
+  border:0;
+  border-radius:6px;
+  padding:7px 8px;
+  background:var(--g);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+.msg{
+  font-size:9px;
+  color:#667085;
+  margin-top:2px;
+}
+.contact input:first-child{
+  margin-bottom:3px;
+}
+@media(max-width:1200px){
+  .line-main,
+  .line-company{
+    grid-template-columns:repeat(4,minmax(140px,1fr));
+  }
+}
+@media(max-width:800px){
+  .dashboard{grid-template-columns:repeat(2,1fr)}
+  .line-main,
+  .line-company{grid-template-columns:1fr 1fr}
+}
+
+/* DEV.204 — présentation compacte entreprise */
+.student-card{
+  display:grid;
+  grid-template-columns:
+    minmax(170px,1.25fr)
+    minmax(150px,.95fr)
+    minmax(245px,1.55fr)
+    minmax(260px,1.7fr)
+    minmax(180px,1.15fr)
+    minmax(190px,1.2fr)
+    88px
+    52px;
+  gap:10px;
+  align-items:start;
+  padding:10px 0 12px;
+  border-bottom:1px solid #dfe9e6;
+}
+.student-card:last-child{border-bottom:0}
+.compact-cell{min-width:0}
+.compact-title{display:block;font-size:9px;color:#667085;margin-bottom:3px;text-transform:uppercase;letter-spacing:.02em}
+.compact-stack{display:flex;flex-direction:column;gap:3px}
+.compact-inline{display:flex;gap:5px;align-items:center}
+.company-name{font-weight:800;color:#0b4035}
+.trade-name{font-style:italic;color:#365b53}
+.student-meta{display:flex;flex-direction:column;gap:4px}
+.student-meta .dates{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.history-btn,.save{width:100%}
+@media(max-width:1450px){
+  .student-card{grid-template-columns:minmax(170px,1.2fr) minmax(150px,1fr) minmax(240px,1.5fr) minmax(240px,1.5fr)}
+}
+@media(max-width:850px){
+  .student-card{grid-template-columns:1fr}
+}
+
+
+/* DEV206_LOADING_STYLES */
+.loading-indicator{display:none;align-items:center;gap:8px;margin-top:8px;color:#0b745f;font-weight:700;font-size:12px}
+.loading-indicator.on{display:flex}
+.loading-spinner{width:16px;height:16px;border:2px solid #b9ddd2;border-top-color:#0b8f72;border-radius:50%;animation:dev206spin .75s linear infinite}
+@keyframes dev206spin{to{transform:rotate(360deg)}}
+
+
+/* DEV211_VISUAL_TUNE */
+.panel{box-shadow:0 1px 2px rgba(16,24,40,.03)}
+.student-card{padding:14px 6px 16px}
+.student-card:nth-child(even){background:#fbfefc}
+.compact-title{font-size:10px;font-weight:700;color:#667085}
+.student{font-size:15px}
+.workflow{background:#f7fbf9;border-radius:8px;padding:6px}
+.company-name{font-size:13px}
+.trade-name{font-size:12px}
+
+/* DEV212_VISUAL_ONLY — mise en page lisible Gestion des apprentis */
+.student-card{
+  display:grid !important;
+  grid-template-columns:repeat(12,minmax(0,1fr)) !important;
+  gap:14px 16px !important;
+  padding:16px 14px 18px !important;
+  margin:0 !important;
+  border-bottom:1px solid #d8e7e2 !important;
+  background:#fff !important;
+  align-items:start !important;
+}
+.student-card:nth-child(even){
+  background:#fbfefc !important;
+}
+
+/* 1re ligne */
+.student-card > .compact-cell:nth-child(1){grid-column:span 2}
+.student-card > .compact-cell:nth-child(2){grid-column:span 2}
+.student-card > .compact-cell:nth-child(3){grid-column:span 4}
+.student-card > .compact-cell:nth-child(4){grid-column:span 4}
+
+/* 2e ligne */
+.student-card > .compact-cell:nth-child(5){grid-column:span 4}
+.student-card > .compact-cell:nth-child(6){grid-column:span 3}
+.student-card > .compact-cell:nth-child(7){grid-column:span 3}
+.student-card > .compact-cell:nth-child(8){grid-column:span 2}
+
+.compact-cell{
+  min-width:0 !important;
+}
+.compact-title{
+  display:block !important;
+  margin:0 0 6px !important;
+  font-size:10px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+  letter-spacing:.035em !important;
+  text-transform:uppercase !important;
+  color:#667085 !important;
+}
+.caption{
+  font-size:9px !important;
+  line-height:1.1 !important;
+  color:#7a869a !important;
+}
+.student{
+  font-size:15px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  color:#0b4035 !important;
+  padding-top:2px !important;
+}
+
+/* Statut */
+.student-meta{
+  gap:8px !important;
+}
+.student-meta .compact-inline{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+}
+.student-meta .dates{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+
+/* Champs */
+.student-card input{
+  min-width:0 !important;
+  height:30px !important;
+  padding:4px 3px !important;
+  font-size:12px !important;
+  line-height:1.2 !important;
+  border:0 !important;
+  border-bottom:1px solid #bdd6ce !important;
+  background:transparent !important;
+}
+.student-card input[type="date"]{
+  font-size:11px !important;
+  letter-spacing:-.01em !important;
+}
+.student-card input[type="checkbox"]{
+  width:15px !important;
+  height:15px !important;
+  min-width:15px !important;
+  padding:0 !important;
+}
+
+/* Dossier / contrat */
+.workflow{
+  display:grid !important;
+  grid-template-columns:auto minmax(88px,1fr) auto minmax(105px,1fr) !important;
+  gap:6px 8px !important;
+  padding:10px !important;
+  border:1px solid #e0ece8 !important;
+  border-radius:9px !important;
+  background:#f8fcfa !important;
+  font-size:10px !important;
+  line-height:1.15 !important;
+  align-items:center !important;
+}
+.workflow span{
+  white-space:nowrap !important;
+}
+.workflow input[type="date"]{
+  min-width:105px !important;
+}
+
+/* Entreprise */
+.company-name{
+  font-size:13px !important;
+  font-weight:800 !important;
+  color:#0b4035 !important;
+}
+.trade-name{
+  font-size:12px !important;
+  font-style:italic !important;
+  color:#405f57 !important;
+}
+.compact-stack{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:6px !important;
+}
+.siret-wrap{
+  display:grid !important;
+  grid-template-columns:minmax(125px,1fr) auto !important;
+  gap:7px !important;
+  align-items:end !important;
+}
+.siret-wrap input{
+  min-width:0 !important;
+}
+.msg{
+  min-height:12px !important;
+  margin-top:2px !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  color:#667085 !important;
+}
+
+/* Adresse */
+.compact-inline{
+  display:flex !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+.compact-inline .cp{
+  flex:0 0 76px !important;
+}
+.compact-inline .ville{
+  flex:1 1 auto !important;
+}
+
+/* Coordonnées */
+.contact input:first-of-type{
+  margin-bottom:6px !important;
+}
+
+/* Boutons */
+.student-card button{
+  min-height:30px !important;
+  padding:6px 10px !important;
+  font-size:11px !important;
+  line-height:1.1 !important;
+  border-radius:7px !important;
+}
+.history-btn{
+  margin-top:4px !important;
+}
+.save{
+  width:100% !important;
+  min-height:34px !important;
+}
+
+/* En-tête */
+.dashboard{
+  gap:0 !important;
+}
+.kpi{
+  padding:8px 14px !important;
+}
+.kpi b{
+  font-size:21px !important;
+}
+.kpi span{
+  font-size:10px !important;
+  line-height:1.15 !important;
+}
+
+/* Responsive */
+@media(max-width:1450px){
+  .student-card{
+    grid-template-columns:repeat(8,minmax(0,1fr)) !important;
+  }
+  .student-card > .compact-cell:nth-child(1){grid-column:span 2}
+  .student-card > .compact-cell:nth-child(2){grid-column:span 2}
+  .student-card > .compact-cell:nth-child(3){grid-column:span 4}
+  .student-card > .compact-cell:nth-child(4){grid-column:span 4}
+  .student-card > .compact-cell:nth-child(5){grid-column:span 4}
+  .student-card > .compact-cell:nth-child(6){grid-column:span 3}
+  .student-card > .compact-cell:nth-child(7){grid-column:span 3}
+  .student-card > .compact-cell:nth-child(8){grid-column:span 2}
+}
+@media(max-width:980px){
+  .student-card{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .student-card > .compact-cell{
+    grid-column:span 1 !important;
+  }
+  .student-card > .compact-cell:nth-child(3),
+  .student-card > .compact-cell:nth-child(4),
+  .student-card > .compact-cell:nth-child(5){
+    grid-column:span 2 !important;
+  }
+}
+@media(max-width:650px){
+  .student-card{
+    grid-template-columns:1fr !important;
+  }
+  .student-card > .compact-cell{
+    grid-column:span 1 !important;
+  }
+  .workflow{
+    grid-template-columns:auto 1fr !important;
+  }
+}
+
+/* DEV213_VISUAL_SPLIT — apprenti à gauche / entreprise à droite */
+.student-card{
+  display:grid !important;
+  grid-template-columns:minmax(0,46%) minmax(0,54%) !important;
+  gap:18px !important;
+  padding:14px 14px 16px !important;
+  border-bottom:1px solid #d8e7e2 !important;
+  background:#fff !important;
+  align-items:start !important;
+}
+.student-card:nth-child(even){background:#fbfefc !important}
+.apprentice-side,
+.company-side{
+  min-width:0 !important;
+}
+.apprentice-side{
+  display:grid !important;
+  grid-template-columns:minmax(170px,1.05fr) minmax(150px,.85fr) minmax(260px,1.45fr) !important;
+  gap:12px !important;
+  align-items:start !important;
+  padding-right:8px !important;
+  border-right:1px solid #e2ece8 !important;
+}
+.company-side{
+  display:grid !important;
+  grid-template-columns:minmax(245px,1.45fr) minmax(190px,1.05fr) minmax(180px,1fr) minmax(180px,1fr) !important;
+  gap:12px !important;
+  align-items:start !important;
+}
+.apprentice-main{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+}
+.apprentice-actions{
+  display:flex !important;
+  gap:7px !important;
+  margin-top:8px !important;
+}
+.apprentice-actions button{
+  flex:1 1 auto !important;
+}
+.compact-title{
+  display:block !important;
+  margin:0 0 5px !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+  letter-spacing:.035em !important;
+  text-transform:uppercase !important;
+  color:#667085 !important;
+}
+.student{
+  font-size:15px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  color:#0b4035 !important;
+}
+.student-card input{
+  min-width:0 !important;
+  height:29px !important;
+  padding:4px 3px !important;
+  font-size:11px !important;
+  line-height:1.15 !important;
+  border:0 !important;
+  border-bottom:1px solid #bdd6ce !important;
+  background:transparent !important;
+}
+.student-card input[type="date"]{
+  font-size:10px !important;
+}
+.student-card input[type="checkbox"]{
+  width:15px !important;
+  height:15px !important;
+  min-width:15px !important;
+  padding:0 !important;
+}
+.status-dates{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:7px !important;
+}
+.status-line{
+  display:flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  margin-bottom:6px !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+}
+.workflow{
+  display:grid !important;
+  grid-template-columns:auto minmax(82px,1fr) auto minmax(102px,1fr) !important;
+  gap:5px 7px !important;
+  padding:8px !important;
+  border:1px solid #e0ece8 !important;
+  border-radius:8px !important;
+  background:#f8fcfa !important;
+  font-size:9px !important;
+  line-height:1.12 !important;
+  align-items:center !important;
+}
+.workflow span{white-space:nowrap !important}
+.company-stack{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:5px !important;
+}
+.company-name{
+  font-size:12px !important;
+  font-weight:800 !important;
+  color:#0b4035 !important;
+}
+.trade-name{
+  font-size:11px !important;
+  font-style:italic !important;
+  color:#405f57 !important;
+}
+.siret-wrap{
+  display:grid !important;
+  grid-template-columns:minmax(120px,1fr) auto !important;
+  gap:6px !important;
+  align-items:end !important;
+}
+.address-stack,
+.contact-stack,
+.tutor-stack{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:5px !important;
+}
+.cp-city{
+  display:grid !important;
+  grid-template-columns:72px 1fr !important;
+  gap:7px !important;
+}
+.student-card button{
+  min-height:29px !important;
+  padding:6px 9px !important;
+  font-size:10px !important;
+  line-height:1.1 !important;
+  border-radius:7px !important;
+}
+.save{
+  background:#0b8f72 !important;
+}
+.history-btn{
+  background:#e8f5f0 !important;
+  color:#086955 !important;
+}
+.msg{
+  min-height:11px !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  color:#667085 !important;
+}
+@media(max-width:1400px){
+  .student-card{grid-template-columns:1fr !important}
+  .apprentice-side{border-right:0 !important;border-bottom:1px solid #e2ece8 !important;padding:0 0 12px !important}
+}
+@media(max-width:900px){
+  .apprentice-side,
+  .company-side{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+@media(max-width:650px){
+  .apprentice-side,
+  .company-side{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* DEV214_APPRENTICE_WORKFLOW */
+.apprentice-side{
+  display:grid !important;
+  grid-template-columns:minmax(175px,.95fr) minmax(260px,1.35fr) minmax(225px,1.15fr) !important;
+  gap:12px !important;
+  align-items:stretch !important;
+}
+.apprentice-identity,.apprentice-process,.apprentice-contract{min-width:0 !important}
+.apprentice-identity{display:flex !important;flex-direction:column !important;gap:8px !important}
+.apprentice-badge-line{display:flex !important;align-items:center !important;gap:7px !important}
+.apprentice-badge{display:inline-flex !important;align-items:center !important;min-height:24px !important;padding:3px 8px !important;border-radius:999px !important;font-size:10px !important;font-weight:800 !important;background:#eef4f1 !important;color:#61736d !important}
+.student-card.apprentice-on .apprentice-badge{background:#d9f4e9 !important;color:#08745e !important}
+.apprentice-dates{display:grid !important;grid-template-columns:1fr 1fr !important;gap:7px !important}
+.process-box,.contract-box{height:100% !important;padding:9px 10px !important;border:1px solid #dfebe7 !important;border-radius:9px !important;background:#f9fcfb !important}
+.process-row{display:grid !important;grid-template-columns:auto minmax(88px,1fr) 108px !important;gap:7px !important;align-items:center !important;min-height:34px !important}
+.process-row + .process-row{border-top:1px solid #e8f0ed !important}
+.process-row input[type="checkbox"]{width:15px !important;min-width:15px !important;height:15px !important}
+.process-label,.contract-label{font-size:10px !important;font-weight:700 !important;color:#294a43 !important}
+.contract-row{display:grid !important;grid-template-columns:minmax(92px,1fr) 112px !important;gap:7px !important;align-items:center !important;min-height:34px !important}
+.contract-row + .contract-row{border-top:1px solid #e8f0ed !important}
+.new-contract-line{display:flex !important;gap:7px !important;align-items:center !important;min-height:32px !important;border-top:1px solid #e8f0ed !important}
+.apprentice-actions{display:grid !important;grid-template-columns:1fr 1fr !important;gap:7px !important;margin-top:8px !important}
+.student-card.apprentice-on{border-left:5px solid #159a79 !important}
+.student-card.apprentice-tone-a{background:linear-gradient(90deg,#f0fbf7 0,#ffffff 28%) !important}
+.student-card.apprentice-tone-b{background:linear-gradient(90deg,#e6f7f1 0,#ffffff 28%) !important}
+@media(max-width:1400px){.apprentice-side{grid-template-columns:minmax(170px,.9fr) minmax(250px,1.3fr) minmax(215px,1.1fr) !important}}
+@media(max-width:900px){.apprentice-side{grid-template-columns:1fr !important}}
+
+
+/* DEV215_ACTIONS_PER_STUDENT */
+.apprentice-contract{
+  display:flex !important;
+  flex-direction:column !important;
+  min-width:0 !important;
+}
+.contract-box{
+  flex:0 0 auto !important;
+}
+.apprentice-actions{
+  position:static !important;
+  inset:auto !important;
+  transform:none !important;
+  float:none !important;
+  clear:both !important;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  width:100% !important;
+  margin:8px 0 0 0 !important;
+  padding:0 !important;
+  align-self:stretch !important;
+  z-index:auto !important;
+}
+.apprentice-actions .history-btn,
+.apprentice-actions .save{
+  position:static !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  display:block !important;
+}
+
+
+/* DEV216_ACTIONS_IN_CONTRACT */
+.contract-box{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:0 !important;
+}
+.contract-actions-inline{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  margin-top:8px !important;
+  padding-top:8px !important;
+  border-top:1px solid #e4eeeb !important;
+}
+.contract-actions-inline button{
+  position:static !important;
+  display:block !important;
+  width:100% !important;
+  margin:0 !important;
+  min-height:30px !important;
+}
+.apprentice-actions{
+  display:none !important;
+}
+
+
+/* DEV217_AUTOSAVE_STATUS */
+.student-card{
+  position:relative !important;
+}
+.student-save-corner{
+  position:absolute !important;
+  top:10px !important;
+  right:10px !important;
+  z-index:3 !important;
+}
+.student-save-corner .save{
+  width:auto !important;
+  min-width:88px !important;
+  min-height:24px !important;
+  padding:4px 8px !important;
+  font-size:9px !important;
+  border-radius:999px !important;
+  box-shadow:0 2px 5px rgba(0,0,0,.14) !important;
+}
+.autosave-state{
+  display:block !important;
+  margin-top:3px !important;
+  font-size:8px !important;
+  color:#667085 !important;
+  text-align:right !important;
+}
+.contract-heading{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+  margin-bottom:4px !important;
+}
+.history-mini{
+  width:auto !important;
+  min-width:0 !important;
+  min-height:21px !important;
+  padding:3px 8px !important;
+  margin:0 !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  border-radius:999px !important;
+  background:#e8f5f0 !important;
+  color:#086955 !important;
+  box-shadow:0 1px 4px rgba(0,0,0,.12) !important;
+}
+.apprentice-status-pill{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:24px !important;
+  padding:4px 9px !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+}
+.status-school{
+  background:#edf2ef !important;
+  color:#4d625c !important;
+}
+.status-future{
+  background:#f79009 !important;
+  color:#fff !important;
+}
+.status-apprentice{
+  background:#1570ef !important;
+  color:#fff !important;
+}
+.status-rupture{
+  background:#d92d20 !important;
+  color:#fff !important;
+}
+.student-card.status-apprentice-card{
+  border-left:5px solid #1570ef !important;
+}
+.student-card.status-future-card{
+  border-left:5px solid #f79009 !important;
+}
+.student-card.status-rupture-card{
+  border-left:5px solid #d92d20 !important;
+}
+.student-card.status-apprentice-card.apprentice-tone-a{
+  background:linear-gradient(90deg,#eef4ff 0,#ffffff 27%) !important;
+}
+.student-card.status-apprentice-card.apprentice-tone-b{
+  background:linear-gradient(90deg,#e1ecff 0,#ffffff 27%) !important;
+}
+
+
+/* DEV218_VISUAL_HIERARCHY */
+.top{
+  display:grid !important;
+  grid-template-columns:minmax(320px,1fr) minmax(520px,1.15fr) !important;
+  gap:24px !important;
+  align-items:start !important;
+}
+.top > div:first-child{
+  padding:8px 0 0 !important;
+}
+#dev218HeaderControls{
+  background:#ffffff !important;
+  border:1px solid #cfe4dc !important;
+  border-radius:14px !important;
+  box-shadow:0 3px 10px rgba(16,24,40,.06) !important;
+  padding:12px 14px !important;
+}
+#dev218HeaderControls .filters{
+  display:grid !important;
+  grid-template-columns:minmax(140px,.8fr) minmax(180px,1fr) auto !important;
+  gap:12px !important;
+  align-items:end !important;
+}
+#dev218HeaderControls #status,
+#dev218HeaderControls #dev206bLoading,
+#dev218HeaderControls #dev206Loading{
+  grid-column:1 / -1 !important;
+}
+#dev218HeaderControls label{margin:0 !important}
+#dev218HeaderControls select{width:100% !important;min-width:0 !important}
+#dev218HeaderControls button{white-space:nowrap !important}
+#dev218HeaderControls .class-stats,
+#dev218HeaderControls [class*="class-stats"]{
+  grid-column:1 / -1 !important;
+  margin:0 !important;
+  padding:2px 0 0 !important;
+  font-size:10px !important;
+  color:#506b63 !important;
+}
+#dev218HeaderControls .status{
+  margin-top:2px !important;
+  min-height:16px !important;
+}
+
+#results{
+  background:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+}
+#studentList{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+}
+.student-card{
+  position:relative !important;
+  margin:0 !important;
+  padding:15px 16px 16px !important;
+  border:1px solid #cfe2db !important;
+  border-radius:14px !important;
+  box-shadow:0 2px 5px rgba(16,24,40,.05), inset 0 1px 0 rgba(255,255,255,.85) !important;
+  background:#ffffff !important;
+  overflow:hidden !important;
+}
+.student-card:nth-child(even){
+  background:#f9fcfb !important;
+}
+.student-card:hover{
+  border-color:#9fcfc0 !important;
+  box-shadow:0 4px 12px rgba(16,24,40,.08), inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+.apprentice-side{
+  padding:12px !important;
+  border:1px solid #d9e8e3 !important;
+  border-radius:11px !important;
+  background:linear-gradient(180deg,#fbfdfc,#f6faf8) !important;
+  box-shadow:inset 0 1px 2px rgba(16,24,40,.035) !important;
+}
+.company-side{
+  padding:12px !important;
+  border:1px solid #dbe8e4 !important;
+  border-radius:11px !important;
+  background:linear-gradient(180deg,#ffffff,#fbfdfc) !important;
+  box-shadow:inset 0 1px 2px rgba(16,24,40,.03) !important;
+}
+.process-box,
+.contract-box{
+  border:1px solid #cfe2db !important;
+  background:#ffffff !important;
+  box-shadow:inset 0 1px 2px rgba(16,24,40,.035) !important;
+}
+.company-stack,
+.address-stack,
+.contact-stack,
+.tutor-stack{
+  background:#fbfdfc !important;
+  border-radius:8px !important;
+  padding:6px 8px !important;
+}
+.compact-title{
+  font-size:9px !important;
+  font-weight:800 !important;
+  letter-spacing:.055em !important;
+  color:#526b64 !important;
+}
+.student{
+  font-size:15px !important;
+  color:#0a4b3d !important;
+}
+.apprentice-side{
+  position:relative !important;
+}
+.apprentice-side:after{
+  content:"" !important;
+  position:absolute !important;
+  top:10px !important;
+  right:-10px !important;
+  bottom:10px !important;
+  width:1px !important;
+  background:#b9d6cd !important;
+}
+.student-save-corner .save{
+  box-shadow:0 2px 6px rgba(0,0,0,.16) !important;
+}
+.history-mini{
+  box-shadow:0 2px 5px rgba(0,0,0,.10) !important;
+}
+.autosave-state{
+  opacity:.8 !important;
+}
+@media(max-width:1250px){
+  .top{grid-template-columns:1fr !important}
+  #dev218HeaderControls .filters{
+    grid-template-columns:1fr 1fr auto !important;
+  }
+}
+@media(max-width:760px){
+  #dev218HeaderControls .filters{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* DEV219_HEADER_COMPACT */
+.top{
+  display:grid !important;
+  grid-template-columns:minmax(280px,.9fr) minmax(520px,1.4fr) auto !important;
+  gap:18px !important;
+  align-items:center !important;
+  margin-bottom:10px !important;
+}
+.top > div:first-child{
+  padding:0 !important;
+}
+.top h1{
+  margin-bottom:2px !important;
+}
+.top > .back{
+  justify-self:end !important;
+  align-self:start !important;
+  margin-top:2px !important;
+  white-space:nowrap !important;
+}
+#dev218HeaderControls{
+  margin:0 !important;
+  padding:8px 10px !important;
+  border:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+}
+#dev218HeaderControls .filters{
+  display:grid !important;
+  grid-template-columns:minmax(150px,.8fr) minmax(200px,1fr) auto !important;
+  gap:10px !important;
+  align-items:end !important;
+}
+#dev218HeaderControls label{
+  margin:0 !important;
+}
+#dev218HeaderControls select{
+  width:100% !important;
+  min-width:0 !important;
+  height:34px !important;
+}
+#dev218HeaderControls button{
+  height:34px !important;
+  align-self:end !important;
+  padding:7px 11px !important;
+}
+#dev218HeaderControls .class-stats,
+#dev218HeaderControls [class*="class-stats"],
+#dev218HeaderControls #status,
+#dev218HeaderControls #dev206bLoading,
+#dev218HeaderControls #dev206Loading{
+  grid-column:1 / -1 !important;
+  margin:2px 0 0 !important;
+  padding:0 !important;
+  min-height:14px !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  color:#55716a !important;
+}
+@media(max-width:1100px){
+  .top{
+    grid-template-columns:1fr auto !important;
+  }
+  #dev218HeaderControls{
+    grid-column:1 / -1 !important;
+  }
+}
+@media(max-width:760px){
+  .top{
+    grid-template-columns:1fr !important;
+  }
+  .top > .back{
+    justify-self:start !important;
+  }
+  #dev218HeaderControls .filters{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* DEV220_HEADER_ALIGNMENT */
+.top{
+  display:grid !important;
+  grid-template-columns:minmax(360px,.9fr) minmax(760px,1.6fr) auto !important;
+  gap:16px !important;
+  align-items:start !important;
+  padding-top:4px !important;
+}
+.top > div:first-child{
+  padding-top:18px !important;
+}
+#dev218HeaderControls{
+  margin-top:0 !important;
+  padding:0 !important;
+  align-self:start !important;
+}
+#dev218HeaderControls .filters{
+  display:grid !important;
+  grid-template-columns:minmax(170px,.75fr) minmax(300px,1.25fr) auto !important;
+  gap:10px !important;
+  align-items:end !important;
+}
+#dev218HeaderControls label:first-child{
+  margin-left:-18px !important;
+}
+#dev218HeaderControls label:nth-child(2){
+  margin-left:-6px !important;
+}
+#dev218HeaderControls button{
+  margin-left:0 !important;
+  align-self:end !important;
+  justify-self:start !important;
+}
+.top > .back{
+  justify-self:end !important;
+  align-self:start !important;
+  margin-top:0 !important;
+  padding-top:2px !important;
+}
+#dev218HeaderControls .class-stats,
+#dev218HeaderControls [class*="class-stats"],
+#dev218HeaderControls #status,
+#dev218HeaderControls #dev206bLoading,
+#dev218HeaderControls #dev206Loading{
+  grid-column:1 / 3 !important;
+  margin-left:-18px !important;
+  margin-top:3px !important;
+}
+@media(max-width:1200px){
+  .top{
+    grid-template-columns:1fr auto !important;
+  }
+  #dev218HeaderControls{
+    grid-column:1 / -1 !important;
+  }
+  #dev218HeaderControls .filters{
+    grid-template-columns:1fr 1fr auto !important;
+  }
+  #dev218HeaderControls label:first-child,
+  #dev218HeaderControls label:nth-child(2),
+  #dev218HeaderControls .class-stats,
+  #dev218HeaderControls [class*="class-stats"],
+  #dev218HeaderControls #status,
+  #dev218HeaderControls #dev206bLoading,
+  #dev218HeaderControls #dev206Loading{
+    margin-left:0 !important;
+  }
+}
+@media(max-width:760px){
+  #dev218HeaderControls .filters{
+    grid-template-columns:1fr !important;
+  }
+  #dev218HeaderControls .class-stats,
+  #dev218HeaderControls [class*="class-stats"],
+  #dev218HeaderControls #status,
+  #dev218HeaderControls #dev206bLoading,
+  #dev218HeaderControls #dev206Loading{
+    grid-column:1 !important;
+  }
+}
+
+
+/* DEV221_HEADER_ROW_EXACT */
+.top{display:grid !important;grid-template-columns:minmax(360px,.95fr) minmax(780px,1.65fr) auto !important;gap:18px !important;align-items:start !important}
+.top > div:first-child{padding-top:12px !important}
+#dev218HeaderControls{margin:0 !important;padding:0 !important;border:0 !important;box-shadow:none !important;background:transparent !important;align-self:start !important}
+#dev218HeaderControls .filters{display:grid !important;grid-template-columns:minmax(180px,.8fr) minmax(320px,1.35fr) auto !important;column-gap:10px !important;row-gap:4px !important;align-items:start !important}
+#dev218HeaderControls .filters > label{margin:0 !important;padding:0 !important;align-self:start !important;display:flex !important;flex-direction:column !important;gap:4px !important}
+#dev218HeaderControls .filters > label:first-child,#dev218HeaderControls .filters > label:nth-child(2){margin-left:0 !important;transform:none !important}
+#dev218HeaderControls .filters > label > select{width:100% !important;min-width:0 !important;height:34px !important;margin:0 !important}
+#dev218HeaderControls .filters > button{align-self:start !important;justify-self:start !important;margin:21px 0 0 0 !important;height:34px !important;padding:7px 12px !important;white-space:nowrap !important}
+#dev218HeaderControls .class-stats,#dev218HeaderControls [class*="class-stats"],#dev218HeaderControls #status,#dev218HeaderControls #dev206bLoading,#dev218HeaderControls #dev206Loading{grid-column:1 / 3 !important;margin:0 !important;padding:1px 0 0 !important;min-height:14px !important;font-size:9px !important;line-height:1.2 !important;color:#55716a !important}
+.top > .back{justify-self:end !important;align-self:start !important;margin:0 !important;padding-top:2px !important;white-space:nowrap !important}
+@media(max-width:1200px){.top{grid-template-columns:1fr auto !important}#dev218HeaderControls{grid-column:1 / -1 !important}#dev218HeaderControls .filters{grid-template-columns:1fr 1fr auto !important}}
+@media(max-width:760px){.top{grid-template-columns:1fr !important}#dev218HeaderControls .filters{grid-template-columns:1fr !important}#dev218HeaderControls .filters > button{margin-top:0 !important}#dev218HeaderControls .class-stats,#dev218HeaderControls [class*="class-stats"],#dev218HeaderControls #status,#dev218HeaderControls #dev206bLoading,#dev218HeaderControls #dev206Loading{grid-column:1 !important}.top > .back{justify-self:start !important}}
+
+
+/* DEV222_CLASS_META */
+#dev222ClassMeta{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:3px !important;
+  margin-top:4px !important;
+  min-height:28px !important;
+}
+#dev222ClassMeta .class-stats,
+#dev222ClassMeta [class*="class-stats"],
+#dev222ClassMeta #status{
+  margin:0 !important;
+  padding:0 !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  color:#49645d !important;
+  font-weight:600 !important;
+}
+#dev222ClassMeta #dev206bLoading,
+#dev222ClassMeta #dev206Loading{
+  margin:0 !important;
+  padding:0 !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  color:#08745e !important;
+  font-weight:700 !important;
+}
+#dev222ClassMeta .loading-indicator,
+#dev222ClassMeta .loading-box{
+  margin-top:0 !important;
+}
+
+
+/* DEV223_CLASS_META_TIGHTER */
+#dev222ClassMeta{
+  margin-top:-2px !important;
+  gap:1px !important;
+  min-height:24px !important;
+}
+#dev222ClassMeta .class-stats,
+#dev222ClassMeta [class*="class-stats"],
+#dev222ClassMeta #status{
+  margin-top:0 !important;
+  padding-top:0 !important;
+  font-size:18px !important;
+  line-height:1.08 !important;
+  font-weight:700 !important;
+  color:#3d5d55 !important;
+}
+#dev222ClassMeta #dev206bLoading,
+#dev222ClassMeta #dev206Loading{
+  margin-top:0 !important;
+  padding-top:0 !important;
+  font-size:18px !important;
+  line-height:1.08 !important;
+  font-weight:800 !important;
+  color:#08745e !important;
+}
+#dev222ClassMeta .loading-indicator,
+#dev222ClassMeta .loading-box{
+  margin-top:0 !important;
+}
+
+
+/* DEV224_LOADING_COMMENT_FINE_TUNE */
+#dev222ClassMeta #dev206bLoading,
+#dev222ClassMeta #dev206Loading{
+  font-size:15px !important;
+  line-height:1.1 !important;
+  margin-top:5px !important;
+  margin-bottom:0 !important;
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+  min-height:16px !important;
+}
+#dev222ClassMeta .loading-indicator,
+#dev222ClassMeta .loading-box{
+  margin-top:5px !important;
+  margin-bottom:0 !important;
+  padding:0 !important;
+}
+#dev222ClassMeta{
+  padding-bottom:0 !important;
+  margin-bottom:0 !important;
+}
+
+/* DEV225_STATUS_AUTOMATIQUE */
+.apprenti.check{
+  pointer-events:none !important;
+  opacity:.65 !important;
+}
+.apprentice-status-pill.status-school{
+  background:#edf2ef !important;
+  color:#4d625c !important;
+}
+.apprentice-status-pill.status-future{
+  background:#f79009 !important;
+  color:#fff !important;
+}
+.apprentice-status-pill.status-apprentice{
+  background:#1570ef !important;
+  color:#fff !important;
+}
+.apprentice-status-pill.status-rupture{
+  background:#d92d20 !important;
+  color:#fff !important;
+}
+.student-card.status-future-card{
+  border-left:5px solid #f79009 !important;
+}
+.student-card.status-apprentice-card{
+  border-left:5px solid #1570ef !important;
+}
+.student-card.status-rupture-card{
+  border-left:5px solid #d92d20 !important;
+}
+.student-card.status-apprentice-card.apprentice-tone-a{
+  background:linear-gradient(90deg,#edf4ff 0,#fff 24%) !important;
+}
+.student-card.status-apprentice-card.apprentice-tone-b{
+  background:linear-gradient(90deg,#e1ecff 0,#fff 24%) !important;
+}
+.workflow-warning{
+  display:block !important;
+  min-height:12px !important;
+  margin-top:4px !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  color:#b54708 !important;
+  font-weight:700 !important;
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<div class="top">
+  <div>
+    <h1>Gestion des apprentis</h1>
+    <div>Suivi des dossiers, contrats et situations d'apprentissage.</div>
+  </div>
+  <a id="homeLink" class="back">← Accueil</a>
+</div>
+
+<section class="panel">
+
+<div class="dashboard">
+  <div class="kpi"><b id="dClasseEntiere">0</b><span>Apprentis classe entière</span></div>
+  <div class="kpi"><b id="dMixite">0</b><span>Apprentis en mixité</span></div>
+  <div class="kpi"><b id="dTotalApprentis">0</b><span>Total apprentis</span></div>
+  <div class="kpi"><b id="dDossier">0</b><span>Dossiers remis</span></div>
+  <div class="kpi"><b id="dCfa">0</b><span>Transmis CFA</span></div>
+  <div class="kpi"><b id="dValides">0</b><span>Contrats valides</span></div>
+  <div class="kpi"><b id="dRuptures">0</b><span>Ruptures</span></div>
+</div>
+</section>
+
+<section class="panel">
+  <div class="filters">
+    <label>Année
+      <select id="year"></select>
+    </label>
+
+    <label>Classe
+      <select id="classe"></select>
+    </label>
+
+    <div id="classStats" class="class-stats"></div>
+  </div>
+
+  <div id="status" class="status">
+    Choisissez une classe.
+  </div>
+  <div id="dev206Loading" class="loading-indicator"><span class="loading-spinner"></span><span id="dev206LoadingText">Chargement en cours…</span></div>
+</section>
+
+<section id="results" class="panel" hidden>
+  <div id="studentList" class="list"></div>
+</section>
+
+<section class="panel">
+  <a id="maintLink" class="back">
+    Maintenance Snapshot PFMP
+  </a>
+</section>
+
+<div
+  id="historyModal"
+  hidden
+  style="
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.35);
+    z-index:9999;
+    padding:40px;
+    overflow:auto;
+  "
+>
+  <div
+    style="
+      max-width:900px;
+      margin:auto;
+      background:#fff;
+      border-radius:12px;
+      padding:18px;
+    "
+  >
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+      "
+    >
+      <h2 style="margin:0">
+        Historique des contrats
+      </h2>
+
+      <button
+        id="closeHistory"
+        type="button"
+      >
+        Fermer
+      </button>
+    </div>
+
+    <div
+      id="historyContent"
+      style="margin-top:14px"
+    ></div>
+  </div>
+</div>
+
+
+<div id="auditSiretModal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10000;padding:30px;overflow:auto">
+  <div style="max-width:1200px;margin:auto;background:#fff;border-radius:12px;padding:18px">
+    <div style="display:flex;justify-content:space-between;gap:12px">
+      <h2 style="margin:0">Audit SIRET</h2>
+      <button id="closeAuditSiret" type="button">Fermer</button>
+    </div>
+    <pre id="auditSiretContent" style="white-space:pre-wrap;word-break:break-word;background:#f5faf8;padding:12px;border-radius:8px;max-height:70vh;overflow:auto;margin-top:14px;font-size:12px"></pre>
+  </div>
+</div>
+</main>
+
+<script>
+const BOOT=<?!= bootJson ?>;
+
+(function(){
+  function dev206ShowLoading(text){
+    var box=document.getElementById('dev206Loading');
+    var txt=document.getElementById('dev206LoadingText');
+    if(txt)txt.textContent=text||'Chargement en cours…';
+    if(box)box.classList.add('on');
+    if(classe)classe.disabled=true;
+  }
+  function dev206HideLoading(){
+    var box=document.getElementById('dev206Loading');
+    if(box)box.classList.remove('on');
+    if(classe)classe.disabled=false;
+  }
+
+
+  homeLink.href=
+    BOOT.webappUrl+
+    '?page=admin-pfmp';
+
+  homeLink.target='_top';
+
+  maintLink.href=
+    BOOT.webappUrl+
+    '?page=snapshot-pfmp-admin';
+
+  maintLink.target='_top';
+
+  closeHistory.onclick=function(){
+    historyModal.hidden=true;
+  };
+
+  let DASH=null;
+
+  function esc(v){
+    return String(v==null?'':v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function fillYears(){
+    year.innerHTML=
+      (BOOT.years||[])
+      .map(function(v){
+        return (
+          '<option value="'+
+          esc(v)+
+          '"'+
+          (
+            v===BOOT.currentYear
+              ? ' selected'
+              : ''
+          )+
+          '>'+
+          esc(v)+
+          '</option>'
+        );
+      })
+      .join('');
+  }
+
+  function fillClasses(classes){
+    classe.innerHTML=
+      '<option value="">— Choisir une classe —</option>'+
+      (classes||[])
+      .map(function(c){
+        return (
+          '<option value="'+
+          c.id+
+          '">'+
+          esc(c.nom)+
+          '</option>'
+        );
+      })
+      .join('');
+
+    classe.value='';
+  }
+
+
+function setKpis(s){
+  s=s||{};
+  var e;
+  e=document.getElementById('dClasseEntiere'); if(e)e.textContent=s.classeEntiere||0;
+  e=document.getElementById('dMixite'); if(e)e.textContent=s.mixite||0;
+  e=document.getElementById('dTotalApprentis'); if(e)e.textContent=s.totalApprentis||0;
+  e=document.getElementById('dDossier'); if(e)e.textContent=s.dossierRemis||0;
+  e=document.getElementById('dCfa'); if(e)e.textContent=s.transmisCFA||0;
+  e=document.getElementById('dValides'); if(e)e.textContent=s.contratsValides||0;
+  e=document.getElementById('dRuptures'); if(e)e.textContent=s.ruptures||0;
+}
+
+  function refreshDashboard(){
+    google.script.run
+      .withSuccessHandler(function(d){
+        DASH=d||{};
+        setKpis(
+          DASH.global||{}
+        );
+        updateClassStats();
+      })
+      .withFailureHandler(function(){})
+      .EUC_DEV192_getDashboard(
+        year.value
+      );
+  }
+
+  function updateClassStats(){
+    if(
+      !DASH ||
+      !classe.value
+    ){
+      classStats.textContent='';
+      return;
+    }
+
+    var code=
+      classe.options[
+        classe.selectedIndex
+      ].text;
+
+    var s=
+      (DASH.classes||{})[code]||
+      {};
+
+    classStats.textContent=
+      'Classe : '+
+      (s.apprentisActifs||0)+
+      ' actif(s) · '+
+      (s.dossierRemis||0)+
+      ' dossier(s) remis · '+
+      (s.transmisCFA||0)+
+      ' transmis CFA · '+
+      (s.ruptures||0)+
+      ' rupture(s)';
+  }
+
+  function studentHtml(x){
+    return `
+      <div class="student-card" data-id="${x.id}">
+
+        <div class="student-save-corner">
+          <button type="button" class="save">Enregistrer</button>
+          <span class="autosave-state">Prêt</span>
+        </div>
+
+        <div class="apprentice-side">
+
+          <div class="apprentice-identity">
+            <div>
+              <span class="compact-title">Élève</span>
+              <div class="student">${esc(x.nom)} ${esc(x.prenom)}</div>
+            </div>
+
+            <div>
+              <span class="compact-title">Statut</span>
+              <div class="apprentice-badge-line">
+                <input class="apprenti check" type="checkbox" ${x.apprenti?'checked':''}>
+                <span class="apprentice-status-pill status-school">Scolaire</span>
+              </div>
+            </div>
+
+            <div class="apprentice-dates">
+              <label>
+                <span class="compact-title">Début</span>
+                <input class="debut" type="date" value="${esc(x.debut||'')}">
+              </label>
+              <label>
+                <span class="compact-title">Fin</span>
+                <input class="fin" type="date" value="${esc(x.fin||'')}">
+              </label>
+            </div>
+          </div>
+
+          <div class="apprentice-process">
+            <span class="compact-title">Circuit du dossier</span>
+            <div class="process-box">
+              <div class="process-row">
+                <input class="dossier-distribue" type="checkbox" ${x.dossierDistribue?'checked':''}>
+                <span class="process-label">Dossier distribué</span>
+                <input class="date-distribution" type="date" value="${esc(x.dateDistribution||'')}">
+              </div>
+              <div class="process-row">
+                <input class="dossier-remis" type="checkbox" ${x.dossierRemis?'checked':''}>
+                <span class="process-label">Dossier remis</span>
+                <input class="date-remise" type="date" value="${esc(x.dateRemise||'')}">
+              </div>
+              <div class="process-row">
+                <input class="transmis-cfa" type="checkbox" ${x.transmisCfa?'checked':''}>
+                <span class="process-label">Transmis au CFA</span>
+                <input class="date-cfa" type="date" value="${esc(x.dateCfa||'')}">
+              </div>
+            </div>
+          </div>
+
+          <div class="apprentice-contract">
+            <div class="contract-heading">
+              <span class="compact-title" style="margin:0">Contrat</span>
+              <button type="button" class="history-btn history-mini">Historique</button>
+            </div>
+
+            <div class="contract-box">
+              <div class="contract-row">
+                <span class="contract-label">Contrat officiel</span>
+                <input class="date-contrat" type="date" value="${esc(x.dateContrat||'')}">
+              </div>
+              <div class="contract-row">
+                <span class="contract-label">Rupture</span>
+                <input class="date-rupture" type="date" value="${esc(x.dateRupture||'')}">
+              </div>
+              <div class="new-contract-line">
+                <input class="nouveau-contrat" type="checkbox" ${x.nouveauContrat?'checked':''}>
+                <span class="contract-label">Nouveau contrat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="company-side">
+          <div>
+            <span class="compact-title">Entreprise</span>
+            <div class="company-stack">
+              <input class="nom-ent company-name" placeholder="Raison sociale" value="${esc(x.nomEntreprise||'')}">
+              <input class="nom-com trade-name" placeholder="Nom commercial / enseigne" value="${esc(x.nomCommercial||'')}">
+              <div class="siret-wrap">
+                <input class="siret-input" maxlength="14" placeholder="SIRET" value="${esc(x.siret||'')}">
+                <button type="button" class="search">Rechercher</button>
+              </div>
+              <div class="msg"></div>
+            </div>
+          </div>
+
+          <div>
+            <span class="compact-title">Adresse</span>
+            <div class="address-stack">
+              <input class="adresse" placeholder="Adresse" value="${esc(x.adresse||'')}">
+              <div class="cp-city">
+                <input class="cp" placeholder="CP" value="${esc(x.cp||'')}">
+                <input class="ville" placeholder="Ville" value="${esc(x.ville||'')}">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <span class="compact-title">Coordonnées entreprise</span>
+            <div class="contact-stack">
+              <input class="tel-ent" placeholder="Téléphone" value="${esc(x.telEntreprise||'')}">
+              <input class="mail-ent" type="email" placeholder="Courriel" value="${esc(x.mailEntreprise||'')}">
+            </div>
+          </div>
+
+          <div>
+            <span class="compact-title">Tuteur</span>
+            <div class="tutor-stack">
+              <input class="tuteur-input" placeholder="Nom du tuteur" value="${esc(x.tuteur||'')}">
+              <input class="tel-tut" placeholder="Téléphone" value="${esc(x.telTuteur||'')}">
+              <input class="mail-tut" type="email" placeholder="Courriel" value="${esc(x.mailTuteur||'')}">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function render(rows){
+    studentList.innerHTML=
+      (rows||[])
+      .map(studentHtml)
+      .join('');
+
+    Array.from(
+      studentList.querySelectorAll(
+        '.student-card'
+      )
+    )
+    .forEach(function(card){
+
+      var msg=
+        card.querySelector(
+          '.msg'
+        );
+
+      var apprenti=
+        card.querySelector(
+          '.apprenti'
+        );
+
+      var debut=
+        card.querySelector(
+          '.debut'
+        );
+
+      var fin=
+        card.querySelector(
+          '.fin'
+        );
+
+      var dateContrat=
+        card.querySelector(
+          '.date-contrat'
+        );
+
+      var dateRupture=
+        card.querySelector(
+          '.date-rupture'
+        );
+
+      /*
+       * AUTOMATISMES DEMANDÉS
+       */
+      dateContrat.addEventListener(
+        'change',
+        function(){
+          if(dateContrat.value){
+            debut.value=
+              dateContrat.value;
+
+            apprenti.checked=true;
+          }
+        }
+      );
+
+      dateRupture.addEventListener(
+        'change',
+        function(){
+          if(dateRupture.value){
+            fin.value=
+              dateRupture.value;
+
+            apprenti.checked=false;
+          }
+        }
+      );
+
+      var __auditBtn=
+        card.querySelector(
+          '.audit-siret'
+        );
+
+      /*
+       * DEV.301
+       * L'ancien audit DEV199 n'est plus utilisé pour vérifier
+       * un SIRET. Le bouton réutilise la recherche officielle
+       * de cette carte.
+       */
+      if(__auditBtn)
+      __auditBtn.onclick=function(){
+        var __searchBtn=
+          card.querySelector(
+            '.search'
+          );
+
+        if(__searchBtn){
+          __searchBtn.click();
+        }
+      };
+
+      card.querySelector(
+        '.search'
+      ).onclick=function(){
+
+        var siret=
+          card.querySelector(
+            '.siret-input'
+          )
+          .value
+          .replace(/\D/g,'')
+          .slice(0,14);
+
+        card.querySelector(
+          '.siret-input'
+        ).value=siret;
+
+        if(siret.length!==14){
+          msg.textContent=
+            'SIRET incomplet';
+          return;
+        }
+
+        function applyCompany(r){
+
+          if(!r || !r.found){
+            msg.textContent=
+              (r&&r.error)
+                ? r.error
+                : 'Entreprise non trouvée';
+            return;
+          }
+
+          card.querySelector(
+            '.nom-ent'
+          ).value=
+            r.nomEntreprise||'';
+
+          card.querySelector(
+            '.nom-com'
+          ).value=
+            r.nomCommercial||'';
+
+          card.querySelector(
+            '.adresse'
+          ).value=
+            r.adresse||'';
+
+          card.querySelector(
+            '.cp'
+          ).value=
+            r.codePostal||'';
+
+          card.querySelector(
+            '.ville'
+          ).value=
+            r.ville||'';
+
+          card.querySelector(
+            '.tel-ent'
+          ).value=
+            r.telephoneEntreprise||'';
+
+          card.querySelector(
+            '.mail-ent'
+          ).value=
+            r.courrielEntreprise||'';
+
+          card.querySelector(
+            '.tuteur-input'
+          ).value=
+            r.tuteur||'';
+
+          card.querySelector(
+            '.tel-tut'
+          ).value=
+            r.telephoneTuteur||'';
+
+          card.querySelector(
+            '.mail-tut'
+          ).value=
+            r.courrielTuteur||'';
+
+          msg.textContent=
+            'Entreprise trouvée'+
+            (
+              r.source
+                ? ' · '+r.source
+                : ''
+            );
+        }
+
+        function remoteSearch(){
+
+          msg.textContent=
+            'Recherche sur l’Annuaire des Entreprises…';
+
+          var url=
+            'https://recherche-entreprises.api.gouv.fr/search?q='+
+            encodeURIComponent(siret)+
+            '&per_page=10';
+
+          fetch(
+            url,
+            {
+              method:'GET',
+              headers:{
+                'Accept':'application/json'
+              }
+            }
+          )
+          .then(function(response){
+
+            if(!response.ok){
+              throw new Error(
+                'HTTP '+response.status
+              );
+            }
+
+            return response.json();
+
+          })
+          .then(function(json){
+
+            /*
+             * EXACTEMENT COMME LE MODULE PFMP :
+             * on donne le JSON navigateur à la fonction serveur historique.
+             */
+            google.script.run
+              .withSuccessHandler(
+                function(pfmpResult){
+
+                  /*
+                   * Puis on normalise/enrichit pour le tableau Apprentis.
+                   */
+                  google.script.run
+                    .withSuccessHandler(
+                      applyCompany
+                    )
+                    .withFailureHandler(
+                      function(e){
+                        msg.textContent=
+                          'Erreur mapping : '+
+                          String(
+                            e&&e.message||e
+                          );
+                      }
+                    )
+                    .EUC_DEV203_finalizeBrowserResult(
+                      pfmpResult,
+                      siret
+                    );
+
+                }
+              )
+              .withFailureHandler(
+                function(e){
+                  msg.textContent=
+                    'Erreur traitement PFMP : '+
+                    String(
+                      e&&e.message||e
+                    );
+                }
+              )
+              .EUC_ENT_traiterReponseApiNavigateur(
+                json,
+                siret
+              );
+
+          })
+          .catch(function(e){
+            msg.textContent=
+              'Erreur recherche Annuaire Entreprises : '+
+              String(
+                e&&e.message||e
+              );
+          });
+        }
+
+        msg.textContent=
+          'Vérification du SIRET sur l’Annuaire des Entreprises…';
+
+        /*
+         * DEV.301
+         * Une vérification manuelle interroge toujours
+         * la source officielle.
+         *
+         * La base globale reste alimentée ensuite par
+         * EUC_DEV203_finalizeBrowserResult().
+         */
+        remoteSearch();
+      };
+
+      card.querySelector(
+        '.history-btn'
+      ).onclick=function(){
+
+        historyModal.hidden=false;
+
+        historyContent.innerHTML=
+          'Chargement…';
+
+        google.script.run
+          .withSuccessHandler(
+            function(r){
+
+              var h=
+                (r&&r.history)||[];
+
+              if(!h.length){
+                historyContent.innerHTML=
+                  '<p>Aucun historique.</p>';
+                return;
+              }
+
+              historyContent.innerHTML=
+                h.map(
+                  function(x,i){
+                    return (
+                      '<div style="border-bottom:1px solid #ddd;padding:10px 0">'+
+                      '<b>Contrat '+
+                      (h.length-i)+
+                      '</b> · '+
+                      esc(
+                        x.nomEntreprise||
+                        x.nomCommercial||
+                        'Entreprise non renseignée'
+                      )+
+                      '<br>Début : '+
+                      esc(x.debut||'—')+
+                      ' · Fin : '+
+                      esc(x.fin||'—')+
+                      (
+                        x.rupture
+                          ? ' · <b>Rupture : '+
+                            esc(x.rupture)+
+                            '</b>'
+                          : ''
+                      )+
+                      '<br>Statut : '+
+                      esc(x.statut||'—')+
+                      (
+                        x.nouveauContrat
+                          ? ' · Nouveau contrat'
+                          : ''
+                      )+
+                      '</div>'
+                    );
+                  }
+                )
+                .join('');
+            }
+          )
+          .withFailureHandler(
+            function(e){
+              historyContent.textContent=
+                'Erreur : '+
+                String(
+                  e&&e.message||e
+                );
+            }
+          )
+          .EUC_DEV193_history(
+            Number(
+              card.dataset.id
+            )
+          );
+      };
+
+      card.querySelector('.save').onclick=function(){ doSave(true); };
+    }
+  );
+  }
+
+  fillYears();
+
+  fillClasses(
+    BOOT.classes||[]
+  );
+
+  if(window.EUC_DEV250_refreshDashboard){window.EUC_DEV250_refreshDashboard();}else{refreshDashboard();}
+
+  year.onchange=function(){
+
+    results.hidden=true;
+
+    studentList.innerHTML='';
+
+    status.textContent=
+      'Mise à jour des classes…';
+
+    google.script.run
+      .withSuccessHandler(
+        function(r){
+
+          fillClasses(
+            r.classes||[]
+          );
+
+          status.textContent=
+            'Choisissez une classe.';
+
+          if(window.EUC_DEV250_refreshDashboard){window.EUC_DEV250_refreshDashboard();}else{refreshDashboard();}
+        }
+      )
+      .withFailureHandler(
+        function(){
+          status.textContent=
+            'Erreur de chargement des classes.';
+        }
+      )
+      .EUC_DEV190X_getClasses(
+        year.value,
+        false
+      );
+  };
+
+  /* DEV242B_CLASS_HANDLER_CLEAN */
+  /* DEV244_EXPOSE_RENDERER */
+  window.EUC_DEV244_render=render;
+  window.EUC_DEV244_refreshDashboard=refreshDashboard;
+
+  classe.onchange=function(){
+
+    var classId=Number(classe.value||0);
+
+    if(!classId){
+      results.hidden=true;
+      studentList.innerHTML='';
+      status.textContent='Choisissez une classe.';
+      status.style.color='';
+      return;
+    }
+
+    var className=classe.options[classe.selectedIndex].text;
+
+    results.hidden=true;
+    studentList.innerHTML='';
+
+    status.textContent='DEV242B — chargement de '+className+'…';
+    status.style.color='#08745e';
+
+    var t0=Date.now();
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        try{
+          var obj=(typeof r==='string') ? JSON.parse(r) : (r||{});
+          var rows=(obj&&obj.students)||[];
+
+          studentList.innerHTML=
+            rows.map(function(x){
+              return '<div class="student-card" style="padding:10px 12px;border-bottom:1px solid #dfe9e5"><b>'+
+                String(x.nom||'')+' '+String(x.prenom||'')+
+                '</b></div>';
+            }).join('');
+
+          results.hidden=false;
+
+          status.textContent=
+            'DEV242B OK — '+rows.length+' élève(s) chargé(s) · '+
+            (obj.source||'DEV235/json')+' · '+(Date.now()-t0)+' ms';
+          status.style.color='#49645d';
+
+        }catch(err){
+          results.hidden=true;
+          status.textContent='DEV242B ERREUR RENDU : '+String(err&&err.stack||err);
+          status.style.color='#b42318';
+        }
+      })
+      .withFailureHandler(function(e){
+        results.hidden=true;
+        status.textContent='DEV242B ERREUR SERVEUR : '+String(e&&e.message||e);
+        status.style.color='#b42318';
+      })
+      .EUC_DEV235_loadStudentsJson(
+        year.value,
+        classId,
+        className
+      );
+  };
+
+})();
+</script>
+<script>
+/* DEV218_HEADER_RELOCATE */
+(function(){
+  function moveControls(){
+    try{
+      var top=document.querySelector('.top');
+      var year=document.getElementById('year');
+      var classe=document.getElementById('classe');
+      if(!top || !year || !classe) return;
+
+      var panel=year.closest('.panel');
+      if(!panel || panel.id==='dev218HeaderControls') return;
+
+      panel.id='dev218HeaderControls';
+      top.appendChild(panel);
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',moveControls,{once:true});
+  }else{
+    moveControls();
+  }
+
+  setTimeout(moveControls,100);
+  setTimeout(moveControls,400);
+})();
+</script>
+
+
+<script>
+/* DEV219_HEADER_REORDER */
+(function(){
+  function arrange(){
+    try{
+      var top=document.querySelector('.top');
+      var home=top ? top.querySelector('.back') : null;
+      var year=document.getElementById('year');
+      if(!top || !home || !year) return;
+
+      var panel=year.closest('.panel');
+      if(!panel) return;
+
+      panel.id='dev218HeaderControls';
+
+      if(panel.parentNode!==top){
+        top.insertBefore(panel,home);
+      }else if(panel.nextSibling!==home){
+        top.insertBefore(panel,home);
+      }
+
+      home.textContent='← Accueil';
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',arrange,{once:true});
+  }else{
+    arrange();
+  }
+
+  setTimeout(arrange,100);
+  setTimeout(arrange,400);
+})();
+</script>
+
+
+<script>
+/* DEV222_MOVE_CLASS_META */
+(function(){
+  function moveClassMeta(){
+    try{
+      var classe=document.getElementById('classe');
+      if(!classe) return;
+
+      var classLabel=classe.closest('label');
+      if(!classLabel) return;
+
+      var meta=document.getElementById('dev222ClassMeta');
+      if(!meta){
+        meta=document.createElement('div');
+        meta.id='dev222ClassMeta';
+        classLabel.appendChild(meta);
+      }
+
+      var stats=document.getElementById('classStats');
+      var loading=document.getElementById('dev206bLoading') || document.getElementById('dev206Loading');
+      var status=document.getElementById('status');
+
+      if(stats && stats.parentNode!==meta) meta.appendChild(stats);
+      if(loading && loading.parentNode!==meta) meta.appendChild(loading);
+      if(status && status.parentNode!==meta) meta.appendChild(status);
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',moveClassMeta,{once:true});
+  }else{
+    moveClassMeta();
+  }
+
+  setTimeout(moveClassMeta,100);
+  setTimeout(moveClassMeta,400);
+})();
+</script>
+
+<script>
+/* DEV229_NATIVE_LOADER_GUARD */
+(function(){
+  function stopLoadingOnError(message){
+    try{
+      ['dev206bLoading','dev206Loading','loading'].forEach(function(id){
+        var e=document.getElementById(id);
+        if(e){
+          e.style.display='none';
+          e.classList.remove('on');
+        }
+      });
+      var st=document.getElementById('status');
+      if(st && message){
+        st.textContent=message;
+        st.style.color='#b42318';
+      }
+    }catch(_e){}
+  }
+
+  window.addEventListener('unhandledrejection',function(e){
+    stopLoadingOnError(
+      'Erreur JavaScript : '+
+      String(e.reason && (e.reason.message||e.reason) || e)
+    );
+  });
+})();
+</script>
+
+
+
+
+
+
+<style id="DEV249_REFERENCE_LAYOUT_STYLE">
+#studentList{overflow-x:hidden}
+.dev248-card{position:relative;display:grid!important;grid-template-columns:44% 56%!important;gap:16px!important;align-items:stretch!important;min-width:0!important;background:#fff!important;border:1px solid #cfe5de!important;border-radius:12px!important;padding:14px 16px!important;margin:10px 0!important}
+.dev248-card.future{border-left:5px solid #f59e0b!important}.dev248-card.apprentice{border-left:5px solid #2563eb!important}.dev248-card.rupture{border-left:5px solid #dc2626!important}
+.dev249-left{display:grid;grid-template-columns:27% 42% 31%;gap:12px;min-width:0}.dev249-right{position:relative;display:grid;grid-template-columns:35% 23% 22% 20%;gap:12px;min-width:0;padding:10px 12px;border:1px solid #cfe5de;border-radius:10px;background:#fbfefd}
+.dev249-col{min-width:0}.dev249-title{font-size:9px;font-weight:800;color:#59756f;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}.dev249-name{font-size:14px;font-weight:800;color:#0b4035;margin-bottom:14px}
+.dev249-status-line{display:flex;align-items:center;gap:7px;margin-bottom:8px}.dev248-status{display:inline-flex!important;width:max-content;padding:5px 9px!important;border-radius:999px;font-size:10px!important;font-weight:800;background:#eef2f1;color:#59636a}.dev248-status.future{background:#fff1dc;color:#9a5a00}.dev248-status.apprentice{background:#e5f0ff;color:#175ea8}.dev248-status.rupture{background:#fde8e8;color:#b42318}
+.dev249-check{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;margin:6px 0}.dev249-check input{width:auto}.dev249-field{display:flex;flex-direction:column;gap:2px;min-width:0;margin-top:5px}.dev249-field span{font-size:9px;color:#667085;font-weight:700}.dev249-field input{width:100%;min-width:0;border:0;border-bottom:1px solid #b9d8cf;background:transparent;padding:5px 2px;outline:none;font-size:10px}.dev249-field input:focus{border-bottom:2px solid #0b8f72}
+.dev249-circuit-row{display:grid;grid-template-columns:auto 1fr 110px;gap:6px;align-items:center;margin-bottom:7px;font-size:10px;font-weight:700}.dev249-circuit-row input[type=checkbox]{width:auto}.dev249-circuit-row input[type=date]{width:100%;border:0;border-bottom:1px solid #b9d8cf;background:transparent;padding:4px 2px;font-size:10px}
+.dev249-contract{position:relative}.dev249-history{position:absolute;right:0;top:-4px}.dev249-history button,.dev249-search button,.dev249-save{border:0;border-radius:7px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer}.dev249-history button{background:#e8f5f0;color:#086955}.dev249-search button{background:#0b9f82;color:#fff}.dev249-save{position:absolute;top:10px;right:10px;background:#0b9f82;color:#fff;min-width:88px;z-index:2}
+.dev249-company-box{padding-right:74px}.dev249-search{display:flex;gap:6px;align-items:end}.dev249-search .dev249-field{flex:1 1 auto}.dev249-msg{font-size:9px;color:#667085;min-height:12px;margin-top:4px}.dev248-saved{position:absolute;top:40px;right:12px;font-size:8px;color:#667085}
+#dev248ClassSummary{display:block;margin:10px 0 14px!important;padding:7px 12px;border-radius:8px;background:#f7fbf9;color:#0c5f4e;font-size:11px;font-weight:800;line-height:1.35;text-align:left!important;box-shadow:none!important}
+@media(max-width:1250px){.dev248-card{grid-template-columns:1fr!important}.dev249-left{grid-template-columns:1fr 1.2fr 1fr}.dev249-right{grid-template-columns:1.2fr 1fr 1fr 1fr}}
+</style>
+<script>
+/* DEV248_LAYOUT_MEMOIRE_COMPTEURS_DATES */
+(function(){
+  var lastRows=[];
+
+  function esc(v){
+    var d=document.createElement('div');
+    d.textContent=(v==null?'':String(v));
+    return d.innerHTML;
+  }
+  function q(card,sel){return card.querySelector(sel);}
+  function val(card,sel){
+    var e=q(card,sel);
+    return e ? String(e.value||'') : '';
+  }
+  function chk(card,sel){
+    var e=q(card,sel);
+    return !!(e&&e.checked);
+  }
+
+  function stateFromValues(card){
+    var rupture=val(card,'.date-rupture');
+    var contrat=val(card,'.date-contrat');
+    var debut=val(card,'.debut');
+    var fin=val(card,'.fin');
+    var nouveau=chk(card,'.nouveau-contrat');
+
+    var complete=!!contrat && !!debut && !!fin;
+    var future=
+      chk(card,'.dossier-remis') ||
+      chk(card,'.transmis-cfa') ||
+      !!val(card,'.date-dossier') ||
+      !!val(card,'.date-transmission-cfa') ||
+      !!val(card,'.date-cfa');
+
+    if(rupture && !(nouveau && complete)){
+      return {code:'rupture',label:'Rupture',apprenti:false};
+    }
+    if(complete){
+      return {code:'apprentice',label:'Apprenti',apprenti:true};
+    }
+    if(future || contrat || debut){
+      return {code:'future',label:'Futur apprenti',apprenti:false};
+    }
+    return {code:'school',label:'Scolaire',apprenti:false};
+  }
+
+  function normalizeDatesAndStatus(card,target){
+    var contrat=q(card,'.date-contrat');
+    var debut=q(card,'.debut');
+    var fin=q(card,'.fin');
+    var rupture=q(card,'.date-rupture');
+
+    /* Contrat officiel -> Début, seulement lors de la saisie du contrat
+       ou si Début est encore vide. */
+    if(
+      contrat && contrat.value &&
+      (
+        target===contrat ||
+        !debut.value
+      )
+    ){
+      debut.value=contrat.value;
+    }
+
+    /* Rupture -> remplace toujours la date de fin. */
+    if(rupture && rupture.value){
+      fin.value=rupture.value;
+    }
+
+    if(val(card,'.date-distribution') && q(card,'.dossier-distribue')){
+      q(card,'.dossier-distribue').checked=true;
+    }
+    if(val(card,'.date-dossier') && q(card,'.dossier-remis')){
+      q(card,'.dossier-remis').checked=true;
+    }
+    if(
+      (val(card,'.date-transmission-cfa') || val(card,'.date-cfa')) &&
+      q(card,'.transmis-cfa')
+    ){
+      q(card,'.transmis-cfa').checked=true;
+    }
+
+    var st=stateFromValues(card);
+
+    var apprenti=q(card,'.apprenti');
+    if(apprenti){
+      apprenti.checked=st.apprenti;
+      apprenti.disabled=true;
+      apprenti.title='Statut calculé automatiquement';
+    }
+
+    var badge=q(card,'.dev248-status');
+    if(badge){
+      badge.textContent=st.label;
+      badge.className='dev248-status'+
+        (st.code==='future'?' future':
+         st.code==='apprentice'?' apprentice':
+         st.code==='rupture'?' rupture':'');
+    }
+
+    card.classList.remove('future','apprentice','rupture');
+    if(st.code!=='school')card.classList.add(st.code);
+
+    return st;
+  }
+
+  function payload(card){
+    function v(s){return val(card,s);}
+    function c(s){return chk(card,s);}
+    return {
+      eleveId:Number(card.dataset.id||0),
+      id:Number(card.dataset.id||0),
+      annee:document.getElementById('year').value,
+      classeId:Number((document.getElementById('classe')||{}).value||0),
+      apprenti:c('.apprenti'),
+      debut:v('.debut'),
+      fin:v('.fin'),
+      dossierDistribue:c('.dossier-distribue'),
+      dateDistribution:v('.date-distribution'),
+      dossierRemis:c('.dossier-remis'),
+      dateDossier:v('.date-dossier'),
+      transmisCfa:c('.transmis-cfa'),
+      dateTransmissionCfa:v('.date-transmission-cfa'),
+      dateCfa:v('.date-cfa'),
+      dateContrat:v('.date-contrat'),
+      dateRupture:v('.date-rupture'),
+      nouveauContrat:c('.nouveau-contrat'),
+      siret:v('.siret-input'),
+      nomEntreprise:v('.nom-ent'),
+      nomCommercial:v('.nom-com'),
+      adresse:v('.adresse'),
+      cp:v('.cp'),
+      ville:v('.ville'),
+      telEntreprise:v('.tel-ent'),
+      mailEntreprise:v('.mail-ent'),
+      tuteur:v('.tuteur-input'),
+      telTuteur:v('.tel-tut'),
+      mailTuteur:v('.mail-tut')
+    };
+  }
+
+  function currentCards(){
+    return Array.from(
+      document.querySelectorAll('#studentList .dev248-card')
+    );
+  }
+
+  function classSummary(){
+    var cards=currentCards();
+    var count={
+      total:cards.length,
+      future:0,
+      apprentices:0,
+      dossier:0,
+      cfa:0,
+      contrats:0,
+      ruptures:0
+    };
+
+    cards.forEach(function(card){
+      var st=stateFromValues(card);
+      if(st.code==='future')count.future++;
+      if(st.code==='apprentice')count.apprentices++;
+      if(chk(card,'.dossier-remis'))count.dossier++;
+      if(chk(card,'.transmis-cfa'))count.cfa++;
+      if(
+        val(card,'.date-contrat') &&
+        val(card,'.debut') &&
+        val(card,'.fin')
+      )count.contrats++;
+      if(val(card,'.date-rupture'))count.ruptures++;
+    });
+
+    var el=document.getElementById('dev248ClassSummary');
+    if(!el){
+      el=document.createElement('div');
+      el.id='dev248ClassSummary';
+
+      var status=document.getElementById('status');
+      if(status && status.parentNode){
+        status.parentNode.insertBefore(el,status.nextSibling);
+      }
+    }
+
+    var classe=document.getElementById('classe');
+    var nom=
+      classe && classe.selectedIndex>=0
+        ? classe.options[classe.selectedIndex].text
+        : '';
+
+    el.textContent=
+      nom+' : '+
+      count.total+' élève(s) · '+
+      count.future+' futur(s) apprenti(s) · '+
+      count.apprentices+' apprenti(s) · '+
+      count.dossier+' dossier(s) remis · '+
+      count.cfa+' transmis CFA · '+
+      count.contrats+' contrat(s) complet(s) · '+
+      count.ruptures+' rupture(s)';
+  }
+
+  function setGlobalKpis(s){
+    s=s||{};
+
+    document.querySelectorAll('.kpi').forEach(function(kpi){
+      var label=(kpi.querySelector('span')||{}).textContent||'';
+      var b=kpi.querySelector('b');
+      if(!b)return;
+
+      var n=label
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .toLowerCase();
+
+      var value=null;
+
+      if(n.indexOf('classe entiere')>=0){
+        value=
+          s.apprentisClasseEntiere ??
+          s.classeEntiere ??
+          s.apprentisClasse ??
+          null;
+      }else if(n.indexOf('mixite')>=0){
+        value=
+          s.apprentisMixite ??
+          s.mixite ??
+          null;
+      }else if(n.indexOf('total apprent')>=0 || n==='suivis'){
+        value=
+          s.totalApprentis ??
+          s.apprentisActifs ??
+          s.suivis ??
+          null;
+      }else if(n.indexOf('dossiers remis')>=0){
+        value=s.dossierRemis ?? null;
+      }else if(n.indexOf('transmis cfa')>=0){
+        value=s.transmisCFA ?? s.transmisCfa ?? null;
+      }else if(n.indexOf('contrats valid')>=0){
+        value=s.contratsValides ?? null;
+      }else if(n.indexOf('ruptures')>=0){
+        value=s.ruptures ?? null;
+      }else if(n.indexOf('nouveaux contrats')>=0){
+        value=s.nouveauxContrats ?? null;
+      }else if(n.indexOf('apprentis actifs')>=0){
+        value=s.apprentisActifs ?? null;
+      }
+
+      if(value!==null && value!==undefined){
+        b.textContent=Number(value)||0;
+      }
+    });
+  }
+
+  function refreshDashboard(){
+    var year=document.getElementById('year');
+    if(!year)return;
+
+    google.script.run
+      .withSuccessHandler(function(d){
+        d=d||{};
+        setGlobalKpis(d.global||{});
+        classSummary();
+      })
+      .withFailureHandler(function(){
+        classSummary();
+      })
+      .EUC_DEV192_getDashboard(year.value);
+  }
+
+  function markSaved(card,text){
+    var e=q(card,'.dev248-saved');
+    if(e)e.textContent=text||'Enregistré';
+  }
+
+  function save(card,btn){
+    if(card.dataset.saving==='1')return;
+    card.dataset.saving='1';
+    normalizeDatesAndStatus(card,null);
+    var msg=q(card,'.msg');
+
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='…';
+    }
+
+    markSaved(card,'Enregistrement…');
+
+    google.script.run
+      .withSuccessHandler(function(){
+        card.dataset.saving='0';
+        card.dataset.dirty='0';
+        if(btn){
+          btn.disabled=false;
+          btn.textContent='✓';
+          setTimeout(function(){
+            btn.textContent='Enregistrer';
+          },900);
+        }
+
+        if(msg)msg.textContent='';
+        markSaved(card,'Enregistré');
+
+        classSummary();
+      })
+      .withFailureHandler(function(e){
+        card.dataset.saving='0';
+        if(btn){
+          btn.disabled=false;
+          btn.textContent='Erreur';
+        }
+
+        if(msg){
+          msg.textContent=
+            'Erreur : '+String(e&&e.message||e);
+        }
+
+        markSaved(card,'Erreur');
+      })
+      .EUC_DEV449_saveApprenti(payload(card));
+  }
+
+  function loadHistoryCount(card){
+    var count=q(card,'.dev248-history-count');
+    if(!count)return;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        var h=(r&&r.history)||[];
+        count.textContent=String(h.length||0);
+      })
+      .withFailureHandler(function(){
+        count.textContent='?';
+      })
+      .EUC_DEV193_history(Number(card.dataset.id||0));
+  }
+
+  function showHistory(card){
+    var msg=q(card,'.msg');
+    if(msg)msg.textContent='Chargement historique…';
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        var h=(r&&r.history)||[];
+        var count=q(card,'.dev248-history-count');
+        if(count)count.textContent=String(h.length||0);
+
+        if(!h.length){
+          if(msg)msg.textContent='Aucun historique';
+          return;
+        }
+
+        if(msg){
+          msg.innerHTML=h.map(function(x){
+            return esc(
+              x.nomEntreprise ||
+              x.nomCommercial ||
+              'Entreprise'
+            )+
+            ' · '+esc(x.debut||'—')+
+            ' → '+esc(x.fin||'—')+
+            (x.rupture
+              ? ' · rupture '+esc(x.rupture)
+              : '');
+          }).join('<br>');
+        }
+      })
+      .withFailureHandler(function(e){
+        if(msg){
+          msg.textContent=
+            'Erreur historique : '+
+            String(e&&e.message||e);
+        }
+      })
+      .EUC_DEV193_history(Number(card.dataset.id||0));
+  }
+
+  function companySearch(card,schedule){
+    var msg=q(card,'.msg');
+    var siret=
+      (q(card,'.siret-input').value||'')
+      .replace(/\D/g,'')
+      .slice(0,14);
+
+    q(card,'.siret-input').value=siret;
+
+    if(siret.length!==14){
+      msg.textContent='SIRET incomplet';
+      return;
+    }
+
+    function applyCompany(r){
+      if(!r||!r.found){
+        msg.textContent=
+          (r&&r.error)
+            ? r.error
+            : 'Entreprise non trouvée';
+        return;
+      }
+
+      q(card,'.nom-ent').value=r.nomEntreprise||'';
+      q(card,'.nom-com').value=r.nomCommercial||'';
+      q(card,'.adresse').value=r.adresse||'';
+      q(card,'.cp').value=r.codePostal||'';
+      q(card,'.ville').value=r.ville||'';
+      q(card,'.tel-ent').value=r.telephoneEntreprise||'';
+      q(card,'.mail-ent').value=r.courrielEntreprise||'';
+      q(card,'.tuteur-input').value=r.tuteur||'';
+      q(card,'.tel-tut').value=r.telephoneTuteur||'';
+      q(card,'.mail-tut').value=r.courrielTuteur||'';
+
+      msg.textContent=
+        'SIRET vérifié — '+(r.source||'base Entreprises');
+
+      schedule();
+    }
+
+    function remoteSearch(){
+      msg.textContent='Recherche sur l’Annuaire des Entreprises…';
+
+      fetch(
+        'https://recherche-entreprises.api.gouv.fr/search?q='+
+        encodeURIComponent(siret)+
+        '&per_page=10',
+        {headers:{'Accept':'application/json'}}
+      )
+      .then(function(res){
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        return res.json();
+      })
+      .then(function(json){
+        google.script.run
+          .withSuccessHandler(function(pfmpResult){
+            google.script.run
+              .withSuccessHandler(applyCompany)
+              .withFailureHandler(function(e){
+                msg.textContent=
+                  'Erreur mapping : '+
+                  String(e&&e.message||e);
+              })
+              .EUC_DEV203_finalizeBrowserResult(
+                pfmpResult,
+                siret
+              );
+          })
+          .withFailureHandler(function(e){
+            msg.textContent=
+              'Erreur traitement PFMP : '+
+              String(e&&e.message||e);
+          })
+          .EUC_ENT_traiterReponseApiNavigateur(
+            json,
+            siret
+          );
+      })
+      .catch(function(e){
+        msg.textContent=
+          'Erreur recherche Annuaire : '+
+          String(e&&e.message||e);
+      });
+    }
+
+    msg.textContent=
+      'Vérification du SIRET sur l’Annuaire des Entreprises…';
+
+    /*
+     * DEV.301
+     * Contrôle manuel = contrôle de la source officielle.
+     */
+    remoteSearch();
+  }
+
+  function cardHtml(x){
+    return ''+
+    '<div class="student-card dev248-card" data-id="'+esc(x.id)+'">'+
+      '<div class="dev249-left">'+
+        '<div class="dev249-col"><div class="dev249-title">Élève</div><div class="dev249-name">'+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="dev249-title">Statut</div><div class="dev249-status-line"><input class="apprenti check" type="checkbox" disabled><div class="dev248-status">Scolaire</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="dev249-field"><span>Début</span><input class="debut" type="date" value="'+esc(x.debut)+'"></label><label class="dev249-field"><span>Fin</span><input class="fin" type="date" value="'+esc(x.fin)+'"></label></div></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Circuit du dossier</div><div class="dev249-circuit-row"><input class="dossier-distribue" type="checkbox" '+(x.dossierDistribue?'checked':'')+'><span>Dossier distribué</span><input class="date-distribution" type="date" value="'+esc(x.dateDistribution)+'"></div><div class="dev249-circuit-row"><input class="dossier-remis" type="checkbox" '+(x.dossierRemis?'checked':'')+'><span>Dossier remis</span><input class="date-dossier" type="date" value="'+esc(x.dateDossier||x.dateRemise)+'"></div><div class="dev249-circuit-row"><input class="transmis-cfa" type="checkbox" '+(x.transmisCfa?'checked':'')+'><span>Transmis au CFA</span><input class="date-transmission-cfa" type="date" value="'+esc(x.dateTransmissionCfa||x.dateCfa)+'"></div></div>'+
+        '<div class="dev249-col dev249-contract"><div class="dev249-title">Contrat</div><div class="dev249-history"><button type="button" class="history-btn">Historique</button></div><label class="dev249-field"><span>Contrat officiel</span><input class="date-contrat" type="date" value="'+esc(x.dateContrat)+'"></label><label class="dev249-field"><span>Rupture</span><input class="date-rupture" type="date" value="'+esc(x.dateRupture)+'"></label><label class="dev249-check"><input class="nouveau-contrat" type="checkbox" '+(x.nouveauContrat?'checked':'')+'><span>Nouveau contrat</span></label><input class="date-cfa" type="date" value="'+esc(x.dateCfa)+'" style="display:none"></div>'+
+      '</div>'+
+      '<div class="dev249-right"><button type="button" class="save dev249-save">Enregistrer</button><span class="dev248-saved">Prêt</span>'+
+        '<div class="dev249-col dev249-company-box"><div class="dev249-title">Entreprise</div><label class="dev249-field"><span>Raison sociale</span><input class="nom-ent" value="'+esc(x.nomEntreprise||x.entreprise)+'"></label><label class="dev249-field"><span>Nom commercial / enseigne</span><input class="nom-com" value="'+esc(x.nomCommercial)+'"></label><div class="dev249-search"><label class="dev249-field"><span>SIRET</span><input class="siret-input" maxlength="14" value="'+esc(x.siret)+'"></label><button type="button" class="search">Rechercher</button></div><div class="dev249-msg msg"></div></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Adresse</div><label class="dev249-field"><span>Adresse</span><input class="adresse" value="'+esc(x.adresse)+'"></label><div style="display:grid;grid-template-columns:70px 1fr;gap:8px"><label class="dev249-field"><span>CP</span><input class="cp" value="'+esc(x.cp)+'"></label><label class="dev249-field"><span>Ville</span><input class="ville" value="'+esc(x.ville)+'"></label></div></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Coordonnées entreprise</div><label class="dev249-field"><span>Téléphone</span><input class="tel-ent" value="'+esc(x.telEntreprise)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-ent" type="email" value="'+esc(x.mailEntreprise)+'"></label></div>'+
+        '<div class="dev249-col"><div class="dev249-title">Tuteur</div><label class="dev249-field"><span>Nom du tuteur</span><input class="tuteur-input" value="'+esc(x.tuteur)+'"></label><label class="dev249-field"><span>Téléphone</span><input class="tel-tut" value="'+esc(x.telTuteur)+'"></label><label class="dev249-field"><span>Courriel</span><input class="mail-tut" type="email" value="'+esc(x.mailTuteur)+'"></label></div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function wire(card,index){
+    normalizeDatesAndStatus(card,null);
+
+    function schedule(){
+      card.dataset.dirty='1';
+      markSaved(card,'À enregistrer');
+    }
+
+    card.addEventListener('change',function(ev){
+      if(ev.target.matches('.apprenti')){
+        ev.preventDefault();
+        normalizeDatesAndStatus(card,ev.target);
+        return;
+      }
+
+      normalizeDatesAndStatus(card,ev.target);
+      classSummary();
+      schedule();
+    },false);
+
+    card.addEventListener('blur',function(ev){
+      if(ev.target.matches(
+        '.nom-ent,.nom-com,.adresse,.cp,.ville,.tel-ent,.mail-ent,.tuteur-input,.tel-tut,.mail-tut'
+      )){
+        schedule();
+      }
+    },true);
+
+    var saveBtn=q(card,'.save');
+    if(saveBtn){
+      saveBtn.onclick=function(){
+        save(card,saveBtn);
+      };
+    }
+
+    var hist=q(card,'.history-btn');
+    if(hist){
+      hist.onclick=function(){
+        showHistory(card);
+      };
+    }
+
+    var search=q(card,'.search');
+    if(search){
+      search.onclick=function(){
+        companySearch(card,schedule);
+      };
+    }
+
+    /* Historique chargé seulement au clic : aucune requête par élève lors de
+     * l'ouverture de la classe. */
+  }
+
+  function render(rows){
+    lastRows=rows||[];
+    var list=document.getElementById('studentList');
+
+    list.innerHTML=
+      lastRows.map(cardHtml).join('');
+
+    Array.from(
+      list.querySelectorAll('.student-card')
+    ).forEach(wire);
+
+    classSummary();
+  }
+
+  function install(){
+    var classe=document.getElementById('classe');
+    var year=document.getElementById('year');
+    var status=document.getElementById('status');
+    var results=document.getElementById('results');
+    var list=document.getElementById('studentList');
+
+    if(!classe||!year||!status||!results||!list)return;
+
+    classe.onchange=null;
+
+    classe.addEventListener('change',function(){
+      var classId=Number(classe.value||0);
+
+      if(!classId){
+        results.hidden=true;
+        list.innerHTML='';
+        status.textContent='Choisissez une classe.';
+
+        var summary=document.getElementById('dev248ClassSummary');
+        if(summary)summary.textContent='';
+
+        return;
+      }
+
+      var className=
+        classe.options[classe.selectedIndex].text;
+
+      var t0=Date.now();
+
+      results.hidden=true;
+      list.innerHTML='';
+      status.textContent=
+        'Chargement des élèves de '+className+'…';
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          try{
+            var obj=
+              (typeof r==='string')
+                ? JSON.parse(r)
+                : (r||{});
+
+            var rows=obj.students||[];
+
+            render(rows);
+            results.hidden=false;
+
+            status.textContent=
+              rows.length+
+              ' élève(s) chargé(s) · '+
+              (Date.now()-t0)+
+              ' ms';
+
+            status.style.color='#49645d';
+
+            if(window.EUC_DEV250_refreshDashboard){window.EUC_DEV250_refreshDashboard();}else{refreshDashboard();}
+
+          }catch(err){
+            results.hidden=true;
+            status.textContent=
+              'Erreur affichage : '+
+              String(err&&err.stack||err);
+
+            status.style.color='#b42318';
+          }
+        })
+        .withFailureHandler(function(e){
+          results.hidden=true;
+          status.textContent=
+            'Erreur chargement : '+
+            String(e&&e.message||e);
+
+          status.style.color='#b42318';
+        })
+        .EUC_DEV235_loadStudentsJson(
+          year.value,
+          classId,
+          className
+        );
+    },false);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install
+    );
+  }else{
+    install();
+  }
+})();
+</script>
+
+
+<style id="DEV250_UI_FIX">
+/* Résumé de classe déplacé sous le sous-titre */
+#dev248ClassSummary{
+  margin:8px 0 12px 0!important;
+  padding:0!important;
+  background:transparent!important;
+  font-size:14px!important;
+  line-height:1.4!important;
+  font-weight:800!important;
+  color:#0b5d4d!important;
+  text-align:left!important;
+}
+
+/* Petit bouton Enregistrer comme sur la référence */
+.dev249-save{
+  width:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:6px 12px!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  border-radius:999px!important;
+  top:8px!important;
+  right:10px!important;
+}
+.dev248-saved{
+  top:34px!important;
+  right:12px!important;
+  font-size:8px!important;
+}
+
+/* Plus de place sous le titre avant les KPI globaux */
+.top{margin-bottom:8px!important}
+</style>
+
+<script>
+/* DEV250_COMPTEURS_LIVE */
+(function(){
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase();
+  }
+
+  function placeClassSummary(){
+    var summary=document.getElementById('dev248ClassSummary');
+    if(!summary)return;
+
+    var h1=document.querySelector('h1');
+    if(!h1 || !h1.parentNode)return;
+
+    var host=h1.parentNode;
+
+    /* Le sous-titre est le premier élément après h1. */
+    var subtitle=h1.nextElementSibling;
+
+    if(subtitle){
+      if(summary.parentNode!==host || summary.previousElementSibling!==subtitle){
+        subtitle.insertAdjacentElement('afterend',summary);
+      }
+    }else{
+      host.appendChild(summary);
+    }
+  }
+
+  function setKpis(s){
+    s=s||{};
+
+    document.querySelectorAll('.kpi').forEach(function(kpi){
+      var b=kpi.querySelector('b');
+      var span=kpi.querySelector('span');
+      if(!b||!span)return;
+
+      var label=norm(span.textContent);
+      var value=0;
+
+      if(label.indexOf('classe entiere')>=0){
+        value=s.apprentisClasseEntiere||0;
+      }else if(label.indexOf('mixite')>=0){
+        value=s.apprentisMixite||0;
+      }else if(label.indexOf('total apprent')>=0){
+        value=s.totalApprentis||s.apprentisActifs||0;
+      }else if(label.indexOf('dossiers remis')>=0){
+        value=s.dossierRemis||0;
+      }else if(label.indexOf('transmis cfa')>=0){
+        value=s.transmisCFA||s.transmisCfa||0;
+      }else if(label.indexOf('contrats valid')>=0){
+        value=s.contratsValides||0;
+      }else if(label.indexOf('ruptures')>=0){
+        value=s.ruptures||0;
+      }else if(label.indexOf('futur')>=0){
+        value=s.futursApprentis||0;
+      }
+
+      b.textContent=Number(value)||0;
+    });
+  }
+
+  window.EUC_DEV250_refreshDashboard=function(){
+    var year=document.getElementById('year');
+    if(!year)return;
+
+    google.script.run
+      .withSuccessHandler(function(d){
+        d=d||{};
+        setKpis(d.global||{});
+
+        /* Le résumé de classe est calculé instantanément depuis les cartes. */
+        if(typeof classSummary==='function'){
+          try{classSummary();}catch(e){}
+        }
+
+        setTimeout(placeClassSummary,0);
+      })
+      .withFailureHandler(function(){})
+      .EUC_DEV250_dashboardLive(year.value);
+  };
+
+  function install(){
+    /* Ajoute "Futurs apprentis" au résumé de classe si absent. */
+    var oldClassSummary=window.classSummary;
+
+    /* Déplace régulièrement le résumé après les rendus. */
+    var obs=new MutationObserver(function(){
+      placeClassSummary();
+    });
+    obs.observe(document.body,{childList:true,subtree:true});
+
+    setTimeout(function(){
+      placeClassSummary();
+      window.EUC_DEV250_refreshDashboard();
+    },200);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install);
+  }else{
+    install();
+  }
+})();
+</script>
+
+
+<style id="DEV251_UI_FIX">
+/* ---- géométrie de la fiche ---- */
+.dev248-card{
+  grid-template-columns:42% 58%!important;
+  gap:10px!important;
+}
+.dev249-left{
+  grid-template-columns:25% 45% 30%!important;
+  gap:8px!important;
+}
+.dev249-right{
+  grid-template-columns:34% 24% 22% 20%!important;
+  gap:9px!important;
+  padding:9px 10px!important;
+}
+.dev249-contract .dev249-field input[type=date],
+.dev249-circuit-row input[type=date]{
+  max-width:112px!important;
+}
+.dev249-contract{
+  padding-right:2px!important;
+}
+.dev249-history{
+  right:0!important;
+  top:-2px!important;
+}
+.dev249-history button{
+  padding:5px 8px!important;
+  font-size:9px!important;
+}
+
+/* ---- bouton Enregistrer + statut d'enregistrement ---- */
+.dev249-save{
+  width:auto!important;
+  min-width:62px!important;
+  height:25px!important;
+  padding:5px 9px!important;
+  font-size:9px!important;
+  line-height:1!important;
+  border-radius:999px!important;
+  top:7px!important;
+  right:8px!important;
+}
+.dev248-saved{
+  top:35px!important;
+  right:10px!important;
+  font-size:8px!important;
+  white-space:nowrap!important;
+}
+
+/* ---- résumé de la classe : pleine largeur, une seule ligne ---- */
+#dev248ClassSummary{
+  width:100%!important;
+  max-width:none!important;
+  margin:6px 0 12px!important;
+  padding:3px 0!important;
+  background:transparent!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+  overflow-x:auto!important;
+  color:#0b5d4d!important;
+}
+
+/* ---- KPI global : 8 cases après ajout Futurs apprentis ---- */
+.dashboard{
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;
+}
+.kpi{
+  position:relative;
+  cursor:help;
+}
+
+/* ---- infobulle KPI ---- */
+#dev251Tooltip{
+  position:fixed;
+  z-index:999999;
+  display:none;
+  min-width:280px;
+  max-width:460px;
+  max-height:420px;
+  overflow:auto;
+  background:#fff;
+  border:1px solid #bddbd2;
+  border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+  padding:10px 12px;
+  font-size:11px;
+  color:#17312b;
+}
+#dev251Tooltip .tt-title{
+  font-weight:900;
+  color:#0b5d4d;
+  margin-bottom:7px;
+}
+#dev251Tooltip .tt-etab{
+  font-weight:900;
+  margin-top:7px;
+  color:#344054;
+}
+#dev251Tooltip .tt-class{
+  font-weight:800;
+  margin:5px 0 2px 7px;
+}
+#dev251Tooltip .tt-name{
+  margin-left:16px;
+  color:#475467;
+  line-height:1.35;
+}
+</style>
+
+<script>
+/* DEV251_LIVE_KPI_AND_HOVER */
+(function(){
+  var globalState=null;
+  var details=null;
+  var cardState=new WeakMap();
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase();
+  }
+
+  function q(card,sel){return card.querySelector(sel);}
+  function val(card,sel){
+    var e=q(card,sel);
+    return e ? String(e.value||'') : '';
+  }
+  function chk(card,sel){
+    var e=q(card,sel);
+    return !!(e&&e.checked);
+  }
+
+  function calc(card){
+    var rupture=val(card,'.date-rupture');
+    var contrat=val(card,'.date-contrat');
+    var debut=val(card,'.debut');
+    var fin=val(card,'.fin');
+
+    var apprentice=
+      !rupture &&
+      (
+        chk(card,'.apprenti') ||
+        (!!contrat && !!debut && !!fin)
+      );
+
+    var future=
+      !rupture &&
+      !apprentice &&
+      (
+        chk(card,'.dossier-remis') ||
+        chk(card,'.transmis-cfa') ||
+        !!val(card,'.date-dossier') ||
+        !!val(card,'.date-transmission-cfa') ||
+        !!val(card,'.date-cfa') ||
+        !!contrat ||
+        !!debut
+      );
+
+    return {
+      apprentice:apprentice,
+      future:future,
+      dossier:
+        chk(card,'.dossier-remis') ||
+        !!val(card,'.date-dossier'),
+      cfa:
+        chk(card,'.transmis-cfa') ||
+        !!val(card,'.date-transmission-cfa') ||
+        !!val(card,'.date-cfa'),
+      contrat:
+        !!contrat && !!debut && !!fin && !rupture,
+      rupture:!!rupture
+    };
+  }
+
+  function selectedCards(){
+    return Array.from(
+      document.querySelectorAll('#studentList .student-card')
+    );
+  }
+
+  function countClass(){
+    var cards=selectedCards();
+    var c={
+      total:cards.length,
+      apprentice:0,
+      future:0,
+      dossier:0,
+      cfa:0,
+      contrats:0,
+      ruptures:0
+    };
+
+    cards.forEach(function(card){
+      var s=calc(card);
+      if(s.apprentice)c.apprentice++;
+      if(s.future)c.future++;
+      if(s.dossier)c.dossier++;
+      if(s.cfa)c.cfa++;
+      if(s.contrat)c.contrats++;
+      if(s.rupture)c.ruptures++;
+    });
+
+    return c;
+  }
+
+  function rewriteClassSummary(){
+    var el=document.getElementById('dev248ClassSummary');
+    if(!el)return;
+
+    var classe=document.getElementById('classe');
+    var name=
+      classe && classe.selectedIndex>=0
+        ? classe.options[classe.selectedIndex].text
+        : '';
+
+    var c=countClass();
+
+    el.textContent=
+      name+
+      ' · '+c.total+' élève(s)'+
+      ' · '+c.apprentice+' apprenti(s)'+
+      ' · '+c.future+' futur(s) apprenti(s)'+
+      ' · '+c.dossier+' dossier(s) remis'+
+      ' · '+c.cfa+' transmis CFA'+
+      ' · '+c.contrats+' contrat(s) complet(s)'+
+      ' · '+c.ruptures+' rupture(s)';
+  }
+
+  function moveSummary(){
+    var el=document.getElementById('dev248ClassSummary');
+    if(!el)return;
+
+    var top=document.querySelector('.top');
+    if(!top || !top.parentNode)return;
+
+    if(el.previousElementSibling!==top){
+      top.insertAdjacentElement('afterend',el);
+    }
+  }
+
+  function ensureFutureKpi(){
+    var dashboard=document.querySelector('.dashboard');
+    if(!dashboard)return null;
+
+    var found=null;
+
+    Array.from(dashboard.querySelectorAll('.kpi')).forEach(function(k){
+      var t=norm((k.querySelector('span')||{}).textContent);
+      if(t.indexOf('futur')>=0)found=k;
+    });
+
+    if(found)return found;
+
+    var div=document.createElement('div');
+    div.className='kpi';
+    div.dataset.dev251='future';
+    div.innerHTML=
+      '<b>0</b><span>Futurs apprentis</span>';
+
+    /* Inséré juste avant Dossiers remis. */
+    var dossier=null;
+    Array.from(dashboard.querySelectorAll('.kpi')).forEach(function(k){
+      if(norm((k.querySelector('span')||{}).textContent).indexOf('dossiers remis')>=0){
+        dossier=k;
+      }
+    });
+
+    if(dossier)dashboard.insertBefore(div,dossier);
+    else dashboard.appendChild(div);
+
+    return div;
+  }
+
+  function readKpis(){
+    var s={};
+    document.querySelectorAll('.kpi').forEach(function(k){
+      var label=norm((k.querySelector('span')||{}).textContent);
+      var n=Number((k.querySelector('b')||{}).textContent)||0;
+
+      if(label.indexOf('classe entiere')>=0)s.classeEntiere=n;
+      else if(label.indexOf('mixite')>=0)s.mixite=n;
+      else if(label.indexOf('total apprent')>=0)s.total=n;
+      else if(label.indexOf('futur')>=0)s.future=n;
+      else if(label.indexOf('dossiers remis')>=0)s.dossier=n;
+      else if(label.indexOf('transmis cfa')>=0)s.cfa=n;
+      else if(label.indexOf('contrats valid')>=0)s.contrats=n;
+      else if(label.indexOf('ruptures')>=0)s.ruptures=n;
+    });
+    return s;
+  }
+
+  function writeKpis(s){
+    if(!s)return;
+
+    document.querySelectorAll('.kpi').forEach(function(k){
+      var b=k.querySelector('b');
+      var label=norm((k.querySelector('span')||{}).textContent);
+      if(!b)return;
+
+      if(label.indexOf('classe entiere')>=0)b.textContent=s.classeEntiere||0;
+      else if(label.indexOf('mixite')>=0)b.textContent=s.mixite||0;
+      else if(label.indexOf('total apprent')>=0)b.textContent=s.total||0;
+      else if(label.indexOf('futur')>=0)b.textContent=s.future||0;
+      else if(label.indexOf('dossiers remis')>=0)b.textContent=s.dossier||0;
+      else if(label.indexOf('transmis cfa')>=0)b.textContent=s.cfa||0;
+      else if(label.indexOf('contrats valid')>=0)b.textContent=s.contrats||0;
+      else if(label.indexOf('ruptures')>=0)b.textContent=s.ruptures||0;
+    });
+  }
+
+  function contribution(appCount,total){
+    return {
+      classeEntiere:(total>0 && appCount>=total)?total:0,
+      mixite:(appCount>0 && appCount<total)?appCount:0
+    };
+  }
+
+  function snapshotCards(){
+    selectedCards().forEach(function(card){
+      cardState.set(card,calc(card));
+    });
+  }
+
+  function instantUpdate(changedCard){
+    rewriteClassSummary();
+
+    if(!globalState){
+      globalState=readKpis();
+    }
+
+    var before=cardState.get(changedCard)||calc(changedCard);
+    var after=calc(changedCard);
+
+    var cards=selectedCards();
+    var totalClass=cards.length;
+
+    var beforeApp=0;
+    var afterApp=0;
+
+    cards.forEach(function(card){
+      var cur=calc(card);
+      if(card===changedCard){
+        if(before.apprentice)beforeApp++;
+        if(after.apprentice)afterApp++;
+      }else{
+        if(cur.apprentice){
+          beforeApp++;
+          afterApp++;
+        }
+      }
+    });
+
+    var bc=contribution(beforeApp,totalClass);
+    var ac=contribution(afterApp,totalClass);
+
+    globalState.classeEntiere=
+      (globalState.classeEntiere||0) +
+      ac.classeEntiere-bc.classeEntiere;
+
+    globalState.mixite=
+      (globalState.mixite||0) +
+      ac.mixite-bc.mixite;
+
+    globalState.total=
+      (globalState.total||0) +
+      (after.apprentice?1:0) -
+      (before.apprentice?1:0);
+
+    globalState.future=
+      (globalState.future||0) +
+      (after.future?1:0) -
+      (before.future?1:0);
+
+    globalState.dossier=
+      (globalState.dossier||0) +
+      (after.dossier?1:0) -
+      (before.dossier?1:0);
+
+    globalState.cfa=
+      (globalState.cfa||0) +
+      (after.cfa?1:0) -
+      (before.cfa?1:0);
+
+    globalState.contrats=
+      (globalState.contrats||0) +
+      (after.contrat?1:0) -
+      (before.contrat?1:0);
+
+    globalState.ruptures=
+      (globalState.ruptures||0) +
+      (after.rupture?1:0) -
+      (before.rupture?1:0);
+
+    cardState.set(changedCard,after);
+    writeKpis(globalState);
+  }
+
+  function fetchDetails(){
+    var year=document.getElementById('year');
+    if(!year)return;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        details=(r&&r.lists)||{};
+      })
+      .withFailureHandler(function(){})
+      .EUC_DEV251_dashboardDetails(year.value);
+  }
+
+  function groupHtml(items){
+    items=items||[];
+    if(!items.length)return '<div>Aucun jeune concerné.</div>';
+
+    var by={LP:{},LGT:{}};
+
+    items.forEach(function(x){
+      var e=(x.etab==='LGT')?'LGT':'LP';
+      var c=x.classe||'Sans classe';
+      if(!by[e][c])by[e][c]=[];
+      by[e][c].push(x);
+    });
+
+    var html='';
+
+    ['LP','LGT'].forEach(function(e){
+      var classes=Object.keys(by[e]).sort();
+      if(!classes.length)return;
+
+      html+='<div class="tt-etab">'+e+'</div>';
+
+      classes.forEach(function(c){
+        html+='<div class="tt-class">'+c+'</div>';
+
+        by[e][c]
+          .sort(function(a,b){
+            return String(a.nom||'').localeCompare(String(b.nom||''),'fr');
+          })
+          .forEach(function(x){
+            html+='<div class="tt-name">'+
+              String(x.nom||'')+
+              '</div>';
+          });
+      });
+    });
+
+    return html;
+  }
+
+  function keyForKpi(kpi){
+    var label=norm((kpi.querySelector('span')||{}).textContent);
+
+    if(label.indexOf('classe entiere')>=0)return 'classeEntiere';
+    if(label.indexOf('mixite')>=0)return 'mixite';
+    if(label.indexOf('total apprent')>=0)return 'total';
+    if(label.indexOf('futur')>=0)return 'future';
+    if(label.indexOf('dossiers remis')>=0)return 'dossier';
+    if(label.indexOf('transmis cfa')>=0)return 'cfa';
+    if(label.indexOf('contrats valid')>=0)return 'contrats';
+    if(label.indexOf('ruptures')>=0)return 'ruptures';
+
+    return '';
+  }
+
+  function tooltip(){
+    var t=document.getElementById('dev251Tooltip');
+    if(t)return t;
+
+    t=document.createElement('div');
+    t.id='dev251Tooltip';
+    document.body.appendChild(t);
+    return t;
+  }
+
+  function wireHover(){
+    var tt=tooltip();
+
+    document.querySelectorAll('.kpi').forEach(function(kpi){
+      if(kpi.dataset.dev251Hover==='1')return;
+      kpi.dataset.dev251Hover='1';
+
+      kpi.addEventListener('mouseenter',function(){
+        var key=keyForKpi(kpi);
+        var title=(kpi.querySelector('span')||{}).textContent||'Détail';
+
+        tt.innerHTML=
+          '<div class="tt-title">'+title+'</div>'+
+          groupHtml((details&&details[key])||[]);
+
+        var r=kpi.getBoundingClientRect();
+        var left=Math.min(
+          window.innerWidth-480,
+          Math.max(10,r.left)
+        );
+        var top=Math.min(
+          window.innerHeight-430,
+          r.bottom+6
+        );
+
+        tt.style.left=left+'px';
+        tt.style.top=Math.max(10,top)+'px';
+        tt.style.display='block';
+      });
+
+      kpi.addEventListener('mouseleave',function(){
+        tt.style.display='none';
+      });
+    });
+  }
+
+  function reconcileServer(){
+    /* Mise à jour serveur en arrière-plan, sans bloquer l'instantané. */
+    if(window.EUC_DEV250_refreshDashboard){
+      try{
+        window.EUC_DEV250_refreshDashboard();
+      }catch(e){}
+    }
+
+    setTimeout(function(){
+      ensureFutureKpi();
+      globalState=readKpis();
+      fetchDetails();
+      wireHover();
+    },1000);
+  }
+
+  function install(){
+    ensureFutureKpi();
+    moveSummary();
+    rewriteClassSummary();
+    snapshotCards();
+    globalState=readKpis();
+    fetchDetails();
+    wireHover();
+
+    document.addEventListener('change',function(ev){
+      var card=ev.target && ev.target.closest
+        ? ev.target.closest('.student-card')
+        : null;
+
+      if(!card)return;
+
+      /* Laisse d'abord DEV248 normaliser statut/dates. */
+      setTimeout(function(){
+        instantUpdate(card);
+      },0);
+    },false);
+
+    /* Les cartes sont recréées à chaque changement de classe. */
+    var list=document.getElementById('studentList');
+    if(list){
+      new MutationObserver(function(){
+        setTimeout(function(){
+          moveSummary();
+          rewriteClassSummary();
+          snapshotCards();
+          wireHover();
+        },20);
+      }).observe(list,{childList:true});
+    }
+
+    /* Au retour d'une sauvegarde, réconciliation serveur. */
+    document.addEventListener('click',function(ev){
+      if(ev.target && ev.target.matches('.save')){
+        setTimeout(reconcileServer,800);
+      }
+    },false);
+
+    setTimeout(function(){
+      moveSummary();
+      rewriteClassSummary();
+      reconcileServer();
+    },300);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install);
+  }else{
+    install();
+  }
+})();
+</script>
+
+
+<style id="DEV252_FINAL_UI">
+/* =========================================================
+   DEV252 — FINITIONS VISUELLES
+   ========================================================= */
+
+/* Résumé classe : une seule ligne, aucun ascenseur horizontal */
+#dev248ClassSummary{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  margin:6px 0 12px!important;
+  padding:2px 0!important;
+  font-size:13px!important;
+  line-height:1.2!important;
+}
+
+/* Plus de place à droite pour Entreprise */
+.dev248-card{
+  grid-template-columns:39% 61%!important;
+  gap:9px!important;
+}
+.dev249-left{
+  grid-template-columns:26% 46% 28%!important;
+  gap:7px!important;
+}
+.dev249-right{
+  grid-template-columns:37% 22% 21% 20%!important;
+  gap:8px!important;
+  padding:8px 10px!important;
+}
+
+/* Circuit du dossier : lecture plus nette */
+.dev249-left > .dev249-col:nth-child(2){
+  background:#f8fbfa;
+  border:1px solid #e2eeea;
+  border-radius:8px;
+  padding:8px 9px;
+}
+.dev249-circuit-row{
+  grid-template-columns:18px minmax(92px,1fr) 104px!important;
+  gap:6px!important;
+  min-height:30px;
+  padding:3px 0;
+  border-bottom:1px solid #edf3f1;
+}
+.dev249-circuit-row:last-child{border-bottom:0}
+
+/* Contrat plus compact */
+.dev249-contract{
+  background:#fbfcfc;
+  border:1px solid #edf2f0;
+  border-radius:8px;
+  padding:8px 8px!important;
+}
+.dev249-contract .dev249-field input[type=date]{
+  max-width:105px!important;
+}
+.dev249-history{
+  position:static!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  margin:-23px 0 5px!important;
+}
+.dev249-history button{
+  padding:4px 7px!important;
+  font-size:8.5px!important;
+}
+
+/* Bouton Enregistrer déplacé sous Début / Fin */
+.dev252-savebox{
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.dev252-savebox .save{
+  position:static!important;
+  width:auto!important;
+  min-width:70px!important;
+  height:25px!important;
+  padding:5px 10px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+}
+.dev252-savebox .dev248-saved{
+  position:static!important;
+  font-size:9px!important;
+  color:#667085!important;
+  white-space:nowrap!important;
+}
+
+/* Le bloc entreprise n'a plus à réserver de place pour Enregistrer */
+.dev249-company-box{
+  padding-right:0!important;
+}
+
+/* Infobulles : grandes listes = 2 colonnes + scroll vertical */
+#dev251Tooltip{
+  min-width:340px!important;
+  max-width:600px!important;
+  max-height:460px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+#dev251Tooltip .tt-name{
+  display:inline-block!important;
+  vertical-align:top;
+  width:48%!important;
+  margin-left:1%!important;
+  padding-right:7px;
+}
+
+/* Lecture seule */
+body.dev252-readonly .save,
+body.dev252-readonly .search{
+  display:none!important;
+}
+body.dev252-readonly .student-card input:not(.apprenti){
+  pointer-events:none!important;
+  background:#f8faf9!important;
+  color:#475467!important;
+}
+body.dev252-readonly .student-card input[type=checkbox]{
+  pointer-events:none!important;
+}
+body.dev252-readonly .dev248-saved{
+  display:none!important;
+}
+.dev252-readonly-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#eef2f6;
+  color:#344054;
+  font-size:10px;
+  font-weight:800;
+  margin-left:8px;
+}
+</style>
+
+<script>
+/* DEV252_FINAL_UI_AND_WORKFLOW */
+(function(){
+  function q(card,sel){return card.querySelector(sel);}
+  function val(card,sel){
+    var e=q(card,sel);
+    return e ? String(e.value||'') : '';
+  }
+
+  function fitClassSummary(){
+    var el=document.getElementById('dev248ClassSummary');
+    if(!el)return;
+
+    var size=13;
+    el.style.fontSize=size+'px';
+
+    var guard=0;
+    while(
+      el.scrollWidth>el.clientWidth &&
+      size>9 &&
+      guard<20
+    ){
+      size-=0.5;
+      el.style.fontSize=size+'px';
+      guard++;
+    }
+  }
+
+  function moveControls(card){
+    if(!card || card.dataset.dev252Layout==='1')return;
+    card.dataset.dev252Layout='1';
+
+    var firstCol=card.querySelector('.dev249-left .dev249-col:first-child');
+    var save=card.querySelector('.save');
+    var saved=card.querySelector('.dev248-saved');
+
+    if(firstCol && save){
+      var box=document.createElement('div');
+      box.className='dev252-savebox';
+
+      box.appendChild(save);
+
+      if(saved){
+        box.appendChild(saved);
+      }
+
+      firstCol.appendChild(box);
+    }
+
+    /* Les coches du circuit sont toujours calculées par les dates. */
+    ['.dossier-distribue','.dossier-remis','.transmis-cfa']
+      .forEach(function(sel){
+        var e=q(card,sel);
+        if(e){
+          e.disabled=true;
+          e.title='Calculé automatiquement à partir de la date';
+        }
+      });
+  }
+
+  function syncWorkflow(card,target){
+    var dDistrib=q(card,'.date-distribution');
+    var dRemis=q(card,'.date-dossier');
+    var dTrans=q(card,'.date-transmission-cfa');
+    var dCfa=q(card,'.date-cfa');
+
+    var cDistrib=q(card,'.dossier-distribue');
+    var cRemis=q(card,'.dossier-remis');
+    var cTrans=q(card,'.transmis-cfa');
+
+    if(cDistrib)cDistrib.checked=!!(dDistrib&&dDistrib.value);
+    if(cRemis)cRemis.checked=!!(dRemis&&dRemis.value);
+    if(cTrans)cTrans.checked=!!(
+      (dTrans&&dTrans.value) ||
+      (dCfa&&dCfa.value)
+    );
+
+    var contrat=q(card,'.date-contrat');
+    var debut=q(card,'.debut');
+    var fin=q(card,'.fin');
+    var rupture=q(card,'.date-rupture');
+
+    /* Contrat officiel <-> Début */
+    if(target===contrat && debut){
+      debut.value=contrat.value;
+    }else if(target===debut && contrat){
+      contrat.value=debut.value;
+    }
+
+    /* Rupture -> Fin, y compris suppression */
+    if(target===rupture && fin){
+      fin.value=rupture.value;
+    }
+
+    /* Si une rupture existe, une modification de Fin la répercute.
+       Effacer Fin efface donc aussi la rupture. */
+    if(target===fin && rupture && rupture.value){
+      rupture.value=fin.value;
+    }
+  }
+
+  function setupCards(){
+    document.querySelectorAll('#studentList .student-card')
+      .forEach(moveControls);
+
+    fitClassSummary();
+  }
+
+  function isReadonly(){
+    var p=new URLSearchParams(location.search);
+    var byRoute=p.get('page')==='apprentissage-public-pfmp';
+
+    var byBoot=false;
+    try{
+      byBoot=(
+        typeof BOOT!=='undefined' &&
+        !!BOOT.readonly
+      );
+    }catch(e){}
+
+    return byRoute||byBoot;
+  }
+
+  function activateReadonly(){
+    if(!isReadonly())return;
+
+    document.body.classList.add('dev252-readonly');
+
+    var top=document.querySelector('.top');
+    if(top && !document.getElementById('dev252ReadonlyBadge')){
+      var badge=document.createElement('span');
+      badge.id='dev252ReadonlyBadge';
+      badge.className='dev252-readonly-badge';
+      badge.textContent='Lecture seule';
+      top.appendChild(badge);
+    }
+
+    document.querySelectorAll('#studentList input').forEach(function(e){
+      if(e.type==='checkbox'){
+        e.disabled=true;
+      }else{
+        e.readOnly=true;
+        e.tabIndex=-1;
+      }
+    });
+  }
+
+  function addPublicLink(){
+    var home=document.getElementById('homeLink') ||
+      document.querySelector('.back');
+
+    if(!home || document.getElementById('dev252PublicLink'))return;
+
+    var a=document.createElement('a');
+    a.id='dev252PublicLink';
+    a.className='back';
+    a.style.marginLeft='12px';
+    a.textContent='Consultation lecture seule';
+
+    var base='';
+    try{
+      if(typeof BOOT!=='undefined'){
+        base=String(BOOT.webappUrl||'');
+      }
+    }catch(e){}
+
+    if(!base){
+      base=location.href.split('?')[0];
+    }
+
+    a.href=base+'?page=apprentissage-public-pfmp';
+    a.target='_top';
+
+    home.insertAdjacentElement('afterend',a);
+  }
+
+  /* Capture AVANT les handlers de carte existants. */
+  document.addEventListener('change',function(ev){
+    var card=ev.target && ev.target.closest
+      ? ev.target.closest('.student-card')
+      : null;
+
+    if(!card)return;
+
+    if(isReadonly()){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      return;
+    }
+
+    syncWorkflow(card,ev.target);
+  },true);
+
+  function install(){
+    addPublicLink();
+    setupCards();
+    activateReadonly();
+
+    var list=document.getElementById('studentList');
+
+    if(list){
+      new MutationObserver(function(){
+        setTimeout(function(){
+          setupCards();
+          activateReadonly();
+        },0);
+      }).observe(list,{childList:true,subtree:false});
+    }
+
+    var summary=document.getElementById('dev248ClassSummary');
+    if(summary){
+      new MutationObserver(function(){
+        fitClassSummary();
+      }).observe(summary,{childList:true,subtree:true});
+    }
+
+    window.addEventListener('resize',fitClassSummary);
+
+    /* Infobulles globales : disponibles même sans classe sélectionnée. */
+    if(
+      typeof EUC_DEV251_dashboardDetails==='undefined'
+    ){
+      /* fonction serveur appelée via google.script.run ci-dessous */
+    }
+
+    try{
+      var year=document.getElementById('year');
+
+      if(year){
+        google.script.run
+          .withSuccessHandler(function(r){
+            var lists=(r&&r.lists)||{};
+
+            /* On remplit la variable utilisée par DEV251 si elle existe
+               dans son closure via ses prochains refresh ; sinon,
+               on câble une infobulle autonome. */
+            var tt=document.getElementById('dev251Tooltip');
+
+            if(!tt){
+              tt=document.createElement('div');
+              tt.id='dev251Tooltip';
+              document.body.appendChild(tt);
+            }
+
+            function norm(v){
+              return String(v||'')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g,'')
+                .toLowerCase();
+            }
+
+            function key(kpi){
+              var t=norm((kpi.querySelector('span')||{}).textContent);
+
+              if(t.indexOf('classe entiere')>=0)return 'classeEntiere';
+              if(t.indexOf('mixite')>=0)return 'mixite';
+              if(t.indexOf('total apprent')>=0)return 'total';
+              if(t.indexOf('futur')>=0)return 'future';
+              if(t.indexOf('dossiers remis')>=0)return 'dossier';
+              if(t.indexOf('transmis cfa')>=0)return 'cfa';
+              if(t.indexOf('contrats valid')>=0)return 'contrats';
+              if(t.indexOf('ruptures')>=0)return 'ruptures';
+
+              return '';
+            }
+
+            function html(items){
+              items=items||[];
+
+              if(!items.length){
+                return '<div>Aucun jeune concerné.</div>';
+              }
+
+              var by={LP:{},LGT:{}};
+
+              items.forEach(function(x){
+                var et=(x.etab==='LGT')?'LGT':'LP';
+                var cl=x.classe||'Sans classe';
+
+                if(!by[et][cl])by[et][cl]=[];
+                by[et][cl].push(x);
+              });
+
+              var out='';
+
+              ['LP','LGT'].forEach(function(et){
+                var cls=Object.keys(by[et]).sort();
+
+                if(!cls.length)return;
+
+                out+='<div class="tt-etab">'+et+'</div>';
+
+                cls.forEach(function(cl){
+                  out+='<div class="tt-class">'+cl+'</div>';
+
+                  by[et][cl]
+                    .sort(function(a,b){
+                      return String(a.nom||'')
+                        .localeCompare(String(b.nom||''),'fr');
+                    })
+                    .forEach(function(x){
+                      out+='<div class="tt-name">'+
+                        String(x.nom||'')+
+                        '</div>';
+                    });
+                });
+              });
+
+              return out;
+            }
+
+            document.querySelectorAll('.kpi').forEach(function(kpi){
+              if(kpi.dataset.dev252Hover==='1')return;
+              kpi.dataset.dev252Hover='1';
+
+              kpi.addEventListener('mouseenter',function(){
+                var k=key(kpi);
+                var title=(kpi.querySelector('span')||{}).textContent||'Détail';
+
+                tt.innerHTML=
+                  '<div class="tt-title">'+title+'</div>'+
+                  html(lists[k]||[]);
+
+                var r=kpi.getBoundingClientRect();
+
+                tt.style.left=
+                  Math.max(
+                    10,
+                    Math.min(window.innerWidth-620,r.left)
+                  )+'px';
+
+                tt.style.top=
+                  Math.min(
+                    window.innerHeight-470,
+                    r.bottom+6
+                  )+'px';
+
+                tt.style.display='block';
+              });
+
+              kpi.addEventListener('mouseleave',function(){
+                tt.style.display='none';
+              });
+            });
+          })
+          .withFailureHandler(function(){})
+          .EUC_DEV251_dashboardDetails(year.value);
+      }
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install);
+  }else{
+    install();
+  }
+})();
+</script>
+
+
+<style id="DEV253_UI_FIX">
+.dev253-mode-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#e8f5f0;
+  color:#086955;
+  font-size:10px;
+  font-weight:800;
+  margin-left:10px;
+}
+.dev253-public-link{
+  margin-left:10px;
+  font-size:11px;
+  font-weight:800;
+  color:#0b745f;
+  text-decoration:none;
+}
+body.dev252-readonly .dev253-mode-badge{
+  background:#eef2f6;
+  color:#344054;
+}
+
+#dev253HistoryTip{
+  position:fixed;
+  z-index:999999;
+  display:none;
+  min-width:320px;
+  max-width:520px;
+  max-height:360px;
+  overflow:auto;
+  background:#fff;
+  border:1px solid #bddbd2;
+  border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+  padding:10px 12px;
+  font-size:11px;
+  color:#17312b;
+}
+#dev253HistoryTip .h-title{
+  font-weight:900;
+  color:#0b5d4d;
+  margin-bottom:7px;
+}
+#dev253HistoryTip .h-row{
+  padding:7px 0;
+  border-bottom:1px solid #edf2f0;
+  line-height:1.35;
+}
+#dev253HistoryTip .h-row:last-child{border-bottom:0}
+#dev253HistoryTip .h-company{
+  font-weight:800;
+  color:#17312b;
+}
+#dev253HistoryTip .h-meta{
+  color:#667085;
+  margin-top:2px;
+}
+</style>
+
+<script>
+/* DEV253_MODE_ADMIN_HISTORIQUE_SURVOL */
+(function(){
+  var historyCache={};
+  var hideTimer=null;
+
+  function esc(v){
+    var d=document.createElement('div');
+    d.textContent=(v==null?'':String(v));
+    return d.innerHTML;
+  }
+
+  function isReadonly(){
+    var p=new URLSearchParams(location.search);
+
+    if(p.get('page')==='apprentissage-public-pfmp'){
+      return true;
+    }
+
+    try{
+      return (
+        typeof BOOT!=='undefined' &&
+        !!BOOT.readonly
+      );
+    }catch(e){
+      return false;
+    }
+  }
+
+  function setupModeLabel(){
+    var readonly=isReadonly();
+
+    /* Retire l'ancien lien DEV252 devenu ambigu. */
+    var old=document.getElementById('dev252PublicLink');
+    if(old)old.remove();
+
+    var oldBadge=document.getElementById('dev252ReadonlyBadge');
+    if(oldBadge)oldBadge.remove();
+
+    var top=document.querySelector('.top');
+    if(!top)return;
+
+    var right=
+      document.getElementById('homeLink') ||
+      top.querySelector('.back');
+
+    if(!right)return;
+
+    if(document.getElementById('dev253ModeBadge'))return;
+
+    var badge=document.createElement('span');
+    badge.id='dev253ModeBadge';
+    badge.className='dev253-mode-badge';
+
+    if(readonly){
+      badge.textContent='Lecture seule';
+      right.insertAdjacentElement('afterend',badge);
+      return;
+    }
+
+    badge.textContent='Mode administration · écriture possible';
+
+    var a=document.createElement('a');
+    a.id='dev253PublicLink';
+    a.className='dev253-public-link';
+    a.textContent='Afficher la consultation';
+
+    var base='';
+    try{
+      if(typeof BOOT!=='undefined'){
+        base=String(BOOT.webappUrl||'');
+      }
+    }catch(e){}
+
+    if(!base){
+      base=location.href.split('?')[0];
+    }
+
+    a.href=base+'?page=apprentissage-public-pfmp';
+    a.target='_top';
+
+    right.insertAdjacentElement('afterend',badge);
+    badge.insertAdjacentElement('afterend',a);
+  }
+
+  function tip(){
+    var t=document.getElementById('dev253HistoryTip');
+
+    if(t)return t;
+
+    t=document.createElement('div');
+    t.id='dev253HistoryTip';
+
+    t.addEventListener('mouseenter',function(){
+      clearTimeout(hideTimer);
+    });
+
+    t.addEventListener('mouseleave',function(){
+      hideTimer=setTimeout(function(){
+        t.style.display='none';
+      },120);
+    });
+
+    document.body.appendChild(t);
+    return t;
+  }
+
+  function historyHtml(h){
+    h=h||[];
+
+    if(!h.length){
+      return (
+        '<div class="h-title">Historique des contrats</div>'+
+        '<div>Aucun historique.</div>'
+      );
+    }
+
+    return (
+      '<div class="h-title">Historique des contrats · '+h.length+'</div>'+
+      h.map(function(x,i){
+        var company=
+          x.nomEntreprise ||
+          x.nomCommercial ||
+          'Entreprise non renseignée';
+
+        var meta=
+          'Début : '+esc(x.debut||'—')+
+          ' · Fin : '+esc(x.fin||'—')+
+          (x.rupture
+            ? ' · Rupture : '+esc(x.rupture)
+            : '')+
+          (x.statut
+            ? ' · '+esc(x.statut)
+            : '');
+
+        return (
+          '<div class="h-row">'+
+            '<div class="h-company">'+esc(company)+'</div>'+
+            '<div class="h-meta">'+meta+'</div>'+
+          '</div>'
+        );
+      }).join('')
+    );
+  }
+
+  function showHistory(btn,card){
+    clearTimeout(hideTimer);
+
+    var t=tip();
+    var id=Number(card.dataset.id||0);
+
+    var r=btn.getBoundingClientRect();
+
+    var left=Math.min(
+      window.innerWidth-540,
+      Math.max(10,r.left)
+    );
+
+    var top=Math.min(
+      window.innerHeight-380,
+      r.bottom+6
+    );
+
+    t.style.left=left+'px';
+    t.style.top=Math.max(10,top)+'px';
+
+    if(historyCache[id]){
+      t.innerHTML=historyHtml(historyCache[id]);
+      t.style.display='block';
+      return;
+    }
+
+    t.innerHTML=
+      '<div class="h-title">Historique des contrats</div>'+
+      '<div>Chargement…</div>';
+
+    t.style.display='block';
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        var h=(res&&res.history)||[];
+        historyCache[id]=h;
+
+        if(t.style.display!=='none'){
+          t.innerHTML=historyHtml(h);
+        }
+      })
+      .withFailureHandler(function(e){
+        t.innerHTML=
+          '<div class="h-title">Historique des contrats</div>'+
+          '<div>Erreur : '+esc(e&&e.message||e)+'</div>';
+      })
+      .EUC_DEV193_history(id);
+  }
+
+  function wireHistory(){
+    document.querySelectorAll(
+      '#studentList .student-card .history-btn'
+    ).forEach(function(btn){
+
+      if(btn.dataset.dev253Wired==='1')return;
+      btn.dataset.dev253Wired='1';
+
+      var card=btn.closest('.student-card');
+      if(!card)return;
+
+      /*
+       * Annule l'ancien onclick qui écrivait l'historique
+       * dans la zone de message sous le SIRET.
+       */
+      btn.onclick=null;
+
+      btn.addEventListener('click',function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+      },true);
+
+      btn.addEventListener('mouseenter',function(){
+        showHistory(btn,card);
+      });
+
+      btn.addEventListener('mouseleave',function(){
+        hideTimer=setTimeout(function(){
+          var t=document.getElementById('dev253HistoryTip');
+          if(t)t.style.display='none';
+        },180);
+      });
+    });
+  }
+
+  function install(){
+    setupModeLabel();
+    wireHistory();
+
+    var list=document.getElementById('studentList');
+
+    if(list){
+      new MutationObserver(function(){
+        setTimeout(wireHistory,0);
+      }).observe(list,{
+        childList:true,
+        subtree:true
+      });
+    }
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install
+    );
+  }else{
+    install();
+  }
+})();
+</script>
+
+
+<style id="DEV254_HOVER_LIVE_STYLE">
+/* DEV254 prend la main sur l'ancienne infobulle DEV251 */
+#dev251Tooltip{
+  display:none!important;
+}
+#dev254Tooltip{
+  position:fixed;
+  z-index:1000000;
+  display:none;
+  min-width:340px;
+  max-width:600px;
+  max-height:460px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background:#fff;
+  border:1px solid #bddbd2;
+  border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+  padding:10px 12px;
+  font-size:11px;
+  color:#17312b;
+}
+#dev254Tooltip .tt-title{
+  font-weight:900;
+  color:#0b5d4d;
+  margin-bottom:7px;
+}
+#dev254Tooltip .tt-wait{
+  color:#667085;
+  font-style:italic;
+}
+#dev254Tooltip .tt-etab{
+  font-weight:900;
+  margin-top:7px;
+  color:#344054;
+  clear:both;
+}
+#dev254Tooltip .tt-class{
+  font-weight:800;
+  margin:5px 0 2px 7px;
+  clear:both;
+}
+#dev254Tooltip .tt-name{
+  display:inline-block;
+  vertical-align:top;
+  width:48%;
+  margin-left:1%;
+  padding-right:7px;
+  color:#475467;
+  line-height:1.35;
+}
+</style>
+
+<script>
+/* DEV254_SURVOL_KPI_TOUJOURS_A_JOUR */
+(function(){
+  var requestSeq=0;
+  var currentKpi=null;
+  var hideTimer=null;
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase();
+  }
+
+  function tooltip(){
+    var t=document.getElementById('dev254Tooltip');
+    if(t)return t;
+
+    t=document.createElement('div');
+    t.id='dev254Tooltip';
+
+    t.addEventListener('mouseenter',function(){
+      clearTimeout(hideTimer);
+    });
+
+    t.addEventListener('mouseleave',function(){
+      hideTimer=setTimeout(function(){
+        t.style.display='none';
+        currentKpi=null;
+      },100);
+    });
+
+    document.body.appendChild(t);
+    return t;
+  }
+
+  function keyForKpi(kpi){
+    var label=norm(
+      (kpi.querySelector('span')||{}).textContent
+    );
+
+    if(label.indexOf('classe entiere')>=0)return 'classeEntiere';
+    if(label.indexOf('mixite')>=0)return 'mixite';
+    if(label.indexOf('total apprent')>=0)return 'total';
+    if(label.indexOf('futur')>=0)return 'future';
+    if(label.indexOf('dossiers remis')>=0)return 'dossier';
+    if(label.indexOf('transmis cfa')>=0)return 'cfa';
+    if(label.indexOf('contrats valid')>=0)return 'contrats';
+    if(label.indexOf('ruptures')>=0)return 'ruptures';
+
+    return '';
+  }
+
+  function groupHtml(items){
+    items=items||[];
+
+    if(!items.length){
+      return '<div>Aucun jeune concerné.</div>';
+    }
+
+    var by={LP:{},LGT:{}};
+
+    items.forEach(function(x){
+      var etab=(x.etab==='LGT')?'LGT':'LP';
+      var classe=x.classe||'Sans classe';
+
+      if(!by[etab][classe]){
+        by[etab][classe]=[];
+      }
+
+      by[etab][classe].push(x);
+    });
+
+    var html='';
+
+    ['LP','LGT'].forEach(function(etab){
+      var classes=Object.keys(by[etab]).sort();
+
+      if(!classes.length)return;
+
+      html+='<div class="tt-etab">'+etab+'</div>';
+
+      classes.forEach(function(classe){
+        html+='<div class="tt-class">'+classe+'</div>';
+
+        by[etab][classe]
+          .sort(function(a,b){
+            return String(a.nom||'')
+              .localeCompare(
+                String(b.nom||''),
+                'fr'
+              );
+          })
+          .forEach(function(x){
+            html+=
+              '<div class="tt-name">'+
+              String(x.nom||'')+
+              '</div>';
+          });
+      });
+    });
+
+    return html;
+  }
+
+  function positionTip(t,kpi){
+    var r=kpi.getBoundingClientRect();
+
+    var left=Math.max(
+      10,
+      Math.min(
+        window.innerWidth-620,
+        r.left
+      )
+    );
+
+    var top=Math.min(
+      window.innerHeight-470,
+      r.bottom+6
+    );
+
+    t.style.left=left+'px';
+    t.style.top=Math.max(10,top)+'px';
+  }
+
+  function showFresh(kpi){
+    if(!kpi)return;
+
+    var key=keyForKpi(kpi);
+    if(!key)return;
+
+    currentKpi=kpi;
+
+    var t=tooltip();
+    var title=
+      (kpi.querySelector('span')||{}).textContent||
+      'Détail';
+
+    positionTip(t,kpi);
+
+    t.innerHTML=
+      '<div class="tt-title">'+title+'</div>'+
+      '<div class="tt-wait">Actualisation…</div>';
+
+    t.style.display='block';
+
+    var year=document.getElementById('year');
+    if(!year)return;
+
+    var seq=++requestSeq;
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        /* Ignore une réponse devenue obsolète si la souris a bougé. */
+        if(seq!==requestSeq || currentKpi!==kpi){
+          return;
+        }
+
+        var lists=(r&&r.lists)||{};
+
+        t.innerHTML=
+          '<div class="tt-title">'+title+'</div>'+
+          groupHtml(lists[key]||[]);
+
+        positionTip(t,kpi);
+      })
+      .withFailureHandler(function(e){
+        if(seq!==requestSeq || currentKpi!==kpi){
+          return;
+        }
+
+        t.innerHTML=
+          '<div class="tt-title">'+title+'</div>'+
+          '<div>Erreur d’actualisation.</div>';
+      })
+      .EUC_DEV251_dashboardDetails(year.value);
+  }
+
+  function hideLater(){
+    clearTimeout(hideTimer);
+
+    hideTimer=setTimeout(function(){
+      var t=document.getElementById('dev254Tooltip');
+      if(t)t.style.display='none';
+      currentKpi=null;
+      requestSeq++;
+    },140);
+  }
+
+  /*
+   * Event delegation : fonctionne également pour le KPI
+   * "Futurs apprentis" créé dynamiquement.
+   */
+  document.addEventListener('mouseover',function(ev){
+    var kpi=ev.target && ev.target.closest
+      ? ev.target.closest('.kpi')
+      : null;
+
+    if(!kpi)return;
+
+    /* Ne relance pas à chaque passage entre enfants du même KPI. */
+    if(
+      ev.relatedTarget &&
+      kpi.contains(ev.relatedTarget)
+    ){
+      return;
+    }
+
+    clearTimeout(hideTimer);
+    showFresh(kpi);
+  },true);
+
+  document.addEventListener('mouseout',function(ev){
+    var kpi=ev.target && ev.target.closest
+      ? ev.target.closest('.kpi')
+      : null;
+
+    if(!kpi)return;
+
+    if(
+      ev.relatedTarget &&
+      kpi.contains(ev.relatedTarget)
+    ){
+      return;
+    }
+
+    hideLater();
+  },true);
+
+  /*
+   * Toute modification invalide immédiatement le contenu
+   * éventuellement affiché.
+   */
+  document.addEventListener('change',function(ev){
+    if(
+      ev.target &&
+      ev.target.closest &&
+      ev.target.closest('.student-card')
+    ){
+      requestSeq++;
+
+      var t=document.getElementById('dev254Tooltip');
+      if(t)t.style.display='none';
+
+      currentKpi=null;
+    }
+  },true);
+
+})();
+</script>
+
+
+<style id="DEV258_PUBLIC_FILTER">
+body.dev252-readonly .student-card.dev258-scolaire-hidden{
+  display:none!important;
+}
+#dev258PublicEmpty{
+  display:none;
+  margin:14px 0;
+  padding:16px;
+  border:1px solid #cfe5de;
+  border-radius:12px;
+  background:#fff;
+  color:#49645d;
+  font-weight:700;
+  text-align:center;
+}
+body.dev252-readonly #dev258PublicEmpty.dev258-show{
+  display:block;
+}
+</style>
+
+<script>
+/* DEV258_PUBLIC_FILTER_SCOLAIRES */
+(function(){
+
+  function isReadonly(){
+    var q=new URLSearchParams(location.search);
+
+    if(q.get('page')==='apprentissage-public-pfmp'){
+      return true;
+    }
+
+    try{
+      return (
+        typeof BOOT!=='undefined' &&
+        !!BOOT.readonly
+      );
+    }catch(e){
+      return false;
+    }
+  }
+
+  function norm(v){
+    return String(v||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .trim()
+      .toLowerCase();
+  }
+
+  function statusOf(card){
+    var candidates=card.querySelectorAll(
+      '.status-badge, .badge, .status, [class*="status"], [class*="statut"]'
+    );
+
+    for(var i=0;i<candidates.length;i++){
+      var t=norm(candidates[i].textContent);
+
+      if(
+        t.indexOf('futur apprenti')>=0 ||
+        t==='apprenti' ||
+        t.indexOf('apprenti')>=0
+      ){
+        return 'APPRENTISSAGE';
+      }
+
+      if(t.indexOf('scolaire')>=0){
+        return 'SCOLAIRE';
+      }
+    }
+
+    var left=card.querySelector(
+      '.dev249-left .dev249-col:first-child'
+    );
+
+    var text=norm(left ? left.textContent : '');
+
+    if(text.indexOf('futur apprenti')>=0){
+      return 'APPRENTISSAGE';
+    }
+
+    if(
+      text.indexOf('apprenti')>=0 &&
+      text.indexOf('scolaire')<0
+    ){
+      return 'APPRENTISSAGE';
+    }
+
+    if(text.indexOf('scolaire')>=0){
+      return 'SCOLAIRE';
+    }
+
+    return 'INCONNU';
+  }
+
+  function ensureEmpty(){
+    var e=document.getElementById('dev258PublicEmpty');
+    if(e)return e;
+
+    e=document.createElement('div');
+    e.id='dev258PublicEmpty';
+    e.textContent=
+      'Aucun futur apprenti ou apprenti dans cette classe.';
+
+    var list=document.getElementById('studentList');
+
+    if(list && list.parentNode){
+      list.parentNode.insertBefore(e,list);
+    }
+
+    return e;
+  }
+
+  function applyFilter(){
+    if(!isReadonly())return;
+
+    var cards=Array.from(
+      document.querySelectorAll(
+        '#studentList .student-card'
+      )
+    );
+
+    var visible=0;
+
+    cards.forEach(function(card){
+      var status=statusOf(card);
+      var hide=(status==='SCOLAIRE');
+
+      card.classList.toggle(
+        'dev258-scolaire-hidden',
+        hide
+      );
+
+      if(!hide){
+        visible++;
+      }
+    });
+
+    var empty=ensureEmpty();
+
+    empty.classList.toggle(
+      'dev258-show',
+      cards.length>0 && visible===0
+    );
+
+    var status=document.getElementById('status');
+
+    if(status && cards.length){
+      status.textContent=
+        visible+
+        ' dossier(s) apprentissage affiché(s)';
+    }
+  }
+
+  function install(){
+    if(!isReadonly())return;
+
+    applyFilter();
+
+    var list=document.getElementById('studentList');
+
+    if(list){
+      new MutationObserver(function(){
+        setTimeout(applyFilter,20);
+      }).observe(
+        list,
+        {
+          childList:true,
+          subtree:true,
+          characterData:true,
+          attributes:true,
+          attributeFilter:['class']
+        }
+      );
+    }
+
+    document.addEventListener(
+      'change',
+      function(){
+        setTimeout(applyFilter,20);
+      },
+      true
+    );
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install
+    );
+  }else{
+    install();
+  }
+
+})();
+</script>
+
+
+<style id="DEV259_PUBLIC_HIDE_MAINT">
+body.dev252-readonly #maintLink{
+  display:none!important;
+}
+body.dev252-readonly .dev259-maint-hidden{
+  display:none!important;
+}
+</style>
+
+<script>
+/* DEV259_PUBLIC_HIDE_MAINT */
+(function(){
+
+  function isReadonly(){
+    var q=new URLSearchParams(location.search);
+
+    if(q.get('page')==='apprentissage-public-pfmp'){
+      return true;
+    }
+
+    try{
+      return (
+        typeof BOOT!=='undefined' &&
+        !!BOOT.readonly
+      );
+    }catch(e){
+      return false;
+    }
+  }
+
+  function hideMaintenance(){
+    if(!isReadonly())return;
+
+    var link=document.getElementById('maintLink');
+
+    if(link){
+      var block=
+        link.closest('section') ||
+        link.closest('.panel') ||
+        link.parentElement;
+
+      if(block){
+        block.classList.add('dev259-maint-hidden');
+      }else{
+        link.style.display='none';
+      }
+    }
+
+    /*
+     * Sécurité supplémentaire :
+     * si le lien historique n'a plus son id mais que le texte subsiste,
+     * on masque le bloc qui contient "Maintenance Snapshot PFMP".
+     */
+    Array.from(
+      document.querySelectorAll('a,section,.panel,div')
+    ).forEach(function(el){
+      var txt=String(el.textContent||'').trim();
+
+      if(
+        txt==='Maintenance Snapshot PFMP' ||
+        txt.indexOf('Maintenance Snapshot PFMP')===0
+      ){
+        var target=
+          el.tagName==='A'
+            ? (
+                el.closest('section') ||
+                el.closest('.panel') ||
+                el.parentElement
+              )
+            : el;
+
+        if(target){
+          target.classList.add('dev259-maint-hidden');
+        }
+      }
+    });
+  }
+
+  function install(){
+    if(!isReadonly())return;
+
+    hideMaintenance();
+
+    new MutationObserver(function(){
+      hideMaintenance();
+    }).observe(
+      document.body,
+      {
+        childList:true,
+        subtree:true
+      }
+    );
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install
+    );
+  }else{
+    install();
+  }
+
+})();
+</script>
+
+</body>
+</html>
