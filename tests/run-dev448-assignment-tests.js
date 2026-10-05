@@ -48,19 +48,20 @@ function fixture(){
 
 let n=0;function test(name,fn){try{fn();console.log('✓',name);n++;}catch(e){console.error('✗',name,e.stack||e);process.exitCode=1;}}
 const ids=Array.from({length:10},(_,i)=>i+1);
+const scopeIds=Array.from({length:12},(_,i)=>i+1);
 
-test('admin affecte dix élèves avec cinq appels et une écriture groupée',()=>{
-  const f=fixture(),r=f.ctx.EUC_DEV448_affecterAdmin({annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:ids});
-  assert.equal(r.ok,true);assert.equal(r.crees,10);assert.equal(r.modifies,0);assert.equal(f.calls.length,5);
+test('admin affecte dix élèves avec trois appels et une écriture groupée',()=>{
+  const f=fixture(),r=f.ctx.EUC_DEV448_affecterAdmin({annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:ids,scopeIds});
+  assert.equal(r.ok,true);assert.equal(r.crees,10);assert.equal(r.modifies,0);assert.equal(f.calls.length,3);
   const post=f.calls.find(x=>x.method==='post');assert.equal(post.body.records.length,10);
   assert.equal(f.tables.EUC_AFFECTATIONS_SUIVI_PFMP.length,10);
-  assert.equal(JSON.parse(f.tables.EUC_SUIVI_PFMP_INDEX[0].fields.Payload_JSON).lignes[0].professeurVisiteur,'M. Alex MARTIN');
+  assert.equal(f.calls.some(x=>x.url.includes('EUC_SUIVI_PFMP_INDEX')),false);
 });
 
-test('réaffectation admin des dix élèves tient en quatre appels sans reconstruction',()=>{
-  const f=fixture(),q={annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'TELEPHONE',profId:7,eleveIds:ids};
+test('réaffectation admin des dix élèves tient en deux appels sans reconstruction',()=>{
+  const f=fixture(),q={annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'TELEPHONE',profId:7,eleveIds:ids,scopeIds};
   f.ctx.EUC_DEV448_affecterAdmin(q);f.calls.length=0;
-  const r=f.ctx.EUC_DEV448_affecterAdmin(q);assert.equal(r.modifies,10);assert.equal(r.crees,0);assert.equal(f.calls.length,4);
+  const r=f.ctx.EUC_DEV448_affecterAdmin(q);assert.equal(r.modifies,10);assert.equal(r.crees,0);assert.equal(f.calls.length,2);
   const patch=f.calls.find(x=>x.method==='patch'&&x.url.includes('EUC_AFFECTATIONS'));assert.equal(patch.body.records.length,10);
 });
 
@@ -79,8 +80,18 @@ test('PP affecte dix élèves en lot sans reconstruction familiale',()=>{
 });
 
 test('un élève hors périmètre est refusé avant toute écriture métier',()=>{
-  const f=fixture();assert.throws(()=>f.ctx.EUC_DEV448_affecterAdmin({annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:[999]}),/hors de la classe/);
+  const f=fixture();assert.throws(()=>f.ctx.EUC_DEV448_affecterAdmin({annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:[999],scopeIds}),/hors de la classe/);
   assert.equal(f.calls.some(x=>x.method==='post'||x.method==='patch'),false);
+});
+
+test('le noyau sans périmètre client utilise uniquement le détail ciblé disponible',()=>{
+  const f=fixture(),detail=JSON.parse(f.tables.EUC_SUIVI_PFMP_INDEX[0].fields.Payload_JSON);
+  f.tables.EUC_SUIVI_PFMP_INDEX.length=0;
+  let targeted=0;f.ctx.EUC_DEV416_finalDetail_=()=>{targeted++;return detail;};
+  const r=f.ctx.EUC_DEV448_core_({annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:ids},'TEST');
+  assert.equal(r.ok,true);assert.equal(r.crees,10);assert.equal(targeted,1);
+  assert.match(r.warning,/actualis/);assert.equal(f.tables.EUC_AFFECTATIONS_SUIVI_PFMP.length,10);
+  assert.equal(f.calls.some(x=>x.method==='patch'&&x.url.includes('EUC_SUIVI_PFMP_INDEX')),false);
 });
 
 test('le module ne lance jamais la reconstruction synchrone DEV425',()=>{

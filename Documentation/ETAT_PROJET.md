@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 5 octobre 2026 — DEV450 à DEV452 (validation réelle et réduction des appels)
+
+- Autorisation explicite donnée pour intervenir sur le document Grist actif `b2CyeMEdVEMSsLZgmQcP6D`, mettre à jour les deux Web Apps existantes et exécuter des essais limités de sauvegarde et d'affectation. La production interdite `3pnVrygfNn7c` n'a pas été consultée.
+- Les deux déploiements existants, public et administrateur, ont été mis à jour sans changer leurs identifiants jusqu'à la version immuable `802` (`DEV452 - apprentis un chargement consolide`). `DOMAIN` et le déployeur existant sont conservés; aucun nouveau Web App n'a été créé.
+- Le déclencheur de reconstruction automatique des snapshots reste supprimé. Les exécutions anciennes bloquées ont été interrompues et aucun nouveau déclencheur n'a été installé.
+- Validation réelle DEV449 : sauvegarde explicite de l'apprenti KIROF, sans modification de valeur, réussie en `4,821 s` côté Apps Script.
+- DEV451 : l'affectation administrateur reçoit le périmètre des élèves déjà affichés et n'effectue plus de lecture/reconstruction de snapshot. L'accès PP mémorise le même périmètre lors du déverrouillage. Les tests couvrent dix élèves avec trois appels au premier passage et deux appels lors d'une réaffectation.
+- Validation réelle de l'affectation : premier passage de compatibilité réussi en `6,178 s`; après suppression de la relecture snapshot, retour fonctionnel affiché en `2,924 s` côté serveur (`7,579 s` navigateur, latence Web App comprise).
+- DEV452 : la page Apprentis ne lance plus en parallèle `EUC_DEV192_getDashboard`, `EUC_DEV251_dashboardDetails` et `EUC_DEV348_dashboard`. Un seul chargement consolidé du tableau de bord est conservé; la sélection d'une classe ne relit plus ce tableau de bord.
+- Mesure réelle TMP3D après DEV452 : `12` élèves chargés en `5,586 s` affichés par l'application (`5,946 s` bout en bout), contre `19,943 s` avant correction. Le journal d'exécution confirme une seule exécution `EUC_DEV348_dashboard` au démarrage puis une seule `EUC_DEV235_loadStudentsJson` lors du choix de TMP3D.
+- Contrôle du distant après `clasp push` : les empreintes SHA-256 des modules DEV448, de la page Apprentis active et de la page détail de classe sont identiques entre la copie relue et le projet Apps Script.
+- Tests ciblés : `10` DEV448, `5` DEV449 et `23` DEV447 réussis. Aucun courriel ni ordre de mission n'a été envoyé ou généré pendant les validations.
+
 ## Mise à jour du 5 octobre 2026 — DEV448/DEV449 (urgence saturation Grist)
 
 - Diagnostic différentiel sur les exécutions réelles Apps Script : une affectation `EUC_SUIVI_AFFECTER_V156` a duré `814,797 s`; le déclencheur `EUC_DEV424_refreshScheduled` lancé à 08:42 a duré `1 383,047 s`; l'interface Apprentis a ensuite lancé simultanément de nombreuses exécutions `EUC_DEV225_saveApprenti`, dont plusieurs ont duré de 12 à 16 minutes. Cette concurrence explique le `429 Too many backlogged requests` et la consommation anormale.
@@ -7,8 +20,8 @@
 - `DEV448` remplace l'affectation élève par élève par une écriture groupée : 4 à 6 appels Grist pour dix élèves, sans reconstruction générale synchrone. Le même point rapide est utilisé par l'administration et l'accès PP.
 - `DEV449` supprime les sauvegardes automatiques sur chaque modification/blur de la page Apprentis. Une sauvegarde explicite lit seulement l'épisode ciblé et réalise une seule écriture, avec verrou court et dédoublonnage de 60 secondes; elle conserve notamment le code postal sous forme de texte.
 - `DEV447` ajoute un coupe-circuit local : 2 minutes après un backlog, 15 minutes après un quota quotidien, sans nouvel appel Grist pendant l'ouverture du circuit; un `429` suspend aussi le déclencheur snapshot.
-- Tests ciblés : 5 DEV449, 9 DEV448 et 23 DEV447 réussis. Suite complète : aucune nouvelle régression; sept échecs de référence préexistants et déjà documentés subsistent.
-- Sources Apps Script distantes relues après `clasp push` : contrôles SHA-256 identiques pour les six fichiers critiques. Version immuable `799` créée, mais déploiements public et administrateur laissés sur `798` : l'application active renvoie le document Grist `b2CyeMEdVEMSsLZgmQcP6D`, tandis que les consignes du dépôt imposent la recette `j1jDArBkzi7P`. Aucun test d'écriture ni activation de la version 799 ne doit être effectué avant résolution explicite de cette divergence de cible.
+- Tests ciblés initiaux : 5 DEV449, 9 DEV448 et 23 DEV447 réussis. Suite complète : aucune nouvelle régression; sept échecs de référence préexistants et déjà documentés subsistent.
+- Sources Apps Script distantes relues après `clasp push` : contrôles SHA-256 identiques pour les six fichiers critiques. Version immuable `799` créée. La divergence de cible a ensuite été levée pour cette intervention par l'autorisation explicite de travailler sur le document actif `b2CyeMEdVEMSsLZgmQcP6D`; voir DEV450 à DEV452 ci-dessus.
 
 ## Mise à jour du 5 octobre 2026 — DEV447
 
