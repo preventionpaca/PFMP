@@ -68,4 +68,12 @@ test('la consultation publique des apprentis conserve sa route publique', () => 
   assert.match(source, /ro\?PUBLIC\+'\?page=suivi-conventions-public':'https:\/\/alternance\.loucodi\.fr\/'/);
 });
 
+test('les anciens wrappers de mesure restent appelables sans écriture', () => {
+  const source = read('EUC_PFMP_DEV470_ProfilerCompat.js');
+  for (const name of ['EUC_DEV394_begin_', 'EUC_DEV394_mark_', 'EUC_DEV394_finish_']) {
+    assert.match(source, new RegExp('function ' + name.replace('_', '\\_') + '\\('));
+  }
+  assert.doesNotMatch(source, /PropertiesService|UrlFetchApp|EUC_ENT_grist/);
+});
+
 if (!process.exitCode) console.log(`\n${passed} tests DEV470 navigation Accueil réussis.`);
