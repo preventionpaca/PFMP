@@ -18,10 +18,12 @@ test('le tableau élèves et ses dix colonnes métier restent présents',()=>{
 });
 test('la page missions préremplit année famille classe et période depuis l URL',()=>{
   assert.match(mission,/new URLSearchParams\(location\.search\)/);
+  assert.match(mission,/BP=B\.params\|\|\{\}/);
   assert.match(mission,/PREF=\{annee:/);
   assert.match(mission,/PREF\.classe/);
   assert.match(mission,/PREF\.periode/);
   assert.match(mission,/maybeAutoLoad\(\)/);
+  assert.match(server,/b\.params=\{annee:/);
 });
 test('une classe sans période l indique explicitement',()=>assert.match(mission,/Aucune période affichée/));
 test('la liste des modèles propose radio par défaut et suppression',()=>{
