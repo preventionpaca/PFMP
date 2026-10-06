@@ -53,6 +53,12 @@ test('la copie propre reste lisible par le navigateur de test', () => {
   assert.match(script, /dirname \"\$repo_root\"/);
 });
 
+test('la relecture distante normalise uniquement l extension serveur clasp', () => {
+  assert.match(script, /file\.replace\(\/\\\.gs\$\/, '\.js'\)/);
+  assert.match(script, /Nom Apps Script dupliqué/);
+  assert.match(script, /fs\.readFileSync\(path\.join\(dir, file\)\)/);
+});
+
 test('promote exige le même commit et le même contenu distant', () => {
   assert.match(script, /commit.*candidate_commit/s);
   assert.match(script, /remote_hash.*candidate_hash/s);

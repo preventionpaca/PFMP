@@ -30,12 +30,27 @@ EOF
 
 tree_hash() {
   local app_dir="$1/apps-script"
-  (
-    cd "$app_dir"
-    find . -maxdepth 1 -type f \
-      \( -name '*.js' -o -name '*.gs' -o -name '*.html' -o -name 'appsscript.json' \) \
-      -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
-  )
+  # `clasp pull` restitue tous les fichiers serveur en .js, même lorsqu'ils
+  # ont été poussés en .gs. Comparer le nom logique Apps Script (le radical)
+  # et les octets permet une relecture stricte sans faux écart d'extension.
+  node - "$app_dir" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const dir = process.argv[2];
+const logical = new Map();
+for (const file of fs.readdirSync(dir)) {
+  if (file !== 'appsscript.json' && !/\.(?:js|gs|html)$/.test(file)) continue;
+  const key = file.replace(/\.gs$/, '.js');
+  if (logical.has(key)) throw new Error(`Nom Apps Script dupliqué : ${key}`);
+  logical.set(key, fs.readFileSync(path.join(dir, file)));
+}
+const hash = crypto.createHash('sha256');
+for (const key of [...logical.keys()].sort()) {
+  hash.update(key); hash.update('\0'); hash.update(logical.get(key)); hash.update('\0');
+}
+process.stdout.write(hash.digest('hex') + '\n');
+NODE
 }
 
 new_release_clone() {
