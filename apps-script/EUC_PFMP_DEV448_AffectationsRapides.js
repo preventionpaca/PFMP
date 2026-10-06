@@ -79,6 +79,11 @@ function EUC_DEV448_professeurs_(){
   try{cache.put(EUC_DEV448_PROF_CACHE_,JSON.stringify(rows),21600);}catch(e3){}
   return rows;
 }
+function EUC_DEV435_professeursDisponibles(){
+  var ctx=typeof EUC_V156_contexteAdmin_==='function'?EUC_V156_contexteAdmin_():null;
+  if(!ctx)throw new Error('Accès administrateur requis.');
+  return{ok:true,version:EUC_DEV448_VERSION_,professeurs:EUC_DEV448_professeurs_()};
+}
 function EUC_DEV448_professeur_(id){
   id=EUC_DEV448_n_(id);
   var p=EUC_DEV448_professeurs_().filter(function(x){return x.id===id;})[0];

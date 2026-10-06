@@ -71,6 +71,13 @@ test('accès PP se déverrouille en trois lectures après amorçage professeurs'
   assert.equal(r.lignes.length,12);assert.equal(r.scope.classe,'TMP3D');assert.equal(f.calls.length,3);assert.ok(f.calls.every(x=>x.method==='get'));
 });
 
+test('l’autocomplétion administrateur charge et mémorise la liste des professeurs',()=>{
+  const f=fixture(),first=f.ctx.EUC_DEV435_professeursDisponibles();
+  assert.equal(first.ok,true);assert.equal(first.professeurs.length,1);assert.equal(first.professeurs[0].nom,'M. Alex MARTIN');assert.equal(f.calls.length,1);
+  const second=f.ctx.EUC_DEV435_professeursDisponibles();assert.equal(second.professeurs.length,1);assert.equal(f.calls.length,1);
+  f.ctx.EUC_V156_contexteAdmin_=()=>null;assert.throws(()=>f.ctx.EUC_DEV435_professeursDisponibles(),/administrateur/);
+});
+
 test('PP affecte dix élèves en lot sans reconstruction familiale',()=>{
   const f=fixture();f.ctx.EUC_DEV448_professeurs_();f.calls.length=0;
   const r=f.ctx.EUC_DEV448_affecterPp({code:'VALIDCODE1234567890',annee:'2026-2027',classeId:28,periodeId:65,type:'VISITE',profId:7,eleveIds:ids});
@@ -119,6 +126,7 @@ test('la pause manuelle ne supprime que le déclencheur snapshot',()=>{
 
 test('les deux interfaces appellent les points rapides',()=>{
   const admin=fs.readFileSync(path.join(root,'apps-script','Suivi_PFMP_Classe_Detail_V156.html'),'utf8');
+  assert.match(admin,/EUC_DEV435_professeursDisponibles/);assert.match(admin,/retapez le nom pour réessayer/);
   assert.match(admin,/EUC_DEV448_affecterAdmin/);
   assert.match(code,/function EUC_DEV448_unlockPp/);assert.match(code,/function EUC_DEV448_affecterPp/);
 });

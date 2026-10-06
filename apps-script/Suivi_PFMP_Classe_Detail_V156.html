@@ -313,7 +313,11 @@ function statusPill(x){
       const q=professeursWaiters.splice(0);q.forEach(function(fn){fn()});
     }).withFailureHandler(function(e){
       professeursLoading=false;professeursWaiters=[];
-      showStatus('Erreur de chargement des professeurs : '+(e&&e.message||e),'err');
+      const message='Erreur de chargement des professeurs : '+(e&&e.message||e);
+      [phoneProfSuggestions,visitProfSuggestions].forEach(function(box){
+        if(box.style.display==='block')box.innerHTML='<div class="prof-option">'+esc(message)+' — retapez le nom pour réessayer.</div>';
+      });
+      showStatus(message,'err');
     }).EUC_DEV435_professeursDisponibles();
   }
 
