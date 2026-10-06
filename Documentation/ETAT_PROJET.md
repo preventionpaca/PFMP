@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV473 (Accueil des missions et autocomplétion professeurs)
+
+- La page des ordres de mission réécrivait encore son lien `Accueil PFMP` vers la route Apps Script interne après le rendu. Le lien est maintenant déclaré directement avec `href="https://alternance.loucodi.fr/"` et `target="_top"`; aucun script ne peut plus le remplacer par `?page=admin-pfmp`.
+- L’audit des huit fichiers réellement publiés qui contiennent le libellé `Accueil PFMP` confirme que toutes les vues administratives actives connaissent le sous-domaine canonique. Le test DEV470 inclut désormais explicitement les ordres de mission et interdit le retour de l’ancienne réécriture locale.
+- Cause de l’autocomplétion bloquée sur `Chargement des professeurs…` : la fiche appelait encore le point serveur historique `EUC_DEV435_professeursDisponibles`, absent du paquet actif. Le point d’accès est restauré sur le lecteur ciblé DEV448, protégé par le contexte administrateur et servi par le cache professeurs existant. En cas d’échec, le champ affiche désormais l’erreur et permet une nouvelle tentative au lieu de rester indéfiniment en chargement.
+- Contrôle navigateur réel TRMO / PFMP n°1 : la saisie `huar` dans Professeur visiteur retourne `M. JEROME HUART`, sa discipline et son adresse institutionnelle. Le lien `Accueil PFMP` de la page des missions rend exactement `https://alternance.loucodi.fr/`. Aucune affectation n’a été déclenchée.
+- Tests ciblés : `11/11` DEV448, `20/20` DEV455, `10/10` DEV462, `8/8` DEV470, `9/9` DEV472 et `10/10` DEV461. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `873` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante avant création de version est identique pour les trois fichiers corrigés. La version `872`, créée avant le signalement de l’autocomplétion, n’a jamais été attachée aux Web Apps.
+- Aucune affectation, donnée élève, convention ou autre donnée métier Grist n’a été écrite ; aucun PDF, courriel ou ordre de mission n’a été généré. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV472 (ordres de mission intégrés à la fiche de classe)
 
 - La fiche de classe administrative comporte désormais un unique bouton `Ordres de mission`, ajouté à côté de l’export PDF sans modifier le tableau des élèves, les compteurs ni les commandes d’affectation. Il transmet au Web App administrateur l’année scolaire, la famille, la classe et la période déjà affichées.
