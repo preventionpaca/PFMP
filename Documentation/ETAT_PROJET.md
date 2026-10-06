@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV474 (récapitulatif des visites sur une page A4)
+
+- La troisième page provenait du bloc horizontal des signatures, ajouté sous un tableau déjà dimensionné sur toute sa largeur. Le récapitulatif paysage utilise maintenant la bande libre à droite du tableau des élèves : `630 pt` pour les douze colonnes existantes et `145 pt` pour deux encarts empilés « Date et signature du professeur » puis « Date et signature du directeur délégué aux formations ».
+- La hauteur des deux encarts suit le nombre de lignes et reste bornée pour conserver jusqu’à `15` élèves sur la même page A4 paysage. Les largeurs des colonnes métier et la première page de l’ordre de mission ne sont pas modifiées.
+- « Précisions complémentaires » comporte désormais exactement deux lignes et couvre toute la largeur utile de la page (`775 pt`), au lieu de six lignes limitées à la largeur du tableau. Le bloc de signatures inférieur qui créait la troisième page est supprimé.
+- Contrôle visuel hors ligne avec quinze élèves fictifs : une seule page A4 paysage, quinze lignes lisibles, signatures dans la bande droite, deux lignes de précisions sur toute la largeur et aucun chevauchement ni élément coupé.
+- Tests ciblés : `15/15` DEV461 et `9/9` DEV472. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `874` publiée sur les deux Web Apps existantes, URL inchangées. Une relecture complète depuis Google confirme que le générateur distant est strictement identique à la source testée.
+- Aucun ordre de mission réel, PDF métier ou courriel n’a été généré ; aucune donnée élève, convention, affectation ou autre donnée métier Grist n’a été écrite. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV473 (Accueil des missions et autocomplétion professeurs)
 
 - La page des ordres de mission réécrivait encore son lien `Accueil PFMP` vers la route Apps Script interne après le rendu. Le lien est maintenant déclaré directement avec `href="https://alternance.loucodi.fr/"` et `target="_top"`; aucun script ne peut plus le remplacer par `?page=admin-pfmp`.
