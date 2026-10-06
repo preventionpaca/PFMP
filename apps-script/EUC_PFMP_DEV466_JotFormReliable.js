@@ -1,0 +1,213 @@
+/**
+ * PFMP DEV466 — import JotForm fiable, idempotent et publié atomiquement.
+ *
+ * Garanties :
+ * - sélection explicite et préflight complet avant toute écriture ;
+ * - clé métier élève + classe + période + année ;
+ * - écritures Grist groupées (créations puis compléments) ;
+ * - aucune convention QR/déjà renseignée n'est écrasée ;
+ * - tampon validé uniquement après relecture Grist ET contrôle de la vue ;
+ * - reconstruction DEV425 limitée aux classes/périodes touchées.
+ */
+var EUC_DEV466_VERSION_='1.0.0-dev.466';
+
+function EUC_DEV466_txt_(v){return String(v==null?'':v).trim();}
+function EUC_DEV466_ref_(v){
+  if(typeof EUC_DEV307_ref_==='function')return Number(EUC_DEV307_ref_(v))||0;
+  if(Array.isArray(v))return Number(v[0])||0;
+  return Number(v)||0;
+}
+function EUC_DEV466_key_(studentId,classId,periodId,year){
+  return [Number(studentId)||0,Number(classId)||0,Number(periodId)||0,EUC_DEV466_txt_(year)].join('|');
+}
+function EUC_DEV466_empty_(v){
+  return v===null||v===undefined||v===''||(Array.isArray(v)&&v.length===0);
+}
+function EUC_DEV466_family_(classe){
+  if(typeof EUC_DEV453_familyForClass_==='function')return EUC_DEV453_familyForClass_(classe||{});
+  var s=EUC_DEV466_txt_(classe&&(classe.Categorie||classe.Famille||classe.Code||classe.Libelle||classe.Nom)).toUpperCase();
+  return s.indexOf('BTS')>=0?'BTS':(s.indexOf('CAP')>=0?'CAP':'BACPRO');
+}
+function EUC_DEV466_year_(student,years){
+  var direct=EUC_DEV466_txt_(student&&(student.Annee_scolaire_code||student.Annee_scolaire));
+  if(/^20\d{2}-20\d{2}$/.test(direct))return direct;
+  var id=EUC_DEV466_ref_(student&&student.Annee_scolaire),found=null;
+  (years||[]).some(function(y){if(Number(y.id)===id){found=y;return true;}return false;});
+  return EUC_DEV466_txt_(found&&found.Code);
+}
+function EUC_DEV466_activeAccess_(a){
+  return !!a&&a.Revoked!==true&&a.Supprimee_admin!==true;
+}
+function EUC_DEV466_isSubmitted_(a){
+  if(typeof EUC_V50_estRemontee_==='function')return !!EUC_V50_estRemontee_(a);
+  if(typeof EUC_DEV307_eligible_==='function')return !!EUC_DEV307_eligible_(a);
+  return !!(a&&(a.Date_saisie_entreprise||a.Entreprise_raison_sociale||a.Entreprise_siret));
+}
+function EUC_DEV466_safeLabel_(row){
+  return EUC_DEV466_txt_(row&&(row.Eleve_match_libelle||row.Eleve_saisi||row.Eleve_brut))||('ligne '+Number(row&&row.id||0));
+}
+function EUC_DEV466_verifiedSiret_(row){
+  if(typeof EUC_DEV322_verifiedSiret_==='function')return !!EUC_DEV322_verifiedSiret_(row||{});
+  return EUC_DEV466_txt_(row&&row.SIRET_statut).toUpperCase()==='VERIFIE';
+}
+function EUC_DEV466_mergeIncomplete_(existing,prepared,companyFields,columns){
+  var out={},business={};
+  Object.keys(companyFields||{}).forEach(function(k){business[k]=true;});
+  Object.keys(prepared||{}).forEach(function(k){
+    if(EUC_DEV466_empty_(existing&&existing[k]))out[k]=prepared[k];
+  });
+  Object.keys(companyFields||{}).forEach(function(k){out[k]=companyFields[k];});
+  /* Ne jamais ramener un dossier déjà avancé à ENTREPRISE_SAISIE. */
+  ['Statut','Statut_administratif'].forEach(function(k){
+    var old=EUC_DEV466_txt_(existing&&existing[k]).toUpperCase();
+    if(old&&old!=='CONVENTION_GENEREE'&&old!=='A_COMPLETER')delete out[k];
+  });
+  return EUC_DEV307_filterFields_(out,columns);
+}
+function EUC_DEV466_selected_(payload){
+  payload=payload||{};
+  var ids=Array.isArray(payload.ids)?payload.ids.map(function(x){return Number(x)||0;}).filter(function(x){return x>0;}):[];
+  var unique={};ids.forEach(function(id){unique[id]=true;});ids=Object.keys(unique).map(Number);
+  if(payload.manualSelection!==true||!ids.length)throw new Error('IMPORT BLOQUÉ : sélection explicite obligatoire.');
+  var rows=EUC_DEV298_rows_(),selected=rows.filter(function(r){return !!unique[Number(r.id)||0];});
+  if(selected.length!==ids.length){
+    throw new Error('Sélection incohérente : '+ids.length+' ligne(s) demandée(s), '+selected.length+' retrouvée(s). Aucune écriture effectuée.');
+  }
+  return selected;
+}
+function EUC_DEV466_prepare_(selected,ctx){
+  var students=EUC_DEV307_flatRecords_(EUC_DEV307_STUDENTS_TABLE_),studentBy={};
+  students.forEach(function(s){studentBy[Number(s.id)||0]=s;});
+  var generatorStudents=EUC_CONVENTION_lireElevesAdmin(),genBy={};
+  (generatorStudents||[]).forEach(function(s){genBy[Number(s.id)||0]=s;});
+  var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),classBy={},periodMetaBy={};
+  (meta.classes||[]).forEach(function(c){classBy[Number(c.id)||0]=c;});
+  (meta.periodes||[]).forEach(function(p){periodMetaBy[Number(p.id)||0]=p;});
+  var periods=EUC_DEV307_flatRecords_('Planning_Periodes');
+  var links=EUC_DEV307_flatRecords_('EUC_OFFRES_PERIODES');
+  var years=EUC_DEV307_flatRecords_('Annees_Scolaires');
+  var offers=EUC_DEV307_flatRecords_('EUC_OFFRES_FORMATION');
+  var accesses=EUC_DEV307_flatRecords_(EUC_DEV307_ACCESS_TABLE_);
+  var columns=EUC_DEV307_columns_(EUC_DEV307_ACCESS_TABLE_),byKey={};
+  accesses.filter(EUC_DEV466_activeAccess_).forEach(function(a){
+    var k=EUC_DEV466_key_(EUC_DEV466_ref_(a.Eleve),EUC_DEV466_ref_(a.Classe_convention),EUC_DEV466_ref_(a.Periode),a.Annee_scolaire);
+    (byKey[k]=byKey[k]||[]).push(a);
+  });
+  Object.keys(byKey).forEach(function(k){byKey[k].sort(function(a,b){return Number(b.id||0)-Number(a.id||0);});});
+  var items=[],errors=[],seen={};
+  selected.forEach(function(row){
+    var label=EUC_DEV466_safeLabel_(row);
+    try{
+      if(!EUC_DEV466_verifiedSiret_(row))throw new Error('SIRET non vérifié.');
+      var studentId=Number(row.Eleve_match_id)||0,student=studentBy[studentId],genStudent=genBy[studentId];
+      if(!studentId||!student||!genStudent)throw new Error('Élève rapproché introuvable dans EUC_ELEVES_PFMP.');
+      var realClassId=EUC_DEV466_ref_(student.Classe),chosenClassId=Number(row.Classe_match_id)||0;
+      if(!realClassId||!classBy[realClassId])throw new Error('Classe actuelle de l’élève introuvable.');
+      if(chosenClassId&&chosenClassId!==realClassId)throw new Error('La classe choisie dans JotForm ne correspond pas à la classe actuelle de l’élève. Corrigez le rapprochement avant import.');
+      var offerId=EUC_DEV466_ref_(student.Offre_formation)||EUC_DEV466_ref_(row.Offre_formation),periodRes=EUC_DEV312_periodFor_(row,student,periods,links,offerId,realClassId,offers);
+      if(!periodRes||!periodRes.ok)throw new Error(EUC_DEV466_txt_(periodRes&&periodRes.error)||'Période officielle introuvable ou ambiguë.');
+      var periodId=Number(periodRes.period&&periodRes.period.id)||0;
+      if(!periodId)throw new Error('Identifiant de période officielle absent.');
+      var period=periodMetaBy[periodId]||{id:periodId,libelle:EUC_DEV466_txt_(periodRes.period.Libelle_periode||periodRes.period.Code_periode||periodRes.period.Type),debut:periodRes.start,fin:periodRes.end};
+      var year=EUC_DEV466_year_(student,years);
+      if(!/^20\d{2}-20\d{2}$/.test(year))throw new Error('Année scolaire de l’élève introuvable.');
+      var siret=EUC_DEV466_txt_(row.SIRET_normalise||row.SIRET_brut).replace(/\D/g,'');
+      if(siret.length!==14)throw new Error('SIRET invalide : 14 chiffres attendus.');
+      var key=EUC_DEV466_key_(studentId,realClassId,periodId,year);
+      if(seen[key])throw new Error('Deux lignes sélectionnées visent le même élève, la même classe et la même période. Ne conservez qu’une ligne.');
+      seen[key]=true;
+      var existing=(byKey[key]||[])[0]||null,existingSiret=EUC_DEV466_txt_(existing&&existing.Entreprise_siret).replace(/\D/g,'');
+      if(existing&&EUC_DEV466_isSubmitted_(existing)&&existingSiret&&existingSiret!==siret){
+        throw new Error('Conflit QR/JotForm : une convention existe déjà avec un autre SIRET. Aucune donnée n’a été écrasée.');
+      }
+      var prepared=EUC_CONVENTION_preparerRecordAcces_(ctx,genStudent,classBy[realClassId],period,year,{lot:'MIGRATION_JOTFORM_DEV466'});
+      var preparedFields=(prepared.record&&prepared.record.fields)||prepared.record||{};
+      var companyFields=EUC_DEV307_companyFields_(row,ctx,columns),mode='CREATE',fields=null,accessId=0;
+      if(existing&&EUC_DEV466_isSubmitted_(existing)){
+        mode='EXISTING';fields={};accessId=Number(existing.id)||0;
+      }else if(existing){
+        mode='COMPLETE';accessId=Number(existing.id)||0;
+        fields=EUC_DEV466_mergeIncomplete_(existing,preparedFields,companyFields,columns);
+      }else{
+        fields=EUC_DEV307_filterFields_(Object.assign({},preparedFields,companyFields),columns);
+      }
+      items.push({rowId:Number(row.id)||0,label:label,studentId:studentId,classId:realClassId,periodId:periodId,year:year,family:EUC_DEV466_family_(classBy[realClassId]),key:key,siret:siret,mode:mode,fields:fields,accessId:accessId});
+    }catch(e){errors.push({id:Number(row.id)||0,eleve:label,erreur:EUC_DEV466_txt_(e&&e.message||e)});}
+  });
+  if(errors.length){
+    throw new Error('PRÉCONTRÔLE BLOQUÉ — aucune écriture effectuée. '+errors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
+  }
+  return {items:items,accessesBefore:accesses.length};
+}
+function EUC_DEV466_readback_(items){
+  var rows=EUC_DEV307_flatRecords_(EUC_DEV307_ACCESS_TABLE_),byKey={};
+  rows.filter(EUC_DEV466_activeAccess_).forEach(function(a){
+    var key=EUC_DEV466_key_(EUC_DEV466_ref_(a.Eleve),EUC_DEV466_ref_(a.Classe_convention),EUC_DEV466_ref_(a.Periode),a.Annee_scolaire);
+    (byKey[key]=byKey[key]||[]).push(a);
+  });
+  Object.keys(byKey).forEach(function(k){byKey[k].sort(function(a,b){return Number(b.id||0)-Number(a.id||0);});});
+  var errors=[];
+  items.forEach(function(item){
+    var a=(byKey[item.key]||[])[0]||null,siret=EUC_DEV466_txt_(a&&a.Entreprise_siret).replace(/\D/g,'');
+    if(!a||!EUC_DEV466_isSubmitted_(a))errors.push({id:item.rowId,eleve:item.label,erreur:'Convention absente ou incomplète après relecture Grist.'});
+    else if(item.siret&&siret&&item.siret!==siret)errors.push({id:item.rowId,eleve:item.label,erreur:'Le SIRET relu dans Grist ne correspond pas au SIRET contrôlé.'});
+    else item.accessId=Number(a.id)||0;
+  });
+  return {rows:rows,errors:errors};
+}
+function EUC_DEV466_verifyViews_(items){
+  var groups={},errors=[];
+  items.forEach(function(item){
+    var key=item.year+'|'+item.family+'|'+item.classId+'|'+item.periodId;
+    (groups[key]=groups[key]||[]).push(item);
+  });
+  Object.keys(groups).forEach(function(k){
+    var target=groups[k][0],detail=null;
+    try{detail=EUC_DEV416_cacheGet_(EUC_DEV416_key_(target.year,target.family,target.classId,target.periodId));}catch(e){}
+    if(!detail||!Array.isArray(detail.lignes)){
+      groups[k].forEach(function(item){errors.push({id:item.rowId,eleve:item.label,erreur:'Vue reconstruite introuvable dans le cache publié.'});});return;
+    }
+    groups[k].forEach(function(item){
+      var line=(detail.lignes||[]).filter(function(x){return Number(x.eleveId)===item.studentId;})[0]||null;
+      var status=EUC_DEV466_txt_(line&&(line.statutCode||line.statut)).toUpperCase();
+      if(!line||status==='SANS_CONVENTION'||!status){
+        errors.push({id:item.rowId,eleve:item.label,erreur:'La vue de classe ne publie pas encore la convention pour la période choisie.'});
+      }
+    });
+  });
+  return errors;
+}
+function EUC_DEV466_importSelection(payload){
+  var lock=LockService.getScriptLock();
+  if(!lock.tryLock(10000))throw new Error('Un autre import PFMP est déjà en cours.');
+  try{
+    var started=Date.now(),ctx=EUC_IMPORT_exigerAdminTexte_(),selected=EUC_DEV466_selected_(payload),plan=EUC_DEV466_prepare_(selected,ctx),items=plan.items;
+    var tokens=EUC_DEV425_beginImportItems_(items,'import-jotform-dev466'),creates=[],updates=[];
+    items.forEach(function(item){
+      if(item.mode==='CREATE')creates.push({fields:item.fields});
+      else if(item.mode==='COMPLETE')updates.push({id:item.accessId,fields:item.fields});
+    });
+    if(creates.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:creates});
+    if(updates.length)EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:updates});
+    var readback=EUC_DEV466_readback_(items);
+    if(readback.errors.length){
+      throw new Error('CONTRÔLE GRIST ÉCHOUÉ — le tampon reste à contrôler. '+readback.errors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
+    }
+    var snapshots=EUC_DEV425_finishMany_(tokens),viewErrors=EUC_DEV466_verifyViews_(items);
+    if(viewErrors.length){
+      throw new Error('PUBLICATION INCOMPLÈTE — aucune ligne du tampon n’est marquée validée. Relancez le même lot sans risque de doublon. '+viewErrors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
+    }
+    EUC_DEV322_patchBufferValidated_(items.map(function(x){return x.rowId;}),ctx);
+    var list=EUC_DEV298_lister(),created=items.filter(function(x){return x.mode==='CREATE';}).length;
+    var completed=items.filter(function(x){return x.mode==='COMPLETE';}).length;
+    var existing=items.filter(function(x){return x.mode==='EXISTING';}).length;
+    list.validationBilan={
+      selectionnees:items.length,creees:created,completees:completed,dejaExistantes:existing,
+      lieesEleves:items.length,verifiees:items.length,affichees:items.length,rejetees:0,
+      cibleAvant:plan.accessesBefore,cibleApres:readback.rows.length,erreurs:[],
+      idempotent:true,publicationAtomique:true,table:EUC_DEV307_ACCESS_TABLE_,snapshotSync:{ok:true,details:snapshots},
+      dureeMs:Date.now()-started
+    };
+    return list;
+  }finally{lock.releaseLock();}
+}

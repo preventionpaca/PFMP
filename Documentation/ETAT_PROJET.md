@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV466 (import JotForm fiable et publication atomique)
+
+- Le bouton final de migration JotForm utilise désormais un import de lot dédié. La sélection est obligatoirement explicite et le précontrôle de toutes les lignes est terminé avant la première écriture : élève rapproché, classe actuelle, période officielle non ambiguë, année scolaire et SIRET vérifié.
+- La clé métier est `élève + classe + période + année`. Une convention QR/JotForm déjà complète avec le même SIRET est reconnue sans nouvelle création ; un dossier incomplet est seulement complété ; un autre SIRET provoque un conflit bloquant et aucune convention existante n'est écrasée.
+- Les créations et compléments sont envoyés en écritures Grist groupées, puis une seule relecture contrôle les clés et SIRET réellement enregistrés. La reconstruction atomique est limitée aux classes/périodes touchées et le tampon JotForm n'est marqué validé qu'après présence effective de chaque convention dans la liste publiée de sa classe.
+- Les caches familial, persistant et canonique vérifient maintenant la révision atomique. Une ancienne vue ne peut donc plus masquer pendant plusieurs heures une convention qui vient d'être importée ; une publication incomplète laisse le tampon à contrôler et le même lot peut être relancé sans créer de doublon.
+- Le bilan utilisateur distingue les lignes créées, complétées, déjà existantes, vérifiées dans Grist et vérifiées dans les listes de classes. Aucun balayage de toutes les années, familles ou périodes n'est lancé après l'import.
+- Tests ciblés : `11/11` DEV466, `8/8` DEV453, `17/17` DEV455, `14/14` DEV456, `5/5` DEV457 et `15/15` DEV459. La suite complète conserve uniquement les sept échecs historiques déjà documentés ; aucun nouvel échec n'est introduit.
+- Déploiement : version Apps Script immuable `855` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante des cinq fichiers publiés est identique au paquet testé, le manifeste conserve `USER_DEPLOYING` / `ANYONE_ANONYMOUS` et la page administrateur de migration a été ouverte avec succès après publication.
+- Aucun import n'a été déclenché pendant ce lot et aucune donnée élève ou convention n'a été écrite. Aucun courriel, ordre de mission ou géocodage réel n'a été lancé ; la production Grist interdite n'a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV465 (données élève et calage du dossier d’apprentissage)
 
 - Le fichier Pronote réellement importé contient la date de naissance, l’adresse élève, le code postal, la ville, le pays, le courriel, le téléphone, l’INE/numéro national et la formation. Il ne contient pas la nationalité, le lieu de naissance ni le NIR ; ces trois champs restent donc volontairement vides au lieu d’être déduits ou inventés.

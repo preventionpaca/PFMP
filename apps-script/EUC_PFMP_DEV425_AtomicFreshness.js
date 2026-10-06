@@ -163,6 +163,11 @@ function EUC_DEV425_removeDetailCache_(annee,famille,classe,periode){
   try{cache.removeAll(keys);}catch(e){keys.forEach(function(k){try{cache.remove(k);}catch(e2){}});}
 }
 function EUC_DEV425_invalidateFamily_(annee,famille,payload){
+  /* DEV466 : le cache familial persistant est une copie de publication, pas
+   * une source métier. Il doit disparaître dès le passage à DIRTY ; sinon
+   * DEV459 peut continuer à servir pendant six heures la convention
+   * précédente alors que l'écriture JotForm a bien réussi dans Grist. */
+  try{if(typeof EUC_DEV456_familyCacheDrop_==='function')EUC_DEV456_familyCacheDrop_(annee,famille);}catch(e0){}
   try{if(typeof EUC_DEV421_familyCacheInvalidate_==='function')EUC_DEV421_familyCacheInvalidate_(annee,famille);}catch(e){}
   try{if(typeof EUC_DEV396_invalidateAppSnapshots_==='function')EUC_DEV396_invalidateAppSnapshots_(annee);}catch(e2){}
   try{if(typeof EUC_SUIVI_invaliderCacheSynthese_==='function')EUC_SUIVI_invaliderCacheSynthese_(annee);}catch(e3){}
@@ -314,6 +319,9 @@ function EUC_DEV425_buildFamily_(token,famille){
     if(!cid||!pid||wanted.some(function(t){return t.classe===cid&&t.periode===pid;}))return;
     var oldDetail=previousDetails[key];
     if(!oldDetail){wanted.push({classe:cid,periode:pid,p:p});return;}
+    if(typeof EUC_DEV454_detailMatchesCard_==='function'&&!EUC_DEV454_detailMatchesCard_(oldDetail,p)){
+      wanted.push({classe:cid,periode:pid,p:p});return;
+    }
     var copy=EUC_DEV425_clone_(oldDetail);copy.__dev425Revision=token.revision;copy.__dev425FreshAt=new Date().toISOString();
     details.push({classe:cid,periode:pid,detail:copy});
     try{if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),copy);}catch(eCopyCache){}
@@ -359,6 +367,7 @@ function EUC_DEV425_finishMutation_(token){
   });
   out.forEach(function(x){
     try{if(x&&x._payload&&typeof EUC_DEV421_familyCachePut_==='function')EUC_DEV421_familyCachePut_(token.annee,x.famille,x._payload);}catch(e){}
+    try{if(x&&x._payload&&typeof EUC_DEV456_familyPersistentPut_==='function'){EUC_DEV456_familyPersistentPut_(token.annee,x.famille,x._payload);EUC_DEV456_familyCachePut_(token.annee,x.famille,x._payload);}}catch(e456){}
     if(x)delete x._payload;
   });
   return {ok:true,annee:token.annee,revision:token.revision,families:out};

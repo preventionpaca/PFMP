@@ -1,34 +1,46 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="fr">
 <head>
   <base target="_top">
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#1d2939}
-    .wrap{max-width:1500px;margin:auto;padding:24px}
-    .top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
-    h1{margin:0}.sub{color:#667085}
-    .card{background:#fff;border:1px solid #d9e1ec;border-radius:16px;padding:18px;margin-bottom:18px}
-    .upload{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
-    .metric{background:#f8fafc;border:1px solid #d9e1ec;border-radius:12px;padding:12px}
-    .metric span{display:block;color:#667085;font-size:12px}.metric b{font-size:22px}
-    button,a.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none}
-    .primary{background:#165d9c;color:#fff}.secondary{background:#fff;color:#1d2939;border:1px solid #d9e1ec}
-    .okb{background:#067647;color:#fff}
-    .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#fff;border:1px solid #d9e1ec}.tab.active{background:#165d9c;color:#fff}
-    table{width:100%;border-collapse:collapse;min-width:1400px}.table-wrap{overflow:auto}
-    th,td{border-bottom:1px solid #edf0f4;padding:8px;text-align:left;vertical-align:top;font-size:13px}
-    th{background:#f8fafc;position:sticky;top:0;z-index:2}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:800;font-size:11px}
-    .VERT{background:#ecfdf3;color:#067647}.ORANGE{background:#fff7ed;color:#b45309}.ROUGE{background:#fff1f2;color:#b42318}
-    .small{font-size:11px;color:#667085}.alert{max-width:260px}
-    textarea{width:100%;min-height:52px;border:1px solid #b9c7d8;border-radius:8px;padding:6px}
-    select{border:1px solid #b9c7d8;border-radius:8px;padding:6px}
-    #status{display:none;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-weight:700}
-    #status.show{display:block}.info{background:#eef5fb;color:#164e7a}.success{background:#ecfdf3;color:#067647}.error{background:#fff1f2;color:#b42318}
-    .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .75s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f4f7fb;color:#1d2939;font-family:Arial,sans-serif}
+    .wrap{max-width:1900px;margin:auto;padding:22px}
+    .top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+    h1{margin:0;font-size:1.9rem}
+    .sub{margin-top:5px;color:#667085}
+    .btn{border:0;border-radius:8px;padding:9px 12px;font-weight:800;cursor:pointer}
+    .primary{background:#3b2bd4;color:#fff}
+    .green{background:#079455;color:#fff}
+    .secondary{background:#fff;border:1px solid #cbd5e1;color:#344054;text-decoration:none}
+    .verify-one{margin-top:5px;padding:6px 9px;font-size:.72rem}
+    .card{margin-top:16px;padding:15px;background:#fff;border:1px solid #d6e0ea;border-radius:12px}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .metrics{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-top:14px}
+    .metric{padding:11px;border:1px solid #d6e0ea;border-radius:10px}
+    .metric span{display:block;color:#667085;font-size:.75rem}
+    .metric b{font-size:1.25rem}
+    #status{display:none;margin-top:14px;padding:12px;border-radius:8px}
+    #status.show{display:block}
+    #status.info{background:#eef5fb;color:#164e7a}
+    #status.ok{background:#ecfdf3;color:#067647}
+    #status.err{background:#fff1f2;color:#b42318}
+    .tablewrap{overflow:auto}
+    table{width:100%;min-width:1880px;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #e4e7ec;text-align:left;vertical-align:top;font-size:.78rem}
+    th{position:sticky;top:0;background:#f8fafc;z-index:2;font-size:.72rem}
+    input[type=text],select{width:100%;min-width:145px;padding:7px;border:1px solid #cbd5e1;border-radius:7px;background:#fff}
+    .badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:.67rem;font-weight:900}
+    .verified{background:#dcfae6;color:#067647}
+    .manual{background:#fff3d6;color:#9a6700}
+    .error{background:#fee4e2;color:#b42318}
+    .pending{background:#eef4ff;color:#3538cd}
+    .small{font-size:.69rem;color:#667085;line-height:1.28}
+    .source-name{font-weight:800}
+    .source-address{margin-top:4px;max-width:240px}
+    .official{font-weight:800}
     @media(max-width:900px){.metrics{grid-template-columns:1fr 1fr}}
   </style>
 </head>
@@ -36,169 +48,3946 @@
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>Migration JotForm PFMP — 2026-2027</h1>
-      <div class="sub">Import tampon, analyse automatique et contrôle avant toute migration définitive.</div>
+      <h1>Migration JotForm PFMP — contrôle SIRET, classes et élèves</h1>
+      <div class="sub">La classe et l’élève peuvent être corrigés avant validation. Les erreurs HTTP 502 sont automatiquement retentées.</div>
     </div>
-    <a id="back" class="btn secondary" href="#">← Retour</a>
+    <a class="btn secondary" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-pfmp">← Accueil PFMP</a>
   </div>
 
   <div id="status"></div>
 
-  <div class="card">
-    <div class="upload">
+  <!-- EUC_DEV313_DIAG_UI -->
+
+<!-- EUC_DEV314_DIAG_UI -->
+
+<!-- EUC_DEV315_REPAIR_UI -->
+
+<!-- EUC_DEV318_DIAG_UI -->
+<!-- EUC_DEV321_SAFE_IMPORT_UI -->
+<style id="EUC_DEV322_HIDE_OLD_TOOLS">
+#EUC_DEV313_DIAG_UI,
+#EUC_DEV314_DIAG_UI,
+#EUC_DEV315_REPAIR_UI,
+#EUC_DEV318_DIAG_UI,
+#EUC_DEV321_SAFE_IMPORT_UI{
+  display:none !important;
+}
+</style>
+
+<style id="EUC_DEV324_HIDE_323">
+#EUC_DEV323_AUTO_RECOVERY_UI{
+  display:none !important;
+}
+</style>
+
+<style id="EUC_DEV325_HIDE_OLD_IMPORT">
+#EUC_DEV322_DIFF_UI{
+  display:none !important;
+}
+</style>
+
+<!-- EUC_DEV326_FAST_IMPORT_UI -->
+<style id="EUC_DEV328_HIDE_327">
+#EUC_DEV327_ANOMALY_RESOLVER_UI{
+  display:none !important;
+}
+</style>
+
+<style id="EUC_DEV330_STYLE">
+#EUC_DEV328_RESOLVER_UI{display:none!important}
+
+@keyframes euc330spin{to{transform:rotate(360deg)}}
+.euc330spin{
+ display:inline-block;width:12px;height:12px;margin-right:6px;
+ border:2px solid currentColor;border-right-color:transparent;
+ border-radius:50%;animation:euc330spin .75s linear infinite;
+ vertical-align:-2px
+}
+.euc330btn{
+ padding:7px 10px;border:0;border-radius:7px;
+ background:#b45309;color:#fff;font-weight:800;cursor:pointer
+}
+.euc330ok{color:#067647}
+.euc330err{color:#b42318}
+</style>
+
+<!-- EUC_DEV330_RESOLVER_UI -->
+<section id="EUC_DEV330_RESOLVER_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #b45309;border-radius:12px;background:#fffaf2">
+
+ <div style="font-weight:800;color:#92400e;margin-bottom:5px">
+  DEV.330 — Résolution rapide + Monaco / NIS
+ </div>
+
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Chaque bouton affiche son traitement dans la carte concernée. Vous pouvez corriger plusieurs dossiers sans attendre un rechargement complet ; cliquez ensuite sur « Actualiser les anomalies ». Pour Monaco, utilisez le NIS : aucun faux SIRET n’est créé.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc330load" class="euc330btn" type="button">
+   Actualiser les anomalies
+  </button>
+
+  <button id="euc330import" class="euc330btn" type="button"
+   style="background:#087f70">
+   Importer globalement les nouveaux devenus sûrs
+  </button>
+ </div>
+
+ <div id="euc330summary"
+  style="margin-top:10px;font-size:13px;font-weight:700;color:#475467"></div>
+
+ <div id="euc330list"
+  style="margin-top:10px;display:grid;gap:10px"></div>
+</section>
+
+<script>
+(function(){
+ var load=document.getElementById('euc330load');
+ var imp=document.getElementById('euc330import');
+ var summary=document.getElementById('euc330summary');
+ var list=document.getElementById('euc330list');
+
+ function esc(v){
+  var d=document.createElement('div');
+  d.textContent=v==null?'':String(v);
+  return d.innerHTML;
+ }
+
+ function run(fn,arg){
+  return new Promise(function(resolve,reject){
+   var r=google.script.run
+    .withSuccessHandler(resolve)
+    .withFailureHandler(reject);
+
+   r[fn](arg||{});
+  });
+ }
+
+ function busy(btn,on,label){
+  if(!btn)return;
+
+  if(on){
+   if(!btn.dataset.old){
+    btn.dataset.old=btn.innerHTML;
+   }
+   btn.disabled=true;
+   btn.innerHTML=
+    '<span class="euc330spin"></span>'+
+    esc(label||'Traitement en cours…');
+  }else{
+   btn.disabled=false;
+   if(btn.dataset.old){
+    btn.innerHTML=btn.dataset.old;
+   }
+  }
+ }
+
+ function local(row,text,ok){
+  var s=row.querySelector('.euc330local');
+  if(!s)return;
+  s.style.display='block';
+  s.className=
+    'euc330local '+
+    (ok===false?'euc330err':'euc330ok');
+  s.textContent=text;
+ }
+
+ function periodLabel(p){
+  if(!p)return'';
+  return p.display||
+   (
+    (p.libelle||'Période')+
+    (p.debutFr||p.finFr
+     ? ' — du '+(p.debutFr||'?')+
+       ' au '+(p.finFr||'?')
+     : '')
+   );
+ }
+
+ function histLabel(h){
+  return (
+   '#'+h.accessId+
+   ' — '+h.className+
+   ' — '+(h.libelle||'Ancienne période')+
+   (h.debutFr||h.finFr
+    ? ' — du '+(h.debutFr||'?')+
+      ' au '+(h.finFr||'?')
+    : '')+
+   (h.entreprise?' — '+h.entreprise:'')+
+   (h.identifiant
+    ? ' — '+(h.identifiantType||'ID')+' '+h.identifiant
+    : '')
+  );
+ }
+
+ function monacoBox(x){
+  var m=x.monaco||x.monacoPrefill||{};
+  var open=x.looksMonaco||x.isMonaco?' open':'';
+
+  return (
+   '<details class="monaco-box"'+open+
+    ' style="margin-top:8px;padding:8px;background:#eef2ff;border-radius:8px">'+
+    '<summary style="font-weight:800;cursor:pointer">Cas Monaco — utiliser un NIS</summary>'+
+    '<div style="font-size:12px;color:#667085;margin:6px 0">Le NIS est conservé comme NIS. Il ne sera jamais transformé en SIRET français.</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:6px">'+
+     '<input class="nis" placeholder="NIS Monaco" value="'+esc(m.nis||'')+'">'+
+     '<input class="mnom" placeholder="Raison sociale" value="'+esc(m.nom||'')+'">'+
+     '<input class="maddr" placeholder="Adresse" value="'+esc(m.adresse||'')+'">'+
+     '<div style="display:grid;grid-template-columns:120px 1fr;gap:6px">'+
+      '<input class="mcp" placeholder="CP" value="'+esc(m.cp||'')+'">'+
+      '<input class="mville" placeholder="Ville" value="'+esc(m.ville||'MONACO')+'">'+
+     '</div>'+
+    '</div>'+
+    '<button class="mark-monaco euc330btn" style="margin-top:7px;background:#4338ca">Valider comme entreprise Monaco / NIS</button>'+
+   '</details>'
+  );
+ }
+
+ function action(x){
+  if(x.statut==='PERIODE_A_CONTROLER'){
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#fffbeb;border-radius:8px">'+
+     '<div style="font-size:12px"><b>Étape :</b> choisir la période officielle. Cela corrige le tampon ; aucune convention n’est créée à ce clic.</div>'+
+     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+      '<select class="pselect" style="min-width:440px;padding:7px;border:1px solid #d0d5dd;border-radius:7px">'+
+       '<option value="">Choisir la période officielle…</option>'+
+       (x.periodOptions||[]).map(function(p){
+        return '<option value="'+p.id+'">'+esc(periodLabel(p))+'</option>';
+       }).join('')+
+      '</select>'+
+      '<button class="confirm-period euc330btn">Confirmer cette période</button>'+
+     '</div>'+
+    '</div>'
+   );
+  }
+
+  if(x.statut==='PERIODE_HISTORIQUE_A_CONTROLER'){
+   var h=x.historical||[];
+   var same=h.filter(function(v){return v.sameClass;});
+   var target=x.targetPeriod||{};
+
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#f5f3ff;border-radius:8px">'+
+     '<div><b>Période officielle cible :</b> '+esc(periodLabel(target))+'</div>'+
+     (
+      target.technicalLabel
+       ? '<div style="font-size:12px;color:#667085;margin-top:3px">Libellé technique du référentiel : '+esc(target.technicalLabel)+
+         (/TBAC/i.test(target.technicalLabel)
+          ? ' — « Tbac » = Terminale Bac.'
+          : '')+
+         '</div>'
+       : ''
+     )+
+     '<div style="font-size:12px;margin-top:7px"><b>Accès déjà existants retrouvés :</b></div>'+
+     (
+      h.length
+       ? '<ul style="margin:5px 0 8px 18px">'+
+          h.map(function(v){
+           return '<li'+(v.sameClass?' style="font-weight:800"':' style="color:#667085"')+'>'+
+            esc(histLabel(v))+
+            (v.sameClass?'':' — autre classe, diagnostic seulement')+
+            '</li>';
+          }).join('')+
+         '</ul>'
+       : '<div class="euc330err">Aucun ancien accès retrouvé.</div>'
+     )+
+     (
+      same.length
+       ? '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<select class="hselect" style="min-width:560px;padding:7px;border:1px solid #d0d5dd;border-radius:7px">'+
+           '<option value="">Choisir l’accès existant de la même classe…</option>'+
+           same.map(function(v){
+            return '<option value="'+v.accessId+'">'+esc(histLabel(v))+'</option>';
+           }).join('')+
+          '</select>'+
+          '<button class="relink-history euc330btn">Rattacher CE MÊME accès</button>'+
+         '</div>'
+       : '<div class="euc330err" style="margin-top:6px">Aucun accès de la même classe : rattachement automatique désactivé.</div>'
+     )+
+    '</div>'
+   );
+  }
+
+  if(x.statut==='EXISTANTE_A_COMPLETER'){
+   var p=x.preview||{};
+   var e=p.existing||{};
+   var n=p.incoming||{};
+
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#ecfdf3;border-radius:8px">'+
+     '<div><b>Accès existant #'+Number(x.existingId||0)+'</b> : il sera complété, jamais recréé.</div>'+
+     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px;font-size:12px">'+
+      '<div style="padding:7px;background:#fff;border-radius:7px"><b>Actuellement</b><br>Entreprise : '+esc(e.entreprise||'—')+'<br>SIRET : '+esc(e.siret||'—')+'<br>Adresse : '+esc([e.adresse,e.cp,e.ville].filter(Boolean).join(' ')||'—')+'</div>'+
+      '<div style="padding:7px;background:#fff;border-radius:7px"><b>Données à appliquer</b><br>Entreprise : '+esc(n.entreprise||'—')+'<br>SIRET : '+esc(n.siret||'—')+'<br>Adresse : '+esc([n.adresse,n.cp,n.ville].filter(Boolean).join(' ')||'—')+'</div>'+
+     '</div>'+
+     '<button class="complete-existing euc330btn" style="margin-top:7px">Compléter ce même accès</button>'+
+     (x.isMonaco?monacoBox(x):'')+
+    '</div>'
+   );
+  }
+
+  if([
+    'SIRET_A_VERIFIER',
+    'SIRET_ABSENT',
+    'SIRET_INVALIDE',
+    'SIREN_9_CHIFFRES',
+    'ENTREPRISE_INCOMPLETE',
+    'NIS_A_COMPLETER'
+  ].includes(x.statut)){
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#eff6ff;border-radius:8px">'+
+     (
+      x.statut!=='NIS_A_COMPLETER'
+       ? '<div style="font-size:12px;margin-bottom:5px">France : corrigez éventuellement le numéro puis utilisez la recherche SIRET/SIREN.</div>'+
+         '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<input class="company-query" value="'+esc(x.companyQuery||'')+'" placeholder="SIRET, SIREN ou entreprise + ville" style="min-width:320px;padding:7px;border:1px solid #d0d5dd;border-radius:7px">'+
+          '<button class="company-search euc330btn" style="background:#2563eb">Rechercher / valider l’entreprise française</button>'+
+         '</div>'
+       : '<div style="font-size:12px">Complétez les informations Monaco ci-dessous.</div>'
+     )+
+     monacoBox(x)+
+    '</div>'
+   );
+  }
+
+  return '';
+ }
+
+ function render(r){
+  var c=r.counts||{};
+  var a=r.anomalies||[];
+
+  summary.textContent=
+   a.length+' anomalie(s) restante(s) sur '+Number(r.total||0)+' ligne(s) · '+
+   Object.keys(c).sort().map(function(k){
+    return k+' '+c[k];
+   }).join(' · ');
+
+  if(!a.length){
+   list.innerHTML='<div style="padding:12px;background:#ecfdf3;border-radius:8px;color:#027a48;font-weight:800">Aucune anomalie restante.</div>';
+   return;
+  }
+
+  list.innerHTML=a.map(function(x){
+   return (
+    '<article class="euc330row" data-line="'+x.ligne+'" style="padding:12px;border:1px solid #fed7aa;border-radius:10px;background:#fff">'+
+     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+      '<div><b>'+esc(x.eleve||('ligne '+x.ligne))+'</b><div style="font-size:12px;color:#667085">'+esc(x.classeNom||'')+(x.annee?' · '+esc(x.annee):'')+' · ligne '+x.ligne+'</div></div>'+
+      '<span style="font-size:12px;font-weight:800;color:#b42318">'+esc(x.statut)+'</span>'+
+     '</div>'+
+     '<div style="margin-top:6px;font-size:13px;color:#475467">'+esc(x.detail||'')+'</div>'+
+     action(x)+
+     '<div class="euc330local" style="display:none;margin-top:8px;padding:7px;background:#f8fafc;border-radius:7px;font-size:12px;font-weight:800"></div>'+
+    '</article>'
+   );
+  }).join('');
+
+  bind();
+ }
+
+ async function reload(){
+  busy(load,true,'Actualisation…');
+  summary.textContent='Recalcul des anomalies…';
+
+  try{
+   render(await run('EUC_DEV330_list',{}));
+  }catch(e){
+   summary.textContent='ERREUR : '+String(e&&e.message||e);
+  }
+
+  busy(load,false);
+ }
+
+ async function fetchApi(q){
+  var r=await fetch(
+   'https://recherche-entreprises.api.gouv.fr/search?q='+encodeURIComponent(q)+'&per_page=10',
+   {headers:{Accept:'application/json'}}
+  );
+
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return await r.json();
+ }
+
+ function bind(){
+  list.querySelectorAll('.confirm-period').forEach(function(b){
+   b.onclick=async function(){
+    var row=b.closest('.euc330row');
+    var sel=row.querySelector('.pselect');
+    var pid=Number(sel.value)||0;
+
+    if(!pid){
+     local(row,'Choisissez une période.',false);
+     return;
+    }
+
+    busy(b,true,'Traitement en cours…');
+    local(row,'Traitement lancé : enregistrement de la période…',true);
+
+    try{
+     var r=await run('EUC_DEV330_confirmPeriod',{
+      ligne:Number(row.dataset.line),
+      periodeId:pid
+     });
+     local(row,r.message,true);
+    }catch(e){
+     local(row,'ERREUR : '+String(e&&e.message||e),false);
+    }
+
+    busy(b,false);
+   };
+  });
+
+  list.querySelectorAll('.relink-history').forEach(function(b){
+   b.onclick=async function(){
+    var row=b.closest('.euc330row');
+    var sel=row.querySelector('.hselect');
+    var aid=Number(sel.value)||0;
+
+    if(!aid){
+     local(row,'Choisissez l’accès existant.',false);
+     return;
+    }
+
+    if(!confirm(
+     'Rattacher ce même accès à la période officielle actuelle ?\\n\\nAucune nouvelle convention ne sera créée.'
+    ))return;
+
+    busy(b,true,'Rattachement en cours…');
+    local(row,'Traitement lancé : rattachement de l’accès existant…',true);
+
+    try{
+     var r=await run('EUC_DEV330_relinkHistorical',{
+      ligne:Number(row.dataset.line),
+      accessId:aid
+     });
+     local(row,r.message,true);
+    }catch(e){
+     local(row,'ERREUR : '+String(e&&e.message||e),false);
+    }
+
+    busy(b,false);
+   };
+  });
+
+  list.querySelectorAll('.complete-existing').forEach(function(b){
+   b.onclick=async function(){
+    var row=b.closest('.euc330row');
+
+    if(!confirm(
+     'Compléter CE MÊME accès existant avec les données entreprise du tampon ?\\n\\nAucune nouvelle convention ne sera créée.'
+    ))return;
+
+    busy(b,true,'Complétion en cours…');
+    local(row,'Traitement lancé : complétion de l’accès existant…',true);
+
+    try{
+     var r=await run('EUC_DEV330_completeExisting',{
+      ligne:Number(row.dataset.line)
+     });
+     local(row,r.message,true);
+    }catch(e){
+     local(row,'ERREUR : '+String(e&&e.message||e),false);
+    }
+
+    busy(b,false);
+   };
+  });
+
+  list.querySelectorAll('.company-search').forEach(function(b){
+   b.onclick=async function(){
+    var row=b.closest('.euc330row');
+    var q=String(row.querySelector('.company-query').value||'').trim();
+
+    if(!q){
+     local(row,'Saisissez un SIRET, SIREN ou nom d’entreprise.',false);
+     return;
+    }
+
+    busy(b,true,'Recherche en cours…');
+    local(row,'Traitement lancé : recherche entreprise française…',true);
+
+    try{
+     var json=await fetchApi(q);
+     var r=await run('EUC_DEV327_applyCompanyResult',{
+      ligne:Number(row.dataset.line),
+      query:q,
+      reponse:json
+     });
+
+     if(!r.ok){
+      local(
+       row,
+       (r.reason||'Aucun résultat sûr.')+
+       ((r.suggestions||[]).length
+        ? ' Suggestions : '+
+          (r.suggestions||[]).slice(0,3).map(function(s){
+           return [s.siret,s.nom,s.cp,s.ville].filter(Boolean).join(' · ');
+          }).join(' | ')
+        : ''),
+       false
+      );
+     }else{
+      local(
+       row,
+       'Entreprise française validée : '+r.siret+' · '+r.nom+'. Cliquez Actualiser quand vous avez terminé vos corrections.',
+       true
+      );
+     }
+
+    }catch(e){
+     local(row,'ERREUR : '+String(e&&e.message||e),false);
+    }
+
+    busy(b,false);
+   };
+  });
+
+  list.querySelectorAll('.mark-monaco').forEach(function(b){
+   b.onclick=async function(){
+    var row=b.closest('.euc330row');
+    var box=b.closest('.monaco-box');
+
+    var nis=String(box.querySelector('.nis').value||'').trim();
+    var nom=String(box.querySelector('.mnom').value||'').trim();
+    var adresse=String(box.querySelector('.maddr').value||'').trim();
+    var cp=String(box.querySelector('.mcp').value||'').trim();
+    var ville=String(box.querySelector('.mville').value||'').trim();
+
+    if(!confirm(
+     'Confirmer cette entreprise comme entreprise MONACO avec identifiant NIS ?\\n\\nNIS : '+nis+'\\nEntreprise : '+nom+'\\nAdresse : '+adresse+' '+cp+' '+ville+'\\n\\nAucun faux SIRET ne sera créé.'
+    ))return;
+
+    busy(b,true,'Enregistrement NIS…');
+    local(row,'Traitement lancé : enregistrement du NIS Monaco…',true);
+
+    try{
+     var r=await run('EUC_DEV330_markMonaco',{
+      ligne:Number(row.dataset.line),
+      nis:nis,
+      nom:nom,
+      adresse:adresse,
+      cp:cp,
+      ville:ville
+     });
+     local(row,r.message+' NIS '+r.nis+' — '+r.nom+'.',true);
+    }catch(e){
+     local(row,'ERREUR : '+String(e&&e.message||e),false);
+    }
+
+    busy(b,false);
+   };
+  });
+ }
+
+ load.onclick=reload;
+
+ imp.onclick=async function(){
+  if(!confirm(
+   'Importer maintenant uniquement les lignes devenues sûres ?\\n\\nLes anomalies restantes seront laissées de côté.'
+  ))return;
+
+  busy(imp,true,'Import global en cours…');
+  summary.textContent='Import global lancé…';
+
+  try{
+   var r=await run('EUC_DEV330_importerNouveauxRapide',{});
+
+   summary.textContent=
+    'Import terminé : '+
+    Number(r.creees||0)+' créée(s), '+
+    Number(r.sautees||0)+' ignorée(s), '+
+    Number(r.manquantesApresEcriture||0)+' manquante(s) après contrôle.';
+
+   await reload();
+
+  }catch(e){
+   summary.textContent='ERREUR : '+String(e&&e.message||e);
+  }
+
+  busy(imp,false);
+ };
+
+ summary.textContent='Analyse non lancée automatiquement — cliquez sur « Actualiser les anomalies » si nécessaire.';
+})();
+</script>
+<!-- EUC_DEV328_RESOLVER_UI -->
+<section id="EUC_DEV328_RESOLVER_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #b45309;border-radius:12px;background:#fffaf2">
+ <div style="font-weight:800;color:#92400e;margin-bottom:5px">
+  DEV.328 — Résolution guidée et vérifiée
+ </div>
+
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Chaque anomalie se valide individuellement. Une correction de période ne crée pas immédiatement une convention. Le bouton global d’import ne crée ensuite que les dossiers devenus sûrs.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc328load" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#b45309;color:#fff;font-weight:800">
+   Actualiser les anomalies
+  </button>
+
+  <button id="euc328import" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#087f70;color:#fff;font-weight:800">
+   Importer globalement les nouveaux devenus sûrs
+  </button>
+ </div>
+
+ <div id="euc328msg"
+  style="display:none;margin-top:10px;padding:10px;border-radius:8px;background:#fff;border:1px solid #fed7aa;font-weight:700"></div>
+
+ <div id="euc328summary"
+  style="margin-top:10px;font-size:13px;font-weight:700;color:#475467"></div>
+
+ <div id="euc328list"
+  style="margin-top:10px;display:grid;gap:10px"></div>
+</section>
+
+<script>
+(function(){
+ var load=document.getElementById('euc328load');
+ var imp=document.getElementById('euc328import');
+ var msg=document.getElementById('euc328msg');
+ var summary=document.getElementById('euc328summary');
+ var list=document.getElementById('euc328list');
+
+ function esc(v){
+  var d=document.createElement('div');
+  d.textContent=v==null?'':String(v);
+  return d.innerHTML;
+ }
+
+ function run(fn,arg){
+  return new Promise(function(resolve,reject){
+   var r=google.script.run
+    .withSuccessHandler(resolve)
+    .withFailureHandler(reject);
+
+   r[fn](arg||{});
+  });
+ }
+
+ function show(text,ok){
+  msg.style.display='block';
+  msg.style.color=ok===false?'#b42318':'#075e54';
+  msg.textContent=text;
+  msg.scrollIntoView({
+   behavior:'smooth',
+   block:'nearest'
+  });
+ }
+
+ function historicalLabel(h){
+  return (
+   '#'+h.accessId+
+   ' — '+(h.libelle||'Ancienne période')+
+   (h.debutFr||h.finFr
+    ? ' — du '+(h.debutFr||'?')+
+      ' au '+(h.finFr||'?')
+    : '')+
+   (h.entreprise
+    ? ' — '+h.entreprise
+    : '')+
+   (h.siret
+    ? ' — SIRET '+h.siret
+    : '')
+  );
+ }
+
+ function actionHtml(x){
+  if(x.statut==='PERIODE_A_CONTROLER'){
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#fffbeb;border-radius:8px">'+
+     '<div style="font-size:12px;margin-bottom:6px"><b>Action :</b> choisir la période officielle. Cela corrige le tampon JotForm ; aucune convention n’est encore créée.</div>'+
+     '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      '<select class="pselect" style="min-width:420px;padding:7px;border:1px solid #d0d5dd;border-radius:7px">'+
+       '<option value="">Choisir la période officielle…</option>'+
+       (x.periodOptions||[]).map(function(p){
+        return '<option value="'+p.id+'">'+esc(p.display)+'</option>';
+       }).join('')+
+      '</select>'+
+      '<button class="confirm-period">Confirmer cette période</button>'+
+     '</div>'+
+    '</div>'
+   );
+  }
+
+  if(x.statut==='PERIODE_HISTORIQUE_A_CONTROLER'){
+   var target=x.targetPeriod
+    ? x.targetPeriod.display
+    : ('Période ID '+x.periodeId);
+
+   var historical=x.historical||[];
+
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#f5f3ff;border-radius:8px">'+
+     '<div><b>Période actuelle cible :</b> '+esc(target)+'</div>'+
+     '<div style="font-size:12px;margin:5px 0 7px">Choisissez ci-dessous l’ancienne convention qui correspond à cette même PFMP. Elle sera rattachée à la période actuelle ; aucune nouvelle convention ne sera créée.</div>'+
+     (
+      historical.length
+       ? '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<select class="hselect" style="min-width:520px;padding:7px;border:1px solid #d0d5dd;border-radius:7px">'+
+           '<option value="">Choisir l’accès existant…</option>'+
+           historical.map(function(h){
+            return '<option value="'+h.accessId+'">'+esc(historicalLabel(h))+'</option>';
+           }).join('')+
+          '</select>'+
+          '<button class="relink-history">Rattacher cette convention existante</button>'+
+         '</div>'
+       : '<div style="color:#b42318;font-weight:800">Aucun ancien accès exploitable retrouvé : aucun bouton de rattachement n’est proposé.</div>'
+     )+
+    '</div>'
+   );
+  }
+
+  if(x.statut==='EXISTANTE_A_COMPLETER'){
+   var p=x.preview||{};
+   var e=p.existing||{};
+   var n=p.incoming||{};
+
+   return (
+    '<div style="margin-top:8px;padding:9px;background:#ecfdf3;border-radius:8px">'+
+     '<div><b>Accès existant #'+Number(x.existingId||0)+'</b> — il sera complété, pas recréé.</div>'+
+     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px;font-size:12px">'+
+      '<div style="padding:7px;background:#fff;border-radius:7px"><b>Actuellement dans PFMP</b><br>'+
+       'Entreprise : '+esc(e.entreprise||'—')+'<br>'+
+       'SIRET : '+esc(e.siret||'—')+'<br>'+
+       'Adresse : '+esc([e.adresse,e.cp,e.ville].filter(Boolean).join(' ')||'—')+
+      '</div>'+
+      '<div style="padding:7px;background:#fff;border-radius:7px"><b>Données vérifiées à appliquer</b><br>'+
+       'Entreprise : '+esc(n.entreprise||'—')+'<br>'+
+       'SIRET : '+esc(n.siret||'—')+'<br>'+
+       'Adresse : '+esc([n.adresse,n.cp,n.ville].filter(Boolean).join(' ')||'—')+
+      '</div>'+
+     '</div>'+
+     '<button class="complete-existing" style="margin-top:7px" '+(x.companyVerified?'':'disabled')+'>'+
+      'Compléter ce même accès avec ces données'+
+     '</button>'+
+     (!x.companyVerified
+       ? '<span style="margin-left:8px;color:#b42318;font-size:12px">Données entreprise pas encore suffisamment vérifiées.</span>'
+       : '')+
+    '</div>'
+   );
+  }
+
+  return '';
+ }
+
+ function styleButtons(){
+  list.querySelectorAll('button')
+   .forEach(function(b){
+    b.style.cssText+=
+     ';padding:7px 10px;border:0;border-radius:7px;background:#b45309;color:#fff;font-weight:700;cursor:pointer';
+   });
+ }
+
+ function render(r){
+  var c=r.counts||{};
+  var a=r.anomalies||[];
+
+  summary.textContent=
+   a.length+
+   ' anomalie(s) restante(s) sur '+
+   Number(r.total||0)+
+   ' ligne(s) · '+
+   Object.keys(c).sort().map(function(k){
+    return k+' '+c[k];
+   }).join(' · ');
+
+  if(!a.length){
+   list.innerHTML=
+    '<div style="padding:12px;background:#ecfdf3;border-radius:8px;color:#027a48;font-weight:800">Aucune anomalie restante.</div>';
+   return;
+  }
+
+  list.innerHTML=a.map(function(x){
+   return (
+    '<article class="euc328row" data-line="'+x.ligne+'" '+
+     'style="padding:12px;border:1px solid #fed7aa;border-radius:10px;background:#fff">'+
+     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+      '<div>'+
+       '<b>'+esc(x.eleve||('ligne '+x.ligne))+'</b>'+
+       '<div style="font-size:12px;color:#667085">'+
+        esc(x.classeNom||'')+
+        (x.annee?' · '+esc(x.annee):'')+
+        ' · ligne '+x.ligne+
+       '</div>'+
+      '</div>'+
+      '<span style="font-size:12px;font-weight:800;color:#b42318">'+esc(x.statut)+'</span>'+
+     '</div>'+
+     '<div style="margin-top:6px;font-size:13px;color:#475467">'+esc(x.detail||'')+'</div>'+
+     actionHtml(x)+
+    '</article>'
+   );
+  }).join('');
+
+  styleButtons();
+  bind();
+ }
+
+ async function reload(){
+  load.disabled=true;
+  summary.textContent='Chargement des anomalies...';
+
+  try{
+   render(
+    await run(
+     'EUC_DEV328_list',
+     {}
+    )
+   );
+  }catch(e){
+   summary.textContent=
+    'ERREUR : '+
+    String(e&&e.message||e);
+  }
+
+  load.disabled=false;
+ }
+
+ function bind(){
+  list.querySelectorAll('.confirm-period')
+   .forEach(function(b){
+    b.onclick=async function(){
+     var row=b.closest('.euc328row');
+     var select=row.querySelector('.pselect');
+     var pid=Number(select.value)||0;
+     var label=select.options[select.selectedIndex]
+       ? select.options[select.selectedIndex].text
+       : '';
+
+     if(!pid){
+      show('Choisissez une période.',false);
+      return;
+     }
+
+     if(!confirm(
+      'Vous allez confirmer :\\n\\n'+
+      label+
+      '\\n\\nCette action corrige seulement la période dans le tampon JotForm. Elle ne crée pas encore de convention.'
+     )){
+      return;
+     }
+
+     b.disabled=true;
+
+     try{
+      var r=await run(
+       'EUC_DEV328_confirmPeriod',
+       {
+        ligne:Number(row.dataset.line),
+        periodeId:pid
+       }
+      );
+
+      show(
+       r.eleve+
+       ' : période enregistrée. Nouveau statut : '+
+       r.nouveauStatut+
+       '.',
+       true
+      );
+
+      await reload();
+
+     }catch(e){
+      show(
+       'ERREUR : '+
+       String(e&&e.message||e),
+       false
+      );
+     }
+
+     b.disabled=false;
+    };
+   });
+
+  list.querySelectorAll('.relink-history')
+   .forEach(function(b){
+    b.onclick=async function(){
+     var row=b.closest('.euc328row');
+     var select=row.querySelector('.hselect');
+     var aid=Number(select.value)||0;
+     var label=select.options[select.selectedIndex]
+       ? select.options[select.selectedIndex].text
+       : '';
+
+     if(!aid){
+      show(
+       'Choisissez l’ancienne convention à rattacher.',
+       false
+      );
+      return;
+     }
+
+     if(!confirm(
+      'Vous allez modifier CE MÊME accès existant :\\n\\n'+
+      label+
+      '\\n\\nIl sera rattaché à la période actuelle affichée. Aucune nouvelle convention ne sera créée.'
+     )){
+      return;
+     }
+
+     b.disabled=true;
+
+     try{
+      var r=await run(
+       'EUC_DEV328_relinkHistorical',
+       {
+        ligne:Number(row.dataset.line),
+        accessId:aid
+       }
+      );
+
+      show(
+       r.eleve+
+       ' : accès #'+r.accessId+
+       ' rattaché de la période '+
+       r.anciennePeriode+
+       ' vers '+
+       r.nouvellePeriode+
+       '. Nouveau statut : '+
+       r.nouveauStatut+
+       '.',
+       true
+      );
+
+      await reload();
+
+     }catch(e){
+      show(
+       'ERREUR : '+
+       String(e&&e.message||e),
+       false
+      );
+     }
+
+     b.disabled=false;
+    };
+   });
+
+  list.querySelectorAll('.complete-existing')
+   .forEach(function(b){
+    b.onclick=async function(){
+     var row=b.closest('.euc328row');
+     var card=row.querySelector('div[style*="grid-template-columns"]');
+     var text=card?card.innerText:'';
+
+     if(!confirm(
+      'Cet élève possède déjà un accès PFMP.\\n\\n'+
+      'Vous allez compléter CE MÊME accès avec les données entreprise vérifiées ci-dessous.\\n'+
+      'Aucune nouvelle convention ne sera créée.\\n\\n'+
+      text
+     )){
+      return;
+     }
+
+     b.disabled=true;
+
+     try{
+      var r=await run(
+       'EUC_DEV328_completeExisting',
+       {
+        ligne:Number(row.dataset.line)
+       }
+      );
+
+      show(
+       r.eleve+
+       ' : accès #'+r.accessId+
+       ' complété avec '+
+       (r.entreprise||'l’entreprise')+
+       (r.siret?' — SIRET '+r.siret:'')+
+       '. Visible par le suivi : '+
+       (r.visible?'OUI':'NON')+
+       '. Nouveau statut : '+
+       r.nouveauStatut+
+       '.',
+       r.visible
+      );
+
+      await reload();
+
+     }catch(e){
+      show(
+       'ERREUR : '+
+       String(e&&e.message||e),
+       false
+      );
+     }
+
+     b.disabled=false;
+    };
+   });
+ }
+
+ load.onclick=reload;
+
+ imp.onclick=async function(){
+  if(!confirm(
+   'Importer globalement uniquement les lignes désormais classées comme nouveaux dossiers sûrs ? Les anomalies restantes seront ignorées.'
+  )){
+   return;
+  }
+
+  imp.disabled=true;
+  show(
+   'Import rapide des nouveaux dossiers sûrs...',
+   true
+  );
+
+  try{
+   var r=await run(
+    'EUC_DEV326_importerNouveauxRapide',
+    {}
+   );
+
+   show(
+    'Import terminé : '+
+    Number(r.creees||0)+
+    ' créée(s), '+
+    Number(r.sautees||0)+
+    ' ignorée(s), '+
+    Number(r.manquantesApresEcriture||0)+
+    ' manquante(s) après contrôle.',
+    Number(r.manquantesApresEcriture||0)===0
+   );
+
+   await reload();
+
+  }catch(e){
+   show(
+    'ERREUR : '+
+    String(e&&e.message||e),
+    false
+   );
+  }
+
+  imp.disabled=false;
+ };
+
+ reload();
+})();
+</script>
+<!-- EUC_DEV327_ANOMALY_RESOLVER_UI -->
+<section id="EUC_DEV327_ANOMALY_RESOLVER_UI" style="margin:12px 22px;padding:14px;border:2px solid #b45309;border-radius:12px;background:#fffaf2">
+ <div style="font-weight:800;color:#92400e;margin-bottom:5px">DEV.327 — Résoudre les anomalies restantes</div>
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">Corrigez ici périodes, anciens rattachements, conventions incomplètes et entreprises. Le CSV n’a plus besoin d’être modifié.</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc327load" type="button" style="padding:9px 12px;border:0;border-radius:8px;background:#b45309;color:#fff;font-weight:800">Charger / actualiser les anomalies</button>
+  <button id="euc327import" type="button" style="padding:9px 12px;border:0;border-radius:8px;background:#087f70;color:#fff;font-weight:800">Importer les nouveaux devenus sûrs</button>
+ </div>
+ <div id="euc327summary" style="margin-top:10px;font-size:13px;font-weight:700;color:#475467"></div>
+ <div id="euc327list" style="margin-top:10px;display:grid;gap:10px"></div>
+ <pre id="euc327out" style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:500px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+ var load=document.getElementById('euc327load'),imp=document.getElementById('euc327import'),summary=document.getElementById('euc327summary'),list=document.getElementById('euc327list'),out=document.getElementById('euc327out');
+ function esc(v){var d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;}
+ function run(fn,arg){return new Promise(function(resolve,reject){var r=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);r[fn](arg||{});});}
+ function pl(p){return p?(p.libelle||'Période')+((p.debut||p.fin)?' — '+(p.debut||'?')+' → '+(p.fin||'?'):''):'';}
+ function show(v){out.style.display='block';out.textContent=String(v||'');}
+ function action(x){
+  if(x.statut==='PERIODE_A_CONTROLER')return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><select class="pselect" style="padding:7px;border:1px solid #d0d5dd;border-radius:7px"><option value="">Choisir la période officielle…</option>'+(x.periodOptions||[]).map(function(p){return '<option value="'+p.id+'">'+esc(pl(p))+'</option>';}).join('')+'</select><button class="resolve-period">Confirmer la période</button></div>';
+  if(x.statut==='PERIODE_HISTORIQUE_A_CONTROLER')return '<div style="margin-top:8px;font-size:12px"><b>Période cible :</b> '+esc(x.targetPeriod?pl(x.targetPeriod):('ID '+x.periodeId))+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><select class="hselect" style="padding:7px;border:1px solid #d0d5dd;border-radius:7px"><option value="">Choisir l’accès existant…</option>'+(x.historical||[]).map(function(h){return '<option value="'+h.accessId+'">#'+h.accessId+' · '+esc(h.libelle)+' · '+esc(h.debut||'?')+' → '+esc(h.fin||'?')+(h.entreprise?' · '+esc(h.entreprise):'')+'</option>';}).join('')+'</select><button class="relink-history">Rattacher l’existante</button></div>';
+  if(x.statut==='EXISTANTE_A_COMPLETER')return '<div style="margin-top:8px"><button class="complete-existing">Compléter l’accès existant #'+Number(x.existingId||0)+'</button>'+(x.companyVerified?'':' <span style="font-size:12px;color:#b42318">Entreprise à vérifier d’abord.</span>')+'</div>';
+  if(['SIRET_A_VERIFIER','SIRET_ABSENT','SIRET_INVALIDE','SIREN_9_CHIFFRES','ENTREPRISE_INCOMPLETE'].includes(x.statut))return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input class="company-query" value="'+esc(x.companyQuery||'')+'" placeholder="SIRET, SIREN ou entreprise + ville" style="min-width:300px;padding:7px;border:1px solid #d0d5dd;border-radius:7px"><button class="company-search">Rechercher / valider l’entreprise</button></div>';
+  if(x.statut==='ELEVE_A_RAPPROCHER')return '<div style="margin-top:8px;font-size:12px;color:#92400e">Corrigez l’élève dans la ligne correspondante du tableau, puis actualisez.</div>';
+  return '';
+ }
+ function styleButtons(){list.querySelectorAll('button').forEach(function(b){b.style.cssText+=';padding:7px 10px;border:0;border-radius:7px;background:#b45309;color:#fff;font-weight:700;cursor:pointer';});}
+ function render(r){var c=r.counts||{},a=r.anomalies||[];summary.textContent=a.length+' anomalie(s) restante(s) sur '+Number(r.total||0)+' ligne(s) · '+Object.keys(c).sort().map(function(k){return k+' '+c[k];}).join(' · ');list.innerHTML=a.map(function(x){return '<article class="euc327row" data-line="'+x.ligne+'" style="padding:12px;border:1px solid #fed7aa;border-radius:10px;background:#fff"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b>'+esc(x.eleve||('ligne '+x.ligne))+'</b><div style="font-size:12px;color:#667085">ligne '+x.ligne+(x.annee?' · '+esc(x.annee):'')+'</div></div><span style="font-size:12px;font-weight:800;color:#b42318">'+esc(x.statut)+'</span></div><div style="margin-top:6px;font-size:13px;color:#475467">'+esc(x.detail||'')+'</div>'+action(x)+'</article>';}).join('');styleButtons();bind();}
+ async function reload(){load.disabled=true;summary.textContent='Chargement...';try{render(await run('EUC_DEV327_listAnomalies',{}));}catch(e){summary.textContent='ERREUR : '+String(e&&e.message||e);}load.disabled=false;}
+ async function fetchApi(q){var r=await fetch('https://recherche-entreprises.api.gouv.fr/search?q='+encodeURIComponent(q)+'&per_page=10',{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+ function bind(){
+  list.querySelectorAll('.resolve-period').forEach(function(b){b.onclick=async function(){var row=b.closest('.euc327row'),pid=Number(row.querySelector('.pselect').value)||0;if(!pid){show('Choisissez une période.');return;}b.disabled=true;try{var r=await run('EUC_DEV327_resolvePeriod',{ligne:Number(row.dataset.line),periodeId:pid});show(r.eleve+' : période confirmée → '+pl(r.periode));await reload();}catch(e){show('ERREUR : '+String(e&&e.message||e));}b.disabled=false;};});
+  list.querySelectorAll('.relink-history').forEach(function(b){b.onclick=async function(){var row=b.closest('.euc327row'),aid=Number(row.querySelector('.hselect').value)||0;if(!aid){show('Choisissez un accès existant.');return;}if(!confirm('Rattacher cet accès existant à la période actuelle ?'))return;b.disabled=true;try{var r=await run('EUC_DEV327_relinkHistorical',{ligne:Number(row.dataset.line),accessId:aid});show(r.eleve+' : accès #'+r.accessId+' rattaché de '+r.oldPeriodId+' vers '+r.newPeriodId+'.');await reload();}catch(e){show('ERREUR : '+String(e&&e.message||e));}b.disabled=false;};});
+  list.querySelectorAll('.complete-existing').forEach(function(b){b.onclick=async function(){var row=b.closest('.euc327row');if(!confirm('Compléter cet accès existant avec les données entreprise vérifiées ?'))return;b.disabled=true;try{var r=await run('EUC_DEV327_completeExisting',{ligne:Number(row.dataset.line)});show(r.eleve+' : accès #'+r.accessId+' complété.');await reload();}catch(e){show('ERREUR : '+String(e&&e.message||e));}b.disabled=false;};});
+  list.querySelectorAll('.company-search').forEach(function(b){b.onclick=async function(){var row=b.closest('.euc327row'),q=String(row.querySelector('.company-query').value||'').trim();if(!q){show('Saisissez un SIRET, SIREN ou nom d’entreprise.');return;}b.disabled=true;try{var json=await fetchApi(q),r=await run('EUC_DEV327_applyCompanyResult',{ligne:Number(row.dataset.line),query:q,reponse:json});if(!r.ok){show((r.eleve||'Ligne')+' : '+(r.reason||'Aucun résultat sûr.')+'\n'+(r.suggestions||[]).slice(0,3).map(function(s){return 'Suggestion : '+(s.siret||'')+' · '+(s.nom||'')+' · '+(s.adresse||'')+' · '+(s.cp||'')+' '+(s.ville||'');}).join('\n'));}else{show(r.eleve+' : '+r.siret+' · '+r.nom+' · '+r.cp+' '+r.ville+' ['+(r.confidence||'')+']');await reload();}}catch(e){show('ERREUR : '+String(e&&e.message||e));}b.disabled=false;};});
+ }
+ load.onclick=reload;
+ imp.onclick=async function(){if(!confirm('Importer uniquement les lignes devenues NOUVELLE_PRETE ?'))return;imp.disabled=true;show('Import rapide des nouveaux sûrs...');try{var r=await run('EUC_DEV326_importerNouveauxRapide',{});show('Import terminé : '+Number(r.creees||0)+' créée(s), '+Number(r.sautees||0)+' ignorée(s), '+Number(r.manquantesApresEcriture||0)+' manquante(s) après contrôle.');await reload();}catch(e){show('ERREUR : '+String(e&&e.message||e));}imp.disabled=false;};
+ reload();
+})();
+</script>
+<!-- EUC_DEV325_HISTORICAL_GUARD_UI -->
+<section id="EUC_DEV325_HISTORICAL_GUARD_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #7c3aed;border-radius:12px;background:#fbf8ff">
+ <div style="font-weight:800;color:#6d28d9;margin-bottom:5px">
+  DEV.325 — Anti-doublons de périodes
+ </div>
+
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Une ancienne convention reste reconnue même si l’ID de sa période officielle a changé. En cas d’ambiguïté, l’import est bloqué au lieu de créer un doublon.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc325audit" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#6d28d9;color:#fff;font-weight:800">
+   1. Analyser avec anti-doublons
+  </button>
+
+  <button id="euc325import" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#087f70;color:#fff;font-weight:800">
+   2. Importer les vrais nouveaux — rapide
+  </button>
+ </div>
+
+ <pre id="euc325out"
+  style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:760px;overflow:auto"></pre>
+</section>
+
+<script>
+(function(){
+ var audit=document.getElementById('euc325audit');
+ var imp=document.getElementById('euc325import');
+ var out=document.getElementById('euc325out');
+
+ function display(r,title){
+  var c=(r&&r.counts)||{};
+  var lines=[
+   title||'DEV.325',
+   '',
+   'Total : '+Number(r.total||0)
+  ];
+
+  Object.keys(c).sort().forEach(function(k){
+   lines.push(
+    k+' : '+Number(c[k]||0)
+   );
+  });
+
+  var hist=(r.lignes||[]).filter(function(x){
+   return x.statut===
+    'DEJA_PRESENTE_PERIODE_HISTORIQUE';
+  });
+
+  if(hist.length){
+   lines.push('');
+   lines.push(
+    'ANCIENNES PÉRIODES RECONNUES — AUCUN DOUBLON CRÉÉ :'
+   );
+
+   hist.forEach(function(x){
+    lines.push(
+     '- '+x.eleve+
+     ' : ancienne période ID '+
+     x.historicalPeriodId+
+     ' → période actuelle ID '+
+     x.currentPeriodId+
+     ' · rang '+x.periodOrdinal+
+     ' · '+(x.confidence||'')
+    );
+   });
+  }
+
+  var blocked=(r.lignes||[]).filter(function(x){
+   return ![
+    'DEJA_PRESENTE',
+    'DEJA_PRESENTE_PERIODE_HISTORIQUE',
+    'NOUVELLE_PRETE',
+    'DOUBLON_CSV'
+   ].includes(x.statut);
+  });
+
+  if(blocked.length){
+   lines.push('');
+   lines.push('À CONTROLER / BLOQUÉES :');
+
+   blocked.forEach(function(x){
+    lines.push(
+     '- '+(x.eleve||('ligne '+x.ligne))+
+     ' ['+x.statut+'] '+
+     (x.detail||'')
+    );
+   });
+  }
+
+  out.style.display='block';
+  out.textContent=lines.join('\n');
+ }
+
+ audit.onclick=function(){
+  audit.disabled=true;
+  out.style.display='block';
+  out.textContent=
+   'Analyse anti-doublons en cours...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    audit.disabled=false;
+    display(
+     r,
+     'DEV.325 — ANALYSE ANTI-DOUBLONS'
+    );
+   })
+   .withFailureHandler(function(e){
+    audit.disabled=false;
+    out.textContent=
+     'ERREUR : '+
+     String(e&&e.message||e);
+   })
+   .EUC_DEV325_auditer();
+ };
+
+ imp.onclick=function(){
+  if(!confirm(
+   'Créer uniquement les lignes encore classées NOUVELLE_PRETE après le verrou anti-doublons ?'
+  )){
+   return;
+  }
+
+  imp.disabled=true;
+  out.style.display='block';
+  out.textContent=
+   'Import rapide : préflight unique, écriture groupée et contrôle final...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    imp.disabled=false;
+
+    display(
+     r,
+     'DEV.325 — IMPORT TERMINÉ\n'+
+     'Créées : '+Number(r.creees||0)+
+     ' · bloquées par recontrôle : '+
+     Number(r.sauteesParVerrou||0)
+    );
+
+    if((r.erreurs||[]).length){
+     out.textContent+=
+      '\n\nERREURS D’ÉCRITURE :\n'+
+      r.erreurs.map(function(e){
+       return '- '+e.eleve+' : '+e.erreur;
+      }).join('\n');
+    }
+   })
+   .withFailureHandler(function(e){
+    imp.disabled=false;
+    out.textContent=
+     'ERREUR : '+
+     String(e&&e.message||e);
+   })
+   .EUC_DEV326_importerNouveauxRapide();
+ };
+})();
+</script>
+<!-- EUC_DEV324_FAST_RECOVERY_UI -->
+<section id="EUC_DEV324_FAST_RECOVERY_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #2563eb;border-radius:12px;background:#f8fbff">
+ <div style="font-weight:800;color:#1d4ed8;margin-bottom:5px">
+  DEV.324 — Récupération rapide SIREN / SIRET
+ </div>
+
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Traitement par lots : 8 recherches API parallèles puis une seule mise à jour Grist groupée.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc324recover" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:800">
+   Récupérer rapidement les entreprises
+  </button>
+
+  <button id="euc324reaudit" type="button"
+   style="padding:9px 12px;border:1px solid #2563eb;border-radius:8px;background:#fff;color:#1d4ed8;font-weight:700">
+   Refaire l’analyse DEV.322
+  </button>
+ </div>
+
+ <pre id="euc324out"
+  style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:760px;overflow:auto"></pre>
+</section>
+
+<script>
+(function(){
+ var recover=document.getElementById('euc324recover');
+ var reaudit=document.getElementById('euc324reaudit');
+ var out=document.getElementById('euc324out');
+
+ function runServer(fn,arg){
+  return new Promise(function(resolve,reject){
+   var runner=google.script.run
+    .withSuccessHandler(resolve)
+    .withFailureHandler(reject);
+
+   runner[fn](arg);
+  });
+ }
+
+ function sleep(ms){
+  return new Promise(function(resolve){
+   setTimeout(resolve,ms);
+  });
+ }
+
+ async function fetchApi(q){
+  if(!q){
+   throw new Error(
+    'Aucune donnée suffisante pour la recherche.'
+   );
+  }
+
+  var url=
+   'https://recherche-entreprises.api.gouv.fr/search?q='+
+   encodeURIComponent(q)+
+   '&per_page=10';
+
+  var last=null;
+
+  for(var i=0;i<2;i++){
+   try{
+    var r=await fetch(url,{
+     method:'GET',
+     headers:{'Accept':'application/json'}
+    });
+
+    if(r.ok){
+     return await r.json();
+    }
+
+    last=new Error(
+     'HTTP '+r.status
+    );
+
+   }catch(e){
+    last=e;
+   }
+
+   await sleep(600);
+  }
+
+  throw last||new Error('API indisponible');
+ }
+
+ function suggestion(s){
+  if(!s)return'';
+
+  return [
+   s.siret||'',
+   s.nom||'',
+   s.adresse||'',
+   [s.cp||'',s.ville||''].filter(Boolean).join(' ')
+  ].filter(Boolean).join(' · ');
+ }
+
+ function showAudit(r,title){
+  var c=(r&&r.counts)||{};
+  var lines=[
+   title||'DEV.322',
+   '',
+   'Total : '+Number(r.total||0)
+  ];
+
+  Object.keys(c).sort().forEach(function(k){
+   lines.push(
+    k+' : '+Number(c[k]||0)
+   );
+  });
+
+  var bad=(r.lignes||[]).filter(function(x){
+   return ![
+    'DEJA_PRESENTE',
+    'NOUVELLE_PRETE',
+    'DOUBLON_CSV'
+   ].includes(x.statut);
+  });
+
+  if(bad.length){
+   lines.push('');
+   lines.push('À CONTROLER :');
+
+   bad.forEach(function(x){
+    lines.push(
+     '- '+(x.eleve||('ligne '+x.ligne))+
+     ' ['+x.statut+'] '+
+     (x.detail||'')
+    );
+   });
+  }
+
+  out.style.display='block';
+  out.textContent=lines.join('\n');
+ }
+
+ recover.onclick=async function(){
+  recover.disabled=true;
+  reaudit.disabled=true;
+
+  var started=Date.now();
+
+  out.style.display='block';
+  out.textContent='Préparation...';
+
+  try{
+   var prep=await runServer(
+    'EUC_DEV323_preparerRecuperation',
+    {}
+   );
+
+   var list=prep.candidates||[];
+   var periodHints=prep.periodes||[];
+
+   if(!list.length){
+    out.textContent=
+     'Aucune entreprise à récupérer automatiquement.';
+    recover.disabled=false;
+    reaudit.disabled=false;
+    return;
+   }
+
+   var done=[];
+   var fetchErrors=[];
+   var size=8;
+
+   for(var i=0;i<list.length;i+=size){
+    var batch=list.slice(i,i+size);
+
+    var fetched=await Promise.all(
+     batch.map(async function(c){
+      try{
+       var json=await fetchApi(c.query);
+
+       return {
+        ok:true,
+        ligne:c.ligne,
+        reponse:json
+       };
+
+      }catch(e){
+       return {
+        ok:false,
+        ligne:c.ligne,
+        eleve:c.eleve,
+        reason:String(e&&e.message||e)
+       };
+      }
+     })
+    );
+
+    var good=fetched.filter(function(x){
+     return x.ok;
+    });
+
+    fetchErrors=fetchErrors.concat(
+     fetched.filter(function(x){
+      return !x.ok;
+     })
+    );
+
+    if(good.length){
+     var applied=await runServer(
+      'EUC_DEV324_applyBatch',
+      {items:good}
+     );
+
+     done=done.concat(
+      applied.results||[]
+     );
+    }
+
+    var completed=
+      Math.min(
+       list.length,
+       i+batch.length
+      );
+
+    var elapsed=
+      Math.round((Date.now()-started)/1000);
+
+    out.textContent=
+     'Récupération rapide : '+
+     completed+
+     ' / '+
+     list.length+
+     ' ligne(s) · '+
+     elapsed+
+     ' s';
+
+    if(i+size<list.length){
+     await sleep(250);
+    }
+   }
+
+   done=done.concat(fetchErrors);
+
+   var ok=done.filter(function(x){
+    return x&&x.ok;
+   });
+
+   var ko=done.filter(function(x){
+    return !(x&&x.ok);
+   });
+
+   var seconds=
+    Math.round((Date.now()-started)/1000);
+
+   var lines=[
+    'DEV.324 — RÉCUPÉRATION TERMINÉE',
+    '',
+    'Candidats : '+list.length,
+    'Récupérés automatiquement : '+ok.length,
+    'Restés manuels / ambigus : '+ko.length,
+    'Durée : '+seconds+' s'
+   ];
+
+   if(ok.length){
+    lines.push('');
+    lines.push('RÉCUPÉRÉS :');
+
+    ok.forEach(function(x){
+     lines.push(
+      '- '+(x.eleve||('ligne '+x.ligne))+
+      ' → '+x.siret+
+      ' · '+(x.nom||'')+
+      ' · '+(x.cp||'')+' '+(x.ville||'')+
+      ' ['+(x.confidence||'')+']'
+     );
+    });
+   }
+
+   if(ko.length){
+    lines.push('');
+    lines.push('À CONTROLER MANUELLEMENT :');
+
+    ko.forEach(function(x){
+     lines.push(
+      '- '+(x.eleve||('ligne '+x.ligne))+
+      ' : '+(x.reason||'Non résolu')
+     );
+
+     (x.suggestions||[]).slice(0,3)
+      .forEach(function(s){
+       lines.push(
+        '    suggestion : '+
+        suggestion(s)
+       );
+      });
+    });
+   }
+
+   if(periodHints.length){
+    lines.push('');
+    lines.push('PÉRIODES À CONTROLER / SUGGESTIONS :');
+
+    periodHints.forEach(function(h){
+     lines.push(
+      '- '+(h.eleve||('ligne '+h.ligne))+
+      ' : '+(h.raison||'')
+     );
+
+     if(!(h.propositions||[]).length){
+      lines.push(
+       '    aucune proposition automatique sûre'
+      );
+     }else{
+      h.propositions.forEach(function(p){
+       lines.push(
+        '    '+p.libelle+
+        ' · '+p.debut+' → '+p.fin+
+        ' · confiance '+p.confiance+
+        ' · ID '+p.periodeId
+       );
+      });
+     }
+    });
+   }
+
+   out.textContent=lines.join('\n');
+
+   var audit=await runServer(
+    'EUC_DEV322_auditerDifferentiel',
+    {}
+   );
+
+   var c=audit.counts||{};
+
+   out.textContent+=
+    '\n\n----------------------------------------\n'+
+    'DEV.322 — NOUVEL ÉTAT DU DIFFÉRENTIEL\n';
+
+   Object.keys(c).sort().forEach(function(k){
+    out.textContent+=
+     '\n'+k+' : '+Number(c[k]||0);
+   });
+
+  }catch(e){
+   out.textContent=
+    'ERREUR DEV.324 : '+
+    String(e&&e.message||e);
+  }
+
+  recover.disabled=false;
+  reaudit.disabled=false;
+ };
+
+ reaudit.onclick=function(){
+  reaudit.disabled=true;
+  out.style.display='block';
+  out.textContent='Analyse DEV.322...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    reaudit.disabled=false;
+    showAudit(
+     r,
+     'DEV.322 — ANALYSE APRÈS RÉCUPÉRATION'
+    );
+   })
+   .withFailureHandler(function(e){
+    reaudit.disabled=false;
+    out.textContent=
+     'ERREUR : '+
+     String(e&&e.message||e);
+   })
+   .EUC_DEV322_auditerDifferentiel();
+ };
+})();
+</script>
+<!-- EUC_DEV323_AUTO_RECOVERY_UI -->
+<section id="EUC_DEV323_AUTO_RECOVERY_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #2563eb;border-radius:12px;background:#f8fbff">
+ <div style="font-weight:800;color:#1d4ed8;margin-bottom:5px">
+  DEV.323 — Récupération automatique des entreprises
+ </div>
+
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Traite les SIRET à vérifier, les SIREN à 9 chiffres et tente de retrouver les SIRET absents/invalides par le nom et l’adresse de l’entreprise. Seuls les rapprochements à forte confiance sont écrits dans le tampon.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc323recover" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:800">
+   Récupérer automatiquement SIREN / SIRET
+  </button>
+
+  <button id="euc323reaudit" type="button"
+   style="padding:9px 12px;border:1px solid #2563eb;border-radius:8px;background:#fff;color:#1d4ed8;font-weight:700">
+   Refaire l’analyse DEV.322
+  </button>
+ </div>
+
+ <pre id="euc323out"
+  style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:760px;overflow:auto"></pre>
+</section>
+
+<script>
+(function(){
+ var recover=document.getElementById('euc323recover');
+ var reaudit=document.getElementById('euc323reaudit');
+ var out=document.getElementById('euc323out');
+
+ function runServer(fn,arg){
+  return new Promise(function(resolve,reject){
+   var runner=google.script.run
+    .withSuccessHandler(resolve)
+    .withFailureHandler(reject);
+
+   runner[fn](arg);
+  });
+ }
+
+ function sleep(ms){
+  return new Promise(function(resolve){
+   setTimeout(resolve,ms);
+  });
+ }
+
+ async function fetchApi(q){
+  var url=
+   'https://recherche-entreprises.api.gouv.fr/search?q='+
+   encodeURIComponent(q)+
+   '&per_page=10';
+
+  var last=null;
+
+  for(var i=0;i<2;i++){
+   try{
+    var r=await fetch(url,{
+     method:'GET',
+     headers:{'Accept':'application/json'}
+    });
+
+    if(r.ok){
+     return await r.json();
+    }
+
+    last=new Error(
+     'HTTP '+r.status
+    );
+
+   }catch(e){
+    last=e;
+   }
+
+   await sleep(700);
+  }
+
+  throw last||new Error('API indisponible');
+ }
+
+ function compactSuggestion(s){
+  if(!s)return'';
+
+  return [
+   s.siret||'',
+   s.nom||'',
+   s.adresse||'',
+   [s.cp||'',s.ville||''].filter(Boolean).join(' ')
+  ].filter(Boolean).join(' · ');
+ }
+
+ function showAudit(r,title){
+  var c=(r&&r.counts)||{};
+  var lines=[
+   title||'DEV.322',
+   '',
+   'Total : '+Number(r.total||0)
+  ];
+
+  Object.keys(c).sort().forEach(function(k){
+   lines.push(
+    k+' : '+Number(c[k]||0)
+   );
+  });
+
+  var bad=(r.lignes||[]).filter(function(x){
+   return ![
+    'DEJA_PRESENTE',
+    'NOUVELLE_PRETE',
+    'DOUBLON_CSV'
+   ].includes(x.statut);
+  });
+
+  if(bad.length){
+   lines.push('');
+   lines.push('À CONTROLER :');
+
+   bad.forEach(function(x){
+    lines.push(
+     '- '+(x.eleve||('ligne '+x.ligne))+
+     ' ['+x.statut+'] '+
+     (x.detail||'')
+    );
+   });
+  }
+
+  out.style.display='block';
+  out.textContent=lines.join('\n');
+ }
+
+ async function processCandidate(c){
+  if(!c.query){
+   return {
+    ok:false,
+    ligne:c.ligne,
+    eleve:c.eleve,
+    reason:'Aucune donnée suffisante pour lancer une recherche.'
+   };
+  }
+
+  try{
+   var json=await fetchApi(c.query);
+
+   return await runServer(
+    'EUC_DEV323_applyApiResult',
+    {
+     ligne:c.ligne,
+     reponse:json
+    }
+   );
+
+  }catch(e){
+   return {
+    ok:false,
+    ligne:c.ligne,
+    eleve:c.eleve,
+    reason:String(e&&e.message||e)
+   };
+  }
+ }
+
+ recover.onclick=async function(){
+  recover.disabled=true;
+  reaudit.disabled=true;
+
+  out.style.display='block';
+  out.textContent='Préparation de la récupération...';
+
+  try{
+   var prep=await runServer(
+    'EUC_DEV323_preparerRecuperation',
+    {}
+   );
+
+   var list=prep.candidates||[];
+   var periodHints=prep.periodes||[];
+
+   if(!list.length){
+    out.textContent=
+     'Aucune entreprise à récupérer automatiquement.';
+   }else{
+    var done=[];
+    var size=4;
+
+    for(var i=0;i<list.length;i+=size){
+     var batch=list.slice(i,i+size);
+
+     var res=await Promise.all(
+      batch.map(processCandidate)
+     );
+
+     done=done.concat(res);
+
+     out.textContent=
+      'Récupération en cours : '+
+      done.length+
+      ' / '+
+      list.length+
+      ' ligne(s)...';
+
+     await sleep(250);
+    }
+
+    var ok=done.filter(function(x){
+     return x&&x.ok;
+    });
+
+    var ko=done.filter(function(x){
+     return !(x&&x.ok);
+    });
+
+    var lines=[
+     'DEV.323 — RÉCUPÉRATION TERMINÉE',
+     '',
+     'Candidats : '+list.length,
+     'Récupérés automatiquement : '+ok.length,
+     'Restés manuels / ambigus : '+ko.length
+    ];
+
+    if(ok.length){
+     lines.push('');
+     lines.push('RÉCUPÉRÉS :');
+
+     ok.forEach(function(x){
+      lines.push(
+       '- '+(x.eleve||('ligne '+x.ligne))+
+       ' → '+x.siret+
+       ' · '+(x.nom||'')+
+       ' · '+(x.cp||'')+' '+(x.ville||'')+
+       ' ['+(x.confidence||'')+']'
+      );
+     });
+    }
+
+    if(ko.length){
+     lines.push('');
+     lines.push('À CONTROLER MANUELLEMENT :');
+
+     ko.forEach(function(x){
+      lines.push(
+       '- '+(x.eleve||('ligne '+x.ligne))+
+       ' : '+(x.reason||'Non résolu')
+      );
+
+      (x.suggestions||[]).slice(0,3).forEach(function(s){
+       lines.push(
+        '    suggestion : '+
+        compactSuggestion(s)
+       );
+      });
+     });
+    }
+
+    if(periodHints.length){
+     lines.push('');
+     lines.push('PÉRIODES À CONTROLER / SUGGESTIONS :');
+
+     periodHints.forEach(function(h){
+      lines.push(
+       '- '+(h.eleve||('ligne '+h.ligne))+
+       ' : '+(h.raison||'')
+      );
+
+      if(!(h.propositions||[]).length){
+       lines.push(
+        '    aucune proposition automatique sûre'
+       );
+      }else{
+       h.propositions.forEach(function(p){
+        lines.push(
+         '    '+p.libelle+
+         ' · '+p.debut+' → '+p.fin+
+         ' · confiance '+p.confiance+
+         ' · ID '+p.periodeId
+        );
+       });
+      }
+     });
+    }
+
+    out.textContent=lines.join('\n');
+   }
+
+   /*
+    * Refaire automatiquement l'analyse DEV.322 après récupération.
+    */
+   var audit=await runServer(
+    'EUC_DEV322_auditerDifferentiel',
+    {}
+   );
+
+   out.textContent+=
+    '\n\n----------------------------------------\n';
+
+   var before=out.textContent;
+
+   var c=audit.counts||{};
+   var lines2=[
+    'DEV.322 — NOUVEL ÉTAT DU DIFFÉRENTIEL',
+    ''
+   ];
+
+   Object.keys(c).sort().forEach(function(k){
+    lines2.push(
+     k+' : '+Number(c[k]||0)
+    );
+   });
+
+   out.textContent=
+    before+
+    lines2.join('\n');
+
+  }catch(e){
+   out.textContent=
+    'ERREUR DEV.323 : '+
+    String(e&&e.message||e);
+  }
+
+  recover.disabled=false;
+  reaudit.disabled=false;
+ };
+
+ reaudit.onclick=function(){
+  reaudit.disabled=true;
+  out.style.display='block';
+  out.textContent='Nouvelle analyse DEV.322...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    reaudit.disabled=false;
+    showAudit(
+     r,
+     'DEV.322 — ANALYSE APRÈS RÉCUPÉRATION'
+    );
+   })
+   .withFailureHandler(function(e){
+    reaudit.disabled=false;
+    out.textContent=
+     'ERREUR : '+
+     String(e&&e.message||e);
+   })
+   .EUC_DEV322_auditerDifferentiel();
+ };
+})();
+</script>
+<!-- EUC_DEV322_DIFF_UI -->
+<section id="EUC_DEV322_DIFF_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #087f70;border-radius:12px;background:#f5fffb">
+ <div style="font-weight:800;color:#075e54;margin-bottom:5px">
+  DEV.322 — Import différentiel JotForm
+ </div>
+ <div style="font-size:12px;color:#667085;margin-bottom:10px">
+  Vous pouvez charger un export complet : les conventions déjà présentes sont reconnues et sorties automatiquement de l’import. Seuls les nouveaux dossiers sûrs seront créés.
+ </div>
+
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc322verify" type="button"
+   style="padding:9px 12px;border:1px solid #087f70;border-radius:8px;background:#fff;color:#075e54;font-weight:700">
+   1. Vérifier les SIRET
+  </button>
+
+  <button id="euc322audit" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#344054;color:#fff;font-weight:700">
+   2. Analyser le différentiel
+  </button>
+
+  <button id="euc322import" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#087f70;color:#fff;font-weight:800">
+   3. Importer uniquement les nouveaux
+  </button>
+ </div>
+
+ <pre id="euc322out"
+  style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:700px;overflow:auto"></pre>
+</section>
+
+<script>
+(function(){
+ var verify=document.getElementById('euc322verify');
+ var audit=document.getElementById('euc322audit');
+ var imp=document.getElementById('euc322import');
+ var out=document.getElementById('euc322out');
+
+ function display(r,title){
+  var c=(r&&r.counts)||{};
+  var lines=[
+   title||'DEV.322',
+   '',
+   'Total CSV/tampon : '+Number(r.total||0),
+   'Anciennes lignes IGNOREE réanalysées : '+
+     Number(r.anciennesIgnorees||0)
+  ];
+
+  Object.keys(c).sort().forEach(function(k){
+   lines.push(
+    k+' : '+Number(c[k]||0)
+   );
+  });
+
+  var attention=(r.lignes||[]).filter(function(x){
+   return ![
+    'DEJA_PRESENTE',
+    'NOUVELLE_PRETE',
+    'DOUBLON_CSV'
+   ].includes(x.statut);
+  });
+
+  if(attention.length){
+   lines.push('');
+   lines.push('À CONTROLER :');
+
+   attention.forEach(function(x){
+    lines.push(
+     '- '+(x.eleve||('ligne '+x.ligne))+
+     ' ['+x.statut+'] '+
+     (x.detail||'')+
+     (x.csvSiret
+       ? ' · CSV '+x.csvSiret
+       : '')+
+     (x.pfmpSiret
+       ? ' · PFMP '+x.pfmpSiret
+       : '')
+    );
+   });
+  }
+
+  var preserved=(r.lignes||[]).filter(function(x){
+   return (
+    x.statut==='DEJA_PRESENTE' &&
+    x.csvSiret &&
+    x.pfmpSiret &&
+    x.csvSiret!==x.pfmpSiret
+   );
+  });
+
+  if(preserved.length){
+   lines.push('');
+   lines.push('SIRET PFMP CONSERVÉS MALGRÉ CSV DIFFÉRENT :');
+
+   preserved.forEach(function(x){
+    lines.push(
+     '- '+x.eleve+
+     ' : CSV '+x.csvSiret+
+     ' → PFMP conservé '+x.pfmpSiret
+    );
+   });
+  }
+
+  out.style.display='block';
+  out.textContent=lines.join('\n');
+ }
+
+ verify.onclick=function(){
+  var target=document.getElementById('verify');
+
+  if(target&&typeof target.click==='function'){
+   target.click();
+
+   out.style.display='block';
+   out.textContent=
+    'Vérification SIRET lancée avec le moteur existant. Attendez la fin du traitement puis cliquez sur « 2. Analyser le différentiel ».';
+   return;
+  }
+
+  out.style.display='block';
+  out.textContent=
+    'Le bouton global de vérification SIRET n’a pas été détecté. Utilisez le contrôle SIRET existant de la page, puis relancez l’analyse.';
+ };
+
+ audit.onclick=function(){
+  audit.disabled=true;
+  out.style.display='block';
+  out.textContent='Analyse complète des lignes en cours...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    audit.disabled=false;
+    display(
+      r,
+      'DEV.322 — ANALYSE DIFFÉRENTIELLE'
+    );
+   })
+   .withFailureHandler(function(e){
+    audit.disabled=false;
+    out.textContent=
+      'ERREUR : '+
+      String(e&&e.message||e);
+   })
+   .EUC_DEV322_auditerDifferentiel();
+ };
+
+ imp.onclick=function(){
+  if(!confirm(
+   'Créer uniquement les conventions classées NOUVELLE_PRETE ? Les conventions déjà présentes ne seront jamais modifiées.'
+  )){
+   return;
+  }
+
+  imp.disabled=true;
+  out.style.display='block';
+  out.textContent='Import des nouvelles conventions sûres...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    imp.disabled=false;
+
+    display(
+      r,
+      'DEV.322 — IMPORT TERMINÉ\n'+
+      'Créées : '+Number(r.creees||0)+
+      ' · déjà apparues pendant le traitement : '+
+      Number(r.dejaCreeesPendantImport||0)+
+      ' · encore prêtes après contrôle : '+
+      Number(r.restantesPretes||0)
+    );
+
+    if((r.erreurs||[]).length){
+      out.textContent+=
+        '\n\nERREURS D’ÉCRITURE :\n'+
+        r.erreurs.map(function(e){
+          return '- '+e.eleve+' : '+e.erreur;
+        }).join('\n');
+    }
+   })
+   .withFailureHandler(function(e){
+    imp.disabled=false;
+    out.textContent=
+      'ERREUR : '+
+      String(e&&e.message||e);
+   })
+   .EUC_DEV322_importerNouveaux();
+ };
+})();
+</script>
+<section id="EUC_DEV321_SAFE_IMPORT_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #087f70;border-radius:12px;background:#f5fffb">
+ <div style="font-weight:800;color:#075e54;margin-bottom:8px">
+  DEV.321 — Import JotForm sécurisé
+ </div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="euc321verify" type="button"
+   style="padding:9px 12px;border:1px solid #087f70;border-radius:8px;background:#fff;color:#075e54;font-weight:700">
+   Vérifier les SIRET
+  </button>
+  <button id="euc321audit" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#344054;color:#fff;font-weight:700">
+   Auditer tout le lot
+  </button>
+  <button id="euc321import" type="button"
+   style="padding:9px 12px;border:0;border-radius:8px;background:#087f70;color:#fff;font-weight:800">
+   Importer toutes les lignes sûres
+  </button>
+ </div>
+ <div style="font-size:12px;color:#667085;margin-top:8px">
+  Toutes les lignes du tampon sont contrôlées. Les conflits et données incomplètes restent bloqués.
+ </div>
+ <pre id="euc321out"
+  style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;max-height:650px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+ var verify=document.getElementById('euc321verify');
+ var audit=document.getElementById('euc321audit');
+ var imp=document.getElementById('euc321import');
+ var out=document.getElementById('euc321out');
+
+ function showAudit(r,title){
+  var c=(r&&r.counts)||(r&&r.finalCounts)||{};
+  var lines=[
+   title||'DEV.321',
+   '',
+   'Total tampon : '+Number(r.total||0)
+  ];
+
+  Object.keys(c).sort().forEach(function(k){
+   lines.push(k+' : '+Number(c[k]||0));
+  });
+
+  var list=(r.lignes||[]).filter(function(x){
+   return ![
+    'DEJA_IMPORTEE',
+    'PRETE_CREATION',
+    'PRETE_MAJ'
+   ].includes(x.statut);
+  });
+
+  if(list.length){
+   lines.push('');
+   lines.push('À CONTROLER / BLOQUÉES :');
+
+   list.forEach(function(x){
+    lines.push(
+     '- '+(x.eleve||('ligne '+x.ligne))+
+     ' ['+x.statut+'] '+
+     (x.detail||'')+
+     (x.siret?' · SIRET '+x.siret:'')
+    );
+   });
+  }
+
+  out.style.display='block';
+  out.textContent=lines.join('\n');
+ }
+
+ verify.onclick=function(){
+  var target=document.getElementById('verify');
+
+  if(target&&typeof target.click==='function'){
+   target.click();
+   out.style.display='block';
+   out.textContent=
+    'Vérification SIRET lancée avec le moteur existant. Attendez la fin, puis cliquez sur « Auditer tout le lot ».';
+   return;
+  }
+
+  out.style.display='block';
+  out.textContent=
+    'Bouton global de vérification SIRET non détecté. Utilisez le bouton de vérification déjà présent dans la page.';
+ };
+
+ audit.onclick=function(){
+  audit.disabled=true;
+  out.style.display='block';
+  out.textContent='Audit complet en cours...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    audit.disabled=false;
+    showAudit(r,'DEV.321 — AUDIT COMPLET');
+   })
+   .withFailureHandler(function(e){
+    audit.disabled=false;
+    out.textContent='ERREUR : '+String(e&&e.message||e);
+   })
+   .EUC_DEV321_auditerLot();
+ };
+
+ imp.onclick=function(){
+  if(!confirm(
+   'Importer toutes les lignes sûres ? Les SIRET non vérifiés, conflits et anomalies resteront bloqués.'
+  )){
+   return;
+  }
+
+  imp.disabled=true;
+  out.style.display='block';
+  out.textContent='Import sécurisé en cours...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    imp.disabled=false;
+
+    showAudit(
+      {
+       total:r.total,
+       finalCounts:r.finalCounts,
+       lignes:r.lignes
+      },
+      'DEV.321 — IMPORT TERMINÉ\nCréées : '+
+      Number(r.creees||0)+
+      ' · mises à jour : '+
+      Number(r.misesAJour||0)
+    );
+   })
+   .withFailureHandler(function(e){
+    imp.disabled=false;
+    out.textContent='ERREUR : '+String(e&&e.message||e);
+   })
+   .EUC_DEV321_importerLotSecurise();
+ };
+})();
+</script>
+<section id="EUC_DEV318_DIAG_UI" style="margin:12px 22px;padding:14px;border:1px solid #d0d5dd;border-radius:12px;background:#fff">
+ <button id="eucDev318Btn" type="button" style="padding:9px 13px;border:0;border-radius:8px;background:#344054;color:#fff;font-weight:800;cursor:pointer">
+  DEV.318 - Diagnostiquer le suivi réel
+ </button>
+ <pre id="eucDev318Out" style="display:none;white-space:pre-wrap;margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;max-height:720px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+ var btn=document.getElementById('eucDev318Btn');
+ var out=document.getElementById('eucDev318Out');
+ if(!btn||!out)return;
+ btn.onclick=function(){
+  btn.disabled=true;out.style.display='block';out.textContent='Diagnostic en cours...';
+  google.script.run
+   .withSuccessHandler(function(r){
+    btn.disabled=false;
+    var c=r.compteurs||{},lines=[
+     'DEV.318 - DIAGNOSTIC SUIVI REEL','',
+     'Accès DEV.315 trouvés : '+Number(c.migration315||0),
+     'Avec SIRET : '+Number(c.avecSiret||0),
+     'Avec entreprise : '+Number(c.avecEntreprise||0),
+     'Avec Date_saisie_entreprise : '+Number(c.avecDateSaisie||0),
+     'Remontés par détail V50 : '+Number(c.remonteesV50||0),
+     'Actifs pour comptage V45 : '+Number(c.activesV45||0),
+     'Cibles classe/période : '+Number(r.cibles||0),'',
+     'DETAIL DIRECT :'
+    ];
+    (r.detailsDirects||[]).forEach(function(d){
+     lines.push('- '+d.annee+' | classe='+d.classe+' | période='+d.periode+
+      (d.erreur?' | ERREUR='+d.erreur:' | avec='+d.avecConvention+'/'+d.total+' | sans='+d.sansConvention));
+    });
+    lines.push('','INDEX FAMILLE FAST : ready='+((r.indexFamille||{}).ready?'OUI':'NON'));
+    ((r.indexFamille||{}).classes||[]).forEach(function(ca){
+     lines.push('- '+(ca.classe||('classe '+ca.classeId))+' | '+
+      (ca.periodes||[]).map(function(p){return p.id+':'+p.conventions+'/'+p.total;}).join(', '));
+    });
+    if((r.indexFamille||{}).erreur)lines.push('ERREUR INDEX : '+r.indexFamille.erreur);
+    lines.push('','ECHANTILLONS :');
+    (r.echantillons||[]).forEach(function(x){
+     lines.push('#'+x.accesId+' | '+x.eleve+' | c='+x.classe+' p='+x.periode+
+      ' | siret='+(x.siret||'')+' | entreprise='+(x.entreprise||'')+
+      ' | dateSaisie='+(x.dateSaisie||'')+' | V50='+(x.remonteeV50?'OUI':'NON')+
+      ' | V45='+(x.activeV45?'OUI':'NON'));
+    });
+    out.textContent=lines.join('\n');
+   })
+   .withFailureHandler(function(e){
+    btn.disabled=false;out.style.display='block';out.textContent='ERREUR : '+String(e&&e.message||e);
+   })
+   .EUC_DEV318_diagSuiviLayers();
+ };
+})();
+</script>
+<section id="EUC_DEV315_REPAIR_UI"
+ style="margin:12px 22px;padding:14px;border:2px solid #0b8f72;border-radius:12px;background:#f7fbf9">
+ <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <button id="eucDev315Btn" type="button"
+   style="padding:10px 14px;border:0;border-radius:8px;background:#0b8f72;color:#fff;font-weight:800;cursor:pointer">
+   DEV.315 - Réparer/importer les conventions
+  </button>
+  <span style="font-size:12px;color:#49645d">
+   Utiliser ce bouton à la place de 3. Valider la sélection.
+  </span>
+ </div>
+ <pre id="eucDev315Out"
+  style="display:none;white-space:pre-wrap;margin-top:12px;padding:12px;background:#fff;border:1px solid #cfe5de;border-radius:8px;max-height:650px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+ var btn=document.getElementById('eucDev315Btn');
+ var out=document.getElementById('eucDev315Out');
+ if(!btn||!out)return;
+
+ btn.onclick=function(){
+  if(!confirm(
+   'DEV.315 va créer ou compléter les vrais accès convention à partir des lignes JotForm sélectionnées/validées. Continuer ?'
+  )){
+   return;
+  }
+
+  btn.disabled=true;
+  out.style.display='block';
+  out.textContent='Réparation/import en cours...';
+
+  google.script.run
+   .withSuccessHandler(function(r){
+    btn.disabled=false;
+
+    var lines=[
+     'DEV.315 - RESULTAT',
+     '',
+     'Lignes tampon : '+Number(r.lignesTampon||0),
+     'Elèves distincts/périodes traités : '+Number(r.elevesDistincts||0),
+     'Accès créés : '+Number(r.creees||0),
+     'Accès complétés : '+Number(r.misesAJour||0),
+     'Déjà corrects : '+Number(r.dejaCorrectes||0),
+     'Doublons tampon ignorés : '+Number(r.doublonsTamponIgnores||0),
+     'Rejetés : '+Number(r.rejetees||0),
+     '',
+     'VISIBLES APRÈS CONTRÔLE : '+
+       Number(r.visiblesApresControle||0)+
+       ' / '+
+       Number(r.elevesDistincts||0),
+     '',
+     (r.ok
+       ? 'OK : les accès créés/complétés sont lisibles par la clé du suivi.'
+       : 'ATTENTION : au moins un accès reste non vérifié par le contrôle final.')
+    ];
+
+    if((r.erreurs||[]).length){
+     lines.push('');
+     lines.push('REJETS :');
+
+     (r.erreurs||[]).forEach(function(e){
+      lines.push(
+       '- '+(e.eleve||('ligne '+e.ligne))+
+       ' : '+e.erreur
+      );
+     });
+    }
+
+    out.textContent=lines.join('\n');
+   })
+   .withFailureHandler(function(e){
+    btn.disabled=false;
+    out.style.display='block';
+    out.textContent='ERREUR : '+String(e&&e.message||e);
+   })
+   .EUC_DEV315_reparerImporter();
+ };
+})();
+</script>
+<section id="EUC_DEV314_DIAG_UI" style="margin:12px 22px;padding:12px;border:1px solid #cfe5de;border-radius:12px;background:#fff">
+ <button id="eucDev314Btn" type="button" style="padding:8px 12px;border:0;border-radius:8px;background:#0b8f72;color:#fff;font-weight:700;cursor:pointer">Diagnostic accès réels</button>
+ <span style="margin-left:10px;font-size:12px;color:#667085">Lecture seule — ne pas recliquer sur Valider la sélection.</span>
+ <pre id="eucDev314Out" style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#f7fbf9;border-radius:8px;max-height:650px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+ var b=document.getElementById('eucDev314Btn'),o=document.getElementById('eucDev314Out');
+ if(!b||!o)return;
+ b.onclick=function(){
+  b.disabled=true;o.style.display='block';o.textContent='Diagnostic en cours…';
+  google.script.run.withSuccessHandler(function(r){
+   b.disabled=false;var c=(r&&r.compteurs)||{},d=(r&&r.details)||[];
+   var x=[
+    'DEV.314 - DIAGNOSTIC ACCES REELS','',
+    'Acces total table : '+Number(r.totalAccesTable||0),
+    'Lignes tampon selectionnees/validees : '+Number(c.lignesTampon||0),
+    'Eleves distincts : '+Number(c.elevesDistincts||0),
+    'Eleves avec au moins un acces : '+Number(c.elevesAvecAcces||0),
+    'Eleves sans acces : '+Number(c.elevesSansAcces||0),
+    'Eleves avec plusieurs acces : '+Number(c.elevesAvecPlusieursAcces||0),
+    'Eleves avec SIRET correspondant : '+Number(c.elevesAvecSiretMatch||0),
+    'Eleves visibles par le suivi : '+Number(c.elevesVisiblesSuivi||0),
+    '',
+    'Acces lies : '+Number(c.accesLies||0),
+    'Acces SIRET correspondant : '+Number(c.accesSiretMatch||0),
+    'Acces actifs : '+Number(c.accesActifs||0),
+    'Acces classe OK : '+Number(c.accesClasseOk||0),
+    'Acces cle classe/periode OK : '+Number(c.accesCleSuiviOk||0),
+    '', 'DETAILS :'
+   ];
+   d.forEach(function(e){
+    x.push('');
+    x.push(e.eleve+' | id='+e.eleveId+' | classeReelle='+e.classeReelle+' '+e.codeClasse+' | SIRET='+(e.sirets||[]).join(',')+' | nbAcces='+e.nbAcces+' | visible='+(e.visibleSuivi?'OUI':'NON'));
+    (e.acces||[]).forEach(function(a){
+     x.push('  acces #'+a.id+' | annee='+a.annee+' | classe='+a.classe+' | periode='+a.periode+' | actif='+(a.active?'OUI':'NON')+' | classeOK='+(a.classOk?'OUI':'NON')+' | cleSuivi='+(a.keyOk?'OK':'NON')+' | siret='+a.siret+' | siretMatch='+(a.siretMatch?'OUI':'NON')+' | entreprise='+a.entreprise+' | lot='+a.lot);
+    });
+   });
+   o.textContent=x.join('\n');
+  }).withFailureHandler(function(e){b.disabled=false;o.style.display='block';o.textContent='ERREUR : '+String(e&&e.message||e);}).EUC_DEV314_diagAccesEleves();
+ };
+})();
+</script>
+<section id="EUC_DEV313_DIAG_UI" style="margin:12px 0;padding:12px;border:1px solid #cfe5de;border-radius:12px;background:#fff">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button id="eucDev313DiagBtn" type="button" style="padding:8px 12px;border:0;border-radius:8px;background:#0b8f72;color:#fff;font-weight:700;cursor:pointer">Diagnostic rattachement suivi</button>
+    <span style="font-size:12px;color:#667085">Lecture seule - aucune donnée Grist modifiée.</span>
+  </div>
+  <pre id="eucDev313DiagOut" style="display:none;white-space:pre-wrap;margin-top:10px;padding:10px;background:#f7fbf9;border-radius:8px;max-height:520px;overflow:auto"></pre>
+</section>
+<script>
+(function(){
+  var btn=document.getElementById('eucDev313DiagBtn'),out=document.getElementById('eucDev313DiagOut');
+  if(!btn||!out)return;
+  btn.onclick=function(){
+    btn.disabled=true;out.style.display='block';out.textContent='Diagnostic en cours...';
+    google.script.run.withSuccessHandler(function(r){
+      btn.disabled=false;
+      var c=(r&&r.compteurs)||{},ex=(r&&r.exemples)||[];
+      var lines=[
+        'DEV.313 - DIAGNOSTIC RATTACHEMENT','',
+        'Accès total : '+Number(r.totalAcces||0),
+        'Accès migration JotForm : '+Number(r.totalMigration||0),
+        'Clés classe/période visibles dans le suivi : '+Number(r.nbClesSuivi||0),'',
+        'Actifs : '+Number(c.active||0),
+        'Bonne année : '+Number(c.bonneAnnee||0),
+        'Clé classe/période reconnue par le suivi : '+Number(c.cleSuiviValide||0),
+        'Classe accès = classe réelle élève : '+Number(c.classeEleveConforme||0),
+        'Clé absente du suivi : '+Number(c.cleAbsenteDuSuivi||0),
+        'Mauvaise année : '+Number(c.mauvaiseAnnee||0),
+        'Élève manquant : '+Number(c.manqueEleve||0),
+        'Classe manquante : '+Number(c.manqueClasse||0),
+        'Période manquante : '+Number(c.manquePeriode||0),'','EXEMPLES :'
+      ];
+      ex.forEach(function(x){
+        lines.push('#'+x.accesId+' | '+(x.eleve||'(élève ?)')+' | classeEleve='+x.classeEleveId+' | classeAcces='+x.classeAccesId+' | periode='+x.periodeAccesId+' | annee='+x.anneeAcces+' | active='+(x.active?'OUI':'NON')+' | cléSuivi='+(x.cleExisteDansSuivi?'OK':'NON')+' | classeConforme='+(x.classeEleveConforme?'OUI':'NON')+' | entreprise='+(x.entreprise||''));
+      });
+      out.textContent=lines.join('\n');
+    }).withFailureHandler(function(e){
+      btn.disabled=false;out.style.display='block';out.textContent='ERREUR : '+String(e&&e.message||e);
+    }).EUC_DEV313_diagRattachement();
+  };
+})();
+</script>
+<section class="card">
+    <div class="toolbar">
       <input id="file" type="file" accept=".csv,text/csv">
-      <button id="analyse" class="primary" type="button">Analyser / importer le CSV</button>
-      <button id="validateGreen" class="okb" type="button">Valider toutes les lignes vertes</button>
+      <button id="analyse" class="btn primary">1. Analyser / importer le CSV</button>
+      <button id="verify" class="btn primary">2. Vérifier automatiquement les SIRET</button>
+      <button id="validate" class="btn green">3. Valider la sélection</button>
     </div>
-    <div class="small" style="margin-top:8px">Seules les lignes <b>2026-2027</b> sont importées. Les autres années sont ignorées dans cette phase.</div>
+
+    <div class="small" style="margin-top:8px">
+      La recherche SIRET est effectuée une par une. En cas de HTTP 502/503/504/429, le système retente automatiquement pendant environ 20 à 25 secondes avant de classer la ligne « à contrôler ».
+    </div>
 
     <div class="metrics">
-      <div class="metric"><span>Total tampon</span><b id="mTotal">0</b></div>
-      <div class="metric"><span>Vert</span><b id="mVert">0</b></div>
-      <div class="metric"><span>À contrôler</span><b id="mOrange">0</b></div>
-      <div class="metric"><span>Bloqué</span><b id="mRouge">0</b></div>
-      <div class="metric"><span>Validé</span><b id="mValide">0</b></div>
+      <div class="metric"><span>Total</span><b id="mTotal">0</b></div>
+      <div class="metric"><span>SIRET vérifiés</span><b id="mOk">0</b></div>
+      <div class="metric"><span>À traiter manuellement</span><b id="mManual">0</b></div>
+      <div class="metric"><span>Élèves non rapprochés</span><b id="mStudents">0</b></div>
+      <div class="metric"><span>Sélectionnés pour import</span><b id="mImport">0</b></div>
     </div>
-  </div>
+  </section>
 
-  <div class="card">
-    <div class="tabs">
-      <button class="tab active" data-filter="TOUS">Tous</button>
-      <button class="tab" data-filter="VERT">Verts</button>
-      <button class="tab" data-filter="ORANGE">À contrôler</button>
-      <button class="tab" data-filter="ROUGE">Bloqués</button>
-      <button class="tab" data-filter="VALIDEE">Validés</button>
-      <button class="tab" data-filter="IGNOREE">Ignorés</button>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
+  <section class="card tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Importer</th>
+          <th>Élève saisi JotForm</th>
+          <th>Classe retenue</th>
+          <th>Rapprochement élève</th>
+          <th>SIRET corrigible</th>
+          <th>État</th>
+          <th>Entreprise saisie JotForm + adresse</th>
+          <th>Raison sociale officielle</th>
+          <th>Nom commercial / enseigne</th>
+          <th>Adresse officielle</th>
+          <th>CP</th>
+          <th>Ville</th>
           <th>Contrôle</th>
-          <th>Élève</th>
-          <th>Classe</th>
-          <th>Dates</th>
-          <th>Entreprise saisie</th>
-          <th>SIRET</th>
-          <th>Rapprochement entreprise</th>
-          <th>Alertes</th>
-          <th>Décision</th>
-          <th>Commentaire</th>
           <th>Action</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </div>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </section>
 </div>
 
 <script>
-const C=<?!= config ?>;
-let DATA=<?!= dataJson ?>;
-let filter='TOUS';
+let DATA={
+  counts:{},
+  lignes:[],
+  classes:[],
+  elevesParClasseId:{}
+};
 
-const tbody=document.getElementById('tbody');
-const status=document.getElementById('status');
-const analyse=document.getElementById('analyse');
-const validateGreen=document.getElementById('validateGreen');
-
-function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
-function show(text,type){status.textContent=text||'';status.className=text?'show '+type:''}
-function busy(btn,text){btn.dataset.old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+text}
-function unbusy(btn){btn.disabled=false;btn.innerHTML=btn.dataset.old||btn.innerHTML}
-
-function renderMetrics(){
-  const r=DATA.resume||{};
-  document.getElementById('mTotal').textContent=r.total||0;
-  document.getElementById('mVert').textContent=r.VERT||0;
-  document.getElementById('mOrange').textContent=r.ORANGE||0;
-  document.getElementById('mRouge').textContent=r.ROUGE||0;
-  document.getElementById('mValide').textContent=r.VALIDEE||0;
+function esc(v){
+  const d=document.createElement('div');
+  d.textContent=v==null?'':String(v);
+  return d.innerHTML;
 }
 
-function visible(x){
-  if(filter==='TOUS')return true;
-  if(filter==='VALIDEE'||filter==='IGNOREE')return x.decision===filter;
-  return x.niveau===filter;
+function show(msg,kind){
+  const e=document.getElementById('status');
+  e.className='show '+(kind||'info');
+  e.textContent=msg;
 }
 
-function render(){
-  renderMetrics();
-  tbody.innerHTML=(DATA.lignes||[]).filter(visible).map(function(x){
-    return '<tr data-id="'+x.id+'">'+
-      '<td><span class="pill '+esc(x.niveau)+'">'+esc(x.niveau)+'</span><div class="small">JotForm '+esc(x.convention||x.submission)+'</div></td>'+
-      '<td><b>'+esc(x.eleve)+'</b><div class="small">'+(x.matchEleve?'✓ '+esc(x.matchEleve):'Non reconnu')+'</div></td>'+
-      '<td><b>'+esc(x.classe)+'</b><div class="small">'+(x.matchClasse?'✓ '+esc(x.matchClasse):'Non reconnue')+'</div></td>'+
-      '<td>'+esc(x.debut)+'<br>'+esc(x.fin)+'</td>'+
-      '<td><b>'+esc(x.entreprise)+'</b><div class="small">'+esc(x.ville)+'</div></td>'+
-      '<td>'+esc(x.siret||'—')+'<div class="small">'+esc(x.siretN||'')+'</div></td>'+
-      '<td>'+(x.matchEntreprise?'<b>'+esc(x.matchEntreprise)+'</b><div class="small">score '+x.score+'%</div>':'<span class="small">Aucun rapprochement sûr</span>')+'</td>'+
-      '<td class="alert">'+esc(x.alertes||'—')+'</td>'+
-      '<td><select class="decision">'+
-        '<option value="A_CONTROLER" '+(x.decision==='A_CONTROLER'?'selected':'')+'>À contrôler</option>'+
-        '<option value="VALIDEE" '+(x.decision==='VALIDEE'?'selected':'')+'>Validée</option>'+
-        '<option value="IGNOREE" '+(x.decision==='IGNOREE'?'selected':'')+'>Ignorée</option>'+
-      '</select></td>'+
-      '<td><textarea class="commentaire">'+esc(x.commentaire||'')+'</textarea></td>'+
-      '<td><button class="saveLine primary" type="button">Enregistrer</button></td>'+
-    '</tr>';
-  }).join('');
+function busy(btn,on,label){
+  if(!btn)return;
 
-  Array.from(tbody.querySelectorAll('.saveLine')).forEach(function(btn){
-    btn.onclick=function(){
+  if(on){
+    btn.dataset.old=btn.textContent;
+    btn.disabled=true;
+    btn.textContent=label||'Traitement…';
+  }else{
+    btn.disabled=false;
+
+    if(btn.dataset.old){
+      btn.textContent=btn.dataset.old;
+    }
+  }
+}
+
+function badge(r){
+  if(r.siretStatut==='VERIFIE'){
+    return '<span class="badge verified">VÉRIFIÉ</span>';
+  }
+
+  if(r.siretStatut==='A_VERIFIER'){
+    return '<span class="badge pending">À VÉRIFIER</span>';
+  }
+
+  if((r.siretStatut||'').indexOf('MANUEL')===0){
+    return '<span class="badge manual">MANUEL</span>';
+  }
+
+  return '<span class="badge error">À CONTRÔLER</span>';
+}
+
+function classSelect(r){
+  const classes=DATA.classes||[];
+
+  return '<select class="class-select">'+
+    '<option value="">— Choisir la classe —</option>'+
+    classes.map(c=>
+      '<option value="'+c.id+'"'+
+      (Number(r.classeId)===Number(c.id)?' selected':'')+
+      '>'+esc(c.label)+'</option>'
+    ).join('')+
+    '</select>'+
+    '<div class="small">Saisi JotForm : '+esc(r.classe||'—')+'</div>';
+}
+
+function studentSelectHtml(r,classId){
+  const list=
+    (DATA.elevesParClasseId||{})[
+      String(classId||0)
+    ]||
+    [];
+
+  if(!list.length){
+    return '<div class="small">Aucun élève trouvé pour cette classe.</div>';
+  }
+
+  return '<select class="student">'+
+    '<option value="">— Choisir le bon élève —</option>'+
+    list.map(s=>
+      '<option value="'+s.id+'"'+
+      (Number(r.matchEleveId)===Number(s.id)?' selected':'')+
+      '>'+esc(s.label)+'</option>'
+    ).join('')+
+    '</select>'+
+    (
+      r.matchEleve
+        ? '<div class="small">Rapproché : '+esc(r.matchEleve)+'</div>'
+        : '<div class="small">Choisissez le bon élève de la classe retenue.</div>'
+    );
+}
+
+function jotformCompany(r){
+  let lines=[];
+
+  if(r.adresseSaisie){
+    lines.push(esc(r.adresseSaisie));
+  }
+
+  if(r.complementAdresseSaisie){
+    lines.push(esc(r.complementAdresseSaisie));
+  }
+
+  const city=[
+    r.cpSaisi||'',
+    r.villeSaisie||''
+  ].filter(Boolean).join(' ');
+
+  if(city){
+    lines.push(esc(city));
+  }
+
+  return '<div class="source-name">'+
+    esc(r.entrepriseSaisie||'—')+
+    '</div>'+
+    (
+      lines.length
+        ? '<div class="small source-address">'+lines.join('<br>')+'</div>'
+        : '<div class="small source-address">Adresse non renseignée dans JotForm.</div>'
+    );
+}
+
+function render(d){
+  DATA=d||DATA;
+  const c=DATA.counts||{};
+
+  mTotal.textContent=c.total||0;
+  mOk.textContent=c.verifies||0;
+  mManual.textContent=c.manuel||0;
+  mStudents.textContent=c.elevesNonReconnus||0;
+  mImport.textContent=c.importer||0;
+
+  tb.innerHTML=(DATA.lignes||[]).map(r=>`
+    <tr data-id="${r.id}">
+      <td><input class="imp" type="checkbox" ${r.importer?'checked':''}></td>
+
+      <td><span class="source-name">${esc(r.eleve)}</span></td>
+
+      <td>${classSelect(r)}</td>
+
+      <td>
+        <div class="student-wrap">
+          ${studentSelectHtml(r,r.classeId)}
+        </div>
+      </td>
+
+      <td>
+        <input
+          class="siret"
+          type="text"
+          inputmode="numeric"
+          value="${esc(r.siret)}"
+          placeholder="14 chiffres"
+        >
+        <button class="verify-one btn secondary" type="button">Vérifier</button>
+        <div class="small">${esc(r.siretErreur||'')}</div>
+      </td>
+
+      <td>${badge(r)}</td>
+
+      <td>${jotformCompany(r)}</td>
+
+      <td><span class="official">${esc(r.raisonOfficielle)}</span></td>
+
+      <td>
+        <input
+          class="nomcom"
+          type="text"
+          value="${esc(r.nomCommercial)}"
+          placeholder="Nom commercial"
+        >
+      </td>
+
+      <td>${esc(r.adresseOfficielle)}</td>
+      <td>${esc(r.cpOfficiel)}</td>
+      <td>${esc(r.villeOfficielle)}</td>
+
+      <td>
+        <div>${esc(r.classeRetenue||'Classe à vérifier')}</div>
+        <div class="small">${esc(r.alertes||'')}</div>
+      </td>
+
+      <td>
+        <button class="save btn secondary" type="button">Enregistrer</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id=Number(tr.dataset.id);
+    const r=(DATA.lignes||[]).find(x=>Number(x.id)===id);
+    const classSel=tr.querySelector('.class-select');
+    const wrap=tr.querySelector('.student-wrap');
+
+    classSel.onchange=()=>{
+      const cid=Number(classSel.value||0);
+
+      if(wrap){
+        const clone=Object.assign({},r);
+
+        /*
+         * Si on change de classe, ne présélectionne pas l'ancien élève
+         * s'il n'appartient pas à la nouvelle classe.
+         */
+        clone.matchEleveId=0;
+        clone.matchEleve='';
+
+        wrap.innerHTML=
+          studentSelectHtml(
+            clone,
+            cid
+          );
+      }
+    };
+  });
+
+  document.querySelectorAll('.save').forEach(btn=>{
+    btn.onclick=()=>{
       const tr=btn.closest('tr');
-      busy(btn,'Enregistrement...');
+
+      busy(
+        btn,
+        true,
+        'Enregistrement…'
+      );
+
       google.script.run
-        .withSuccessHandler(function(r){DATA=r;unbusy(btn);show('Ligne enregistrée.','success');render()})
-        .withFailureHandler(function(e){unbusy(btn);show('Erreur : '+(e&&e.message||e),'error')})
-        .EUC_V160_sauverControle({
+        .withSuccessHandler(()=>{
+          busy(btn,false);
+          show(
+            'Ligne enregistrée.',
+            'ok'
+          );
+          refresh();
+        })
+        .withFailureHandler(e=>{
+          busy(btn,false);
+          show(
+            'Erreur : '+
+            String(e&&e.message||e),
+            'err'
+          );
+        })
+        .EUC_DEV298_saveLine({
           id:Number(tr.dataset.id),
-          decision:tr.querySelector('.decision').value,
-          commentaire:tr.querySelector('.commentaire').value
+
+          importer:
+            tr.querySelector('.imp').checked,
+
+          classeId:
+            Number(
+              tr.querySelector('.class-select').value||
+              0
+            ),
+
+          eleveId:
+            Number(
+              tr.querySelector('.student')?.value||
+              0
+            ),
+
+          nomCommercial:
+            tr.querySelector('.nomcom').value,
+
+          siret:
+            tr.querySelector('.siret').value
+        });
+    };
+  });
+
+  document.querySelectorAll('.verify-one').forEach(btn=>{
+    btn.onclick=()=>{
+      const tr=btn.closest('tr');
+
+      busy(
+        btn,
+        true,
+        'Recherche…'
+      );
+
+      show(
+        'Vérification du SIRET. En cas de 502, plusieurs tentatives peuvent prendre jusqu’à environ 25 secondes…',
+        'info'
+      );
+
+      google.script.run
+        .withSuccessHandler(r=>{
+          busy(btn,false);
+
+          if(r&&r.found){
+            show(
+              'SIRET vérifié : entreprise retrouvée.',
+              'ok'
+            );
+          }else{
+            show(
+              'SIRET non retrouvé après les tentatives automatiques.',
+              'err'
+            );
+          }
+
+          refresh();
+        })
+        .withFailureHandler(e=>{
+          busy(btn,false);
+          show(
+            'Erreur recherche SIRET : '+
+            String(e&&e.message||e),
+            'err'
+          );
+        })
+        .EUC_DEV299_verifierLigneSiret({
+          id:Number(tr.dataset.id),
+          siret:
+            tr.querySelector('.siret').value
         });
     };
   });
 }
 
-Array.from(document.querySelectorAll('.tab')).forEach(function(btn){
-  btn.onclick=function(){
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    btn.classList.add('active');filter=btn.dataset.filter;render();
-  };
-});
+function refresh(){
+  google.script.run
+    .withSuccessHandler(render)
+    .withFailureHandler(e=>{
+      show(
+        'Erreur chargement : '+
+        String(e&&e.message||e),
+        'err'
+      );
+    })
+    .EUC_DEV298_lister();
+}
 
-analyse.onclick=function(){
-  const file=document.getElementById('file').files[0];
-  if(!file){show('Choisissez d’abord le fichier CSV JotForm.','error');return}
+analyse.onclick=()=>{
+  const f=file.files[0];
 
-  busy(analyse,'Analyse en cours...');
-  show('Lecture et analyse du CSV en cours...','info');
+  if(!f){
+    show(
+      'Choisissez le fichier CSV JotForm.',
+      'err'
+    );
+    return;
+  }
+
+  if(!/\.csv$/i.test(f.name||'')){
+    show(
+      'Le fichier sélectionné n’est pas un CSV.',
+      'err'
+    );
+    return;
+  }
+
+  busy(
+    analyse,
+    true,
+    'Analyse…'
+  );
 
   const reader=new FileReader();
-  reader.onload=function(){
+
+  reader.onload=()=>{
     google.script.run
-      .withSuccessHandler(function(r){
-        show('Import tampon terminé : '+r.yearCount+' ligne(s) 2026-2027, '+r.ignoredCount+' autre(s) année(s) ignorée(s).','success');
-        google.script.run.withSuccessHandler(function(d){DATA=d;unbusy(analyse);render()}).EUC_V160_lister();
+      .withSuccessHandler(()=>{
+        busy(analyse,false);
+        show(
+          'CSV importé dans le tampon.',
+          'ok'
+        );
+        refresh();
       })
-      .withFailureHandler(function(e){unbusy(analyse);show('Erreur : '+(e&&e.message||e),'error')})
-      .EUC_V160_importCsv(reader.result);
+      .withFailureHandler(e=>{
+        busy(analyse,false);
+        show(
+          'Erreur import : '+
+          String(e&&e.message||e),
+          'err'
+        );
+      })
+      .EUC_V160_importCsv(
+        reader.result
+      );
   };
-  reader.onerror=function(){unbusy(analyse);show('Impossible de lire le fichier.','error')};
-  reader.readAsText(file,'UTF-8');
+
+  reader.onerror=()=>{
+    busy(analyse,false);
+    show(
+      'Lecture du fichier impossible.',
+      'err'
+    );
+  };
+
+  reader.readAsText(
+    f,
+    'UTF-8'
+  );
 };
 
-validateGreen.onclick=function(){
-  busy(validateGreen,'Validation en cours...');
-  show('Validation des lignes vertes en cours...','info');
+verify.onclick=()=>{
+  busy(
+    verify,
+    true,
+    'Préparation…'
+  );
+
+  show(
+    'Préparation de la vérification SIRET…',
+    'info'
+  );
+
   google.script.run
-    .withSuccessHandler(function(r){DATA=r;unbusy(validateGreen);show('Toutes les lignes vertes ont été validées.','success');render()})
-    .withFailureHandler(function(e){unbusy(validateGreen);show('Erreur : '+(e&&e.message||e),'error')})
-    .EUC_V160_validerVerts();
+    .withSuccessHandler(plan=>{
+      const all=
+        plan.sirets||
+        [];
+
+      let done=0;
+      let found=0;
+      let errors=0;
+
+      /*
+       * DEV300 : un SIRET par appel.
+       * Le backend gère lui-même les retries 502/503/504/429.
+       */
+      function next(){
+        if(done>=all.length){
+          busy(
+            verify,
+            false
+          );
+
+          show(
+            'Vérification terminée : '+
+            found+
+            ' SIRET retrouvés, '+
+            errors+
+            ' à contrôler manuellement.',
+            'ok'
+          );
+
+          refresh();
+          return;
+        }
+
+        const part=[
+          all[done]
+        ];
+
+        show(
+          'Vérification SIRET '+
+          (done+1)+
+          ' / '+
+          all.length+
+          ' — le système retente automatiquement les erreurs 502 temporaires…',
+          'info'
+        );
+
+        google.script.run
+          .withSuccessHandler(r=>{
+            done+=1;
+            found+=
+              Number(
+                r.trouves||
+                0
+              );
+            errors+=
+              Number(
+                r.erreurs||
+                0
+              );
+            next();
+          })
+          .withFailureHandler(e=>{
+            busy(
+              verify,
+              false
+            );
+
+            show(
+              'Erreur vérification : '+
+              String(e&&e.message||e),
+              'err'
+            );
+          })
+          .EUC_DEV298_verifyChunk(
+            part
+          );
+      }
+
+      next();
+    })
+    .withFailureHandler(e=>{
+      busy(
+        verify,
+        false
+      );
+
+      show(
+        'Erreur préparation SIRET : '+
+        String(e&&e.message||e),
+        'err'
+      );
+    })
+    .EUC_DEV298_prepareVerification();
 };
 
-document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
-render();
+validate.onclick=()=>{
+  if(!confirm(
+    'Valider les lignes cochées et marquer les autres comme ignorées ?'
+  )){
+    return;
+  }
+
+  busy(
+    validate,
+    true,
+    'Validation…'
+  );
+
+  google.script.run
+    .withSuccessHandler(d=>{
+      busy(
+        validate,
+        false
+      );
+
+      show(
+        'Sélection validée dans le tampon Grist.',
+        'ok'
+      );
+
+      render(d);
+    })
+    .withFailureHandler(e=>{
+      busy(
+        validate,
+        false
+      );
+
+      show(
+        'Erreur validation : '+
+        String(e&&e.message||e),
+        'err'
+      );
+    })
+    .EUC_DEV298_validateSelection();
+};
+
+refresh();
 </script>
+
+<!-- EUC_DEV304_SIRET_BROWSER_OVERRIDE -->
+<script id="EUC_DEV304_SIRET_BROWSER_OVERRIDE">
+(function(){
+  'use strict';
+
+  /*
+   * PFMP DEV.304
+   *
+   * Cette surcouche intercepte UNIQUEMENT le bouton
+   * .verify-one d'une ligne de Migration JotForm.
+   *
+   * Aucun remplacement du JavaScript existant.
+   * Le bouton Analyser reste strictement celui de la 619.
+   */
+
+  function DEV304_message(texte,type){
+    if(typeof show==='function'){
+      show(texte,type||'info');
+    }else{
+      console.log('[DEV304]',texte);
+    }
+  }
+
+  function DEV304_busy(btn,on,label){
+    if(typeof busy==='function'){
+      busy(btn,on,label);
+    }else if(btn){
+      btn.disabled=!!on;
+    }
+  }
+
+  function DEV304_refresh(){
+    if(typeof refresh==='function'){
+      refresh();
+    }
+  }
+
+  function DEV304_sleep(ms){
+    return new Promise(function(resolve){
+      setTimeout(resolve,ms);
+    });
+  }
+
+  async function DEV304_fetchSiret(siret){
+
+    var url=
+      'https://recherche-entreprises.api.gouv.fr/search?q='+
+      encodeURIComponent(siret)+
+      '&per_page=10';
+
+    var delays=[
+      0,
+      1200,
+      2500,
+      4500
+    ];
+
+    var lastError='';
+
+    for(
+      var i=0;
+      i<delays.length;
+      i++
+    ){
+
+      if(delays[i]){
+        await DEV304_sleep(delays[i]);
+      }
+
+      try{
+
+        DEV304_message(
+          'Recherche Annuaire des Entreprises — tentative '+
+          (i+1)+'/'+delays.length+'…',
+          'info'
+        );
+
+        var response=
+          await fetch(
+            url,
+            {
+              method:'GET',
+              headers:{
+                'Accept':'application/json'
+              }
+            }
+          );
+
+        if(response.ok){
+          return await response.json();
+        }
+
+        lastError='HTTP '+response.status;
+
+        if(
+          [
+            429,
+            500,
+            502,
+            503,
+            504
+          ].indexOf(response.status)<0
+        ){
+          throw new Error(lastError);
+        }
+
+      }catch(e){
+
+        lastError=
+          String(
+            e&&e.message||
+            e
+          );
+
+        if(i===delays.length-1){
+          throw new Error(lastError);
+        }
+      }
+    }
+
+    throw new Error(
+      lastError||
+      'Annuaire des Entreprises indisponible.'
+    );
+  }
+
+
+  /*
+   * Capture = l'ancien onclick de la 619 n'est pas exécuté
+   * pour .verify-one.
+   *
+   * Tous les autres boutons restent totalement intacts.
+   */
+  document.addEventListener(
+    'click',
+    function(ev){
+
+      var target=ev.target;
+
+      if(
+        !target ||
+        typeof target.closest!=='function'
+      ){
+        return;
+      }
+
+      var btn=
+        target.closest(
+          '.verify-one'
+        );
+
+      if(!btn){
+        return;
+      }
+
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      if(
+        typeof ev.stopImmediatePropagation==='function'
+      ){
+        ev.stopImmediatePropagation();
+      }
+
+      var tr=
+        btn.closest('tr');
+
+      if(!tr){
+        DEV304_message(
+          'Ligne SIRET introuvable.',
+          'err'
+        );
+        return;
+      }
+
+      var input=
+        tr.querySelector(
+          '.siret'
+        );
+
+      var siret=
+        String(
+          input&&input.value||
+          ''
+        )
+        .replace(/\D/g,'')
+        .slice(0,14);
+
+      if(input){
+        input.value=siret;
+      }
+
+      if(siret.length!==14){
+
+        DEV304_message(
+          'SIRET invalide : 14 chiffres attendus.',
+          'err'
+        );
+
+        return;
+      }
+
+      var id=
+        Number(
+          tr.dataset.id||
+          0
+        );
+
+      if(!id){
+
+        DEV304_message(
+          'Identifiant de ligne manquant.',
+          'err'
+        );
+
+        return;
+      }
+
+      DEV304_busy(
+        btn,
+        true,
+        'Recherche…'
+      );
+
+      DEV304_fetchSiret(siret)
+
+        .then(function(json){
+
+          google.script.run
+
+            .withSuccessHandler(
+              function(result){
+
+                DEV304_busy(
+                  btn,
+                  false
+                );
+
+                if(
+                  result &&
+                  result.found
+                ){
+
+                  DEV304_message(
+                    'SIRET vérifié : entreprise officielle retrouvée.',
+                    'ok'
+                  );
+
+                }else{
+
+                  DEV304_message(
+                    'Le SIRET n’apparaît pas dans la réponse officielle.',
+                    'err'
+                  );
+                }
+
+                DEV304_refresh();
+              }
+            )
+
+            .withFailureHandler(
+              function(e){
+
+                DEV304_busy(
+                  btn,
+                  false
+                );
+
+                DEV304_message(
+                  'Erreur traitement SIRET : '+
+                  String(
+                    e&&e.message||
+                    e
+                  ),
+                  'err'
+                );
+              }
+            )
+
+            .EUC_DEV304_verifierLigneSiretNavigateur(
+              {
+                id:id,
+                siret:siret
+              },
+              json
+            );
+        })
+
+        .catch(function(e){
+
+          /*
+           * IMPORTANT :
+           * Une erreur 502/503/etc. reste une erreur technique.
+           * On ne modifie PAS la ligne en A_CONTROLER.
+           */
+
+          DEV304_busy(
+            btn,
+            false
+          );
+
+          DEV304_message(
+            'Annuaire des Entreprises temporairement indisponible : '+
+            String(
+              e&&e.message||
+              e
+            ),
+            'err'
+          );
+        });
+
+    },
+    true
+  );
+
+})();
+
+</script>
+
+<!-- EUC_DEV305_SIRET_AUTO_BROWSER -->
+<script id="EUC_DEV305_SIRET_AUTO_BROWSER">
+(function(){
+  'use strict';
+  var DEV305_CONCURRENCY=3;
+
+  function DEV305_show(text,type){
+    try{
+      if(typeof show==='function'){
+        show(text,type||'info');
+        return;
+      }
+    }catch(e){}
+    console.log('[DEV305]',text);
+  }
+
+  function DEV305_setBusy(on,label){
+    var btn=document.getElementById('verify');
+    if(!btn)return;
+    if(on){
+      if(!btn.dataset.dev305Old){
+        btn.dataset.dev305Old=btn.textContent;
+      }
+      btn.disabled=true;
+      if(label)btn.textContent=label;
+    }else{
+      btn.disabled=false;
+      if(btn.dataset.dev305Old){
+        btn.textContent=btn.dataset.dev305Old;
+      }
+    }
+  }
+
+  function DEV305_sleep(ms){
+    return new Promise(function(resolve){ setTimeout(resolve,ms); });
+  }
+
+  async function DEV305_fetch(siret){
+    var url=
+      'https://recherche-entreprises.api.gouv.fr/search?q='+
+      encodeURIComponent(siret)+
+      '&per_page=10';
+
+    var delays=[0,800,2000];
+    var last='';
+
+    for(var i=0;i<delays.length;i++){
+      if(delays[i])await DEV305_sleep(delays[i]);
+      try{
+        var response=await fetch(
+          url,
+          {
+            method:'GET',
+            headers:{'Accept':'application/json'}
+          }
+        );
+
+        if(response.ok){
+          return await response.json();
+        }
+
+        last='HTTP '+response.status;
+
+        if([429,500,502,503,504].indexOf(response.status)<0){
+          throw new Error(last);
+        }
+      }catch(e){
+        last=String(e&&e.message||e);
+        if(i===delays.length-1){
+          throw new Error(last);
+        }
+      }
+    }
+
+    throw new Error(last||'Annuaire indisponible');
+  }
+
+  function DEV305_server(item,json){
+    return new Promise(function(resolve,reject){
+      google.script.run
+        .withSuccessHandler(function(r){ resolve(r||{}); })
+        .withFailureHandler(function(e){
+          reject(new Error(String(e&&e.message||e)));
+        })
+        .EUC_DEV304_verifierLigneSiretNavigateur(
+          {id:item.id,siret:item.siret},
+          json
+        );
+    });
+  }
+
+  async function DEV305_one(item){
+    try{
+      var json=await DEV305_fetch(item.siret);
+      var result=await DEV305_server(item,json);
+
+      if(result&&result.found){
+        return {ok:true,item:item,result:result};
+      }
+
+      return {
+        ok:false,
+        technical:false,
+        item:item,
+        message:'SIRET absent de la réponse officielle'
+      };
+    }catch(e){
+      return {
+        ok:false,
+        technical:true,
+        item:item,
+        message:String(e&&e.message||e)
+      };
+    }
+  }
+
+  function DEV305_items(){
+    var out=[];
+    var seen={};
+
+    document.querySelectorAll('tr[data-id]').forEach(function(tr){
+      if(tr.querySelector('.badge.verified'))return;
+
+      var input=tr.querySelector('.siret');
+      if(!input)return;
+
+      var siret=String(input.value||'')
+        .replace(/\D/g,'')
+        .slice(0,14);
+
+      var id=Number(tr.dataset.id||0);
+
+      if(!id||siret.length!==14)return;
+
+      var key=String(id);
+      if(seen[key])return;
+      seen[key]=true;
+
+      out.push({id:id,siret:siret});
+    });
+
+    return out;
+  }
+
+  async function DEV305_run(){
+    var items=DEV305_items();
+
+    if(!items.length){
+      DEV305_show('Aucun SIRET restant à vérifier.','info');
+      return;
+    }
+
+    DEV305_setBusy(true,'Vérification…');
+
+    var index=0;
+    var done=0;
+    var found=0;
+    var notFound=0;
+    var technical=0;
+
+    DEV305_show(
+      'Vérification automatique de '+
+      items.length+
+      ' SIRET — '+
+      DEV305_CONCURRENCY+
+      ' recherches simultanées…',
+      'info'
+    );
+
+    async function worker(){
+      while(true){
+        var myIndex=index++;
+        if(myIndex>=items.length)return;
+
+        var result=await DEV305_one(items[myIndex]);
+
+        done++;
+        if(result.ok)found++;
+        else if(result.technical)technical++;
+        else notFound++;
+
+        DEV305_show(
+          'Vérification SIRET : '+
+          done+' / '+items.length+
+          ' — '+found+' vérifié(s), '+
+          notFound+' non retrouvé(s), '+
+          technical+' erreur(s) technique(s).',
+          'info'
+        );
+      }
+    }
+
+    var workers=[];
+    for(var w=0;w<DEV305_CONCURRENCY;w++){
+      workers.push(worker());
+    }
+
+    await Promise.all(workers);
+
+    DEV305_setBusy(false);
+
+    DEV305_show(
+      'Vérification terminée : '+
+      found+' SIRET vérifié(s), '+
+      notFound+' réellement non retrouvé(s), '+
+      technical+' erreur(s) technique(s).',
+      technical?'info':'ok'
+    );
+
+    try{
+      if(typeof refresh==='function'){
+        refresh();
+      }
+    }catch(e){}
+  }
+
+  document.addEventListener(
+    'click',
+    function(ev){
+      var target=ev.target;
+      if(!target||typeof target.closest!=='function')return;
+
+      var btn=target.closest('#verify');
+      if(!btn)return;
+
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      if(typeof ev.stopImmediatePropagation==='function'){
+        ev.stopImmediatePropagation();
+      }
+
+      DEV305_run();
+    },
+    true
+  );
+
+})();
+
+</script>
+
+<!-- EUC_DEV306_VALIDATION_REELLE -->
+<script id="EUC_DEV306_VALIDATION_REELLE">
+(function(){
+  'use strict';
+
+  function DEV306_panel(){
+    var p=document.getElementById('dev306-bilan');
+    if(p)return p;
+    var status=document.getElementById('status');
+    p=document.createElement('div');
+    p.id='dev306-bilan';
+    p.style.display='none';
+    p.style.margin='10px 0 14px';
+    p.style.padding='12px 14px';
+    p.style.border='1px solid #9dd5c7';
+    p.style.borderRadius='10px';
+    p.style.background='#f5fffb';
+    p.style.fontSize='.82rem';
+    if(status&&status.parentNode){
+      status.parentNode.insertBefore(p,status.nextSibling);
+    }
+    return p;
+  }
+
+  function DEV306_esc(v){
+    var d=document.createElement('div');
+    d.textContent=v==null?'':String(v);
+    return d.innerHTML;
+  }
+
+  function DEV453_bilanText(b){
+    b=b||{};
+    var parts=[
+      Number(b.selectionnees||0)+' sélectionnée(s)',
+      Number(b.creees||0)+' créée(s)',
+      Number(b.completees||0)+' complétée(s)',
+      Number(b.dejaExistantes||0)+' déjà existante(s)',
+      Number(b.verifiees||0)+' vérifiée(s) dans Grist',
+      Number(b.affichees||0)+' vérifiée(s) dans la liste de classe',
+      Number(b.rejetees||0)+' rejetée(s)'
+    ];
+    var errors=(b.erreurs||[]).slice(0,5).map(function(e){
+      return String(e.eleve||('ligne '+e.id))+' — '+String(e.erreur||'Erreur');
+    });
+    var sync=b.snapshotSync||{};
+    if(sync.ok===false){
+      parts.push('affichage en cours de resynchronisation');
+    }
+    return 'Import terminé : '+parts.join(', ')+'.'+
+      (errors.length?'\n\nÀ contrôler :\n- '+errors.join('\n- '):'');
+  }
+
+  function DEV306_showBilan(b){
+    var p=DEV306_panel();
+    var errors=(b&&b.erreurs)||[];
+    p.style.display='block';
+    p.innerHTML=
+      '<div style="font-weight:900;font-size:1rem;margin-bottom:8px">Bilan réel de l’import</div>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div><b>'+Number(b.selectionnees||0)+'</b> sélectionnée(s)</div>'+
+        '<div><b>'+Number(b.creees||0)+'</b> créée(s)</div>'+
+        '<div><b>'+Number(b.completees||0)+'</b> complétée(s)</div>'+
+        '<div><b>'+Number(b.dejaExistantes||0)+'</b> déjà existante(s)</div>'+
+        '<div><b>'+Number(b.lieesEleves||0)+'</b> élève(s) relié(s)</div>'+
+        '<div><b>'+Number(b.verifiees||0)+'</b> vérifiée(s) dans Grist</div>'+
+        '<div><b>'+Number(b.affichees||0)+'</b> vérifiée(s) dans la liste de classe</div>'+
+        '<div><b>'+Number(b.rejetees||0)+'</b> rejetée(s)</div>'+
+      '</div>'+
+      '<div style="margin-top:8px;color:#49645d">Table conventions EUC_ACCES_FORMULAIRES_PFMP : '+
+        Number(b.cibleAvant||0)+' → '+Number(b.cibleApres||0)+
+        ' enregistrement(s). Import idempotent : oui.</div>'+
+      (errors.length?
+        '<div style="margin-top:10px;color:#9b1c1c"><b>Rejets du dernier import :</b><ul style="margin:5px 0 0 18px">'+
+        errors.slice(0,20).map(function(e){
+          return '<li>'+DEV306_esc(e.eleve||('ligne '+e.id))+' — '+DEV306_esc(e.erreur||'Erreur')+'</li>';
+        }).join('')+
+        '</ul></div>'
+        :'<div style="margin-top:10px;color:#087443"><b>Aucune erreur d’import.</b></div>'
+      );
+  }
+
+  document.addEventListener('click',function(ev){
+    var t=ev.target;
+    if(!t||typeof t.closest!=='function')return;
+    var btn=t.closest('#validate');
+    if(!btn)return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+    if(typeof ev.stopImmediatePropagation==='function')ev.stopImmediatePropagation();
+
+    var countEl=document.getElementById('mImport');
+    var n=Number(countEl&&countEl.textContent||0)||0;
+
+    if(!n){
+      if(typeof show==='function')show('Aucune ligne sélectionnée pour import.','err');
+      return;
+    }
+
+    if(!confirm(
+      'Importer RÉELLEMENT '+n+' ligne(s) sélectionnée(s) dans le suivi PFMP ?\n\n'+
+      'Les dossiers de convention existants seront réutilisés afin d’éviter les doublons.'
+    ))return;
+
+    if(typeof busy==='function')busy(btn,true,'Import réel…');
+    if(typeof show==='function')show('Import réel vers le suivi PFMP en cours…','info');
+
+    google.script.run
+      .withSuccessHandler(function(d){
+        if(typeof busy==='function')busy(btn,false);
+        var b=d&&d.validationBilan||{};
+        if(typeof show==='function'){
+          show(
+            'IMPORT RÉEL TERMINÉ — '+
+            Number(b.creees||0)+' créée(s), '+
+            Number(b.dejaExistantes||0)+' déjà existante(s), '+
+            Number(b.rejetees||0)+' rejetée(s).',
+            Number(b.rejetees||0)?'info':'ok'
+          );
+        }
+        DEV306_showBilan(b);
+        if(typeof render==='function')render(d);
+      })
+      .withFailureHandler(function(e){
+        if(typeof busy==='function')busy(btn,false);
+        if(typeof show==='function')show('Erreur import réel : '+String(e&&e.message||e),'err');
+      })
+      .EUC_DEV306_validateSelectionReel();
+  },true);
+})();
+
+
+</script>
+
+<!-- EUC_DEV378_SELECTION_BEGIN -->
+<style id="EUC_DEV378_SELECTION_STYLE">
+#euc378bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:10px 12px;border:1px solid #9ed4c7;border-radius:10px;background:#eef9f6;color:#14594d}
+#euc378bar button{padding:7px 10px;border-radius:7px;border:1px solid #8fc6b9;background:#fff;color:#14594d;font-weight:800;cursor:pointer}
+#euc378count{font-weight:900}
+.euc378-hidden{display:none!important}
+.euc378-spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:euc378spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes euc378spin{to{transform:rotate(360deg)}}
+</style>
+<div id="euc378bar">
+  <b>Import sécurisé :</b>
+  <span>seules les lignes cochées au moment du clic sont traitées.</span>
+  <button id="euc378clear" type="button">Tout désélectionner</button>
+  <span id="euc378count">0 sélectionné</span>
+</div>
+<script id="EUC_DEV378_SELECTION_JS">
+(function(){
+  'use strict';
+  var chosen=new Set();
+
+  function rowId(cb){
+    var tr=cb&&cb.closest&&cb.closest('tr[data-id]');
+    return tr ? (Number(tr.dataset.id)||0) : 0;
+  }
+
+  function boxes(){
+    var tb=document.getElementById('tb');
+    if(!tb)return [];
+    return Array.from(tb.querySelectorAll('tr[data-id]')).map(function(tr){
+      return tr.querySelector('td:first-child input[type="checkbox"]');
+    }).filter(Boolean);
+  }
+
+  function refresh(){
+    boxes().forEach(function(cb){
+      var id=rowId(cb);
+      cb.dataset.euc378='1';
+      cb.checked=chosen.has(id);
+    });
+    var n=chosen.size;
+    var c=document.getElementById('euc378count');
+    if(c)c.textContent=n+' sélectionné'+(n>1?'s':'');
+    var m=document.getElementById('mImport');
+    if(m)m.textContent=String(n);
+  }
+
+  function hideBulk(){
+    document.querySelectorAll('button').forEach(function(b){
+      var t=String(b.textContent||'').toLowerCase();
+      if(
+        t.indexOf('importer globalement')>=0 ||
+        t.indexOf('importer les vrais nouveaux')>=0 ||
+        t.indexOf('nouveaux devenus sûrs')>=0
+      ){
+        b.classList.add('euc378-hidden');
+        b.disabled=true;
+      }
+    });
+  }
+
+  document.addEventListener('change',function(ev){
+    var cb=ev.target;
+    if(!cb||cb.dataset.euc378!=='1')return;
+    var id=rowId(cb);
+    if(!id)return;
+    if(cb.checked)chosen.add(id); else chosen.delete(id);
+    ev.stopImmediatePropagation();
+    refresh();
+  },true);
+
+  function installButton(){
+    var old=document.getElementById('validate')||document.getElementById('validate379');
+    if(!old)return;
+    if(old.id==='validate379'&&old.dataset.euc378==='1')return;
+
+    var btn=old.cloneNode(true);
+    btn.id='validate379';
+    btn.dataset.euc378='1';
+    btn.textContent='3. Importer uniquement la sélection';
+    old.parentNode.replaceChild(btn,old);
+
+    btn.addEventListener('click',function(ev){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+
+      var ids=Array.from(chosen);
+      if(!ids.length){
+        alert('Aucun élève sélectionné.');
+        return;
+      }
+
+      if(!confirm(
+        'Importer uniquement '+ids.length+' élève(s) sélectionné(s) ?\n\n'+
+        'Aucune autre ligne du tampon ne sera modifiée.'
+      ))return;
+
+      var previous=btn.innerHTML;
+      btn.disabled=true;
+      btn.innerHTML='<span class="euc378-spinner"></span>Import en cours…';
+
+      google.script.run
+        .withSuccessHandler(function(d){
+          btn.disabled=false;
+          btn.innerHTML=previous;
+
+          var b=d&&d.validationBilan||{};
+          alert(DEV453_bilanText(b));
+
+          chosen.clear();
+          if(typeof render==='function'){
+            try{render(d);}catch(e){}
+          }
+
+          setTimeout(function(){
+            refresh();
+            hideBulk();
+            installButton();
+          },30);
+        })
+        .withFailureHandler(function(e){
+          btn.disabled=false;
+          btn.innerHTML=previous;
+          alert('Erreur import : '+String(e&&e.message||e));
+        })
+        .EUC_DEV466_importSelection({
+          manualSelection:true,
+          ids:ids
+        });
+    },true);
+  }
+
+  function init(){
+    chosen.clear();
+    refresh();
+    hideBulk();
+    installButton();
+
+    var clear=document.getElementById('euc378clear');
+    if(clear)clear.onclick=function(){chosen.clear();refresh();};
+
+    var tb=document.getElementById('tb');
+    if(tb){
+      new MutationObserver(function(){
+        setTimeout(function(){
+          refresh();
+          hideBulk();
+          installButton();
+        },0);
+      }).observe(tb,{childList:true,subtree:true});
+    }
+
+    setTimeout(function(){refresh();hideBulk();installButton();},100);
+    setTimeout(function(){refresh();hideBulk();installButton();},700);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  }else{
+    init();
+  }
+})();
+</script>
+<!-- EUC_DEV378_SELECTION_END -->
 </body>
 </html>

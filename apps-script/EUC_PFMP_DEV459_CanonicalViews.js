@@ -63,7 +63,14 @@ function EUC_DEV459_mergePreparedRoster_(detail,roster){
 function EUC_DEV459_familyData_(annee,famille){
   annee=EUC_DEV459_t_(annee);famille=EUC_DEV459_t_(famille).toUpperCase()||'BACPRO';
   var data=EUC_DEV456_familyData_(annee,famille);
-  if(data&&data.__dev459Canonical===EUC_DEV459_CANONICAL_)return data;
+  if(data&&data.__dev459Canonical===EUC_DEV459_CANONICAL_&&(
+    typeof EUC_DEV425_payloadFresh_!=='function'||
+    EUC_DEV425_payloadFresh_(annee,famille,data)
+  ))return data;
+  if(data&&data.__dev459Canonical===EUC_DEV459_CANONICAL_){
+    try{EUC_DEV456_familyCacheDrop_(annee,famille);}catch(eStale){}
+    data=EUC_DEV456_familyData_(annee,famille);
+  }
   if(data&&data.__dev459Canonical){try{EUC_DEV456_familyCacheDrop_(annee,famille);data=EUC_DEV456_familyData_(annee,famille);}catch(eReset){}}
   data=EUC_DEV459_clone_(data||{classes:[]});
   var details={},rosters=null,batch=null,classIds={};
