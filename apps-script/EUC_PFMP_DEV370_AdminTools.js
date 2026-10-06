@@ -483,22 +483,36 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   meta.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8).setSpacingAfter(5);
   var rows=[['N°','Élève','Entreprise','Adresse','Contact\nentreprise','Contact\ntuteur','Date','Lieu de\ndépart','Heure\nd’arrivée','Nombre de\nkilomètres','Heure de\ndépart','Moyen de\ntransport']];
   (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'',x.contactEntreprise||'',x.contactTuteur||'','','','','','',x.transport||''])});
-  var table=body.appendTable(rows);table.setBorderColor('#6f9f95');
+  /* La zone utile A4 paysage mesure environ 794 pt. Le tableau historique
+     reste à 630 pt et les signatures occupent désormais les 145 pt libres
+     à sa droite, ce qui évite une troisième page jusqu'à 15 élèves. */
+  var layout=body.appendTable([['','']]);
+  try{layout.setBorderWidth(0).setColumnWidth(0,630).setColumnWidth(1,145)}catch(e0){}
+  for(var lc=0;lc<2;lc++){
+    var layoutCell=layout.getCell(0,lc);
+    try{layoutCell.clear().setPaddingTop(0).setPaddingBottom(0).setPaddingLeft(0).setPaddingRight(0)}catch(e1){}
+  }
+  var table=layout.getCell(0,0).appendTable(rows);table.setBorderColor('#6f9f95');
   for(var c=0;c<12;c++)table.getCell(0,c).setBackgroundColor('#e7f5f1');
   /* 630 pt : marge de sécurité pour éviter toute coupe lors de l'export PDF. */
   EUC_DEV438_formatTable_(table,[18,45,50,82,93,93,28,38,32,30,32,89],6,6);
+  var signatureHeight=Math.max(105,Math.min(145,Math.ceil((20+(g.lignes||[]).length*18)/2)));
+  var signatures=layout.getCell(0,1).appendTable([['Date et signature du professeur'],['Date et signature du directeur délégué aux formations']]);
+  signatures.setBorderColor('#6f9f95');
+  try{signatures.setColumnWidth(0,145)}catch(e2){}
+  for(var s=0;s<2;s++){
+    try{signatures.getRow(s).setMinimumHeight(signatureHeight)}catch(e3){}
+    try{signatures.getCell(s,0).setPaddingTop(4).setPaddingBottom(2).setPaddingLeft(4).setPaddingRight(3).editAsText().setBold(true).setFontSize(7)}catch(e4){}
+  }
   var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
   help.setFontSize(7).setItalic(true).setSpacingBefore(5).setSpacingAfter(2);
   var receipts=body.appendParagraph('Justificatifs : joindre tous les justificatifs nécessaires pour bénéficier d’une prise en charge financière.');
   receipts.setFontSize(7).setItalic(true).setSpacingBefore(0).setSpacingAfter(4);
   var precisionTitle=body.appendParagraph('Précisions complémentaires');
   precisionTitle.setBold(true).setFontSize(8).setSpacingBefore(0).setSpacingAfter(2);
-  var precision=body.appendTable([[''],[''],[''],[''],[''],['']]);precision.setBorderColor('#6f9f95');
+  var precision=body.appendTable([[''],['']]);precision.setBorderColor('#6f9f95');
   for(var r=0;r<precision.getNumRows();r++){try{precision.getRow(r).setMinimumHeight(11)}catch(e){}try{precision.getCell(r,0).setPaddingTop(0).setPaddingBottom(0)}catch(e2){}}
-  try{precision.setColumnWidth(0,630)}catch(e3){}
-  var signatures=body.appendTable([['Signature du professeur','Signature du directeur délégué aux formations']]);signatures.setBorderColor('#6f9f95');
-  try{signatures.setColumnWidth(0,312).setColumnWidth(1,312);signatures.getRow(0).setMinimumHeight(42)}catch(e4){}
-  for(var s=0;s<2;s++){try{signatures.getCell(0,s).setPaddingTop(3).setPaddingLeft(4).editAsText().setBold(true).setFontSize(8)}catch(e5){}}
+  try{precision.setColumnWidth(0,775)}catch(e5){}
 }
 function EUC_DEV442_validateMissionTemplate_(body){
   var text=body.getText(),required=['NOM','PRENOM','DISCIPLINE','CLASSE','PERIODE','DEBUT','FIN','DATE','LISTE_ELEVES'];

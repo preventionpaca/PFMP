@@ -11,5 +11,10 @@ assert.match(code,/insertSectionBreak:\{sectionType:'NEXT_PAGE'/,'la page récap
 assert.match(code,/flipPageOrientation:true/,'la page 2 doit être en paysage réel');
 for(const label of ["'Contact\\nentreprise'","'Contact\\ntuteur'","'Nombre de\\nkilomètres'","'Moyen de\\ntransport'"])assert.ok(code.includes(label),'colonne manquante '+label);
 assert.match(code,/Justificatifs : joindre tous les justificatifs nécessaires/,'consigne justificatifs absente');
-assert.match(code,/Signature du professeur.*Signature du directeur délégué aux formations/s,'signatures absentes');
-console.log('10 tests DEV461 ordre de mission réussis.');
+assert.match(code,/layout\.setBorderWidth\(0\)\.setColumnWidth\(0,630\)\.setColumnWidth\(1,145\)/,'la zone de signatures doit utiliser la bande droite libre');
+assert.match(code,/appendTable\(\[\['Date et signature du professeur'\],\['Date et signature du directeur délégué aux formations'\]\]\)/,'les deux signatures doivent être empilées avec leur date');
+assert.match(code,/Math\.min\(145,Math\.ceil\(\(20\+\(g\.lignes\|\|\[\]\)\.length\*18\)\/2\)\)/,'les signatures doivent rester compatibles avec quinze élèves');
+assert.match(code,/var precision=body\.appendTable\(\[\[''\],\[''\]\]\)/,'les précisions complémentaires doivent contenir exactement deux lignes');
+assert.match(code,/precision\.setColumnWidth\(0,775\)/,'les deux lignes de précisions doivent couvrir toute la largeur utile');
+assert.doesNotMatch(code,/appendTable\(\[\['Signature du professeur','Signature du directeur délégué aux formations'\]\]\)/,'les signatures ne doivent plus créer une troisième page sous le tableau');
+console.log('15 tests DEV461 ordre de mission réussis.');
