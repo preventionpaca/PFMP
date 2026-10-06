@@ -52,7 +52,7 @@ test('un seul modèle est marqué par défaut et le standard est protégé',()=>
 });
 test('la page propose une gestion complète des modèles de courriel',()=>{
   assert.match(mission,/Gérer les modèles de courriel/);
-  for(const id of ['emailKind','emailSubject','emailBody','emailSignature','emailProcedureUrl','saveEmailTemplates','resetEmailTemplates','emailPreview','emailFrom','emailReplyTo'])assert.match(mission,new RegExp('id="'+id+'"'));
+  for(const id of ['emailKind','emailSubject','emailBody','emailSignature','emailProcedureUrl','emailCc','saveEmailTemplates','resetEmailTemplates','emailPreview','emailFrom','emailReplyTo'])assert.match(mission,new RegExp('id="'+id+'"'));
   assert.match(mission,/EUC_DEV476_listMissionEmailTemplates/);
   assert.match(mission,/EUC_DEV476_saveMissionEmailTemplates/);
   assert.match(mission,/EUC_DEV476_resetMissionEmailTemplates/);
@@ -61,8 +61,8 @@ test('les modèles prévisionnel et définitif sont persistants, validés et fus
   const store={},props={getProperty:k=>store[k]||'',setProperty:(k,v)=>{store[k]=v},deleteProperty:k=>{delete store[k]}};
   const ctx={console,Date,JSON,PropertiesService:{getScriptProperties:()=>props},Session:{getEffectiveUser:()=>({getEmail:()=> 'deploiement@example.fr'})}};
   vm.createContext(ctx);vm.runInContext(server,ctx);ctx.EUC_DEV368_t=v=>String(v==null?'':v).trim();ctx.EUC_DEV368_admin=()=>({email:'reponse@example.fr'});
-  let result=ctx.EUC_DEV476_listMissionEmailTemplates();assert.ok(result.templates.PREVISIONNEL.body.includes('véhicule personnel'));assert.ok(result.templates.DEFINITIF.body.includes('{{PROCEDURE}}'));assert.equal(result.sender.from,'deploiement@example.fr');assert.equal(result.settings.expediteur,'Bureau des entreprises');
-  result=ctx.EUC_DEV476_saveMissionEmailTemplates({templates:{PREVISIONNEL:{subject:'Prévision {{CLASSE}}',body:'Bonjour {{PROFESSEUR}}'},DEFINITIF:{subject:'Définitif {{PERIODE}}',body:'Voir la {{PROCEDURE}}'}},settings:{expediteur:'Bureau des entreprises',procedureUrl:'https://example.fr/procedure'}});assert.equal(result.templates.PREVISIONNEL.subject,'Prévision {{CLASSE}}');assert.ok(store.EUC_DEV476_MISSION_EMAIL_TEMPLATES);assert.ok(store.EUC_DEV478_MISSION_EMAIL_SETTINGS);
+  let result=ctx.EUC_DEV476_listMissionEmailTemplates();assert.ok(result.templates.PREVISIONNEL.body.includes('véhicule personnel'));assert.ok(result.templates.DEFINITIF.body.includes('{{PROCEDURE}}'));assert.equal(result.sender.from,'deploiement@example.fr');assert.equal(result.settings.expediteur,'Bureau des entreprises');assert.equal(result.settings.cc,'bfe@lycee-les-eucalyptus.org');
+  result=ctx.EUC_DEV476_saveMissionEmailTemplates({templates:{PREVISIONNEL:{subject:'Prévision {{CLASSE}}',body:'Bonjour {{PROFESSEUR}}'},DEFINITIF:{subject:'Définitif {{PERIODE}}',body:'Voir la {{PROCEDURE}}'}},settings:{expediteur:'Bureau des entreprises',procedureUrl:'https://example.fr/procedure',cc:'bfe@lycee-les-eucalyptus.org'}});assert.equal(result.templates.PREVISIONNEL.subject,'Prévision {{CLASSE}}');assert.ok(store.EUC_DEV476_MISSION_EMAIL_TEMPLATES);assert.ok(store.EUC_DEV478_MISSION_EMAIL_SETTINGS);
   assert.equal(ctx.EUC_DEV476_renderMissionEmail_('Bonjour {{PROFESSEUR}}',{PROFESSEUR:'Mme MARTIN'}),'Bonjour Mme MARTIN');
   assert.match(ctx.EUC_DEV478_renderMissionEmailHtml_('Voir la {{PROCEDURE}}',{PROCEDURE:'procédure'},'https://example.fr/procedure'),/<a href="https:\/\/example\.fr\/procedure">procédure<\/a>/);
   assert.throws(()=>ctx.EUC_DEV476_saveMissionEmailTemplates({PREVISIONNEL:{subject:'{{INCONNUE}}',body:'x'},DEFINITIF:{subject:'x',body:'x'}}),/Variable\(s\) inconnue/);
@@ -73,6 +73,8 @@ test('une erreur PDF interrompt le traitement avant tout envoi',()=>{
   assert.ok(pdf>=0&&send>pdf);
   assert.match(server,/sentAt:new Date\(\)\.toISOString\(\)/);
   assert.match(server,/htmlBody:prepared\.htmlBody/);
+  assert.match(server,/options\.cc=prepared\.cc/);
+  assert.match(mission,/avec copie à '\+p\.cc/);
 });
 
 console.log(`${n} tests DEV472 workflow missions réussis.`);

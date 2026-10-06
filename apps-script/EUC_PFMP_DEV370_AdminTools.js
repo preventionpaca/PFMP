@@ -452,13 +452,14 @@ function EUC_DEV476_defaultMissionEmailTemplates_(){
     }
   };
 }
-function EUC_DEV478_defaultMissionEmailSettings_(){return{expediteur:'Bureau des entreprises',procedureUrl:EUC_DEV478_PROCEDURE_URL_}}
+function EUC_DEV478_defaultMissionEmailSettings_(){return{expediteur:'Bureau des entreprises',procedureUrl:EUC_DEV478_PROCEDURE_URL_,cc:'bfe@lycee-les-eucalyptus.org'}}
 function EUC_DEV478_validateMissionEmailSettings_(value){
-  value=value||{};var defaults=EUC_DEV478_defaultMissionEmailSettings_(),expediteur=EUC_DEV368_t(value.expediteur)||defaults.expediteur,procedureUrl=EUC_DEV368_t(value.procedureUrl)||defaults.procedureUrl;
+  value=value||{};var defaults=EUC_DEV478_defaultMissionEmailSettings_(),expediteur=EUC_DEV368_t(value.expediteur)||defaults.expediteur,procedureUrl=EUC_DEV368_t(value.procedureUrl)||defaults.procedureUrl,cc=EUC_DEV368_t(value.cc)||defaults.cc;
   if(expediteur.length>160)throw new Error('La signature expéditeur est limitée à 160 caractères.');
   if(!/^https:\/\/[a-z0-9.-]+(?:\/|$)/i.test(procedureUrl))throw new Error('Le lien de la procédure doit être une adresse HTTPS valide.');
   if(procedureUrl.length>2000)throw new Error('Le lien de la procédure est trop long.');
-  return{expediteur:expediteur,procedureUrl:procedureUrl};
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cc))throw new Error('L’adresse de copie conforme est invalide.');
+  return{expediteur:expediteur,procedureUrl:procedureUrl,cc:cc};
 }
 function EUC_DEV478_missionEmailSettings_(){
   var defaults=EUC_DEV478_defaultMissionEmailSettings_(),raw='';
@@ -515,26 +516,27 @@ function EUC_DEV478_renderMissionEmailHtml_(text,values,procedureUrl){
   return escaped.replace(/\r?\n/g,'<br>');
 }
 function EUC_DEV440_prepareMissionTransportEmail(q){
-  var ctx=EUC_DEV368_admin(),g=EUC_DEV440_groupForPdf_(q),settings=EUC_DEV478_missionEmailSettings_(),sender=settings.expediteur,replyTo=EUC_DEV368_t(ctx.email);
+  var ctx=EUC_DEV368_admin(),g=EUC_DEV440_groupForPdf_(q),settings=EUC_DEV478_missionEmailSettings_(),sender=settings.expediteur,replyTo=EUC_DEV368_t(ctx.email),cc=settings.cc;
   if(!g)throw new Error('Groupe de mission introuvable.');
   var recipient=EUC_DEV440_profEmail_(g.professeur);if(!recipient)throw new Error('Aucune adresse électronique valide pour ce professeur.');
   var kind=EUC_DEV443_missionKind_(q),qualifier=kind==='PREVISIONNEL'?'prévisionnel':'définitif',template=EUC_DEV476_missionEmailTemplates_()[kind];
   var values={PROFESSEUR:g.professeur,CLASSE:g.classe,PERIODE:g.periode,DEBUT:g.debut||'date de début à préciser',FIN:g.fin||'date de fin à préciser',TYPE:qualifier,EXPEDITEUR:sender||'Bureau des entreprises',PROCEDURE:'procédure'};
   var subject=EUC_DEV476_renderMissionEmail_(template.subject,values),body=EUC_DEV476_renderMissionEmail_(template.body,values),htmlBody=EUC_DEV478_renderMissionEmailHtml_(template.body,values,settings.procedureUrl);
-  return{ok:true,to:recipient,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,htmlBody:htmlBody,kind:kind,professeur:g.professeur,classe:g.classe,periode:g.periode};
+  return{ok:true,to:recipient,cc:cc,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,htmlBody:htmlBody,kind:kind,professeur:g.professeur,classe:g.classe,periode:g.periode};
 }
 function EUC_DEV440_sendMissionTransportEmail(q){
   var prepared=EUC_DEV440_prepareMissionTransportEmail(q),lock=LockService.getScriptLock();lock.waitLock(10000);
   try{
-    var duplicateKey='DEV440_MAIL_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,[prepared.to,prepared.subject,prepared.replyTo,prepared.kind].join('|'))).slice(0,24),cache=CacheService.getScriptCache();
+    var duplicateKey='DEV440_MAIL_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,[prepared.to,prepared.cc,prepared.subject,prepared.replyTo,prepared.kind].join('|'))).slice(0,24),cache=CacheService.getScriptCache();
     if(cache.get(duplicateKey))throw new Error('Ce message vient déjà d’être envoyé. Patientez une minute avant un nouvel envoi.');
     var mission=EUC_DEV436_pdfMission(q),attachment=Utilities.newBlob(Utilities.base64Decode(mission.base64),mission.mime,mission.name);
     var options={to:prepared.to,subject:prepared.subject,body:prepared.body,htmlBody:prepared.htmlBody,name:'PFMP — Lycée Les Eucalyptus',attachments:[attachment]};
+    if(prepared.cc)options.cc=prepared.cc;
     if(prepared.replyTo)options.replyTo=prepared.replyTo;
     MailApp.sendEmail(options);cache.put(duplicateKey,'1',60);
   }finally{lock.releaseLock()}
   var senderInfo=EUC_DEV476_missionEmailSender_(EUC_DEV368_admin());
-  return{ok:true,to:prepared.to,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs,sentAt:new Date().toISOString(),from:senderInfo.from,replyTo:prepared.replyTo};
+  return{ok:true,to:prepared.to,cc:prepared.cc,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs,sentAt:new Date().toISOString(),from:senderInfo.from,replyTo:prepared.replyTo};
 }
 function EUC_DEV440_docsRequest_(documentId,suffix,method,payload){
   if(typeof Docs!=='undefined'&&Docs.Documents){
