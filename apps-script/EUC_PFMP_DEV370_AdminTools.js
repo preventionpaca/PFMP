@@ -5,7 +5,24 @@ function EUC_DEV368_t(v){return String(v==null?'':v).trim()}
 function EUC_DEV368_n(v){return Number(v)||0}
 function EUC_DEV368_admin(){var c=EUC_V156_contexteAdmin_();if(!c)throw new Error('Accès administrateur requis.');return c}
 function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_contexteAnneeLectureV155_().active)}
-function EUC_DEV368_catalog(y){EUC_DEV368_admin();y=EUC_DEV368_year(y);var out=[];['BACPRO','BTS','CAP'].forEach(function(f){var r=EUC_DEV190G1_fastFamilyIndex({annee:y,famille:f}),d=r&&r.ready&&r.payload?r.payload:{classes:[]};(d.classes||[]).forEach(function(c){out.push({famille:f,classeId:EUC_DEV368_n(c.classeId||c.id),classe:EUC_DEV368_t(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV368_n(p.id),libelle:EUC_DEV368_t(p.libelle||p.nom),debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})})})});out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out}}
+/* DEV472 — le catalogue global des missions se lit en une seule requête sur
+ * l'index chaud. L'ancienne boucle BACPRO/BTS/CAP faisait trois allers-retours
+ * Grist avant même d'afficher la première classe. */
+function EUC_DEV472_familyPayloads_(y){
+  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[y]})||[],latest={};
+  rows.filter(function(r){return(r.fields||{}).Actif!==false}).sort(function(a,b){
+    return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
+  }).forEach(function(r){
+    var f=r.fields||{},fam=EUC_DEV368_t(f.Famille).toUpperCase();if(!fam||latest[fam])return;
+    try{latest[fam]=JSON.parse(f.Payload_JSON||'{}')}catch(e){}
+  });
+  return latest;
+}
+function EUC_DEV368_catalog(y){
+  EUC_DEV368_admin();y=EUC_DEV368_year(y);var out=[],payloads=EUC_DEV472_familyPayloads_(y);
+  ['BACPRO','BTS','CAP'].forEach(function(f){var d=payloads[f]||{classes:[]};(d.classes||[]).forEach(function(c){out.push({famille:f,classeId:EUC_DEV368_n(c.classeId||c.id),classe:EUC_DEV368_t(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV368_n(p.id||p.periodeId),libelle:EUC_DEV368_t(p.libelle||p.nom),debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})})})});
+  out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out};
+}
 function EUC_DEV368_detail(y,c,p){var r=EUC_DEV190I_readOne({annee:y,classe:c,periode:p}),d=r&&r.ready&&r.detail?r.detail:null;if(!d&&typeof EUC_DEV190_buildHistoricalDetail_==='function')d=EUC_DEV190_buildHistoricalDetail_(y,c,p);d=d||{annee:y,classe:{id:c,nom:''},periode:{id:p},lignes:[]};try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e){}try{var a=EUC_V156_affectations_(y,c,p)||[],m={};a.forEach(function(x){var id=Number(EUC_PFMP_ref_(x.Eleve))||0,t=EUC_DEV368_t(x.Type_suivi).toUpperCase();if(id&&t)m[id+'|'+t]=x});(d.lignes||[]).forEach(function(x){var v=m[EUC_DEV368_n(x.eleveId)+'|VISITE'];if(v)x.professeurVisiteur=EUC_DEV368_t(v.Nom_professeur_snapshot)})}catch(e2){}return d}
 function EUC_DEV368_targets(q){q=q||{};var y=EUC_DEV368_year(q.annee),f=EUC_DEV368_t(q.famille),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),o=[];EUC_DEV368_catalog(y).classes.forEach(function(c){if(f&&c.famille!==f)return;if(cid&&c.classeId!==cid)return;(c.periodes||[]).forEach(function(p){if(pid&&p.id!==pid)return;o.push({annee:y,famille:c.famille,classeId:c.classeId,classe:c.classe,periode:p})})});return o}
 function EUC_DEV368_sansConvention(q){EUC_DEV368_admin();var o=[];EUC_DEV368_targets(q).forEach(function(t){var d=EUC_DEV368_detail(t.annee,t.classeId,t.periode.id);(d.lignes||[]).forEach(function(x){if(x.apprenti)return;var code=EUC_DEV368_t(x.statutCode||x.statut).toUpperCase();if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return;if(EUC_DEV368_n(x.conventionId)>0)return;o.push({classe:t.classe,periode:t.periode.libelle,eleve:[x.nom,x.prenom].filter(Boolean).join(' '),professeurPrincipal:EUC_DEV368_t(x.professeurPrincipal)})})});return{ok:true,total:o.length,lignes:o}}
@@ -228,15 +245,20 @@ function EUC_DEV374_pdfMission(q){
  * les modèles supplémentaires sont enregistrés dans les propriétés du script. */
 var EUC_DEV436_MISSION_MODEL_DEFAULT_='1UYL-QMQpTvR1XsijWNsyLjcDrOr2K6S_nQEk2ZYDKKI';
 var EUC_DEV436_MISSION_MODELS_KEY_='EUC_DEV436_MISSION_MODELS';
+var EUC_DEV472_MISSION_DEFAULT_KEY_='EUC_DEV472_MISSION_DEFAULT_ID';
 function EUC_DEV436_extractDriveId_(v){
   var s=EUC_DEV368_t(v),m=s.match(/[-\w]{25,}/);return m?m[0]:'';
 }
 function EUC_DEV436_models_(){
-  var base=[{id:'eucalyptus-standard',label:'Modèle Eucalyptus standard',famille:'TOUS',documentId:EUC_DEV436_MISSION_MODEL_DEFAULT_,defaut:true}];
+  var base=[{id:'eucalyptus-standard',label:'Modèle Eucalyptus standard',famille:'TOUS',documentId:EUC_DEV436_MISSION_MODEL_DEFAULT_,protege:true,defaut:false}],props=PropertiesService.getScriptProperties(),extra=[];
   try{
-    var raw=PropertiesService.getScriptProperties().getProperty(EUC_DEV436_MISSION_MODELS_KEY_),extra=raw?JSON.parse(raw):[];
+    var raw=props.getProperty(EUC_DEV436_MISSION_MODELS_KEY_);extra=raw?JSON.parse(raw):[];
     if(Array.isArray(extra))base=base.concat(extra);
   }catch(e){}
+  var selected='';try{selected=EUC_DEV368_t(props.getProperty(EUC_DEV472_MISSION_DEFAULT_KEY_))}catch(e2){}
+  if(!selected){for(var i=base.length-1;i>=0;i--){if(base[i].defaut){selected=base[i].id;break;}}}
+  if(!selected||!base.some(function(x){return x.id===selected}))selected='eucalyptus-standard';
+  base.forEach(function(x){x.defaut=x.id===selected});
   return base;
 }
 function EUC_DEV436_listMissionModels(){EUC_DEV368_admin();return{ok:true,models:EUC_DEV436_models_()}}
@@ -250,16 +272,31 @@ function EUC_DEV436_saveMissionModel(q){
   var props=PropertiesService.getScriptProperties(),raw=props.getProperty(EUC_DEV436_MISSION_MODELS_KEY_),models=[];
   try{models=raw?JSON.parse(raw):[]}catch(e){models=[]}
   if(!Array.isArray(models))models=[];
-  if(q.defaut)models.forEach(function(x){if(x.famille===fam)x.defaut=false});
-  var id='modele-'+Utilities.getUuid(),item={id:id,label:label,famille:fam,documentId:documentId,defaut:q.defaut!==false};
+  var id='modele-'+Utilities.getUuid(),item={id:id,label:label,famille:fam,documentId:documentId,defaut:false};
   models.push(item);props.setProperty(EUC_DEV436_MISSION_MODELS_KEY_,JSON.stringify(models));
+  if(q.defaut!==false)props.setProperty(EUC_DEV472_MISSION_DEFAULT_KEY_,id);
   return{ok:true,model:item,models:EUC_DEV436_models_()};
+}
+function EUC_DEV472_setDefaultMissionModel(q){
+  EUC_DEV368_admin();var id=EUC_DEV368_t(q&&q.id),models=EUC_DEV436_models_();
+  if(!id||!models.some(function(x){return x.id===id}))throw new Error('Modèle introuvable.');
+  PropertiesService.getScriptProperties().setProperty(EUC_DEV472_MISSION_DEFAULT_KEY_,id);
+  return{ok:true,models:EUC_DEV436_models_()};
+}
+function EUC_DEV472_deleteMissionModel(q){
+  EUC_DEV368_admin();var id=EUC_DEV368_t(q&&q.id);if(!id||id==='eucalyptus-standard')throw new Error('Le modèle Eucalyptus standard est protégé.');
+  var props=PropertiesService.getScriptProperties(),raw=props.getProperty(EUC_DEV436_MISSION_MODELS_KEY_),models=[];
+  try{models=raw?JSON.parse(raw):[]}catch(e){models=[]}if(!Array.isArray(models))models=[];
+  var kept=models.filter(function(x){return x.id!==id});if(kept.length===models.length)throw new Error('Modèle introuvable.');
+  props.setProperty(EUC_DEV436_MISSION_MODELS_KEY_,JSON.stringify(kept));
+  if(EUC_DEV368_t(props.getProperty(EUC_DEV472_MISSION_DEFAULT_KEY_))===id)props.setProperty(EUC_DEV472_MISSION_DEFAULT_KEY_,'eucalyptus-standard');
+  return{ok:true,models:EUC_DEV436_models_()};
 }
 function EUC_DEV436_model_(id,famille){
   var models=EUC_DEV436_models_(),wanted=EUC_DEV368_t(id),fam=EUC_DEV368_t(famille).toUpperCase();
   var selected=models.filter(function(x){return x.id===wanted&&(x.famille==='TOUS'||x.famille===fam)})[0];
-  if(!selected)selected=models.filter(function(x){return x.defaut&&x.famille===fam})[0];
-  if(!selected)selected=models.filter(function(x){return x.defaut&&x.famille==='TOUS'})[0]||models[0];
+  if(!selected)selected=models.filter(function(x){return x.defaut&&(x.famille==='TOUS'||x.famille===fam)})[0];
+  if(!selected)selected=models.filter(function(x){return x.famille===fam})[0]||models.filter(function(x){return x.famille==='TOUS'})[0]||models[0];
   return selected;
 }
 function EUC_DEV436_replace_(body,key,value){

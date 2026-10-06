@@ -43,7 +43,7 @@
     .modal-card h3{margin-top:0}.modal-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;max-height:180px;overflow:auto;font-size:13px}
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
     @media(max-width:900px){.context,.summary,.assignbar{grid-template-columns:1fr}}
-    @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#mapPfmp,#exportPdf,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
+    @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#mapPfmp,#exportPdf,#missionOrders,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
   
     .hist-v162{margin-top:5px;color:#b42318;font-size:11px}.hist-v162 summary{cursor:pointer;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a}.hist-v162 span{font-weight:400}
     .retire-v162{background:#fff;color:#b42318!important;border:1px solid #f1aeb5!important}
@@ -173,6 +173,7 @@ body{background:#f7fbf9!important}
     <div class="mail-actions">
       <button id="mapPfmp" class="secondary" type="button">Carte des lieux de stage</button>
       <button id="exportPdf" class="secondary" type="button">Exporter PDF</button>
+      <a id="missionOrders" class="secondary" href="#">Ordres de mission</a>
       <a id="mailParams" class="secondary" href="#">Paramètres des envois</a>
       <button id="sendTable" class="primary" type="button">Envoyer le tableau par email</button>
     </div>
@@ -227,7 +228,7 @@ const DETAIL_INIT=<?!= detailJson ?>;
 (function(){
   const back=document.getElementById('back'),yearSelect=document.getElementById('yearSelect'),pageTitle=document.getElementById('pageTitle'),pageSub=document.getElementById('pageSub'),classLabel=document.getElementById('classLabel'),ppLabel=document.getElementById('ppLabel'),periodTabs=document.getElementById('periodTabs'),tbody=document.getElementById('tbody');
   const toolbar=document.getElementById('assignToolbar'),assignStatus=document.getElementById('assignStatus'),selectAll=document.getElementById('selectAll'),selectedCount=document.getElementById('selectedCount'),phoneProfInput=document.getElementById('phoneProfInput'),visitProfInput=document.getElementById('visitProfInput'),phoneProfSuggestions=document.getElementById('phoneProfSuggestions'),visitProfSuggestions=document.getElementById('visitProfSuggestions'),phoneAssignBtn=document.getElementById('phoneAssignBtn'),visitAssignBtn=document.getElementById('visitAssignBtn');
-  const sendTable=document.getElementById('sendTable'),mailParams=document.getElementById('mailParams'),mailModal=document.getElementById('mailModal'),mailModalText=document.getElementById('mailModalText'),mailTo=document.getElementById('mailTo'),mailCc=document.getElementById('mailCc'),mailCancel=document.getElementById('mailCancel'),mailConfirm=document.getElementById('mailConfirm');
+  const sendTable=document.getElementById('sendTable'),mailParams=document.getElementById('mailParams'),missionOrders=document.getElementById('missionOrders'),mailModal=document.getElementById('mailModal'),mailModalText=document.getElementById('mailModalText'),mailTo=document.getElementById('mailTo'),mailCc=document.getElementById('mailCc'),mailCancel=document.getElementById('mailCancel'),mailConfirm=document.getElementById('mailConfirm');
 
   let yearContext=ANNEE_CTX||{annees:[],active:''},detail=DETAIL_INIT||{},selectedProfPhone=null,selectedProfVisit=null,pendingMail=null;
   let professeursLoading=false,professeursWaiters=[];
@@ -382,6 +383,7 @@ function statusPill(x){
   function render(){
     window.EUC_DEV417_DETAIL_CURRENT=detail;
     back.href=C.baseUrl+'?page=suivi-conventions';mailParams.href=C.baseUrl+'?page=parametres-envois-pfmp';
+    var missionUrl=new URL(C.baseUrl);missionUrl.searchParams.set('page','ordres-mission-pfmp');missionUrl.searchParams.set('annee',detail.annee||'');missionUrl.searchParams.set('famille',detail.famille||(new URLSearchParams(location.search).get('famille')||''));missionUrl.searchParams.set('classe',detail.classe&&detail.classe.id||'');missionUrl.searchParams.set('classeNom',detail.classe&&detail.classe.nom||'');missionUrl.searchParams.set('periode',detail.periode&&detail.periode.id||'');missionUrl.searchParams.set('periodeNom',detail.periode&&detail.periode.libelle||'');missionOrders.href=missionUrl.toString();
     pageTitle.textContent='Suivi PFMP : '+(detail.classe&&detail.classe.nom||'Classe');
     pageSub.textContent=detail.periode?[detail.periode.libelle,detail.periode.debut,detail.periode.fin].filter(Boolean).join(' · '):'Aucune période sélectionnée';
     classLabel.textContent=(detail.classe&&detail.classe.nom||'')+' — '+detail.annee;
