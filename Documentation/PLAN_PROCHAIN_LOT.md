@@ -1,6 +1,6 @@
 # Prochain lot après DEV452
 
-0. Réaliser une recette visuelle authentifiée du dossier de demande d’apprentissage avec le PDF fusionné de huit pages : contrôler l’alignement des champs sur les trois modèles et compléter la carte de coordonnées pour les prochains champs métier demandés, sans créer d’historique d’impression.
+0. Après suppression éventuelle des pointillés dans le modèle source, refaire un seul contrôle visuel sur les huit pages sans déplacer les libellés, les marges, l’ordre ni le nombre de pages. Pour préremplir nationalité, lieu de naissance ou NIR, identifier d’abord une source autorisée et des colonnes explicites ; ne jamais les déduire de l’INE ou du responsable légal.
 
 1. Observer une journée complète dans `Paramétrage → Consommation API Grist` et comparer le total PFMP aux informations que pourra fournir le support Grist; ne pas assimiler l'estimation PFMP au compteur officiel du document.
 2. Conserver le déclencheur de snapshots désinstallé tant que son remplacement incrémental n'est pas prêt. Le futur traitement doit être différentiel, plafonné et interrompu immédiatement par le coupe-circuit.

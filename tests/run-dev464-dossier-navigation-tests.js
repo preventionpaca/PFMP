@@ -25,6 +25,7 @@ test('le détail rapide public reste en lecture seule et l’admin reste contrô
 
 test('la page dossier est réservée à l’administration et reliée au centre',()=>{
   assert(server.includes('EUC_DEV464_admin_();'),'garde admin absente');
+  assert(server.includes("EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'"),'configuration serveur encore branchée sur le déploiement public');
   assert(router.includes("'dossier-apprentissage-pfmp'"),'route absente');
   assert(admin.includes('Dossier de demande d’apprentissage'),'tuile absente');
   assert(admin.includes("?page=dossier-apprentissage-pfmp"),'lien absent');
@@ -43,7 +44,7 @@ test('l’autocomplétion charge un index unique sans appel serveur à chaque fr
 
 test('INE et NIR restent deux champs distincts et aucune valeur n’est inventée',()=>{
   assert(server.includes("['INE','Numero_INE','Numero_national']"),'aliases INE absents');
-  assert(server.includes("['NIR','Numero_securite_sociale','Numero_securite','SSN']"),'aliases NIR absents');
+  assert(server.includes("['NIR','Numero_securite_sociale','Numero_securite_sociale_eleve','Numero_securite','SSN']"),'aliases NIR absents');
   assert(!server.includes("nir:EUC_DEV464_t_(f.Numero_national"),'numéro national confondu avec NIR');
   assert(html.includes("['','eleve.nir','N° de sécurité sociale']"),'champ NIR absent');
 });
@@ -72,6 +73,29 @@ test('les dates Grist en secondes et millisecondes restent lisibles',()=>{
   const ctx={Date,String,Number,Array,Object,isNaN,Math};vm.createContext(ctx);vm.runInContext(server,ctx);
   assert(ctx.EUC_DEV464_date_(1791237599)==='05/10/2026','secondes Unix mal lues');
   assert(ctx.EUC_DEV464_date_(1791237599000)==='05/10/2026','millisecondes mal lues');
+});
+
+test('l’adresse élève absente reprend celle du responsable légal sans inventer le NIR',()=>{
+  const rows={
+    EUC_ELEVES_PFMP:[{id:7,fields:{Nom:'TEST',Prenom:'Camille',Date_naissance:'2010-08-17',Numero_national:'INE-TEST',Formation_Pronote:'Première pro véhicules'}}],
+    EUC_RESPONSABLES_ELEVES_PFMP:[{id:9,fields:{Nom:'PARENT',Responsable_legal:true,Adresse_1:'12 rue des Écoles',Code_postal:'06000',Ville:'Nice'}}],
+    EUC_APPRENTISSAGE_PFMP:[]
+  };
+  const ctx={Date,String,Number,Array,Object,isNaN,Math,EUC_PFMP_contexteAdmin_:()=>({autorise:true}),EUC_DEV190G_fastRecords_:(table)=>rows[table]||[]};
+  vm.createContext(ctx);vm.runInContext(server,ctx);const d=ctx.EUC_DEV464_studentDossier(7);
+  assert(d.eleve.adresse==='12 rue des Écoles','adresse responsable non reprise');
+  assert(d.eleve.codePostal==='06000'&&d.eleve.ville==='Nice','localité responsable non reprise');
+  assert(d.eleve.ine==='INE-TEST'&&d.eleve.nir==='','INE réutilisé comme NIR');
+  assert(d.eleve.etablissement==='Lycée Les Eucalyptus','établissement par défaut absent');
+  assert(d.eleve.annee===ctx.EUC_DEV464_currentSchoolYear_(),'année scolaire courante absente');
+});
+
+test('les zones PDF corrigées ne chevauchent plus les libellés ni le pied de page',()=>{
+  assert(!html.includes('w(p,e.formation,200,122,300)'),'formation encore injectée sur le bloc CFA de la page 2');
+  assert(html.includes("w(p,e.etablissement||'Lycée Les Eucalyptus',190,104"),'dernier établissement absent de la page 1');
+  assert(html.includes('w(p,e.formation||e.classe,180,91'),'dernière classe absente de la page 1');
+  assert(html.includes('w(p,e.telephone,210,455')&&html.includes('w(p,e.courriel,210,429'),'coordonnées page 7 encore sur les libellés');
+  assert(html.includes("' - page '+(i+1)+'/8',405,18"),'pied de page encore hors marge utile');
 });
 
 console.log(`\nDEV464: ${ok} tests réussis, ${ko} échec(s)`);if(ko)process.exit(1);

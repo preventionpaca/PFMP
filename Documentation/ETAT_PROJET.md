@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV465 (données élève et calage du dossier d’apprentissage)
+
+- Le fichier Pronote réellement importé contient la date de naissance, l’adresse élève, le code postal, la ville, le pays, le courriel, le téléphone, l’INE/numéro national et la formation. Il ne contient pas la nationalité, le lieu de naissance ni le NIR ; ces trois champs restent donc volontairement vides au lieu d’être déduits ou inventés.
+- Quand l’adresse élève est absente, le dossier reprend désormais l’adresse, le code postal, la ville et le pays du responsable légal prioritaire, puis du responsable en charge. L’INE n’est jamais réutilisé comme NIR. L’année scolaire est complétée avec l’année courante et le dernier établissement est fixé au `Lycée Les Eucalyptus`.
+- La formation n’est plus injectée dans le pied CFA de la page 2 : elle est placée dans `Dernière classe fréquentée` en page 1, avec l’établissement et l’année scolaire. La date et le lieu de naissance ont des zones séparées.
+- La page 7 place la date et le lieu de naissance sur leur ligne et décale le téléphone et le courriel afin de ne plus recouvrir leurs libellés. La date d’impression et la pagination ajoutées par l’application sont remontées dans la marge utile sur les huit pages.
+- Contrôle visuel hors ligne sur les huit pages du modèle, avec données fictives, puis contrôle du Web App administrateur réellement servi : l’index charge toujours `788` élèves et le dossier ciblé s’ouvre sans écriture métier. Les pointillés du modèle peuvent être retirés à condition de conserver strictement le format A4, l’ordre, le nombre de pages et la position des libellés.
+- Tests ciblés DEV464/DEV465 : `11/11`. La suite complète conserve uniquement les sept échecs historiques déjà documentés (routeur ancien, versions dev.8/dev.27 et audit dev.9 absent) ; aucun test du lot n’échoue.
+- Déploiement : version Apps Script immuable `854` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante des deux fichiers modifiés est identique à la copie locale et le manifeste conserve `USER_DEPLOYING` / `ANYONE_ANONYMOUS`.
+- Aucune donnée Grist, aucun élève, aucune convention, aucun courriel et aucun ordre de mission n’ont été modifiés. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV464 (navigation canonique et dossier d’apprentissage)
 
 - Correctif DEV464c après contrôle réel : la tuile du dossier utilisait encore une URL relative, résolue par Apps Script dans l’iframe technique `googleusercontent.com/userCodeAppPanel`, d’où la page blanche. La tuile et le retour « Administration PFMP » visent désormais explicitement le Web App administrateur existant et utilisent `target="_top"`. Les tests interdisent le retour à une navigation relative ou au déploiement public.
