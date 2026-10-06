@@ -76,4 +76,12 @@ test('les anciens wrappers de mesure restent appelables sans écriture', () => {
   assert.doesNotMatch(source, /PropertiesService|UrlFetchApp|EUC_ENT_grist/);
 });
 
+test('l’accueil administrateur fonctionne sans l’ancien module passerelle', () => {
+  const source = read('EUC_CENTRE_ADMIN_PFMP_WebApp.gs');
+  assert.match(source, /typeof EUC_DEV270B_contextOrNull_==='function'/);
+  assert.match(source, /typeof EUC_PFMP_contexteAdmin_==='function'/);
+  assert.match(source, /ctx=EUC_PFMP_contexteAdmin_\(\)/);
+  assert.match(source, /!ctx\s*\|\|\s*!ctx\.autorise/);
+});
+
 if (!process.exitCode) console.log(`\n${passed} tests DEV470 navigation Accueil réussis.`);

@@ -5,7 +5,8 @@
 - Tous les boutons et liens visibles « Accueil PFMP » des écrans administratifs pointent désormais vers `https://alternance.loucodi.fr/`, avec navigation dans la fenêtre haute. Ils ne dépendent plus de l'URL Apps Script courante ni du déploiement qui a rendu la page.
 - La normalisation couvre les vues actives suivies dans Git : synthèses, familles, détails de classe, apprentis, migration JotForm et géocodage. Les autres liens internes restent sur leurs routes administratives ou publiques respectives.
 - Le contrôle après publication a révélé que d'anciens wrappers DEV394 appelaient encore un profiler temporaire qui n'est plus livré. Trois fonctions de compatibilité neutres restaurent ces routes sans écriture de trace, sans appel réseau et sans accès Grist.
-- Tests ciblés : `6/6` DEV470, `15/15` DEV459, `6/6` DEV463 et `15/15` DEV464. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- Le centre administrateur accepte aussi l'authentification Google Workspace existante lorsque l'ancienne passerelle multi-domaines DEV270B n'est pas livrée. Le retour par le sous-domaine ne dépend donc plus de ce module historique.
+- Tests ciblés : `7/7` DEV470, `15/15` DEV459, `6/6` DEV463 et `15/15` DEV464. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
 - Aucune donnée Grist n'a été lue ou modifiée, aucun import, courriel, ordre de mission ou traitement métier n'a été déclenché et la production Grist interdite n'a pas été consultée.
 
 ## Mise à jour du 6 octobre 2026 — DEV469 (affectations professeur durables à la relecture)

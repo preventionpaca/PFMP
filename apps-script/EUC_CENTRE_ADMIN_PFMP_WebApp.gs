@@ -3,19 +3,27 @@ function EUC_CENTRE_ADMIN_afficherApplication(e){
   var auth=String(e&&e.parameter&&e.parameter.auth||'').trim();
   var ctx=null;
 
-  if(auth){
+  if(auth && typeof EUC_DEV270B_startSession_==='function'){
     ctx=EUC_DEV270B_startSession_(auth);
   }
 
-  if(!ctx){
+  if(!ctx && typeof EUC_DEV270B_contextOrNull_==='function'){
     ctx=EUC_DEV270B_contextOrNull_();
   }
 
-  if(!ctx){
+  /* Le sous-domaine peut arriver sans le module passerelle DEV270B. Dans ce
+   * cas, réutiliser l'authentification Google Workspace déjà validée par le
+   * centre au lieu de produire une page blanche. */
+  if(!ctx && typeof EUC_PFMP_contexteAdmin_==='function'){
+    ctx=EUC_PFMP_contexteAdmin_();
+  }
+
+  if(!ctx && typeof EUC_DEV270B_loginPage_==='function'){
     return EUC_DEV270B_loginPage_();
   }
 
   if(
+    !ctx ||
     !ctx.autorise ||
     ['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role)<0
   ){
