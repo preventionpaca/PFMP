@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV482 (workflow de release bleu / vert)
+
+- Un workflow de publication contrôlé est installé dans `scripts/pfmp-release.sh`. `prepare` travaille depuis un clone propre du commit, exécute la suite complète, construit le paquet Apps Script complet, pousse uniquement `@HEAD`, relit le distant par empreinte logique et contrôle 25 routes. `promote` exige exactement le candidat validé, crée une version immuable, met à jour uniquement les deux Web Apps stables existantes et revient automatiquement aux versions précédentes si la recette verte échoue.
+- La suite complète est désormais verte : `560/560` tests. Les anciennes assertions `dev.8` / `dev.27` ont été réalignées sur les versions réellement présentes sans supprimer de contrôle métier. Les dépendances de test qui n'étaient présentes que dans le répertoire de travail sont maintenant versionnées ; un commit propre est reproductible.
+- Le paquet complet contient `368` fichiers Apps Script logiques. La relecture distante est identique ; la comparaison normalise uniquement l'extension `.gs` restituée en `.js` par `clasp pull`, tout en comparant strictement les noms logiques et les octets.
+- Le canal bleu `@HEAD` a été mis à jour sans modifier les URL vertes. Le contrôle réel donne `18/25` routes valides. Les sept autres sont arrêtées par la garde de cible Grist : les propriétés Apps Script sont partagées avec le vert et leur cible actuelle ne correspond pas à la recette désormais autorisée `j1jDArBkzi7P`.
+- Aucune promotion n'a donc été réalisée. Les deux Web Apps stables restent sur la version immuable `881`; aucune propriété partagée n'a été changée. Changer la cible commune maintenant couperait la version stable. Une décision est nécessaire entre un projet Apps Script de développement réellement isolé (recommandé) et une migration coordonnée de la configuration commune.
+- Aucun accès à la production Grist interdite, aucune écriture élève/convention/affectation, aucun import, aucun courriel, PDF ou ordre de mission n'a été déclenché.
+
 ## Mise à jour du 6 octobre 2026 — DEV480 (publication effective des réglages de courriel)
 
 - Le contrôle navigateur après DEV479 a révélé que les versions `878` et `879` avaient été créées puis attachées aux Web Apps sans les deux fichiers modifiés : le répertoire de préparation ne respectait pas le `rootDir` `apps-script` de `.clasp.json`. Les numéros de version étaient donc corrects, mais l'interface servie restait l'ancienne.

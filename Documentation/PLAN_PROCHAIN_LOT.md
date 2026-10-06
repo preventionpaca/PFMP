@@ -1,4 +1,17 @@
-# Prochain lot après DEV481
+# Prochain lot après DEV482
+
+Le workflow bleu / vert est installé et sa protection est effective : il a
+bloqué la promotion du candidat après le contrôle réel du canal bleu. Les deux
+Web Apps stables restent sur `881`.
+
+Priorité avant toute nouvelle évolution : isoler la configuration de
+développement. Les déploiements d'un même projet Apps Script partagent leurs
+propriétés ; la cible actuelle du vert ne correspond pas à la recette autorisée
+`j1jDArBkzi7P`. Ne pas modifier la propriété commune et ne pas élargir la garde
+de Doc ID. La solution recommandée est un projet Apps Script de développement
+séparé, avec une copie contrôlée des propriétés non secrètes et une saisie
+sécurisée des secrets, puis remplacement du canal bleu dans
+`scripts/pfmp-release-config.json`.
 
 Le prochain déploiement doit obligatoirement utiliser le workflow bleu / vert
 décrit dans `Documentation/RELEASE_BLEU_VERT.md`. `prepare` ne modifie que le
@@ -7,10 +20,9 @@ déploiement de développement `@HEAD`; `promote` est la seule commande autoris�
 retour automatique sur les versions précédentes en cas d'échec.
 
 DEV481 restaure les routes de l'accueil PFMP à partir d'un paquet complet et
-isole les anciens routeurs optionnels. Le contrôle HTTP de la première
-publication a trouvé 23 pages administratives saines sur 24 et a bloqué la page
-Snapshot sur une variable `baseUrl` non initialisée. Ce dernier correctif fait
-partie du candidat bleu suivant et doit être validé avant toute promotion.
+isole les anciens routeurs optionnels. La variable `baseUrl` de la page Snapshot
+est corrigée et cette route passe sur le canal bleu. La promotion reste bloquée
+uniquement par la divergence de configuration partagée décrite ci-dessus.
 
 DEV480 est publié en version immuable `880` sur les deux Web Apps existantes. Cette version est la première publication effective des réglages DEV478/DEV479 après correction du répertoire de préparation Apps Script. Le contrôle navigateur réel montre les champs `Texte de {{EXPEDITEUR}}`, `Lien de la procédure` et `Copie conforme systématique`. Aucun courriel de recette n'a été envoyé.
 
@@ -36,5 +48,5 @@ DEV469 est publié en version immuable `859` sur les deux Web Apps existantes. L
 4. Réduire encore les lectures de structure : mutualiser en priorité `/tables` et les métadonnées répétitives. Objectif suivant pour la liste Apprentis : passer de `5,586 s` à moins de cinq secondes de façon reproductible à froid.
 5. Étendre les mesures différentielles aux autres pages publiques et administratives, sans lancer simultanément des traitements qui fausseraient les résultats ou consommeraient inutilement le quota.
 6. Transformer Destinataires/envois en coquille légère avec chargement ciblé; objectif inférieur à cinq secondes.
-7. Réaligner le socle de tests Git historique (versions dev.8/dev.27, fichier d'audit dev.9 et routeur historique) sans affaiblir les assertions métier.
+7. Conserver la suite complète à `560/560` et ajouter chaque nouvelle route à la matrice bleu / vert avant publication.
 8. Conserver les modes protégés : Pronote `DRY_RUN`, courriels `DISABLED`, aucun envoi ni ordre de mission de test, aucune consultation de la production Grist `3pnVrygfNn7c`.

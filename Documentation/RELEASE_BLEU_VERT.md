@@ -37,6 +37,19 @@ partagées par les déploiements du même projet. La recette automatique reste
 donc strictement en lecture seule ; aucun import, envoi, ordre de mission ou
 écriture métier ne doit être déclenché sans autorisation séparée.
 
+### Verrou de configuration partagé
+
+`prepare` contrôle aussi les pages qui lisent Grist. Si la propriété partagée
+`EUC_ENT_GRIST_DOC_ID` ne correspond pas à la cible autorisée par le candidat,
+la préparation échoue avant toute promotion. Il est interdit de changer cette
+propriété pour « faire passer » le bleu : une modification des propriétés du
+projet affecterait immédiatement le vert encore en service.
+
+Une isolation complète des propriétés et de la base de recette nécessite un
+second projet Apps Script de développement, avec ses propres propriétés. Cette
+évolution doit être décidée et configurée séparément ; elle ne doit jamais être
+simulée en élargissant la liste des Doc ID autorisés.
+
 ## Commandes
 
 Depuis la racine du dépôt :
@@ -69,8 +82,9 @@ dans `.git/pfmp-release-candidate.json` et n'est jamais ajouté au dépôt.
 - ne jamais promouvoir un autre commit que le candidat bleu contrôlé ;
 - ne jamais utiliser un paquet construit depuis les modifications non
   commitées du répertoire de travail ;
-- conserver les deux URL vertes et leur configuration `DOMAIN` /
-  `USER_DEPLOYING` ;
+- conserver les deux URL vertes et leur configuration actuelle
+  `ANYONE_ANONYMOUS` / `USER_DEPLOYING`, nécessaire au parcours QR public par
+  jeton ;
 - ne jamais créer un nouveau Web App pour contourner un échec ;
 - ne jamais affaiblir la matrice de tests ou supprimer une route pour faire
   passer une publication.
