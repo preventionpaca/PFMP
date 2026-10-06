@@ -83,10 +83,15 @@ function EUC_DEV466_prepare_(selected,ctx){
   var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),classBy={},periodMetaBy={};
   (meta.classes||[]).forEach(function(c){classBy[Number(c.id)||0]=c;});
   (meta.periodes||[]).forEach(function(p){periodMetaBy[Number(p.id)||0]=p;});
-  var periods=EUC_DEV307_flatRecords_('Planning_Periodes');
-  var links=EUC_DEV307_flatRecords_('EUC_OFFRES_PERIODES');
-  var years=EUC_DEV307_flatRecords_('Annees_Scolaires');
-  var offers=EUC_DEV307_flatRecords_('EUC_OFFRES_FORMATION');
+  /* Ces tables d'aide n'existent pas dans toutes les générations du
+   * document Grist. Le moteur DEV312 sait résoudre la période depuis les
+   * données de classe/JotForm sans elles : une ancienne table absente ne
+   * doit donc jamais bloquer l'import avant écriture. */
+  var periods=[],links=[],years=[],offers=[];
+  try{periods=EUC_DEV307_flatRecords_('Planning_Periodes');}catch(ePeriods){}
+  try{links=EUC_DEV307_flatRecords_('EUC_OFFRES_PERIODES');}catch(eLinks){}
+  try{years=EUC_DEV307_flatRecords_('Annees_Scolaires');}catch(eYears){}
+  try{offers=EUC_DEV307_flatRecords_('EUC_OFFRES_FORMATION');}catch(eOffers){}
   var accesses=EUC_DEV307_flatRecords_(EUC_DEV307_ACCESS_TABLE_);
   var columns=EUC_DEV307_columns_(EUC_DEV307_ACCESS_TABLE_),byKey={};
   accesses.filter(EUC_DEV466_activeAccess_).forEach(function(a){
