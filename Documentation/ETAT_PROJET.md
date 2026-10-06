@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV470 (Accueil PFMP canonique)
+
+- Tous les boutons et liens visibles « Accueil PFMP » des écrans administratifs pointent désormais vers `https://alternance.loucodi.fr/`, avec navigation dans la fenêtre haute. Ils ne dépendent plus de l'URL Apps Script courante ni du déploiement qui a rendu la page.
+- La normalisation couvre les vues actives suivies dans Git : synthèses, familles, détails de classe, apprentis, migration JotForm et géocodage. Les autres liens internes restent sur leurs routes administratives ou publiques respectives.
+- Tests ciblés : `5/5` DEV470, `15/15` DEV459, `6/6` DEV463 et `15/15` DEV464. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- Aucune donnée Grist n'a été lue ou modifiée, aucun import, courriel, ordre de mission ou traitement métier n'a été déclenché et la production Grist interdite n'a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV469 (affectations professeur durables à la relecture)
 
 - Une affectation administrateur n'était pas perdue : le message de succès n'est renvoyé qu'après le `PATCH` ou le `POST` Grist. En revanche, le détail de classe conservé jusqu'à six heures dans `CacheService` pouvait réafficher l'ancien professeur après un changement de classe.

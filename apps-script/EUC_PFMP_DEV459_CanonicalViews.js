@@ -137,7 +137,7 @@ function EUC_DEV459_adminBreadcrumb_(detail,p){
   function esc(v){return EUC_DEV459_t_(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function url(page,extra){var q=['page='+encodeURIComponent(page),'annee='+encodeURIComponent(p.annee)];Object.keys(extra||{}).forEach(function(k){q.push(encodeURIComponent(k)+'='+encodeURIComponent(extra[k]));});return EUC_DEV459_ADMIN_URL_+'?'+q.join('&');}
   return '<nav id="EUC_DEV183_BREADCRUMB" aria-label="Fil d’Ariane">'+
-    '<a target="_top" href="'+url('admin-pfmp',{})+'">Accueil PFMP</a><span>›</span>'+
+    '<a target="_top" href="https://alternance.loucodi.fr/">Accueil PFMP</a><span>›</span>'+
     '<a target="_top" href="'+url('suivi-conventions',{})+'">Suivi des conventions</a><span>›</span>'+
     '<a target="_top" href="'+url('suivi-conventions-famille',{famille:fam})+'">'+esc(fl)+'</a><span>›</span>'+
     '<strong>'+esc(detail&&detail.classe&&detail.classe.nom||'Classe')+'</strong><span>›</span>'+

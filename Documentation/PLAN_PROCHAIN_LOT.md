@@ -1,5 +1,7 @@
 # Prochain lot après DEV452
 
+DEV470 normalise tous les liens actifs « Accueil PFMP » suivis dans Git vers `https://alternance.loucodi.fr/`. Après publication, contrôler depuis un détail de classe, Apprentis, migration JotForm et géocodage que le clic revient au portail sans page blanche.
+
 DEV468 est publié : après autorisation explicite, les 50 versions anciennes non déployées `664` à `713` ont été supprimées, puis la version immuable `858` a été publiée sur les deux Web Apps existantes, URL inchangées. Les déploiements actifs historiques ont été conservés.
 
 DEV469 est publié en version immuable `859` sur les deux Web Apps existantes. La révision de la table pilote une réconciliation ciblée année/classe/période uniquement après une mutation. Le contrôle navigateur TMVA1, avec passage par une autre classe puis retour, conserve les affectations visiteur déjà enregistrées sur `24` des `25` élèves sans nouvelle écriture.
