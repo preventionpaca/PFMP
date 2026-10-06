@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV477 (calage des tableaux et signatures des ordres de mission)
+
+- Le PDF définitif fourni a été contrôlé visuellement sur ses deux pages. Sur la première page, le tableau des élèves conserve sa largeur et son contenu mais son retrait gauche passe de `12 pt` à `40 pt`, soit un déplacement supplémentaire d’environ `1 cm` vers la droite, sans modifier les marges globales ni le modèle Google Docs.
+- Sur la seconde page, une colonne invisible de `9 pt` (environ `3 mm`) sépare maintenant le tableau récapitulatif des encarts de signature. Les deux encarts sont des tableaux distincts séparés verticalement de `8 pt`; leurs libellés « Date et signature… » sont centrés horizontalement et verticalement.
+- Le calcul de hauteur des encarts conserve la contrainte de quinze élèves sur une seule page A4 paysage. Les colonnes métier, les deux lignes de précisions complémentaires et le contenu des ordres de mission ne sont pas modifiés.
+- Tests ciblés : `18/18` DEV461 et `12/12` DEV472. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `877` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme une empreinte strictement identique à la source testée.
+- Aucun ordre de mission réel, PDF métier ou courriel n’a été généré ou envoyé ; aucune donnée Grist n’a été lue ou écrite et la production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV476 (modèles de courriel des ordres de mission)
 
 - La tentative accompagnée de l’exception Google Docs n’a envoyé aucun message : `EUC_DEV440_sendMissionTransportEmail` génère d’abord le PDF, puis appelle `MailApp.sendEmail`. L’exception s’est donc produite avant l’instruction d’envoi, ce qui explique l’absence de message dans les éléments envoyés.

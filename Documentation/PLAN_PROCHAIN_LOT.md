@@ -1,5 +1,7 @@
 # Prochain lot après DEV452
 
+DEV477 est publié en version immuable `877` sur les deux Web Apps existantes. La première page décale le tableau des élèves d’environ `1 cm` vers la droite. La seconde page ménage environ `3 mm` entre le tableau et les signatures, sépare verticalement les deux encarts et centre leurs libellés. Aucun ordre réel n’a été généré pendant le déploiement : le prochain contrôle doit consister à régénérer un seul PDF depuis l’interface et à vérifier visuellement les deux pages avant tout autre ajustement.
+
 DEV476 est publié en version immuable `876` sur les deux Web Apps existantes. Les objets et corps des courriels d’ordre de mission sont maintenant administrables séparément pour le prévisionnel et le définitif, avec variables contrôlées, prévisualisation et identification explicite du compte expéditeur. Aucun courriel de recette n’a été envoyé. Si une preuve applicative durable d’envoi devient nécessaire, décider séparément entre un journal d’envoi non nominatif et un passage à `GmailApp`, qui élargirait les autorisations Gmail.
 
 DEV470 est publié en version immuable `863` sur les deux Web Apps existantes. Tous les liens actifs « Accueil PFMP » suivis dans Git visent `https://alternance.loucodi.fr/`; les clics réels depuis la synthèse et un détail de classe reviennent au centre administrateur sans page blanche. Les contrôles automatisés couvrent également Apprentis, migration JotForm et géocodage.
