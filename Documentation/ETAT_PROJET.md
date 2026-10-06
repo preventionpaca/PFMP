@@ -9,7 +9,7 @@
 - Le fil d'Ariane du détail de classe expose maintenant de vrais liens `href` en `_top` et son indicateur de chargement navigue lui aussi dans la fenêtre haute ; il ne peut plus enfermer l'accueil dans l'iframe Apps Script.
 - Tests ciblés : `7/7` DEV470, `15/15` DEV459, `6/6` DEV463 et `15/15` DEV464. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
 - Déploiement : version Apps Script immuable `863` publiée sur les deux Web Apps existantes, URL inchangées, après comparaison exacte des fichiers relus depuis Google. Contrôle navigateur réel depuis la synthèse puis depuis le détail TCAR / PFMP n°1 : le lien rendu est exactement `https://alternance.loucodi.fr/`, cible `_top`, et le clic aboutit au « Centre d’administration PFMP + Apprentis » sans page blanche.
-- Aucune donnée Grist n'a été lue ou modifiée, aucun import, courriel, ordre de mission ou traitement métier n'a été déclenché et la production Grist interdite n'a pas été consultée.
+- Le contrôle navigateur s'est limité à l'affichage en lecture seule de la recette ; aucune donnée Grist n'a été modifiée, aucun import, courriel, ordre de mission ou traitement métier n'a été déclenché et la production Grist interdite n'a pas été consultée.
 
 ## Mise à jour du 6 octobre 2026 — DEV469 (affectations professeur durables à la relecture)
 
