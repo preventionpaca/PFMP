@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV475 (modèle mission terminé par la liste des élèves)
+
+- Le modèle Google Docs `Ordre_de_mission_ok_suivi pfmp` a été contrôlé en lecture seule : un seul onglet, les neuf champs de fusion attendus et `{{LISTE_ELEVES}}` placé en dernière position utile, après le bloc de signature du proviseur. Le modèle n’a pas été modifié.
+- Cause de l’exception « Impossible de supprimer le dernier paragraphe d’une partie du document » : après insertion du tableau, le compacteur tentait de retirer le paragraphe vide terminal. Google Docs impose qu’une partie conserve ce dernier paragraphe.
+- Le marqueur `{{LISTE_ELEVES}}` est maintenant vidé sans supprimer son paragraphe, puis le tableau est inséré à son emplacement. Le compactage préserve toujours le dernier paragraphe obligatoire ; le moteur accepte donc un modèle dont la liste des élèves termine le contenu utile.
+- Les courriels d’ordre de mission sont envoyés par `MailApp` sous l’identité du propriétaire du déploiement (`executeAs: USER_DEPLOYING`), actuellement `rudy.themines@lycee-les-eucalyptus.org`, avec le nom visible « PFMP — Lycée Les Eucalyptus ». L’adresse de réponse est celle de l’administrateur actif. L’objet et le corps restent définis dans `EUC_DEV440_prepareMissionTransportEmail` et ne disposent pas encore d’un écran de paramétrage.
+- Tests ciblés : `18/18` DEV461 et `9/9` DEV472. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `875` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme que le générateur publié est identique à la source testée.
+- Aucun courriel ni ordre de mission réel n’a été envoyé ou généré pendant le correctif ; aucune donnée Grist n’a été lue ou écrite et la production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV474 (récapitulatif des visites sur une page A4)
 
 - La troisième page provenait du bloc horizontal des signatures, ajouté sous un tableau déjà dimensionné sur toute sa largeur. Le récapitulatif paysage utilise maintenant la bande libre à droite du tableau des élèves : `630 pt` pour les douze colonnes existantes et `145 pt` pour deux encarts empilés « Date et signature du professeur » puis « Date et signature du directeur délégué aux formations ».
