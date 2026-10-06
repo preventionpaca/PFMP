@@ -9,7 +9,8 @@ function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_co
  * l'index chaud. L'ancienne boucle BACPRO/BTS/CAP faisait trois allers-retours
  * Grist avant même d'afficher la première classe. */
 function EUC_DEV472_familyPayloads_(y){
-  var rows=EUC_DEV190G_fastRecords_(EUC_DEV190E_INDEX_TABLE_,{Annee_scolaire:[y]})||[],latest={};
+  var table=typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',path='/tables/'+encodeURIComponent(table)+'/records?filter='+encodeURIComponent(JSON.stringify({Annee_scolaire:[y]}));
+  var response=EUC_DEV190_api_('get',path,null),rows=response&&response.records||[],latest={};
   rows.filter(function(r){return(r.fields||{}).Actif!==false}).sort(function(a,b){
     return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
   }).forEach(function(r){
@@ -391,7 +392,7 @@ function EUC_DEV440_transportMap_(){
 function EUC_DEV440_missionTargets_(q){
   q=q||{};var y=EUC_DEV368_year(q.annee),family=EUC_DEV368_t(q.famille),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId);
   if(!family)return EUC_DEV368_targets(q);
-  var response=EUC_DEV190G1_fastFamilyIndex({annee:y,famille:family}),payload=response&&response.ready&&response.payload?response.payload:{classes:[]},out=[];
+  var payload=EUC_DEV472_familyPayloads_(y)[family]||{classes:[]},out=[];
   (payload.classes||[]).forEach(function(c){
     var classId=EUC_DEV368_n(c.classeId||c.id);if(cid&&classId!==cid)return;
     (c.periodes||[]).forEach(function(p){var periodId=EUC_DEV368_n(p.id||p.periodeId);if(pid&&periodId!==pid)return;out.push({annee:y,famille:family,classeId:classId,classe:EUC_DEV368_t(c.classe||c.nom),periode:{id:periodId,libelle:EUC_DEV368_t(p.libelle||p.nom),debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})});

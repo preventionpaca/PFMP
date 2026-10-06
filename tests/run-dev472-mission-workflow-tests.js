@@ -32,11 +32,15 @@ test('la liste des modèles propose radio par défaut et suppression',()=>{
 test('le catalogue global effectue une seule lecture de l index chaud',()=>{
   const calls=[],ctx={console,Date,JSON};vm.createContext(ctx);vm.runInContext(server,ctx);
   ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;ctx.EUC_DEV190E_INDEX_TABLE_='INDEX';
-  ctx.EUC_DEV190G_fastRecords_=(table,filter)=>{calls.push({table,filter});return[
+  ctx.EUC_DEV190_api_=(method,path)=>{calls.push({method,path});return{records:[
     {fields:{Famille:'BACPRO',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]})}},
     {fields:{Famille:'BTS',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:31,classe:'1BTSMV',periodes:[]}]})}}
-  ]};
-  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.equal(calls.length,1);assert.deepEqual(calls[0].filter,{Annee_scolaire:['2026-2027']});assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[1].periodes[0].id,62);
+  ]}};
+  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.equal(calls.length,1);assert.equal(calls[0].method,'get');assert.match(decodeURIComponent(calls[0].path),/\/tables\/INDEX\/records\?filter=\{"Annee_scolaire":\["2026-2027"\]\}/);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[1].periodes[0].id,62);
+});
+test('le chargement ciblé des missions réutilise le même catalogue sans ancien helper absent',()=>{
+  assert.doesNotMatch(server,/EUC_DEV190G1_fastFamilyIndex\(\{annee:y,famille:family\}\)/);
+  assert.match(server,/EUC_DEV472_familyPayloads_\(y\)\[family\]/);
 });
 test('un seul modèle est marqué par défaut et le standard est protégé',()=>{
   const store={EUC_DEV436_MISSION_MODELS:JSON.stringify([{id:'modele-test',label:'Mon modèle',famille:'TOUS',documentId:'doc',defaut:true}])};
