@@ -40,7 +40,9 @@ tree_hash() {
 
 new_release_clone() {
   local release_root
-  release_root="$(mktemp -d /tmp/pfmp-release.XXXXXX)"
+  # Chromium installé par Snap ne peut pas lire les fichiers sous /tmp.
+  # La copie reste hors du dépôt, mais dans le même répertoire utilisateur.
+  release_root="$(mktemp -d "$(dirname "$repo_root")/pfmp-release.XXXXXX")"
   git clone --quiet --shared --no-hardlinks "$repo_root" "$release_root/repo"
   git -C "$release_root/repo" checkout --quiet "$(git -C "$repo_root" rev-parse HEAD)"
   printf '%s\n' "$release_root"

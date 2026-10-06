@@ -48,6 +48,11 @@ test('prepare ne modifie aucun déploiement stable', () => {
   assert.match(prepare, /--channel development/);
 });
 
+test('la copie propre reste lisible par le navigateur de test', () => {
+  assert.doesNotMatch(script, /mktemp -d \/tmp\/pfmp-release/);
+  assert.match(script, /dirname \"\$repo_root\"/);
+});
+
 test('promote exige le même commit et le même contenu distant', () => {
   assert.match(script, /commit.*candidate_commit/s);
   assert.match(script, /remote_hash.*candidate_hash/s);
