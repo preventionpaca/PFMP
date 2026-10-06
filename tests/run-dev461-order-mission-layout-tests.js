@@ -17,4 +17,7 @@ assert.match(code,/Math\.min\(145,Math\.ceil\(\(20\+\(g\.lignes\|\|\[\]\)\.lengt
 assert.match(code,/var precision=body\.appendTable\(\[\[''\],\[''\]\]\)/,'les précisions complémentaires doivent contenir exactement deux lignes');
 assert.match(code,/precision\.setColumnWidth\(0,775\)/,'les deux lignes de précisions doivent couvrir toute la largeur utile');
 assert.doesNotMatch(code,/appendTable\(\[\['Signature du professeur','Signature du directeur délégué aux formations'\]\]\)/,'les signatures ne doivent plus créer une troisième page sous le tableau');
-console.log('15 tests DEV461 ordre de mission réussis.');
+assert.match(code,/index\+1<body\.getNumChildren\(\)-1/,'le compactage doit conserver le dernier paragraphe obligatoire de la partie');
+assert.match(code,/EUC_DEV436_replace_\(body,'LISTE_ELEVES',''\);var inserted=EUC_DEV442_insertMissionTable_/,'le marqueur final doit être vidé sans supprimer son paragraphe');
+assert.doesNotMatch(code,/paragraph\.removeFromParent\(\);var inserted=EUC_DEV442_insertMissionTable_/,'un modèle terminé par la liste ne doit jamais supprimer le dernier paragraphe');
+console.log('18 tests DEV461 ordre de mission réussis.');

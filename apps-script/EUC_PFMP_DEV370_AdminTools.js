@@ -347,7 +347,10 @@ function EUC_DEV438_compactMissionPage_(body,table){
      tableau et les signatures. Ils faisaient basculer « Le Proviseur » et
      les deux mentions sur une seconde page. On ne retire que les lignes
      réellement vides (ou constituées d'un saut de page), jamais du texte. */
-  while(index>=0&&index+1<body.getNumChildren()&&removed<40){
+  /* Google Docs impose de conserver le dernier paragraphe de chaque partie.
+     Un modèle peut placer {{LISTE_ELEVES}} tout en bas : dans ce cas le
+     paragraphe vide final reste volontairement présent. */
+  while(index>=0&&index+1<body.getNumChildren()-1&&removed<40){
     var next=body.getChild(index+1);
     if(!EUC_DEV438_emptyParagraph_(next))break;
     next.removeFromParent();removed++;
@@ -538,7 +541,7 @@ function EUC_DEV436_pdfMission(q){
     EUC_DEV436_replace_(body,'PERIODE',g.periode);EUC_DEV436_replace_(body,'DEBUT',g.debut||'');EUC_DEV436_replace_(body,'FIN',g.fin||'');EUC_DEV436_replace_(body,'DATE',date);
     var range=body.findText('\\{\\{LISTE_ELEVES\\}\\}'),rows=[['Élève','Entreprise','Adresse','Transport']];
     g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport||''])});
-    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);paragraph.removeFromParent();var inserted=EUC_DEV442_insertMissionTable_(body,index,rows),table=inserted.table;table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table,inserted.layout);EUC_DEV441_formatMissionSignature_(body)}
+    if(range){var paragraph=range.getElement().getParent(),index=body.getChildIndex(paragraph);EUC_DEV436_replace_(body,'LISTE_ELEVES','');var inserted=EUC_DEV442_insertMissionTable_(body,index,rows),table=inserted.table;table.setBorderColor('#8fbdb3');for(var c=0;c<4;c++){table.getCell(0,c).setBackgroundColor('#e7f5f1').editAsText().setBold(true)}EUC_DEV438_compactMissionPage_(body,table,inserted.layout);EUC_DEV441_formatMissionSignature_(body)}
     else EUC_DEV436_replace_(body,'LISTE_ELEVES',g.lignes.map(function(x){return x.eleve}).join(' · '));
     if(kind==='PREVISIONNEL')EUC_DEV443_applyProvisionalWatermark_(body);
     doc.saveAndClose();
