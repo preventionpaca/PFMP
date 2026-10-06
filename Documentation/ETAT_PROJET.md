@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV472 (ordres de mission intégrés à la fiche de classe)
+
+- La fiche de classe administrative comporte désormais un unique bouton `Ordres de mission`, ajouté à côté de l’export PDF sans modifier le tableau des élèves, les compteurs ni les commandes d’affectation. Il transmet au Web App administrateur l’année scolaire, la famille, la classe et la période déjà affichées.
+- La page des ordres de mission reçoit ce contexte depuis les paramètres externes Apps Script et sélectionne automatiquement les quatre filtres. Contrôle réel depuis TCAR / PFMP n°1 : `2026-2027`, `BACPRO`, `TCAR`, `PFMP n°1`, puis chargement automatique de deux groupes — M. SYLVAIN DELACHE (`10` visites) et M. GERALD FLORIOT (`9` visites), soit les `19` élèves attendus, dont Barbosa et Ben Khaled.
+- Le catalogue de sélection réutilise les vues familiales déjà préparées et leurs caches persistant/mémoire. Il ne télécharge plus l’index nominatif global pour construire la liste des classes : `26` classes BAC Pro sont disponibles lors du contrôle, et une classe sans période reste sélectionnable avec le libellé explicite `Aucune période affichée`.
+- La gestion des modèles affiche une ligne par modèle, avec un bouton radio garantissant un seul modèle par défaut et une commande de suppression. Le modèle Eucalyptus standard est protégé ; supprimer un modèle personnalisé retire uniquement sa configuration et ne supprime jamais le document Google Docs. Aucun modèle personnalisé n’était enregistré lors de la recette.
+- Tests ciblés : `9/9` DEV472, `10/10` DEV461, `10/10` DEV462, `10/10` DEV448. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `871` publiée sur les deux Web Apps existantes, URL inchangées. Le contrôle navigateur réel confirme le préremplissage, la liste complète des classes et périodes, le chargement des missions et l’affichage du modèle protégé par défaut.
+- Aucun PDF, courriel ou ordre de mission n’a été généré ; aucun modèle n’a été supprimé ou changé par défaut ; aucune donnée élève, convention, affectation ou autre donnée métier Grist n’a été écrite. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV471 (écran Ordres de mission restauré)
 
 - La route `ordres-mission-pfmp` appelait bien `Ordres_Mission_PFMP_V368`, mais ce modèle HTML n'était pas présent dans la branche déployée. Le moteur, la génération PDF et les données n'étaient pas en cause.
