@@ -29,14 +29,15 @@ test('la liste des modèles propose radio par défaut et suppression',()=>{
   assert.match(mission,/data-delete-model/);
   assert.match(mission,/Le document Google Docs ne sera pas supprimé/);
 });
-test('le catalogue global effectue une seule lecture SQL et conserve les classes sans période',()=>{
+test('le catalogue global réutilise les métadonnées éprouvées et conserve les classes sans période',()=>{
   const calls=[],ctx={console,Date,JSON};vm.createContext(ctx);vm.runInContext(server,ctx);
-  ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;ctx.EUC_SUIVI_fields_=x=>x;
-  ctx.EUC_SUIVI_sqlLecture_=(sql,args)=>{calls.push({sql,args});return[
-    {classeId:24,classe:'TCAR',diplomeCode:'BAC_PRO_CAR',periodeId:62,periodeLibelle:'PFMP n°1',debut:'28/09/2026',fin:'16/10/2026'},
-    {classeId:31,classe:'1BTSMV',diplomeCode:'BTS_MV',periodeId:null,periodeLibelle:null}
-  ]};
-  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.equal(calls.length,1);assert.deepEqual(calls[0].args,['2026-2027','2026-2027']);assert.match(calls[0].sql,/LEFT JOIN EUC_OFFRES_PERIODES/);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[0].periodes.length,0);assert.equal(result.classes[1].periodes[0].id,62);
+  ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;
+  ctx.EUC_SUIVI_metadonnees_=(year)=>{calls.push(year);return{classes:[
+    {offreAnnee:'2026-2027',classeRef:24,code:'TCAR',categorie:'BAC_PRO',periodes:[{id:'62',libelle:'PFMP n°1',dates:'28/09/2026 au 16/10/2026'}]},
+    {offreAnnee:'2026-2027',classeRef:31,code:'1BTSMV',categorie:'BTS',periodes:[]},
+    {offreAnnee:'2025-2026',classeRef:99,code:'ANCIENNE',categorie:'BAC_PRO',periodes:[]}
+  ]}};
+  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.deepEqual(calls,['2026-2027']);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[0].periodes.length,0);assert.equal(result.classes[1].periodes[0].id,62);assert.equal(result.classes[1].periodes[0].debut,'28/09/2026');
 });
 test('le chargement ciblé des missions réutilise le même catalogue normalisé',()=>{
   assert.doesNotMatch(server,/EUC_DEV190G1_fastFamilyIndex\(\{annee:y,famille:family\}\)/);

@@ -6,8 +6,8 @@ function EUC_DEV368_n(v){return Number(v)||0}
 function EUC_DEV368_admin(){var c=EUC_V156_contexteAdmin_();if(!c)throw new Error('Accès administrateur requis.');return c}
 function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_contexteAnneeLectureV155_().active)}
 /* DEV472 : le sélecteur contient toutes les classes Pronote, y compris celles
- * sans période. Une seule requête SQL légère lit les référentiels normalisés,
- * sans télécharger l'index nominatif devenu trop volumineux. */
+ * sans période. Il réutilise le cache de métadonnées du suivi PFMP et ne
+ * télécharge jamais l'index nominatif devenu trop volumineux. */
 function EUC_DEV472_familyFromDiploma_(code){
   code=EUC_DEV368_t(code).toUpperCase();
   return code.indexOf('BTS_')===0?'BTS':(code.indexOf('CAP_')===0?'CAP':'BACPRO');
@@ -19,21 +19,19 @@ function EUC_DEV472_dateFr_(value){
 }
 function EUC_DEV368_catalog(y){
   EUC_DEV368_admin();y=EUC_DEV368_year(y);
-  var sql="SELECT o.Classe AS classeId,o.Code_classe AS classe,d.Code AS diplomeCode,"+
-    "p.id AS periodeId,COALESCE(NULLIF(p.Libelle_periode,''),NULLIF(p.Code_periode,''),p.Formation) AS periodeLibelle,"+
-    "p.Date_debut AS debut,p.Date_fin AS fin "+
-    "FROM EUC_OFFRES_FORMATION o JOIN EUC_DIPLOMES d ON d.id=o.Diplome JOIN Annees_Scolaires a ON a.id=o.Annee_scolaire "+
-    "LEFT JOIN EUC_OFFRES_PERIODES l ON l.Offre_formation=o.id AND l.Active=1 "+
-    "LEFT JOIN Planning_Periodes p ON p.id=l.Periode AND (CAST(p.Annee_scolaire AS TEXT)=? OR p.Annee_scolaire=a.id) "+
-    "AND UPPER(COALESCE(p.Type,'')) NOT IN ('ENT.','ENT','ALTERNANCE') "+
-    "WHERE o.Actif=1 AND a.Code=? ORDER BY o.Ordre,o.Code_classe,p.Date_debut,p.id";
-  var rows=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_(sql,[y,y])),byClass={},out=[];
-  rows.forEach(function(r){
-    var cid=EUC_DEV368_n(r.classeId),name=EUC_DEV368_t(r.classe),key=cid+'|'+name;
-    if(!byClass[key]){byClass[key]={famille:EUC_DEV472_familyFromDiploma_(r.diplomeCode),classeId:cid,classe:name,periodes:[]};out.push(byClass[key]);}
-    var pid=EUC_DEV368_n(r.periodeId);if(!pid)return;
-    if(byClass[key].periodes.some(function(p){return p.id===pid}))return;
-    byClass[key].periodes.push({id:pid,libelle:EUC_DEV368_t(r.periodeLibelle)||'Période officielle',debut:EUC_DEV472_dateFr_(r.debut),fin:EUC_DEV472_dateFr_(r.fin)});
+  var chrono={mesurer:function(){},finir:function(){}},meta=EUC_SUIVI_metadonnees_(y,chrono)||{},out=[];
+  (meta.classes||[]).forEach(function(c){
+    if(EUC_DEV368_t(c.offreAnnee)!==y)return;
+    var family=c.categorie==='BTS'?'BTS':(c.categorie==='CAP'?'CAP':'BACPRO');
+    out.push({
+      famille:family,
+      classeId:EUC_DEV368_n(c.classeRef||c.classeId),
+      classe:EUC_DEV368_t(c.code||c.libelle),
+      periodes:(c.periodes||[]).map(function(p){
+        var dates=EUC_DEV368_t(p.dates).split(/\s+au\s+/i);
+        return{id:EUC_DEV368_n(p.id||p.periodeId),libelle:EUC_DEV368_t(p.libelle)||'Période officielle',debut:dates[0]||'',fin:dates[1]||''};
+      })
+    });
   });
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out};
 }
