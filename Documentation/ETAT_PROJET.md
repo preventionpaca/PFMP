@@ -1,12 +1,28 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV480 (publication effective des réglages de courriel)
+
+- Le contrôle navigateur après DEV479 a révélé que les versions `878` et `879` avaient été créées puis attachées aux Web Apps sans les deux fichiers modifiés : le répertoire de préparation ne respectait pas le `rootDir` `apps-script` de `.clasp.json`. Les numéros de version étaient donc corrects, mais l'interface servie restait l'ancienne.
+- La préparation du déploiement a été corrigée, les sources ont été réellement poussées, puis la version Apps Script immuable `880` a été publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante des deux fichiers est strictement identique aux sources testées.
+- Contrôle navigateur réel de la version `880` : la rubrique `Gérer les modèles de courriel` expose bien `Texte de {{EXPEDITEUR}}`, `Lien de la procédure` et `Copie conforme systématique`; la liste des variables inclut `{{PROCEDURE}}` et le lien `Accueil PFMP` vise toujours `https://alternance.loucodi.fr/`.
+- Les fonctionnalités DEV478 et DEV479 sont donc effectivement disponibles à partir de la version `880`. Aucun courriel, PDF ou ordre de mission réel n'a été généré ou envoyé ; aucune donnée Grist n'a été lue ou écrite et la production Grist interdite n'a pas été consultée.
+
+## Mise à jour du 6 octobre 2026 — DEV479 (copie conforme des courriels de mission)
+
+- Tous les envois d’ordres de mission, prévisionnels comme définitifs, utilisent maintenant un véritable champ `CC` avec `bfe@lycee-les-eucalyptus.org` par défaut. La copie reçoit le même message et la même pièce jointe que le professeur destinataire.
+- L’adresse est visible et modifiable dans `Ordres de mission → Gérer les modèles de courriel → Copie conforme systématique`. Sa syntaxe est contrôlée avant enregistrement.
+- La fenêtre de confirmation annonce le destinataire principal et la copie avant toute génération. Après envoi, le résultat rappelle les deux adresses. La protection contre le double envoi inclut également l’adresse de copie.
+- Tests ciblés : `12/12` DEV472 et `18/18` DEV461. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- La version `879` a été attachée aux Web Apps mais n'embarquait pas encore ces fichiers à cause du défaut de préparation décrit dans DEV480. La publication effective est la version `880`.
+- Aucun courriel, PDF ou ordre de mission réel n’a été généré ou envoyé ; aucune donnée Grist n’a été lue ou écrite et la production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV478 (procédure cliquable et signature des courriels de mission)
 
 - Les courriels d’ordre de mission disposent maintenant d’une version HTML et d’une version texte de secours. Dans le courriel HTML, le mot « procédure » est cliquable et ouvre la fiche de remboursement fournie sur Google Drive ; l’adresse brute n’apparaît pas dans le corps du message.
 - Le rendu couvre le modèle définitif par défaut avec `{{PROCEDURE}}` et les modèles déjà enregistrés qui contiennent le mot « procédure ». Aucun second PDF n’est joint : seule la pièce jointe de l’ordre de mission reste envoyée.
 - La rubrique `Gérer les modèles de courriel` expose deux réglages persistants hors Grist : `Texte de {{EXPEDITEUR}}`, fixé par défaut à `Bureau des entreprises`, et `Lien de la procédure`. La prévisualisation affiche réellement le mot cliquable. Le compte technique d’envoi, le nom visible et l’adresse de réponse restent affichés séparément et inchangés.
 - Tests ciblés : `12/12` DEV472 et `18/18` DEV461. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
-- Déploiement : version Apps Script immuable `878` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme que le serveur et l’interface publiés sont strictement identiques aux sources testées.
+- La version `878` a été attachée aux Web Apps mais n'embarquait pas encore ces fichiers à cause du défaut de préparation décrit dans DEV480. La publication effective est la version `880`.
 - Aucun courriel, PDF ou ordre de mission réel n’a été généré ou envoyé ; aucune donnée Grist n’a été lue ou écrite et la production Grist interdite n’a pas été consultée.
 
 ## Mise à jour du 6 octobre 2026 — DEV477 (calage des tableaux et signatures des ordres de mission)

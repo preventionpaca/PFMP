@@ -1,6 +1,10 @@
 # Prochain lot après DEV452
 
-DEV478 est publié en version immuable `878` sur les deux Web Apps existantes. Le mot « procédure » des courriels d’ordre de mission devient un lien HTML vers la fiche Drive sans afficher l’URL, tout en conservant un corps texte de secours. La signature `{{EXPEDITEUR}}` et le lien se règlent directement dans `Ordres de mission → Gérer les modèles de courriel`; la signature par défaut est `Bureau des entreprises`. Aucun courriel de recette n’a été envoyé.
+DEV480 est publié en version immuable `880` sur les deux Web Apps existantes. Cette version est la première publication effective des réglages DEV478/DEV479 après correction du répertoire de préparation Apps Script. Le contrôle navigateur réel montre les champs `Texte de {{EXPEDITEUR}}`, `Lien de la procédure` et `Copie conforme systématique`. Aucun courriel de recette n'a été envoyé.
+
+DEV479 met systématiquement `bfe@lycee-les-eucalyptus.org` en copie conforme par défaut pour les courriels prévisionnels et définitifs ; l’adresse est modifiable dans la gestion des modèles et apparaît dans la confirmation puis dans le résultat d’envoi. La publication effective est incluse dans DEV480 / version `880`.
+
+DEV478 rend le mot « procédure » des courriels d’ordre de mission cliquable vers la fiche Drive sans afficher l’URL, tout en conservant un corps texte de secours. La signature `{{EXPEDITEUR}}` et le lien se règlent directement dans `Ordres de mission → Gérer les modèles de courriel`; la signature par défaut est `Bureau des entreprises`. La publication effective est incluse dans DEV480 / version `880`.
 
 DEV477 est publié en version immuable `877` sur les deux Web Apps existantes. La première page décale le tableau des élèves d’environ `1 cm` vers la droite. La seconde page ménage environ `3 mm` entre le tableau et les signatures, sépare verticalement les deux encarts et centre leurs libellés. Aucun ordre réel n’a été généré pendant le déploiement : le prochain contrôle doit consister à régénérer un seul PDF depuis l’interface et à vérifier visuellement les deux pages avant tout autre ajustement.
 
