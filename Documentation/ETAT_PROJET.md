@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV478 (procédure cliquable et signature des courriels de mission)
+
+- Les courriels d’ordre de mission disposent maintenant d’une version HTML et d’une version texte de secours. Dans le courriel HTML, le mot « procédure » est cliquable et ouvre la fiche de remboursement fournie sur Google Drive ; l’adresse brute n’apparaît pas dans le corps du message.
+- Le rendu couvre le modèle définitif par défaut avec `{{PROCEDURE}}` et les modèles déjà enregistrés qui contiennent le mot « procédure ». Aucun second PDF n’est joint : seule la pièce jointe de l’ordre de mission reste envoyée.
+- La rubrique `Gérer les modèles de courriel` expose deux réglages persistants hors Grist : `Texte de {{EXPEDITEUR}}`, fixé par défaut à `Bureau des entreprises`, et `Lien de la procédure`. La prévisualisation affiche réellement le mot cliquable. Le compte technique d’envoi, le nom visible et l’adresse de réponse restent affichés séparément et inchangés.
+- Tests ciblés : `12/12` DEV472 et `18/18` DEV461. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `878` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme que le serveur et l’interface publiés sont strictement identiques aux sources testées.
+- Aucun courriel, PDF ou ordre de mission réel n’a été généré ou envoyé ; aucune donnée Grist n’a été lue ou écrite et la production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV477 (calage des tableaux et signatures des ordres de mission)
 
 - Le PDF définitif fourni a été contrôlé visuellement sur ses deux pages. Sur la première page, le tableau des élèves conserve sa largeur et son contenu mais son retrait gauche passe de `12 pt` à `40 pt`, soit un déplacement supplémentaire d’environ `1 cm` vers la droite, sans modifier les marges globales ni le modèle Google Docs.

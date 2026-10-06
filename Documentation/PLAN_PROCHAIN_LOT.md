@@ -1,5 +1,7 @@
 # Prochain lot après DEV452
 
+DEV478 est publié en version immuable `878` sur les deux Web Apps existantes. Le mot « procédure » des courriels d’ordre de mission devient un lien HTML vers la fiche Drive sans afficher l’URL, tout en conservant un corps texte de secours. La signature `{{EXPEDITEUR}}` et le lien se règlent directement dans `Ordres de mission → Gérer les modèles de courriel`; la signature par défaut est `Bureau des entreprises`. Aucun courriel de recette n’a été envoyé.
+
 DEV477 est publié en version immuable `877` sur les deux Web Apps existantes. La première page décale le tableau des élèves d’environ `1 cm` vers la droite. La seconde page ménage environ `3 mm` entre le tableau et les signatures, sépare verticalement les deux encarts et centre leurs libellés. Aucun ordre réel n’a été généré pendant le déploiement : le prochain contrôle doit consister à régénérer un seul PDF depuis l’interface et à vérifier visuellement les deux pages avant tout autre ajustement.
 
 DEV476 est publié en version immuable `876` sur les deux Web Apps existantes. Les objets et corps des courriels d’ordre de mission sont maintenant administrables séparément pour le prévisionnel et le définitif, avec variables contrôlées, prévisualisation et identification explicite du compte expéditeur. Aucun courriel de recette n’a été envoyé. Si une preuve applicative durable d’envoi devient nécessaire, décider séparément entre un journal d’envoi non nominatif et un passage à `GmailApp`, qui élargirait les autorisations Gmail.
