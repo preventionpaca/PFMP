@@ -29,18 +29,18 @@ test('la liste des modèles propose radio par défaut et suppression',()=>{
   assert.match(mission,/data-delete-model/);
   assert.match(mission,/Le document Google Docs ne sera pas supprimé/);
 });
-test('le catalogue global effectue une seule lecture de l index chaud',()=>{
+test('le catalogue global effectue une seule lecture SQL et conserve les classes sans période',()=>{
   const calls=[],ctx={console,Date,JSON};vm.createContext(ctx);vm.runInContext(server,ctx);
-  ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;ctx.EUC_DEV190E_INDEX_TABLE_='INDEX';
-  ctx.EUC_ENT_grist=(method,path)=>{calls.push({method,path});return{records:[
-    {fields:{Famille:'BACPRO',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]})}},
-    {fields:{Famille:'BTS',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:31,classe:'1BTSMV',periodes:[]}]})}}
-  ]}};
-  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.equal(calls.length,1);assert.equal(calls[0].method,'get');assert.match(decodeURIComponent(calls[0].path),/\/tables\/INDEX\/records\?filter=\{"Annee_scolaire":\["2026-2027"\]\}/);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[1].periodes[0].id,62);
+  ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;ctx.EUC_SUIVI_fields_=x=>x;
+  ctx.EUC_SUIVI_sqlLecture_=(sql,args)=>{calls.push({sql,args});return[
+    {classeId:24,classe:'TCAR',diplomeCode:'BAC_PRO_CAR',periodeId:62,periodeLibelle:'PFMP n°1',debut:'28/09/2026',fin:'16/10/2026'},
+    {classeId:31,classe:'1BTSMV',diplomeCode:'BTS_MV',periodeId:null,periodeLibelle:null}
+  ]};
+  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.equal(calls.length,1);assert.deepEqual(calls[0].args,['2026-2027','2026-2027']);assert.match(calls[0].sql,/LEFT JOIN EUC_OFFRES_PERIODES/);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[0].periodes.length,0);assert.equal(result.classes[1].periodes[0].id,62);
 });
-test('le chargement ciblé des missions réutilise le même catalogue sans ancien helper absent',()=>{
+test('le chargement ciblé des missions réutilise le même catalogue normalisé',()=>{
   assert.doesNotMatch(server,/EUC_DEV190G1_fastFamilyIndex\(\{annee:y,famille:family\}\)/);
-  assert.match(server,/EUC_DEV472_familyPayloads_\(y\)\[family\]/);
+  assert.match(server,/function EUC_DEV440_missionTargets_\(q\)\{\s*return EUC_DEV368_targets\(q\|\|\{\}\);/);
 });
 test('un seul modèle est marqué par défaut et le standard est protégé',()=>{
   const store={EUC_DEV436_MISSION_MODELS:JSON.stringify([{id:'modele-test',label:'Mon modèle',famille:'TOUS',documentId:'doc',defaut:true}])};

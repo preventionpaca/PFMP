@@ -5,23 +5,36 @@ function EUC_DEV368_t(v){return String(v==null?'':v).trim()}
 function EUC_DEV368_n(v){return Number(v)||0}
 function EUC_DEV368_admin(){var c=EUC_V156_contexteAdmin_();if(!c)throw new Error('Accès administrateur requis.');return c}
 function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_contexteAnneeLectureV155_().active)}
-/* DEV472 — le catalogue global des missions se lit en une seule requête sur
- * l'index chaud. L'ancienne boucle BACPRO/BTS/CAP faisait trois allers-retours
- * Grist avant même d'afficher la première classe. */
-function EUC_DEV472_familyPayloads_(y){
-  var table=typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',path='/tables/'+encodeURIComponent(table)+'/records?filter='+encodeURIComponent(JSON.stringify({Annee_scolaire:[y]}));
-  var response=EUC_ENT_grist('get',path),rows=response&&response.records||[],latest={};
-  rows.filter(function(r){return(r.fields||{}).Actif!==false}).sort(function(a,b){
-    return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
-  }).forEach(function(r){
-    var f=r.fields||{},fam=EUC_DEV368_t(f.Famille).toUpperCase();if(!fam||latest[fam])return;
-    try{latest[fam]=JSON.parse(f.Payload_JSON||'{}')}catch(e){}
-  });
-  return latest;
+/* DEV472 : le sélecteur contient toutes les classes Pronote, y compris celles
+ * sans période. Une seule requête SQL légère lit les référentiels normalisés,
+ * sans télécharger l'index nominatif devenu trop volumineux. */
+function EUC_DEV472_familyFromDiploma_(code){
+  code=EUC_DEV368_t(code).toUpperCase();
+  return code.indexOf('BTS_')===0?'BTS':(code.indexOf('CAP_')===0?'CAP':'BACPRO');
+}
+function EUC_DEV472_dateFr_(value){
+  if(!value)return'';
+  if(typeof EUC_SUIVI_dateGristFR_==='function')return EUC_SUIVI_dateGristFR_(value);
+  return EUC_DEV368_t(value);
 }
 function EUC_DEV368_catalog(y){
-  EUC_DEV368_admin();y=EUC_DEV368_year(y);var out=[],payloads=EUC_DEV472_familyPayloads_(y);
-  ['BACPRO','BTS','CAP'].forEach(function(f){var d=payloads[f]||{classes:[]};(d.classes||[]).forEach(function(c){out.push({famille:f,classeId:EUC_DEV368_n(c.classeId||c.id),classe:EUC_DEV368_t(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV368_n(p.id||p.periodeId),libelle:EUC_DEV368_t(p.libelle||p.nom),debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})})})});
+  EUC_DEV368_admin();y=EUC_DEV368_year(y);
+  var sql="SELECT o.Classe AS classeId,o.Code_classe AS classe,d.Code AS diplomeCode,"+
+    "p.id AS periodeId,COALESCE(NULLIF(p.Libelle_periode,''),NULLIF(p.Code_periode,''),p.Formation) AS periodeLibelle,"+
+    "p.Date_debut AS debut,p.Date_fin AS fin "+
+    "FROM EUC_OFFRES_FORMATION o JOIN EUC_DIPLOMES d ON d.id=o.Diplome JOIN Annees_Scolaires a ON a.id=o.Annee_scolaire "+
+    "LEFT JOIN EUC_OFFRES_PERIODES l ON l.Offre_formation=o.id AND l.Active=1 "+
+    "LEFT JOIN Planning_Periodes p ON p.id=l.Periode AND (CAST(p.Annee_scolaire AS TEXT)=? OR p.Annee_scolaire=a.id) "+
+    "AND UPPER(COALESCE(p.Type,'')) NOT IN ('ENT.','ENT','ALTERNANCE') "+
+    "WHERE o.Actif=1 AND a.Code=? ORDER BY o.Ordre,o.Code_classe,p.Date_debut,p.id";
+  var rows=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_(sql,[y,y])),byClass={},out=[];
+  rows.forEach(function(r){
+    var cid=EUC_DEV368_n(r.classeId),name=EUC_DEV368_t(r.classe),key=cid+'|'+name;
+    if(!byClass[key]){byClass[key]={famille:EUC_DEV472_familyFromDiploma_(r.diplomeCode),classeId:cid,classe:name,periodes:[]};out.push(byClass[key]);}
+    var pid=EUC_DEV368_n(r.periodeId);if(!pid)return;
+    if(byClass[key].periodes.some(function(p){return p.id===pid}))return;
+    byClass[key].periodes.push({id:pid,libelle:EUC_DEV368_t(r.periodeLibelle)||'Période officielle',debut:EUC_DEV472_dateFr_(r.debut),fin:EUC_DEV472_dateFr_(r.fin)});
+  });
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out};
 }
 function EUC_DEV368_detail(y,c,p){var r=EUC_DEV190I_readOne({annee:y,classe:c,periode:p}),d=r&&r.ready&&r.detail?r.detail:null;if(!d&&typeof EUC_DEV190_buildHistoricalDetail_==='function')d=EUC_DEV190_buildHistoricalDetail_(y,c,p);d=d||{annee:y,classe:{id:c,nom:''},periode:{id:p},lignes:[]};try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e){}try{var a=EUC_V156_affectations_(y,c,p)||[],m={};a.forEach(function(x){var id=Number(EUC_PFMP_ref_(x.Eleve))||0,t=EUC_DEV368_t(x.Type_suivi).toUpperCase();if(id&&t)m[id+'|'+t]=x});(d.lignes||[]).forEach(function(x){var v=m[EUC_DEV368_n(x.eleveId)+'|VISITE'];if(v)x.professeurVisiteur=EUC_DEV368_t(v.Nom_professeur_snapshot)})}catch(e2){}return d}
@@ -390,14 +403,7 @@ function EUC_DEV440_transportMap_(){
   return map;
 }
 function EUC_DEV440_missionTargets_(q){
-  q=q||{};var y=EUC_DEV368_year(q.annee),family=EUC_DEV368_t(q.famille),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId);
-  if(!family)return EUC_DEV368_targets(q);
-  var payload=EUC_DEV472_familyPayloads_(y)[family]||{classes:[]},out=[];
-  (payload.classes||[]).forEach(function(c){
-    var classId=EUC_DEV368_n(c.classeId||c.id);if(cid&&classId!==cid)return;
-    (c.periodes||[]).forEach(function(p){var periodId=EUC_DEV368_n(p.id||p.periodeId);if(pid&&periodId!==pid)return;out.push({annee:y,famille:family,classeId:classId,classe:EUC_DEV368_t(c.classe||c.nom),periode:{id:periodId,libelle:EUC_DEV368_t(p.libelle||p.nom),debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})});
-  });
-  return out;
+  return EUC_DEV368_targets(q||{});
 }
 function EUC_DEV440_cacheGroup_(group){
   try{
