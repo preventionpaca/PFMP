@@ -27,6 +27,7 @@ const labelledFiles = [
   'EUC_PFMP_DEV459_CanonicalViews.js',
   'Geocodage_PFMP_DEV441.html',
   'Migration_JotForm_PFMP_V160.html',
+  'Ordres_Mission_PFMP_V368.html',
   'Suivi_Conventions_Admin_Summary_V348.html',
   'Suivi_Conventions_Famille_DEV459.html',
   'Suivi_PFMP_Classe_Detail_V156.html'
@@ -60,10 +61,17 @@ test('les modules administratifs secondaires utilisent le sous-domaine', () => {
   for (const file of [
     'Apprentissage_PFMP_V190X.html',
     'Geocodage_PFMP_DEV441.html',
-    'Migration_JotForm_PFMP_V160.html'
+    'Migration_JotForm_PFMP_V160.html',
+    'Ordres_Mission_PFMP_V368.html'
   ]) {
     assert.ok(read(file).includes(homeUrl), file);
   }
+});
+
+test('les ordres de mission ouvrent directement l’accueil canonique dans la fenêtre haute', () => {
+  const source = read('Ordres_Mission_PFMP_V368.html');
+  assert.match(source, /id="back" href="https:\/\/alternance\.loucodi\.fr\/" target="_top"/);
+  assert.doesNotMatch(source, /back\.href=B\.baseUrl\+'\?page=admin-pfmp'/);
 });
 
 test('la consultation publique des apprentis conserve sa route publique', () => {
