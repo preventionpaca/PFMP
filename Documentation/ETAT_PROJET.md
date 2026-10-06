@@ -4,7 +4,9 @@
 
 - La route `ordres-mission-pfmp` appelait bien `Ordres_Mission_PFMP_V368`, mais ce modèle HTML n'était pas présent dans la branche déployée. Le moteur, la génération PDF et les données n'étaient pas en cause.
 - Le modèle HTML précédemment validé est restauré sans modification du moteur d'ordre de mission ni des autres pages. Un test interdit désormais de livrer la route sans son fichier HTML.
-- Aucun ordre de mission n'a été généré ou envoyé et aucune donnée Grist n'a été modifiée.
+- Tests : `10/10` DEV461. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `864` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme que le modèle est identique à la source ; le contrôle navigateur réel affiche l'écran « Ordres de mission — visites PFMP », ses filtres et le bouton `Afficher` sans erreur.
+- Aucun filtre n'a été lancé, aucun ordre de mission n'a été généré ou envoyé et aucune donnée Grist n'a été modifiée.
 
 ## Mise à jour du 6 octobre 2026 — DEV470 (Accueil PFMP canonique)
 
