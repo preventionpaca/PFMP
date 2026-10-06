@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV468 (dates JotForm incluses dans une période officielle)
+
+- Le blocage de `GHARDA Sayane` s'est produit pendant le précontrôle, avant toute écriture : aucune convention partielle et aucune modification élève n'ont été créées. Les dates JotForm `04/10/2026 → 15/10/2026` étaient entièrement incluses dans la PFMP officielle `28/09/2026 → 16/10/2026`, mais l'ancien rapprochement refusait tout début décalé de plus de trois jours.
+- Le rapprochement accepte désormais un intervalle JotForm inclus seulement s'il appartient à une unique période officielle de la vraie classe et de la même année scolaire. Les bornes enregistrées restent celles de la période officielle ; un simple chevauchement, une autre classe, une période P.dif. ou plusieurs fenêtres possibles restent bloquants pour contrôle manuel.
+- La règle utilise les métadonnées de période déjà chargées par le précontrôle et n'ajoute aucun appel Grist.
+- Tests ciblés : `15/15` DEV466/DEV468. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- Le code a été poussé dans la tête du projet Apps Script puis relu avec une empreinte identique à la source testée. La publication immuable est provisoirement bloquée par la limite Google de `200` versions : les deux Web Apps existantes restent donc en version `857` tant qu'une ancienne version inutilisée n'a pas été supprimée dans l'historique du projet. Aucun déploiement n'a été remplacé par `HEAD`.
+- Aucun import n'a été déclenché, aucune donnée Grist n'a été modifiée et la production Grist interdite n'a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV467 (correspondances Pronote et choix de formation du dossier d’apprentissage)
 
 - Le tableau de correspondance fourni a été intégré au dossier d’apprentissage. L’interface propose désormais un choix combiné `diplôme — niveau d’entrée`, puis alimente automatiquement « Formation préparée » avec le diplôme choisi.

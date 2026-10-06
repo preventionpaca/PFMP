@@ -1,5 +1,7 @@
 # Prochain lot après DEV452
 
+Priorité bloquante : libérer explicitement une place dans l'historique Apps Script arrivé à `200` versions, puis créer et publier la version immuable DEV468 sur les deux Web Apps existantes. Ne supprimer aucune version sans choix explicite de la version obsolète ; conserver les déploiements `857` tant que cette opération n'est pas faite.
+
 0. Après suppression éventuelle des pointillés dans le modèle source, refaire un seul contrôle visuel sur les huit pages sans déplacer les libellés, les marges, l’ordre ni le nombre de pages. Pour préremplir nationalité, lieu de naissance ou NIR, identifier d’abord une source autorisée et des colonnes explicites ; ne jamais les déduire de l’INE ou du responsable légal.
 
 1. Observer une journée complète dans `Paramétrage → Consommation API Grist` et comparer le total PFMP aux informations que pourra fournir le support Grist; ne pas assimiler l'estimation PFMP au compteur officiel du document.

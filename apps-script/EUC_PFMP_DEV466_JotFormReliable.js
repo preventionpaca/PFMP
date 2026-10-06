@@ -9,7 +9,7 @@
  * - tampon validé uniquement après relecture Grist ET contrôle de la vue ;
  * - reconstruction DEV425 limitée aux classes/périodes touchées.
  */
-var EUC_DEV466_VERSION_='1.0.0-dev.466';
+var EUC_DEV466_VERSION_='1.0.0-dev.468';
 
 function EUC_DEV466_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV466_ref_(v){
@@ -49,6 +49,62 @@ function EUC_DEV466_safeLabel_(row){
 function EUC_DEV466_verifiedSiret_(row){
   if(typeof EUC_DEV322_verifiedSiret_==='function')return !!EUC_DEV322_verifiedSiret_(row||{});
   return EUC_DEV466_txt_(row&&row.SIRET_statut).toUpperCase()==='VERIFIE';
+}
+function EUC_DEV468_isPdif_(period){
+  var label=EUC_DEV466_txt_(period&&(period.type||period.Type||period.libelle||period.Libelle_periode||period.Code_periode));
+  var normalized=label.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'');
+  return normalized.indexOf('PDIF')>=0||normalized.indexOf('PARCOURSDIFFERENCIE')>=0||normalized.indexOf('FINTERMINALE')>=0;
+}
+function EUC_DEV468_periodFor_(row,student,periods,links,offerId,classId,offers,meta,yearCode){
+  var base=EUC_DEV312_periodFor_(row,student,periods,links,offerId,classId,offers);
+  if(base&&base.ok)return base;
+
+  var rawStart=EUC_DEV307_dateISO_(EUC_DEV307_pick_(row,[
+    'Date_debut_brut','Date_debut','Date début','Date debut','Debut','Début','Date_debut_PFMP','Date début PFMP'
+  ]));
+  var rawEnd=EUC_DEV307_dateISO_(EUC_DEV307_pick_(row,[
+    'Date_fin_brut','Date_fin','Date fin','Fin','Date_fin_PFMP','Date fin PFMP'
+  ]));
+  yearCode=EUC_DEV466_txt_(yearCode);
+  if(!rawStart||!rawEnd||rawStart>rawEnd||!/^20\d{2}-20\d{2}$/.test(yearCode))return base;
+
+  /*
+   * DEV468 : JotForm peut contenir les dates réellement travaillées et non
+   * les bornes complètes de la PFMP. On n'accepte ce cas que si l'intervalle
+   * saisi est entièrement inclus dans une unique fenêtre officielle de la
+   * vraie classe. Aucun rapprochement par simple chevauchement n'est permis.
+   */
+  var windows={};
+  ((meta&&meta.periodes)||[]).forEach(function(period){
+    if(!period||EUC_DEV468_isPdif_(period))return;
+    var periodYear=EUC_DEV466_txt_(period.annee||period.Annee_scolaire);
+    if(periodYear&&periodYear!==yearCode)return;
+    var classIds=Array.isArray(period.classesConcernees)?period.classesConcernees:[];
+    if(!classIds.some(function(id){return EUC_DEV466_ref_(id)===Number(classId);}))return;
+    var officialStart=EUC_DEV307_dateISO_(period.debut||period.Date_debut);
+    var officialEnd=EUC_DEV307_dateISO_(period.fin||period.Date_fin);
+    if(!officialStart||!officialEnd||rawStart<officialStart||rawEnd>officialEnd)return;
+    var key=officialStart+'|'+officialEnd;
+    (windows[key]=windows[key]||[]).push(period);
+  });
+
+  var keys=Object.keys(windows);
+  if(keys.length!==1){
+    if(keys.length>1)return {ok:false,error:'Les dates saisies '+rawStart+' → '+rawEnd+' sont incluses dans plusieurs périodes officielles de la vraie classe ; contrôle manuel requis.'};
+    return base;
+  }
+  var chosen=windows[keys[0]].sort(function(a,b){return Number(a.id||0)-Number(b.id||0);})[0];
+  var bounds=keys[0].split('|');
+  return {
+    ok:true,
+    period:chosen,
+    start:bounds[0],
+    end:bounds[1],
+    correctionDate:'DEV468_INTERVALLE_INCLUS_UNIQUE',
+    dateSaisieDebut:rawStart,
+    dateSaisieFin:rawEnd,
+    annee:yearCode
+  };
 }
 function EUC_DEV466_mergeIncomplete_(existing,prepared,companyFields,columns){
   var out={},business={};
@@ -109,13 +165,13 @@ function EUC_DEV466_prepare_(selected,ctx){
       var realClassId=EUC_DEV466_ref_(student.Classe),chosenClassId=Number(row.Classe_match_id)||0;
       if(!realClassId||!classBy[realClassId])throw new Error('Classe actuelle de l’élève introuvable.');
       if(chosenClassId&&chosenClassId!==realClassId)throw new Error('La classe choisie dans JotForm ne correspond pas à la classe actuelle de l’élève. Corrigez le rapprochement avant import.');
-      var offerId=EUC_DEV466_ref_(student.Offre_formation)||EUC_DEV466_ref_(row.Offre_formation),periodRes=EUC_DEV312_periodFor_(row,student,periods,links,offerId,realClassId,offers);
+      var year=EUC_DEV466_year_(student,years);
+      if(!/^20\d{2}-20\d{2}$/.test(year))throw new Error('Année scolaire de l’élève introuvable.');
+      var offerId=EUC_DEV466_ref_(student.Offre_formation)||EUC_DEV466_ref_(row.Offre_formation),periodRes=EUC_DEV468_periodFor_(row,student,periods,links,offerId,realClassId,offers,meta,year);
       if(!periodRes||!periodRes.ok)throw new Error(EUC_DEV466_txt_(periodRes&&periodRes.error)||'Période officielle introuvable ou ambiguë.');
       var periodId=Number(periodRes.period&&periodRes.period.id)||0;
       if(!periodId)throw new Error('Identifiant de période officielle absent.');
       var period=periodMetaBy[periodId]||{id:periodId,libelle:EUC_DEV466_txt_(periodRes.period.Libelle_periode||periodRes.period.Code_periode||periodRes.period.Type),debut:periodRes.start,fin:periodRes.end};
-      var year=EUC_DEV466_year_(student,years);
-      if(!/^20\d{2}-20\d{2}$/.test(year))throw new Error('Année scolaire de l’élève introuvable.');
       var siret=EUC_DEV466_txt_(row.SIRET_normalise||row.SIRET_brut).replace(/\D/g,'');
       if(siret.length!==14)throw new Error('SIRET invalide : 14 chiffres attendus.');
       var key=EUC_DEV466_key_(studentId,realClassId,periodId,year);

@@ -46,7 +46,56 @@ test('le précontrôle complet précède le passage atomique à DIRTY',()=>{
 test('les anciennes tables de rattachement absentes ne bloquent pas le précontrôle',()=>{
   assert.match(code,/var periods=\[\],links=\[\],years=\[\],offers=\[\]/);
   assert.match(code,/try\{links=EUC_DEV307_flatRecords_\('EUC_OFFRES_PERIODES'\);\}catch\(eLinks\)\{\}/);
-  assert.match(code,/EUC_DEV312_periodFor_\(row,student,periods,links,offerId,realClassId,offers\)/);
+  assert.match(code,/EUC_DEV468_periodFor_\(row,student,periods,links,offerId,realClassId,offers,meta,year\)/);
+});
+
+test('un intervalle JotForm entièrement inclus rejoint son unique période officielle',()=>{
+  const c=context({
+    EUC_DEV312_periodFor_:()=>({ok:false,error:'trop éloignée'}),
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Array.isArray(v)?Number(v[0]):Number(v)
+  });
+  const out=c.EUC_DEV468_periodFor_(
+    {Date_debut_brut:'2026-10-04',Date_fin_brut:'2026-10-15'},
+    {},[],[],0,24,[],
+    {periodes:[{id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[24]}]},
+    '2026-2027'
+  );
+  assert.equal(out.ok,true);assert.equal(out.period.id,62);
+  assert.equal(out.start,'2026-09-28');assert.equal(out.end,'2026-10-16');
+  assert.equal(out.correctionDate,'DEV468_INTERVALLE_INCLUS_UNIQUE');
+});
+
+test('l’inclusion ne contourne ni la vraie classe ni les bornes officielles',()=>{
+  const fallback={ok:false,error:'aucune période suffisamment proche'};
+  const c=context({
+    EUC_DEV312_periodFor_:()=>fallback,
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Array.isArray(v)?Number(v[0]):Number(v)
+  });
+  const meta={periodes:[
+    {id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[99]},
+    {id:63,annee:'2026-2027',debut:'2026-10-05',fin:'2026-10-16',type:'PFMP n°2',classesConcernees:[24]}
+  ]};
+  const out=c.EUC_DEV468_periodFor_({Date_debut:'2026-10-04',Date_fin:'2026-10-15'}, {},[],[],0,24,[],meta,'2026-2027');
+  assert.equal(out.ok,false);assert.match(out.error,/suffisamment proche/);
+});
+
+test('deux fenêtres officielles distinctes contenant les dates restent bloquantes',()=>{
+  const c=context({
+    EUC_DEV312_periodFor_:()=>({ok:false,error:'trop éloignée'}),
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Number(v)
+  });
+  const meta={periodes:[
+    {id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[24]},
+    {id:63,annee:'2026-2027',debut:'2026-10-01',fin:'2026-10-20',type:'PFMP n°2',classesConcernees:[24]}
+  ]};
+  const out=c.EUC_DEV468_periodFor_({Date_debut:'2026-10-04',Date_fin:'2026-10-15'}, {},[],[],0,24,[],meta,'2026-2027');
+  assert.equal(out.ok,false);assert.match(out.error,/plusieurs périodes officielles/);
 });
 
 test('le tampon n’est validé qu’après Grist snapshot et vue publiée',()=>{

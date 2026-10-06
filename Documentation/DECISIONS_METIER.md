@@ -6,6 +6,7 @@
 - Les données 2025-2026 sont un jeu historique de test. Aucun effectif Pronote réel 2026-2027 n’est importé.
 - Un élève sorti reste visible mais n’est plus compté sans convention après sa sortie.
 - Homonymes et rapprochements ambigus ne sont jamais fusionnés automatiquement.
+- Pendant la transition JotForm, des dates réellement travaillées peuvent être rattachées à une PFMP seulement si leur intervalle est entièrement inclus dans une unique période officielle de la vraie classe et de la même année scolaire. La convention conserve alors les bornes officielles ; un chevauchement partiel ou plusieurs périodes possibles imposent un contrôle manuel.
 - Les classes viennent de Grist. Les classes explicitement écartées lors de l’import Élèves + responsables restent hors périmètre PFMP, y compris si elles existent dans les exports Classes/Professeurs.
 - En 2026-2027, `1MP3D`, `2BTS CPI`, `2BTS CPRP`, `2BTS ELEC` et `2BTS CIEL` n’ont volontairement aucune période officielle. Cette absence n’est pas une anomalie.
 - `1BTS ELEC` et `1BTS CIEL` ont des périodes propres, aux mêmes dates : du 24/05/2027 au 02/07/2027.
