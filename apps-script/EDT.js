@@ -10,6 +10,10 @@ function doGet(e) {
   // DEV455 : route de détail ciblée, sans lecture de toute la table snapshot.
   var __d455=typeof EUC_DEV455_routeDetail_==='function'?EUC_DEV455_routeDetail_(e):null;
   if(__d455)return __d455;
+
+  // DEV481 : les liens de l'accueil passent avant les routeurs historiques.
+  var __d481=typeof EUC_DEV481_routeAccueil_==='function'?EUC_DEV481_routeAccueil_(e):null;
+  if(__d481)return __d481;
   // EUC_DEV453_PUBLIC_NAV_BEGIN
   var __p453=String(e&&e.parameter&&e.parameter.page||'');
   if(__p453==='suivi-conventions-public-famille'){
@@ -176,7 +180,7 @@ function doGet(e) {
   if (__uPage === 'parcours-differencie-pfmp') return EUC_DEV190U_afficherPdif(e);
 
   // EUC_DEV190O_PRIORITY_ROUTE
-  var __o = EUC_DEV190O_route_(e);
+  var __o = typeof EUC_DEV190O_route_==='function'?EUC_DEV190O_route_(e):null;
   if (__o) return __o;
 
   // EUC_DEV190N_HARD_ROUTES
@@ -246,23 +250,23 @@ function doGet(e) {
 
 
   // EUC_DEV190L_PRIORITY_ROUTE
-  var __l = EUC_DEV190L_route_(e);
+  var __l = typeof EUC_DEV190L_route_==='function'?EUC_DEV190L_route_(e):null;
   if (__l) return __l;
 
   // EUC_DEV190K4_PRIORITY_ROUTE
-  var __k4 = EUC_DEV190K4_route_(e);
+  var __k4 = typeof EUC_DEV190K4_route_==='function'?EUC_DEV190K4_route_(e):null;
   if (__k4) return __k4;
 
   // EUC_DEV190K3_PRIORITY_ROUTE
-  var __k3 = EUC_DEV190K3_route_(e);
+  var __k3 = typeof EUC_DEV190K3_route_==='function'?EUC_DEV190K3_route_(e):null;
   if (__k3) return __k3;
 
   // EUC_DEV190K2_HARD_ROUTE
-  var __k2 = EUC_DEV190K2_route_(e);
+  var __k2 = typeof EUC_DEV190K2_route_==='function'?EUC_DEV190K2_route_(e):null;
   if (__k2) return __k2;
 
   // EUC_DEV190K_PRIORITY_ROUTER
-  var __dev190kRoute = EUC_DEV190K_routePrioritaire_(e);
+  var __dev190kRoute = typeof EUC_DEV190K_routePrioritaire_==='function'?EUC_DEV190K_routePrioritaire_(e):null;
   if (__dev190kRoute) return __dev190kRoute;
 
   // EUC_DEV190J1_ROUTE_MAINTENANCE

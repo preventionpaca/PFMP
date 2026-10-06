@@ -49,10 +49,9 @@ function EUC_DEV463_dateMs_(value){
 }
 function EUC_DEV441_catalog_(year,requireAdmin){
   if(requireAdmin)EUC_DEV441_admin_();
-  year=EUC_DEV368_year(year);var out=[];
-  ['BACPRO','BTS','CAP'].forEach(function(f){
-    var r=EUC_DEV190G1_fastFamilyIndex({annee:year,famille:f}),d=r&&r.ready&&r.payload?r.payload:{classes:[]};
-    (d.classes||[]).forEach(function(c){out.push({famille:f,classeId:EUC_DEV441_n_(c.classeId||c.id),classe:EUC_DEV441_t_(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV441_n_(p.id||p.periodeId),libelle:EUC_DEV441_t_(p.libelle||p.nom),debut:EUC_DEV441_t_(p.debutFr||p.debut),fin:EUC_DEV441_t_(p.finFr||p.fin)};})});});
+  year=EUC_DEV368_year(year);var out=[],catalog=EUC_DEV368_catalog(year);
+  (catalog&&catalog.classes||[]).forEach(function(c){
+    out.push({famille:EUC_DEV441_t_(c.famille),classeId:EUC_DEV441_n_(c.classeId||c.id),classe:EUC_DEV441_t_(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV441_n_(p.id||p.periodeId),libelle:EUC_DEV441_t_(p.libelle||p.nom),debut:EUC_DEV441_t_(p.debutFr||p.debut),fin:EUC_DEV441_t_(p.finFr||p.fin)};})});
   });
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});return{annee:year,classes:out};
 }
