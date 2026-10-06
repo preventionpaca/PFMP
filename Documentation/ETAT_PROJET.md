@@ -6,6 +6,7 @@
 - La normalisation couvre les vues actives suivies dans Git : synthèses, familles, détails de classe, apprentis, migration JotForm et géocodage. Les autres liens internes restent sur leurs routes administratives ou publiques respectives.
 - Le contrôle après publication a révélé que d'anciens wrappers DEV394 appelaient encore un profiler temporaire qui n'est plus livré. Trois fonctions de compatibilité neutres restaurent ces routes sans écriture de trace, sans appel réseau et sans accès Grist.
 - Le centre administrateur accepte aussi l'authentification Google Workspace existante lorsque l'ancienne passerelle multi-domaines DEV270B n'est pas livrée. Le retour par le sous-domaine ne dépend donc plus de ce module historique.
+- Le fil d'Ariane du détail de classe expose maintenant de vrais liens `href` en `_top` et son indicateur de chargement navigue lui aussi dans la fenêtre haute ; il ne peut plus enfermer l'accueil dans l'iframe Apps Script.
 - Tests ciblés : `7/7` DEV470, `15/15` DEV459, `6/6` DEV463 et `15/15` DEV464. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
 - Aucune donnée Grist n'a été lue ou modifiée, aucun import, courriel, ordre de mission ou traitement métier n'a été déclenché et la production Grist interdite n'a pas été consultée.
 

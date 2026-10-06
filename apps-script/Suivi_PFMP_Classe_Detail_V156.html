@@ -2223,7 +2223,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function feedback(el,url){
     if(el)el.classList.add('euc183-loading');
-    location.href=url;
+    window.top.location.href=url;
   }
 
   function killGlobalSpinner(){
@@ -2264,11 +2264,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
 
     bc.innerHTML=
-      '<a data-d183="accueil">Accueil PFMP</a>'+
+      '<a data-d183="accueil" target="_top" href="'+accueil+'">Accueil PFMP</a>'+
       '<span>›</span>'+
-      '<a data-d183="suivi">Suivi des conventions</a>'+
+      '<a data-d183="suivi" target="_top" href="'+suivi+'">Suivi des conventions</a>'+
       '<span>›</span>'+
-      '<a data-d183="famille">'+fl+'</a>'+
+      '<a data-d183="famille" target="_top" href="'+famille+'">'+fl+'</a>'+
       '<span>›</span>'+
       '<strong>'+((detail.classe&&detail.classe.nom)||'Classe')+'</strong>'+
       '<span>›</span>'+

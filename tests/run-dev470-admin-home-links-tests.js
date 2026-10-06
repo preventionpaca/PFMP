@@ -39,8 +39,11 @@ test('tous les fichiers affichant Accueil PFMP connaissent le sous-domaine canon
 });
 
 test('le détail de classe envoie Accueil PFMP vers le sous-domaine', () => {
-  assert.match(read('Suivi_PFMP_Classe_Detail_V156.html'), /var accueil='https:\/\/alternance\.loucodi\.fr\/'/);
-  assert.doesNotMatch(read('Suivi_PFMP_Classe_Detail_V156.html'), /var accueil=make\('admin-pfmp'/);
+  const source = read('Suivi_PFMP_Classe_Detail_V156.html');
+  assert.match(source, /var accueil='https:\/\/alternance\.loucodi\.fr\/'/);
+  assert.match(source, /data-d183="accueil" target="_top" href="'\+accueil\+'"/);
+  assert.match(source, /window\.top\.location\.href=url/);
+  assert.doesNotMatch(source, /var accueil=make\('admin-pfmp'/);
 });
 
 test('les vues canoniques de synthèse et de famille utilisent le sous-domaine', () => {
