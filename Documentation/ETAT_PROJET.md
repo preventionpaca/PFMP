@@ -6,7 +6,7 @@
 - Le rapprochement accepte désormais un intervalle JotForm inclus seulement s'il appartient à une unique période officielle de la vraie classe et de la même année scolaire. Les bornes enregistrées restent celles de la période officielle ; un simple chevauchement, une autre classe, une période P.dif. ou plusieurs fenêtres possibles restent bloquants pour contrôle manuel.
 - La règle utilise les métadonnées de période déjà chargées par le précontrôle et n'ajoute aucun appel Grist.
 - Tests ciblés : `15/15` DEV466/DEV468. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
-- Le code a été poussé dans la tête du projet Apps Script puis relu avec une empreinte identique à la source testée. La publication immuable est provisoirement bloquée par la limite Google de `200` versions : les deux Web Apps existantes restent donc en version `857` tant qu'une ancienne version inutilisée n'a pas été supprimée dans l'historique du projet. Aucun déploiement n'a été remplacé par `HEAD`.
+- Le code a été poussé dans la tête du projet Apps Script puis relu avec une empreinte identique à la source testée. Après autorisation explicite, les 50 versions anciennes non déployées `664` à `713` ont été supprimées ; les versions utilisées par les déploiements actifs ont été conservées. La version immuable `858` a ensuite été créée et publiée sur les deux Web Apps existantes, URL inchangées. Aucun déploiement n'a été remplacé par `HEAD`.
 - Aucun import n'a été déclenché, aucune donnée Grist n'a été modifiée et la production Grist interdite n'a pas été consultée.
 
 ## Mise à jour du 6 octobre 2026 — DEV467 (correspondances Pronote et choix de formation du dossier d’apprentissage)

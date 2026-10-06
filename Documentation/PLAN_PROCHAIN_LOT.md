@@ -1,6 +1,6 @@
 # Prochain lot après DEV452
 
-Priorité bloquante : libérer explicitement une place dans l'historique Apps Script arrivé à `200` versions, puis créer et publier la version immuable DEV468 sur les deux Web Apps existantes. Ne supprimer aucune version sans choix explicite de la version obsolète ; conserver les déploiements `857` tant que cette opération n'est pas faite.
+DEV468 est publié : après autorisation explicite, les 50 versions anciennes non déployées `664` à `713` ont été supprimées, puis la version immuable `858` a été publiée sur les deux Web Apps existantes, URL inchangées. Les déploiements actifs historiques ont été conservés.
 
 0. Après suppression éventuelle des pointillés dans le modèle source, refaire un seul contrôle visuel sur les huit pages sans déplacer les libellés, les marges, l’ordre ni le nombre de pages. Pour préremplir nationalité, lieu de naissance ou NIR, identifier d’abord une source autorisée et des colonnes explicites ; ne jamais les déduire de l’INE ou du responsable légal.
 
