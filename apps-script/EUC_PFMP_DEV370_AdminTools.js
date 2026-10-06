@@ -434,14 +434,70 @@ function EUC_DEV440_profEmail_(name){
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:'';
 }
 function EUC_DEV443_missionKind_(q){return EUC_DEV368_t(q&&q.missionKind).toUpperCase()==='DEFINITIF'?'DEFINITIF':'PREVISIONNEL';}
+var EUC_DEV476_MISSION_EMAIL_TEMPLATES_KEY_='EUC_DEV476_MISSION_EMAIL_TEMPLATES';
+var EUC_DEV476_MISSION_EMAIL_VARIABLES_=['PROFESSEUR','CLASSE','PERIODE','DEBUT','FIN','TYPE','EXPEDITEUR'];
+function EUC_DEV476_defaultMissionEmailTemplates_(){
+  var signature='\n\nLe remboursement se fait sur la base des justificatifs transmis.\n\nSincères salutations,\n\n{{EXPEDITEUR}}';
+  return{
+    PREVISIONNEL:{
+      subject:'[PFMP] Ordre de mission {{TYPE}} — {{CLASSE}} — {{PERIODE}}',
+      body:'Bonjour,\n\nVous trouverez en pièce jointe l’ordre de mission {{TYPE}} concernant la classe {{CLASSE}} pour la période {{PERIODE}} ({{DEBUT}} au {{FIN}}).\n\nLe véhicule personnel est retenu par défaut pour l’ensemble de vos visites. Si vous effectuez les visites avec un autre moyen de transport (bus, tramway, à pied ou, par nécessité, en visioconférence), merci de nous le signaler par retour de courriel, en précisant les visites concernées et la modalité choisie pour chacune.\n\nSans retour de votre part, le véhicule personnel restera le mode de déplacement retenu pour toutes vos visites.'+signature
+    },
+    DEFINITIF:{
+      subject:'[PFMP] Ordre de mission {{TYPE}} — {{CLASSE}} — {{PERIODE}}',
+      body:'Bonjour,\n\nVous trouverez en pièce jointe l’ordre de mission {{TYPE}} concernant la classe {{CLASSE}} pour la période {{PERIODE}} ({{DEBUT}} au {{FIN}}).\n\nLes moyens de transport indiqués sur ce document correspondent aux modalités définitives enregistrées pour vos visites.'+signature
+    }
+  };
+}
+function EUC_DEV476_validateMissionEmailTemplate_(value){
+  value=value||{};var subject=EUC_DEV368_t(value.subject),body=String(value.body==null?'':value.body).trim();
+  if(!subject||!body)throw new Error('L’objet et le message du modèle de courriel sont obligatoires.');
+  if(subject.length>250)throw new Error('L’objet du courriel est limité à 250 caractères.');
+  if(body.length>10000)throw new Error('Le message du courriel est limité à 10 000 caractères.');
+  var allowed={};EUC_DEV476_MISSION_EMAIL_VARIABLES_.forEach(function(x){allowed[x]=true});
+  var unknown=[],match,re=/\{\{([A-Z_]+)\}\}/g,text=subject+'\n'+body;
+  while((match=re.exec(text)))if(!allowed[match[1]]&&unknown.indexOf(match[1])<0)unknown.push(match[1]);
+  if(unknown.length)throw new Error('Variable(s) inconnue(s) : '+unknown.map(function(x){return'{{'+x+'}}'}).join(', ')+'.');
+  return{subject:subject,body:body};
+}
+function EUC_DEV476_missionEmailTemplates_(){
+  var defaults=EUC_DEV476_defaultMissionEmailTemplates_(),raw='';
+  try{raw=PropertiesService.getScriptProperties().getProperty(EUC_DEV476_MISSION_EMAIL_TEMPLATES_KEY_)||''}catch(e){}
+  if(!raw)return defaults;
+  try{
+    var saved=JSON.parse(raw)||{};
+    ['PREVISIONNEL','DEFINITIF'].forEach(function(kind){if(saved[kind])defaults[kind]=EUC_DEV476_validateMissionEmailTemplate_(saved[kind])});
+  }catch(e2){}
+  return defaults;
+}
+function EUC_DEV476_missionEmailSender_(ctx){
+  var from='';try{from=EUC_DEV368_t(Session.getEffectiveUser().getEmail())}catch(e){}
+  return{from:from,name:'PFMP — Lycée Les Eucalyptus',replyTo:EUC_DEV368_t(ctx&&ctx.email)};
+}
+function EUC_DEV476_listMissionEmailTemplates(){
+  var ctx=EUC_DEV368_admin();
+  return{ok:true,templates:EUC_DEV476_missionEmailTemplates_(),variables:EUC_DEV476_MISSION_EMAIL_VARIABLES_.slice(),sender:EUC_DEV476_missionEmailSender_(ctx)};
+}
+function EUC_DEV476_saveMissionEmailTemplates(q){
+  EUC_DEV368_admin();q=q||{};
+  var templates={PREVISIONNEL:EUC_DEV476_validateMissionEmailTemplate_(q.PREVISIONNEL),DEFINITIF:EUC_DEV476_validateMissionEmailTemplate_(q.DEFINITIF)};
+  PropertiesService.getScriptProperties().setProperty(EUC_DEV476_MISSION_EMAIL_TEMPLATES_KEY_,JSON.stringify(templates));
+  return EUC_DEV476_listMissionEmailTemplates();
+}
+function EUC_DEV476_resetMissionEmailTemplates(){
+  EUC_DEV368_admin();PropertiesService.getScriptProperties().deleteProperty(EUC_DEV476_MISSION_EMAIL_TEMPLATES_KEY_);
+  return EUC_DEV476_listMissionEmailTemplates();
+}
+function EUC_DEV476_renderMissionEmail_(text,values){
+  return String(text==null?'':text).replace(/\{\{([A-Z_]+)\}\}/g,function(all,key){return Object.prototype.hasOwnProperty.call(values,key)?String(values[key]==null?'':values[key]):all});
+}
 function EUC_DEV440_prepareMissionTransportEmail(q){
   var ctx=EUC_DEV368_admin(),g=EUC_DEV440_groupForPdf_(q),sender=EUC_DEV368_t(ctx.nom||ctx.email),replyTo=EUC_DEV368_t(ctx.email);
   if(!g)throw new Error('Groupe de mission introuvable.');
   var recipient=EUC_DEV440_profEmail_(g.professeur);if(!recipient)throw new Error('Aucune adresse électronique valide pour ce professeur.');
-  var kind=EUC_DEV443_missionKind_(q),qualifier=kind==='PREVISIONNEL'?'prévisionnel':'définitif',subject='[PFMP] Ordre de mission '+qualifier+' — '+g.classe+' — '+g.periode;
-  var intro='Bonjour,\n\nVous trouverez en pièce jointe l’ordre de mission '+qualifier+' concernant la classe '+g.classe+' pour la période '+g.periode+' ('+(g.debut||'date de début à préciser')+' au '+(g.fin||'date de fin à préciser')+').';
-  var transport=kind==='PREVISIONNEL'?'\n\nLe véhicule personnel est retenu par défaut pour l’ensemble de vos visites. Si vous effectuez les visites avec un autre moyen de transport (bus, tramway, à pied ou, par nécessité, en visioconférence), merci de nous le signaler par retour de courriel, en précisant les visites concernées et la modalité choisie pour chacune.\n\nSans retour de votre part, le véhicule personnel restera le mode de déplacement retenu pour toutes vos visites.':'\n\nLes moyens de transport indiqués sur ce document correspondent aux modalités définitives enregistrées pour vos visites.';
-  var body=intro+transport+'\n\nLe remboursement se fait sur la base des justificatifs transmis.\n\nSincères salutations,\n\n'+(sender||'Bureau des entreprises');
+  var kind=EUC_DEV443_missionKind_(q),qualifier=kind==='PREVISIONNEL'?'prévisionnel':'définitif',template=EUC_DEV476_missionEmailTemplates_()[kind];
+  var values={PROFESSEUR:g.professeur,CLASSE:g.classe,PERIODE:g.periode,DEBUT:g.debut||'date de début à préciser',FIN:g.fin||'date de fin à préciser',TYPE:qualifier,EXPEDITEUR:sender||'Bureau des entreprises'};
+  var subject=EUC_DEV476_renderMissionEmail_(template.subject,values),body=EUC_DEV476_renderMissionEmail_(template.body,values);
   return{ok:true,to:recipient,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,kind:kind,professeur:g.professeur,classe:g.classe,periode:g.periode};
 }
 function EUC_DEV440_sendMissionTransportEmail(q){
@@ -454,7 +510,8 @@ function EUC_DEV440_sendMissionTransportEmail(q){
     if(prepared.replyTo)options.replyTo=prepared.replyTo;
     MailApp.sendEmail(options);cache.put(duplicateKey,'1',60);
   }finally{lock.releaseLock()}
-  return{ok:true,to:prepared.to,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs};
+  var senderInfo=EUC_DEV476_missionEmailSender_(EUC_DEV368_admin());
+  return{ok:true,to:prepared.to,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs,sentAt:new Date().toISOString(),from:senderInfo.from,replyTo:prepared.replyTo};
 }
 function EUC_DEV440_docsRequest_(documentId,suffix,method,payload){
   if(typeof Docs!=='undefined'&&Docs.Documents){

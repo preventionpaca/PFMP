@@ -50,5 +50,27 @@ test('un seul modèle est marqué par défaut et le standard est protégé',()=>
   ctx.EUC_DEV472_setDefaultMissionModel({id:'eucalyptus-standard'});models=ctx.EUC_DEV436_listMissionModels().models;assert.equal(models.filter(x=>x.defaut).length,1);assert.equal(models.find(x=>x.defaut).id,'eucalyptus-standard');
   assert.throws(()=>ctx.EUC_DEV472_deleteMissionModel({id:'eucalyptus-standard'}),/protégé/);
 });
+test('la page propose une gestion complète des modèles de courriel',()=>{
+  assert.match(mission,/Gérer les modèles de courriel/);
+  for(const id of ['emailKind','emailSubject','emailBody','saveEmailTemplates','resetEmailTemplates','emailPreview','emailFrom','emailReplyTo'])assert.match(mission,new RegExp('id="'+id+'"'));
+  assert.match(mission,/EUC_DEV476_listMissionEmailTemplates/);
+  assert.match(mission,/EUC_DEV476_saveMissionEmailTemplates/);
+  assert.match(mission,/EUC_DEV476_resetMissionEmailTemplates/);
+});
+test('les modèles prévisionnel et définitif sont persistants, validés et fusionnés',()=>{
+  const store={},props={getProperty:k=>store[k]||'',setProperty:(k,v)=>{store[k]=v},deleteProperty:k=>{delete store[k]}};
+  const ctx={console,Date,JSON,PropertiesService:{getScriptProperties:()=>props},Session:{getEffectiveUser:()=>({getEmail:()=> 'deploiement@example.fr'})}};
+  vm.createContext(ctx);vm.runInContext(server,ctx);ctx.EUC_DEV368_t=v=>String(v==null?'':v).trim();ctx.EUC_DEV368_admin=()=>({email:'reponse@example.fr'});
+  let result=ctx.EUC_DEV476_listMissionEmailTemplates();assert.ok(result.templates.PREVISIONNEL.body.includes('véhicule personnel'));assert.ok(result.templates.DEFINITIF.body.includes('modalités définitives'));assert.equal(result.sender.from,'deploiement@example.fr');
+  result=ctx.EUC_DEV476_saveMissionEmailTemplates({PREVISIONNEL:{subject:'Prévision {{CLASSE}}',body:'Bonjour {{PROFESSEUR}}'},DEFINITIF:{subject:'Définitif {{PERIODE}}',body:'Du {{DEBUT}} au {{FIN}}'}});assert.equal(result.templates.PREVISIONNEL.subject,'Prévision {{CLASSE}}');assert.ok(store.EUC_DEV476_MISSION_EMAIL_TEMPLATES);
+  assert.equal(ctx.EUC_DEV476_renderMissionEmail_('Bonjour {{PROFESSEUR}}',{PROFESSEUR:'Mme MARTIN'}),'Bonjour Mme MARTIN');
+  assert.throws(()=>ctx.EUC_DEV476_saveMissionEmailTemplates({PREVISIONNEL:{subject:'{{INCONNUE}}',body:'x'},DEFINITIF:{subject:'x',body:'x'}}),/Variable\(s\) inconnue/);
+  ctx.EUC_DEV476_resetMissionEmailTemplates();assert.equal(store.EUC_DEV476_MISSION_EMAIL_TEMPLATES,undefined);
+});
+test('une erreur PDF interrompt le traitement avant tout envoi',()=>{
+  const send=server.indexOf('MailApp.sendEmail(options)'),pdf=server.indexOf('var mission=EUC_DEV436_pdfMission(q)');
+  assert.ok(pdf>=0&&send>pdf);
+  assert.match(server,/sentAt:new Date\(\)\.toISOString\(\)/);
+});
 
 console.log(`${n} tests DEV472 workflow missions réussis.`);
