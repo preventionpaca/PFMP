@@ -84,8 +84,12 @@ function EUC_DEV481_afficherSuivi_(e) {
 }
 
 function EUC_DEV481_afficherSnapshot_(e) {
+  var template = HtmlService.createTemplateFromFile(
+    'Snapshot_PFMP_Admin_V190'
+  );
+  template.baseUrl = ScriptApp.getService().getUrl();
   return EUC_DEV481_accueilCanonique_(
-    HtmlService.createTemplateFromFile('Snapshot_PFMP_Admin_V190').evaluate()
+    template.evaluate()
   )
     .setTitle('Maintenance Snapshot PFMP')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

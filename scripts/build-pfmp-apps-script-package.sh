@@ -31,12 +31,27 @@ done < <(git ls-files apps-script)
 
 cp .clasp.json "$target_dir/.clasp.json"
 
+# Apps Script utilise le nom sans extension comme identifiant de fichier :
+# un fichier serveur et un modèle HTML ne peuvent donc pas partager le même
+# radical. Le nom des fichiers serveur n'étant pas utilisé par le runtime, on
+# les renomme uniquement dans le paquet de publication.
+while IFS= read -r html_file; do
+  html_base="${html_file%.html}"
+  for code_ext in js gs; do
+    code_file="${html_base}.${code_ext}"
+    if [[ -f "$code_file" ]]; then
+      mv "$code_file" "${html_base}_Code.${code_ext}"
+    fi
+  done
+done < <(find "$target_dir/apps-script" -maxdepth 1 -type f -name '*.html' -print)
+
 duplicates="$({
-  find "$target_dir/apps-script" -maxdepth 1 -type f \( -name '*.js' -o -name '*.gs' \) \
-    -printf '%f\n' | sed -E 's/\.(js|gs)$//' | sort | uniq -d
+  find "$target_dir/apps-script" -maxdepth 1 -type f \
+    \( -name '*.js' -o -name '*.gs' -o -name '*.html' \) \
+    -printf '%f\n' | sed -E 's/\.(js|gs|html)$//' | sort | uniq -d
 } || true)"
 if [[ -n "$duplicates" ]]; then
-  printf 'Doublons .js/.gs dans le paquet :\n%s\n' "$duplicates" >&2
+  printf 'Noms Apps Script en conflit dans le paquet :\n%s\n' "$duplicates" >&2
   exit 1
 fi
 

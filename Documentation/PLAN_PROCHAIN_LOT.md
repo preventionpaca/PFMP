@@ -1,4 +1,16 @@
-# Prochain lot après DEV452
+# Prochain lot après DEV481
+
+Le prochain déploiement doit obligatoirement utiliser le workflow bleu / vert
+décrit dans `Documentation/RELEASE_BLEU_VERT.md`. `prepare` ne modifie que le
+déploiement de développement `@HEAD`; `promote` est la seule commande autorisée
+à actualiser les deux Web Apps stables, après contrôle des 25 routes et avec
+retour automatique sur les versions précédentes en cas d'échec.
+
+DEV481 restaure les routes de l'accueil PFMP à partir d'un paquet complet et
+isole les anciens routeurs optionnels. Le contrôle HTTP de la première
+publication a trouvé 23 pages administratives saines sur 24 et a bloqué la page
+Snapshot sur une variable `baseUrl` non initialisée. Ce dernier correctif fait
+partie du candidat bleu suivant et doit être validé avant toute promotion.
 
 DEV480 est publié en version immuable `880` sur les deux Web Apps existantes. Cette version est la première publication effective des réglages DEV478/DEV479 après correction du répertoire de préparation Apps Script. Le contrôle navigateur réel montre les champs `Texte de {{EXPEDITEUR}}`, `Lien de la procédure` et `Copie conforme systématique`. Aucun courriel de recette n'a été envoyé.
 

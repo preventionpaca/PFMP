@@ -128,6 +128,18 @@ test('les routeurs historiques optionnels ne peuvent plus bloquer les autres pag
   }
 });
 
+test('la maintenance snapshot reçoit son URL de base avant évaluation', () => {
+  const source = read('EUC_PFMP_DEV481_AdminRoutes.js');
+  const start = source.indexOf('function EUC_DEV481_afficherSnapshot_');
+  const end = source.indexOf('\nfunction ', start + 1);
+  const fn = source.slice(start, end < 0 ? source.length : end);
+  assert.match(fn, /template\.baseUrl\s*=\s*ScriptApp\.getService\(\)\.getUrl\(\)/);
+  assert.ok(
+    fn.indexOf('template.baseUrl') < fn.indexOf('template.evaluate()'),
+    'baseUrl doit être défini avant evaluate()'
+  );
+});
+
 test('le paquet versionné contient les modules et modèles des routes de l’accueil', () => {
   const required = [
     'EUC_PFMP_DEV481_AdminRoutes.js',
@@ -174,13 +186,15 @@ test('la récupération complète contient les moteurs historiques requis', () =
   }
 });
 
-test('le constructeur de paquet part de la récupération complète et déduplique js/gs', () => {
+test('le constructeur de paquet part de la récupération complète et évite tous les noms en conflit', () => {
   const source = fs.readFileSync(
     path.join(root, 'scripts', 'build-pfmp-apps-script-package.sh'), 'utf8'
   );
   assert.match(source, /18addabe4882ab4c5381fb158e5ad98117621b02/);
   assert.match(source, /git archive "\$complete_base_ref" apps-script/);
   assert.match(source, /git show "HEAD:\$source_file"/);
+  assert.match(source, /html_base.*_Code/s);
+  assert.match(source, /js\|gs\|html/);
   assert.match(source, /uniq -d/);
 });
 

@@ -1,0 +1,48 @@
+{
+  "projectId": "1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c",
+  "domain": "lycee-les-eucalyptus.org",
+  "channels": {
+    "development": {
+      "name": "bleu",
+      "deploymentId": "AKfycbw0B6PpxJeuuMI0ymLnWFiGwPbyoaP0sUS4nLlwQBf4",
+      "endpoint": "dev"
+    },
+    "stableAdmin": {
+      "name": "vert-admin",
+      "deploymentId": "AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg",
+      "endpoint": "exec"
+    },
+    "stablePublic": {
+      "name": "vert-public",
+      "deploymentId": "AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA",
+      "endpoint": "exec"
+    }
+  },
+  "routes": [
+    {"page": "admin-pfmp", "scope": "admin", "expected": "Administration PFMP"},
+    {"page": "admin-conventions-pfmp", "scope": "admin", "expected": "Administration des conventions PFMP"},
+    {"page": "apprentissage-pfmp", "scope": "admin", "expected": "Gestion des apprentis"},
+    {"page": "apprentissage-public-pfmp", "scope": "admin", "expected": "Gestion des apprentis"},
+    {"page": "conventions-pfmp", "scope": "admin", "expected": "Génération des conventions PFMP"},
+    {"page": "destinataires-envois-pfmp", "scope": "admin", "expected": "Destinataires"},
+    {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
+    {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},
+    {"page": "gestion-pfmp", "scope": "admin", "expected": "Gestion administrative PFMP"},
+    {"page": "import-prof-classes-pfmp", "scope": "admin", "expected": "Synchronisation Pronote"},
+    {"page": "import-pronote-pfmp", "scope": "admin", "expected": "Import Pronote PFMP"},
+    {"page": "migration-jotform-pfmp", "scope": "admin", "expected": "Migration JotForm PFMP"},
+    {"page": "parametres-convention-pfmp", "scope": "admin", "expected": "Paramètres de la convention PFMP"},
+    {"page": "parametres-envois-pfmp", "scope": "admin", "expected": "Paramètres des envois PFMP"},
+    {"page": "parcours-differencie-pfmp", "scope": "admin", "expected": "Fin de Terminale"},
+    {"page": "snapshot-pfmp-admin", "scope": "admin", "expected": "Maintenance Snapshot PFMP"},
+    {"page": "suivi-conventions", "scope": "admin", "expected": "Suivi des conventions PFMP"},
+    {"page": "suivi-pfmp", "scope": "admin", "expected": "Tableau de bord PFMP"},
+    {"page": "suivi-pfmp-classes", "scope": "admin", "expected": "Suivi des conventions PFMP"},
+    {"page": "sans-convention-pfmp", "scope": "admin", "expected": "Élèves sans convention"},
+    {"page": "ordres-mission-pfmp", "scope": "admin", "expected": "Ordres de mission PFMP"},
+    {"page": "acces-pp-admin", "scope": "admin", "expected": "Accès professeurs principaux"},
+    {"page": "geocodage-pfmp-admin", "scope": "admin", "expected": "Géocodage des entreprises"},
+    {"page": "cartographie-pfmp", "scope": "admin", "expected": "Cartographie des entreprises"},
+    {"page": "suivi-conventions-public", "scope": "public", "expected": "Suivi des conventions"}
+  ]
+}
