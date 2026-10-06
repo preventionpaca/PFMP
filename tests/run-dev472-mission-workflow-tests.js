@@ -32,7 +32,7 @@ test('la liste des modèles propose radio par défaut et suppression',()=>{
 test('le catalogue global effectue une seule lecture de l index chaud',()=>{
   const calls=[],ctx={console,Date,JSON};vm.createContext(ctx);vm.runInContext(server,ctx);
   ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;ctx.EUC_DEV190E_INDEX_TABLE_='INDEX';
-  ctx.EUC_DEV190_api_=(method,path)=>{calls.push({method,path});return{records:[
+  ctx.EUC_ENT_grist=(method,path)=>{calls.push({method,path});return{records:[
     {fields:{Famille:'BACPRO',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]})}},
     {fields:{Famille:'BTS',Actif:true,Updated_at:'2026-10-06T10:00:00Z',Payload_JSON:JSON.stringify({classes:[{classeId:31,classe:'1BTSMV',periodes:[]}]})}}
   ]}};

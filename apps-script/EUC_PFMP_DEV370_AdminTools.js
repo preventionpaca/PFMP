@@ -10,7 +10,7 @@ function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_co
  * Grist avant même d'afficher la première classe. */
 function EUC_DEV472_familyPayloads_(y){
   var table=typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',path='/tables/'+encodeURIComponent(table)+'/records?filter='+encodeURIComponent(JSON.stringify({Annee_scolaire:[y]}));
-  var response=EUC_DEV190_api_('get',path,null),rows=response&&response.records||[],latest={};
+  var response=EUC_ENT_grist('get',path),rows=response&&response.records||[],latest={};
   rows.filter(function(r){return(r.fields||{}).Actif!==false}).sort(function(a,b){
     return (Date.parse((b.fields||{}).Updated_at||'')||0)-(Date.parse((a.fields||{}).Updated_at||'')||0);
   }).forEach(function(r){
