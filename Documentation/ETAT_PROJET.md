@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV469 (affectations professeur durables à la relecture)
+
+- Une affectation administrateur n'était pas perdue : le message de succès n'est renvoyé qu'après le `PATCH` ou le `POST` Grist. En revanche, le détail de classe conservé jusqu'à six heures dans `CacheService` pouvait réafficher l'ancien professeur après un changement de classe.
+- Le détail compare désormais la révision DEV457 de `EUC_AFFECTATIONS_SUIVI_PFMP` avec celle embarquée dans son cache. Si elle a changé, une seule lecture Grist filtrée sur l'année, la classe et la période réconcilie les suivis téléphoniques et visiteurs puis remplace le cache ; si elle est identique, aucune lecture supplémentaire n'est effectuée.
+- Le même mécanisme couvre les affectations administrateur, les affectations par code professeur principal, les réaffectations et les retraits. Une valeur retirée ne peut plus réapparaître depuis un ancien snapshot.
+- Tests ciblés : `20/20` DEV455, `10/10` DEV448 et `10/10` DEV462. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- Aucun professeur n'a été affecté ou retiré pendant le correctif, aucune donnée Grist n'a été modifiée et la production Grist interdite n'a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV468 (dates JotForm incluses dans une période officielle)
 
 - Le blocage de `GHARDA Sayane` s'est produit pendant le précontrôle, avant toute écriture : aucune convention partielle et aucune modification élève n'ont été créées. Les dates JotForm `04/10/2026 → 15/10/2026` étaient entièrement incluses dans la PFMP officielle `28/09/2026 → 16/10/2026`, mais l'ancien rapprochement refusait tout début décalé de plus de trois jours.

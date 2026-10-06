@@ -119,4 +119,30 @@ test('une vue existante sans PP est complétée dans son en-tête et ses lignes'
   c.EUC_DEV455_mergeRoster_(d,'2026-2027',24);
   assert.equal(d.professeursPrincipaux[0].nom,'Mme PP TCAR');assert.equal(d.lignes[0].professeurPrincipal,'Mme PP TCAR');
 });
+test('une nouvelle révision affectations remplace immédiatement le cache de classe',()=>{
+  let rev='0_r2',reads=0,puts=0;
+  const cached=ordinary();cached.__dev455AssignmentRevision='0_r1';
+  cached.lignes[0].professeurTelephone='Ancien professeur';
+  const c=ctx({
+    EUC_DEV416_key_:()=> 'k',EUC_DEV416_cacheGet_:()=>cached,EUC_DEV416_cachePut_:()=>{puts++;},EUC_DEV416_cacheDrop_:()=>{},
+    EUC_DEV425_payloadFresh_:()=>true,EUC_DEV457_revision_:()=>rev,
+    EUC_DEV448_rows_:(table,filter)=>{reads++;assert.equal(table,'EUC_AFFECTATIONS_SUIVI_PFMP');assert.deepEqual(JSON.parse(JSON.stringify(filter)),{Annee_scolaire:['2026-2027'],Classe:[1],Periode:[1],Actif:[true]});return[{id:91,Annee_scolaire:'2026-2027',Classe:1,Periode:1,Eleve:1,Type_suivi:'TELEPHONE',Professeur:7,Nom_professeur_snapshot:'Mme Nouvelle',Actif:true}];}
+  });
+  const d=c.EUC_DEV455_fastDetail_('2026-2027','BACPRO',1,1);
+  assert.equal(d.lignes[0].professeurTelephone,'Mme Nouvelle');assert.equal(d.lignes[0].affectationTelephoneId,91);
+  assert.equal(d.__dev455AssignmentRevision,'0_r2');assert.equal(reads,1);assert.equal(puts,1);
+});
+test('une révision affectations inchangée ne consomme aucune lecture Grist',()=>{
+  let reads=0;const d=ordinary();d.__dev455AssignmentRevision='0_r2';d.lignes[0].professeurVisiteur='M. Stable';
+  const c=ctx({EUC_DEV457_revision_:()=> '0_r2',EUC_DEV448_rows_:()=>{reads++;return[];}});
+  c.EUC_DEV455_refreshAssignments_(d,'2026-2027',1,1);
+  assert.equal(reads,0);assert.equal(d.lignes[0].professeurVisiteur,'M. Stable');
+});
+test('un retrait durable efface les deux anciennes valeurs du cache',()=>{
+  const d=ordinary();d.__dev455AssignmentRevision='0_r1';Object.assign(d.lignes[0],{professeurTelephone:'Mme Ancienne',professeurTelephoneId:7,affectationTelephoneId:81,professeurVisiteur:'M. Ancien',professeurVisiteurId:8,affectationVisiteId:82});
+  const c=ctx({EUC_DEV457_revision_:()=> '0_r3',EUC_DEV448_rows_:()=>[]});
+  c.EUC_DEV455_refreshAssignments_(d,'2026-2027',1,1);
+  assert.equal(d.lignes[0].professeurTelephone,'');assert.equal(d.lignes[0].affectationTelephoneId,0);
+  assert.equal(d.lignes[0].professeurVisiteur,'');assert.equal(d.lignes[0].affectationVisiteId,0);
+});
 process.on('exit',()=>{if(!process.exitCode)console.log(passed+' tests DEV455 vues rapides vérifiées réussis.');});

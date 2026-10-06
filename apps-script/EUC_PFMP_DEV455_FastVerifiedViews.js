@@ -2,9 +2,73 @@
 var EUC_DEV455_VERSION_='1.0.0-dev.455';
 var EUC_DEV455_PUBLIC_DEPLOYMENT_='AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA';
 var EUC_DEV455_PUBLIC_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/'+EUC_DEV455_PUBLIC_DEPLOYMENT_+'/exec';
+var EUC_DEV455_ASSIGN_TABLE_='EUC_AFFECTATIONS_SUIVI_PFMP';
 
 function EUC_DEV455_t_(v){return String(v==null?'':v).trim();}
 function EUC_DEV455_ref_(v){if(Array.isArray(v)){for(var i=0;i<v.length;i++){var n=Number(v[i]);if(n)return n;}}return Number(v)||0;}
+function EUC_DEV455_assignmentRevision_(){
+  try{
+    if(typeof EUC_DEV457_revision_==='function')return EUC_DEV455_t_(EUC_DEV457_revision_(EUC_DEV455_ASSIGN_TABLE_));
+  }catch(e){}
+  return'';
+}
+function EUC_DEV455_assignmentType_(v){
+  var s=EUC_DEV455_t_(v).toUpperCase();
+  if(s.indexOf('TELEPHONE')>=0)return'TELEPHONE';
+  if(s.indexOf('VISITE')>=0)return'VISITE';
+  return'';
+}
+function EUC_DEV455_assignmentRows_(annee,classe,periode){
+  try{
+    var rows=[];
+    if(typeof EUC_DEV448_rows_==='function'){
+      rows=EUC_DEV448_rows_(EUC_DEV455_ASSIGN_TABLE_,{
+        Annee_scolaire:[annee],Classe:[Number(classe)],Periode:[Number(periode)],Actif:[true]
+      })||[];
+    }else if(typeof EUC_DEV190G_fastRecords_==='function'){
+      rows=(EUC_DEV190G_fastRecords_(EUC_DEV455_ASSIGN_TABLE_,{
+        Annee_scolaire:[annee],Classe:[Number(classe)],Periode:[Number(periode)],Actif:[true]
+      })||[]).map(function(r){
+        var x={id:Number(r.id)||0},f=r.fields||r||{};
+        Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
+      });
+    }else return null;
+    return rows.filter(function(r){
+      return r.Actif!==false&&EUC_DEV455_t_(r.Annee_scolaire)===annee&&
+        EUC_DEV455_ref_(r.Classe)===Number(classe)&&EUC_DEV455_ref_(r.Periode)===Number(periode);
+    });
+  }catch(e){return null;}
+}
+/* DEV469 — une affectation réussie est déjà durable dans Grist. Le détail
+ * de classe pouvait toutefois rester six heures dans CacheService et
+ * réafficher l'ancien professeur après un aller-retour entre deux classes.
+ * La révision de la table change à chaque écriture DEV457 : tant qu'elle est
+ * identique, aucun appel n'est ajouté ; lorsqu'elle change, une seule lecture
+ * ciblée classe/période réconcilie les deux colonnes et remplace le cache. */
+function EUC_DEV455_refreshAssignments_(detail,annee,classe,periode){
+  detail=detail||{};
+  var revision=EUC_DEV455_assignmentRevision_();
+  if(revision&&EUC_DEV455_t_(detail.__dev455AssignmentRevision)===revision)return detail;
+  var rows=EUC_DEV455_assignmentRows_(annee,classe,periode);
+  if(rows===null)return detail;
+  var newest={};
+  rows.forEach(function(r){
+    var eid=EUC_DEV455_ref_(r.Eleve),type=EUC_DEV455_assignmentType_(r.Type_suivi),key=eid+'|'+type;
+    if(!eid||!type)return;
+    if(!newest[key]||Number(r.id||0)>Number(newest[key].id||0))newest[key]=r;
+  });
+  (detail.lignes||[]).forEach(function(x){
+    var eid=Number(x.eleveId)||0,tel=newest[eid+'|TELEPHONE'],vis=newest[eid+'|VISITE'];
+    x.professeurTelephone=tel?EUC_DEV455_t_(tel.Nom_professeur_snapshot):'';
+    x.professeurTelephoneId=tel?EUC_DEV455_ref_(tel.Professeur):0;
+    x.affectationTelephoneId=tel?Number(tel.id)||0:0;
+    x.professeurVisiteur=vis?EUC_DEV455_t_(vis.Nom_professeur_snapshot):'';
+    x.professeurVisiteurId=vis?EUC_DEV455_ref_(vis.Professeur):0;
+    x.affectationVisiteId=vis?Number(vis.id)||0:0;
+  });
+  detail.__dev455AssignmentRevision=revision||('lu_'+new Date().toISOString());
+  return detail;
+}
 function EUC_DEV455_rosterKey_(annee,classe){return 'DEV455_ROSTER_'+EUC_DEV455_t_(annee)+'_'+(Number(classe)||0);}
 function EUC_DEV455_currentRoster_(annee,classe){
   var cache=CacheService.getScriptCache(),key=EUC_DEV455_rosterKey_(annee,classe),raw='';
@@ -156,6 +220,9 @@ function EUC_DEV455_fastDetail_(annee,famille,classe,periode){
   }
   if(detail&&cacheFresh){
     detail=EUC_DEV455_sanitizePeriod_(EUC_DEV455_mergeRoster_(detail,annee,classe));
+    var assignmentRevisionBefore=EUC_DEV455_t_(detail.__dev455AssignmentRevision);
+    detail=EUC_DEV455_refreshAssignments_(detail,annee,classe,periode);
+    if(EUC_DEV455_t_(detail.__dev455AssignmentRevision)!==assignmentRevisionBefore)EUC_DEV416_cachePut_(key,detail);
     detail.__dev455Source='CACHE_VERIFIE';detail.__dev455DurationMs=Date.now()-started;
     return detail;
   }
@@ -172,6 +239,7 @@ function EUC_DEV455_fastDetail_(annee,famille,classe,periode){
     err.code='DEV455_REFRESHING';throw err;
   }
   detail=EUC_DEV455_sanitizePeriod_(EUC_DEV455_mergeRoster_(detail,annee,classe));
+  detail=EUC_DEV455_refreshAssignments_(detail,annee,classe,periode);
   detail.__dev455Source='SNAPSHOT_CIBLE_VERIFIE';detail.__dev455DurationMs=Date.now()-started;
   EUC_DEV416_cachePut_(key,detail);
   return detail;
