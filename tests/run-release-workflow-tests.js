@@ -77,6 +77,8 @@ test('le vérificateur refuse erreurs runtime, login et contenu inattendu', () =
     'Impossible de trouver le fichier HTML'
   ]) assert.ok(verifier.includes(marker));
   assert.match(verifier, /accounts\.google\.com/);
+  assert.match(verifier, /Page Apps Script en erreur/);
+  assert.match(verifier, /\^\(\?:Erreur\|Error\)\$/);
   assert.match(verifier, /body\.includes\(route\.expected\)/);
 });
 

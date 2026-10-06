@@ -59,6 +59,8 @@ async function verify(route) {
     const title = titleMatch ? titleMatch[1].trim() : '';
     const login = response.url.includes('accounts.google.com');
     const expected = body.includes(route.expected);
+    const appsScriptErrorPage = /^(?:Erreur|Error)$/i.test(title);
+    if (appsScriptErrorPage) errors.push('Page Apps Script en erreur');
     const ok = response.status === 200 && !login && !errors.length && expected;
     return {route, response, errors, title, login, expected, ok};
   } catch (error) {

@@ -43,6 +43,6 @@
     {"page": "acces-pp-admin", "scope": "admin", "expected": "Accès professeurs principaux"},
     {"page": "geocodage-pfmp-admin", "scope": "admin", "expected": "Géocodage des entreprises"},
     {"page": "cartographie-pfmp", "scope": "admin", "expected": "Cartographie des entreprises"},
-    {"page": "suivi-conventions-public", "scope": "public", "expected": "Suivi des conventions"}
+    {"page": "suivi-conventions-public", "scope": "public", "expected": "Point sur les stages"}
   ]
 }
