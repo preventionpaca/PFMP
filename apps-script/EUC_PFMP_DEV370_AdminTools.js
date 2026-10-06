@@ -5,32 +5,18 @@ function EUC_DEV368_t(v){return String(v==null?'':v).trim()}
 function EUC_DEV368_n(v){return Number(v)||0}
 function EUC_DEV368_admin(){var c=EUC_V156_contexteAdmin_();if(!c)throw new Error('Accès administrateur requis.');return c}
 function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_contexteAnneeLectureV155_().active)}
-/* DEV472 : le sélecteur contient toutes les classes Pronote, y compris celles
- * sans période. Il réutilise le cache de métadonnées du suivi PFMP et ne
- * télécharge jamais l'index nominatif devenu trop volumineux. */
-function EUC_DEV472_familyFromDiploma_(code){
-  code=EUC_DEV368_t(code).toUpperCase();
-  return code.indexOf('BTS_')===0?'BTS':(code.indexOf('CAP_')===0?'CAP':'BACPRO');
-}
-function EUC_DEV472_dateFr_(value){
-  if(!value)return'';
-  if(typeof EUC_SUIVI_dateGristFR_==='function')return EUC_SUIVI_dateGristFR_(value);
-  return EUC_DEV368_t(value);
-}
+/* DEV472 : le sélecteur contient toutes les classes déjà publiées par les vues
+ * BAC PRO, BTS et CAP, y compris celles sans période. Il lit d'abord les caches
+ * locaux existants et n'ouvre jamais l'index nominatif pour construire la liste. */
 function EUC_DEV368_catalog(y){
-  EUC_DEV368_admin();y=EUC_DEV368_year(y);
-  var chrono={mesurer:function(){},finir:function(){}},meta=EUC_SUIVI_metadonnees_(y,chrono)||{},out=[];
-  (meta.classes||[]).forEach(function(c){
-    if(EUC_DEV368_t(c.offreAnnee)!==y)return;
-    var family=c.categorie==='BTS'?'BTS':(c.categorie==='CAP'?'CAP':'BACPRO');
-    out.push({
-      famille:family,
-      classeId:EUC_DEV368_n(c.classeRef||c.classeId),
-      classe:EUC_DEV368_t(c.code||c.libelle),
-      periodes:(c.periodes||[]).map(function(p){
-        var dates=EUC_DEV368_t(p.dates).split(/\s+au\s+/i);
-        return{id:EUC_DEV368_n(p.id||p.periodeId),libelle:EUC_DEV368_t(p.libelle)||'Période officielle',debut:dates[0]||'',fin:dates[1]||''};
-      })
+  EUC_DEV368_admin();y=EUC_DEV368_year(y);var out=[];
+  ['BACPRO','BTS','CAP'].forEach(function(family){
+    var data=null;
+    try{data=EUC_DEV456_familyCacheGet_(y,family)}catch(eCache){}
+    try{if(!data)data=EUC_DEV456_familyPersistentGet_(y,family)}catch(ePersistent){}
+    try{if(!data)data=EUC_DEV456_familyData_(y,family)}catch(eFamily){}
+    (data&&data.classes||[]).forEach(function(c){
+      out.push({famille:family,classeId:EUC_DEV368_n(c.classeId||c.id),classe:EUC_DEV368_t(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV368_n(p.id||p.periodeId),libelle:EUC_DEV368_t(p.libelle||p.nom)||'Période officielle',debut:EUC_DEV368_t(p.debutFr||p.debut),fin:EUC_DEV368_t(p.finFr||p.fin)}})});
     });
   });
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out};

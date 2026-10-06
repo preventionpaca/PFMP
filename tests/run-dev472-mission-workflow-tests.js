@@ -29,15 +29,12 @@ test('la liste des modèles propose radio par défaut et suppression',()=>{
   assert.match(mission,/data-delete-model/);
   assert.match(mission,/Le document Google Docs ne sera pas supprimé/);
 });
-test('le catalogue global réutilise les métadonnées éprouvées et conserve les classes sans période',()=>{
+test('le catalogue global réutilise les caches familiaux et conserve les classes sans période',()=>{
   const calls=[],ctx={console,Date,JSON};vm.createContext(ctx);vm.runInContext(server,ctx);
   ctx.EUC_DEV368_admin=()=>true;ctx.EUC_DEV368_year=x=>x;
-  ctx.EUC_SUIVI_metadonnees_=(year)=>{calls.push(year);return{classes:[
-    {offreAnnee:'2026-2027',classeRef:24,code:'TCAR',categorie:'BAC_PRO',periodes:[{id:'62',libelle:'PFMP n°1',dates:'28/09/2026 au 16/10/2026'}]},
-    {offreAnnee:'2026-2027',classeRef:31,code:'1BTSMV',categorie:'BTS',periodes:[]},
-    {offreAnnee:'2025-2026',classeRef:99,code:'ANCIENNE',categorie:'BAC_PRO',periodes:[]}
-  ]}};
-  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.deepEqual(calls,['2026-2027']);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[0].periodes.length,0);assert.equal(result.classes[1].periodes[0].id,62);assert.equal(result.classes[1].periodes[0].debut,'28/09/2026');
+  ctx.EUC_DEV456_familyCacheGet_=(year,family)=>{calls.push(family);return family==='BACPRO'?{classes:[{classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]}:family==='BTS'?{classes:[{classeId:31,classe:'1BTSMV',periodes:[]}]}:{classes:[]}};
+  ctx.EUC_DEV456_familyPersistentGet_=()=>{throw new Error('ne doit pas être appelé')};ctx.EUC_DEV456_familyData_=()=>{throw new Error('ne doit pas être appelé')};
+  const result=ctx.EUC_DEV368_catalog('2026-2027');assert.deepEqual(calls,['BACPRO','BTS','CAP']);assert.equal(result.classes.length,2);assert.equal(result.classes[0].classe,'1BTSMV');assert.equal(result.classes[0].periodes.length,0);assert.equal(result.classes[1].periodes[0].id,62);
 });
 test('le chargement ciblé des missions réutilise le même catalogue normalisé',()=>{
   assert.doesNotMatch(server,/EUC_DEV190G1_fastFamilyIndex\(\{annee:y,famille:family\}\)/);
