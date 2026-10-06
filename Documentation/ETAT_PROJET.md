@@ -6,6 +6,7 @@
 - Le détail compare désormais la révision DEV457 de `EUC_AFFECTATIONS_SUIVI_PFMP` avec celle embarquée dans son cache. Si elle a changé, une seule lecture Grist filtrée sur l'année, la classe et la période réconcilie les suivis téléphoniques et visiteurs puis remplace le cache ; si elle est identique, aucune lecture supplémentaire n'est effectuée.
 - Le même mécanisme couvre les affectations administrateur, les affectations par code professeur principal, les réaffectations et les retraits. Une valeur retirée ne peut plus réapparaître depuis un ancien snapshot.
 - Tests ciblés : `20/20` DEV455, `10/10` DEV448 et `10/10` DEV462. La suite complète conserve exactement les sept échecs historiques déjà documentés et n'introduit aucun nouvel échec.
+- La version Apps Script immuable `859` a été publiée sur les deux Web Apps existantes, URL inchangées, après relecture distante identique de la source corrigée. Contrôle navigateur réel : après ouverture d'une autre classe puis retour dans TMVA1 / PFMP n°1, les `25` lignes sont présentes et les affectations visiteur déjà enregistrées restent affichées sur `24` élèves ; aucune affectation téléphonique n'était enregistrée sur cette période.
 - Aucun professeur n'a été affecté ou retiré pendant le correctif, aucune donnée Grist n'a été modifiée et la production Grist interdite n'a pas été consultée.
 
 ## Mise à jour du 6 octobre 2026 — DEV468 (dates JotForm incluses dans une période officielle)
