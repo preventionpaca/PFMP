@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV471 (écran Ordres de mission restauré)
+
+- La route `ordres-mission-pfmp` appelait bien `Ordres_Mission_PFMP_V368`, mais ce modèle HTML n'était pas présent dans la branche déployée. Le moteur, la génération PDF et les données n'étaient pas en cause.
+- Le modèle HTML précédemment validé est restauré sans modification du moteur d'ordre de mission ni des autres pages. Un test interdit désormais de livrer la route sans son fichier HTML.
+- Aucun ordre de mission n'a été généré ou envoyé et aucune donnée Grist n'a été modifiée.
+
 ## Mise à jour du 6 octobre 2026 — DEV470 (Accueil PFMP canonique)
 
 - Tous les boutons et liens visibles « Accueil PFMP » des écrans administratifs pointent désormais vers `https://alternance.loucodi.fr/`, avec navigation dans la fenêtre haute. Ils ne dépendent plus de l'URL Apps Script courante ni du déploiement qui a rendu la page.
