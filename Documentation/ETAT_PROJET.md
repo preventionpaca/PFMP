@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV476 (modèles de courriel des ordres de mission)
+
+- La tentative accompagnée de l’exception Google Docs n’a envoyé aucun message : `EUC_DEV440_sendMissionTransportEmail` génère d’abord le PDF, puis appelle `MailApp.sendEmail`. L’exception s’est donc produite avant l’instruction d’envoi, ce qui explique l’absence de message dans les éléments envoyés.
+- La page `Ordres de mission` comporte maintenant une rubrique repliable `Gérer les modèles de courriel`. Elle distingue les textes prévisionnel et définitif, permet de modifier l’objet et le corps, affiche une prévisualisation, propose une restauration des textes par défaut et persiste les réglages dans les propriétés Apps Script, sans accès Grist.
+- Les variables autorisées sont explicitement contrôlées : `{{PROFESSEUR}}`, `{{CLASSE}}`, `{{PERIODE}}`, `{{DEBUT}}`, `{{FIN}}`, `{{TYPE}}` et `{{EXPEDITEUR}}`. Une variable inconnue bloque l’enregistrement au lieu de produire un courriel incomplet.
+- L’écran affiche le compte expéditeur effectif du déploiement, le nom visible et l’adresse de réponse. Contrôle réel en lecture seule : expéditeur `rudy.themines@lycee-les-eucalyptus.org`, nom visible `PFMP — Lycée Les Eucalyptus`, réponse vers l’administrateur actif.
+- Le succès d’envoi renvoie désormais l’horodatage, le compte expéditeur et l’adresse de réponse ; l’interface rappelle le compte utilisé. `MailApp` reste volontairement conservé : aucun élargissement d’autorisation Gmail et aucun envoi de contrôle n’ont été réalisés.
+- Tests ciblés : `18/18` DEV461 et `12/12` DEV472. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `876` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante confirme que le serveur et l’interface publiés sont identiques aux sources testées. Aucun courriel, PDF ou ordre de mission réel n’a été envoyé ou généré ; aucune donnée Grist n’a été lue ou écrite et la production interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV475 (modèle mission terminé par la liste des élèves)
 
 - Le modèle Google Docs `Ordre_de_mission_ok_suivi pfmp` a été contrôlé en lecture seule : un seul onglet, les neuf champs de fusion attendus et `{{LISTE_ELEVES}}` placé en dernière position utile, après le bloc de signature du proviseur. Le modèle n’a pas été modifié.
