@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 octobre 2026 — DEV467 (correspondances Pronote et choix de formation du dossier d’apprentissage)
+
+- Le tableau de correspondance fourni a été intégré au dossier d’apprentissage. L’interface propose désormais un choix combiné `diplôme — niveau d’entrée`, puis alimente automatiquement « Formation préparée » avec le diplôme choisi.
+- L’année d’entrée est une liste fermée de `2023-2024` à `2037-2038`; l’année scolaire déterminée à partir de la date courante est sélectionnée par défaut (`2026-2027` lors de la recette). Le choix reste une variable du dossier et n’est pas encore imprimé tant que le calage PDF correspondant n’est pas demandé.
+- Le catalogue diplôme/niveaux peut être modifié depuis l’écran administrateur. Il est conservé dans les propriétés Apps Script, hors Grist, et sa lecture ou sa modification ne consomme donc aucun appel API Grist.
+- Le prochain import Pronote complet conservera les colonnes validées utiles au dossier : lieu de naissance, nationalité, dernier établissement, dernière classe, dernier diplôme préparé, téléphones fixe/portable/professionnel et profession des responsables. `HEBERGE` alimente l’indicateur de responsable en charge. Le correctif antérieur de contrôle des dates de naissance a été conservé lors du réalignement Git/distant.
+- Aucun import réel n’a été exécuté : les dossiers déjà présents ne sont pas rétroalimentés automatiquement. Les nouveaux champs seront renseignés au prochain import Pronote explicitement autorisé, si les colonnes existent dans l’export ; les valeurs absentes restent vides et modifiables dans l’interface.
+- Tests ciblés DEV464/DEV467 : `15/15`. La suite complète conserve exactement les sept échecs historiques déjà documentés et n’introduit aucun nouvel échec.
+- Déploiement : version Apps Script immuable `857` publiée sur les deux Web Apps existantes, URL inchangées. La relecture distante des quatre fichiers du lot est identique à la source contrôlée ; le manifeste conserve `USER_DEPLOYING` / `ANYONE_ANONYMOUS`.
+- Contrôle navigateur réel en lecture seule : l’index charge `788` élèves, la liste d’années contient les quinze valeurs attendues avec `2026-2027` sélectionnée, et le choix `BAC PRO Maintenance des Véhicules — Première` remplit immédiatement « Formation préparée » avec `BAC PRO Maintenance des Véhicules`.
+- Aucune donnée Grist, aucun élève, aucune convention, aucun courriel et aucun ordre de mission n’ont été modifiés. La production Grist interdite n’a pas été consultée.
+
 ## Mise à jour du 6 octobre 2026 — DEV466 (import JotForm fiable et publication atomique)
 
 - Le bouton final de migration JotForm utilise désormais un import de lot dédié. La sélection est obligatoirement explicite et le précontrôle de toutes les lignes est terminé avant la première écriture : élève rapproché, classe actuelle, période officielle non ambiguë, année scolaire et SIRET vérifié.

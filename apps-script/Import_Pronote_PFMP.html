@@ -8,13 +8,13 @@ function convertirLargeurFixePronote(text){
   function add(label,token,from){const start=header.indexOf(token,from||0);if(start<0)return -1;let end=start+token.length;while(end<header.length&&header.charAt(end)===' ')end++;specs.push({label,start,end});return start;}
   add('NUMERO','NUMERO',0);add('IDENT','IDENT',0);add('NOM','NOM',0);
   const pu=add('PRENOM USAGE','PRENOM_USAGE',0);add('PRENOM','PRENOM',pu>=0?pu+1:0);
-  add('DATE NAISS','DATE NAISS',0);add('CLASSES','CLASSES',0);add('N NATIONAL','N NATIONAL',0);add('DATE ENTREE','DATE ENTRE',0);add('DATE SORTIE','DATE SORTI',0);add('FORMATION','FORMATION',0);
-  const adr=add('ADRES 1','ADRES 1',6000);add('ADRES 2','ADRES 2',adr);add('ADRES 3','ADRES 3',adr);add('ADRES 4','ADRES 4',adr);add('CP','CP',adr);add('VILLE','VILLE',adr);add('PAYS','PAYS',adr);add('EMAIL','EMAIL',adr);add('PORTABLENUM','PORTABLENum',adr);add('PORTABLECOMPLET','PORTABLEComplet',adr);add('AP FORMATION','AP_FORMATION',6000);
+  add('DATE NAISS','DATE NAISS',0);add('LIEU NAISS','LIEU NAISS',0);add('NATIONALITE','NATIONALITE',0);add('CLASSES','CLASSES',0);add('N NATIONAL','N NATIONAL',0);add('DATE ENTREE','DATE ENTRE',0);add('DATE SORTIE','DATE SORTI',0);add('FORMATION','FORMATION',0);
+  const adr=add('ADRES 1','ADRES 1',6000);add('ADRES 2','ADRES 2',adr);add('ADRES 3','ADRES 3',adr);add('ADRES 4','ADRES 4',adr);add('CP','CP',adr);add('VILLE','VILLE',adr);add('PAYS','PAYS',adr);add('EMAIL','EMAIL',adr);add('PORTABLENUM','PORTABLENum',adr);add('PORTABLECOMPLET','PORTABLEComplet',adr);add('DERNETAB','DERNETAB',6000);add('AP CLASSE','AP_CLASSE',6000);add('AP FORMATION','AP_FORMATION',6000);
   for(let n=1;n<=5;n++){
     const p='R'+n+'_';
     add('R'+n+' NIV RESP',p+'NIV_RESP',10000);add('R'+n+' CIVILITE',p+'CIVILITE',10000);add('R'+n+' NOM',p+'NOM',10000);add('R'+n+' PRENOM',p+'PRENOM',10000);add('R'+n+' IDENT',p+'IDENT',10000);add('R'+n+' NUMERO',p+'NUMERO',10000);
     add('R'+n+' ADRES 1',p+'ADRES 1',10000);add('R'+n+' ADRES 2',p+'ADRES 2',10000);add('R'+n+' ADRES 3',p+'ADRES 3',10000);add('R'+n+' ADRES 4',p+'ADRES 4',10000);add('R'+n+' CP',p+'CP',10000);add('R'+n+' VILLE',p+'VILLE',10000);add('R'+n+' PAYS',p+'PAYS',10000);add('R'+n+' EMAIL',p+'EMAIL',10000);
-    add('R'+n+' FIXENUM',p+'FIXENum',10000);add('R'+n+' PORTABLENUM',p+'PORTABLEN',10000);add('R'+n+' TELBUREAU',p+'TELBUREAU',10000);add('R'+n+' L LIEN',p+'L_LIEN',10000);
+    add('R'+n+' FIXECOMPLET',p+'FIXEComplet',10000);add('R'+n+' PORTABLECOMPLET',p+'PORTABLEComplet',10000);add('R'+n+' TELBUREAUCOMPLET',p+'TELBUREAUComplet',10000);add('R'+n+' L LIEN',p+'L_LIEN',10000);add('R'+n+' L PROFESSION',p+'L_PROFESSION',10000);add('R'+n+' HEBERGE',p+'HEBERGE',10000);
   }
   const required=['NOM','PRENOM','CLASSES','DATE ENTREE','DATE SORTIE'];if(required.some(x=>!specs.some(s=>s.label===x)))return {text:text,converted:false,fields:0};
   const clean=v=>String(v||'').replace(/[\t\r\n]+/g,' ').trim();const out=[specs.map(s=>s.label).join('\t')];
@@ -22,4 +22,459 @@ function convertirLargeurFixePronote(text){
   return {text:out.join('\n'),converted:true,fields:specs.length,rows:out.length-1};
 }
 input.addEventListener('change',function(){const file=input.files&&input.files[0];if(!file)return;info.textContent='Chargement de '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' Mo)…';const reader=new FileReader();reader.onload=function(){try{const raw=String(reader.result||'');const prepared=convertirLargeurFixePronote(raw);area.value=prepared.text;if(prepared.converted){info.textContent='✓ '+file.name+' — '+(file.size/1024/1024).toFixed(1)+' Mo chargé. Export PRONOTE largeur fixe reconnu et converti : '+prepared.rows+' élève(s), '+prepared.fields+' champ(s) utiles. Vous pouvez cliquer sur « Analyser sans importer ».';}else{info.textContent='✓ '+file.name+' — '+(file.size/1024/1024).toFixed(1)+' Mo chargé. Format délimité conservé. Vous pouvez cliquer sur « Analyser sans importer ».';}}catch(e){area.value='';info.textContent='Erreur pendant la préparation du fichier : '+(e&&e.message||e);}};reader.onerror=function(){info.textContent='Erreur de lecture du fichier. Aucun envoi n’a été effectué.';};reader.readAsText(file,'UTF-8');});
-})();</script><?!= EUC_PFMP_inclure_('Import_Pronote_PFMP_Scripts'); ?></body></html>
+})();</script><?!= EUC_PFMP_inclure_('Import_Pronote_PFMP_Scripts'); ?>
+<!-- DEV273I_UI -->
+<style>
+#dev273i-panel{
+  display:none;
+  margin:14px 0;
+  padding:14px;
+  border:1px solid #d97706;
+  background:#fff7ed;
+  border-radius:9px;
+}
+#dev273i-panel strong{
+  color:#7c2d12;
+}
+#dev273i-panel .actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.dev273i-choice{
+  min-width:150px;
+  padding:5px 7px;
+}
+.dev273i-unresolved{
+  outline:2px solid #ef4444;
+  outline-offset:-2px;
+}
+</style>
+<script id="DEV273I_UI_SCRIPT">
+(function(){
+  'use strict';
+
+  var infos={};
+
+  function q(s){
+    return document.querySelector(s);
+  }
+
+  function payload(){
+    var paste=q('#paste');
+    var annee=q('#annee');
+    var source=q('#source-pronote');
+
+    if(!paste||!annee){
+      return null;
+    }
+
+    return {
+      texte:paste.value||'',
+      annee:annee.value||'',
+      sourcePronote:
+        source
+          ? (source.value||'AUTO')
+          : 'AUTO'
+    };
+  }
+
+  function setStatus(t,c){
+    var s=q('#status');
+
+    if(!s){
+      return;
+    }
+
+    s.textContent=t;
+
+    if(c){
+      s.className=
+        'analysis-status '+
+        c;
+    }
+  }
+
+  function rerun(){
+    var b=q('#reanalyze');
+
+    if(b&&!b.disabled){
+      b.click();
+      return;
+    }
+
+    b=q('#analyze');
+
+    if(b&&!b.disabled){
+      b.click();
+      return;
+    }
+
+    var f=q('#import-form');
+
+    if(
+      f&&
+      typeof f.requestSubmit==='function'
+    ){
+      f.requestSubmit();
+    }
+  }
+
+  function ensurePanel(){
+    var panel=q('#dev273i-panel');
+
+    if(panel){
+      return panel;
+    }
+
+    panel=document.createElement('div');
+    panel.id='dev273i-panel';
+    panel.innerHTML=
+      '<strong>Arbitrage des dates de naissance</strong>'+
+      '<div id="dev273i-summary" style="margin-top:5px"></div>'+
+      '<div class="actions">'+
+        '<button type="button" id="dev273i-all-grist">Tout conserver Grist</button>'+
+        '<button type="button" id="dev273i-all-pronote">Tout prendre Pronote</button>'+
+        '<button type="button" id="dev273i-apply"><strong>Valider tous les arbitrages</strong></button>'+
+      '</div>';
+
+    var preview=q('#preview');
+
+    if(preview){
+      preview.insertBefore(
+        panel,
+        preview.firstChild
+      );
+    }
+
+    q('#dev273i-all-grist').onclick=function(){
+      document
+        .querySelectorAll('.dev273i-choice')
+        .forEach(function(sel){
+          sel.value='GRIST';
+        });
+
+      refreshSummary();
+    };
+
+    q('#dev273i-all-pronote').onclick=function(){
+      document
+        .querySelectorAll('.dev273i-choice')
+        .forEach(function(sel){
+          sel.value='PRONOTE';
+        });
+
+      refreshSummary();
+    };
+
+    q('#dev273i-apply').onclick=applyAll;
+
+    return panel;
+  }
+
+  function refreshSummary(){
+    var sels=Array.from(
+      document.querySelectorAll(
+        '.dev273i-choice'
+      )
+    );
+
+    var chosen=sels.filter(function(s){
+      return !!s.value;
+    }).length;
+
+    var total=sels.length;
+
+    var el=q('#dev273i-summary');
+
+    if(el){
+      el.textContent=
+        chosen+
+        ' / '+
+        total+
+        ' arbitrage(s) renseigné(s).';
+    }
+
+    var panel=ensurePanel();
+
+    panel.style.display=
+      total
+        ? 'block'
+        : 'none';
+  }
+
+  function decorate(list){
+    infos={};
+
+    (list||[]).forEach(function(x){
+      infos[String(x.ligne)]=x;
+    });
+
+    var tbody=q('#changes');
+
+    if(!tbody){
+      return;
+    }
+
+    Array.from(
+      tbody.querySelectorAll('tr')
+    ).forEach(function(tr){
+      var td=tr.querySelectorAll('td');
+
+      if(td.length<6){
+        return;
+      }
+
+      /* DEV273J_ONLY_REAL_AMBIGUITIES */
+      var action=String(
+        td[4].textContent||''
+      ).trim().toUpperCase();
+
+      var detailAvant=String(
+        td[5].textContent||''
+      ).trim().toLowerCase();
+
+      if(
+        action.indexOf('AMBIGU')<0 ||
+        detailAvant.indexOf('dates de naissance divergentes')<0
+      ){
+        return;
+      }
+
+      var line=String(
+        td[0].textContent||''
+      ).trim();
+
+      var item=infos[line];
+
+      if(!item){
+        return;
+      }
+
+      td[5].innerHTML=
+        '<strong>Dates de naissance divergentes</strong>'+
+        '<div style="margin-top:5px">'+
+          'Grist : <strong>'+
+          item.dateGristFr+
+          '</strong><br>'+
+          'Pronote : <strong>'+
+          item.datePronoteFr+
+          '</strong>'+
+        '</div>'+
+        '<div style="margin-top:7px">'+
+          '<select class="dev273i-choice" data-line="'+
+          item.ligne+
+          '">'+
+            '<option value="">— Choisir —</option>'+
+            '<option value="GRIST">Conserver Grist</option>'+
+            '<option value="PRONOTE">Prendre Pronote</option>'+
+          '</select>'+
+        '</div>';
+
+      tr.classList.add(
+        'dev273i-unresolved'
+      );
+    });
+
+    document
+      .querySelectorAll(
+        '.dev273i-choice'
+      )
+      .forEach(function(sel){
+        sel.onchange=function(){
+          var tr=sel.closest('tr');
+
+          if(tr){
+            tr.classList.toggle(
+              'dev273i-unresolved',
+              !sel.value
+            );
+          }
+
+          refreshSummary();
+        };
+      });
+
+    refreshSummary();
+  }
+
+  function load(){
+    var p=payload();
+
+    if(
+      !p||
+      !p.texte.trim()
+    ){
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        decorate(
+          (r&&r.ambiguities)||[]
+        );
+      })
+      .withFailureHandler(function(e){
+        setStatus(
+          'Erreur chargement arbitrages : '+
+          ((e&&e.message)||e),
+          'status-err'
+        );
+      })
+      .EUC_DEV273I_listerAmbiguities(
+        p
+      );
+  }
+
+  function applyAll(){
+    var p=payload();
+
+    if(!p){
+      return;
+    }
+
+    var sels=Array.from(
+      document.querySelectorAll(
+        '.dev273i-choice'
+      )
+    );
+
+    if(!sels.length){
+      return;
+    }
+
+    var missing=sels.filter(function(s){
+      return !s.value;
+    });
+
+    if(missing.length){
+      setStatus(
+        'Il reste '+
+        missing.length+
+        ' arbitrage(s) à choisir.',
+        'status-err'
+      );
+
+      missing.forEach(function(s){
+        var tr=s.closest('tr');
+
+        if(tr){
+          tr.classList.add(
+            'dev273i-unresolved'
+          );
+        }
+      });
+
+      return;
+    }
+
+    var decisions=sels.map(function(s){
+      return {
+        ligne:Number(
+          s.dataset.line
+        )||0,
+        decision:s.value
+      };
+    });
+
+    if(!confirm(
+      'Appliquer les '+
+      decisions.length+
+      ' arbitrage(s) en une seule fois ?'
+    )){
+      return;
+    }
+
+    var btn=q('#dev273i-apply');
+
+    if(btn){
+      btn.disabled=true;
+    }
+
+    setStatus(
+      'Application de tous les arbitrages…',
+      'status-info'
+    );
+
+    google.script.run
+      .withSuccessHandler(function(r){
+        if(
+          r&&
+          r.texteCorrige
+        ){
+          var paste=q('#paste');
+
+          if(paste){
+            paste.value=
+              r.texteCorrige;
+          }
+        }
+
+        setStatus(
+          (r&&r.traites||0)+
+          ' arbitrage(s) appliqué(s). Nouvelle analyse…',
+          'status-ok'
+        );
+
+        setTimeout(
+          rerun,
+          120
+        );
+      })
+      .withFailureHandler(function(e){
+        if(btn){
+          btn.disabled=false;
+        }
+
+        setStatus(
+          'Erreur arbitrage en lot : '+
+          ((e&&e.message)||e),
+          'status-err'
+        );
+      })
+      .EUC_DEV273I_appliquerLot(
+        Object.assign(
+          {},
+          p,
+          {decisions:decisions}
+        )
+      );
+  }
+
+  function install(){
+    ensurePanel();
+
+    var tbody=q('#changes');
+
+    if(tbody){
+      new MutationObserver(function(){
+        setTimeout(load,80);
+      }).observe(
+        tbody,
+        {
+          childList:true,
+          subtree:true
+        }
+      );
+    }
+
+    setTimeout(load,100);
+  }
+
+  if(
+    document.readyState===
+    'loading'
+  ){
+    document.addEventListener(
+      'DOMContentLoaded',
+      install,
+      {once:true}
+    );
+  }else{
+    install();
+  }
+})();
+</script>
+
+</body></html>

@@ -7,6 +7,8 @@ const fast=read('EUC_PFMP_DEV382_Performance.js');
 const detail=read('Suivi_PFMP_Classe_Detail_V156.html');
 const router=read('EUC_PFMP_DEV455_FastVerifiedViews.js');
 const admin=read('Admin_PFMP.html');
+const rich=read('EUC_IMPORT_PFMP_RichData.gs');
+const importHtml=read('Import_Pronote_PFMP.html');
 let ok=0,ko=0;function assert(v,m){if(!v)throw new Error(m||'assertion failed')}function test(n,f){try{f();console.log('✓',n);ok++}catch(e){console.error('✗',n,'-',e.message);ko++}}
 
 test('la navigation rapide utilise le même détail canonique que la route complète',()=>{
@@ -47,6 +49,37 @@ test('INE et NIR restent deux champs distincts et aucune valeur n’est inventé
   assert(server.includes("['NIR','Numero_securite_sociale','Numero_securite_sociale_eleve','Numero_securite','SSN']"),'aliases NIR absents');
   assert(!server.includes("nir:EUC_DEV464_t_(f.Numero_national"),'numéro national confondu avec NIR');
   assert(html.includes("['','eleve.nir','N° de sécurité sociale']"),'champ NIR absent');
+});
+
+test('l’année d’entrée couvre 2023-2024 à 2037-2038 avec l’année courante par défaut',()=>{
+  const ctx={Date,String,Number,Array,Object,isNaN,Math};vm.createContext(ctx);vm.runInContext(server,ctx);
+  const years=Array.from(ctx.EUC_DEV464_schoolYears_());
+  assert(years.length===15,'nombre d’années incorrect');assert(years[0]==='2023-2024','première année incorrecte');assert(years.at(-1)==='2037-2038','dernière année incorrecte');
+  assert(ctx.EUC_DEV464_currentSchoolYear_(new Date('2026-10-06T12:00:00Z'))==='2026-2027','année courante incorrecte');
+  assert(server.includes("anneeEntree:anneeCourante"),'année courante non appliquée au dossier');
+  assert(server.includes('var anneeCourante=EUC_DEV464_currentSchoolYear_();'),'année d’entrée encore reprise depuis la fiche élève');
+});
+
+test('le choix formation combine diplôme et niveau et alimente la formation préparée',()=>{
+  assert(html.includes('id="formationChoice"'),'liste diplôme/niveau absente');
+  assert(html.includes('id="entryYear"'),'liste année d’entrée absente');
+  assert(html.includes('p.formationPreparee=p.formationSouhaitee'),'formation préparée non dérivée du diplôme');
+  assert(html.includes('pr.formationPreparee||e.formation'),'PDF non raccordé à la formation préparée');
+});
+
+test('la liste des diplômes reste modifiable hors Grist',()=>{
+  assert(server.includes("DOSSIER_APPRENTISSAGE_FORMATIONS"),'propriété de catalogue absente');
+  assert(server.includes('PropertiesService.getScriptProperties().setProperty'),'catalogue non enregistrable');
+  assert(html.includes('EUC_DEV464_saveFormations(rows)'),'commande de sauvegarde absente');
+  assert(!server.slice(server.indexOf('function EUC_DEV464_saveFormations'),server.indexOf('function EUC_DEV464_responsable_')).includes('EUC_DEV464_records_'),'sauvegarde du catalogue branchée sur Grist');
+});
+
+test('les correspondances validées Pronote sont conservées au prochain import',()=>{
+  for(const col of ['Lieu_naissance','Nationalite','Dernier_etablissement','Derniere_classe','Dernier_diplome_prepare'])assert(rich.includes(col),col+' absent');
+  assert(rich.includes("['LIEU NAISS']")&&rich.includes("['NATIONALITE']")&&rich.includes("['DERNETAB']")&&rich.includes("['AP CLASSE']")&&rich.includes("['AP FORMATION']"),'entêtes exactes non raccordées');
+  assert(rich.includes("'FIXECOMPLET'")&&rich.includes("'PORTABLECOMPLET'")&&rich.includes("'TELBUREAUCOMPLET'")&&rich.includes("'L PROFESSION'")&&rich.includes("heberge:ix('HEBERGE')"),'coordonnées responsables incomplètes');
+  assert(rich.includes('responsableEnCharge:EUC_IMPORT_boolOuiRich_'),'hébergement Pronote non raccordé');
+  assert(importHtml.includes("add('LIEU NAISS','LIEU NAISS'")&&importHtml.includes("add('DERNETAB','DERNETAB'")&&importHtml.includes("add('AP CLASSE','AP_CLASSE'"),'convertisseur largeur fixe incomplet');
 });
 
 test('les données responsables et apprenti sont lues seulement pour l’élève choisi',()=>{
@@ -92,8 +125,8 @@ test('l’adresse élève absente reprend celle du responsable légal sans inven
 
 test('les zones PDF corrigées ne chevauchent plus les libellés ni le pied de page',()=>{
   assert(!html.includes('w(p,e.formation,200,122,300)'),'formation encore injectée sur le bloc CFA de la page 2');
-  assert(html.includes("w(p,e.etablissement||'Lycée Les Eucalyptus',190,104"),'dernier établissement absent de la page 1');
-  assert(html.includes('w(p,e.formation||e.classe,180,91'),'dernière classe absente de la page 1');
+  assert(html.includes("w(p,s.dernierEtablissement||e.etablissement||'Lycée Les Eucalyptus',190,104"),'dernier établissement absent de la page 1');
+  assert(html.includes('w(p,s.derniereClasse||e.formation||e.classe,180,91'),'dernière classe absente de la page 1');
   assert(html.includes('w(p,e.telephone,210,455')&&html.includes('w(p,e.courriel,210,429'),'coordonnées page 7 encore sur les libellés');
   assert(html.includes("' - page '+(i+1)+'/8',405,18"),'pied de page encore hors marge utile');
 });
