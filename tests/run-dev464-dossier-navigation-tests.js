@@ -30,6 +30,8 @@ test('la page dossier est réservée à l’administration et reliée au centre'
   assert(admin.includes("?page=dossier-apprentissage-pfmp"),'lien absent');
   assert(admin.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=dossier-apprentissage-pfmp'),'déploiement administrateur absolu absent');
   assert(/(?:target=["']_top["']|\.target=["']_top["'])/.test(admin),'sortie de l’iframe technique absente');
+  assert(html.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-pfmp'),'retour administrateur absolu absent');
+  assert(html.includes("$('#back').target='_top'"),'retour administrateur encore enfermé dans l’iframe');
 });
 
 test('l’autocomplétion charge un index unique sans appel serveur à chaque frappe',()=>{
