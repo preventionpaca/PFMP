@@ -57,6 +57,29 @@ l’exécuter sur des données ou destinataires réels.
 
 ## 4. Contrôles avant remise
 
+Quatre preuves différentes doivent être rapportées séparément :
+
+1. **test unitaire ou simulé** : vérifie une règle de code avec des données
+   fictives ;
+2. **contrôle de route** : prouve seulement que l'URL s'ouvre sans erreur
+   Apps Script ;
+3. **contrôle de navigation** : prouve que les liens conduisent au bon écran et
+   restent dans le bon canal ;
+4. **parcours métier de bout en bout** : part d'un exemple de recette, réalise
+   les choix et clics de l'utilisateur, attend la fin réelle du traitement puis
+   vérifie son résultat dans l'écran ou le document consommateur.
+
+La mention « testé » doit préciser laquelle de ces quatre preuves a été
+obtenue. `25/25 routes` ne permet jamais d'écrire « tous les parcours sont
+fonctionnels ». Une opération restée sur un spinner, terminée côté serveur sans
+confirmation côté écran, ou dont le résultat final n'a pas été relu est un
+échec de parcours métier.
+
+Pour chaque domaine modifié, le bleu doit exécuter au moins un scénario complet
+sur une donnée de recette autorisée. Les actions interdites (courriel réel,
+production, import Pronote réel, ordre de mission réel) restent simulées et
+sont explicitement listées comme non exécutées.
+
 - tests ciblés du lot ;
 - une seule suite complète finale ;
 - diff relu et absence de secret ou donnée nominative dans Git ;

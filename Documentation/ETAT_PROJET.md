@@ -1,5 +1,34 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV504 (parcours métier et temps de réponse)
+
+- Le contrôle qualité distingue désormais quatre preuves : tests simulés,
+  ouverture des routes, navigation et parcours métier de bout en bout. La
+  formule « tout est testé » est interdite lorsque seul le contrôle des URL a
+  été exécuté.
+- Les journaux de la recette précédente ont objectivé les blocages : un import
+  JotForm a terminé côté serveur en `262,759 s`, l'ouverture de la famille BAC
+  PRO a attendu environ `41,872 s`, et les analyses concurrentes de la migration
+  ont duré environ `77 à 102 s`. Le lot PDF a bloqué le navigateur à `18/31`.
+- La reconstruction après import repart maintenant du snapshot familial déjà
+  matérialisé, ne recalcule que les couples classe/période réellement touchés et
+  ne réécrit plus les détails inchangés. Les lectures groupées de conventions
+  et d'affectations sont filtrées aux classes ciblées.
+- La synthèse par famille essaie d'abord son cache/payload persistant local,
+  sans attendre une lecture Grist. Pendant un recalcul, la dernière synthèse
+  complète reste visible avec son marqueur de recalcul.
+- Le rattachement spécial JotForm dispose d'un bouton explicite
+  `Enregistrer le rattachement pour cet import`. Une modification non
+  enregistrée bloque le clic final ; l'import affiche sa phase et sa durée.
+- La fusion de conventions en lot conserve chaque document PDF en mémoire et
+  copie directement ses pages. Elle ne sérialise puis ne recharge plus chaque
+  convention, cède régulièrement la main au navigateur et affiche le temps
+  écoulé.
+- Tests ciblés DEV504 : `7/7`; tests JotForm : `19/19`; suite complète :
+  `635/635`. À ce stade, il s'agit de preuves automatisées : la publication
+  bleue et les parcours navigateur chronométrés restent à effectuer avant de
+  considérer le candidat homologué. Le vert n'est pas modifié.
+
 ## Mise à jour du 7 octobre 2026 — DEV503 (dates réelles et rattachement manuel JotForm)
 
 - Le précontrôle de migration JotForm continue de refuser tout rapprochement automatique par simple chevauchement. Une convention dont les dates ne correspondent pas sans ambiguïté à la vraie classe reste bloquée avant toute écriture.

@@ -3839,6 +3839,11 @@ refresh();
 .euc503-card label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800}
 .euc503-card select,.euc503-card input{box-sizing:border-box;width:100%;padding:7px;border:1px solid #93c5fd;border-radius:7px;background:#fff}
 .euc503-motive{grid-column:1/-1}
+#euc503actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+#euc503save{padding:8px 12px;border:0;border-radius:8px;background:#1d4ed8;color:#fff;font-weight:800;cursor:pointer}
+#euc503save:disabled{opacity:.65;cursor:wait}
+#euc503status{font-size:13px;font-weight:800;color:#334155}
+#euc503status.ok{color:#087443}#euc503status.warn{color:#a16207}
 @media(max-width:900px){.euc503-card-grid{grid-template-columns:1fr}.euc503-motive{grid-column:auto}}
 .euc378-hidden{display:none!important}
 .euc378-spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:euc378spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
@@ -3855,11 +3860,13 @@ refresh();
   <h3>Dates réelles et période officielle de rattachement</h3>
   <div class="euc503-help">Les dates réelles sont conservées. La période choisie sert au suivi PFMP et aux ordres de mission. Activez uniquement les dossiers qui nécessitent ce rattachement explicite.</div>
   <div id="euc503rows"></div>
+  <div id="euc503actions"><button id="euc503save" type="button">Enregistrer le rattachement pour cet import</button><span id="euc503status">Non enregistré.</span></div>
 </section>
 <script id="EUC_DEV378_SELECTION_JS">
 (function(){
   'use strict';
   var chosen=new Set();
+  var overrideStorageKey='EUC_DEV504_JOTFORM_PERIOD_OVERRIDES';
 
   function html(v){
     var d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;
@@ -3886,6 +3893,8 @@ refresh();
       '</article>';
     }).join('');
     panel.style.display='block';
+    restorePeriodOverrides();
+    host.querySelectorAll('input,select').forEach(function(el){el.addEventListener('change',markPeriodOverridesDirty);el.addEventListener('input',markPeriodOverridesDirty);});
   }
 
   function collectPeriodOverrides(){
@@ -3900,6 +3909,34 @@ refresh();
         motive:card.querySelector('.euc503-motive-input').value
       };
     }).filter(function(x){return chosen.has(x.rowId)&&x.enabled;});
+  }
+
+  function normalizedOverrides(items){
+    return (items||[]).map(function(x){return {rowId:Number(x.rowId)||0,enabled:x.enabled!==false,periodId:Number(x.periodId)||0,actualStart:String(x.actualStart||''),actualEnd:String(x.actualEnd||''),scenario:String(x.scenario||''),motive:String(x.motive||'').trim()};}).filter(function(x){return x.rowId&&x.enabled;}).sort(function(a,b){return a.rowId-b.rowId;});
+  }
+  function loadPeriodOverrides(){try{return normalizedOverrides(JSON.parse(sessionStorage.getItem(overrideStorageKey)||'[]'));}catch(e){return [];}}
+  function periodOverridesEqual(a,b){return JSON.stringify(normalizedOverrides(a))===JSON.stringify(normalizedOverrides(b));}
+  function setPeriodStatus(text,kind){var el=document.getElementById('euc503status');if(!el)return;el.textContent=text;el.className=kind||'';}
+  function markPeriodOverridesDirty(){if(collectPeriodOverrides().length)setPeriodStatus('Modifié : cliquez sur « Enregistrer le rattachement » avant l’import.','warn');}
+  function validatePeriodOverrides(items){
+    for(var i=0;i<items.length;i++){
+      var x=items[i];
+      if(!x.periodId||!x.actualStart||!x.actualEnd||!x.scenario||!x.motive)throw new Error('Complétez la période, les deux dates, la situation et le motif pour chaque rattachement actif.');
+      if(x.actualStart>x.actualEnd)throw new Error('La date réelle de début doit précéder la date réelle de fin.');
+    }
+  }
+  function savePeriodOverrides(){
+    var items=normalizedOverrides(collectPeriodOverrides());
+    try{validatePeriodOverrides(items);sessionStorage.setItem(overrideStorageKey,JSON.stringify(items));setPeriodStatus(items.length?items.length+' rattachement(s) enregistré(s) pour le prochain import.':'Aucun rattachement spécial actif.','ok');}
+    catch(e){setPeriodStatus(String(e&&e.message||e),'warn');alert(String(e&&e.message||e));}
+  }
+  function restorePeriodOverrides(){
+    var saved=loadPeriodOverrides();
+    saved.forEach(function(x){
+      var card=document.querySelector('.euc503-card[data-row-id="'+x.rowId+'"]');if(!card)return;
+      card.querySelector('.euc503-enabled').checked=x.enabled!==false;card.querySelector('.euc503-period').value=String(x.periodId||'');card.querySelector('.euc503-start').value=x.actualStart;card.querySelector('.euc503-end').value=x.actualEnd;card.querySelector('.euc503-scenario').value=x.scenario;card.querySelector('.euc503-motive-input').value=x.motive;
+    });
+    if(saved.length)setPeriodStatus(saved.length+' rattachement(s) déjà enregistré(s) pour cet import.','ok');
   }
 
   function rowId(cb){
@@ -3974,6 +4011,14 @@ refresh();
       }
 
       var periodOverrides=collectPeriodOverrides();
+      if(periodOverrides.length){
+        try{validatePeriodOverrides(periodOverrides);}catch(eValidation){alert(String(eValidation&&eValidation.message||eValidation));return;}
+        var savedOverrides=loadPeriodOverrides();
+        if(!periodOverridesEqual(periodOverrides,savedOverrides)){
+          alert('Le rattachement spécial a été modifié mais pas enregistré. Cliquez d’abord sur « Enregistrer le rattachement pour cet import ».');
+          return;
+        }
+      }
       if(!confirm(
         'Importer uniquement '+ids.length+' élève(s) sélectionné(s) ?\n\n'+
         'Aucune autre ligne du tampon ne sera modifiée.'+
@@ -3981,16 +4026,25 @@ refresh();
       ))return;
 
       var previous=btn.innerHTML;
+      var importStarted=Date.now(),importTicker=null;
       btn.disabled=true;
       btn.innerHTML='<span class="euc378-spinner"></span>Import en cours…';
+      if(typeof show==='function')show('Étape 1/3 — contrôle puis écriture des conventions sélectionnées…','info');
+      importTicker=setInterval(function(){
+        var seconds=Math.round((Date.now()-importStarted)/1000),phase=seconds<20?'contrôle et écriture':(seconds<60?'vérification des données écrites':'mise à jour ciblée du suivi');
+        btn.innerHTML='<span class="euc378-spinner"></span>'+phase+' — '+seconds+' s';
+      },1000);
 
       google.script.run
         .withSuccessHandler(function(d){
+          clearInterval(importTicker);
           btn.disabled=false;
           btn.innerHTML=previous;
 
           var b=d&&d.validationBilan||{};
           alert(DEV453_bilanText(b));
+          sessionStorage.removeItem(overrideStorageKey);
+          if(typeof show==='function')show('Import terminé en '+Math.round((Date.now()-importStarted)/1000)+' s. Le suivi ciblé a été actualisé.','ok');
 
           chosen.clear();
           if(typeof render==='function'){
@@ -4004,9 +4058,12 @@ refresh();
           },30);
         })
         .withFailureHandler(function(e){
+          clearInterval(importTicker);
           btn.disabled=false;
           btn.innerHTML=previous;
-          alert('Erreur import : '+String(e&&e.message||e));
+          var message='Erreur import après '+Math.round((Date.now()-importStarted)/1000)+' s : '+String(e&&e.message||e);
+          if(typeof show==='function')show(message,'err');
+          alert(message);
         })
         .EUC_DEV466_importSelection({
           manualSelection:true,
@@ -4024,9 +4081,12 @@ refresh();
 
     var clear=document.getElementById('euc378clear');
     if(clear)clear.onclick=function(){
-      chosen.clear();refresh();
+      chosen.clear();sessionStorage.removeItem(overrideStorageKey);refresh();
       var panel=document.getElementById('euc503panel');if(panel)panel.style.display='none';
     };
+
+    var save=document.getElementById('euc503save');
+    if(save)save.onclick=savePeriodOverrides;
 
     var prepare=document.getElementById('euc503prepare');
     if(prepare)prepare.onclick=function(){

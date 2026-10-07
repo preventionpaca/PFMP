@@ -1,4 +1,22 @@
-# Prochain lot après DEV503
+# Prochain lot après DEV504
+
+DEV504 distingue désormais les routes des parcours métier et traite les trois
+goulots observés lors de la recette utilisateur : l'import JotForm ne doit plus
+réécrire les détails inchangés de toute une famille, le suivi sert d'abord son
+snapshot persistant local, et la fusion PDF de lot ne sérialise/recharge plus
+chaque convention avant de l'ajouter au document final. Le rattachement spécial
+dispose d'un bouton d'enregistrement explicite pour le prochain import et d'un
+retour de phase/durée.
+
+Avant toute promotion, publier le candidat uniquement sur le bleu et exécuter
+séparément : ouverture des routes, navigation, puis parcours métier. Le parcours
+JotForm doit aller de la sélection d'une ligne de recette à sa présence dans le
+suivi ciblé ; le parcours suivi doit afficher BAC PRO avec une durée relevée ;
+le parcours PDF doit achever un lot représentatif sans dialogue « page ne
+répondant pas ». Toute impossibilité due aux protections de recette doit être
+rapportée comme non testée et non comme réussie.
+
+## Historique immédiat après DEV503
 
 DEV503 ajoute un rattachement manuel et contrôlé dans la migration JotForm.
 Pour un élève qui commence sa PFMP en retard, conserver les dates réelles,

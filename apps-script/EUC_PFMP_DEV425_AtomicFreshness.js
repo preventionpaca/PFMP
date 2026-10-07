@@ -109,8 +109,20 @@ function EUC_DEV425_payloadFresh_(annee,famille,payload){
   /* Compatibilité de déploiement : avant l'initialisation DEV425, DEV424
    * reste lisible. Dès qu'un état existe, la révision doit correspondre. */
   if(!state)return !!(payload&&payload.__dev424Enriched===true);
-  return state.status==='READY'&&!!state.revision&&
-    EUC_DEV425_txt_(payload&&payload.__dev425Revision)===EUC_DEV425_txt_(state.revision);
+  if(state.status!=='READY'||!state.revision||!payload)return false;
+  if(EUC_DEV425_txt_(payload.__dev425Revision)===EUC_DEV425_txt_(state.revision))return true;
+  /* DEV504 : une mutation ciblée ne doit plus recopier les dizaines de
+   * détails inchangés de toute une famille. Le nouvel état READY conserve la
+   * liste exacte des couples classe/période recalculés. Un détail d'une autre
+   * période reste donc valide avec sa révision précédente ; seule une cible
+   * explicitement modifiée doit porter la nouvelle révision. */
+  var cid=Number(payload.classe&&payload.classe.id||payload.classeId)||0;
+  var pid=Number(payload.periode&&payload.periode.id||payload.periodeId)||0;
+  if(!cid||!pid)return false; /* un snapshot familial reste atomique */
+  var targets=state.targets||[];
+  return !targets.some(function(t){
+    return Number(t.classe)===cid&&(!Number(t.periode)||Number(t.periode)===pid);
+  });
 }
 
 function EUC_DEV425_classInfo_(classeId,classRows){
@@ -292,11 +304,15 @@ function EUC_DEV426_targetsForBuild_(token,famille,base){
 }
 
 function EUC_DEV425_buildFamily_(token,famille){
-  var annee=token.annee,base=EUC_DEV424_clone_(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]});
-  var classIds={};(base.classes||[]).forEach(function(c){var id=Number(c.classeId||c.id)||0;if(id)classIds[String(id)]=c;});
-  var previous=EUC_DEV426_rawFamilySnapshot_(annee,famille),previousPeriods=EUC_DEV426_periodMap_(previous);
-  var previousDetails=EUC_DEV427_rawDetailMap_(annee,famille);
-  var hydrated=base,batch=EUC_DEV422_batchSources_(annee,classIds),built=0,details=[];
+  var annee=token.annee,previous=EUC_DEV426_rawFamilySnapshot_(annee,famille);
+  /* DEV504 : le snapshot familial précédent contient déjà la structure des
+   * classes et périodes. Une mutation ciblée repart de cette vue matérialisée
+   * au lieu de reconstruire toute la famille avant de recalculer une seule
+   * période. Le calcul lourd reste réservé à l'initialisation/synchronisation
+   * complète ou à l'absence d'un snapshot exploitable. */
+  var usablePrevious=previous&&previous.__dev424Enriched===true&&Array.isArray(previous.classes)&&previous.classes.length;
+  var base=EUC_DEV424_clone_(usablePrevious?previous:(EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||{classes:[]}));
+  var previousPeriods=EUC_DEV426_periodMap_(previous),hydrated=base,built=0,details=[];
   (hydrated.classes||[]).forEach(function(c){
     var cid=Number(c.classeId||c.id)||0;
     (c.periodes||[]).forEach(function(p){
@@ -311,21 +327,8 @@ function EUC_DEV425_buildFamily_(token,famille){
   (hydrated.classes||[]).forEach(function(c){var cid=Number(c.classeId||c.id)||0;(c.periodes||[]).forEach(function(p){
     var pid=Number(p.id||p.periodeId)||0;if(cid&&pid&&!p.quick&&!wanted.some(function(t){return t.classe===cid&&t.periode===pid;}))wanted.push({classe:cid,periode:pid,p:p});
   });});
-  /* Une nouvelle révision familiale couvre toutes ses périodes. Les détails
-   * inchangés sont recopiés avec cette révision ; s'ils n'existent pas encore,
-   * ils sont construits une seule fois. */
-  (hydrated.classes||[]).forEach(function(c){var cid=Number(c.classeId||c.id)||0;(c.periodes||[]).forEach(function(p){
-    var pid=Number(p.id||p.periodeId)||0,key=cid+'|'+pid;
-    if(!cid||!pid||wanted.some(function(t){return t.classe===cid&&t.periode===pid;}))return;
-    var oldDetail=previousDetails[key];
-    if(!oldDetail){wanted.push({classe:cid,periode:pid,p:p});return;}
-    if(typeof EUC_DEV454_detailMatchesCard_==='function'&&!EUC_DEV454_detailMatchesCard_(oldDetail,p)){
-      wanted.push({classe:cid,periode:pid,p:p});return;
-    }
-    var copy=EUC_DEV425_clone_(oldDetail);copy.__dev425Revision=token.revision;copy.__dev425FreshAt=new Date().toISOString();
-    details.push({classe:cid,periode:pid,detail:copy});
-    try{if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),copy);}catch(eCopyCache){}
-  });});
+  var classIds={};wanted.forEach(function(t){if(t.classe)classIds[String(t.classe)]=true;});
+  var batch=EUC_DEV422_batchSources_(annee,classIds);
   wanted.forEach(function(t){
     var detail=EUC_DEV190_buildHistoricalDetail_(annee,t.classe,t.periode);
     detail=EUC_DEV190J_enrichContacts_(detail);
@@ -363,7 +366,10 @@ function EUC_DEV425_finishMutation_(token){
   token.families.forEach(function(fam){
     var state=EUC_DEV425_readState_(token.annee,fam);
     if(!state||state.status!=='DIRTY'||state.revision!==token.revision)return;
-    EUC_DEV425_writeState_(token.annee,fam,{revision:token.revision,status:'READY',reason:token.reason});
+    EUC_DEV425_writeState_(token.annee,fam,{
+      revision:token.revision,status:'READY',reason:token.reason,
+      targets:(token.targets||[]).filter(function(t){return !t.famille||t.famille===fam;})
+    });
   });
   out.forEach(function(x){
     try{if(x&&x._payload&&typeof EUC_DEV421_familyCachePut_==='function')EUC_DEV421_familyCachePut_(token.annee,x.famille,x._payload);}catch(e){}

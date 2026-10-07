@@ -120,6 +120,7 @@ function EUC_DEV422_readDetailSnapshot_(payload){
   }
 }
 function EUC_DEV422_batchSources_(annee,classIds){
+  var selectedClassIds=Object.keys(classIds||{}).map(function(x){return Number(x)||0;}).filter(Boolean);
   var out={
     access:{},accessAvailable:false,
     apps:[],appsByEleve:{},appsAvailable:false,
@@ -128,7 +129,9 @@ function EUC_DEV422_batchSources_(annee,classIds){
   try{
     var rows=[];
     if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_CONVENTION_ACCES_TABLE_!=='undefined'){
-      rows=(EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{Annee_scolaire:[annee]})||[]).map(function(r){
+      rows=(EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{
+        Annee_scolaire:[annee],Classe_convention:selectedClassIds
+      })||[]).map(function(r){
         var x={id:Number(r.id)||0},f=r.fields||{};Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
       });
     }else{
@@ -165,7 +168,9 @@ function EUC_DEV422_batchSources_(annee,classIds){
   try{
     var affectRows=[];
     if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_V156_TABLE_!=='undefined'){
-      affectRows=(EUC_DEV190G_fastRecords_(EUC_V156_TABLE_,{Annee_scolaire:[annee]})||[]).map(function(r){
+      affectRows=(EUC_DEV190G_fastRecords_(EUC_V156_TABLE_,{
+        Annee_scolaire:[annee],Classe:selectedClassIds
+      })||[]).map(function(r){
         var x={id:Number(r.id)||0},f=r.fields||{};Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
       });
     }else if(typeof EUC_IMPORT_lireRecords_==='function'&&typeof EUC_V156_TABLE_!=='undefined'){
@@ -387,6 +392,20 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
 }
 function EUC_DEV394_BASE_EUC_DEV339_familyData_(annee,famille){
   var data=null;
+  /* DEV504 : le rendu initial ne doit pas attendre un recalcul métier ni une
+   * lecture Grist. La dernière synthèse complète est déjà dupliquée dans les
+   * propriétés Apps Script par DEV456. Elle est servie immédiatement, même
+   * pendant la reconstruction ciblée, avec un indicateur explicite. */
+  try{
+    if(typeof EUC_DEV456_familyCacheGet_==='function')data=EUC_DEV456_familyCacheGet_(annee,famille);
+    if(!data&&typeof EUC_DEV456_familyPersistentGet_==='function')data=EUC_DEV456_familyPersistentGet_(annee,famille);
+    if(data&&Array.isArray(data.classes)&&data.classes.length){
+      var storedFresh=typeof EUC_DEV425_payloadFresh_!=='function'||EUC_DEV425_payloadFresh_(annee,famille,data);
+      if(!storedFresh)data.__snapshotRecalculating=true;
+      data.ready=true;data.source=storedFresh?'PERSISTENT_IMMEDIAT':'PERSISTENT_RECALCUL';
+      return data;
+    }
+  }catch(eStored){}
   /* Le snapshot indexé est précisément la vue de lecture destinée à cette
    * page. Le recalcul APP172 reste le repli de sécurité si le snapshot manque. */
   try{var fast=EUC_DEV421_fastFamilySnapshot_({annee:annee,famille:famille});if(fast&&fast.ready&&fast.payload){data=fast.payload;data.ready=true;data.source='FAST_INDEX';return data;}}catch(e1){}
