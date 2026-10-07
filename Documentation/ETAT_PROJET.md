@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV487 (générateur de conventions)
+
+- Cause de l'écran bloqué en production : le constructeur de paquet récupérait encore depuis le socle historique l'audit temporaire `EUC_PFMP_PerfAuditP71`. Ce module redéfinissait la lecture des élèves puis appelait `EUC_CONVENTION_lireElevesAdmin__P71_ORIG`, symbole absent des sources actuellement versionnées ; le navigateur restait donc sur « Chargement… ».
+- Le constructeur exclut désormais explicitement cet audit obsolète. Les fonctions directes versionnées de lecture des élèves et des périodes restent seules dans le paquet publié.
+- Le correctif ne modifie aucune donnée élève ou convention et ne nécessite aucune lecture de la production Grist pour être vérifié.
+
 ## Mise à jour du 7 octobre 2026 — DEV486 (URL canonique du canal bleu)
 
 - La recette navigateur a identifié que `ScriptApp.getService().getUrl()` pouvait fournir l'alias Workspace `script.google.com/a/<domaine>/macros/s/...`. Depuis une page incorporée, cet alias ouvrait l'écran Google « Une autorisation est nécessaire », bien que l'utilisateur soit éditeur du projet bleu.

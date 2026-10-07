@@ -1,4 +1,10 @@
-# Prochain lot après DEV486
+# Prochain lot après DEV487
+
+DEV487 retire du paquet de publication l'ancien audit P7.1B qui interceptait
+le générateur de conventions et appelait des fonctions supprimées. Contrôler
+sur le bleu que les listes « Classe des élèves » et « Classe portée par la
+convention » quittent bien l'état « Chargement… », puis promouvoir exactement
+ce candidat sur les deux Web Apps vertes existantes sans changer leurs URL.
 
 DEV486 normalise toutes les URL calculées par Apps Script vers la forme
 Workspace partageable `/a/macros/<domaine>/s/...`. La recette navigateur doit

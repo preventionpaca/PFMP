@@ -29,6 +29,16 @@ while IFS= read -r source_file; do
   git show "HEAD:$source_file" > "$destination"
 done < <(git ls-files apps-script)
 
+# Le socle complet historique contient encore l'instrumentation temporaire
+# P7.1B. Ce fichier redéfinit les fonctions du générateur de conventions et
+# délègue vers des symboles `__P71_ORIG` qui n'existent plus dans les sources
+# actuelles. Le conserver dans un paquet reconstruit casse le chargement des
+# classes en production. L'audit P7.1B étant terminé et absent de HEAD, il ne
+# doit pas être republié depuis le socle de récupération.
+rm -f \
+  "$target_dir/apps-script/EUC_PFMP_PerfAuditP71.js" \
+  "$target_dir/apps-script/EUC_PFMP_PerfAuditP71.gs"
+
 cp .clasp.json "$target_dir/.clasp.json"
 
 # Le depot conserve le routeur historique sous son nom naturel. Le paquet de
