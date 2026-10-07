@@ -6,7 +6,8 @@
 - compatibilité de lecture avec les colonnes Pronote historiques du tableau de correspondance ;
 - date d’édition sur les huit pages et confirmation séparée de la distribution ;
 - registre de distribution sans duplication nominative, simulé sans écriture sur le canal bleu ;
-- aucune promotion verte, aucun import réel et aucun accès à la production Grist.
+- promotion contrôlée du commit `beb7ddbed8a4590ea58ab15ded3c08133269a0d7` vers la version Apps Script immuable `887` sur les deux Web Apps vertes existantes, avec leurs URL inchangées ;
+- `609/609` tests, `25/25` routes bleues et `25/25` routes vertes validés ; aucun import réel ni accès direct à la production Grist.
 
 # Eucalyptus PFMP — v1.0.0-dev.27 — développement local non déployé
 

@@ -1,23 +1,27 @@
 # Prochain lot après DEV495
 
-DEV495 ajoute sur le canal bleu la gestion de plusieurs modèles PDF du dossier
-d’apprentissage, renforce la compatibilité avec les colonnes historiques
-Pronote et prépare le registre de distribution. Le canal bleu simule la
-confirmation sans écriture ; l’écriture append-only ne deviendra active que
-sur le vert après promotion explicitement autorisée.
+DEV495 ajoute la gestion de plusieurs modèles PDF du dossier d’apprentissage,
+renforce la compatibilité avec les colonnes historiques Pronote et prépare le
+registre de distribution. Le canal bleu simule toujours la confirmation sans
+écriture ; le candidat exact `beb7ddbed8a4590ea58ab15ded3c08133269a0d7` a été
+promu après autorisation explicite vers les deux Web Apps vertes existantes dans
+la version Apps Script immuable `887`.
 
-La prochaine étape est de recevoir le PDF de référence annoncé, le placer dans
-un dossier Drive réservé à l’administration, l’enregistrer dans l’écran bleu
-et effectuer un contrôle visuel des huit pages avec des données fictives ou de
-recette. Vérifier en particulier les coordonnées fixes : ce moteur ne lit pas
-encore les balises du tableau Excel et un modèle dont la mise en page change
-nécessitera un recalage ou un moteur AcroForm/balises séparé. Ne pas promouvoir
-le vert tant que ce contrôle visuel n’est pas terminé.
+La recette bleue ne contient aucun élève. La prochaine étape est donc de la
+rendre réellement testable sans recopier silencieusement de données
+personnelles : utiliser uniquement un jeu anonymisé fourni ou une copie limitée
+explicitement autorisée. Il faudra aussi recevoir le PDF de référence annoncé,
+le placer dans un dossier Drive réservé à l’administration, l’enregistrer et
+effectuer un contrôle visuel des huit pages. Vérifier en particulier les
+coordonnées fixes : ce moteur ne lit pas encore les balises du tableau Excel et
+un modèle dont la mise en page change nécessitera un recalage ou un moteur
+AcroForm/balises séparé.
 
-Après validation du PDF, exécuter la suite complète, publier le commit exact sur
-le `HEAD` bleu, contrôler les 25 routes et le parcours accueil → dossier →
-retour. La promotion globale vers les deux Web Apps vertes reste soumise à une
-autorisation explicite et doit conserver leurs URL et leur version de repli.
+Pour toute évolution suivante, exécuter la suite complète, publier le commit
+exact sur le `HEAD` bleu, contrôler les 25 routes et le parcours accueil →
+dossier → retour. Toute nouvelle promotion globale vers les deux Web Apps
+vertes reste soumise à une autorisation explicite et doit conserver leurs URL
+et leur version de repli.
 
 ## Historique immédiat après DEV494
 
