@@ -6,6 +6,7 @@
 - Le point d'origine attendu par DEV331 est restauré. Le constructeur de paquet contrôle désormais tous les symboles `__…ORIG` et bloque la publication si l'un d'eux est appelé sans définition.
 - Le générateur de conventions possède maintenant un fil d'Ariane administratif et un bouton explicite `Retour à l'accueil PFMP`. La réécriture du canal bleu conserve la navigation dans le `/dev`; le vert continue de viser le sous-domaine canonique.
 - Les contrôles de ce lot n'exécutent aucun import, aucune génération de convention, aucune écriture Grist et aucun courriel.
+- Le commit `96dabb1` a été validé sur les 25 routes du canal bleu, puis promu à l'identique sur les deux déploiements verts existants dans la version Apps Script immuable `885`. Les 25 routes vertes ont été recontrôlées après publication ; les URL administrateur et publique sont inchangées.
 
 ## Mise à jour du 7 octobre 2026 — DEV490 (recette Grist Camin isolée)
 
