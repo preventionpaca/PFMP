@@ -1,5 +1,13 @@
 # Changelog
 
+## Eucalyptus PFMP — DEV495 — 2026-10-07
+
+- gestion de plusieurs modèles PDF Drive pour le dossier d’apprentissage, avec sélection et modèle par défaut unique ;
+- compatibilité de lecture avec les colonnes Pronote historiques du tableau de correspondance ;
+- date d’édition sur les huit pages et confirmation séparée de la distribution ;
+- registre de distribution sans duplication nominative, simulé sans écriture sur le canal bleu ;
+- aucune promotion verte, aucun import réel et aucun accès à la production Grist.
+
 # Eucalyptus PFMP — v1.0.0-dev.27 — développement local non déployé
 
 - route administrative protégée de prévisualisation d’un export Pronote, sans écriture ;

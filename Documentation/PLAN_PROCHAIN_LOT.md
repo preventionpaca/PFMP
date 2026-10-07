@@ -1,4 +1,25 @@
-# Prochain lot après DEV494
+# Prochain lot après DEV495
+
+DEV495 ajoute sur le canal bleu la gestion de plusieurs modèles PDF du dossier
+d’apprentissage, renforce la compatibilité avec les colonnes historiques
+Pronote et prépare le registre de distribution. Le canal bleu simule la
+confirmation sans écriture ; l’écriture append-only ne deviendra active que
+sur le vert après promotion explicitement autorisée.
+
+La prochaine étape est de recevoir le PDF de référence annoncé, le placer dans
+un dossier Drive réservé à l’administration, l’enregistrer dans l’écran bleu
+et effectuer un contrôle visuel des huit pages avec des données fictives ou de
+recette. Vérifier en particulier les coordonnées fixes : ce moteur ne lit pas
+encore les balises du tableau Excel et un modèle dont la mise en page change
+nécessitera un recalage ou un moteur AcroForm/balises séparé. Ne pas promouvoir
+le vert tant que ce contrôle visuel n’est pas terminé.
+
+Après validation du PDF, exécuter la suite complète, publier le commit exact sur
+le `HEAD` bleu, contrôler les 25 routes et le parcours accueil → dossier →
+retour. La promotion globale vers les deux Web Apps vertes reste soumise à une
+autorisation explicite et doit conserver leurs URL et leur version de repli.
+
+## Historique immédiat après DEV494
 
 DEV494 corrige sur le canal bleu uniquement la conversion des dates Grist du
 module Apprentis. Le candidat exact est le commit `65577e6`, la suite complète
