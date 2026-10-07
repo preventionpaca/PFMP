@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV499 (modèle Word éditable et sortie PDF)
+
+- Le dossier d’apprentissage utilise désormais le document Word métier de huit pages comme base éditable. Une préparation locale conserve la mise en page, vérifie que chaque balise reste dans une seule séquence Word et remplace les anciennes balises de pagination par les champs natifs `PAGE` et `NUMPAGES`.
+- Le fichier prêt à importer dans Google Drive reste hors Git, car il contient les mentions du document métier. Une documentation opératoire et un script reproductible permettent de repartir du DOCX source après chaque évolution.
+- Le site bleu accepte plusieurs modèles Google Docs, impose un modèle par défaut et refuse les anciens fonds PDF. Lors d’une génération, il copie temporairement le document maître, remplace les `135` champs autorisés, ajoute la date d’édition, refuse toute balise résiduelle, exporte le résultat en PDF puis place uniquement la copie temporaire à la corbeille. Le modèle maître n’est jamais modifié.
+- Les champs élève, responsables, scolarité antérieure, entreprise, contrat et positionnement déjà présents dans le formulaire sont transmis au moteur de fusion. Une donnée absente reste vide ; aucune valeur personnelle n’est inventée.
+- Tests ciblés DEV464/DEV499 : `25/25`; suite complète : `621/621`. Le contrôle visuel local des huit pages confirme la conservation de la mise en page et les pieds de page `1/8` à `8/8`.
+- Ce lot vise uniquement le canal bleu. Les Web Apps vertes, la production Grist, les imports réels, les courriels et les écritures élève/convention restent inchangés.
+
 ## Mise à jour du 7 octobre 2026 — DEV498 (promotion bleu → vert)
 
 - L’audit différentiel du candidat bleu a localisé les quatre derniers échecs : trois tables optionnelles absentes de la recette provoquaient une erreur Grist `404`, tandis que la page Destinataires effectuait toutes ses initialisations avant le premier affichage et dépassait le délai de contrôle.

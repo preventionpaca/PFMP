@@ -1,10 +1,37 @@
-/** PFMP DEV496 — dossier de demande d'apprentissage prérempli. */
-var EUC_DEV464_VERSION_='1.0.0-dev.496';
+/** PFMP DEV499 — dossier de demande d'apprentissage prérempli. */
+var EUC_DEV464_VERSION_='1.0.0-dev.499';
 var EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV464_FORMATIONS_PROP_='DOSSIER_APPRENTISSAGE_FORMATIONS';
 var EUC_DEV495_MODELS_PROP_='DOSSIER_APPRENTISSAGE_MODELES';
 var EUC_DEV495_DEFAULT_MODEL_PROP_='DOSSIER_APPRENTISSAGE_MODELE_DEFAUT_ID';
 var EUC_DEV495_PRINT_TABLE_='EUC_DOSSIER_APPRENTISSAGE_IMPRESSIONS';
+var EUC_DEV499_GOOGLE_DOC_MIME_='application/vnd.google-apps.document';
+var EUC_DEV499_MERGE_KEYS_=[
+  'ANCIEN_APPRENTISSAGE_ANNEE','ANCIEN_APPRENTISSAGE_CLASSE','ANCIEN_APPRENTISSAGE_ETABLISSEMENT','ANNEE_ENTREE_APPRENTISSAGE','AVANTAGE_AUTRE','AVANTAGE_LOGEMENT',
+  'AVANTAGE_NOURRITURE','CONTACT_RH_COURRIEL','CONTACT_RH_NOM','CONTACT_RH_PRENOM','CONTACT_RH_TELEPHONE','CONTRAT_AUTORISATION_DEPOT_OPCO',
+  'CONTRAT_DATE_AVENANT','CONTRAT_DATE_DEBUT','CONTRAT_DATE_FIN','CONTRAT_DUREE_HEBDO_HEURES','CONTRAT_DUREE_HEBDO_MINUTES','CONTRAT_DUREE_HEBDO_TYPE',
+  'CONTRAT_MAJORATION_HEURES_SUP','CONTRAT_RISQUES_PARTICULIERS','DATE_EDITION','DATE_HEURE_IMPRESSION','DEMANDE_INTERNAT','DOSSIER_DATE_RECEPTION',
+  'ELEVE_ADRESSE','ELEVE_BOE','ELEVE_CODE_POSTAL','ELEVE_COURRIEL','ELEVE_DATE_NAISSANCE','ELEVE_EQUIVALENCE_15_20',
+  'ELEVE_FORMATION_PREPAREE','ELEVE_INE','ELEVE_LIEU_NAISSANCE','ELEVE_NATIONALITE','ELEVE_NIR','ELEVE_NOM',
+  'ELEVE_PAYS','ELEVE_PHOTO','ELEVE_PRENOM','ELEVE_PROJET_ENTREPRISE','ELEVE_RQTH','ELEVE_SPORTIF_HAUT_NIVEAU',
+  'ELEVE_TELEPHONE','ELEVE_TITRE_EQUIVALENCE','ELEVE_VILLE','ENTREPRISE_ADRESSE','ENTREPRISE_CAISSE_RETRAITE','ENTREPRISE_CODE_POSTAL',
+  'ENTREPRISE_CODE_SPECIFIQUE','ENTREPRISE_CODE_TYPE_EMPLOYEUR','ENTREPRISE_CONVENTION_COLLECTIVE','ENTREPRISE_COURRIEL','ENTREPRISE_EFFECTIF','ENTREPRISE_ENSEIGNE',
+  'ENTREPRISE_IDCC','ENTREPRISE_OPCO','ENTREPRISE_RAISON_SOCIALE','ENTREPRISE_SIRET','ENTREPRISE_STATUT_JURIDIQUE','ENTREPRISE_TELEPHONE',
+  'ENTREPRISE_TROUVEE','ENTREPRISE_TYPE_EMPLOYEUR','ENTREPRISE_VILLE','ETABLISSEMENT_ACTUEL','FORMATION_DATE_DEBUT','FORMATION_DATE_EXAMEN',
+  'FORMATION_DATE_FIN','FORMATION_DUREE_CONTRAT_PROPOSEE','FORMATION_HEURES_CENTRE','FORMATION_MODALITE_VALIDATION','FORMATION_SOUHAITEE','MAITRE_CIVILITE',
+  'MAITRE_COURRIEL','MAITRE_DATE_NAISSANCE','MAITRE_DIPLOME','MAITRE_NIVEAU','MAITRE_NOM','MAITRE_POSTE',
+  'MAITRE_PRENOM','MAITRE_TELEPHONE','NIVEAU_ENTREE_APPRENTISSAGE','ORIGINE_CANDIDATURE','ORIGINE_CANDIDATURE_AUTRE','POSITIONNEMENT_ANNEE_DIPLOME',
+  'POSITIONNEMENT_AVIS_APPRENTI','POSITIONNEMENT_AVIS_ENTREPRISE','POSITIONNEMENT_AVIS_EQUIPE','POSITIONNEMENT_AVIS_ORGANISME','POSITIONNEMENT_COMMENTAIRE_APPRENTI','POSITIONNEMENT_COMMENTAIRE_ENTREPRISE',
+  'POSITIONNEMENT_COMMENTAIRE_ORGANISME','POSITIONNEMENT_DATE','POSITIONNEMENT_DATE_SIGNATURE','POSITIONNEMENT_DERNIER_DIPLOME','POSITIONNEMENT_DIPLOME_OBTENU','POSITIONNEMENT_OBSERVATIONS',
+  'POSITIONNEMENT_REFERENT','POSITIONNEMENT_TOUTES_UNITES','POSITIONNEMENT_UNITES_GENERALES','POSITIONNEMENT_UNITES_PRO','REMUNERATION_BASE','REMUNERATION_SMC_MONTANT',
+  'RESP1_ADRESSE','RESP1_CIVILITE','RESP1_CODE_POSTAL','RESP1_COURRIEL','RESP1_LIEN','RESP1_NOM',
+  'RESP1_PAYS','RESP1_PRENOM','RESP1_PROFESSION','RESP1_TELEPHONE_FIXE','RESP1_TELEPHONE_PORTABLE','RESP1_TELEPHONE_PRO',
+  'RESP1_VILLE','RESP2_ADRESSE','RESP2_CIVILITE','RESP2_CODE_POSTAL','RESP2_COURRIEL','RESP2_LIEN',
+  'RESP2_NOM','RESP2_PAYS','RESP2_PRENOM','RESP2_PROFESSION','RESP2_TELEPHONE_FIXE','RESP2_TELEPHONE_PORTABLE',
+  'RESP2_TELEPHONE_PRO','RESP2_VILLE','RESPONSABLES_CONFIGURATION','RESP_ENTREPRISE_CIVILITE','RESP_ENTREPRISE_COURRIEL','RESP_ENTREPRISE_FONCTION',
+  'RESP_ENTREPRISE_NOM','RESP_ENTREPRISE_PRENOM','RESP_ENTREPRISE_TELEPHONE','SCOLARITE_ANNEE','SCOLARITE_ANNEE_DIPLOME','SCOLARITE_AUCUN_DIPLOME',
+  'SCOLARITE_DERNIERE_CLASSE','SCOLARITE_DERNIER_DIPLOME','SCOLARITE_DERNIER_ETABLISSEMENT','SCOLARITE_ETABLISSEMENT_DIPLOME','SITUATION_AVANT_CFA','SITUATION_AVANT_CFA_AUTRE'
+];
 var EUC_DEV464_FORMATIONS_DEFAULT_=[
   {diplome:'CAP Carrossier Automobile',niveaux:['Première','Terminale']},
   {diplome:'CAP Peinture Automobile',niveaux:['Première','Terminale']},
@@ -83,50 +110,90 @@ function EUC_DEV464_saveFormations(rows){
 function EUC_DEV495_driveId_(value){var match=EUC_DEV464_t_(value).match(/[-\w]{25,}/);return match?match[0]:'';}
 function EUC_DEV495_normalizeModels_(rows){
   var out=[],seen={};(rows||[]).forEach(function(row){
-    var id=EUC_DEV464_t_(row&&row.id),label=EUC_DEV464_t_(row&&row.label),fileId=EUC_DEV495_driveId_(row&&row.fileId);
+    var id=EUC_DEV464_t_(row&&row.id),label=EUC_DEV464_t_(row&&row.label),fileId=EUC_DEV495_driveId_(row&&row.fileId),type=EUC_DEV464_t_(row&&row.type)==='GOOGLE_DOC'?'GOOGLE_DOC':'LEGACY_PDF';
     if(!id||!label||!fileId||seen[id]||label.length>120)return;
-    seen[id]=true;out.push({id:id,label:label,fileId:fileId});
+    seen[id]=true;out.push({id:id,label:label,fileId:fileId,type:type});
   });return out.slice(0,30);
 }
 function EUC_DEV495_models_(){
   var props=PropertiesService.getScriptProperties(),rows=[],selected='';
   try{rows=EUC_DEV495_normalizeModels_(JSON.parse(props.getProperty(EUC_DEV495_MODELS_PROP_)||'[]'));}catch(e){rows=[];}
   try{selected=EUC_DEV464_t_(props.getProperty(EUC_DEV495_DEFAULT_MODEL_PROP_));}catch(e2){}
-  if(!rows.some(function(x){return x.id===selected;}))selected=rows.length?rows[0].id:'';
+  if(!rows.some(function(x){return x.id===selected&&x.type==='GOOGLE_DOC';})){
+    var firstDoc=rows.filter(function(x){return x.type==='GOOGLE_DOC';})[0];selected=firstDoc?firstDoc.id:'';
+  }
   rows.forEach(function(x){x.defaut=x.id===selected;});return rows;
 }
-function EUC_DEV495_publicModels_(){return EUC_DEV495_models_().map(function(x){return{id:x.id,label:x.label,defaut:x.defaut};});}
+function EUC_DEV495_publicModels_(){return EUC_DEV495_models_().map(function(x){return{id:x.id,label:x.label,defaut:x.defaut,type:x.type,compatible:x.type==='GOOGLE_DOC'};});}
 function EUC_DEV495_listDossierModels(){EUC_DEV464_admin_();return{ok:true,models:EUC_DEV495_publicModels_()};}
+function EUC_DEV499_templateParts_(doc){
+  var parts=[doc.getBody()],header=doc.getHeader&&doc.getHeader(),footer=doc.getFooter&&doc.getFooter();if(header)parts.push(header);if(footer)parts.push(footer);return parts;
+}
+function EUC_DEV499_templateAudit_(documentId){
+  var doc=DocumentApp.openById(documentId),text=EUC_DEV499_templateParts_(doc).map(function(x){return x.getText();}).join('\n'),found={},match,re=/\{\{([A-Z0-9_]+)\}\}/g;
+  while((match=re.exec(text))!==null)found[match[1]]=true;
+  var tokens=Object.keys(found).sort(),unknown=tokens.filter(function(x){return EUC_DEV499_MERGE_KEYS_.indexOf(x)<0;}),missing=['ELEVE_NOM','ELEVE_PRENOM'].filter(function(x){return !found[x];});
+  return{tokens:tokens,unknown:unknown,missing:missing};
+}
+function EUC_DEV499_assertTemplateAudit_(audit){
+  var pagination=(audit.unknown||[]).filter(function(x){return x==='PAGE_COURANTE'||x==='NB_PAGES';});
+  if(pagination.length)throw new Error('La pagination du modèle doit utiliser les champs natifs « numéro de page » et « nombre de pages » de Word ou Google Docs, pas les balises {{PAGE_COURANTE}} / {{NB_PAGES}}. Utilisez le DOCX préparé.');
+  if(audit.missing.length)throw new Error('Le modèle Google Docs est incomplet. Champs obligatoires absents : '+audit.missing.map(function(x){return'{{'+x+'}}';}).join(', '));
+  if(audit.unknown.length)throw new Error('Le modèle contient des champs inconnus : '+audit.unknown.map(function(x){return'{{'+x+'}}';}).join(', '));
+}
 function EUC_DEV495_saveDossierModel(q){
   EUC_DEV464_admin_();q=q||{};var label=EUC_DEV464_t_(q.label),fileId=EUC_DEV495_driveId_(q.fileId);
-  if(!label||!fileId)throw new Error('Nom du modèle et lien Google Drive du PDF requis.');
-  var file=DriveApp.getFileById(fileId);if(file.getMimeType()!=='application/pdf')throw new Error('Le modèle doit être un fichier PDF.');
-  if(Number(file.getSize())>12*1024*1024)throw new Error('Le modèle PDF dépasse 12 Mo.');
-  var props=PropertiesService.getScriptProperties(),rows=EUC_DEV495_models_().map(function(x){return{id:x.id,label:x.label,fileId:x.fileId};});
-  var item={id:'modele-'+Utilities.getUuid(),label:label,fileId:fileId};rows.push(item);
+  if(!label||!fileId)throw new Error('Nom du modèle et lien Google Docs requis.');
+  var file=DriveApp.getFileById(fileId);if(file.getMimeType()!==EUC_DEV499_GOOGLE_DOC_MIME_)throw new Error('Le modèle doit être un document Google Docs, pas un PDF.');
+  var audit=EUC_DEV499_templateAudit_(fileId);
+  EUC_DEV499_assertTemplateAudit_(audit);
+  var props=PropertiesService.getScriptProperties(),rows=EUC_DEV495_models_().map(function(x){return{id:x.id,label:x.label,fileId:x.fileId,type:x.type};});
+  var item={id:'modele-'+Utilities.getUuid(),label:label,fileId:fileId,type:'GOOGLE_DOC'};rows.push(item);
   props.setProperty(EUC_DEV495_MODELS_PROP_,JSON.stringify(EUC_DEV495_normalizeModels_(rows)));
   if(q.defaut!==false||rows.length===1)props.setProperty(EUC_DEV495_DEFAULT_MODEL_PROP_,item.id);
-  return{ok:true,models:EUC_DEV495_publicModels_()};
+  return{ok:true,models:EUC_DEV495_publicModels_(),audit:audit};
 }
 function EUC_DEV495_setDefaultDossierModel(q){
   EUC_DEV464_admin_();var id=EUC_DEV464_t_(q&&q.id),models=EUC_DEV495_models_();
-  if(!id||!models.some(function(x){return x.id===id;}))throw new Error('Modèle introuvable.');
+  if(!id||!models.some(function(x){return x.id===id&&x.type==='GOOGLE_DOC';}))throw new Error('Modèle Google Docs introuvable.');
   PropertiesService.getScriptProperties().setProperty(EUC_DEV495_DEFAULT_MODEL_PROP_,id);return{ok:true,models:EUC_DEV495_publicModels_()};
 }
 function EUC_DEV495_deleteDossierModel(q){
   EUC_DEV464_admin_();var id=EUC_DEV464_t_(q&&q.id),props=PropertiesService.getScriptProperties(),models=EUC_DEV495_models_();
   if(!id||!models.some(function(x){return x.id===id;}))throw new Error('Modèle introuvable.');
-  var kept=models.filter(function(x){return x.id!==id;}).map(function(x){return{id:x.id,label:x.label,fileId:x.fileId};});
+  var kept=models.filter(function(x){return x.id!==id;}).map(function(x){return{id:x.id,label:x.label,fileId:x.fileId,type:x.type};});
   props.setProperty(EUC_DEV495_MODELS_PROP_,JSON.stringify(kept));
-  if(EUC_DEV464_t_(props.getProperty(EUC_DEV495_DEFAULT_MODEL_PROP_))===id){if(kept.length)props.setProperty(EUC_DEV495_DEFAULT_MODEL_PROP_,kept[0].id);else props.deleteProperty(EUC_DEV495_DEFAULT_MODEL_PROP_);}
+  if(EUC_DEV464_t_(props.getProperty(EUC_DEV495_DEFAULT_MODEL_PROP_))===id){var next=kept.filter(function(x){return x.type==='GOOGLE_DOC';})[0];if(next)props.setProperty(EUC_DEV495_DEFAULT_MODEL_PROP_,next.id);else props.deleteProperty(EUC_DEV495_DEFAULT_MODEL_PROP_);}
   return{ok:true,models:EUC_DEV495_publicModels_()};
 }
 function EUC_DEV495_model_(id){var models=EUC_DEV495_models_(),wanted=EUC_DEV464_t_(id);return models.filter(function(x){return x.id===wanted;})[0]||models.filter(function(x){return x.defaut;})[0]||null;}
 function EUC_DEV495_loadDossierModel(q){
-  EUC_DEV464_admin_();var model=EUC_DEV495_model_(q&&q.id);if(!model)throw new Error('Aucun modèle PDF enregistré.');
-  var file=DriveApp.getFileById(model.fileId);if(file.getMimeType()!=='application/pdf')throw new Error('Le modèle enregistré n’est plus un PDF.');
-  var bytes=file.getBlob().getBytes();if(bytes.length>12*1024*1024)throw new Error('Le modèle PDF dépasse 12 Mo.');
-  return{ok:true,id:model.id,label:model.label,name:file.getName(),mime:'application/pdf',base64:Utilities.base64Encode(bytes)};
+  EUC_DEV464_admin_();var model=EUC_DEV495_model_(q&&q.id);if(!model||model.type!=='GOOGLE_DOC')throw new Error('Aucun modèle Google Docs compatible enregistré.');
+  var file=DriveApp.getFileById(model.fileId);if(file.getMimeType()!==EUC_DEV499_GOOGLE_DOC_MIME_)throw new Error('Le modèle enregistré n’est plus un document Google Docs.');
+  return{ok:true,id:model.id,label:model.label,name:file.getName(),mime:EUC_DEV499_GOOGLE_DOC_MIME_,audit:EUC_DEV499_templateAudit_(model.fileId)};
+}
+function EUC_DEV499_escapeRegex_(value){return String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function EUC_DEV499_replacement_(value){return EUC_DEV464_t_(value).replace(/\\/g,'\\\\').replace(/\$/g,'\\$');}
+function EUC_DEV499_cleanValues_(values){
+  values=values||{};var out={};EUC_DEV499_MERGE_KEYS_.forEach(function(key){out[key]=EUC_DEV464_t_(values[key]).slice(0,1500);});
+  var stamp=Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy HH:mm');out.DATE_EDITION=stamp;out.DATE_HEURE_IMPRESSION=stamp;return out;
+}
+function EUC_DEV499_replaceParts_(parts,values){
+  var replaced=0;EUC_DEV499_MERGE_KEYS_.forEach(function(key){var pattern='\\{\\{'+EUC_DEV499_escapeRegex_(key)+'\\}\\}',replacement=EUC_DEV499_replacement_(values[key]);parts.forEach(function(part){var before=part.getText(),occurrences=(before.match(new RegExp(pattern,'g'))||[]).length;if(occurrences){part.replaceText(pattern,replacement);replaced+=occurrences;}});});return replaced;
+}
+function EUC_DEV499_generateDossierPdf(q){
+  EUC_DEV464_admin_();q=q||{};var model=EUC_DEV495_model_(q.modelId);if(!model||model.type!=='GOOGLE_DOC')throw new Error('Choisissez un modèle Google Docs compatible.');
+  var source=DriveApp.getFileById(model.fileId);if(source.getMimeType()!==EUC_DEV499_GOOGLE_DOC_MIME_)throw new Error('Le modèle enregistré n’est plus un document Google Docs.');
+  var audit=EUC_DEV499_templateAudit_(model.fileId);EUC_DEV499_assertTemplateAudit_(audit);
+  var values=EUC_DEV499_cleanValues_(q.values),safe=[values.ELEVE_NOM,values.ELEVE_PRENOM].join('_').replace(/[^A-Za-z0-9À-ÿ_-]+/g,'_').slice(0,120)||'eleve',copy=source.makeCopy('TEMP_Dossier_apprentissage_'+safe),id=copy.getId();
+  try{
+    var doc=DocumentApp.openById(id),parts=EUC_DEV499_templateParts_(doc),footer=doc.getFooter&&doc.getFooter();
+    if(!footer&&doc.addFooter){footer=doc.addFooter();parts.push(footer);}if(footer&&footer.getText().indexOf('{{DATE_EDITION}}')<0&&footer.getText().indexOf('Date d’édition :')<0)footer.appendParagraph('Date d’édition : {{DATE_EDITION}}');
+    var replaced=EUC_DEV499_replaceParts_(parts,values),remaining=parts.map(function(x){return x.getText();}).join('\n').match(/\{\{[A-Z0-9_]+\}\}/g)||[];
+    if(remaining.length)throw new Error('Certaines balises du Google Docs sont coupées ou non remplaçables : '+remaining.slice(0,8).join(', ')+'. Retapez-les dans le modèle en une seule fois.');
+    doc.saveAndClose();var pdf=copy.getAs(MimeType.PDF).setName('Dossier_apprentissage_'+safe+'.pdf'),bytes=pdf.getBytes();if(bytes.length>18*1024*1024)throw new Error('Le PDF généré dépasse 18 Mo.');
+    return{ok:true,id:model.id,label:model.label,name:pdf.getName(),mime:'application/pdf',base64:Utilities.base64Encode(bytes),replaced:replaced};
+  }finally{copy.setTrashed(true);}
 }
 function EUC_DEV495_printCol_(id,label,type){return{id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_DEV495_ensurePrintTable_(){

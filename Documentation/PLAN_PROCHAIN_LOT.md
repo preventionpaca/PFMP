@@ -1,4 +1,19 @@
-# Prochain lot après DEV498
+# Prochain lot après DEV499
+
+DEV499 remplace la superposition sur un PDF par une fusion Google Docs puis un
+export PDF. Le DOCX métier de huit pages est désormais la base éditable : ses
+`135` balises sont acceptées, sa date d’édition est fusionnée sur chaque page et
+sa pagination utilise de vrais champs Word. Le modèle maître n’est jamais
+modifié ; seule une copie temporaire est exportée puis supprimée.
+
+Avant promotion verte, importer le fichier préparé comme Google Docs dans Drive,
+l’enregistrer dans la liste des modèles du site bleu et effectuer une génération
+avec un élève de recette. Vérifier les huit pages, l’absence de balise résiduelle,
+la date et les numéros de page. La confirmation de distribution doit rester une
+simulation sur le bleu. Ne pas promouvoir tant que ce contrôle visuel n’est pas
+réussi.
+
+## Historique immédiat après DEV498
 
 DEV498 corrige les quatre routes qui bloquaient la promotion DEV497 et rend les
 chargements Destinataires et Paramètres d’envoi non bloquants. Le candidat exact

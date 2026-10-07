@@ -9,6 +9,7 @@ const router=read('EUC_PFMP_DEV455_FastVerifiedViews.js');
 const admin=read('Admin_PFMP.html');
 const rich=read('EUC_IMPORT_PFMP_RichData.gs');
 const importHtml=read('Import_Pronote_PFMP.html');
+const templatePrep=fs.readFileSync(path.join(root,'scripts','prepare_dossier_apprentissage_template.py'),'utf8');
 let ok=0,ko=0;function assert(v,m){if(!v)throw new Error(m||'assertion failed')}function test(n,f){try{f();console.log('✓',n);ok++}catch(e){console.error('✗',n,'-',e.message);ko++}}
 
 test('la navigation rapide utilise le même détail canonique que la route complète',()=>{
@@ -74,27 +75,28 @@ test('la liste des diplômes reste modifiable hors Grist',()=>{
   assert(!server.slice(server.indexOf('function EUC_DEV464_saveFormations'),server.indexOf('function EUC_DEV495_driveId_')).includes('EUC_DEV464_records_'),'sauvegarde du catalogue branchée sur Grist');
 });
 
-test('plusieurs modèles PDF Drive sont sélectionnables avec un seul défaut',()=>{
+test('plusieurs modèles Google Docs sont sélectionnables avec un seul défaut',()=>{
   assert(server.includes("DOSSIER_APPRENTISSAGE_MODELES"),'registre des modèles absent');
   assert(server.includes("DOSSIER_APPRENTISSAGE_MODELE_DEFAUT_ID"),'propriété du modèle par défaut absente');
-  assert(server.includes("file.getMimeType()!=='application/pdf'"),'contrôle MIME PDF absent');
+  assert(server.includes("file.getMimeType()!==EUC_DEV499_GOOGLE_DOC_MIME_"),'contrôle MIME Google Docs absent');
   assert(html.includes('id="modelChoice"')&&html.includes('id="modelList"'),'sélection ou liste des modèles absente');
   assert(html.includes('EUC_DEV495_saveDossierModel')&&html.includes('EUC_DEV495_setDefaultDossierModel')&&html.includes('EUC_DEV495_deleteDossierModel'),'gestion des modèles incomplète');
-  assert(html.includes('EUC_DEV495_loadDossierModel'),'chargement tardif du PDF Drive absent');
-  assert(html.includes("modelChoice.value='__local__'"),'solution temporaire locale absente');
+  assert(html.includes('Gérer les modèles Google Docs'),'libellé Google Docs absent');
+  assert(!html.includes('id="template"')&&!html.includes("modelChoice.value='__local__'"),'ancien modèle PDF local encore proposé');
 });
 
 test('le registre des modèles impose réellement un seul défaut',()=>{
   const values={},props={getProperty:k=>values[k]||'',setProperty:(k,v)=>{values[k]=String(v)},deleteProperty:k=>{delete values[k]}};let uuid=0;
-  const ctx={Date,String,Number,Array,Object,isNaN,Math,PropertiesService:{getScriptProperties:()=>props},DriveApp:{getFileById:id=>({getMimeType:()=>id==='not-a-pdf-identifier-000000'?'text/plain':'application/pdf',getSize:()=>2048})},Utilities:{getUuid:()=>String(++uuid)}};
+  const parts={getText:()=>'{{ELEVE_NOM}} {{ELEVE_PRENOM}}'},doc={getBody:()=>parts,getHeader:()=>null,getFooter:()=>null};
+  const ctx={Date,String,Number,Array,Object,isNaN,Math,PropertiesService:{getScriptProperties:()=>props},DriveApp:{getFileById:id=>({getMimeType:()=>id==='not-a-doc-identifier-000000'?'application/pdf':'application/vnd.google-apps.document'})},DocumentApp:{openById:()=>doc},Utilities:{getUuid:()=>String(++uuid)}};
   ctx.EUC_PFMP_contexteAdmin_=()=>({autorise:true});vm.createContext(ctx);vm.runInContext(server,ctx);
-  ctx.EUC_DEV495_saveDossierModel({label:'Modèle A',fileId:'pdf-model-identifier-000000001',defaut:true});
-  ctx.EUC_DEV495_saveDossierModel({label:'Modèle B',fileId:'pdf-model-identifier-000000002',defaut:true});
+  ctx.EUC_DEV495_saveDossierModel({label:'Modèle A',fileId:'doc-model-identifier-000000001',defaut:true});
+  ctx.EUC_DEV495_saveDossierModel({label:'Modèle B',fileId:'doc-model-identifier-000000002',defaut:true});
   let models=ctx.EUC_DEV495_listDossierModels().models;
   assert(models.length===2&&models.filter(x=>x.defaut).length===1&&models.find(x=>x.defaut).label==='Modèle B','défaut multiple ou mauvais défaut');
   ctx.EUC_DEV495_setDefaultDossierModel({id:models[0].id});models=ctx.EUC_DEV495_listDossierModels().models;
   assert(models.filter(x=>x.defaut).length===1&&models[0].defaut,'changement de défaut non appliqué');
-  let refused='';try{ctx.EUC_DEV495_saveDossierModel({label:'Texte',fileId:'not-a-pdf-identifier-000000'});}catch(e){refused=e.message||String(e)}assert(/fichier PDF/.test(refused),'fichier non PDF accepté');
+  let refused='';try{ctx.EUC_DEV495_saveDossierModel({label:'PDF',fileId:'not-a-doc-identifier-000000'});}catch(e){refused=e.message||String(e)}assert(/Google Docs, pas un PDF/.test(refused),'fichier PDF accepté comme modèle source');
 });
 
 test('les correspondances validées Pronote sont conservées au prochain import',()=>{
@@ -111,20 +113,41 @@ test('les données responsables et apprenti sont lues seulement pour l’élève
   assert(server.includes("EUC_APPRENTISSAGE_PFMP"),'apprentissage absent');
 });
 
-test('le PDF de huit pages repère et remplace les balises réelles du modèle',()=>{
-  assert(html.includes('pdf.getPages()'),'pages PDF non lues');
-  assert(html.includes('pages.length!==8'),'contrôle 8 pages absent');
-  assert(html.includes('pdfjs-dist@3.11.174')&&html.includes('getTextContent()'),'repérage des textes PDF absent');
-  assert(html.includes('mergeTokenGroups')&&html.includes("marker.key==='ELEVE_NOM'"),'détection des balises absente');
-  assert(html.includes('DATE_HEURE_IMPRESSION:dateLabel')&&html.includes('PAGE_COURANTE:String(pageNumber)')&&html.includes('NB_PAGES:String(pageCount)'),'date ou pagination non fusionnée');
-  assert(!html.includes('function overlay('),'ancien calque à coordonnées fixes encore actif');
-  assert(html.includes('arrayBuffer()'),'modèle local temporaire non utilisable');
-  assert(html.includes('decodeBase64(loaded.base64)'),'modèle Drive non utilisable');
+test('la fusion part du Google Docs, exporte le PDF et supprime toujours la copie temporaire',()=>{
+  assert(server.includes('function EUC_DEV499_generateDossierPdf'),'générateur Google Docs absent');
+  assert(server.includes("source.makeCopy('TEMP_Dossier_apprentissage_"),'copie temporaire absente');
+  assert(server.includes('DocumentApp.openById(id)')&&server.includes('copy.getAs(MimeType.PDF)'),'fusion ou export PDF absent');
+  assert(server.includes('finally{copy.setTrashed(true);'),'copie temporaire non supprimée');
+  assert(server.includes("footer.appendParagraph('Date d’édition : {{DATE_EDITION}}')"),'date d’édition répétée en pied de page absente');
+  assert(server.includes('remaining.length')&&server.includes('balises du Google Docs sont coupées'),'contrôle des balises résiduelles absent');
+  assert(!html.includes('pdfjs-dist')&&!html.includes('PDFLib'),'ancien calque PDF client encore actif');
+  assert(html.includes('EUC_DEV499_generateDossierPdf({modelId,values})'),'appel serveur de fusion absent');
+});
+
+test('le modèle Word métier complet est accepté sans fausse balise de pagination',()=>{
+  const block=(server.match(/var EUC_DEV499_MERGE_KEYS_=\[([\s\S]*?)\];/)||[])[1]||'';
+  const allowed=Array.from(block.matchAll(/'([^']+)'/g),m=>m[1]);
+  const official=`
+ANCIEN_APPRENTISSAGE_ANNEE ANCIEN_APPRENTISSAGE_CLASSE ANCIEN_APPRENTISSAGE_ETABLISSEMENT ANNEE_ENTREE_APPRENTISSAGE AVANTAGE_AUTRE AVANTAGE_LOGEMENT AVANTAGE_NOURRITURE CONTACT_RH_COURRIEL CONTACT_RH_NOM CONTACT_RH_PRENOM CONTACT_RH_TELEPHONE CONTRAT_AUTORISATION_DEPOT_OPCO
+CONTRAT_DATE_AVENANT CONTRAT_DATE_DEBUT CONTRAT_DATE_FIN CONTRAT_DUREE_HEBDO_HEURES CONTRAT_DUREE_HEBDO_MINUTES CONTRAT_DUREE_HEBDO_TYPE CONTRAT_MAJORATION_HEURES_SUP CONTRAT_RISQUES_PARTICULIERS DATE_HEURE_IMPRESSION DEMANDE_INTERNAT DOSSIER_DATE_RECEPTION ELEVE_ADRESSE
+ELEVE_BOE ELEVE_CODE_POSTAL ELEVE_COURRIEL ELEVE_DATE_NAISSANCE ELEVE_EQUIVALENCE_15_20 ELEVE_FORMATION_PREPAREE ELEVE_INE ELEVE_LIEU_NAISSANCE ELEVE_NATIONALITE ELEVE_NIR ELEVE_NOM ELEVE_PHOTO ELEVE_PRENOM ELEVE_PROJET_ENTREPRISE ELEVE_RQTH ELEVE_SPORTIF_HAUT_NIVEAU ELEVE_TELEPHONE ELEVE_TITRE_EQUIVALENCE ELEVE_VILLE
+ENTREPRISE_ADRESSE ENTREPRISE_CAISSE_RETRAITE ENTREPRISE_CODE_POSTAL ENTREPRISE_CODE_SPECIFIQUE ENTREPRISE_CODE_TYPE_EMPLOYEUR ENTREPRISE_CONVENTION_COLLECTIVE ENTREPRISE_COURRIEL ENTREPRISE_EFFECTIF ENTREPRISE_ENSEIGNE ENTREPRISE_IDCC ENTREPRISE_OPCO ENTREPRISE_RAISON_SOCIALE ENTREPRISE_SIRET ENTREPRISE_STATUT_JURIDIQUE ENTREPRISE_TELEPHONE ENTREPRISE_TROUVEE ENTREPRISE_TYPE_EMPLOYEUR ENTREPRISE_VILLE ETABLISSEMENT_ACTUEL
+FORMATION_DATE_DEBUT FORMATION_DATE_EXAMEN FORMATION_DATE_FIN FORMATION_DUREE_CONTRAT_PROPOSEE FORMATION_HEURES_CENTRE FORMATION_MODALITE_VALIDATION FORMATION_SOUHAITEE MAITRE_CIVILITE MAITRE_COURRIEL MAITRE_DATE_NAISSANCE MAITRE_DIPLOME MAITRE_NIVEAU MAITRE_NOM MAITRE_POSTE MAITRE_PRENOM MAITRE_TELEPHONE
+ORIGINE_CANDIDATURE ORIGINE_CANDIDATURE_AUTRE POSITIONNEMENT_ANNEE_DIPLOME POSITIONNEMENT_AVIS_APPRENTI POSITIONNEMENT_AVIS_ENTREPRISE POSITIONNEMENT_AVIS_EQUIPE POSITIONNEMENT_AVIS_ORGANISME POSITIONNEMENT_COMMENTAIRE_APPRENTI POSITIONNEMENT_COMMENTAIRE_ENTREPRISE POSITIONNEMENT_COMMENTAIRE_ORGANISME POSITIONNEMENT_DATE POSITIONNEMENT_DATE_SIGNATURE POSITIONNEMENT_DERNIER_DIPLOME POSITIONNEMENT_DIPLOME_OBTENU POSITIONNEMENT_OBSERVATIONS POSITIONNEMENT_REFERENT POSITIONNEMENT_TOUTES_UNITES POSITIONNEMENT_UNITES_GENERALES POSITIONNEMENT_UNITES_PRO
+REMUNERATION_BASE REMUNERATION_SMC_MONTANT RESP1_ADRESSE RESP1_CIVILITE RESP1_CODE_POSTAL RESP1_COURRIEL RESP1_NOM RESP1_PRENOM RESP1_PROFESSION RESP1_TELEPHONE_FIXE RESP1_TELEPHONE_PORTABLE RESP1_VILLE RESP2_ADRESSE RESP2_CIVILITE RESP2_CODE_POSTAL RESP2_COURRIEL RESP2_NOM RESP2_PRENOM RESP2_PROFESSION RESP2_TELEPHONE_FIXE RESP2_TELEPHONE_PORTABLE RESP2_VILLE RESPONSABLES_CONFIGURATION
+RESP_ENTREPRISE_CIVILITE RESP_ENTREPRISE_COURRIEL RESP_ENTREPRISE_FONCTION RESP_ENTREPRISE_NOM RESP_ENTREPRISE_PRENOM RESP_ENTREPRISE_TELEPHONE SCOLARITE_ANNEE SCOLARITE_ANNEE_DIPLOME SCOLARITE_AUCUN_DIPLOME SCOLARITE_DERNIERE_CLASSE SCOLARITE_DERNIER_DIPLOME SCOLARITE_DERNIER_ETABLISSEMENT SCOLARITE_ETABLISSEMENT_DIPLOME SITUATION_AVANT_CFA SITUATION_AVANT_CFA_AUTRE
+  `.trim().split(/\s+/);
+  for(const token of official)assert(allowed.includes(token),'balise officielle refusée : '+token);
+  assert(!allowed.includes('PAGE_COURANTE')&&!allowed.includes('NB_PAGES'),'fausses balises de pagination encore autorisées');
+  assert(server.includes('La pagination du modèle doit utiliser les champs natifs'),'diagnostic de pagination absent');
+  assert(templatePrep.includes('field_run("PAGE", "1")')&&templatePrep.includes('field_run("NUMPAGES", "8")'),'préparation des vrais numéros de page absente');
+  assert(templatePrep.includes('Balises coupées en plusieurs styles/runs'),'contrôle des balises Word fragmentées absent');
 });
 
 test('les champs demandés sont tous raccordés aux balises du modèle',()=>{
   for(const token of ['ELEVE_LIEU_NAISSANCE','ELEVE_NATIONALITE','ELEVE_COURRIEL','SCOLARITE_DERNIER_ETABLISSEMENT','SCOLARITE_DERNIERE_CLASSE','SCOLARITE_DERNIER_DIPLOME','RESP1_PROFESSION','RESP2_PROFESSION','ENTREPRISE_RAISON_SOCIALE'])assert(html.includes(token+':'),token+' non raccordé');
-  assert(html.includes("Object.prototype.hasOwnProperty.call(values,marker.key)?values[marker.key]:''"),'balises inconnues non neutralisées');
+  assert(server.includes('EUC_DEV499_MERGE_KEYS_')&&server.includes('audit.unknown.length'),'liste blanche ou refus des balises inconnues absent');
+  assert(server.includes('EUC_DEV499_cleanValues_')&&server.includes('.slice(0,1500)'),'bornage des valeurs de fusion absent');
 });
 
 test('la distribution est confirmée explicitement puis inscrite dans un registre dédié',()=>{
@@ -178,7 +201,8 @@ test('le bleu simule aussi l’annulation sans écriture Grist',()=>{
 
 test('le modèle conserve l’ordre annexe 11, annexe 12d, positionnement',()=>{
   assert(html.includes('annexes 11, 12d et du positionnement'),'ordre annoncé absent');
-  assert(html.includes('for(let n=1;n<=pages.length;n++)'),'les huit pages ne sont pas parcourues dans l’ordre');
+  assert(server.includes("source.makeCopy('TEMP_Dossier_apprentissage_"),'le document source n’est pas copié intégralement');
+  assert(!server.includes('appendPage')&&!server.includes('moveChild'),'le générateur réordonne le document source');
 });
 
 test('les dates Grist en secondes et millisecondes restent lisibles',()=>{
@@ -216,11 +240,11 @@ test('les colonnes Pronote historiques restent lisibles sans inventer les champs
 });
 
 test('la fusion suit les emplacements du modèle au lieu de coordonnées historiques',()=>{
-  assert(html.includes('active.fragments.push({x:Number(tr[4])'),'coordonnées PDF.js non utilisées');
-  assert(html.includes('textRatio(text,cursor,item,styles)')&&html.includes('ctx.measureText(text.slice(0,end))'),'largeur proportionnelle des balises non mesurée');
-  assert(html.includes('page.drawRectangle({x:f.x-3.75'),'balise d’origine non effacée');
+  assert(server.includes('part.replaceText(pattern,replacement)'),'remplacement natif Google Docs absent');
+  assert(server.includes("before.match(new RegExp(pattern,'g'))"),'occurrences des balises du modèle non comptées');
   assert(!html.includes('e.nom,65,549')&&!html.includes('e.telephone,210,455'),'coordonnées historiques encore présentes');
-  assert(html.includes("if(!datePages[i+1])page.drawText('Date d\\'édition : '"),'date absente des pages sans balise dédiée');
+  assert(!html.includes('drawText(')&&!html.includes('drawRectangle('),'dessin par coordonnées encore actif');
+  assert(server.includes("footer.appendParagraph('Date d’édition : {{DATE_EDITION}}')"),'date d’édition non répétée dans le pied de page');
 });
 
 console.log(`\nDEV464: ${ok} tests réussis, ${ko} échec(s)`);if(ko)process.exit(1);
