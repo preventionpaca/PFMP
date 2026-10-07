@@ -247,6 +247,27 @@ function EUC_DEV208_loadApprentis(annee,classeId,classeNom){
     var cc=c(names);
     return cc?EUC_DEV208_txt_(f[cc]):'';
   }
+  function dateVal(f,names){
+    var cc=c(names);
+    if(!cc)return '';
+    var raw=f[cc];
+    if(typeof EUC_IMPORT_dateExistanteISO_==='function'){
+      return EUC_IMPORT_dateExistanteISO_(raw)||'';
+    }
+    if(raw===null||raw===undefined||raw==='')return '';
+    if(typeof raw==='number'&&isFinite(raw)){
+      return new Date(raw*1000).toISOString().slice(0,10);
+    }
+    var text=String(raw).trim();
+    if(/^\d{10}(?:\.\d+)?$/.test(text)){
+      return new Date(Number(text)*1000).toISOString().slice(0,10);
+    }
+    if(/^\d{13}$/.test(text)){
+      return new Date(Number(text)).toISOString().slice(0,10);
+    }
+    var match=text.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match?match[1]:'';
+  }
   function bool(f,names){
     var cc=c(names);
     return cc?!!f[cc]:false;
@@ -261,8 +282,8 @@ function EUC_DEV208_loadApprentis(annee,classeId,classeNom){
       nom:s.nom,
       prenom:s.prenom,
       apprenti:bool(f,['Actif','Apprenti']),
-      debut:val(f,['Date_debut','Date_contrat_officielle']),
-      fin:val(f,['Date_fin']),
+      debut:dateVal(f,['Date_debut','Date_contrat_officielle']),
+      fin:dateVal(f,['Date_fin']),
       siret:val(f,['SIRET']),
       nomEntreprise:val(f,['Nom_entreprise']),
       nomCommercial:val(f,['Nom_commercial','Entreprise']),
@@ -276,15 +297,15 @@ function EUC_DEV208_loadApprentis(annee,classeId,classeNom){
       telTuteur:val(f,['Tuteur_telephone','Telephone_tuteur']),
       mailTuteur:val(f,['Tuteur_courriel','Courriel_tuteur']),
       dossierDistribue:bool(f,['Dossier_distribue']),
-      dateDistribution:val(f,['Date_distribution_dossier']),
+      dateDistribution:dateVal(f,['Date_distribution_dossier']),
       dossierRemis:bool(f,['Dossier_remis']),
-      dateRemise:val(f,['Date_remise_dossier','Date_dossier']),
-      dateDossier:val(f,['Date_remise_dossier','Date_dossier']),
+      dateRemise:dateVal(f,['Date_remise_dossier','Date_dossier']),
+      dateDossier:dateVal(f,['Date_remise_dossier','Date_dossier']),
       transmisCfa:bool(f,['Dossier_transmis_CFA']),
-      dateCfa:val(f,['Date_transmission_CFA']),
-      dateTransmissionCfa:val(f,['Date_transmission_CFA']),
-      dateContrat:val(f,['Date_contrat_officielle','Date_debut']),
-      dateRupture:val(f,['Date_rupture_contrat']),
+      dateCfa:dateVal(f,['Date_transmission_CFA']),
+      dateTransmissionCfa:dateVal(f,['Date_transmission_CFA']),
+      dateContrat:dateVal(f,['Date_contrat_officielle','Date_debut']),
+      dateRupture:dateVal(f,['Date_rupture_contrat']),
       nouveauContrat:bool(f,['Nouveau_contrat'])
     };
   });
