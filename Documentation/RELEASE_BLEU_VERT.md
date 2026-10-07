@@ -101,6 +101,13 @@ dans `.git/pfmp-release-candidate.json` et n'est jamais ajouté au dépôt.
 
 ## Règles permanentes
 
+- développer et publier toute évolution sur le bleu avant toute promotion ;
+- contrôler les 25 routes et tous les contrôles de navigation visibles des
+  pages modifiées ;
+- conserver `https://alternance.loucodi.fr/` comme destination exacte de tout
+  accès vert libellé `Accueil PFMP`, le bleu restant sur son propre `/dev` ;
+- imposer un spinner, la protection contre le double clic et la restauration
+  en succès comme en erreur à chaque bouton de traitement asynchrone ;
 - ne plus exécuter directement `clasp deploy` pour une évolution ordinaire ;
 - ne jamais promouvoir un autre commit que le candidat bleu contrôlé ;
 - ne jamais utiliser un paquet construit depuis les modifications non

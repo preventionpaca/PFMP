@@ -1,4 +1,16 @@
-# Prochain lot après DEV492
+# Prochain lot après DEV493
+
+DEV493 ne change pas l’application publiée. Il grave le contrat permanent de
+travail dans `AGENTS.md` et `Documentation/CONTRAT_QUALITE_UI.md` : toute
+évolution applicative doit passer d’abord par le bleu, conserver sa navigation
+dans le bon canal, contrôler les 25 routes et les contrôles visibles des pages
+modifiées, et appliquer le comportement de chargement aux boutons asynchrones.
+La prochaine évolution fonctionnelle devra suivre ce contrat sans que
+l’utilisateur ait à le rappeler.
+
+Tests DEV493 : DEV470 `8/8`, workflow de release `14/14`, suite complète
+`600/600`. Aucun paquet Apps Script n’a été publié pour ce lot documentaire et
+de contrôle.
 
 DEV492 est publié sur le `HEAD` bleu et sur les deux Web Apps vertes existantes
 dans la version Apps Script immuable `886`, à partir du commit applicatif

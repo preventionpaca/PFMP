@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV493 (contrat permanent bleu et qualité d’interface)
+
+- Le dépôt impose désormais dans `AGENTS.md` le développement et la publication sur le site bleu avant toute promotion verte. Une promotion exige toujours l’autorisation explicite de l’utilisateur et le candidat bleu exact.
+- La définition de fini est détaillée dans `Documentation/CONTRAT_QUALITE_UI.md` : contrôle des 25 routes, parcours navigateur de tous les liens et boutons de navigation visibles des pages modifiées, maintien dans le bon canal et vérification des états vide, chargement, succès et erreur.
+- Tout accès vert libellé `Accueil PFMP` doit viser exactement `https://alternance.loucodi.fr/`; le bleu doit conserver sa navigation sur son propre `/dev`. Le test DEV470 inventorie maintenant automatiquement tous les fichiers qui affichent ce libellé au lieu d’une liste manuelle susceptible d’oublier une page.
+- Tout nouveau bouton asynchrone ou bouton asynchrone modifié doit être protégé contre le double clic, afficher un spinner avec un libellé d’action et restaurer son état en succès, erreur ou dépassement de délai. Les simples liens de navigation ne sont pas concernés.
+- Deux tests de workflow empêchent la suppression silencieuse de ces règles. Les tests ciblés DEV470 (`8/8`) et release (`14/14`) ainsi que la suite complète (`600/600`) sont verts. Ce lot ne modifie aucun fichier applicatif et n’entraîne donc aucune publication Apps Script : le bleu et les deux Web Apps vertes restent sur le code applicatif DEV492, les vertes sur la version immuable `886` et leurs URL existantes.
+
 ## Mise à jour du 7 octobre 2026 — DEV492 (fiabilité des courriels d’ordre de mission)
 
 - Le contrôle en lecture seule de l’historique d’exécution du Web App vert a isolé la panne : le 7 octobre à 13:51:34, `EUC_DEV440_prepareMissionTransportEmail` s’est terminé normalement en `8,423 s`, mais aucune exécution de `EUC_DEV440_sendMissionTransportEmail` n’a suivi. `MailApp.sendEmail` n’était donc jamais atteint ; l’absence de message chez le professeur et chez BFE ne provenait ni des spams ni du champ CC.

@@ -22,18 +22,13 @@ function read(file) {
   return fs.readFileSync(path.join(appDir, file), 'utf8');
 }
 
-const labelledFiles = [
-  'Apprentissage_PFMP_V190X.html',
-  'EUC_PFMP_DEV459_CanonicalViews.js',
-  'Geocodage_PFMP_DEV441.html',
-  'Migration_JotForm_PFMP_V160.html',
-  'Ordres_Mission_PFMP_V368.html',
-  'Suivi_Conventions_Admin_Summary_V348.html',
-  'Suivi_Conventions_Famille_DEV459.html',
-  'Suivi_PFMP_Classe_Detail_V156.html'
-];
+const labelledFiles = fs.readdirSync(appDir)
+  .filter(file => /\.(?:html|js|gs)$/.test(file))
+  .filter(file => read(file).includes('Accueil PFMP'))
+  .sort();
 
 test('tous les fichiers affichant Accueil PFMP connaissent le sous-domaine canonique', () => {
+  assert.ok(labelledFiles.length >= 10, 'inventaire Accueil PFMP anormalement incomplet');
   for (const file of labelledFiles) {
     assert.ok(read(file).includes(homeUrl), file + ' ne contient pas la destination canonique');
   }

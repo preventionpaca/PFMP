@@ -7,6 +7,10 @@ const script = fs.readFileSync(path.join(root, 'scripts', 'pfmp-release.sh'), 'u
 const verifier = fs.readFileSync(path.join(root, 'scripts', 'verify-pfmp-release.js'), 'utf8');
 const builder = fs.readFileSync(path.join(root, 'scripts', 'build-pfmp-apps-script-package.sh'), 'utf8');
 const channel = fs.readFileSync(path.join(root, 'apps-script', 'EUC_PFMP_ReleaseChannel.js'), 'utf8');
+const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+const qualityContract = fs.readFileSync(
+  path.join(root, 'Documentation', 'CONTRAT_QUALITE_UI.md'), 'utf8'
+);
 const config = JSON.parse(fs.readFileSync(
   path.join(root, 'scripts', 'pfmp-release-config.json'), 'utf8'
 ));
@@ -134,6 +138,27 @@ test('le vérificateur refuse erreurs runtime, login et contenu inattendu', () =
   assert.match(verifier, /Page Apps Script en erreur/);
   assert.match(verifier, /\^\(\?:Erreur\|Error\)\$/);
   assert.match(verifier, /body\.includes\(route\.expected\)/);
+});
+
+test('le contrat permanent impose le développement bleu avant le vert', () => {
+  assert.match(agents, /Toute évolution applicative commence sur une branche Git/);
+  assert.match(agents, /publiée d’abord, et uniquement, sur le projet Apps Script bleu/);
+  assert.match(agents, /promotion vers le vert exige l’autorisation explicite/);
+  assert.match(qualityContract, /Développement uniquement sur le bleu/);
+  assert.match(qualityContract, /Ne promouvoir le candidat exact qu’après autorisation explicite/);
+  assert.match(qualityContract, /25\/25.*routes bleues/);
+});
+
+test('le contrat permanent protège accueil, navigation et boutons asynchrones', () => {
+  for (const contents of [agents, qualityContract]) {
+    assert.ok(contents.includes('https://alternance.loucodi.fr/'));
+    assert.match(contents, /liens et boutons|liens, carte ou bouton/i);
+    assert.match(contents, /spinner/i);
+    assert.match(contents, /double clic/i);
+    assert.match(contents, /succès, erreur/);
+  }
+  assert.match(agents, /même `\/dev`/);
+  assert.match(qualityContract, /passage silencieux du bleu vers le vert bloque la\s+livraison/);
 });
 
 if (!process.exitCode) {
