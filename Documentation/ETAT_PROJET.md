@@ -7,7 +7,8 @@
 - Pour `Début retardé`, le début réel doit être postérieur au début officiel et la fin réelle doit rester exactement la fin officielle. Le cas `7 octobre 2026 → 16 octobre 2026` peut donc être rattaché à la PFMP finissant le 16 ; `7 octobre → 17 octobre` reste refusé.
 - Le suivi et les ordres de mission utilisent l’identifiant de la période officielle choisie. Les dates réelles et la situation sont conservées dans l’accès de convention ; le libellé garde également une trace lisible du rattachement et du motif.
 - Tests ciblés JotForm : `19/19`. Suite complète : `628/628`. Aucun import, aucune convention, aucun courriel et aucun ordre de mission réel n’ont été déclenchés ; la production Grist n’a pas été consultée.
-- Ce lot est destiné au canal bleu en premier. Les deux Web Apps vertes restent sur la version immuable `889` tant qu’une promotion explicite du candidat testé n’est pas demandée.
+- Publication : le candidat bleu exact `9fc0536b7da66b9dd90e4af789aa2a875a5dd83a` a été relu puis promu par le workflow contrôlé sur la version Apps Script immuable `890` des deux Web Apps vertes existantes. Leurs URL n’ont pas changé ; les contrôles ont obtenu `25/25` routes valides sur le bleu puis `25/25` sur le vert. La version `889` reste disponible comme version antérieure de repli.
+- La publication n’a déclenché aucun import JotForm, aucune convention, aucun courriel et aucun ordre de mission. L’ouverture des routes est validée ; le premier rattachement réel `07/10/2026 → 16/10/2026` doit encore être contrôlé fonctionnellement sur une ligne prête avant de confirmer son import.
 
 ## Mise à jour du 7 octobre 2026 — DEV502 (cohorte courante et sélection des classes Pronote)
 

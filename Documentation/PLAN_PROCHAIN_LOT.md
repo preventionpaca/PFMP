@@ -6,12 +6,17 @@ choisir la période officielle de sa vraie classe, sélectionner `Début retard�
 et renseigner le motif. La date de fin réelle doit être identique à la fin
 officielle ; toute date postérieure reste bloquée avant écriture.
 
-Validation fonctionnelle bleue à effectuer : cocher uniquement la ligne
+Le candidat bleu exact `9fc0536b7da66b9dd90e4af789aa2a875a5dd83a` a été
+promu sur les deux Web Apps vertes existantes dans la version immuable `890`.
+Les URL sont inchangées ; les contrôles ont réussi sur `25/25` routes bleues et
+`25/25` routes vertes. La version `889` reste la version antérieure de repli.
+
+Validation fonctionnelle encore à effectuer : cocher uniquement la ligne
 concernée, ouvrir `Rattachement spécial / début retardé`, choisir sa PFMP,
 contrôler `07/10/2026 → 16/10/2026`, saisir le motif, puis vérifier la
-confirmation sans importer tant que le dossier source et le SIRET ne sont pas
-eux-mêmes prêts. Une promotion verte devra reprendre exactement le candidat
-bleu homologué ; les Web Apps vertes restent entre-temps sur la version `889`.
+confirmation avant tout import. L’audit des routes prouve l’ouverture des pages,
+mais ne remplace pas ce contrôle métier sur une vraie ligne JotForm prête. La
+promotion elle-même n’a déclenché aucun import.
 
 ## Historique immédiat après DEV502
 
