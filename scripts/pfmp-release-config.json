@@ -4,16 +4,19 @@
   "channels": {
     "development": {
       "name": "bleu",
-      "deploymentId": "AKfycbw0B6PpxJeuuMI0ymLnWFiGwPbyoaP0sUS4nLlwQBf4",
+      "projectId": "1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo",
+      "deploymentId": "AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ",
       "endpoint": "dev"
     },
     "stableAdmin": {
       "name": "vert-admin",
+      "projectId": "1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c",
       "deploymentId": "AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg",
       "endpoint": "exec"
     },
     "stablePublic": {
       "name": "vert-public",
+      "projectId": "1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c",
       "deploymentId": "AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA",
       "endpoint": "exec"
     }

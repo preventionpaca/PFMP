@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV483 (projet BLEU réellement isolé)
+
+- Le projet Apps Script `Eucalyptus PFMP — Développement BLEU` a été créé séparément du projet stable. Son ID est `1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo` et son déploiement de test `@HEAD` est `AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ`. Le projet vert et ses deux Web Apps restent inchangés sur la version immuable `881`.
+- Le constructeur de release place le routeur existant derrière un point d'entrée unique qui ajoute un macaron visuel : bleu « DÉVELOPPEMENT » dans le nouveau projet, vert « VERSION EN LIGNE » dans le projet stable après la prochaine promotion contrôlée.
+- `prepare` publie maintenant exclusivement dans le projet bleu. `promote` relit l'empreinte distante bleue, copie exactement le même paquet dans le projet stable, crée une version immuable puis rattache seulement les deux déploiements verts existants. Le retour automatique reste obligatoire si la recette verte échoue.
+- La fonction `EUC_RELEASE_configurerProjetBleu` initialise les seules propriétés non sensibles, impose la recette `j1jDArBkzi7P` et maintient imports, courriels et mutations en `DRY_RUN`/`DISABLED`. La même garde est appliquée automatiquement avant chaque page bleue. La clé Grist n'est ni copiée ni stockée dans Git : une clé limitée à la recette doit encore être saisie manuellement dans les propriétés du nouveau projet, puis contrôlée avec `EUC_RELEASE_controlerProjetBleu`.
+- Le paquet des `370` fichiers du commit a été poussé sur le `HEAD` bleu puis relu avec une empreinte identique. Le contrôle HTTP sans session retourne volontairement `Authorization needed` sur les `25` routes, car `/dev` est réservé aux éditeurs ; cela n'est pas une erreur applicative et ne crée pas de candidat promouvable. La recette fonctionnelle doit être faite dans un navigateur connecté après saisie de la clé de recette.
+- Aucun accès à la production Grist, aucune écriture métier, aucun import, courriel, PDF ou ordre de mission n'a été déclenché. Aucune promotion verte n'a été réalisée.
+
 ## Mise à jour du 7 octobre 2026 — DEV482 (workflow de release bleu / vert)
 
 - Un workflow de publication contrôlé est installé dans `scripts/pfmp-release.sh`. `prepare` travaille depuis un clone propre du commit, exécute la suite complète, construit le paquet Apps Script complet, pousse uniquement `@HEAD`, relit le distant par empreinte logique et contrôle 25 routes. `promote` exige exactement le candidat validé, crée une version immuable, met à jour uniquement les deux Web Apps stables existantes et revient automatiquement aux versions précédentes si la recette verte échoue.

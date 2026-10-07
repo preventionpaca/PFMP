@@ -1,23 +1,26 @@
-# Prochain lot après DEV482
+# Prochain lot après DEV483
 
-Le workflow bleu / vert est installé et sa protection est effective : il a
-bloqué la promotion du candidat après le contrôle réel du canal bleu. Les deux
-Web Apps stables restent sur `881`.
+Le projet bleu séparé existe et le workflow sait désormais publier le bleu,
+puis promouvoir exactement le même paquet vers le projet vert. Les deux Web
+Apps stables restent sur `881`.
 
-Priorité avant toute nouvelle évolution : isoler la configuration de
-développement. Les déploiements d'un même projet Apps Script partagent leurs
-propriétés ; la cible actuelle du vert ne correspond pas à la recette autorisée
-`j1jDArBkzi7P`. Ne pas modifier la propriété commune et ne pas élargir la garde
-de Doc ID. La solution recommandée est un projet Apps Script de développement
-séparé, avec une copie contrôlée des propriétés non secrètes et une saisie
-sécurisée des secrets, puis remplacement du canal bleu dans
-`scripts/pfmp-release-config.json`.
+Priorité immédiate : ouvrir l'éditeur bleu, exécuter
+`EUC_RELEASE_configurerProjetBleu`, saisir manuellement une clé Grist limitée à
+la copie de recette `j1jDArBkzi7P`, puis exécuter
+`EUC_RELEASE_controlerProjetBleu`. Ne jamais copier une clé ayant accès à la
+production. Après ce contrôle, lancer `scripts/pfmp-release.sh prepare` et
+valider les 25 routes du nouveau canal bleu avant toute évolution fonctionnelle.
+Comme l'URL `/dev` est réservée aux éditeurs, le contrôle terminal non connecté
+retourne `Authorization needed`; la validation doit donc être effectuée dans un
+navigateur Google Workspace connecté tant qu'un contrôle automatisé authentifié
+n'a pas été mis en place.
 
 Le prochain déploiement doit obligatoirement utiliser le workflow bleu / vert
 décrit dans `Documentation/RELEASE_BLEU_VERT.md`. `prepare` ne modifie que le
-déploiement de développement `@HEAD`; `promote` est la seule commande autorisée
-à actualiser les deux Web Apps stables, après contrôle des 25 routes et avec
-retour automatique sur les versions précédentes en cas d'échec.
+projet de développement séparé ; `promote` est la seule commande autorisée à
+copier le candidat validé dans le projet stable et à actualiser ses deux Web
+Apps, après contrôle des 25 routes et avec retour automatique sur les versions
+précédentes en cas d'échec.
 
 DEV481 restaure les routes de l'accueil PFMP à partir d'un paquet complet et
 isole les anciens routeurs optionnels. La variable `baseUrl` de la page Snapshot

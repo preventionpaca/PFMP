@@ -12,6 +12,8 @@ cfg() {
 }
 
 development_id="$(cfg config_file 'c.channels.development.deploymentId')"
+development_project_id="$(cfg config_file 'c.channels.development.projectId')"
+stable_project_id="$(cfg config_file 'c.channels.stableAdmin.projectId')"
 admin_id="$(cfg config_file 'c.channels.stableAdmin.deploymentId')"
 public_id="$(cfg config_file 'c.channels.stablePublic.deploymentId')"
 
@@ -67,6 +69,19 @@ build_package() {
   local clone_root="$1"
   local package_dir="$2"
   "$clone_root/scripts/build-pfmp-apps-script-package.sh" "$package_dir" >/dev/null
+}
+
+write_clasp_project() {
+  local package_dir="$1"
+  local project_id="$2"
+  node - "$package_dir/.clasp.json" "$project_id" <<'NODE'
+const fs = require('fs');
+const file = process.argv[2];
+const projectId = process.argv[3];
+const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+config.scriptId = projectId;
+fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n');
+NODE
 }
 
 pull_remote() {
@@ -125,9 +140,10 @@ prepare() {
   (cd "$clone_root" && node tests/run-tests.js)
   echo "[2/5] Construction du paquet complet"
   build_package "$clone_root" "$package_dir"
+  write_clasp_project "$package_dir" "$development_project_id"
   package_hash="$(tree_hash "$package_dir")"
   echo "[3/5] Publication sur HEAD uniquement (canal bleu)"
-  (cd "$package_dir" && clasp push)
+  (cd "$package_dir" && clasp push --force)
   echo "[4/5] Relecture distante"
   pull_remote "$package_dir" "$remote_dir"
   remote_hash="$(tree_hash "$remote_dir")"
@@ -175,6 +191,7 @@ promote() {
     exit 1
   }
   echo "[2/6] Comparaison avec le HEAD distant"
+  write_clasp_project "$package_dir" "$development_project_id"
   pull_remote "$package_dir" "$remote_dir"
   remote_hash="$(tree_hash "$remote_dir")"
   [[ "$remote_hash" == "$candidate_hash" ]] || {
@@ -183,6 +200,13 @@ promote() {
   }
   echo "[3/6] Nouveau contrôle du canal bleu"
   (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development)
+
+  # Aucune URL verte ne bouge pendant la recette. Seulement apres sa
+  # validation, le meme paquet est pousse sur le projet stable afin d'y creer
+  # une version immuable et de rattacher les deux deploiements existants.
+  write_clasp_project "$package_dir" "$stable_project_id"
+  echo "[3b/6] Copie exacte du candidat valide vers le projet stable"
+  (cd "$package_dir" && clasp push --force)
 
   deployments="$(cd "$package_dir" && clasp deployments)"
   admin_previous="$(deployment_version "$deployments" "$admin_id")"
@@ -243,6 +267,7 @@ rollback() {
   package_dir="$release_root/package"
   mkdir -p "$package_dir"
   build_package "$clone_root" "$package_dir"
+  write_clasp_project "$package_dir" "$stable_project_id"
   description="Rollback PFMP explicite vers @$version"
   deploy_version "$package_dir" "$admin_id" "$version" "$description"
   deploy_version "$package_dir" "$public_id" "$version" "$description"
@@ -258,6 +283,8 @@ case "$command" in
   promote) promote ;;
   rollback) rollback "${2:-}" ;;
   status)
+    echo "BLEU  : https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/$development_id/dev?page=admin-pfmp"
+    echo "VERT  : deploiements stables inchanges tant qu'aucune promotion ne reussit"
     clasp deployments
     if [[ -f "$candidate_file" ]]; then
       echo
