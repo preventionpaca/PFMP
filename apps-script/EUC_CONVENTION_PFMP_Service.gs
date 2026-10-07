@@ -19,11 +19,12 @@ function EUC_CONVENTION_maxDate_(a,b){a=String(a||'');b=String(b||'');return !a?
 
 function EUC_CONVENTION_lireElevesAdmin(){
   EUC_IMPORT_exigerAdminTexte_();
-  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;}),byNom={};
-  classes.forEach(function(c){byNom[EUC_CONVENTION_norm_(c.nom)]=c;if(c.libelle)byNom[EUC_CONVENTION_norm_(c.libelle)]=c;});
+  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;}),byNom={},byId={};
+  classes.forEach(function(c){byId[String(c.id)]=c;byNom[EUC_CONVENTION_norm_(c.nom)]=c;if(c.libelle)byNom[EUC_CONVENTION_norm_(c.libelle)]=c;});
   var rows=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP');
   return rows.filter(function(r){return r.Actif!==false;}).map(function(r){
-    var classeNom=r.Code_classe_importe||r.Classe_nom||'',cl=byNom[EUC_CONVENTION_norm_(classeNom)];
+    var classeRef=EUC_PFMP_ref_(r.Classe),clRef=byId[String(classeRef)]||null;
+    var classeNom=r.Code_classe_importe||r.Classe_nom||(clRef&&clRef.nom)||'',cl=byNom[EUC_CONVENTION_norm_(classeNom)]||clRef;
     return {id:r.id,nom:r.Nom||'',prenom:r.Prenom_usage||r.Prenom||'',dateNaissance:EUC_IMPORT_dateExistanteISO_(r.Date_naissance),classe:classeNom,classeId:cl?cl.id:0,annee:r.Annee_scolaire_code||r.Annee_scolaire||'',numeroNational:r.Numero_national||''};
   }).sort(function(a,b){return String(a.classe).localeCompare(String(b.classe),'fr')||String(a.nom).localeCompare(String(b.nom),'fr')||String(a.prenom).localeCompare(String(b.prenom),'fr');});
 }

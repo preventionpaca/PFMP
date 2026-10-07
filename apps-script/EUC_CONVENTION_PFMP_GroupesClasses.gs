@@ -36,10 +36,13 @@ function EUC_CONVENTION_resoudreClasseEleve_(classeEleve, classes) {
 function EUC_CONVENTION_lireGroupesClassesElevesAdmin() {
   EUC_IMPORT_exigerAdminTexte_();
   var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
+  var classesById = {};
+  classes.forEach(function(c){ classesById[String(c.id)] = c; });
   var rows = EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP').filter(function(r){ return r.Actif !== false; });
   var groups = {};
   rows.forEach(function(r){
-    var raw = String(r.Code_classe_importe || r.Classe_nom || '').trim();
+    var classeRef = EUC_PFMP_ref_(r.Classe), classe = classesById[String(classeRef)] || null;
+    var raw = String(r.Code_classe_importe || r.Classe_nom || (classe && classe.nom) || '').trim();
     if (!raw) return;
     var key = EUC_CONVENTION_norm_(raw);
     if (!groups[key]) groups[key] = { key:key, nom:raw, effectif:0, eleves:[] };
