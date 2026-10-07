@@ -338,7 +338,9 @@ function EUC_V158_afficher(e){
 
   var tpl=HtmlService.createTemplateFromFile('Destinataires_Envois_PFMP_V158');
   tpl.config=JSON.stringify({baseUrl:ScriptApp.getService().getUrl()});
-  tpl.dataJson=JSON.stringify(EUC_V158_lire());
+  /* La page doit s'afficher avant les lectures et initialisations Grist.
+   * La matrice est chargée ensuite côté client avec un état occupé visible. */
+  tpl.dataJson=JSON.stringify({lignes:[],classes:[],filieres:[]});
 
   return tpl.evaluate()
     .setTitle('Destinataires & envois PFMP')

@@ -26,7 +26,7 @@ function EUC_DEV481_routeAccueil_(e) {
     case 'suivi-pfmp':
       return EUC_SUIVI_afficherApplication(e);
     case 'admin-conventions-pfmp':
-      return EUC_P7_adminConventions(e);
+      return EUC_DEV498_afficherAdminConventions_(e);
     case 'migration-jotform-pfmp':
       return EUC_P7_migration(e);
     case 'destinataires-envois-pfmp':
@@ -66,6 +66,41 @@ function EUC_DEV481_routeAccueil_(e) {
     default:
       return null;
   }
+}
+
+/**
+ * DEV498 — une table de conventions absente de la recette ne doit jamais
+ * produire une page Apps Script blanche. Le vert conserve son moteur complet ;
+ * seule l'absence explicite de table aboutit à l'écran vide et informatif.
+ */
+function EUC_DEV498_tableAbsente_(err){
+  var message=String(err&&err.message||err||'');
+  return /(?:Grist[^\n]*404|requ[eê]te refus[eé]e\s*\(404\)|table[^\n]*(?:absente|introuvable|not found))/i.test(message);
+}
+
+function EUC_DEV498_contexteAnnees_(){
+  try{return EUC_PFMP_contexteAnneeV148();}catch(err){}
+  var current=EUC_DEV190X_currentYear_();
+  return {active:current,annees:[{code:current,libelle:current,actif:true}]};
+}
+
+function EUC_DEV498_afficherAdminConventions_(e){
+  try{
+    return EUC_P7_adminConventions(e);
+  }catch(err){
+    if(!EUC_DEV498_tableAbsente_(err))throw err;
+  }
+
+  var tpl=HtmlService.createTemplateFromFile('Admin_Conventions_PFMP');
+  tpl.config=JSON.stringify({baseUrl:ScriptApp.getService().getUrl()});
+  tpl.anneeContextJson=JSON.stringify(EUC_DEV498_contexteAnnees_());
+  tpl.dossiersJson='[]';
+  var output=tpl.evaluate();
+  var warning='<div role="status" style="margin:14px auto;max-width:1180px;padding:12px 16px;border:1px solid #f0c36d;border-radius:10px;background:#fff8e5;color:#744c00;font:700 14px Arial,sans-serif">Aucune convention n’est encore disponible dans cette base de recette.</div>';
+  output.setContent(output.getContent().replace(/<body>/i,'<body>'+warning));
+  return output
+    .setTitle('Administration des conventions PFMP')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function EUC_DEV481_afficherSuivi_(e) {

@@ -205,4 +205,36 @@ test('le suivi et la maintenance réécrivent Accueil PFMP vers le domaine canon
   assert.match(source, /page=admin-pfmp\/g/);
 });
 
+test('les quatre routes fragiles s’ouvrent sans lecture Grist bloquante', () => {
+  const routes = read('EUC_PFMP_DEV481_AdminRoutes.js');
+  const clean = read('EUC_PFMP_DEV190X_CleanModules.js');
+  const destinataires = read('EUC_SUIVI_PFMP_DestinatairesV158.gs');
+  const destinatairesHtml = read('Destinataires_Envois_PFMP_V158.html');
+  const params = read('EUC_SUIVI_PFMP_EnvoisV157.gs');
+
+  assert.match(routes, /case 'admin-conventions-pfmp':[\s\S]*EUC_DEV498_afficherAdminConventions_/);
+  assert.match(routes, /EUC_DEV498_tableAbsente_/);
+  assert.match(routes, /tpl\.dossiersJson='\[\]'/);
+  assert.doesNotMatch(
+    clean.slice(clean.indexOf('function EUC_DEV190X_afficherPdif'), clean.indexOf('function EUC_DEV190X_getClasses')),
+    /EUC_DEV285B_(?:ensureSchema_|migrateLegacy_)/
+  );
+  assert.match(destinataires, /dataJson=JSON\.stringify\(\{lignes:\[\],classes:\[\],filieres:\[\]\}\)/);
+  assert.match(destinatairesHtml, /Chargement des destinataires…/);
+  assert.match(destinatairesHtml, /\.EUC_V158_lire\(\)/);
+  assert.match(params, /function EUC_V157_assurerTable_/);
+  assert.ok(
+    params.indexOf('EUC_V157_assurerTable_();') < params.indexOf("EUC_IMPORT_lireRecords_(EUC_V157_PARAMS_TABLE_)"),
+    'la table de paramètres doit être assurée avant sa première lecture'
+  );
+});
+
+test('la page des destinataires protège chargement et sauvegarde par spinner', () => {
+  const html = read('Destinataires_Envois_PFMP_V158.html');
+  assert.match(html, /id="save"[^>]*disabled/);
+  assert.match(html, /status\.innerHTML='<span class="spinner"><\/span>Chargement/);
+  assert.match(html, /save\.innerHTML='<span class="spinner"><\/span>Enregistrement en cours/);
+  assert.match(html, /withFailureHandler\(function\(e\)[\s\S]*show\('Erreur/);
+});
+
 if (!process.exitCode) console.log(`\n${passed} tests DEV481 paquet des outils admin réussis.`);

@@ -43,7 +43,7 @@
     Les professeurs du tableau restent ajoutés automatiquement.
   </div>
 
-  <div id="status"></div>
+  <div id="status" class="show info"><span class="spinner"></span>Chargement des destinataires…</div>
 
   <div class="card">
     <h2>Destinataires</h2>
@@ -82,7 +82,7 @@
     </details>
 
     <div class="actions">
-      <button id="save" class="primary" type="button">Enregistrer</button>
+      <button id="save" class="primary" type="button" disabled>Enregistrer</button>
     </div>
   </div>
 </div>
@@ -138,6 +138,24 @@ function render(){
   }).join('');
 }
 
+function load(){
+  save.disabled=true;
+  show('Chargement des destinataires…','info');
+  status.innerHTML='<span class="spinner"></span>Chargement des destinataires…';
+  google.script.run
+    .withSuccessHandler(function(r){
+      DATA=r||{lignes:[],classes:[],filieres:[]};
+      render();
+      save.disabled=false;
+      show('Destinataires chargés.','ok');
+    })
+    .withFailureHandler(function(e){
+      save.disabled=true;
+      show('Erreur de chargement : '+(e&&e.message||e),'err');
+    })
+    .EUC_V158_lire();
+}
+
 function selectedValues(select){
   return Array.from(select.selectedOptions).map(function(o){return o.value}).filter(Boolean);
 }
@@ -187,6 +205,7 @@ save.onclick=function(){
 
 document.getElementById('back').href=C.baseUrl+'?page=admin-pfmp';
 render();
+load();
 </script>
 </body>
 </html>

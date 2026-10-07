@@ -101,4 +101,18 @@ test('les outils administratifs construisent leurs liens depuis le déploiement 
   assert.doesNotMatch(tools, /function EUC_DEV368_boot\(\)[^\n]+AKfycby6ykCxT/);
 });
 
+test('toutes les sorties ajoutent le spinner transversal des boutons occupés', () => {
+  assert.match(release, /data-pfmp-busy-style/);
+  assert.match(release, /button\.pfmp-auto-busy::before/);
+  assert.match(release, /data-pfmp-busy-script/);
+  assert.match(release, /MutationObserver/);
+  assert.match(release, /b\.disabled\|\|b\.getAttribute\("aria-busy"\)/);
+  assert.match(release, /b\.querySelector\("\.spinner,\.loader,\[role=progressbar\]"\)/);
+  const ctx = releaseContext('1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo');
+  const out = output('<html><head></head><body><button>Action</button></body></html>');
+  ctx.EUC_RELEASE_decorateOutput_(out);
+  const code = out.content.match(/<script data-pfmp-busy-script="1">([\s\S]*?)<\/script>/)[1];
+  assert.doesNotThrow(() => new Function(code));
+});
+
 if (!process.exitCode) console.log(`\n${n} tests DEV485 canal bleu réussis.`);

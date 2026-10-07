@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV498 (préparation de la promotion bleu → vert)
+
+- L’audit différentiel du candidat bleu a localisé les quatre derniers échecs : trois tables optionnelles absentes de la recette provoquaient une erreur Grist `404`, tandis que la page Destinataires effectuait toutes ses initialisations avant le premier affichage et dépassait le délai de contrôle.
+- L’administration des conventions affiche désormais son véritable écran avec un état vide explicite lorsque la table de conventions n’existe pas dans la recette. La page Fin de Terminale s’ouvre avant toute migration de schéma. La table de paramètres d’envoi est créée par son initialiseur avant sa première lecture, au lieu d’être lue avant d’exister.
+- La page Destinataires est devenue une coquille légère : elle s’affiche immédiatement, puis charge sa matrice côté client avec bouton désactivé, spinner et états succès/erreur. Une décoration commune ajoute également un spinner aux boutons asynchrones qui se déclarent occupés sans en fournir un eux-mêmes, sans doubler les spinners déjà présents.
+- Les actions métier restent protégées sur le bleu (`DRY_RUN` / courriels `DISABLED`). Aucun envoi, import, ordre de mission, PDF ou écriture élève/convention n’est utilisé pour la recette. La production Grist `3pnVrygfNn7c` n’est pas consultée.
+- La promotion demandée doit encore passer par la suite complète, la publication/relecture du bleu, les `25/25` routes et l’audit des navigations internes. Elle mettra à jour uniquement les deux Web Apps vertes existantes, avec une version immuable et retour automatique en cas d’échec ; leurs URL restent inchangées.
+
 ## Mise à jour du 7 octobre 2026 — DEV497 (données de recette bleue testables)
 
 - Sur autorisation explicite de l’utilisateur, le canal bleu cible de nouveau exclusivement la recette Grist `j1jDArBkzi7P` sur `https://docs.getgrist.com`. La production interdite `3pnVrygfNn7c` n’a pas été consultée et les deux Web Apps vertes n’ont pas été modifiées.

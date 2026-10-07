@@ -125,13 +125,32 @@ function EUC_RELEASE_decorateOutput_(output) {
     + label + '</div>';
   var content = EUC_RELEASE_blueNavigation_(output.getContent());
   if (content.indexOf('data-pfmp-release-channel=') >= 0) return output;
+  var busyStyle='<style data-pfmp-busy-style="1">'+
+    'button.pfmp-auto-busy::before{content:"";display:inline-block;width:13px;height:13px;'+
+    'margin-right:7px;border:2px solid currentColor;border-right-color:transparent;'+
+    'border-radius:50%;vertical-align:-2px;animation:pfmpAutoSpin .7s linear infinite}'+
+    '@keyframes pfmpAutoSpin{to{transform:rotate(360deg)}}'+
+    '</style>';
+  var busyScript='<script data-pfmp-busy-script="1">(function(){'+
+    'function sync(b){if(!b||!document.documentElement.contains(b))return;'+
+      'var active=b.disabled||b.getAttribute("aria-busy")==="true"||b.classList.contains("busy");'+
+      'var own=b.querySelector&&b.querySelector(".spinner,.loader,[role=progressbar]");'+
+      'b.classList.toggle("pfmp-auto-busy",!!active&&!own)}'+
+    'document.addEventListener("click",function(e){var b=e.target&&e.target.closest&&e.target.closest("button");'+
+      'if(!b)return;setTimeout(function(){sync(b)},0);setTimeout(function(){sync(b)},60)},false);'+
+    'new MutationObserver(function(ms){ms.forEach(function(m){var b=m.target&&m.target.closest&&m.target.closest("button");if(b)sync(b)})})'+
+      '.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:["disabled","class","aria-busy"],childList:true});'+
+    '})()<\/script>';
+  if (/<\/head>/i.test(content)) {
+    content = content.replace(/<\/head>/i, busyStyle + '</head>');
+  }
   if (blue && /<\/head>/i.test(content)) {
     content = content.replace(/<\/head>/i, '<style data-pfmp-blue-offset="1">body{padding-top:42px!important}</style></head>');
   }
   /* Placer le bandeau a la fin du body : certains modeles reconstruisent
    * leur contenu au chargement et pouvaient effacer l'ancien petit badge. */
   if (/<\/body>/i.test(content)) {
-    content = content.replace(/<\/body>/i, banner + '</body>');
+    content = content.replace(/<\/body>/i, busyScript + banner + '</body>');
   } else if (/<body(?:\s[^>]*)?>/i.test(content)) {
     content = content + banner;
   } else {

@@ -1,4 +1,18 @@
-# Prochain lot après DEV497
+# Prochain lot après DEV498
+
+DEV498 corrige les quatre routes qui bloquaient la promotion DEV497 et rend le
+chargement Destinataires non bloquant. La demande courante autorise la
+promotion du candidat exact vers les deux Web Apps vertes existantes, mais
+seulement après suite complète verte, relecture distante du bleu, `25/25`
+routes bleues et contrôle des navigations internes visibles.
+
+Après promotion, contrôler les `25/25` routes vertes et vérifier que les liens
+`Accueil PFMP` reviennent sur `https://alternance.loucodi.fr/`. Les tests des
+boutons d’écriture restent simulés : ne déclencher ni courriel, ni import, ni
+ordre de mission, ni mutation élève/convention. Ne jamais accéder directement
+à la production Grist `3pnVrygfNn7c` pendant cette recette.
+
+## Historique immédiat après DEV497
 
 La recette bleue autorisée `j1jDArBkzi7P` contient désormais `55` élèves issus
 des classes TMVA1, TMVA2 et TRMO de l’export Pronote LP fourni. Le dossier

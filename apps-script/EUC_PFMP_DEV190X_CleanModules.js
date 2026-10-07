@@ -96,9 +96,6 @@ function EUC_DEV190X_afficherApprentis(e){
 }
 
 function EUC_DEV190X_afficherPdif(e){
-  EUC_DEV285B_ensureSchema_();
-  EUC_DEV285B_migrateLegacy_();
-
   var y=EUC_DEV190X_years_();
   var t=HtmlService.createTemplateFromFile('Parcours_Differencie_PFMP_V190X');
 

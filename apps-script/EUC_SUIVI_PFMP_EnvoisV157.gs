@@ -19,7 +19,30 @@ var EUC_V157_DESTINATAIRES_=[
 function EUC_V157_txt_(v){return String(v==null?'':v).trim();}
 function EUC_V157_bool_(v){var s=EUC_V157_txt_(v).toLowerCase();return ['1','true','oui','yes','on'].indexOf(s)>=0;}
 
-function EUC_V157_paramRows_(){return EUC_IMPORT_lireRecords_(EUC_V157_PARAMS_TABLE_);}
+function EUC_V157_assurerTable_(){
+  var tables=EUC_ENT_grist('get','/tables').tables||[];
+  var exists=tables.some(function(t){return t.id===EUC_V157_PARAMS_TABLE_;});
+  if(exists)return true;
+
+  EUC_ENT_grist('post','/tables',{
+    tables:[{
+      id:EUC_V157_PARAMS_TABLE_,
+      columns:[
+        {id:'Cle',fields:{label:'Clé',type:'Text'}},
+        {id:'Valeur',fields:{label:'Valeur',type:'Text'}},
+        {id:'Description',fields:{label:'Description',type:'Text'}},
+        {id:'Ordre',fields:{label:'Ordre',type:'Int'}},
+        {id:'Actif',fields:{label:'Actif',type:'Bool'}}
+      ]
+    }]
+  });
+  return true;
+}
+
+function EUC_V157_paramRows_(){
+  EUC_V157_assurerTable_();
+  return EUC_IMPORT_lireRecords_(EUC_V157_PARAMS_TABLE_);
+}
 function EUC_V157_paramMap_(){
   var map={};
   EUC_V157_paramRows_().forEach(function(r){map[EUC_V157_txt_(r.Cle)]=r;});
