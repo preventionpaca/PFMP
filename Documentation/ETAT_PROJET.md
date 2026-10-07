@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV484 (régressions ciblées sur le canal BLEU)
+
+- Aucun changement n'a été appliqué aux deux Web Apps vertes, qui restent sur la version immuable `881`. Les correctifs de ce lot sont destinés exclusivement au projet Apps Script bleu avant recette navigateur.
+- La page Apprentis lançait jusqu'à trois calculs concurrents de `EUC_DEV251_dashboardDetails` au chargement puis un nouveau calcul à chaque survol. Les infobulles utilisent maintenant un état partagé : une seule lecture est en vol, son résultat est réutilisé instantanément par tous les KPI et une sauvegarde explicite peut seule demander une actualisation.
+- Le générateur d'ordres de mission ignorait les affectations visiteur récentes dès qu'il trouvait un snapshot rapide et écartait aussi les lignes dont le statut canonique indiquait « Convention enregistrée/signée » lorsque `conventionId` n'était pas transporté par ce snapshot. La réconciliation ciblée des affectations est désormais appliquée à tous les chemins de lecture et ces statuts canoniques sont éligibles, hors annulation/interruption.
+- L'accueil administratif du suivi retrouve ses cartes sobres : les trois commentaires ajoutés sous BAC PRO, BTS et CAP sont supprimés au rendu, la hauteur artificielle est retirée et le lien `Accueil PFMP` reste vert dans tous ses états, y compris après visite. La transformation est limitée à la route administrative.
+- La route `suivi-conventions-public` continue d'utiliser son modèle public séparé, lequel ne contient ni bouton ni fil `Accueil PFMP`. Aucun comportement public n'a été transformé par le nettoyage visuel administratif.
+- Tests ciblés : `5/5` DEV484, `12/12` DEV472, `12/12` DEV481, `8/8` DEV470 et `5/5` DEV449. Aucun accès Grist, aucune écriture métier, aucun import, courriel, PDF ou ordre de mission n'a été exécuté pendant ces contrôles.
+
 ## Mise à jour du 7 octobre 2026 — DEV483 (projet BLEU réellement isolé)
 
 - Le projet Apps Script `Eucalyptus PFMP — Développement BLEU` a été créé séparément du projet stable. Son ID est `1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo` et son déploiement de test `@HEAD` est `AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ`. Le projet vert et ses deux Web Apps restent inchangés sur la version immuable `881`.

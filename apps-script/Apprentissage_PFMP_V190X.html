@@ -3227,6 +3227,10 @@ function setKpis(s){
   var globalState=null;
   var details=null;
   var cardState=new WeakMap();
+  var tooltipState=window.EUC_DEV484_TOOLTIP_STATE||{
+    year:'',status:'idle',lists:null,error:'',waiters:[],requestId:0
+  };
+  window.EUC_DEV484_TOOLTIP_STATE=tooltipState;
 
   function norm(v){
     return String(v||'')
@@ -3510,17 +3514,56 @@ function setKpis(s){
     writeKpis(globalState);
   }
 
-  function fetchDetails(){
+  function requestDetails(force,done){
     var year=document.getElementById('year');
-    if(!year)return;
+    if(!year){
+      if(done)done(new Error('Année scolaire indisponible.'));
+      return;
+    }
+
+    var selectedYear=String(year.value||'');
+
+    if(!force && tooltipState.year===selectedYear && tooltipState.status==='ready'){
+      if(done)done(null,tooltipState.lists||{});
+      return;
+    }
+
+    if(tooltipState.year===selectedYear && tooltipState.status==='loading'){
+      if(done)tooltipState.waiters.push(done);
+      return;
+    }
+
+    tooltipState.year=selectedYear;
+    tooltipState.status='loading';
+    tooltipState.error='';
+    tooltipState.lists=null;
+    tooltipState.waiters=done?[done]:[];
+    var requestId=++tooltipState.requestId;
 
     google.script.run
       .withSuccessHandler(function(r){
+        if(requestId!==tooltipState.requestId)return;
         details=(r&&r.lists)||{};
+        tooltipState.lists=details;
+        tooltipState.status='ready';
+        var waiters=tooltipState.waiters.splice(0);
+        waiters.forEach(function(cb){cb(null,details);});
       })
-      .withFailureHandler(function(){})
-      .EUC_DEV251_dashboardDetails(year.value);
+      .withFailureHandler(function(e){
+        if(requestId!==tooltipState.requestId)return;
+        tooltipState.status='error';
+        tooltipState.error=String(e&&e.message||e||'Erreur d’actualisation.');
+        var waiters=tooltipState.waiters.splice(0);
+        waiters.forEach(function(cb){cb(e||new Error(tooltipState.error));});
+      })
+      .EUC_DEV251_dashboardDetails(selectedYear);
   }
+
+  function fetchDetails(force){
+    requestDetails(!!force,function(){});
+  }
+
+  window.EUC_DEV484_requestTooltipDetails=requestDetails;
 
   function groupHtml(items){
     items=items||[];
@@ -3622,7 +3665,7 @@ function setKpis(s){
     });
   }
 
-  function reconcileServer(){
+  function reconcileServer(forceDetails){
     /* Mise à jour serveur en arrière-plan, sans bloquer l'instantané. */
     if(window.EUC_DEV250_refreshDashboard){
       try{
@@ -3633,7 +3676,7 @@ function setKpis(s){
     setTimeout(function(){
       ensureFutureKpi();
       globalState=readKpis();
-      fetchDetails();
+      fetchDetails(!!forceDetails);
       wireHover();
     },1000);
   }
@@ -3676,14 +3719,14 @@ function setKpis(s){
     /* Au retour d'une sauvegarde, réconciliation serveur. */
     document.addEventListener('click',function(ev){
       if(ev.target && ev.target.matches('.save')){
-        setTimeout(reconcileServer,800);
+        setTimeout(function(){reconcileServer(true);},800);
       }
     },false);
 
     setTimeout(function(){
       moveSummary();
       rewriteClassSummary();
-      reconcileServer();
+      reconcileServer(false);
     },300);
   }
 
@@ -4068,7 +4111,11 @@ body.dev252-readonly .dev248-saved{
     try{
       var year=document.getElementById('year');
 
-      if(year){
+      /* DEV484 : l'infobulle principale possède désormais une requête
+         partagée. Ce vieux repli ne doit plus lancer un second calcul en
+         parallèle ; il reste seulement disponible pour un ancien rendu qui
+         ne fournirait pas encore l'état partagé. */
+      if(year && !window.EUC_DEV484_TOOLTIP_STATE){
         google.script.run
           .withSuccessHandler(function(r){
             var lists=(r&&r.lists)||{};
@@ -4723,31 +4770,35 @@ body.dev252-readonly .dev253-mode-badge{
 
     var seq=++requestSeq;
 
-    google.script.run
-      .withSuccessHandler(function(r){
-        /* Ignore une réponse devenue obsolète si la souris a bougé. */
-        if(seq!==requestSeq || currentKpi!==kpi){
-          return;
-        }
+    function complete(error,lists){
+      /* Ignore une réponse devenue obsolète si la souris a bougé. */
+      if(seq!==requestSeq || currentKpi!==kpi)return;
 
-        var lists=(r&&r.lists)||{};
+      t.innerHTML=
+        '<div class="tt-title">'+title+'</div>'+
+        (error
+          ? '<div>Erreur d’actualisation.</div>'
+          : groupHtml((lists||{})[key]||[]));
 
-        t.innerHTML=
-          '<div class="tt-title">'+title+'</div>'+
-          groupHtml(lists[key]||[]);
+      positionTip(t,kpi);
+    }
 
-        positionTip(t,kpi);
-      })
-      .withFailureHandler(function(e){
-        if(seq!==requestSeq || currentKpi!==kpi){
-          return;
-        }
+    var state=window.EUC_DEV484_TOOLTIP_STATE;
+    if(
+      state &&
+      state.year===String(year.value||'') &&
+      state.status==='ready'
+    ){
+      complete(null,state.lists||{});
+      return;
+    }
 
-        t.innerHTML=
-          '<div class="tt-title">'+title+'</div>'+
-          '<div>Erreur d’actualisation.</div>';
-      })
-      .EUC_DEV251_dashboardDetails(year.value);
+    if(typeof window.EUC_DEV484_requestTooltipDetails==='function'){
+      window.EUC_DEV484_requestTooltipDetails(false,complete);
+      return;
+    }
+
+    complete(new Error('Détail indisponible.'));
   }
 
   function hideLater(){

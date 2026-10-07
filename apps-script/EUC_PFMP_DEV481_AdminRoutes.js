@@ -78,9 +78,28 @@ function EUC_DEV481_afficherSuivi_(e) {
   );
   template.paramsJson = JSON.stringify({annee: annee});
   template.baseUrl = ScriptApp.getService().getUrl();
-  return EUC_DEV481_accueilCanonique_(template.evaluate())
+  return EUC_DEV481_accueilCanonique_(
+    EUC_DEV484_nettoyerAccueilSuivi_(template.evaluate())
+  )
     .setTitle('Suivi des conventions PFMP')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/* DEV484 — restauration visuelle limitée à l'accueil administratif du suivi.
+ * La page publique suit une route et un modèle distincts et n'est jamais
+ * transformée par cette fonction. */
+function EUC_DEV484_nettoyerAccueilSuivi_(output) {
+  var html = output.getContent();
+  html = html.replace(/<div class="quick">[^<]*<\/div>/g, '');
+  html = html.replace(
+    '</head>',
+    '<style id="EUC_DEV484_SUIVI_ADMIN_STYLE">'+
+      '.crumb a,.crumb a:visited,.crumb a:hover,.crumb a:active{'+
+        'color:#0b745f;text-decoration:none;font-weight:700}'+
+      '.card{min-height:0}'+
+    '</style></head>'
+  );
+  return HtmlService.createHtmlOutput(html);
 }
 
 function EUC_DEV481_afficherSnapshot_(e) {

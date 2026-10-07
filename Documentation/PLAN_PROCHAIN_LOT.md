@@ -1,4 +1,12 @@
-# Prochain lot après DEV483
+# Prochain lot après DEV484
+
+Le lot DEV484 corrige dans les sources du canal bleu les infobulles Apprentis,
+la remontée des affectations visiteur dans les ordres de mission et les trois
+régressions visuelles de l'accueil du suivi. La version verte `881` n'a pas été
+modifiée. La prochaine action est une recette authentifiée sur le lien `/dev` :
+contrôler un KPI Apprentis deux fois de suite, TRMO / PFMP n°1 avec M. Jérôme
+Huart, l'accueil administratif du suivi, puis la route publique dédiée. Ne pas
+générer de PDF et ne pas envoyer de courriel pendant cette recette.
 
 Le projet bleu séparé existe et le workflow sait désormais publier le bleu,
 puis promouvoir exactement le même paquet vers le projet vert. Les deux Web

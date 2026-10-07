@@ -169,8 +169,14 @@ function EUC_DEV374_isApprenti_(x){
 function EUC_DEV374_missionEligible_(x){
   if(EUC_DEV374_isApprenti_(x))return true;
   var code=EUC_DEV368_t((x||{}).statutCode||(x||{}).statut).toUpperCase();
-  if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return false;
-  return EUC_DEV368_n((x||{}).conventionId)>0;
+  var compact=code.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]+/g,'');
+  if(compact.indexOf('ANNULEE')>=0||compact.indexOf('INTERROMP')>=0)return false;
+  /* Les vues rapides n'embarquent pas toutes conventionId. Leur statut
+   * canonique reste néanmoins fiable : ne pas faire disparaître un élève
+   * « Convention enregistrée » du générateur d'ordres de mission. */
+  if(EUC_DEV368_n((x||{}).conventionId)>0||(x||{}).convention===true)return true;
+  return compact.indexOf('CONVENTIONENREGISTREE')>=0||
+    compact.indexOf('CONVENTIONSIGNEE')>=0||compact==='CONVENTION';
 }
 function EUC_DEV440_contactBlock_(fallback,name,tel,mail){
   var parts=EUC_DEV368_t(fallback).split(/\s*[·\n]\s*/).filter(Boolean),extra=[name,tel,mail];
@@ -198,11 +204,20 @@ function EUC_DEV374_missionDetail_(y,f,c,p){
     if(d){fast=true;if(key&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(key,d);if(typeof EUC_DEV428_withContext_==='function')d=EUC_DEV428_withContext_(d,y,f)}
   }catch(e){d=null;fast=false}
   if(!d){d=EUC_DEV190_buildHistoricalDetail_(y,c,p);try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e2){}}
-  if(fast)return d||{lignes:[]};
+  d=d||{lignes:[]};
+  /* DEV484 : le détail de classe réconcilie les affectations récentes avec
+   * Grist, mais l'ancien chemin Missions quittait ici lorsqu'un snapshot
+   * rapide avait été trouvé. La mission relisait alors une affectation
+   * périmée. On applique désormais la même réconciliation ciblée quel que
+   * soit le chemin de lecture, sans reconstruire toute la famille. */
   try{
-    var a=EUC_V156_affectations_(y,c,p)||[],m={};
-    a.forEach(function(x){var id=Number(EUC_PFMP_ref_(x.Eleve))||0,t=EUC_DEV368_t(x.Type_suivi).toUpperCase();if(id&&t)m[id+'|'+t]=x});
-    (d.lignes||[]).forEach(function(x){var v=m[EUC_DEV368_n(x.eleveId)+'|VISITE'];if(v)x.professeurVisiteur=EUC_DEV368_t(v.Nom_professeur_snapshot)});
+    if(typeof EUC_DEV455_refreshAssignments_==='function'){
+      d=EUC_DEV455_refreshAssignments_(d,y,c,p)||d;
+    }else{
+      var a=EUC_V156_affectations_(y,c,p)||[],m={};
+      a.forEach(function(x){var id=Number(EUC_PFMP_ref_(x.Eleve))||0,t=EUC_DEV368_t(x.Type_suivi).toUpperCase();if(id&&t)m[id+'|'+t]=x});
+      (d.lignes||[]).forEach(function(x){var v=m[EUC_DEV368_n(x.eleveId)+'|VISITE'];if(v)x.professeurVisiteur=EUC_DEV368_t(v.Nom_professeur_snapshot)});
+    }
   }catch(e3){}
   return d||{lignes:[]};
 }
