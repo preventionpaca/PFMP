@@ -115,6 +115,18 @@ test('les données responsables et apprenti sont lues seulement pour l’élève
   assert(server.includes("EUC_APPRENTISSAGE_PFMP"),'apprentissage absent');
 });
 
+test('une table complémentaire absente dans la recette bleue ne bloque pas le dossier',()=>{
+  const rows={EUC_ELEVES_PFMP:[{id:31,fields:{Nom:'TEST',Prenom:'Recette',Code_classe_importe:'TMVA1'}}]};
+  const ctx={Date,String,Number,Array,Object,isNaN,Math,EUC_PFMP_contexteAdmin_:()=>({autorise:true}),EUC_DEV190G_fastRecords_:(table)=>{
+    if(table==='EUC_ELEVES_PFMP')return rows[table];
+    throw new Error('DEV190 Grist API 404 : {"error":"Table not found \\"'+table+'\\""}');
+  }};
+  vm.createContext(ctx);vm.runInContext(server,ctx);const d=ctx.EUC_DEV464_studentDossier(31);
+  assert(d.ok&&d.eleve.nom==='TEST','élève de recette non chargé');
+  assert(d.responsables.length===2&&!d.responsables[0].nom,'responsables absents non normalisés');
+  assert(d.apprentissage.entreprise===''&&d.apprentissage.dateDebut==='','apprentissage absent non normalisé');
+});
+
 test('la fusion se fait directement dans le PDF exporté depuis Word',()=>{
   assert(html.includes('pdfjs-dist')&&html.includes('PDFLib'),'moteur PDF client absent');
   assert(html.includes('function mergeTokenGroups')&&html.includes('function drawMergedValue'),'repérage ou superposition des valeurs absent');

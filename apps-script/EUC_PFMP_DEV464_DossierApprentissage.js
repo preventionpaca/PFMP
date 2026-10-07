@@ -1,5 +1,5 @@
-/** PFMP DEV500 — dossier de demande d'apprentissage prérempli. */
-var EUC_DEV464_VERSION_='1.0.0-dev.500';
+/** PFMP DEV501 — dossier de demande d'apprentissage prérempli. */
+var EUC_DEV464_VERSION_='1.0.0-dev.501';
 var EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV464_FORMATIONS_PROP_='DOSSIER_APPRENTISSAGE_FORMATIONS';
 var EUC_DEV495_MODELS_PROP_='DOSSIER_APPRENTISSAGE_MODELES';
@@ -42,6 +42,13 @@ function EUC_DEV464_admin_(){
 function EUC_DEV464_records_(table,filter){
   if(typeof EUC_DEV190G_fastRecords_==='function')return EUC_DEV190G_fastRecords_(table,filter||{})||[];
   return EUC_IMPORT_lireRecordsBruts_(table)||[];
+}
+function EUC_DEV501_optionalRecords_(table,filter){
+  try{return EUC_DEV464_records_(table,filter||{});}catch(e){
+    var message=String(e&&e.message||e);
+    if(/Table not found/i.test(message))return[];
+    throw e;
+  }
 }
 function EUC_DEV464_studentIndex(){
   EUC_DEV464_admin_();
@@ -198,7 +205,7 @@ function EUC_DEV464_studentDossier(studentId){
   students.some(function(r){var f0=EUC_DEV464_fields_(r);if(Number(r.id||f0.id)===studentId){record=r;return true;}return false;});
   if(!record)throw new Error('Élève introuvable.');
   var f=EUC_DEV464_fields_(record);
-  var resp=EUC_DEV464_records_('EUC_RESPONSABLES_ELEVES_PFMP',{Eleve:[studentId]}).map(EUC_DEV464_responsable_).sort(function(a,b){return Number(b.legal)-Number(a.legal)||Number(b.enCharge)-Number(a.enCharge);}).slice(0,2);
+  var resp=EUC_DEV501_optionalRecords_('EUC_RESPONSABLES_ELEVES_PFMP',{Eleve:[studentId]}).map(EUC_DEV464_responsable_).sort(function(a,b){return Number(b.legal)-Number(a.legal)||Number(b.enCharge)-Number(a.enCharge);}).slice(0,2);
   if(!resp.length){for(var legacyRank=1;legacyRank<=2;legacyRank++){var legacy=EUC_DEV495_legacyResponsable_(f,legacyRank);if(legacy)resp.push(legacy);}}
   var adresseEleve=EUC_DEV464_address_(f),codePostalEleve=EUC_DEV464_t_(EUC_DEV464_pick_(f,['Code_postal','CodePostal','CP'])),villeEleve=EUC_DEV464_t_(f.Ville),paysEleve=EUC_DEV464_t_(f.Pays);
   var adresseResponsable=resp.filter(function(x){return x.legal&&(x.adresse||x.codePostal||x.ville);})[0]||resp.filter(function(x){return x.enCharge&&(x.adresse||x.codePostal||x.ville);})[0]||resp.filter(function(x){return x.adresse||x.codePostal||x.ville;})[0]||{};
@@ -206,7 +213,7 @@ function EUC_DEV464_studentDossier(studentId){
   codePostalEleve=codePostalEleve||adresseResponsable.codePostal||'';
   villeEleve=villeEleve||adresseResponsable.ville||'';
   paysEleve=paysEleve||adresseResponsable.pays||'';
-  var app=EUC_DEV464_latest_(EUC_DEV464_records_('EUC_APPRENTISSAGE_PFMP',{Eleve:[studentId]})),a=EUC_DEV464_fields_(app);
+  var app=EUC_DEV464_latest_(EUC_DEV501_optionalRecords_('EUC_APPRENTISSAGE_PFMP',{Eleve:[studentId]})),a=EUC_DEV464_fields_(app);
   var anneeCourante=EUC_DEV464_currentSchoolYear_();
   var dossier={ok:true,version:EUC_DEV464_VERSION_,eleve:{
     id:studentId,nom:EUC_DEV464_t_(f.Nom),prenom:EUC_DEV464_t_(f.Prenom_usage||f.Prenom),dateNaissance:EUC_DEV464_date_(EUC_DEV464_pick_(f,['Date_naissance','Date_de_naissance'])),lieuNaissance:EUC_DEV464_t_(EUC_DEV464_pick_(f,['Lieu_naissance','LIEU_NAISS','LIEU NAISS','LIEU_NAISSANCE','Commune_naissance','Ville_naissance'])),nationalite:EUC_DEV464_t_(EUC_DEV464_pick_(f,['Nationalite','Nationalité','NATIONALITE','Pays_nationalite'])),adresse:adresseEleve,codePostal:codePostalEleve,ville:villeEleve,pays:paysEleve,telephone:EUC_DEV464_t_(EUC_DEV464_pick_(f,['Telephone_eleve','Telephone','PORTABLECOMPLET','PORTABLE_COMPLET','PORTABLENUM'])),courriel:EUC_DEV464_t_(EUC_DEV464_pick_(f,['Email_eleve','Courriel_eleve','Courriel','Email','EMAIL'])),ine:EUC_DEV464_t_(EUC_DEV464_pick_(f,['INE','Numero_INE','Numero_national'])),nir:EUC_DEV464_t_(EUC_DEV464_pick_(f,['NIR','Numero_securite_sociale','Numero_securite_sociale_eleve','Numero_securite','SSN'])),classe:EUC_DEV464_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),formation:EUC_DEV464_t_(f.Formation_Pronote||f.Diplome_snapshot),annee:EUC_DEV464_t_(EUC_DEV464_pick_(f,['Annee_scolaire_code','Annee_code','Annee_scolaire_libelle']))||EUC_DEV464_currentSchoolYear_(),etablissement:'Lycée Les Eucalyptus'

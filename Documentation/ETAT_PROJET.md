@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV501 (table complémentaire absente en recette)
+
+- Le contrôle métier du dossier d’apprentissage bleu a révélé un cas que l’audit des routes ne couvrait pas : la page HTML répondait correctement, mais le choix d’un élève déclenchait une lecture de `EUC_APPRENTISSAGE_PFMP`, table absente de la recette, puis un `404 Table not found`.
+- Les élèves restent une donnée obligatoire. En revanche, l’absence en recette des tables complémentaires `EUC_RESPONSABLES_ELEVES_PFMP` ou `EUC_APPRENTISSAGE_PFMP` produit désormais un dossier avec champs vides, sans masquer les autres erreurs Grist.
+- Un test reproduit explicitement le `404` observé et exige que le dossier reste chargeable. Le contrôle des routes ne sera plus présenté comme un test complet du parcours métier : il prouve seulement l’ouverture des pages.
+- Tests ciblés du dossier : `26/26`. Suite complète : `622/622`.
+- Le correctif vise uniquement le canal bleu. Le vert et la production Grist restent inchangés.
+
 ## Mise à jour du 7 octobre 2026 — DEV500 (Word éditable, PDF directement fusionné)
 
 - Le modèle maître reste un fichier Word de huit pages. Après modification, l’utilisateur l’exporte en PDF puis charge directement ce PDF dans `Gérer les modèles PDF`; aucun import Google Docs n’est requis.

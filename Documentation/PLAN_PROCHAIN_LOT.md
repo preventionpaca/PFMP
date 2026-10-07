@@ -1,4 +1,12 @@
-# Prochain lot après DEV500
+# Prochain lot après DEV501
+
+DEV501 ajoute au test du dossier le cas réel d’une recette contenant les élèves
+mais pas les tables complémentaires responsables/apprentissage. Une route HTTP
+valide ne vaut pas validation du parcours métier : avant toute promotion verte,
+sélectionner un élève dans le bleu, vérifier que son formulaire s’affiche, puis
+générer un PDF de huit pages avec un modèle enregistré.
+
+## Historique immédiat après DEV500
 
 DEV500 revient au flux simple demandé : modifier le Word, l’exporter en PDF,
 puis téléverser ce PDF dans le site bleu. Les `137/137` balises du modèle préparé
