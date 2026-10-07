@@ -8,6 +8,7 @@
 - confirmation et annulation toujours simulées sans écriture sur le canal bleu ;
 - audit autorisé en lecture seule : les principaux champs signalés sont absents du schéma ou vides dans la base actuelle, tandis que le parseur d’import Pronote enrichi sait déjà les alimenter lors d’un futur import autorisé ;
 - `24/24` tests ciblés, `612/612` tests complets et contrôle visuel local sur huit pages avec données fictives ; aucun import, courriel, ordre de mission ni écriture métier.
+- publication du commit `2b45f0c3a4c5fbeab3e0828a516638e9d292bd64` sur le seul `HEAD` bleu, relecture distante identique et `25/25` routes valides ; les deux Web Apps vertes restent en version `887`.
 
 ## Eucalyptus PFMP — DEV495 — 2026-10-07
 

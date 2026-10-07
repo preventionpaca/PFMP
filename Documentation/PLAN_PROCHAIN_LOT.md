@@ -23,6 +23,11 @@ validée qu’après une copie limitée autorisée ou, plus tard, après promoti
 distribution enregistrée par erreur sur le vert ne doit être annulée qu’après
 promotion de DEV496 et choix explicite de sa ligne dans l’historique.
 
+Le candidat bleu actuellement publié est le commit
+`2b45f0c3a4c5fbeab3e0828a516638e9d292bd64`. Le paquet distant a été relu à
+l’identique et les `25/25` routes bleues sont valides. Les deux Web Apps vertes
+restent sur la version immuable `887`.
+
 ## Historique immédiat après DEV495
 
 DEV495 ajoute la gestion de plusieurs modèles PDF du dossier d’apprentissage,
