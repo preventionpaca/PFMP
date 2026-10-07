@@ -1,6 +1,6 @@
 /** Eucalyptus Entreprises SIRET — v1.0.0-dev.11 */
 var EUC_ENT_VERSION = 'Eucalyptus Entreprises SIRET — v1.0.0-dev.11';
-var EUC_ENT_API_URL_RECETTE_AUTORISE = 'https://camin.getgrist.com';
+var EUC_ENT_API_URL_RECETTE_AUTORISE = 'https://docs.getgrist.com';
 var EUC_ENT_DOC_ID_RECETTE_AUTORISE = 'j1jDArBkzi7P';
 var EUC_ENT_PROJET_BLEU_AUTORISE = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
 var EUC_ENT_PROJET_VERT_AUTORISE = '1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c';

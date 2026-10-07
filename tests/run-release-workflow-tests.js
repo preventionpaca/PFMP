@@ -94,7 +94,7 @@ test('le paquet publie un point d entrée commun avec repère bleu ou vert', () 
 });
 
 test('la configuration bleue reste en recette et n’autorise que l’import Pronote de test', () => {
-  assert.match(channel, /EUC_RELEASE_RECIPE_HOST_ = 'https:\/\/camin\.getgrist\.com'/);
+  assert.match(channel, /EUC_RELEASE_RECIPE_HOST_ = 'https:\/\/docs\.getgrist\.com'/);
   assert.match(channel, /EUC_RELEASE_RECIPE_DOC_ID_ = 'j1jDArBkzi7P'/);
   assert.doesNotMatch(channel, /3pnVrygfNn7c/);
   assert.match(channel, /EUC_PFMP_SUBMISSION_MODE: 'DRY_RUN'/);

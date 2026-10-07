@@ -6,7 +6,7 @@ Ces valeurs sont configurées dans le projet **Eucalyptus PFMP — Développemen
 |---|---|---:|
 | `EUC_ENT_ENVIRONMENT` | `recette` | non |
 | `EUC_ENT_ALLOWED_DOMAIN` | `lycee-les-eucalyptus.org` | non |
-| `EUC_ENT_GRIST_API_URL` | `https://camin.getgrist.com` | non |
+| `EUC_ENT_GRIST_API_URL` | `https://docs.getgrist.com` | non |
 | `EUC_ENT_GRIST_DOC_ID` | `j1jDArBkzi7P` | non |
 | `EUC_ENT_GRIST_API_KEY` | clé donnant accès uniquement à la copie de recette | **oui** |
 | `EUC_ENT_TABLE_ENTREPRISES` | `EUC_ENTREPRISES` | non |
@@ -21,4 +21,4 @@ Après saisie, exécuter depuis l'éditeur `EUC_ENT_controlerConfiguration`. Le 
 
 ## État actuel
 
-La garde applicative vérifie séparément l'environnement, l'hôte Camin et le Doc ID de recette autorisé `j1jDArBkzi7P`. Aucun secret n'est présent dans le dépôt ou dans la configuration CLASP.
+La garde applicative vérifie séparément l'environnement, l'hôte Grist et le Doc ID de recette autorisé `j1jDArBkzi7P`. Aucun secret n'est présent dans le dépôt ou dans la configuration CLASP.

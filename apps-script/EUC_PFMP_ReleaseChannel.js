@@ -5,7 +5,7 @@
  * determine donc le canal sans variable partagee entre le bleu et le vert.
  */
 var EUC_RELEASE_BLUE_PROJECT_ID_ = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
-var EUC_RELEASE_RECIPE_HOST_ = 'https://camin.getgrist.com';
+var EUC_RELEASE_RECIPE_HOST_ = 'https://docs.getgrist.com';
 var EUC_RELEASE_RECIPE_DOC_ID_ = 'j1jDArBkzi7P';
 
 function EUC_RELEASE_isBlue_() {
