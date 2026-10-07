@@ -6,8 +6,8 @@ Dans Apps Script : **Paramètres du projet → Propriétés du script → Ajoute
 |---|---|
 | `EUC_ENT_ENVIRONMENT` | `recette` — seule valeur autorisée par `v1.0.0-dev.8` |
 | `EUC_ENT_ALLOWED_DOMAIN` | `lycee-les-eucalyptus.org` ; absence = accès refusé |
-| `EUC_ENT_GRIST_API_URL` | `https://docs.getgrist.com` |
-| `EUC_ENT_GRIST_DOC_ID` | `j1jDArBkzi7P` — copie Grist de recette imposée par `v1.0.0-dev.8` |
+| `EUC_ENT_GRIST_API_URL` | `https://camin.getgrist.com` |
+| `EUC_ENT_GRIST_DOC_ID` | `kB8bvDag8x7D` — copie Grist Camin réservée au canal bleu |
 | `EUC_ENT_GRIST_API_KEY` | secret saisi manuellement |
 | `EUC_ENT_TABLE_ENTREPRISES` | `EUC_ENTREPRISES` |
 | `EUC_ENT_TABLE_CONTACTS` | `EUC_CONTACTS_ENTREPRISES` |
@@ -27,6 +27,6 @@ Exécuter manuellement `EUC_ENT_controlerConfiguration` pour obtenir uniquement 
 | `EUC_PFMP_TURNSTILE_SECRET_KEY` | secret Turnstile, jamais dans Git ou le HTML |
 | `EUC_PFMP_TURNSTILE_EXPECTED_HOSTNAME` | nom d’hôte exact du futur déploiement |
 
-La version `dev.8` refuse toute autre combinaison que `EUC_ENT_ENVIRONMENT=recette` et `EUC_ENT_GRIST_DOC_ID=j1jDArBkzi7P`. Le Doc ID principal `3pnVrygfNn7c` reste réservé aux modules historiques et ne doit jamais être affecté à `EUC_ENT_GRIST_DOC_ID` dans cette version.
+La garde du canal bleu refuse toute autre combinaison que `EUC_ENT_ENVIRONMENT=recette`, `EUC_ENT_GRIST_API_URL=https://camin.getgrist.com` et `EUC_ENT_GRIST_DOC_ID=kB8bvDag8x7D`. La cible du site vert n'est pas codée dans Git et ne doit jamais être affectée au projet bleu.
 
 Le fichier `.clasp.json` cible le script fourni et `apps-script/`. CLASP n'était pas installé lors du diagnostic. Aucun `clasp push` ne doit être effectué sans autorisation explicite.

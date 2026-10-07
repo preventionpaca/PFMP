@@ -5,7 +5,8 @@
  * determine donc le canal sans variable partagee entre le bleu et le vert.
  */
 var EUC_RELEASE_BLUE_PROJECT_ID_ = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
-var EUC_RELEASE_RECIPE_DOC_ID_ = 'j1jDArBkzi7P';
+var EUC_RELEASE_RECIPE_HOST_ = 'https://camin.getgrist.com';
+var EUC_RELEASE_RECIPE_DOC_ID_ = 'kB8bvDag8x7D';
 
 function EUC_RELEASE_isBlue_() {
   return ScriptApp.getScriptId() === EUC_RELEASE_BLUE_PROJECT_ID_;
@@ -77,7 +78,7 @@ function EUC_RELEASE_blueSafetyValues_() {
   return {
     EUC_ENT_ENVIRONMENT: 'recette',
     EUC_ENT_ALLOWED_DOMAIN: 'lycee-les-eucalyptus.org',
-    EUC_ENT_GRIST_API_URL: 'https://docs.getgrist.com',
+    EUC_ENT_GRIST_API_URL: EUC_RELEASE_RECIPE_HOST_,
     EUC_ENT_GRIST_DOC_ID: EUC_RELEASE_RECIPE_DOC_ID_,
     EUC_ENT_TABLE_ENTREPRISES: 'EUC_ENTREPRISES',
     EUC_ENT_TABLE_CONTACTS: 'EUC_CONTACTS_ENTREPRISES',
@@ -153,11 +154,13 @@ function EUC_RELEASE_configurerProjetBleu() {
 /** Retourne seulement des presences et des modes non sensibles. */
 function EUC_RELEASE_controlerProjetBleu() {
   var p = PropertiesService.getScriptProperties();
+  var apiUrl = String(p.getProperty('EUC_ENT_GRIST_API_URL') || '').replace(/\/+$/, '');
   var docId = String(p.getProperty('EUC_ENT_GRIST_DOC_ID') || '');
   return {
     canal: EUC_RELEASE_channel_(),
     projetCorrect: EUC_RELEASE_isBlue_(),
-    recetteCorrecte: docId === EUC_RELEASE_RECIPE_DOC_ID_,
+    hoteRecetteCorrect: apiUrl === EUC_RELEASE_RECIPE_HOST_,
+    recetteCorrecte: apiUrl === EUC_RELEASE_RECIPE_HOST_ && docId === EUC_RELEASE_RECIPE_DOC_ID_,
     cleRecettePresente: !!String(p.getProperty('EUC_ENT_GRIST_API_KEY') || ''),
     soumissions: String(p.getProperty('EUC_PFMP_SUBMISSION_MODE') || ''),
     courriels: String(p.getProperty('EUC_PFMP_EMAIL_MODE') || ''),

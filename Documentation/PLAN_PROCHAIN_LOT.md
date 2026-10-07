@@ -7,7 +7,7 @@ la génération demandée depuis l'interface ; ne pas lancer de génération de 
 automatique, car elle crée les documents et accès QR réels.
 
 Pour les évolutions suivantes, conserver la séparation stricte : projet bleu
-uniquement sur `j1jDArBkzi7P`, projet vert uniquement sur sa cible configurée
+uniquement sur la recette Camin `kB8bvDag8x7D`, projet vert uniquement sur sa cible configurée
 non-recette, et refus de tout projet Apps Script inconnu. Ne jamais coder
 l'identifiant de la cible verte ni une clé dans Git.
 
@@ -51,7 +51,7 @@ Apps stables restent sur `881`.
 
 Priorité immédiate : ouvrir l'éditeur bleu, exécuter
 `EUC_RELEASE_configurerProjetBleu`, saisir manuellement une clé Grist limitée à
-la copie de recette `j1jDArBkzi7P`, puis exécuter
+la copie de recette Camin `kB8bvDag8x7D`, puis exécuter
 `EUC_RELEASE_controlerProjetBleu`. Ne jamais copier une clé ayant accès à la
 production. Après ce contrôle, lancer `scripts/pfmp-release.sh prepare` et
 valider les 25 routes du nouveau canal bleu avant toute évolution fonctionnelle.

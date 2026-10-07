@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV490 (recette Grist Camin isolée)
+
+- La copie personnelle historique `j1jDArBkzi7P` est remplacée pour le canal bleu par le document Camin payant `kB8bvDag8x7D`, nommé `Base calendrier et planning — RECETTE BLEUE`, sur `https://camin.getgrist.com`. La copie a été créée avec la structure uniquement et ne contient aucune donnée nominative.
+- Un compte de service Grist dédié dispose d'un accès en lecture seule à cette recette. Le contrôle direct confirme `200` sur la recette et `403` sur le document officiel fourni par l'utilisateur ; la clé n'est ni affichée ni versionnée.
+- Les garde-fous du projet bleu imposent désormais simultanément l'hôte Camin et l'identifiant de recette. L'ancien hôte `docs.getgrist.com` et l'ancien document personnel ne peuvent donc plus être réinjectés automatiquement.
+- Les modes bleus restent `DRY_RUN` / `DISABLED`. Aucun accès à la production Grist, import Pronote, écriture élève ou convention, courriel, ordre de mission ou promotion verte n'a été exécuté.
+
 ## Mise à jour du 7 octobre 2026 — DEV489 (cibles Grist séparées bleu / vert)
 
 - Après DEV487 et DEV488, le générateur ne restait plus bloqué mais les listes de production étaient vides. La cause était la garde historique `EUC_ENT_controlerCibleRecette_` : elle imposait la copie Grist de recette à tous les projets, y compris au Web App vert. Les erreurs étaient ensuite absorbées par le lecteur historique, qui retournait silencieusement des tableaux vides.

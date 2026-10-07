@@ -48,7 +48,8 @@ par les personnels ni par les sous-domaines publics.
    immuables précédentes.
 
 Le canal bleu protège la disponibilité et les propriétés du code vert. Il vise
-uniquement la copie Grist `j1jDArBkzi7P` avec une clé limitée à cette copie.
+uniquement la copie Grist Camin `kB8bvDag8x7D` sur
+`https://camin.getgrist.com`, avec une clé de service limitée en lecture à cette copie.
 Aucun import réel, envoi, ordre de mission ou écriture métier ne doit y être
 activé.
 
@@ -56,7 +57,7 @@ activé.
 
 1. Dans l'éditeur bleu, exécuter une fois `EUC_RELEASE_configurerProjetBleu`.
    Cette fonction ne peut pas s'exécuter sur le projet vert. Elle renseigne les
-   valeurs non sensibles, impose `j1jDArBkzi7P` et désactive les mutations.
+   valeurs non sensibles, impose l'hôte Camin et `kB8bvDag8x7D`, puis désactive les mutations.
    La même garde est rejouée automatiquement avant chaque page bleue : une
    modification accidentelle de ces modes est donc corrigée avant le routeur.
 2. Dans **Paramètres du projet > Propriétés du script**, ajouter manuellement
