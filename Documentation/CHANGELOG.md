@@ -1,5 +1,14 @@
 # Changelog
 
+## Eucalyptus PFMP — DEV498 — 2026-10-07
+
+- correction des quatre routes bleues qui échouaient lorsque des tables optionnelles étaient absentes ou initialisées avant le premier affichage ;
+- chargement asynchrone des pages Destinataires et Paramètres d’envoi, avec états de chargement, succès et erreur ;
+- spinner transversal pour les boutons asynchrones occupés, sans doublon avec leurs indicateurs existants ;
+- audit de `35` destinations internes et de `32` fichiers appelant le serveur, avec routes et gestionnaires d’échec présents ;
+- promotion contrôlée du commit `aa040c02fc0ba813fe352f3d39e78dcbb2688bf1` vers la version Apps Script immuable `888` sur les deux Web Apps vertes existantes, URL inchangées ;
+- `620/620` tests, `25/25` routes bleues et `25/25` routes vertes validés, puis relecture distante du projet stable strictement identique au paquet ; aucun courriel, import réel, ordre de mission, PDF, écriture métier ni accès direct à la production Grist.
+
 ## Eucalyptus PFMP — DEV496 — 2026-10-07
 
 - fusion dynamique des balises du modèle PDF de huit pages, sans coordonnées fixes et sans affichage des marqueurs sans valeur ;

@@ -1,16 +1,18 @@
 # Prochain lot après DEV498
 
 DEV498 corrige les quatre routes qui bloquaient la promotion DEV497 et rend les
-chargements Destinataires et Paramètres d’envoi non bloquants. La demande courante autorise la
-promotion du candidat exact vers les deux Web Apps vertes existantes, mais
-seulement après suite complète verte, relecture distante du bleu, `25/25`
-routes bleues et contrôle des navigations internes visibles.
+chargements Destinataires et Paramètres d’envoi non bloquants. Le candidat exact
+`aa040c02fc0ba813fe352f3d39e78dcbb2688bf1` a été promu sur les deux Web Apps
+vertes existantes dans la version immuable `888`. Les URL sont inchangées, les
+`25/25` routes bleues et vertes sont valides et la relecture distante du projet
+stable correspond exactement au paquet testé.
 
-Après promotion, contrôler les `25/25` routes vertes et vérifier que les liens
-`Accueil PFMP` reviennent sur `https://alternance.loucodi.fr/`. Les tests des
-boutons d’écriture restent simulés : ne déclencher ni courriel, ni import, ni
-ordre de mission, ni mutation élève/convention. Ne jamais accéder directement
-à la production Grist `3pnVrygfNn7c` pendant cette recette.
+Le prochain lot repart obligatoirement du bleu. Conserver le contrôle des
+`35` destinations internes, le spinner transversal des boutons asynchrones et
+le retour `Accueil PFMP` vers `https://alternance.loucodi.fr/` sur le vert.
+Les tests des boutons d’écriture restent simulés : ne déclencher ni courriel,
+ni import, ni ordre de mission, ni mutation élève/convention. Ne jamais accéder
+directement à la production Grist `3pnVrygfNn7c` pendant une recette.
 
 ## Historique immédiat après DEV497
 

@@ -1,12 +1,14 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 7 octobre 2026 — DEV498 (préparation de la promotion bleu → vert)
+## Mise à jour du 7 octobre 2026 — DEV498 (promotion bleu → vert)
 
 - L’audit différentiel du candidat bleu a localisé les quatre derniers échecs : trois tables optionnelles absentes de la recette provoquaient une erreur Grist `404`, tandis que la page Destinataires effectuait toutes ses initialisations avant le premier affichage et dépassait le délai de contrôle.
 - L’administration des conventions affiche désormais son véritable écran avec un état vide explicite lorsque la table de conventions n’existe pas dans la recette. La page Fin de Terminale s’ouvre avant toute migration de schéma. La table de paramètres d’envoi est créée par son initialiseur avant sa première lecture, au lieu d’être lue avant d’exister.
 - Les pages Destinataires et Paramètres d’envoi sont devenues des coquilles légères : elles s’affichent immédiatement, puis chargent leurs données côté client avec bouton désactivé, spinner et états succès/erreur. Une décoration commune ajoute également un spinner aux boutons asynchrones qui se déclarent occupés sans en fournir un eux-mêmes, sans doubler les spinners déjà présents.
 - Les actions métier restent protégées sur le bleu (`DRY_RUN` / courriels `DISABLED`). Aucun envoi, import, ordre de mission, PDF ou écriture élève/convention n’est utilisé pour la recette. La production Grist `3pnVrygfNn7c` n’est pas consultée.
-- La promotion demandée doit encore passer par la suite complète, la publication/relecture du bleu, les `25/25` routes et l’audit des navigations internes. Elle mettra à jour uniquement les deux Web Apps vertes existantes, avec une version immuable et retour automatique en cas d’échec ; leurs URL restent inchangées.
+- Le commit applicatif `aa040c02fc0ba813fe352f3d39e78dcbb2688bf1` a passé `620/620` tests, a été publié sur le `HEAD` bleu puis relu avec une empreinte identique. Les `25/25` routes bleues sont valides. L’audit différentiel retrouve une route pour les `35` destinations internes littérales et un gestionnaire d’échec dans les `32` fichiers qui appellent le serveur.
+- Après autorisation explicite, exactement ce candidat bleu a été copié vers le projet stable, relu avec la même empreinte et promu sur les deux Web Apps vertes existantes dans la version Apps Script immuable `888`. Leurs URL sont inchangées et les `25/25` routes vertes sont valides ; le retour automatique vers `887` n’a pas été nécessaire.
+- La promotion n’a déclenché aucun courriel, import Pronote, ordre de mission, PDF, écriture élève/convention ni accès direct à la production Grist `3pnVrygfNn7c`.
 
 ## Mise à jour du 7 octobre 2026 — DEV497 (données de recette bleue testables)
 
