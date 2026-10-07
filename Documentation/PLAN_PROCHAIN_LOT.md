@@ -1,7 +1,7 @@
 # Prochain lot après DEV498
 
-DEV498 corrige les quatre routes qui bloquaient la promotion DEV497 et rend le
-chargement Destinataires non bloquant. La demande courante autorise la
+DEV498 corrige les quatre routes qui bloquaient la promotion DEV497 et rend les
+chargements Destinataires et Paramètres d’envoi non bloquants. La demande courante autorise la
 promotion du candidat exact vers les deux Web Apps vertes existantes, mais
 seulement après suite complète verte, relecture distante du bleu, `25/25`
 routes bleues et contrôle des navigations internes visibles.

@@ -211,6 +211,7 @@ test('les quatre routes fragiles s’ouvrent sans lecture Grist bloquante', () =
   const destinataires = read('EUC_SUIVI_PFMP_DestinatairesV158.gs');
   const destinatairesHtml = read('Destinataires_Envois_PFMP_V158.html');
   const params = read('EUC_SUIVI_PFMP_EnvoisV157.gs');
+  const paramsHtml = read('Parametres_Envois_PFMP_V157.html');
 
   assert.match(routes, /case 'admin-conventions-pfmp':[\s\S]*EUC_DEV498_afficherAdminConventions_/);
   assert.match(routes, /EUC_DEV498_tableAbsente_/);
@@ -223,6 +224,9 @@ test('les quatre routes fragiles s’ouvrent sans lecture Grist bloquante', () =
   assert.match(destinatairesHtml, /Chargement des destinataires…/);
   assert.match(destinatairesHtml, /\.EUC_V158_lire\(\)/);
   assert.match(params, /function EUC_V157_assurerTable_/);
+  assert.match(params, /paramsJson=JSON\.stringify\(\{objet:'',message:'',destinataires:\[\]\}\)/);
+  assert.match(paramsHtml, /Chargement des paramètres…/);
+  assert.match(paramsHtml, /\.EUC_V157_lireParametres\(\)/);
   assert.ok(
     params.indexOf('EUC_V157_assurerTable_();') < params.indexOf("EUC_IMPORT_lireRecords_(EUC_V157_PARAMS_TABLE_)"),
     'la table de paramètres doit être assurée avant sa première lecture'

@@ -252,6 +252,7 @@ function EUC_V157_afficherParametres(e){
 
   var tpl=HtmlService.createTemplateFromFile('Parametres_Envois_PFMP_V157');
   tpl.config=JSON.stringify({baseUrl:ScriptApp.getService().getUrl()});
-  tpl.paramsJson=JSON.stringify(EUC_V157_lireParametres());
+  /* Afficher la coquille avant l'initialisation éventuelle de la table. */
+  tpl.paramsJson=JSON.stringify({objet:'',message:'',destinataires:[]});
   return tpl.evaluate().setTitle('Paramètres des envois PFMP');
 }
