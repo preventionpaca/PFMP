@@ -1,5 +1,7 @@
 /** Eucalyptus PFMP — v1.0.0-dev.56 — authentification administration de recette. */
 function EUC_PFMP_contexteAdmin_() {
+  /* Le /dev bleu est prive aux editeurs du projet. */
+  try{var __blue=EUC_RELEASE_blueEditorContext_();if(__blue)return __blue;}catch(__eBlue){}
   var ctx = EUC_SUIVI_contexteCourant_();
   if (ctx && ctx.autorise && ['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role) >= 0) return ctx;
   var cfg = EUC_ENT_lireConfiguration();

@@ -4,7 +4,10 @@ var EUC_SUIVI_CACHE_SYNTHESE_='EUC_SUIVI_SYNTHESE_DEV27_';
 function EUC_SUIVI_afficherApplication(e){EUC_ENT_controlerAccesUtilisateur_();var tpl=HtmlService.createTemplateFromFile('Suivi_PFMP');tpl.prefiltres=JSON.stringify({annee:String(e&&e.parameter&&e.parameter.annee||'')});return tpl.evaluate().setTitle('Tableau de bord PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');}
 function EUC_SUIVI_chrono_(){var debut=Date.now(),etapes={};return {mesurer:function(n,t){etapes[n]=Date.now()-t;},finir:function(n){etapes.generationReponse=Date.now()-debut;console.log(JSON.stringify({diagnostic:'SUIVI_PFMP_DUREES',operation:n,dureesMs:etapes}));return etapes;}};}
 function EUC_SUIVI_lireUtilisateurs_(){try{return EUC_ENT_grist('get','/tables/EUC_UTILISATEURS_PFMP/records').records||[];}catch(e){return [];}}
-function EUC_SUIVI_contexteCourant_(){return EUC_SUIVI_construireContexteUtilisateur_(Session.getActiveUser().getEmail(),EUC_SUIVI_lireUtilisateurs_());}
+function EUC_SUIVI_contexteCourant_(){
+  try{var __blue=EUC_RELEASE_blueEditorContext_();if(__blue)return __blue;}catch(__eBlue){}
+  return EUC_SUIVI_construireContexteUtilisateur_(Session.getActiveUser().getEmail(),EUC_SUIVI_lireUtilisateurs_());
+}
 function EUC_SUIVI_sqlLecture_(sql,args){if(!/^\s*(SELECT|WITH)\b/i.test(sql)||/\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|PRAGMA|ATTACH)\b/i.test(sql))throw new Error('Requête de lecture invalide.');return EUC_ENT_grist('post','/sql',{sql:sql,args:args||[],timeout:900}).records||[];}
 function EUC_SUIVI_fields_(records){return (records||[]).map(function(r){return r.fields||r;});}
 function EUC_SUIVI_metadonneesSansCache_(annee,chrono){

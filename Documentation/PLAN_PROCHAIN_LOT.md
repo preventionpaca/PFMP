@@ -1,4 +1,11 @@
-# Prochain lot après DEV484
+# Prochain lot après DEV485
+
+Le lot DEV485 rend le canal bleu immédiatement identifiable sur toutes les
+pages, maintient toute sa navigation dans le même `/dev` et restaure l'accès
+administrateur réservé aux éditeurs du projet bleu. La prochaine étape reste
+une recette navigateur des 25 routes avant toute homologation ou promotion.
+
+## Lot DEV484 conservé
 
 Le lot DEV484 corrige dans les sources du canal bleu les infobulles Apprentis,
 la remontée des affectations visiteur dans les ordres de mission et les trois

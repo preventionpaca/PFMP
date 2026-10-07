@@ -15,6 +15,57 @@ function EUC_RELEASE_channel_() {
   return EUC_RELEASE_isBlue_() ? 'BLUE' : 'GREEN';
 }
 
+function EUC_RELEASE_serviceBase_() {
+  var url = '';
+  try { url = String(ScriptApp.getService().getUrl() || ''); } catch (e) {}
+  return url.replace(/[?#].*$/, '');
+}
+
+/**
+ * L'URL /dev du projet bleu n'est accessible qu'aux editeurs Apps Script.
+ * Elle constitue donc deja la porte d'entree du bac a sable. Le contexte
+ * ci-dessous ne vaut jamais dans le projet vert et les garde-fous bleu
+ * maintiennent les mutations en DRY_RUN et les courriels desactives.
+ */
+function EUC_RELEASE_blueEditorContext_() {
+  if (!EUC_RELEASE_isBlue_()) return null;
+  var email = '';
+  try { email = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase(); } catch (e) {}
+  return {
+    autorise: true,
+    email: email,
+    nom: email || 'Editeur du canal bleu',
+    role: 'ADMIN_PFMP',
+    classes: [],
+    peutVoirToutesClasses: true,
+    peutModifier: true,
+    peutSaisir: true,
+    peutAnnuler: true,
+    peutPurgerTests: false,
+    lectureSeule: false,
+    origineAutorisation: 'CANAL_BLEU_EDITEUR_DEV'
+  };
+}
+
+function EUC_RELEASE_blueNavigation_(content) {
+  content = String(content || '');
+  if (!EUC_RELEASE_isBlue_()) return content;
+
+  var base = EUC_RELEASE_serviceBase_();
+  if (!base) return content;
+  var home = base + '?page=admin-pfmp';
+
+  /* Les anciens ecrans contiennent encore les deux deploiements verts ou le
+   * sous-domaine canonique. Dans le projet bleu uniquement, les ramener vers
+   * le meme /dev evite de quitter la recette au milieu d'un parcours. */
+  content = content.replace(/https:\/\/alternance\.loucodi\.fr\//g, home);
+  content = content.replace(
+    /https:\/\/script\.google\.com\/(?:a\/macros\/lycee-les-eucalyptus\.org\/)?s\/(?:AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg|AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA)\/exec/g,
+    base
+  );
+  return content;
+}
+
 function EUC_RELEASE_blueSafetyValues_() {
   return {
     EUC_ENT_ENVIRONMENT: 'recette',
@@ -51,22 +102,28 @@ function EUC_RELEASE_decorateOutput_(output) {
       typeof output.setContent !== 'function') return output;
 
   var blue = EUC_RELEASE_isBlue_();
-  var color = blue ? '#1565c0' : '#18864b';
+  var color = blue ? '#0d47a1' : '#18864b';
   var label = blue
-    ? 'ENVIRONNEMENT BLEU — DÉVELOPPEMENT'
+    ? 'MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE'
     : 'ENVIRONNEMENT VERT — VERSION EN LIGNE';
   var banner = '<div data-pfmp-release-channel="' + (blue ? 'blue' : 'green') + '" '
-    + 'style="position:fixed;top:8px;right:12px;z-index:2147483647;'
-    + 'padding:7px 11px;border-radius:999px;background:' + color + ';color:#fff;'
-    + 'font:700 11px/1.2 Arial,sans-serif;letter-spacing:.03em;'
-    + 'box-shadow:0 2px 8px rgba(0,0,0,.22);pointer-events:none">'
+    + 'style="position:fixed;' + (blue ? 'top:0;left:0;right:0;' : 'top:8px;right:12px;')
+    + 'z-index:2147483647;padding:' + (blue ? '11px 16px' : '7px 11px') + ';'
+    + (blue ? '' : 'border-radius:999px;') + 'background:' + color + ';color:#fff;'
+    + 'text-align:center;font:800 ' + (blue ? '14px' : '11px') + '/1.2 Arial,sans-serif;'
+    + 'letter-spacing:.05em;box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none">'
     + label + '</div>';
-  var content = String(output.getContent() || '');
+  var content = EUC_RELEASE_blueNavigation_(output.getContent());
   if (content.indexOf('data-pfmp-release-channel=') >= 0) return output;
-  if (/<body(?:\s[^>]*)?>/i.test(content)) {
-    content = content.replace(/<body(\s[^>]*)?>/i, function(match) {
-      return match + banner;
-    });
+  if (blue && /<\/head>/i.test(content)) {
+    content = content.replace(/<\/head>/i, '<style data-pfmp-blue-offset="1">body{padding-top:42px!important}</style></head>');
+  }
+  /* Placer le bandeau a la fin du body : certains modeles reconstruisent
+   * leur contenu au chargement et pouvaient effacer l'ancien petit badge. */
+  if (/<\/body>/i.test(content)) {
+    content = content.replace(/<\/body>/i, banner + '</body>');
+  } else if (/<body(?:\s[^>]*)?>/i.test(content)) {
+    content = content + banner;
   } else {
     content = banner + content;
   }

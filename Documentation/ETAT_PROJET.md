@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV485 (canal bleu identifiable et navigation isolée)
+
+- Le canal bleu affiche désormais sur chaque sortie HTML un bandeau bleu fixe sur toute la largeur : `MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE`. Le bandeau est ajouté après le contenu de la page afin que les anciens modèles qui reconstruisent leur interface au chargement ne l'effacent plus.
+- Dans le projet bleu uniquement, les liens historiques vers `alternance.loucodi.fr` et vers les deux déploiements verts sont réécrits vers le `/dev` courant. Le bouton `Accueil PFMP` revient donc à l'accueil administrateur bleu et les parcours internes ne quittent plus silencieusement la recette. Le projet vert conserve ses URL canoniques inchangées.
+- Le `/dev`, accessible uniquement aux éditeurs du projet Apps Script bleu, dispose d'un contexte administrateur propre au bac à sable lorsque l'ancienne passerelle de session n'est pas initialisée. Cette exception est impossible sur le projet vert ; les garde-fous bleu conservent les soumissions et imports en `DRY_RUN`, les courriels en `DISABLED` et les mutations administratives en `DRY_RUN`.
+- Les outils administratifs calculent maintenant leur URL de base depuis le déploiement courant au lieu d'un ancien identifiant de déploiement vert.
+- Aucun accès à la production Grist, aucune écriture métier, aucun import, courriel, PDF ou ordre de mission n'a été exécuté pendant ce correctif.
+
 ## Mise à jour du 7 octobre 2026 — DEV484 (régressions ciblées sur le canal BLEU)
 
 - Aucun changement n'a été appliqué aux deux Web Apps vertes, qui restent sur la version immuable `881`. Les correctifs de ce lot sont destinés exclusivement au projet Apps Script bleu avant recette navigateur.

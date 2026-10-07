@@ -13,11 +13,11 @@ const form=read('Apprentissage_PFMP_V190X.html');
 const loader=read('EUC_PFMP_DEV208_ClassDetailSnapshot.js');
 const bridge=read('EUC_PFMP_DEV235_JsonBridge.js');
 
-test('le centre et les outils admin utilisent le déploiement administrateur',()=>{
-  const adminId='AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg';
+test('le centre et les outils admin utilisent le déploiement courant',()=>{
   assert(admin.includes('baseUrl:EUC_DEV368_boot().baseUrl'),'centre non relié au boot admin');
-  assert(tools.includes(adminId),'URL admin absente');
   const boot=tools.slice(tools.indexOf('function EUC_DEV368_boot'),tools.indexOf('function EUC_DEV368_afficherSans'));
+  assert(boot.includes('ScriptApp.getService().getUrl()'),'URL du déploiement courant absente');
+  assert(!boot.includes('AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg'),'boot encore figé sur le vert admin');
   assert(!boot.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW'),'boot encore public');
 });
 
