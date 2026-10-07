@@ -3831,6 +3831,15 @@ refresh();
 #euc378bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:10px 12px;border:1px solid #9ed4c7;border-radius:10px;background:#eef9f6;color:#14594d}
 #euc378bar button{padding:7px 10px;border-radius:7px;border:1px solid #8fc6b9;background:#fff;color:#14594d;font-weight:800;cursor:pointer}
 #euc378count{font-weight:900}
+#euc503panel{display:none;margin:0 0 14px;padding:14px;border:2px solid #2563eb;border-radius:12px;background:#eff6ff;color:#172554}
+#euc503panel h3{margin:0 0 5px;font-size:1rem}
+#euc503panel .euc503-help{margin-bottom:10px;font-size:13px;color:#334155}
+.euc503-card{padding:12px;margin-top:10px;border:1px solid #93c5fd;border-radius:10px;background:#fff}
+.euc503-card-grid{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(2,minmax(145px,.8fr));gap:9px;margin-top:9px}
+.euc503-card label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800}
+.euc503-card select,.euc503-card input{box-sizing:border-box;width:100%;padding:7px;border:1px solid #93c5fd;border-radius:7px;background:#fff}
+.euc503-motive{grid-column:1/-1}
+@media(max-width:900px){.euc503-card-grid{grid-template-columns:1fr}.euc503-motive{grid-column:auto}}
 .euc378-hidden{display:none!important}
 .euc378-spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:euc378spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
 @keyframes euc378spin{to{transform:rotate(360deg)}}
@@ -3838,13 +3847,60 @@ refresh();
 <div id="euc378bar">
   <b>Import sécurisé :</b>
   <span>seules les lignes cochées au moment du clic sont traitées.</span>
+  <button id="euc503prepare" type="button">Rattachement spécial / début retardé</button>
   <button id="euc378clear" type="button">Tout désélectionner</button>
   <span id="euc378count">0 sélectionné</span>
 </div>
+<section id="euc503panel" aria-live="polite">
+  <h3>Dates réelles et période officielle de rattachement</h3>
+  <div class="euc503-help">Les dates réelles sont conservées. La période choisie sert au suivi PFMP et aux ordres de mission. Activez uniquement les dossiers qui nécessitent ce rattachement explicite.</div>
+  <div id="euc503rows"></div>
+</section>
 <script id="EUC_DEV378_SELECTION_JS">
 (function(){
   'use strict';
   var chosen=new Set();
+
+  function html(v){
+    var d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;
+  }
+
+  function renderPeriodChoices(result){
+    var panel=document.getElementById('euc503panel'),host=document.getElementById('euc503rows');
+    if(!panel||!host)return;
+    var rows=(result&&result.rows)||[];
+    host.innerHTML=rows.map(function(row){
+      var options=(row.periods||[]).map(function(p){
+        return '<option value="'+Number(p.id||0)+'">'+html(p.label)+' — '+html(p.start)+' au '+html(p.end)+'</option>';
+      }).join('');
+      return '<article class="euc503-card" data-row-id="'+Number(row.rowId||0)+'">'+
+        '<label style="display:flex;flex-direction:row;align-items:center;gap:8px;font-size:14px"><input class="euc503-enabled" type="checkbox" checked style="width:auto"> Appliquer un rattachement spécial à <b>'+html(row.student)+'</b> — '+html(row.classLabel||('classe '+row.classId))+'</label>'+
+        '<div class="euc503-card-grid">'+
+          '<label>Période officielle<select class="euc503-period"><option value="">— Choisir —</option>'+options+'</select></label>'+
+          '<label>Date réelle de début<input class="euc503-start" type="date" value="'+html(row.actualStart)+'"></label>'+
+          '<label>Date réelle de fin<input class="euc503-end" type="date" value="'+html(row.actualEnd)+'"></label>'+
+          '<label>Situation<select class="euc503-scenario"><option value="DEBUT_RETARDE">Début retardé</option><option value="AUTRE_SITUATION_EXCEPTIONNELLE">Autre situation exceptionnelle</option></select></label>'+
+          '<label class="euc503-motive">Motif obligatoire<input class="euc503-motive-input" type="text" placeholder="Ex. : l’élève commence la PFMP en retard"></label>'+
+        '</div>'+
+        (!(row.periods||[]).length?'<div style="margin-top:8px;color:#b91c1c;font-weight:800">Aucune période officielle autorisée pour cette classe et cette année.</div>':'')+
+      '</article>';
+    }).join('');
+    panel.style.display='block';
+  }
+
+  function collectPeriodOverrides(){
+    return Array.from(document.querySelectorAll('.euc503-card')).map(function(card){
+      return {
+        rowId:Number(card.dataset.rowId)||0,
+        enabled:!!card.querySelector('.euc503-enabled').checked,
+        periodId:Number(card.querySelector('.euc503-period').value)||0,
+        actualStart:card.querySelector('.euc503-start').value,
+        actualEnd:card.querySelector('.euc503-end').value,
+        scenario:card.querySelector('.euc503-scenario').value,
+        motive:card.querySelector('.euc503-motive-input').value
+      };
+    }).filter(function(x){return chosen.has(x.rowId)&&x.enabled;});
+  }
 
   function rowId(cb){
     var tr=cb&&cb.closest&&cb.closest('tr[data-id]');
@@ -3917,9 +3973,11 @@ refresh();
         return;
       }
 
+      var periodOverrides=collectPeriodOverrides();
       if(!confirm(
         'Importer uniquement '+ids.length+' élève(s) sélectionné(s) ?\n\n'+
-        'Aucune autre ligne du tampon ne sera modifiée.'
+        'Aucune autre ligne du tampon ne sera modifiée.'+
+        (periodOverrides.length?'\n\n'+periodOverrides.length+' rattachement(s) spécial(aux) seront contrôlés.':'')
       ))return;
 
       var previous=btn.innerHTML;
@@ -3952,7 +4010,8 @@ refresh();
         })
         .EUC_DEV466_importSelection({
           manualSelection:true,
-          ids:ids
+          ids:ids,
+          periodOverrides:periodOverrides
         });
     },true);
   }
@@ -3964,7 +4023,21 @@ refresh();
     installButton();
 
     var clear=document.getElementById('euc378clear');
-    if(clear)clear.onclick=function(){chosen.clear();refresh();};
+    if(clear)clear.onclick=function(){
+      chosen.clear();refresh();
+      var panel=document.getElementById('euc503panel');if(panel)panel.style.display='none';
+    };
+
+    var prepare=document.getElementById('euc503prepare');
+    if(prepare)prepare.onclick=function(){
+      var ids=Array.from(chosen);
+      if(!ids.length){alert('Cochez d’abord le ou les élèves concernés.');return;}
+      var old=prepare.innerHTML;prepare.disabled=true;prepare.innerHTML='<span class="euc378-spinner"></span>Chargement…';
+      google.script.run
+        .withSuccessHandler(function(result){prepare.disabled=false;prepare.innerHTML=old;renderPeriodChoices(result);})
+        .withFailureHandler(function(e){prepare.disabled=false;prepare.innerHTML=old;alert('Erreur rattachement : '+String(e&&e.message||e));})
+        .EUC_DEV503_periodChoices({manualSelection:true,ids:ids});
+    };
 
     var tb=document.getElementById('tb');
     if(tb){

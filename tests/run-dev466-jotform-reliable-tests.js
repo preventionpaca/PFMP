@@ -43,6 +43,13 @@ test('le précontrôle complet précède le passage atomique à DIRTY',()=>{
   assert.ok(body.indexOf('EUC_DEV466_prepare_')<body.indexOf('EUC_DEV425_beginImportItems_'));
 });
 
+test('les colonnes de dates spéciales sont créées seulement après le précontrôle',()=>{
+  const body=code.slice(code.indexOf('function EUC_DEV466_importSelection'));
+  assert.ok(body.indexOf('EUC_DEV466_prepare_')<body.indexOf('EUC_CONVENTION_assurerTableAcces_'));
+  assert.ok(body.indexOf('EUC_CONVENTION_assurerTableAcces_')<body.indexOf('EUC_DEV425_beginImportItems_'));
+  assert.match(code,/Scenario_dates:'Text'[\s\S]*Motif_ecart_dates:'Text'/);
+});
+
 test('les anciennes tables de rattachement absentes ne bloquent pas le précontrôle',()=>{
   assert.match(code,/var periods=\[\],links=\[\],years=\[\],offers=\[\]/);
   assert.match(code,/try\{links=EUC_DEV307_flatRecords_\('EUC_OFFRES_PERIODES'\);\}catch\(eLinks\)\{\}/);
@@ -98,6 +105,55 @@ test('deux fenêtres officielles distinctes contenant les dates restent bloquant
   assert.equal(out.ok,false);assert.match(out.error,/plusieurs périodes officielles/);
 });
 
+test('un début retardé conserve les dates réelles et rattache la période officielle choisie',()=>{
+  const c=context({
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Number(v)
+  });
+  const meta={periodes:[
+    {id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[24]}
+  ]};
+  const out=c.EUC_DEV503_periodOverride_(
+    {Date_debut_brut:'2026-10-07',Date_fin_brut:'2026-10-16'},meta,24,'2026-2027',
+    {periodId:62,scenario:'DEBUT_RETARDE',actualStart:'2026-10-07',actualEnd:'2026-10-16',motive:'Début retardé signalé'}
+  );
+  assert.equal(out.ok,true);assert.equal(out.period.id,62);assert.equal(out.start,'2026-09-28');
+  assert.equal(out.dateSaisieDebut,'2026-10-07');assert.equal(out.dateSaisieFin,'2026-10-16');
+  const fields=c.EUC_DEV503_specialFields_(out,out.period);
+  assert.equal(fields.Date_debut,'2026-10-07');assert.equal(fields.Date_fin,'2026-10-16');
+  assert.equal(fields.Scenario_dates,'DEBUT_RETARDE');assert.match(fields.Periode_libelle,/Début retardé/);
+});
+
+test('un début retardé ne peut pas dépasser la fin officielle',()=>{
+  const c=context({
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Number(v)
+  });
+  const meta={periodes:[
+    {id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[24]}
+  ]};
+  assert.throws(()=>c.EUC_DEV503_periodOverride_(
+    {Date_debut_brut:'2026-10-07',Date_fin_brut:'2026-10-17'},meta,24,'2026-2027',
+    {periodId:62,scenario:'DEBUT_RETARDE',actualStart:'2026-10-07',actualEnd:'2026-10-17',motive:'Erreur de saisie'}
+  ),/fin réelle doit rester la fin officielle/);
+});
+
+test('le rattachement manuel exige la vraie classe',()=>{
+  const c=context({
+    EUC_DEV307_pick_:(row,names)=>names.map(n=>row[n]).find(Boolean)||'',
+    EUC_DEV307_dateISO_:v=>String(v||''),
+    EUC_DEV307_ref_:v=>Number(v)
+  });
+  const meta={periodes:[
+    {id:62,annee:'2026-2027',debut:'2026-09-28',fin:'2026-10-16',type:'PFMP n°1',classesConcernees:[99]}
+  ]};
+  assert.throws(()=>c.EUC_DEV503_periodOverride_({},meta,24,'2026-2027',{
+    periodId:62,scenario:'DEBUT_RETARDE',actualStart:'2026-10-07',actualEnd:'2026-10-16',motive:'Début retardé'
+  }),/pas autorisée pour la vraie classe/);
+});
+
 test('le tampon n’est validé qu’après Grist snapshot et vue publiée',()=>{
   const start=code.indexOf('function EUC_DEV466_importSelection');
   const body=code.slice(start);
@@ -138,6 +194,9 @@ test('la publication atomique invalide aussi le cache familial persistant',()=>{
 test('le bouton actif appelle le nouvel import et annonce le contrôle de la liste',()=>{
   assert.match(ui,/\.EUC_DEV466_importSelection\(\{/);
   assert.match(ui,/vérifiée\(s\) dans la liste de classe/);
+  assert.match(ui,/Rattachement spécial \/ début retardé/);
+  assert.match(ui,/\.EUC_DEV503_periodChoices\(\{manualSelection:true,ids:ids\}\)/);
+  assert.match(ui,/periodOverrides:periodOverrides/);
 });
 
 if(!process.exitCode)console.log(`${n} tests DEV466 import JotForm fiable réussis.`);

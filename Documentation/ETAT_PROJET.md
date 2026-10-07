@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV503 (dates réelles et rattachement manuel JotForm)
+
+- Le précontrôle de migration JotForm continue de refuser tout rapprochement automatique par simple chevauchement. Une convention dont les dates ne correspondent pas sans ambiguïté à la vraie classe reste bloquée avant toute écriture.
+- L’écran d’import propose maintenant, pour les seules lignes cochées, un bouton `Rattachement spécial / début retardé`. L’utilisateur choisit explicitement la période officielle autorisée pour la classe et l’année, conserve les dates réelles et saisit un motif obligatoire.
+- Pour `Début retardé`, le début réel doit être postérieur au début officiel et la fin réelle doit rester exactement la fin officielle. Le cas `7 octobre 2026 → 16 octobre 2026` peut donc être rattaché à la PFMP finissant le 16 ; `7 octobre → 17 octobre` reste refusé.
+- Le suivi et les ordres de mission utilisent l’identifiant de la période officielle choisie. Les dates réelles et la situation sont conservées dans l’accès de convention ; le libellé garde également une trace lisible du rattachement et du motif.
+- Tests ciblés JotForm : `19/19`. Suite complète : `628/628`. Aucun import, aucune convention, aucun courriel et aucun ordre de mission réel n’ont été déclenchés ; la production Grist n’a pas été consultée.
+- Ce lot est destiné au canal bleu en premier. Les deux Web Apps vertes restent sur la version immuable `889` tant qu’une promotion explicite du candidat testé n’est pas demandée.
+
 ## Mise à jour du 7 octobre 2026 — DEV502 (cohorte courante et sélection des classes Pronote)
 
 - La recherche du dossier d’apprentissage mélangeait les inscriptions annuelles : un même jeune pouvait apparaître en `1MVA1` dans la cohorte historique 2025-2026 et en `TMVA1` dans la cohorte courante 2026-2027. Les deux lignes Grist sont légitimes et restent conservées ; l’erreur provenait de l’index applicatif qui filtrait seulement `Actif` et `Present_dernier_import` sans filtrer l’année scolaire.

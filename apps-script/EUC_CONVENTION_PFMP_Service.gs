@@ -6,6 +6,7 @@ function EUC_CONVENTION_assurerTableAcces_(){
   var t=EUC_CONVENTION_ACCES_TABLE_,c=EUC_CONVENTION_colonne_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;});
   var cols=[
     c('Token_hash','Empreinte du jeton'),c('Eleve','Élève','Ref:EUC_ELEVES_PFMP'),c('Annee_scolaire','Année scolaire'),c('Classe_convention','Classe convention','Ref:Classes'),c('Classe_convention_nom','Classe convention nom'),c('Periode','Période','Ref:Planning_Periodes'),c('Periode_libelle','Période libellé'),c('Date_debut','Date début','Date'),c('Date_fin','Date fin','Date'),
+    c('Scenario_dates','Situation des dates'),c('Date_officielle_debut','Date officielle début','Date'),c('Date_officielle_fin','Date officielle fin','Date'),c('Date_declaree_debut','Date réelle début','Date'),c('Date_declaree_fin','Date réelle fin','Date'),c('Motif_ecart_dates','Motif écart de dates'),
     c('PDIF_periode','Période PDIF','Ref:Planning_Periodes'),c('PDIF_mode','Parcours différencié'),c('Lot_generation','Lot de génération'),
     c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool')
   ];

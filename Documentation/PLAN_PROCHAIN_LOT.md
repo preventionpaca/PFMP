@@ -1,4 +1,19 @@
-# Prochain lot après DEV502
+# Prochain lot après DEV503
+
+DEV503 ajoute un rattachement manuel et contrôlé dans la migration JotForm.
+Pour un élève qui commence sa PFMP en retard, conserver les dates réelles,
+choisir la période officielle de sa vraie classe, sélectionner `Début retardé`
+et renseigner le motif. La date de fin réelle doit être identique à la fin
+officielle ; toute date postérieure reste bloquée avant écriture.
+
+Validation fonctionnelle bleue à effectuer : cocher uniquement la ligne
+concernée, ouvrir `Rattachement spécial / début retardé`, choisir sa PFMP,
+contrôler `07/10/2026 → 16/10/2026`, saisir le motif, puis vérifier la
+confirmation sans importer tant que le dossier source et le SIRET ne sont pas
+eux-mêmes prêts. Une promotion verte devra reprendre exactement le candidat
+bleu homologué ; les Web Apps vertes restent entre-temps sur la version `889`.
+
+## Historique immédiat après DEV502
 
 DEV502 sépare l’historique annuel de la cohorte utilisable dans le dossier
 d’apprentissage et rend visible le sélecteur de périmètre de l’import Pronote.

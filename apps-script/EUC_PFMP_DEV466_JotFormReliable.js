@@ -9,7 +9,7 @@
  * - tampon validé uniquement après relecture Grist ET contrôle de la vue ;
  * - reconstruction DEV425 limitée aux classes/périodes touchées.
  */
-var EUC_DEV466_VERSION_='1.0.0-dev.468';
+var EUC_DEV466_VERSION_='1.0.0-dev.503';
 
 function EUC_DEV466_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV466_ref_(v){
@@ -106,6 +106,94 @@ function EUC_DEV468_periodFor_(row,student,periods,links,offerId,classId,offers,
     annee:yearCode
   };
 }
+function EUC_DEV503_dates_(row){
+  return {
+    start:EUC_DEV307_dateISO_(EUC_DEV307_pick_(row,[
+      'Date_debut_brut','Date_debut','Date début','Date debut','Debut','Début','Date_debut_PFMP','Date début PFMP'
+    ])),
+    end:EUC_DEV307_dateISO_(EUC_DEV307_pick_(row,[
+      'Date_fin_brut','Date_fin','Date fin','Fin','Date_fin_PFMP','Date fin PFMP'
+    ]))
+  };
+}
+function EUC_DEV503_periodsForClass_(meta,classId,yearCode){
+  return ((meta&&meta.periodes)||[]).filter(function(period){
+    if(!period||EUC_DEV468_isPdif_(period))return false;
+    var periodYear=EUC_DEV466_txt_(period.annee||period.Annee_scolaire);
+    if(periodYear&&periodYear!==EUC_DEV466_txt_(yearCode))return false;
+    var classIds=Array.isArray(period.classesConcernees)?period.classesConcernees:[];
+    return classIds.some(function(id){return EUC_DEV466_ref_(id)===Number(classId);});
+  }).sort(function(a,b){
+    var da=EUC_DEV466_txt_(a.debut||a.Date_debut),db=EUC_DEV466_txt_(b.debut||b.Date_debut);
+    return da.localeCompare(db)||Number(a.id||0)-Number(b.id||0);
+  });
+}
+function EUC_DEV503_overrideMap_(payload){
+  var out={};
+  (Array.isArray(payload&&payload.periodOverrides)?payload.periodOverrides:[]).forEach(function(item){
+    var id=Number(item&&item.rowId)||0;
+    if(id&&item&&item.enabled===true)out[id]=item;
+  });
+  return out;
+}
+function EUC_DEV503_periodOverride_(row,meta,classId,yearCode,item){
+  if(!item)return null;
+  var scenario=EUC_DEV466_txt_(item.scenario).toUpperCase();
+  if(['DEBUT_RETARDE','AUTRE_SITUATION_EXCEPTIONNELLE'].indexOf(scenario)<0){
+    throw new Error('Situation de dates invalide. Choisissez « Début retardé » ou « Autre situation exceptionnelle ».');
+  }
+  var periodId=Number(item.periodId)||0,period=EUC_DEV503_periodsForClass_(meta,classId,yearCode).filter(function(p){return Number(p.id)===periodId;})[0];
+  if(!period)throw new Error('La période de rattachement choisie n’est pas autorisée pour la vraie classe et l’année de l’élève.');
+  var source=EUC_DEV503_dates_(row),actualStart=EUC_DEV307_dateISO_(item.actualStart)||source.start;
+  var actualEnd=EUC_DEV307_dateISO_(item.actualEnd)||source.end;
+  var officialStart=EUC_DEV307_dateISO_(period.debut||period.Date_debut),officialEnd=EUC_DEV307_dateISO_(period.fin||period.Date_fin);
+  var motive=EUC_DEV466_txt_(item.motive);
+  if(!actualStart||!actualEnd||actualStart>actualEnd)throw new Error('Les dates réelles sont absentes ou incohérentes.');
+  if(!officialStart||!officialEnd)throw new Error('Les bornes de la période officielle sont absentes.');
+  if(!motive)throw new Error('Le motif du rattachement manuel est obligatoire.');
+  if(scenario==='DEBUT_RETARDE'){
+    if(actualStart<=officialStart)throw new Error('Pour un début retardé, la date réelle de début doit être postérieure au début officiel.');
+    if(actualStart>officialEnd||actualEnd!==officialEnd)throw new Error('Pour un début retardé, la fin réelle doit rester la fin officielle de la PFMP.');
+  }else if(actualEnd<officialStart||actualStart>officialEnd){
+    throw new Error('Les dates réelles ne chevauchent pas la période officielle choisie.');
+  }
+  return {
+    ok:true,period:period,start:officialStart,end:officialEnd,
+    correctionDate:'DEV503_RATTACHEMENT_MANUEL',dateSaisieDebut:actualStart,dateSaisieFin:actualEnd,
+    scenario:scenario,motive:motive,manual:true,annee:EUC_DEV466_txt_(yearCode)
+  };
+}
+function EUC_DEV503_periodChoices(payload){
+  EUC_IMPORT_exigerAdminTexte_();
+  var selected=EUC_DEV466_selected_(payload),students=EUC_DEV307_flatRecords_(EUC_DEV307_STUDENTS_TABLE_),studentBy={};
+  students.forEach(function(s){studentBy[Number(s.id)||0]=s;});
+  var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),classBy={};
+  (meta.classes||[]).forEach(function(c){classBy[Number(c.id)||0]=c;});
+  var years=[];try{years=EUC_DEV307_flatRecords_('Annees_Scolaires');}catch(eYears){}
+  return {rows:selected.map(function(row){
+    var student=studentBy[Number(row.Eleve_match_id)||0]||{},classId=EUC_DEV466_ref_(student.Classe),year=EUC_DEV466_year_(student,years),dates=EUC_DEV503_dates_(row);
+    var periods=EUC_DEV503_periodsForClass_(meta,classId,year).map(function(p){
+      return {id:Number(p.id)||0,label:EUC_DEV466_txt_(p.type||p.libelle||p.Libelle_periode)||('Période '+p.id),start:EUC_DEV307_dateISO_(p.debut||p.Date_debut),end:EUC_DEV307_dateISO_(p.fin||p.Date_fin)};
+    });
+    return {rowId:Number(row.id)||0,student:EUC_DEV466_safeLabel_(row),classId:classId,classLabel:EUC_DEV466_txt_((classBy[classId]||{}).nom||(classBy[classId]||{}).libelle),year:year,actualStart:dates.start,actualEnd:dates.end,periods:periods};
+  })};
+}
+function EUC_DEV503_specialFields_(periodRes,period){
+  if(!periodRes||periodRes.manual!==true)return {};
+  var scenario=periodRes.scenario==='DEBUT_RETARDE'?'Début retardé':'Situation exceptionnelle';
+  var label=EUC_DEV466_txt_(period.type||period.libelle||period.Libelle_periode||period.Code_periode)||'PFMP';
+  return {
+    Date_debut:periodRes.dateSaisieDebut,
+    Date_fin:periodRes.dateSaisieFin,
+    Periode_libelle:label+' '+periodRes.start+' → '+periodRes.end+' — '+scenario+' : '+periodRes.dateSaisieDebut+' → '+periodRes.dateSaisieFin+' — '+periodRes.motive,
+    Scenario_dates:periodRes.scenario,
+    Date_officielle_debut:periodRes.start,
+    Date_officielle_fin:periodRes.end,
+    Date_declaree_debut:periodRes.dateSaisieDebut,
+    Date_declaree_fin:periodRes.dateSaisieFin,
+    Motif_ecart_dates:periodRes.motive
+  };
+}
 function EUC_DEV466_mergeIncomplete_(existing,prepared,companyFields,columns){
   var out={},business={};
   Object.keys(companyFields||{}).forEach(function(k){business[k]=true;});
@@ -131,7 +219,8 @@ function EUC_DEV466_selected_(payload){
   }
   return selected;
 }
-function EUC_DEV466_prepare_(selected,ctx){
+function EUC_DEV466_prepare_(selected,ctx,payload){
+  var overrides=EUC_DEV503_overrideMap_(payload);
   var students=EUC_DEV307_flatRecords_(EUC_DEV307_STUDENTS_TABLE_),studentBy={};
   students.forEach(function(s){studentBy[Number(s.id)||0]=s;});
   var generatorStudents=EUC_CONVENTION_lireElevesAdmin(),genBy={};
@@ -150,6 +239,9 @@ function EUC_DEV466_prepare_(selected,ctx){
   try{offers=EUC_DEV307_flatRecords_('EUC_OFFRES_FORMATION');}catch(eOffers){}
   var accesses=EUC_DEV307_flatRecords_(EUC_DEV307_ACCESS_TABLE_);
   var columns=EUC_DEV307_columns_(EUC_DEV307_ACCESS_TABLE_),byKey={};
+  if(Object.keys(overrides).length){
+    Object.assign(columns,{Scenario_dates:'Text',Date_officielle_debut:'Date',Date_officielle_fin:'Date',Date_declaree_debut:'Date',Date_declaree_fin:'Date',Motif_ecart_dates:'Text'});
+  }
   accesses.filter(EUC_DEV466_activeAccess_).forEach(function(a){
     var k=EUC_DEV466_key_(EUC_DEV466_ref_(a.Eleve),EUC_DEV466_ref_(a.Classe_convention),EUC_DEV466_ref_(a.Periode),a.Annee_scolaire);
     (byKey[k]=byKey[k]||[]).push(a);
@@ -167,7 +259,8 @@ function EUC_DEV466_prepare_(selected,ctx){
       if(chosenClassId&&chosenClassId!==realClassId)throw new Error('La classe choisie dans JotForm ne correspond pas à la classe actuelle de l’élève. Corrigez le rapprochement avant import.');
       var year=EUC_DEV466_year_(student,years);
       if(!/^20\d{2}-20\d{2}$/.test(year))throw new Error('Année scolaire de l’élève introuvable.');
-      var offerId=EUC_DEV466_ref_(student.Offre_formation)||EUC_DEV466_ref_(row.Offre_formation),periodRes=EUC_DEV468_periodFor_(row,student,periods,links,offerId,realClassId,offers,meta,year);
+      var offerId=EUC_DEV466_ref_(student.Offre_formation)||EUC_DEV466_ref_(row.Offre_formation);
+      var periodRes=EUC_DEV503_periodOverride_(row,meta,realClassId,year,overrides[Number(row.id)||0])||EUC_DEV468_periodFor_(row,student,periods,links,offerId,realClassId,offers,meta,year);
       if(!periodRes||!periodRes.ok)throw new Error(EUC_DEV466_txt_(periodRes&&periodRes.error)||'Période officielle introuvable ou ambiguë.');
       var periodId=Number(periodRes.period&&periodRes.period.id)||0;
       if(!periodId)throw new Error('Identifiant de période officielle absent.');
@@ -183,7 +276,7 @@ function EUC_DEV466_prepare_(selected,ctx){
       }
       var prepared=EUC_CONVENTION_preparerRecordAcces_(ctx,genStudent,classBy[realClassId],period,year,{lot:'MIGRATION_JOTFORM_DEV466'});
       var preparedFields=(prepared.record&&prepared.record.fields)||prepared.record||{};
-      var companyFields=EUC_DEV307_companyFields_(row,ctx,columns),mode='CREATE',fields=null,accessId=0;
+      var companyFields=EUC_DEV307_companyFields_(row,ctx,columns),specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
       if(existing&&EUC_DEV466_isSubmitted_(existing)){
         mode='EXISTING';fields={};accessId=Number(existing.id)||0;
       }else if(existing){
@@ -192,7 +285,8 @@ function EUC_DEV466_prepare_(selected,ctx){
       }else{
         fields=EUC_DEV307_filterFields_(Object.assign({},preparedFields,companyFields),columns);
       }
-      items.push({rowId:Number(row.id)||0,label:label,studentId:studentId,classId:realClassId,periodId:periodId,year:year,family:EUC_DEV466_family_(classBy[realClassId]),key:key,siret:siret,mode:mode,fields:fields,accessId:accessId});
+      if(periodRes.manual===true&&mode!=='EXISTING')fields=Object.assign({},fields,EUC_DEV307_filterFields_(specialFields,columns));
+      items.push({rowId:Number(row.id)||0,label:label,studentId:studentId,classId:realClassId,periodId:periodId,year:year,family:EUC_DEV466_family_(classBy[realClassId]),key:key,siret:siret,mode:mode,fields:fields,accessId:accessId,datesSpeciales:periodRes.manual===true});
     }catch(e){errors.push({id:Number(row.id)||0,eleve:label,erreur:EUC_DEV466_txt_(e&&e.message||e)});}
   });
   if(errors.length){
@@ -242,7 +336,8 @@ function EUC_DEV466_importSelection(payload){
   var lock=LockService.getScriptLock();
   if(!lock.tryLock(10000))throw new Error('Un autre import PFMP est déjà en cours.');
   try{
-    var started=Date.now(),ctx=EUC_IMPORT_exigerAdminTexte_(),selected=EUC_DEV466_selected_(payload),plan=EUC_DEV466_prepare_(selected,ctx),items=plan.items;
+    var started=Date.now(),ctx=EUC_IMPORT_exigerAdminTexte_(),selected=EUC_DEV466_selected_(payload),plan=EUC_DEV466_prepare_(selected,ctx,payload),items=plan.items;
+    if(Object.keys(EUC_DEV503_overrideMap_(payload)).length)EUC_CONVENTION_assurerTableAcces_();
     var tokens=EUC_DEV425_beginImportItems_(items,'import-jotform-dev466'),creates=[],updates=[];
     items.forEach(function(item){
       if(item.mode==='CREATE')creates.push({fields:item.fields});
