@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV494 (dates et statut des apprentis)
+
+- La divergence entre les fiches et les infobulles ne provenait pas des données Grist ni d'un snapshot effacé. La table `EUC_APPRENTISSAGE_PFMP` renvoie ses dates sous forme de secondes Unix ; le chargeur de détail DEV208 les convertissait en texte brut, par exemple `1798761600`, avant de les affecter aux champs HTML `type=date`. Le navigateur refusait cette valeur, affichait des dates vides puis reclassait l'élève actif en « Futur apprenti ». Le calcul agrégé des infobulles ne dépendait pas de ces champs HTML et continuait donc, à juste titre, de compter l'élève comme apprenti.
+- Le chargeur commun aux écrans administrateur et public normalise désormais les neuf dates d'apprentissage en `AAAA-MM-JJ` avant leur transport JSON : début, fin, distribution, remise, transmission CFA, contrat officiel et rupture. Les booléens, entreprises, contacts, statuts enregistrés et données Grist ne sont pas modifiés.
+- Le test DEV494 reproduit les formats Grist en secondes, millisecondes et ISO, contrôle le pont JSON partagé par les deux écrans et interdit qu'une date numérique brute atteigne un champ `type=date`. Tests ciblés DEV494 `3/3`, DEV449 `5/5`, DEV462 `10/10` et DEV463 `6/6` ; suite complète `603/603`.
+- Le commit applicatif `65577e6` a été construit depuis un clone propre, publié uniquement sur le `HEAD` du projet bleu puis relu à l'identique. Les `25/25` routes bleues sont valides. Le contrôle navigateur confirme le chargement des pages Apprentis administrateur et publique, leur bandeau bleu et leur navigation dans le `/dev`; la recette séparée ne contient toutefois aucune classe nominative permettant de contrôler un élève réel.
+- Les deux Web Apps vertes restent volontairement inchangées sur la version immuable `886`. Le défaut est donc encore présent sur le vert tant qu'une promotion de ce candidat n'est pas explicitement autorisée. Aucun accès à la production Grist, aucune écriture élève ou convention, aucun import, courriel, PDF ou ordre de mission n'a été exécuté.
+
 ## Mise à jour du 7 octobre 2026 — DEV493 (contrat permanent bleu et qualité d’interface)
 
 - Le dépôt impose désormais dans `AGENTS.md` le développement et la publication sur le site bleu avant toute promotion verte. Une promotion exige toujours l’autorisation explicite de l’utilisateur et le candidat bleu exact.

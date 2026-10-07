@@ -1,4 +1,23 @@
-# Prochain lot après DEV493
+# Prochain lot après DEV494
+
+DEV494 corrige sur le canal bleu uniquement la conversion des dates Grist du
+module Apprentis. Le candidat exact est le commit `65577e6`, la suite complète
+compte `603/603` tests verts et les `25/25` routes bleues sont valides. Les
+écrans administrateur et public chargent dans le bon `/dev`, mais la recette
+séparée ne contient aucune classe nominative : la vérification d'un élève réel
+reste donc impossible sans recopier des données personnelles, ce qui n'est pas
+autorisé.
+
+La prochaine étape est une promotion contrôlée du candidat bleu vers les deux
+Web Apps vertes existantes, uniquement après autorisation explicite de
+l'utilisateur. La promotion doit conserver leurs URL, créer une version Apps
+Script immuable, contrôler les 25 routes vertes et revenir automatiquement à
+la version `886` en cas d'échec. Après réussite, vérifier en lecture seule une
+classe réelle sur les écrans Apprentis administrateur et public : dates visibles,
+statut « Apprenti » et cohérence avec les compteurs. Ne modifier aucune donnée
+pendant ce contrôle.
+
+## Contrat permanent issu de DEV493
 
 DEV493 ne change pas l’application publiée. Il grave le contrat permanent de
 travail dans `AGENTS.md` et `Documentation/CONTRAT_QUALITE_UI.md` : toute
