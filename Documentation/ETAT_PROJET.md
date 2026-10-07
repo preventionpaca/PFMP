@@ -3,9 +3,9 @@
 ## Mise à jour du 7 octobre 2026 — DEV493 (contrat permanent bleu et qualité d’interface)
 
 - Le dépôt impose désormais dans `AGENTS.md` le développement et la publication sur le site bleu avant toute promotion verte. Une promotion exige toujours l’autorisation explicite de l’utilisateur et le candidat bleu exact.
-- La définition de fini est détaillée dans `Documentation/CONTRAT_QUALITE_UI.md` : contrôle des 25 routes, parcours navigateur de tous les liens et boutons de navigation visibles des pages modifiées, maintien dans le bon canal et vérification des états vide, chargement, succès et erreur.
+- La définition de fini est détaillée dans `Documentation/CONTRAT_QUALITE_UI.md` : contrôle des 25 routes, parcours navigateur de tous les liens et boutons de navigation internes visibles sur l’ensemble du site, maintien dans le bon canal et vérification des états vide, chargement, succès et erreur.
 - Tout accès vert libellé `Accueil PFMP` doit viser exactement `https://alternance.loucodi.fr/`; le bleu doit conserver sa navigation sur son propre `/dev`. Le test DEV470 inventorie maintenant automatiquement tous les fichiers qui affichent ce libellé au lieu d’une liste manuelle susceptible d’oublier une page.
-- Tout nouveau bouton asynchrone ou bouton asynchrone modifié doit être protégé contre le double clic, afficher un spinner avec un libellé d’action et restaurer son état en succès, erreur ou dépassement de délai. Les simples liens de navigation ne sont pas concernés.
+- Tout bouton asynchrone du candidat livré doit être protégé contre le double clic, afficher un spinner avec un libellé d’action et restaurer son état en succès, erreur ou dépassement de délai. Une action réelle interdite est contrôlée par test ou simulation sûre. Les simples liens de navigation ne sont pas concernés.
 - Deux tests de workflow empêchent la suppression silencieuse de ces règles. Les tests ciblés DEV470 (`8/8`) et release (`14/14`) ainsi que la suite complète (`600/600`) sont verts. Ce lot ne modifie aucun fichier applicatif et n’entraîne donc aucune publication Apps Script : le bleu et les deux Web Apps vertes restent sur le code applicatif DEV492, les vertes sur la version immuable `886` et leurs URL existantes.
 
 ## Mise à jour du 7 octobre 2026 — DEV492 (fiabilité des courriels d’ordre de mission)

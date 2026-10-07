@@ -18,7 +18,8 @@ autre paquet applicatif : la promotion repart du SHA candidat exact.
 
 ## 2. Navigation et liens
 
-La recette d’une page modifiée comprend obligatoirement :
+La recette de chaque livraison comprend obligatoirement les 25 routes et, sur
+l’ensemble de ces routes :
 
 - la route directe ;
 - le fil d’Ariane et les boutons de retour ;
@@ -32,13 +33,14 @@ déploiement `/dev`. Une page Apps Script en erreur, une page blanche, une
 connexion inattendue ou un passage silencieux du bleu vers le vert bloque la
 livraison.
 
-La matrice automatisée des routes reste un minimum. Pour les pages modifiées,
-le parcours navigateur des contrôles visibles est également obligatoire.
+La matrice automatisée des routes reste un minimum. Le parcours navigateur de
+tous les contrôles de navigation visibles du site est également obligatoire,
+pas seulement celui des pages modifiées.
 
 ## 3. Boutons et traitements asynchrones
 
-Tout bouton qui déclenche un appel serveur ou un traitement potentiellement
-long doit :
+Tout bouton du candidat livré qui déclenche un appel serveur ou un traitement
+potentiellement long doit :
 
 1. réagir immédiatement au clic ;
 2. se désactiver contre le double clic ;
@@ -49,7 +51,9 @@ long doit :
    dépassé.
 
 Une erreur ne doit jamais laisser un bouton tourner indéfiniment. Les liens qui
-ne font que changer de page n’ont pas besoin de spinner.
+ne font que changer de page n’ont pas besoin de spinner. Une action réelle
+interdite ou destructive est contrôlée par un test ou une simulation sûre, sans
+l’exécuter sur des données ou destinataires réels.
 
 ## 4. Contrôles avant remise
 
@@ -58,7 +62,7 @@ ne font que changer de page n’ont pas besoin de spinner.
 - diff relu et absence de secret ou donnée nominative dans Git ;
 - publication bleue et relecture distante ;
 - `25/25` routes bleues ;
-- parcours des liens et boutons des pages modifiées ;
+- parcours de tous les liens et boutons de navigation internes des 25 routes ;
 - documentation d’état mise à jour.
 
 Après promotion autorisée : version immuable, URL inchangées, `25/25` routes

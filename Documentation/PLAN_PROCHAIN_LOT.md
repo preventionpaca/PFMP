@@ -4,7 +4,8 @@ DEV493 ne change pas l’application publiée. Il grave le contrat permanent de
 travail dans `AGENTS.md` et `Documentation/CONTRAT_QUALITE_UI.md` : toute
 évolution applicative doit passer d’abord par le bleu, conserver sa navigation
 dans le bon canal, contrôler les 25 routes et les contrôles visibles des pages
-modifiées, et appliquer le comportement de chargement aux boutons asynchrones.
+du site entier, et appliquer le comportement de chargement à tous les boutons
+asynchrones du candidat livré.
 La prochaine évolution fonctionnelle devra suivre ce contrat sans que
 l’utilisateur ait à le rappeler.
 
