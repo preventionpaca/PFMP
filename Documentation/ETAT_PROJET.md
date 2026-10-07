@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV491 (régressions JotForm et navigation conventions)
+
+- La panne de l'import JotForm provenait du paquet hybride reconstruit : l'adaptateur historique DEV331 appelait `EUC_V160_importCsv__DEV331_ORIG`, tandis que la source actuelle réinjectée par-dessus le socle complet exposait de nouveau seulement `EUC_V160_importCsv`. Le CSV et les données de l'utilisateur n'étaient pas en cause.
+- Le point d'origine attendu par DEV331 est restauré. Le constructeur de paquet contrôle désormais tous les symboles `__…ORIG` et bloque la publication si l'un d'eux est appelé sans définition.
+- Le générateur de conventions possède maintenant un fil d'Ariane administratif et un bouton explicite `Retour à l'accueil PFMP`. La réécriture du canal bleu conserve la navigation dans le `/dev`; le vert continue de viser le sous-domaine canonique.
+- Les contrôles de ce lot n'exécutent aucun import, aucune génération de convention, aucune écriture Grist et aucun courriel.
+
 ## Mise à jour du 7 octobre 2026 — DEV490 (recette Grist Camin isolée)
 
 - La copie personnelle historique `j1jDArBkzi7P` est remplacée pour le canal bleu par le document Camin payant `kB8bvDag8x7D`, nommé `Base calendrier et planning — RECETTE BLEUE`, sur `https://camin.getgrist.com`. La copie a été créée avec la structure uniquement et ne contient aucune donnée nominative.

@@ -39,6 +39,26 @@ rm -f \
   "$target_dir/apps-script/EUC_PFMP_PerfAuditP71.js" \
   "$target_dir/apps-script/EUC_PFMP_PerfAuditP71.gs"
 
+# Refuser avant publication tout adaptateur historique qui appelle un point
+# d'origine absent du paquet final. C'est ce qui avait cassé l'import JotForm :
+# DEV331 était présent, mais EUC_V160_importCsv__DEV331_ORIG avait été remplacé
+# par une source plus ancienne portant de nouveau le nom public.
+node - "$target_dir/apps-script" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const dir = process.argv[2];
+const files = fs.readdirSync(dir).filter(file => /\.(?:js|gs)$/.test(file));
+const source = files.map(file => fs.readFileSync(path.join(dir, file), 'utf8')).join('\n');
+const refs = [...new Set(source.match(/\b[A-Za-z_$][\w$]*__[A-Za-z0-9_$]*ORIG\b/g) || [])];
+const missing = refs.filter(name => {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return !new RegExp('(?:function\\s+' + escaped + '\\s*\\(|(?:var|let|const)\\s+' + escaped + '\\s*=)').test(source);
+});
+if (missing.length) {
+  throw new Error('Points d’origine absents du paquet Apps Script : ' + missing.join(', '));
+}
+NODE
+
 cp .clasp.json "$target_dir/.clasp.json"
 
 # Le depot conserve le routeur historique sous son nom naturel. Le paquet de

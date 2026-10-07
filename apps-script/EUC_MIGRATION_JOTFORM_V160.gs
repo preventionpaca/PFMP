@@ -283,7 +283,10 @@ function EUC_V160_analyserRow_(row,students,classes,companies){
   return row;
 }
 
-function EUC_V160_importCsv(csvText){
+/* Le paquet complet contient l'adaptateur DEV331 qui expose la fonction
+ * publique EUC_V160_importCsv et enrichit ensuite le tampon France/Monaco.
+ * Ce nom interne est son point d'appel stable. */
+function EUC_V160_importCsv__DEV331_ORIG(csvText){
   var ctx=EUC_V156_contexteAdmin_();
   if(!ctx)throw new Error('Accès administrateur requis.');
 
