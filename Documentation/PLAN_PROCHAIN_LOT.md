@@ -1,4 +1,21 @@
-# Prochain lot après DEV487
+# Prochain lot après DEV489
+
+DEV489 est publié en version immuable `884` sur les deux Web Apps vertes,
+URL inchangées. Le générateur de conventions charge à nouveau les élèves, les
+classes et les périodes de la cible verte. La prochaine action métier peut être
+la génération demandée depuis l'interface ; ne pas lancer de génération de test
+automatique, car elle crée les documents et accès QR réels.
+
+Pour les évolutions suivantes, conserver la séparation stricte : projet bleu
+uniquement sur `j1jDArBkzi7P`, projet vert uniquement sur sa cible configurée
+non-recette, et refus de tout projet Apps Script inconnu. Ne jamais coder
+l'identifiant de la cible verte ni une clé dans Git.
+
+DEV488 a ajouté le repli par référence `Classe` et un état d'erreur visible au
+générateur. DEV487 a retiré l'ancien audit P7.1B du paquet. Ces deux protections
+doivent rester couvertes avec DEV489 lors de toute future promotion.
+
+## Historique immédiat après DEV487
 
 DEV487 retire du paquet de publication l'ancien audit P7.1B qui interceptait
 le générateur de conventions et appelait des fonctions supprimées. Contrôler

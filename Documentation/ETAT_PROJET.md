@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV489 (cibles Grist séparées bleu / vert)
+
+- Après DEV487 et DEV488, le générateur ne restait plus bloqué mais les listes de production étaient vides. La cause était la garde historique `EUC_ENT_controlerCibleRecette_` : elle imposait la copie Grist de recette à tous les projets, y compris au Web App vert. Les erreurs étaient ensuite absorbées par le lecteur historique, qui retournait silencieusement des tableaux vides.
+- La garde identifie désormais explicitement le projet Apps Script : le projet bleu accepte uniquement l'environnement et le document de recette autorisé ; le projet vert officiel accepte uniquement sa cible configurée non vide et différente de la recette ; tout autre projet est refusé. Le contrôle de domaine reste obligatoire sur le vert, même si une ancienne propriété d'environnement subsiste.
+- La cible Grist de production n'est pas codée dans Git et aucune clé n'est journalisée. Les cinq tests DEV489 couvrent le bleu, le vert, le refus de la recette sur le vert, le refus des projets inconnus et le contrôle du domaine. Suite complète : `587/587` tests.
+- Déploiement : version Apps Script immuable `884` attachée aux deux Web Apps vertes existantes, URL inchangées. La relecture distante est identique au fichier testé. Contrôle navigateur réel en lecture seule : la page de production charge les élèves, les classes et les promotions ; `TMVA1` affiche `25` élèves et ses deux périodes officielles. Aucune convention ni QR code n'a été généré et aucune donnée n'a été écrite.
+
+## Mise à jour du 7 octobre 2026 — DEV488 (chargement fiable du générateur)
+
+- Les élèves et promotions récupèrent maintenant le code de classe depuis la référence Grist `Classe` lorsque les anciennes colonnes textuelles ne sont pas recopiées.
+- Le navigateur attend les trois réponses indépendamment et quitte toujours l'état « Chargement… ». Une liste vide est affichée comme telle et un chargement incomplet produit un diagnostic visible au lieu d'un blocage silencieux.
+- Déploiement : version immuable `883` sur les deux Web Apps vertes existantes, URL inchangées. Ce lot a révélé la garde de recette indûment appliquée au projet vert, corrigée par DEV489.
+
 ## Mise à jour du 7 octobre 2026 — DEV487 (générateur de conventions)
 
 - Cause de l'écran bloqué en production : le constructeur de paquet récupérait encore depuis le socle historique l'audit temporaire `EUC_PFMP_PerfAuditP71`. Ce module redéfinissait la lecture des élèves puis appelait `EUC_CONVENTION_lireElevesAdmin__P71_ORIG`, symbole absent des sources actuellement versionnées ; le navigateur restait donc sur « Chargement… ».
