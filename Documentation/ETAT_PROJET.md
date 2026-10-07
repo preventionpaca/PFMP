@@ -6,7 +6,9 @@
 - L’index du dossier d’apprentissage résout maintenant la référence `Annee_scolaire` par la table `Annees_Scolaires` et ne propose que l’année scolaire courante. Aucune inscription historique n’est supprimée ni modifiée.
 - La page d’import Pronote possédait déjà la persistance des correspondances et exclusions de classes. Son écran rend désormais le choix explicite : après analyse, chaque classe Pronote dispose d’une case `Inclure dans PFMP`. Une classe décochée est exclue de la prévisualisation et de l’import, et le choix peut être mémorisé pour l’année et la source LP/LGT.
 - Tests ciblés du dossier et de la sélection des classes : `28/28`. Suite complète : `624/624`.
-- À ce stade, le correctif n’est pas encore promu sur le vert. La production Grist et les imports Pronote réels restent inchangés.
+- Contrôle navigateur bleu : la recherche `NIGITA` ne renvoie plus que l’inscription courante `TMVA1`; l’ancienne inscription `1MVA1` reste conservée dans l’historique mais n’est plus proposée dans ce dossier.
+- Publication : le commit `cce5a6bb396d06450f69c856ad5c7e8bcf4bead7` a été publié et relu sur le bleu, puis promu par le workflow contrôlé sur la version Apps Script immuable `889` des deux Web Apps vertes existantes. Les URL n’ont pas changé; les contrôles ont obtenu `25/25` routes valides sur le bleu puis `25/25` sur le vert.
+- Aucun import Pronote, aucune suppression d’inscription historique et aucune écriture dans Grist n’ont été déclenchés pendant cette publication. La production Grist n’a pas été consultée directement pendant le contrôle ciblé.
 
 ## Mise à jour du 7 octobre 2026 — DEV501 (table complémentaire absente en recette)
 

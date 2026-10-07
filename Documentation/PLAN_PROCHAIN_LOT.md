@@ -2,15 +2,21 @@
 
 DEV502 sépare l’historique annuel de la cohorte utilisable dans le dossier
 d’apprentissage et rend visible le sélecteur de périmètre de l’import Pronote.
-Avant promotion verte, publier et relire le candidat bleu exact, vérifier dans
-le navigateur que la recherche `NIGITA` ne renvoie que l’inscription courante,
-puis ouvrir la page d’import sans lancer d’écriture et contrôler que chaque
-classe analysée dispose de la case `Inclure dans PFMP`.
+Le candidat bleu exact a été publié et relu, la recherche `NIGITA` ne renvoie
+plus que l’inscription courante `TMVA1`, puis le même paquet a été promu en
+version immuable `889` sur les deux Web Apps vertes. Les contrôles de routes ont
+réussi à `25/25` sur le bleu et à `25/25` sur le vert.
 
 La promotion ne doit déclencher aucun import Pronote. Les choix de classes sont
 appliqués seulement lors d’une future prévisualisation/import explicitement
 confirmé par l’utilisateur. Les inscriptions des années antérieures restent
 conservées dans Grist et ne doivent jamais être supprimées.
+
+Prochaine validation fonctionnelle : charger un export Pronote en analyse seule,
+décocher les classes hors périmètre (`prépas`, `STI2D`, etc.), vérifier la
+prévisualisation puis seulement, sur autorisation explicite, confirmer un import.
+Ce contrôle doit rester distinct de l’audit des routes, qui prouve l’ouverture des
+pages mais pas le contenu d’un fichier Pronote particulier.
 
 ## Historique immédiat après DEV501
 
