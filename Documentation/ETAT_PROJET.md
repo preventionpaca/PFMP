@@ -1,6 +1,16 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 7 octobre 2026 — DEV499 (modèle Word éditable et sortie PDF)
+## Mise à jour du 7 octobre 2026 — DEV500 (Word éditable, PDF directement fusionné)
+
+- Le modèle maître reste un fichier Word de huit pages. Après modification, l’utilisateur l’exporte en PDF puis charge directement ce PDF dans `Gérer les modèles PDF`; aucun import Google Docs n’est requis.
+- La cause de l’échec de fusion a été reproduite : sept balises longues étaient coupées ou entrelacées dans le texte du PDF par Word, notamment dans les trois colonnes du positionnement. Elles sont remplacées par les alias courts `{{EL_PROJET}}`, `{{EL_SHN}}`, `{{PAA}}`, `{{PAE}}`, `{{PAO}}`, `{{PCE}}` et `{{PCO}}`.
+- Le DOCX préparé et son export PDF contiennent `137/137` balises distinctes lisibles d’un seul tenant. Les huit pages A4 ont été rendues et contrôlées visuellement.
+- Le site bleu accepte plusieurs PDF téléversés directement, conserve un seul modèle par défaut, retire un modèle de la configuration sans supprimer physiquement le fichier, et refuse les anciens modèles Google Docs devenus incompatibles.
+- La fusion s’effectue côté navigateur avec les positions réellement extraites du PDF. Elle exige huit pages, la présence des balises cœur et au moins cent balises reconnues avant de produire le document.
+- Tests ciblés DEV464/DEV500 : `25/25`. Suite complète : `621/621`. La publication bleue et l’audit des routes restent à consigner à la fin du lot.
+- Le vert et la production Grist restent inchangés.
+
+## Historique DEV499 (solution Google Docs abandonnée)
 
 - Le dossier d’apprentissage utilise désormais le document Word métier de huit pages comme base éditable. Une préparation locale conserve la mise en page, vérifie que chaque balise reste dans une seule séquence Word et remplace les anciennes balises de pagination par les champs natifs `PAGE` et `NUMPAGES`.
 - Le fichier prêt à importer dans Google Drive reste hors Git, car il contient les mentions du document métier. Une documentation opératoire et un script reproductible permettent de repartir du DOCX source après chaque évolution.

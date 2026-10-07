@@ -1,4 +1,17 @@
-# Prochain lot après DEV499
+# Prochain lot après DEV500
+
+DEV500 revient au flux simple demandé : modifier le Word, l’exporter en PDF,
+puis téléverser ce PDF dans le site bleu. Les `137/137` balises du modèle préparé
+restent continues dans le PDF ; les sept noms qui débordaient utilisent des
+alias courts. Le moteur de fusion est de nouveau fondé sur les emplacements du
+PDF, sans Google Docs.
+
+Avant toute promotion verte, enregistrer le PDF validé comme modèle bleu et
+générer un dossier avec un élève de recette. Contrôler les huit pages, les
+données présentes et absentes, la date, la pagination et le comportement de la
+confirmation simulée. Ne pas promouvoir sans ce contrôle métier.
+
+## Historique immédiat après DEV499
 
 DEV499 remplace la superposition sur un PDF par une fusion Google Docs puis un
 export PDF. Le DOCX métier de huit pages est désormais la base éditable : ses

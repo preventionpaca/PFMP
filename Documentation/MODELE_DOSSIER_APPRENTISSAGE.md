@@ -6,27 +6,26 @@ Le document Word fourni par le métier est le modèle maître. Il conserve les h
 pages dans l’ordre suivant : dossier de candidature, fiche de renseignements,
 informations utiles et positionnement pédagogique.
 
-Le fichier préparé s’appelle `dossier_apprentissage_modele_editable.docx`. Il
+Le fichier préparé s’appelle `dossier_apprentissage_modele_balises_pdf.docx`. Il
 reste modifiable dans Word. Pour l’utiliser dans Eucalyptus PFMP :
 
-1. déposer le DOCX dans Google Drive ;
-2. l’ouvrir avec Google Docs et l’enregistrer comme document Google Docs ;
+1. modifier le DOCX dans Word ;
+2. l’exporter en PDF en conservant le texte ;
 3. dans `Administration PFMP → Dossier de demande d’apprentissage → Gérer les
-   modèles Google Docs`, saisir un nom et coller le lien du document ;
+   modèles PDF`, saisir un nom et choisir le PDF ;
 4. le sélectionner comme modèle par défaut si nécessaire.
 
-À chaque génération, l’application copie temporairement le Google Docs,
-remplace les balises, exporte la copie en PDF puis place la copie temporaire à
-la corbeille. Le modèle maître n’est jamais modifié.
+À chaque génération, l’application localise les balises dans le PDF enregistré,
+les masque visuellement et écrit les valeurs à leur place. Le modèle maître
+n’est jamais modifié.
 
 ## Règles d’édition
 
-- Une balise peut être déplacée dans Word ou Google Docs.
+- Une balise peut être déplacée dans Word.
 - Son nom et ses doubles accolades doivent rester inchangés.
 - La balise doit être saisie d’un seul tenant, sans changement de police ou de
   style à l’intérieur.
-- La pagination utilise les champs natifs `PAGE` et `NUMPAGES`. Il ne faut pas
-  les remplacer par `{{PAGE_COURANTE}}` ou `{{NB_PAGES}}`.
+- La pagination utilise `{{PAGE_COURANTE}}` et `{{NB_PAGES}}` dans le PDF.
 - `{{DATE_HEURE_IMPRESSION}}` est remplacé au moment de la génération et figure
   sur les huit pages.
 - Une balise reconnue sans donnée disponible est remplacée par une valeur vide ;
@@ -34,15 +33,15 @@ la corbeille. Le modèle maître n’est jamais modifié.
 
 ## Contrôles automatiques
 
-Lors de l’ajout d’un modèle, l’application refuse :
+Lors de l’ajout ou de l’utilisation d’un modèle, l’application refuse :
 
-- un PDF ou un fichier qui n’est pas un Google Docs ;
+- un fichier qui n’est pas un vrai PDF ou dépasse 8 Mo ;
+- un PDF qui ne contient pas exactement huit pages ;
 - l’absence de `{{ELEVE_NOM}}` ou `{{ELEVE_PRENOM}}` ;
-- une balise inconnue ;
-- les anciennes balises de pagination textuelles.
+- un PDF dans lequel moins de cent balises sont reconnues.
 
-Après fusion, la génération est interrompue si une balise résiduelle demeure.
-Cela évite de remettre un dossier portant encore des textes `{{...}}`.
+La liste exhaustive et les sept alias courts obligatoires sont documentés dans
+`Documentation/BALISES_DOSSIER_APPRENTISSAGE.md`.
 
 ## Familles de balises du modèle validé
 
@@ -58,5 +57,5 @@ Cela évite de remettre un dossier portant encore des textes `{{...}}`.
 - Formation et positionnement pédagogique.
 - Ancien apprentissage, internat et origine de candidature.
 
-Le modèle validé contient `135` balises de fusion distinctes après remplacement
-des deux anciennes balises de pagination par les vrais champs Word.
+Le modèle validé contient `137` balises distinctes, toutes reconnues dans le PDF
+exporté.
