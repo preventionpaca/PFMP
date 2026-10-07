@@ -539,19 +539,64 @@ function EUC_DEV440_prepareMissionTransportEmail(q){
   var subject=EUC_DEV476_renderMissionEmail_(template.subject,values),body=EUC_DEV476_renderMissionEmail_(template.body,values),htmlBody=EUC_DEV478_renderMissionEmailHtml_(template.body,values,settings.procedureUrl);
   return{ok:true,to:recipient,cc:cc,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,htmlBody:htmlBody,kind:kind,professeur:g.professeur,classe:g.classe,periode:g.periode};
 }
-function EUC_DEV440_sendMissionTransportEmail(q){
-  var prepared=EUC_DEV440_prepareMissionTransportEmail(q),lock=LockService.getScriptLock();lock.waitLock(10000);
+var EUC_DEV492_MISSION_EMAIL_STATUS_PREFIX_='DEV492_MISSION_EMAIL_STATUS_';
+function EUC_DEV492_missionEmailRequestId_(value){
+  var id=EUC_DEV368_t(value);if(!id)id=Utilities.getUuid();
+  if(!/^[A-Za-z0-9_-]{16,80}$/.test(id))throw new Error('Identifiant de suivi de l’envoi invalide.');
+  return id;
+}
+function EUC_DEV492_missionEmailStatus_(requestId){
   try{
+    var raw=CacheService.getScriptCache().get(EUC_DEV492_MISSION_EMAIL_STATUS_PREFIX_+requestId);
+    return raw?JSON.parse(raw):{state:'UNKNOWN'};
+  }catch(e){return{state:'UNKNOWN'}}
+}
+function EUC_DEV492_storeMissionEmailStatus_(requestId,state,details){
+  var value=Object.assign({state:state,updatedAt:new Date().toISOString()},details||{});
+  try{CacheService.getScriptCache().put(EUC_DEV492_MISSION_EMAIL_STATUS_PREFIX_+requestId,JSON.stringify(value),21600)}catch(e){}
+  return value;
+}
+function EUC_DEV492_getMissionEmailStatus(q){
+  EUC_DEV368_admin();var requestId=EUC_DEV492_missionEmailRequestId_(q&&q.requestId);
+  return EUC_DEV492_missionEmailStatus_(requestId);
+}
+function EUC_DEV492_assertMissionEmailChannel_(){
+  if(typeof EUC_RELEASE_isBlue_==='function'&&EUC_RELEASE_isBlue_())throw new Error('Envoi désactivé sur le site bleu de développement. Utilisez la version verte en ligne.');
+  return true;
+}
+function EUC_DEV492_recipientCount_(prepared){
+  var unique={};[prepared.to,prepared.cc].forEach(function(value){String(value||'').split(/[;,]/).forEach(function(email){email=EUC_DEV368_t(email).toLowerCase();if(email)unique[email]=true})});
+  return Object.keys(unique).length;
+}
+function EUC_DEV492_recoveredMissionEmail_(requestId,status){
+  return{ok:true,recovered:true,requestId:requestId,sentAt:status.sentAt||status.updatedAt,attachment:status.attachment||'',generationMs:Number(status.generationMs)||0};
+}
+function EUC_DEV440_sendMissionTransportEmail(q){
+  q=q||{};EUC_DEV492_assertMissionEmailChannel_();
+  var requestId=EUC_DEV492_missionEmailRequestId_(q.requestId),previous=EUC_DEV492_missionEmailStatus_(requestId);
+  if(previous.state==='SENT')return EUC_DEV492_recoveredMissionEmail_(requestId,previous);
+  var prepared=null,mission=null,lock=LockService.getScriptLock(),locked=false;
+  try{
+    EUC_DEV492_storeMissionEmailStatus_(requestId,'PREPARING');
+    prepared=EUC_DEV440_prepareMissionTransportEmail(q);lock.waitLock(10000);locked=true;
+    var lockedStatus=EUC_DEV492_missionEmailStatus_(requestId);if(lockedStatus.state==='SENT')return EUC_DEV492_recoveredMissionEmail_(requestId,lockedStatus);
     var duplicateKey='DEV440_MAIL_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,[prepared.to,prepared.cc,prepared.subject,prepared.replyTo,prepared.kind].join('|'))).slice(0,24),cache=CacheService.getScriptCache();
     if(cache.get(duplicateKey))throw new Error('Ce message vient déjà d’être envoyé. Patientez une minute avant un nouvel envoi.');
-    var mission=EUC_DEV436_pdfMission(q),attachment=Utilities.newBlob(Utilities.base64Decode(mission.base64),mission.mime,mission.name);
+    EUC_DEV492_storeMissionEmailStatus_(requestId,'GENERATING');
+    mission=EUC_DEV436_pdfMission(q);var attachment=Utilities.newBlob(Utilities.base64Decode(mission.base64),mission.mime,mission.name);
     var options={to:prepared.to,subject:prepared.subject,body:prepared.body,htmlBody:prepared.htmlBody,name:'PFMP — Lycée Les Eucalyptus',attachments:[attachment]};
     if(prepared.cc)options.cc=prepared.cc;
     if(prepared.replyTo)options.replyTo=prepared.replyTo;
-    MailApp.sendEmail(options);cache.put(duplicateKey,'1',60);
-  }finally{lock.releaseLock()}
+    var quota=null;try{quota=Number(MailApp.getRemainingDailyQuota())}catch(e0){}
+    var required=EUC_DEV492_recipientCount_(prepared);if(quota!==null&&isFinite(quota)&&quota<required)throw new Error('Quota quotidien de courriels insuffisant pour le professeur et la copie BFE.');
+    EUC_DEV492_storeMissionEmailStatus_(requestId,'SENDING');
+    MailApp.sendEmail(options);try{cache.put(duplicateKey,'1',60)}catch(e1){}
+    EUC_DEV492_storeMissionEmailStatus_(requestId,'SENT',{sentAt:new Date().toISOString(),attachment:mission.name,generationMs:Number(mission.generationMs)||0});
+  }catch(error){
+    EUC_DEV492_storeMissionEmailStatus_(requestId,'ERROR',{message:String(error&&error.message||error||'Échec inconnu').slice(0,500)});throw error;
+  }finally{if(locked)lock.releaseLock()}
   var senderInfo=EUC_DEV476_missionEmailSender_(EUC_DEV368_admin());
-  return{ok:true,to:prepared.to,cc:prepared.cc,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs,sentAt:new Date().toISOString(),from:senderInfo.from,replyTo:prepared.replyTo};
+  return{ok:true,requestId:requestId,to:prepared.to,cc:prepared.cc,subject:prepared.subject,attachment:mission.name,generationMs:mission.generationMs,sentAt:EUC_DEV492_missionEmailStatus_(requestId).sentAt||new Date().toISOString(),from:senderInfo.from,replyTo:prepared.replyTo};
 }
 function EUC_DEV440_docsRequest_(documentId,suffix,method,payload){
   if(typeof Docs!=='undefined'&&Docs.Documents){

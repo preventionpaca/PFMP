@@ -69,12 +69,15 @@ test('les modèles prévisionnel et définitif sont persistants, validés et fus
   ctx.EUC_DEV476_resetMissionEmailTemplates();assert.equal(store.EUC_DEV476_MISSION_EMAIL_TEMPLATES,undefined);
 });
 test('une erreur PDF interrompt le traitement avant tout envoi',()=>{
-  const send=server.indexOf('MailApp.sendEmail(options)'),pdf=server.indexOf('var mission=EUC_DEV436_pdfMission(q)');
+  const workflow=server.slice(server.indexOf('function EUC_DEV440_sendMissionTransportEmail(q){'),server.indexOf('function EUC_DEV440_docsRequest_')),
+    send=workflow.indexOf('MailApp.sendEmail(options)'),pdf=workflow.indexOf('mission=EUC_DEV436_pdfMission(q)');
   assert.ok(pdf>=0&&send>pdf);
   assert.match(server,/sentAt:new Date\(\)\.toISOString\(\)/);
   assert.match(server,/htmlBody:prepared\.htmlBody/);
   assert.match(server,/options\.cc=prepared\.cc/);
-  assert.match(mission,/avec copie à '\+p\.cc/);
+  assert.match(mission,/id="emailConfirmDialog"/);
+  assert.match(mission,/emailConfirmCc\.textContent=preview\.cc/);
+  assert.match(mission,/EUC_DEV440_sendMissionTransportEmail\(operation\.payload\)/);
 });
 
 console.log(`${n} tests DEV472 workflow missions réussis.`);
