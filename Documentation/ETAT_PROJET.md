@@ -7,6 +7,8 @@
 - Le site bleu accepte plusieurs modèles Google Docs, impose un modèle par défaut et refuse les anciens fonds PDF. Lors d’une génération, il copie temporairement le document maître, remplace les `135` champs autorisés, ajoute la date d’édition, refuse toute balise résiduelle, exporte le résultat en PDF puis place uniquement la copie temporaire à la corbeille. Le modèle maître n’est jamais modifié.
 - Les champs élève, responsables, scolarité antérieure, entreprise, contrat et positionnement déjà présents dans le formulaire sont transmis au moteur de fusion. Une donnée absente reste vide ; aucune valeur personnelle n’est inventée.
 - Tests ciblés DEV464/DEV499 : `25/25`; suite complète : `621/621`. Le contrôle visuel local des huit pages confirme la conservation de la mise en page et les pieds de page `1/8` à `8/8`.
+- Le commit applicatif `6ad78d12e40cbd48c1e44cfb840e118f9b2383a7` a été publié uniquement sur le `HEAD` bleu puis relu avec une empreinte identique. Les `25/25` routes bleues sont valides, dont `dossier-apprentissage-pfmp`.
+- L’import automatique du DOCX dans Google Drive n’a pas abouti à cause d’une erreur interne du connecteur. Le fichier local validé est conservé ; son import manuel comme Google Docs et son enregistrement dans la liste des modèles bleus restent nécessaires avant le premier essai de fusion.
 - Ce lot vise uniquement le canal bleu. Les Web Apps vertes, la production Grist, les imports réels, les courriels et les écritures élève/convention restent inchangés.
 
 ## Mise à jour du 7 octobre 2026 — DEV498 (promotion bleu → vert)
