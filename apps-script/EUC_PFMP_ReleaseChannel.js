@@ -6,7 +6,7 @@
  */
 var EUC_RELEASE_BLUE_PROJECT_ID_ = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
 var EUC_RELEASE_RECIPE_HOST_ = 'https://camin.getgrist.com';
-var EUC_RELEASE_RECIPE_DOC_ID_ = 'kB8bvDag8x7D';
+var EUC_RELEASE_RECIPE_DOC_ID_ = 'j1jDArBkzi7P';
 
 function EUC_RELEASE_isBlue_() {
   return ScriptApp.getScriptId() === EUC_RELEASE_BLUE_PROJECT_ID_;

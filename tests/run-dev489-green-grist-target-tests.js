@@ -6,7 +6,7 @@ const source = fs.readFileSync('apps-script/EUC_ENT_Config.gs', 'utf8');
 const BLUE = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
 const GREEN = '1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c';
 const RECIPE_HOST = 'https://camin.getgrist.com';
-const RECIPE = 'kB8bvDag8x7D';
+const RECIPE = 'j1jDArBkzi7P';
 let passed = 0;
 
 function context(projectId, values, email) {
