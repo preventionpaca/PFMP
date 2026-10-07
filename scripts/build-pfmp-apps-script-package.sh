@@ -31,6 +31,23 @@ done < <(git ls-files apps-script)
 
 cp .clasp.json "$target_dir/.clasp.json"
 
+# Le depot conserve le routeur historique sous son nom naturel. Le paquet de
+# publication le place derriere le point d'entree commun qui ajoute le repere
+# BLEU/VERT sans modifier chacune des nombreuses pages HTML.
+node - "$target_dir/apps-script/EDT.js" <<'NODE'
+const fs = require('fs');
+const file = process.argv[2];
+let source = fs.readFileSync(file, 'utf8');
+const marker = 'function doGet(e) {';
+const matches = source.split(marker).length - 1;
+if (matches !== 1) {
+  throw new Error(`Routeur doGet inattendu dans EDT.js : ${matches} occurrence(s)`);
+}
+source = source.replace(marker, 'function EUC_RELEASE_doGetCore_(e) {');
+source += '\n\nfunction doGet(e) {\n  return EUC_RELEASE_doGet_(e);\n}\n';
+fs.writeFileSync(file, source);
+NODE
+
 # Apps Script utilise le nom sans extension comme identifiant de fichier :
 # un fichier serveur et un modèle HTML ne peuvent donc pas partager le même
 # radical. Le nom des fichiers serveur n'étant pas utilisé par le runtime, on

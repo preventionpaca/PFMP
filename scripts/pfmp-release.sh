@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_file="$repo_root/scripts/pfmp-release-config.json"
 git_dir="$(git -C "$repo_root" rev-parse --absolute-git-dir)"
 candidate_file="$git_dir/pfmp-release-candidate.json"
+pending_file="$git_dir/pfmp-release-pending.json"
 last_release_file="$git_dir/pfmp-release-last.json"
 
 cfg() {
@@ -12,6 +13,8 @@ cfg() {
 }
 
 development_id="$(cfg config_file 'c.channels.development.deploymentId')"
+development_project_id="$(cfg config_file 'c.channels.development.projectId')"
+stable_project_id="$(cfg config_file 'c.channels.stableAdmin.projectId')"
 admin_id="$(cfg config_file 'c.channels.stableAdmin.deploymentId')"
 public_id="$(cfg config_file 'c.channels.stablePublic.deploymentId')"
 
@@ -20,6 +23,8 @@ usage() {
 Usage: scripts/pfmp-release.sh COMMAND
 
   prepare           construit et publie uniquement le canal bleu /dev
+  approve-development COMMIT 25-ROUTES-VALIDEES
+                    homologue manuellement le bleu privé après recette navigateur
   check-development contrôle les 25 routes du canal bleu
   check-stable      contrôle les 25 routes du canal vert
   promote           promeut exactement le candidat bleu vers les URLs stables
@@ -69,6 +74,19 @@ build_package() {
   "$clone_root/scripts/build-pfmp-apps-script-package.sh" "$package_dir" >/dev/null
 }
 
+write_clasp_project() {
+  local package_dir="$1"
+  local project_id="$2"
+  node - "$package_dir/.clasp.json" "$project_id" <<'NODE'
+const fs = require('fs');
+const file = process.argv[2];
+const projectId = process.argv[3];
+const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+config.scriptId = projectId;
+fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n');
+NODE
+}
+
 pull_remote() {
   local package_dir="$1"
   local remote_dir="$2"
@@ -76,7 +94,7 @@ pull_remote() {
   (cd "$remote_dir" && clasp pull >/dev/null)
 }
 
-write_candidate() {
+write_pending() {
   local commit="$1"
   local hash="$2"
   node -e '
@@ -85,9 +103,10 @@ write_candidate() {
       commit:process.argv[2],
       treeHash:process.argv[3],
       preparedAt:new Date().toISOString(),
-      channel:"development"
+      channel:"development",
+      validation:"pending-browser"
     }, null, 2)+"\n");
-  ' "$candidate_file" "$commit" "$hash"
+  ' "$pending_file" "$commit" "$hash"
 }
 
 read_candidate_field() {
@@ -125,9 +144,10 @@ prepare() {
   (cd "$clone_root" && node tests/run-tests.js)
   echo "[2/5] Construction du paquet complet"
   build_package "$clone_root" "$package_dir"
+  write_clasp_project "$package_dir" "$development_project_id"
   package_hash="$(tree_hash "$package_dir")"
   echo "[3/5] Publication sur HEAD uniquement (canal bleu)"
-  (cd "$package_dir" && clasp push)
+  (cd "$package_dir" && clasp push --force)
   echo "[4/5] Relecture distante"
   pull_remote "$package_dir" "$remote_dir"
   remote_hash="$(tree_hash "$remote_dir")"
@@ -135,12 +155,71 @@ prepare() {
     echo "Le contenu distant diffère du paquet candidat." >&2
     exit 1
   }
+  write_pending "$commit" "$package_hash"
   echo "[5/5] Contrôle HTTP des routes du canal bleu"
-  (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development)
-  write_candidate "$commit" "$package_hash"
+  if (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development); then
+    mv "$pending_file" "$candidate_file"
+  else
+    echo >&2
+    echo "Le paquet bleu est exact mais son URL /dev privée exige une session éditeur." >&2
+    echo "Après contrôle navigateur des 25 routes, homologuer explicitement avec :" >&2
+    echo "scripts/pfmp-release.sh approve-development $commit 25-ROUTES-VALIDEES" >&2
+    exit 1
+  fi
   echo
   echo "Candidat bleu prêt. Les déploiements verts n'ont pas été modifiés."
   echo "URL de test : https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/$development_id/dev?page=admin-pfmp"
+}
+
+approve_development() {
+  local approved_commit="${1:-}"
+  local confirmation="${2:-}"
+  [[ "$confirmation" == "25-ROUTES-VALIDEES" ]] || {
+    echo "Confirmation explicite attendue : 25-ROUTES-VALIDEES" >&2
+    exit 1
+  }
+  [[ -f "$pending_file" ]] || {
+    echo "Aucun paquet bleu en attente de recette navigateur." >&2
+    exit 1
+  }
+
+  local pending_commit pending_hash current release_root clone_root package_dir remote_dir
+  local package_hash remote_hash
+  pending_commit="$(node -e 'const x=require(process.argv[1]); console.log(x.commit||"")' "$pending_file")"
+  pending_hash="$(node -e 'const x=require(process.argv[1]); console.log(x.treeHash||"")' "$pending_file")"
+  current="$(git -C "$repo_root" rev-parse HEAD)"
+  [[ "$approved_commit" == "$pending_commit" && "$current" == "$pending_commit" ]] || {
+    echo "Le commit approuvé ne correspond pas exactement au bleu en attente." >&2
+    exit 1
+  }
+
+  release_root="$(new_release_clone)"
+  clone_root="$release_root/repo"
+  package_dir="$release_root/package"
+  remote_dir="$release_root/remote"
+  mkdir -p "$package_dir" "$remote_dir"
+  build_package "$clone_root" "$package_dir"
+  write_clasp_project "$package_dir" "$development_project_id"
+  package_hash="$(tree_hash "$package_dir")"
+  [[ "$package_hash" == "$pending_hash" ]] || {
+    echo "Le paquet local diffère du bleu contrôlé dans le navigateur." >&2
+    exit 1
+  }
+  pull_remote "$package_dir" "$remote_dir"
+  remote_hash="$(tree_hash "$remote_dir")"
+  [[ "$remote_hash" == "$pending_hash" ]] || {
+    echo "Le projet bleu a changé depuis la recette navigateur." >&2
+    exit 1
+  }
+
+  node -e '
+    const fs=require("fs"); const f=process.argv[1]; const x=require(f);
+    x.validation="manual-browser-25-routes";
+    x.approvedAt=new Date().toISOString();
+    fs.writeFileSync(f, JSON.stringify(x,null,2)+"\n");
+  ' "$pending_file"
+  mv "$pending_file" "$candidate_file"
+  echo "Candidat bleu homologué pour le commit $approved_commit."
 }
 
 promote() {
@@ -175,6 +254,7 @@ promote() {
     exit 1
   }
   echo "[2/6] Comparaison avec le HEAD distant"
+  write_clasp_project "$package_dir" "$development_project_id"
   pull_remote "$package_dir" "$remote_dir"
   remote_hash="$(tree_hash "$remote_dir")"
   [[ "$remote_hash" == "$candidate_hash" ]] || {
@@ -183,6 +263,13 @@ promote() {
   }
   echo "[3/6] Nouveau contrôle du canal bleu"
   (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development)
+
+  # Aucune URL verte ne bouge pendant la recette. Seulement apres sa
+  # validation, le meme paquet est pousse sur le projet stable afin d'y creer
+  # une version immuable et de rattacher les deux deploiements existants.
+  write_clasp_project "$package_dir" "$stable_project_id"
+  echo "[3b/6] Copie exacte du candidat valide vers le projet stable"
+  (cd "$package_dir" && clasp push --force)
 
   deployments="$(cd "$package_dir" && clasp deployments)"
   admin_previous="$(deployment_version "$deployments" "$admin_id")"
@@ -243,6 +330,7 @@ rollback() {
   package_dir="$release_root/package"
   mkdir -p "$package_dir"
   build_package "$clone_root" "$package_dir"
+  write_clasp_project "$package_dir" "$stable_project_id"
   description="Rollback PFMP explicite vers @$version"
   deploy_version "$package_dir" "$admin_id" "$version" "$description"
   deploy_version "$package_dir" "$public_id" "$version" "$description"
@@ -253,16 +341,24 @@ rollback() {
 command="${1:-}"
 case "$command" in
   prepare) prepare ;;
+  approve-development) approve_development "${2:-}" "${3:-}" ;;
   check-development) node "$repo_root/scripts/verify-pfmp-release.js" --channel development ;;
   check-stable) node "$repo_root/scripts/verify-pfmp-release.js" --channel stable ;;
   promote) promote ;;
   rollback) rollback "${2:-}" ;;
   status)
+    echo "BLEU  : https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/$development_id/dev?page=admin-pfmp"
+    echo "VERT  : deploiements stables inchanges tant qu'aucune promotion ne reussit"
     clasp deployments
     if [[ -f "$candidate_file" ]]; then
       echo
       echo "Candidat bleu :"
       node -e 'const x=require(process.argv[1]); console.log(x.commit, x.preparedAt);' "$candidate_file"
+    fi
+    if [[ -f "$pending_file" ]]; then
+      echo
+      echo "Bleu en attente de recette navigateur :"
+      node -e 'const x=require(process.argv[1]); console.log(x.commit, x.preparedAt);' "$pending_file"
     fi
     ;;
   *) usage; exit 1 ;;
