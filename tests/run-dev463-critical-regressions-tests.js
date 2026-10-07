@@ -16,7 +16,7 @@ const bridge=read('EUC_PFMP_DEV235_JsonBridge.js');
 test('le centre et les outils admin utilisent le déploiement courant',()=>{
   assert(admin.includes('baseUrl:EUC_DEV368_boot().baseUrl'),'centre non relié au boot admin');
   const boot=tools.slice(tools.indexOf('function EUC_DEV368_boot'),tools.indexOf('function EUC_DEV368_afficherSans'));
-  assert(boot.includes('ScriptApp.getService().getUrl()'),'URL du déploiement courant absente');
+  assert(boot.includes('EUC_RELEASE_serviceBase_()'),'URL canonique du déploiement courant absente');
   assert(!boot.includes('AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg'),'boot encore figé sur le vert admin');
   assert(!boot.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW'),'boot encore public');
 });

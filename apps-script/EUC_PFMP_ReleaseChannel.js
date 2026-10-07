@@ -18,7 +18,14 @@ function EUC_RELEASE_channel_() {
 function EUC_RELEASE_serviceBase_() {
   var url = '';
   try { url = String(ScriptApp.getService().getUrl() || ''); } catch (e) {}
-  return url.replace(/[?#].*$/, '');
+  /* Apps Script peut retourner l'alias /a/<domaine>/macros/s alors que
+   * l'URL partageable du Web App Workspace est /a/macros/<domaine>/s.
+   * Le premier alias affiche parfois « autorisation nécessaire » lors d'une
+   * navigation depuis l'iframe, même pour un éditeur authentifié. */
+  return url.replace(/[?#].*$/, '').replace(
+    /^https:\/\/script\.google\.com\/a\/([^/]+)\/macros\/s\//,
+    'https://script.google.com/a/macros/$1/s/'
+  );
 }
 
 /**

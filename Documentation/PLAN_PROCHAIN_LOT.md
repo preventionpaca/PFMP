@@ -1,4 +1,11 @@
-# Prochain lot après DEV485
+# Prochain lot après DEV486
+
+DEV486 normalise toutes les URL calculées par Apps Script vers la forme
+Workspace partageable `/a/macros/<domaine>/s/...`. La recette navigateur doit
+reprendre sur le canal bleu en contrôlant le passage de l'accueil public à BAC
+PRO, le retour vers l'administration bleue et la page Apprentis. Ne pas
+homologuer le candidat tant que les routes encore signalées en erreur ne sont
+pas validées.
 
 Le lot DEV485 rend le canal bleu immédiatement identifiable sur toutes les
 pages, maintient toute sa navigation dans le même `/dev` et restaure l'accès

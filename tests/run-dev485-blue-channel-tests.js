@@ -19,12 +19,12 @@ function test(name, fn) {
   }
 }
 
-function releaseContext(projectId) {
+function releaseContext(projectId, serviceUrl) {
   const ctx = {
     ScriptApp: {
       getScriptId: () => projectId,
       getService: () => ({
-        getUrl: () => 'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/BLUE/dev'
+        getUrl: () => serviceUrl || 'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/BLUE/dev'
       })
     },
     Session: {getActiveUser: () => ({getEmail: () => 'editor@example.test'})}
@@ -61,6 +61,20 @@ test('les liens verts sont réécrits vers le même /dev dans le bleu', () => {
   assert.doesNotMatch(html, /alternance\.loucodi|AKfycbwQoKZOD/);
 });
 
+test("l'alias Apps Script refusé est normalisé vers l'URL Workspace partageable", () => {
+  const ctx = releaseContext(
+    '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo',
+    'https://script.google.com/a/lycee-les-eucalyptus.org/macros/s/BLUE/dev'
+  );
+  assert.equal(
+    ctx.EUC_RELEASE_serviceBase_(),
+    'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/BLUE/dev'
+  );
+  const html = ctx.EUC_RELEASE_blueNavigation_('<a href="https://alternance.loucodi.fr/">Accueil</a>');
+  assert.match(html, /script\.google\.com\/a\/macros\/lycee-les-eucalyptus\.org\/s\/BLUE\/dev\?page=admin-pfmp/);
+  assert.doesNotMatch(html, /\/a\/lycee-les-eucalyptus\.org\/macros\/s\//);
+});
+
 test('le projet vert conserve ses URL canoniques', () => {
   const ctx = releaseContext('PROJET_VERT');
   const html = '<a href="https://alternance.loucodi.fr/">Accueil</a>';
@@ -83,7 +97,7 @@ test('les deux contrôles administratifs réutilisent le contexte éditeur bleu'
 });
 
 test('les outils administratifs construisent leurs liens depuis le déploiement courant', () => {
-  assert.match(tools, /ScriptApp\.getService\(\)\.getUrl\(\)/);
+  assert.match(tools, /EUC_RELEASE_serviceBase_\(\)/);
   assert.doesNotMatch(tools, /function EUC_DEV368_boot\(\)[^\n]+AKfycby6ykCxT/);
 });
 

@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV486 (URL canonique du canal bleu)
+
+- La recette navigateur a identifié que `ScriptApp.getService().getUrl()` pouvait fournir l'alias Workspace `script.google.com/a/<domaine>/macros/s/...`. Depuis une page incorporée, cet alias ouvrait l'écran Google « Une autorisation est nécessaire », bien que l'utilisateur soit éditeur du projet bleu.
+- L'URL du canal courant est désormais normalisée vers la forme partageable `script.google.com/a/macros/<domaine>/s/...` avant toute construction de lien. Les boutons et liens des pages bleues restent donc dans le même `/dev` sans déclencher ce faux refus d'accès.
+- Le contrôle réel a confirmé le bandeau pleine largeur sur l'accueil public bleu et sur la page Apprentis bleue ; cette dernière affiche actuellement son écran maîtrisé « Données temporairement indisponibles », sans écriture ni nouvelle tentative automatique.
+- Le paquet reste réservé au projet bleu. Aucun déploiement vert, accès à la production Grist, import, courriel, PDF, ordre de mission ou écriture métier n'a été exécuté.
+
 ## Mise à jour du 7 octobre 2026 — DEV485 (canal bleu identifiable et navigation isolée)
 
 - Le canal bleu affiche désormais sur chaque sortie HTML un bandeau bleu fixe sur toute la largeur : `MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE`. Le bandeau est ajouté après le contenu de la page afin que les anciens modèles qui reconstruisent leur interface au chargement ne l'effacent plus.
