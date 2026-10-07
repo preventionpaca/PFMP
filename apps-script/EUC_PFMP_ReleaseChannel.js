@@ -33,7 +33,9 @@ function EUC_RELEASE_serviceBase_() {
  * L'URL /dev du projet bleu n'est accessible qu'aux editeurs Apps Script.
  * Elle constitue donc deja la porte d'entree du bac a sable. Le contexte
  * ci-dessous ne vaut jamais dans le projet vert et les garde-fous bleu
- * maintiennent les mutations en DRY_RUN et les courriels desactives.
+ * maintiennent les mutations metier en DRY_RUN et les courriels desactives.
+ * Seul l'import Pronote explicitement confirme peut alimenter la base de
+ * recette separee ; la garde serveur verifie encore le projet et le document.
  */
 function EUC_RELEASE_blueEditorContext_() {
   if (!EUC_RELEASE_isBlue_()) return null;
@@ -85,7 +87,7 @@ function EUC_RELEASE_blueSafetyValues_() {
     EUC_ENT_API_RECHERCHE_URL: 'https://recherche-entreprises.api.gouv.fr/search',
     EUC_PFMP_SUBMISSION_MODE: 'DRY_RUN',
     EUC_PFMP_EMAIL_MODE: 'DISABLED',
-    EUC_PFMP_PRONOTE_IMPORT_MODE: 'DRY_RUN',
+    EUC_PFMP_PRONOTE_IMPORT_MODE: 'RECIPE_DATA',
     EUC_PFMP_ADMIN_MUTATION_MODE: 'DRY_RUN'
   };
 }

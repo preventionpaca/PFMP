@@ -80,7 +80,7 @@ function EUC_IMPORT_respFieldsRich_(studentId,studentIdent,resp,source,now){retu
 function EUC_IMPORT_importerReelCompletTexte(payload){
   var lock=LockService.getScriptLock();if(!lock.tryLock(3000))throw new Error('Un autre import est déjà en cours.');
   try{
-    var ctx=EUC_IMPORT_exigerAdminTexte_();payload=payload||{};if(payload.confirmation!=='IMPORTER_REELLEMENT_DANS_GRIST')throw new Error('Confirmation explicite requise pour l’import réel.');
+    var ctx=EUC_IMPORT_exigerAdminTexte_();EUC_DEV497_requirePronoteImportTarget_();payload=payload||{};if(payload.confirmation!=='IMPORTER_REELLEMENT_DANS_GRIST')throw new Error('Confirmation explicite requise pour l’import réel.');
     var preview=EUC_IMPORT_previsualiserTexte(payload);if(!preview.pretAValider)throw new Error('Import réel bloqué : anomalies ou classes inconnues.');var actions=(Number(preview.compteurs.nouveaux)||0)+(Number(preview.compteurs.misesAJour)||0)+(Number(preview.compteurs.reactives)||0);if(actions===0)throw new Error('Import inutile : aucune création ni mise à jour détectée.');
     var source=EUC_IMPORT_normaliserSourcePronote_(preview.sourcePronote||'');if(source!=='LP'&&source!=='LGT')throw new Error('Source Pronote LP/LGT non résolue.');EUC_IMPORT_assurerSchemaRich_();
     var annee=EUC_IMPORT_lireAnnee_(preview.annee),anneeId=annee.id,parsed=EUC_IMPORT_analyserTexteComplet_(String(payload.texte||''),{annee:preview.annee});EUC_IMPORT_extraireProfesseursPrincipaux_(String(payload.texte||''),parsed);

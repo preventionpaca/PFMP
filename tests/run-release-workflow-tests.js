@@ -93,13 +93,13 @@ test('le paquet publie un point d entrée commun avec repère bleu ou vert', () 
   assert.match(channel, /data-pfmp-release-channel/);
 });
 
-test('la configuration bleue reste en recette et désactive les mutations', () => {
+test('la configuration bleue reste en recette et n’autorise que l’import Pronote de test', () => {
   assert.match(channel, /EUC_RELEASE_RECIPE_HOST_ = 'https:\/\/camin\.getgrist\.com'/);
   assert.match(channel, /EUC_RELEASE_RECIPE_DOC_ID_ = 'kB8bvDag8x7D'/);
   assert.doesNotMatch(channel, /3pnVrygfNn7c/);
   assert.match(channel, /EUC_PFMP_SUBMISSION_MODE: 'DRY_RUN'/);
   assert.match(channel, /EUC_PFMP_EMAIL_MODE: 'DISABLED'/);
-  assert.match(channel, /EUC_PFMP_PRONOTE_IMPORT_MODE: 'DRY_RUN'/);
+  assert.match(channel, /EUC_PFMP_PRONOTE_IMPORT_MODE: 'RECIPE_DATA'/);
   assert.match(channel, /EUC_PFMP_ADMIN_MUTATION_MODE: 'DRY_RUN'/);
   assert.doesNotMatch(channel, /EUC_ENT_GRIST_API_KEY\s*:/);
   assert.match(channel, /function EUC_RELEASE_ensureBlueSafety_/);

@@ -8,6 +8,19 @@ function classOptions(classes,selected){return '<option value="">— choisir —
 function currentChoices(){const correspondances={},classesExclues=[];mappingRows.querySelectorAll('tr[data-pronote]').forEach(tr=>{const p=tr.dataset.pronote,exclude=tr.querySelector('input[data-exclude]'),sel=tr.querySelector('select[data-pronote]');if(exclude&&exclude.checked)classesExclues.push(p);else if(sel&&sel.value)correspondances[p]=sel.value;});return {correspondances,classesExclues}}
 function runAnalysis(extra){if(busy)return;const texte=$('#paste').value,sourcePronote=$('#source-pronote').value;if(!texte.trim()){status.textContent='Collez d’abord le tableau Pronote.';return}setBusy(true,'Analyse du fichier Pronote…','Lecture des élèves, comparaison avec Grist et contrôle des classes.');status.textContent='Analyse du copier-coller en cours…';payload={annee:$('#annee').value,texte:texte,source:'COPIER_COLLER_PRONOTE',sourcePronote:sourcePronote,correspondances:(extra&&extra.correspondances)||{},classesExclues:(extra&&extra.classesExclues)||[]};google.script.run.withSuccessHandler(show).withFailureHandler(fail).EUC_IMPORT_previsualiserTexte(payload)}
 $('#version').textContent=IMPORT_CONFIG.version||'';$('#back-admin').href=(IMPORT_CONFIG.baseUrl||'')+'?page=admin-pfmp';
+let blueSetup=null,prepareBlue=null,blueSetupStatus=null;
+if(IMPORT_CONFIG.channel==='BLUE'&&IMPORT_CONFIG.mode==='RECIPE_DATA'){
+  blueSetup=document.createElement('section');blueSetup.id='blue-recipe-setup';
+  blueSetup.innerHTML='<h2>Jeu de test du site bleu</h2><p class="help">Prépare uniquement la base Grist de recette pour les classes TMVA1, TMVA2 et TRMO. Aucune donnée n’est envoyée au site vert.</p><button id="prepare-blue-recipe" type="button">Préparer les 3 classes dans la recette bleue</button><p id="blue-recipe-status" class="help" role="status" aria-live="polite"></p>';
+  form.parentNode.insertBefore(blueSetup,form);prepareBlue=$('#prepare-blue-recipe');blueSetupStatus=$('#blue-recipe-status');
+  prepareBlue.onclick=()=>{
+    if(busy)return;
+    const annee=$('#annee').value||'2026-2027';
+    if(!confirm('Préparer la base de recette BLEUE pour '+annee+' et les classes TMVA1, TMVA2 et TRMO ? Le site vert ne sera pas modifié.'))return;
+    setBusy(true,'Préparation de la recette bleue…','Création des références de test et contrôle du schéma Pronote.');prepareBlue.disabled=true;
+    google.script.run.withSuccessHandler(r=>{setBusy(false);prepareBlue.disabled=false;blueSetupStatus.textContent='Recette bleue prête pour '+r.annee+' — '+r.classes.join(', ')+'. Vous pouvez charger le fichier filtré puis lancer la prévisualisation.';}).withFailureHandler(e=>{setBusy(false);prepareBlue.disabled=false;blueSetupStatus.textContent='Erreur : '+(e&&e.message||e);}).EUC_DEV497_prepareBlueRecipePronote({annee:annee,classes:['TMVA1','TMVA2','TRMO'],confirmation:'PREPARER_RECETTE_BLEUE'});
+  };
+}
 google.script.run.withSuccessHandler(r=>{diag.textContent='Diagnostic accès : environnement='+r.environnement+' ; email='+r.emailDetecte+' ; liste admin='+(r.listeAdminConfiguree?'oui':'non')+' ; email autorisé='+(r.emailDansListe?'oui':'non')+' ; contexte='+(r.autorise?'autorisé':'refusé')+' ; rôle='+(r.role||'—')+' ; origine='+(r.origine||'—');}).withFailureHandler(e=>{diag.textContent='Diagnostic accès indisponible : '+(e&&e.message||e)}).EUC_IMPORT_diagnosticAutorisation();
 form.onsubmit=e=>{e.preventDefault();postImportNotice=null;runAnalysis({correspondances:{},classesExclues:[]})};
 reanalyze.onclick=()=>{postImportNotice=null;runAnalysis(currentChoices())};
