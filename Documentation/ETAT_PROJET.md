@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV492 (fiabilité des courriels d’ordre de mission)
+
+- Le contrôle en lecture seule de l’historique d’exécution du Web App vert a isolé la panne : le 7 octobre à 13:51:34, `EUC_DEV440_prepareMissionTransportEmail` s’est terminé normalement en `8,423 s`, mais aucune exécution de `EUC_DEV440_sendMissionTransportEmail` n’a suivi. `MailApp.sendEmail` n’était donc jamais atteint ; l’absence de message chez le professeur et chez BFE ne provenait ni des spams ni du champ CC.
+- La double séquence navigateur « préparation serveur → boîte `confirm()` native → nouvel appel serveur » est remplacée par un dialogue intégré à la page. Après confirmation explicite, un seul appel lance la génération du PDF et l’envoi. Le bouton est toujours rendu à l’utilisateur en cas de succès, d’échec ou de dépassement de délai.
+- Chaque tentative reçoit un identifiant unique. Le serveur conserve un état `PREPARING`, `GENERATING`, `SENDING`, `SENT` ou `ERROR`, consultable par le navigateur si la réponse directe se perd. Une reprise avec le même identifiant ne renvoie jamais le courriel. Le quota restant est contrôlé avant l’appel à `MailApp` pour couvrir le professeur et la copie conforme.
+- Le canal bleu refuse explicitement tout envoi réel d’ordre de mission. Les tests simulent la remise au professeur et à BFE, le quota insuffisant, la reprise idempotente et le refus bleu ; aucun courriel ni PDF réel n’a été produit.
+- Le commit `ee73160` a passé `598/598` tests, a été poussé sur la branche de travail puis publié uniquement sur le `HEAD` du projet bleu. La relecture distante est cohérente et les `25/25` routes bleues sont valides, dont `ordres-mission-pfmp`. Le contrôle navigateur affiche bien la page et le bandeau bleu ; la recette isolée ne contient actuellement aucune classe. Les deux Web Apps vertes restent inchangées sur la version immuable `885`.
+
 ## Mise à jour du 7 octobre 2026 — DEV491 (régressions JotForm et navigation conventions)
 
 - La panne de l'import JotForm provenait du paquet hybride reconstruit : l'adaptateur historique DEV331 appelait `EUC_V160_importCsv__DEV331_ORIG`, tandis que la source actuelle réinjectée par-dessus le socle complet exposait de nouveau seulement `EUC_V160_importCsv`. Le CSV et les données de l'utilisateur n'étaient pas en cause.

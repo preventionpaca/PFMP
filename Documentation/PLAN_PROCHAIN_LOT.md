@@ -1,19 +1,29 @@
-# Prochain lot après DEV489
+# Prochain lot après DEV492
 
-DEV489 est publié en version immuable `884` sur les deux Web Apps vertes,
-URL inchangées. Le générateur de conventions charge à nouveau les élèves, les
-classes et les périodes de la cible verte. La prochaine action métier peut être
-la génération demandée depuis l'interface ; ne pas lancer de génération de test
-automatique, car elle crée les documents et accès QR réels.
+DEV492 est publié uniquement sur le `HEAD` du projet bleu au commit `ee73160`.
+Les `25/25` routes bleues sont valides et la suite complète compte `598/598`
+tests verts. Les deux Web Apps de production restent sur la version immuable
+`885`, avec leurs URL inchangées.
 
-Pour les évolutions suivantes, conserver la séparation stricte : projet bleu
-uniquement sur la recette Camin `kB8bvDag8x7D`, projet vert uniquement sur sa cible configurée
-non-recette, et refus de tout projet Apps Script inconnu. Ne jamais coder
-l'identifiant de la cible verte ni une clé dans Git.
+La prochaine étape est une recette humaine du dialogue d’envoi sur le canal
+bleu : vérifier le destinataire annoncé, la copie BFE, l’objet, le corps et le
+type de pièce jointe, puis annuler. Le canal bleu bloque volontairement l’envoi
+réel. Aucun clic sur « Confirmer l’envoi » n’est nécessaire pour homologuer
+l’interface.
 
-DEV488 a ajouté le repli par référence `Classe` et un état d'erreur visible au
-générateur. DEV487 a retiré l'ancien audit P7.1B du paquet. Ces deux protections
-doivent rester couvertes avec DEV489 lors de toute future promotion.
+Après validation visuelle, homologuer le SHA exact avec
+`scripts/pfmp-release.sh approve-development ee7316061a5d67d32365c31d8eeeb0cc240a336f 25-ROUTES-VALIDEES`,
+puis seulement sur demande explicite promouvoir exactement ce candidat vers les
+deux Web Apps vertes existantes. Un essai réel devra être autorisé séparément :
+il enverra un courriel et générera un ordre de mission. Contrôler alors une seule
+adresse institutionnelle et la copie `bfe@lycee-les-eucalyptus.org`, sans
+utiliser de données inventées.
+
+Conserver la séparation stricte : projet bleu uniquement sur la recette Camin
+`kB8bvDag8x7D`, projet vert uniquement sur sa cible configurée non-recette, et
+refus de tout projet Apps Script inconnu. Ne jamais coder l’identifiant de la
+cible verte ni une clé dans Git. Les protections DEV487 à DEV491 restent
+obligatoires lors de toute promotion.
 
 ## Historique immédiat après DEV487
 
