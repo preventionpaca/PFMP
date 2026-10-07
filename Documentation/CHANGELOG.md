@@ -1,5 +1,14 @@
 # Changelog
 
+## Eucalyptus PFMP — DEV496 — 2026-10-07
+
+- fusion dynamique des balises du modèle PDF de huit pages, sans coordonnées fixes et sans affichage des marqueurs sans valeur ;
+- raccordement des champs élève, scolarité, responsables et entreprise au modèle fourni ;
+- historique des distributions et annulation logique tracée, sans suppression physique ;
+- confirmation et annulation toujours simulées sans écriture sur le canal bleu ;
+- audit autorisé en lecture seule : les principaux champs signalés sont absents du schéma ou vides dans la base actuelle, tandis que le parseur d’import Pronote enrichi sait déjà les alimenter lors d’un futur import autorisé ;
+- `24/24` tests ciblés, `612/612` tests complets et contrôle visuel local sur huit pages avec données fictives ; aucun import, courriel, ordre de mission ni écriture métier.
+
 ## Eucalyptus PFMP — DEV495 — 2026-10-07
 
 - gestion de plusieurs modèles PDF Drive pour le dossier d’apprentissage, avec sélection et modèle par défaut unique ;

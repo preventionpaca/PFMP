@@ -1,4 +1,29 @@
-# Prochain lot après DEV495
+# Prochain lot après DEV496
+
+DEV496 remplace les coordonnées PDF fixes du dossier d’apprentissage par une
+fusion fondée sur les balises réellement présentes dans le modèle. Il ajoute
+aussi un historique consultable et l’annulation logique d’une distribution,
+sans suppression. Le canal bleu simule toujours confirmation et annulation sans
+écriture Grist.
+
+La lecture autorisée de la base officielle a confirmé que plusieurs informations
+signalées ne sont pas seulement masquées par l’interface : les colonnes riches
+du jeune et la profession des responsables ne sont pas encore présentes dans le
+schéma officiel, et le courriel du jeune contrôlé est vide. Le prochain lot de
+données devra donc être un import Pronote complet explicitement autorisé, après
+prévisualisation, afin de créer puis alimenter les colonnes déjà prises en charge
+par `EUC_IMPORT_PFMP_RichData.gs`. Ne jamais déduire ni inventer les valeurs
+manquantes.
+
+Avant toute promotion verte, publier le commit exact uniquement sur le `HEAD`
+bleu, contrôler les 25 routes, le parcours accueil → dossier → retour, la
+sélection d’un modèle Drive et un PDF vierge de huit pages. La recette bleue ne
+contenant pas le jeune signalé, la présence réelle de ses données ne pourra être
+validée qu’après une copie limitée autorisée ou, plus tard, après promotion. La
+distribution enregistrée par erreur sur le vert ne doit être annulée qu’après
+promotion de DEV496 et choix explicite de sa ligne dans l’historique.
+
+## Historique immédiat après DEV495
 
 DEV495 ajoute la gestion de plusieurs modèles PDF du dossier d’apprentissage,
 renforce la compatibilité avec les colonnes historiques Pronote et prépare le
@@ -6,22 +31,6 @@ registre de distribution. Le canal bleu simule toujours la confirmation sans
 écriture ; le candidat exact `beb7ddbed8a4590ea58ab15ded3c08133269a0d7` a été
 promu après autorisation explicite vers les deux Web Apps vertes existantes dans
 la version Apps Script immuable `887`.
-
-La recette bleue ne contient aucun élève. La prochaine étape est donc de la
-rendre réellement testable sans recopier silencieusement de données
-personnelles : utiliser uniquement un jeu anonymisé fourni ou une copie limitée
-explicitement autorisée. Il faudra aussi recevoir le PDF de référence annoncé,
-le placer dans un dossier Drive réservé à l’administration, l’enregistrer et
-effectuer un contrôle visuel des huit pages. Vérifier en particulier les
-coordonnées fixes : ce moteur ne lit pas encore les balises du tableau Excel et
-un modèle dont la mise en page change nécessitera un recalage ou un moteur
-AcroForm/balises séparé.
-
-Pour toute évolution suivante, exécuter la suite complète, publier le commit
-exact sur le `HEAD` bleu, contrôler les 25 routes et le parcours accueil →
-dossier → retour. Toute nouvelle promotion globale vers les deux Web Apps
-vertes reste soumise à une autorisation explicite et doit conserver leurs URL
-et leur version de repli.
 
 ## Historique immédiat après DEV494
 

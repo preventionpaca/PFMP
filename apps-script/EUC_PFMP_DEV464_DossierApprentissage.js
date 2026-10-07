@@ -1,5 +1,5 @@
-/** PFMP DEV495 — dossier de demande d'apprentissage prérempli. */
-var EUC_DEV464_VERSION_='1.0.0-dev.495';
+/** PFMP DEV496 — dossier de demande d'apprentissage prérempli. */
+var EUC_DEV464_VERSION_='1.0.0-dev.496';
 var EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV464_FORMATIONS_PROP_='DOSSIER_APPRENTISSAGE_FORMATIONS';
 var EUC_DEV495_MODELS_PROP_='DOSSIER_APPRENTISSAGE_MODELES';
@@ -130,11 +130,35 @@ function EUC_DEV495_loadDossierModel(q){
 }
 function EUC_DEV495_printCol_(id,label,type){return{id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_DEV495_ensurePrintTable_(){
-  var c=EUC_DEV495_printCol_,defs=[c('Cle_distribution','Clé distribution'),c('Eleve','Élève','Ref:EUC_ELEVES_PFMP'),c('Date_edition','Date d’édition','DateTime'),c('Annee_scolaire','Année scolaire'),c('Modele_id','Identifiant modèle'),c('Modele_nom','Modèle'),c('Statut','Statut'),c('Canal','Canal')];
+  var c=EUC_DEV495_printCol_,defs=[c('Cle_distribution','Clé distribution'),c('Eleve','Élève','Ref:EUC_ELEVES_PFMP'),c('Date_edition','Date d’édition','DateTime'),c('Annee_scolaire','Année scolaire'),c('Modele_id','Identifiant modèle'),c('Modele_nom','Modèle'),c('Statut','Statut'),c('Canal','Canal'),c('Date_annulation','Date d’annulation','DateTime'),c('Motif_annulation','Motif d’annulation'),c('Auteur_annulation','Auteur de l’annulation')];
   var tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===EUC_DEV495_PRINT_TABLE_;});
   if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV495_PRINT_TABLE_,columns:defs}]});return;}
   var have={};(EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_DEV495_PRINT_TABLE_)+'/columns').columns||[]).forEach(function(x){have[x.id]=true;});
   var missing=defs.filter(function(x){return !have[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_DEV495_PRINT_TABLE_)+'/columns',{columns:missing});
+}
+function EUC_DEV496_refId_(v){if(Array.isArray(v))return Number(v.length>1?v[1]:v[0])||0;return Number(v)||0;}
+function EUC_DEV496_dateTime_(v){
+  if(v===null||v===undefined||v==='')return'';var d=v instanceof Date?v:new Date(typeof v==='number'&&Math.abs(v)<100000000000?v*1000:v);
+  if(!d||isNaN(d.getTime()))return EUC_DEV464_t_(v);return Utilities.formatDate(d,Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy HH:mm');
+}
+function EUC_DEV496_listDossierDistributions(studentId){
+  EUC_DEV464_admin_();if(typeof EUC_ENT_controlerCibleRecette_==='function')EUC_ENT_controlerCibleRecette_();studentId=Number(studentId)||0;if(!studentId)throw new Error('Élève obligatoire.');
+  var tables=EUC_ENT_grist('get','/tables').tables||[];if(!tables.some(function(x){return x.id===EUC_DEV495_PRINT_TABLE_;}))return{ok:true,items:[]};
+  var filter={Eleve:[studentId]},path='/tables/'+encodeURIComponent(EUC_DEV495_PRINT_TABLE_)+'/records?filter='+encodeURIComponent(JSON.stringify(filter));
+  var rows=(EUC_ENT_grist('get',path).records||[]).map(function(r){var f=EUC_DEV464_fields_(r);return{id:Number(r.id)||0,studentId:EUC_DEV496_refId_(f.Eleve),date:EUC_DEV496_dateTime_(f.Date_edition),annee:EUC_DEV464_t_(f.Annee_scolaire),modele:EUC_DEV464_t_(f.Modele_nom),statut:EUC_DEV464_t_(f.Statut)||'DISTRIBUE',dateAnnulation:EUC_DEV496_dateTime_(f.Date_annulation),motifAnnulation:EUC_DEV464_t_(f.Motif_annulation)};}).filter(function(x){return x.id&&x.studentId===studentId;});
+  rows.sort(function(a,b){return b.id-a.id;});return{ok:true,items:rows};
+}
+function EUC_DEV496_cancelDossierDistribution(q){
+  var ctx=EUC_DEV464_admin_();if(typeof EUC_ENT_controlerCibleRecette_==='function')EUC_ENT_controlerCibleRecette_();q=q||{};
+  var id=Number(q.id)||0,studentId=Number(q.studentId)||0,motif=EUC_DEV464_t_(q.motif).slice(0,500);if(!id||!studentId)throw new Error('Distribution ou élève invalide.');if(!motif)throw new Error('Indiquez le motif de l’annulation.');
+  var channel=typeof EUC_RELEASE_channel_==='function'?EUC_RELEASE_channel_():'INCONNU';if(channel==='BLUE')return{ok:true,simulation:true,date:EUC_DEV496_dateTime_(new Date())};
+  var lock=LockService.getScriptLock();if(!lock.tryLock(3000))throw new Error('Une autre modification du registre est en cours.');
+  try{
+    EUC_DEV495_ensurePrintTable_();var rows=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_DEV495_PRINT_TABLE_)+'/records').records||[],record=rows.filter(function(r){return Number(r.id)===id;})[0];if(!record)throw new Error('Distribution introuvable.');
+    var f=EUC_DEV464_fields_(record);if(EUC_DEV496_refId_(f.Eleve)!==studentId)throw new Error('Cette distribution ne correspond pas à l’élève sélectionné.');if(EUC_DEV464_t_(f.Statut)==='ANNULE')return{ok:true,already:true,date:EUC_DEV496_dateTime_(f.Date_annulation)};
+    var now=Math.floor(Date.now()/1000);EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_DEV495_PRINT_TABLE_)+'/records',{records:[{id:id,fields:{Statut:'ANNULE',Date_annulation:now,Motif_annulation:motif,Auteur_annulation:EUC_DEV464_t_(ctx.email)}}]});
+    return{ok:true,date:EUC_DEV496_dateTime_(now)};
+  }finally{lock.releaseLock();}
 }
 function EUC_DEV495_confirmDossierDistribution(q){
   EUC_DEV464_admin_();if(typeof EUC_ENT_controlerCibleRecette_==='function')EUC_ENT_controlerCibleRecette_();q=q||{};

@@ -111,13 +111,20 @@ test('les données responsables et apprenti sont lues seulement pour l’élève
   assert(server.includes("EUC_APPRENTISSAGE_PFMP"),'apprentissage absent');
 });
 
-test('le PDF de huit pages reçoit une date d’édition sur chaque page',()=>{
+test('le PDF de huit pages repère et remplace les balises réelles du modèle',()=>{
   assert(html.includes('pdf.getPages()'),'pages PDF non lues');
   assert(html.includes('pages.length!==8'),'contrôle 8 pages absent');
-  assert(html.includes("pages.slice(0,8).forEach"),'date non appliquée aux huit pages');
-  assert(html.includes("'Date d\\'édition : '"),'date d’édition absente');
+  assert(html.includes('pdfjs-dist@3.11.174')&&html.includes('getTextContent()'),'repérage des textes PDF absent');
+  assert(html.includes('mergeTokenGroups')&&html.includes("marker.key==='ELEVE_NOM'"),'détection des balises absente');
+  assert(html.includes('DATE_HEURE_IMPRESSION:dateLabel')&&html.includes('PAGE_COURANTE:String(pageNumber)')&&html.includes('NB_PAGES:String(pageCount)'),'date ou pagination non fusionnée');
+  assert(!html.includes('function overlay('),'ancien calque à coordonnées fixes encore actif');
   assert(html.includes('arrayBuffer()'),'modèle local temporaire non utilisable');
   assert(html.includes('decodeBase64(loaded.base64)'),'modèle Drive non utilisable');
+});
+
+test('les champs demandés sont tous raccordés aux balises du modèle',()=>{
+  for(const token of ['ELEVE_LIEU_NAISSANCE','ELEVE_NATIONALITE','ELEVE_COURRIEL','SCOLARITE_DERNIER_ETABLISSEMENT','SCOLARITE_DERNIERE_CLASSE','SCOLARITE_DERNIER_DIPLOME','RESP1_PROFESSION','RESP2_PROFESSION','ENTREPRISE_RAISON_SOCIALE'])assert(html.includes(token+':'),token+' non raccordé');
+  assert(html.includes("Object.prototype.hasOwnProperty.call(values,marker.key)?values[marker.key]:''"),'balises inconnues non neutralisées');
 });
 
 test('la distribution est confirmée explicitement puis inscrite dans un registre dédié',()=>{
@@ -127,6 +134,9 @@ test('la distribution est confirmée explicitement puis inscrite dans un registr
   assert(server.includes("if(typeof EUC_ENT_controlerCibleRecette_==='function')EUC_ENT_controlerCibleRecette_()"),'garde de cible Grist absente');
   assert(html.includes('id="markDistributed"')&&html.includes('EUC_DEV495_confirmDossierDistribution(LAST_GENERATION)'),'confirmation explicite absente');
   assert(html.indexOf('EUC_DEV495_confirmDossierDistribution(LAST_GENERATION)')>html.indexOf("markDistributed.addEventListener('click'"),'registre alimenté hors confirmation');
+  assert(server.includes("c('Date_annulation','Date d’annulation','DateTime')")&&server.includes("c('Motif_annulation','Motif d’annulation')"),'colonnes d’annulation absentes');
+  assert(html.includes('id="distributionHistory"')&&html.includes('EUC_DEV496_listDossierDistributions'),'historique de distribution absent');
+  assert(html.includes('EUC_DEV496_cancelDossierDistribution'),'commande d’annulation absente');
 });
 
 test('l’écriture du registre est bornée à la cible autorisée et ne duplique pas les données nominatives',()=>{
@@ -150,9 +160,25 @@ test('le bleu simule la confirmation sans aucune écriture Grist',()=>{
   assert(html.includes('Site bleu : confirmation simulée'),'message de simulation bleue absent');
 });
 
+test('l’annulation d’une distribution est logique, historisée et sans suppression',()=>{
+  let patched=null,deletes=0;
+  const ctx={Date,String,Number,Array,Object,isNaN,Math,encodeURIComponent,JSON,
+    EUC_PFMP_contexteAdmin_:()=>({autorise:true,email:'admin@example.test'}),EUC_ENT_controlerCibleRecette_:()=>true,EUC_RELEASE_channel_:()=>'GREEN',Session:{getScriptTimeZone:()=>'Europe/Paris'},Utilities:{formatDate:()=> '07/10/2026 14:00'},
+    LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock:()=>{}})},EUC_ENT_grist:(method,path,body)=>{if(method==='get'&&path==='/tables')return{tables:[{id:'EUC_DOSSIER_APPRENTISSAGE_IMPRESSIONS'}]};if(method==='get'&&path.endsWith('/columns'))return{columns:[]};if(method==='get'&&path.endsWith('/records'))return{records:[{id:55,fields:{Eleve:12,Statut:'DISTRIBUE'}}]};if(method==='patch'){patched=body;return{}}if(method==='delete')deletes++;return{};}
+  };
+  vm.createContext(ctx);vm.runInContext(server,ctx);const out=ctx.EUC_DEV496_cancelDossierDistribution({id:55,studentId:12,motif:'Erreur de manipulation'});
+  const f=patched.records[0].fields;assert(out.ok&&f.Statut==='ANNULE'&&f.Motif_annulation==='Erreur de manipulation','annulation logique incorrecte');
+  assert(f.Auteur_annulation==='admin@example.test'&&f.Date_annulation,'traçabilité d’annulation absente');assert(deletes===0&&!server.includes("EUC_ENT_grist('delete'"),'suppression physique détectée');
+});
+
+test('le bleu simule aussi l’annulation sans écriture Grist',()=>{
+  let writes=0;const ctx={Date,String,Number,Array,Object,isNaN,Math,encodeURIComponent,JSON,EUC_PFMP_contexteAdmin_:()=>({autorise:true}),EUC_ENT_controlerCibleRecette_:()=>true,EUC_RELEASE_channel_:()=>'BLUE',Session:{getScriptTimeZone:()=>'Europe/Paris'},Utilities:{formatDate:()=> '07/10/2026 14:00'},EUC_ENT_grist:(method)=>{if(method!=='get')writes++;return{}}};
+  vm.createContext(ctx);vm.runInContext(server,ctx);const out=ctx.EUC_DEV496_cancelDossierDistribution({id:55,studentId:12,motif:'Essai'});assert(out.simulation===true&&writes===0,'le bleu a modifié le registre');
+});
+
 test('le modèle conserve l’ordre annexe 11, annexe 12d, positionnement',()=>{
   assert(html.includes('annexes 11, 12d et du positionnement'),'ordre annoncé absent');
-  assert(html.includes('pages[0]')&&html.includes('pages[2]')&&html.includes('pages[6]'),'cartes de pages absentes');
+  assert(html.includes('for(let n=1;n<=pages.length;n++)'),'les huit pages ne sont pas parcourues dans l’ordre');
 });
 
 test('les dates Grist en secondes et millisecondes restent lisibles',()=>{
@@ -189,12 +215,12 @@ test('les colonnes Pronote historiques restent lisibles sans inventer les champs
   assert(d.eleve.nir==='','NIR inventé');
 });
 
-test('les zones PDF corrigées ne chevauchent plus les libellés ni le pied de page',()=>{
-  assert(!html.includes('w(p,e.formation,200,122,300)'),'formation encore injectée sur le bloc CFA de la page 2');
-  assert(html.includes("w(p,s.dernierEtablissement||e.etablissement||'Lycée Les Eucalyptus',190,104"),'dernier établissement absent de la page 1');
-  assert(html.includes('w(p,s.derniereClasse||e.formation||e.classe,180,91'),'dernière classe absente de la page 1');
-  assert(html.includes('w(p,e.telephone,210,455')&&html.includes('w(p,e.courriel,210,429'),'coordonnées page 7 encore sur les libellés');
-  assert(html.includes("' - page '+(i+1)+'/8',375,18"),'pied de page encore hors marge utile');
+test('la fusion suit les emplacements du modèle au lieu de coordonnées historiques',()=>{
+  assert(html.includes('active.fragments.push({x:Number(tr[4])'),'coordonnées PDF.js non utilisées');
+  assert(html.includes('textRatio(text,cursor,item,styles)')&&html.includes('ctx.measureText(text.slice(0,end))'),'largeur proportionnelle des balises non mesurée');
+  assert(html.includes('page.drawRectangle({x:f.x-3.75'),'balise d’origine non effacée');
+  assert(!html.includes('e.nom,65,549')&&!html.includes('e.telephone,210,455'),'coordonnées historiques encore présentes');
+  assert(html.includes("if(!datePages[i+1])page.drawText('Date d\\'édition : '"),'date absente des pages sans balise dédiée');
 });
 
 console.log(`\nDEV464: ${ok} tests réussis, ${ko} échec(s)`);if(ko)process.exit(1);
