@@ -1,4 +1,23 @@
-# Prochain lot après DEV496
+# Prochain lot après DEV497
+
+La recette bleue autorisée `j1jDArBkzi7P` contient désormais `55` élèves issus
+des classes TMVA1, TMVA2 et TRMO de l’export Pronote LP fourni. Le dossier
+d’apprentissage bleu charge `603` élèves au total et permet donc un contrôle
+fonctionnel réel sans utiliser la production Grist.
+
+Avant toute promotion verte, corriger ou revalider les quatre routes encore en
+échec dans l’audit bleu : `admin-conventions-pfmp`,
+`destinataires-envois-pfmp`, `parametres-envois-pfmp` et
+`parcours-differencie-pfmp`. Relancer ensuite les `25` routes, contrôler le
+parcours dossier d’apprentissage sur au moins un élève des trois classes
+importées et homologuer le commit exact seulement si tout est vert. Ne pas
+promouvoir DEV497 en l’état.
+
+Les données nominatives de recette et l’export filtré restent hors Git. La
+production `3pnVrygfNn7c` et les Web Apps vertes restent interdites sans une
+nouvelle autorisation explicite.
+
+## Historique immédiat après DEV496
 
 DEV496 remplace les coordonnées PDF fixes du dossier d’apprentissage par une
 fusion fondée sur les balises réellement présentes dans le modèle. Il ajoute

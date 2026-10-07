@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV497 (données de recette bleue testables)
+
+- Sur autorisation explicite de l’utilisateur, le canal bleu cible de nouveau exclusivement la recette Grist `j1jDArBkzi7P` sur `https://docs.getgrist.com`. La production interdite `3pnVrygfNn7c` n’a pas été consultée et les deux Web Apps vertes n’ont pas été modifiées.
+- La page d’import Pronote bleue prépare les références 2026-2027 et les classes `TMVA1`, `TMVA2` et `TRMO`, puis exige la prévisualisation et la confirmation habituelles avant toute écriture. Les garde-fous refusent cette préparation et cet import sur toute autre cible Grist ou sur un projet qui n’est pas le projet bleu identifié.
+- L’export Pronote LP fourni a été filtré localement aux trois classes autorisées, sans ajout au dépôt. La prévisualisation a contrôlé `55` lignes, `0` ambiguïté, `0` rejet, `0` classe inconnue et `0` élève sans numéro national. L’import dans la recette bleue a créé `55` élèves : `25` en TMVA1, `25` en TMVA2 et `5` en TRMO. La relecture finale les reconnaît tous comme présents et inchangés.
+- Le dossier d’apprentissage bleu charge maintenant un index de `603` élèves et peut donc être testé avec des données réelles de recette. Les données nominatives et le fichier filtré restent hors Git et hors journaux de version.
+- Suite complète : `617/617` tests réussis. La relecture Apps Script distante du paquet bleu est cohérente. L’audit navigateur automatique valide `21/25` routes ; `admin-conventions-pfmp`, `destinataires-envois-pfmp`, `parametres-envois-pfmp` et `parcours-differencie-pfmp` restent à corriger ou revalider avant toute promotion verte. Le candidat n’est donc pas homologué.
+
 ## Mise à jour du 7 octobre 2026 — DEV496 (fusion PDF et annulation de distribution)
 
 - Le moteur du dossier d’apprentissage ne dépend plus de coordonnées fixes : il localise les balises `{{...}}` dans les huit pages du PDF, mesure leur largeur réelle, masque le texte de fusion puis écrit la valeur correspondante à cet emplacement. Les champs élève demandés, la scolarité antérieure, les professions des responsables et les données d’entreprise sont raccordés ; les balises sans donnée restent visuellement vides au lieu d’être imprimées.
