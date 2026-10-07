@@ -7,7 +7,7 @@
 - Le DOCX préparé et son export PDF contiennent `137/137` balises distinctes lisibles d’un seul tenant. Les huit pages A4 ont été rendues et contrôlées visuellement.
 - Le site bleu accepte plusieurs PDF téléversés directement, conserve un seul modèle par défaut, retire un modèle de la configuration sans supprimer physiquement le fichier, et refuse les anciens modèles Google Docs devenus incompatibles.
 - La fusion s’effectue côté navigateur avec les positions réellement extraites du PDF. Elle exige huit pages, la présence des balises cœur et au moins cent balises reconnues avant de produire le document.
-- Tests ciblés DEV464/DEV500 : `25/25`. Suite complète : `621/621`. La publication bleue et l’audit des routes restent à consigner à la fin du lot.
+- Tests ciblés DEV464/DEV500 : `25/25`. Suite complète : `621/621`. Le canal bleu a été publié, relu après `clasp push`, puis contrôlé avec `25/25` routes valides.
 - Le vert et la production Grist restent inchangés.
 
 ## Historique DEV499 (solution Google Docs abandonnée)
