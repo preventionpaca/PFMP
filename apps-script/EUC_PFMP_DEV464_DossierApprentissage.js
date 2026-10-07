@@ -1,5 +1,5 @@
-/** PFMP DEV501 — dossier de demande d'apprentissage prérempli. */
-var EUC_DEV464_VERSION_='1.0.0-dev.501';
+/** PFMP DEV502 — dossier de demande d'apprentissage prérempli. */
+var EUC_DEV464_VERSION_='1.0.0-dev.502';
 var EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 var EUC_DEV464_FORMATIONS_PROP_='DOSSIER_APPRENTISSAGE_FORMATIONS';
 var EUC_DEV495_MODELS_PROP_='DOSSIER_APPRENTISSAGE_MODELES';
@@ -50,12 +50,32 @@ function EUC_DEV501_optionalRecords_(table,filter){
     throw e;
   }
 }
+function EUC_DEV502_refId_(value){
+  if(Array.isArray(value))return Number(value.length>1?value[1]:value[0])||0;
+  return Number(value)||0;
+}
+function EUC_DEV502_schoolYearMap_(){
+  var byId={};
+  EUC_DEV464_records_('Annees_Scolaires',{}).forEach(function(r){
+    var f=EUC_DEV464_fields_(r),id=Number(r.id||f.id)||0,code=EUC_DEV464_t_(f.Code||f.Annee||f.Libelle);
+    if(id&&code)byId[id]=code;
+  });
+  return byId;
+}
+function EUC_DEV502_studentSchoolYear_(fields,yearsById){
+  var direct=EUC_DEV464_t_(EUC_DEV464_pick_(fields,['Annee_scolaire_code','Annee_code','Annee_scolaire_libelle']));
+  if(/^20\d{2}-20\d{2}$/.test(direct))return direct;
+  var raw=fields&&fields.Annee_scolaire;
+  if(/^20\d{2}-20\d{2}$/.test(EUC_DEV464_t_(raw)))return EUC_DEV464_t_(raw);
+  return EUC_DEV464_t_((yearsById||{})[EUC_DEV502_refId_(raw)]);
+}
 function EUC_DEV464_studentIndex(){
   EUC_DEV464_admin_();
+  var currentYear=EUC_DEV464_currentSchoolYear_(),yearsById=EUC_DEV502_schoolYearMap_();
   return EUC_DEV464_records_('EUC_ELEVES_PFMP',{}).map(function(r){
     var f=EUC_DEV464_fields_(r),id=Number(r.id||f.id)||0;
-    return{id:id,nom:EUC_DEV464_t_(f.Nom),prenom:EUC_DEV464_t_(f.Prenom_usage||f.Prenom),classe:EUC_DEV464_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),actif:f.Actif!==false&&f.Present_dernier_import!==false};
-  }).filter(function(x){return x.id&&x.actif&&x.nom;}).sort(function(a,b){return(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr');});
+    return{id:id,nom:EUC_DEV464_t_(f.Nom),prenom:EUC_DEV464_t_(f.Prenom_usage||f.Prenom),classe:EUC_DEV464_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),annee:EUC_DEV502_studentSchoolYear_(f,yearsById),actif:f.Actif!==false&&f.Present_dernier_import!==false};
+  }).filter(function(x){return x.id&&x.actif&&x.nom&&x.annee===currentYear;}).sort(function(a,b){return(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr');});
 }
 function EUC_DEV464_latest_(rows){
   rows=(rows||[]).slice();

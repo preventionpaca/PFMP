@@ -1,4 +1,18 @@
-# Prochain lot après DEV501
+# Prochain lot après DEV502
+
+DEV502 sépare l’historique annuel de la cohorte utilisable dans le dossier
+d’apprentissage et rend visible le sélecteur de périmètre de l’import Pronote.
+Avant promotion verte, publier et relire le candidat bleu exact, vérifier dans
+le navigateur que la recherche `NIGITA` ne renvoie que l’inscription courante,
+puis ouvrir la page d’import sans lancer d’écriture et contrôler que chaque
+classe analysée dispose de la case `Inclure dans PFMP`.
+
+La promotion ne doit déclencher aucun import Pronote. Les choix de classes sont
+appliqués seulement lors d’une future prévisualisation/import explicitement
+confirmé par l’utilisateur. Les inscriptions des années antérieures restent
+conservées dans Grist et ne doivent jamais être supprimées.
+
+## Historique immédiat après DEV501
 
 DEV501 ajoute au test du dossier le cas réel d’une recette contenant les élèves
 mais pas les tables complémentaires responsables/apprentissage. Une route HTTP

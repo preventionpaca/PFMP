@@ -45,6 +45,24 @@ test('l’autocomplétion charge un index unique sans appel serveur à chaque fr
   assert(html.includes('EUC_DEV464_studentDossier(id)'),'dossier non ciblé');
 });
 
+test('l’index du dossier ne mélange pas les inscriptions historiques et courantes',()=>{
+  const rows={
+    Annees_Scolaires:[
+      {id:1,fields:{Code:'2026-2027'}},
+      {id:4,fields:{Code:'2025-2026'}}
+    ],
+    EUC_ELEVES_PFMP:[
+      {id:10,fields:{Nom:'NIGITA--FARRIS',Prenom:'Loris',Code_classe_importe:'1MVA1',Annee_scolaire:4,Actif:true,Present_dernier_import:true}},
+      {id:11,fields:{Nom:'NIGITA--FARRIS',Prenom:'Loris',Code_classe_importe:'TMVA1',Annee_scolaire:1,Actif:true,Present_dernier_import:true}},
+      {id:12,fields:{Nom:'ANCIEN',Prenom:'Absent',Code_classe_importe:'TMVA1',Annee_scolaire:1,Actif:true,Present_dernier_import:false}}
+    ]
+  };
+  const ctx={Date,String,Number,Array,Object,isNaN,Math,EUC_PFMP_contexteAdmin_:()=>({autorise:true}),EUC_DEV190G_fastRecords_:(table)=>rows[table]||[]};
+  vm.createContext(ctx);vm.runInContext(server,ctx);const index=Array.from(ctx.EUC_DEV464_studentIndex());
+  assert(index.length===1,'une inscription historique ou absente reste visible');
+  assert(index[0].id===11&&index[0].classe==='TMVA1'&&index[0].annee==='2026-2027','l’inscription courante n’est pas la seule proposée');
+});
+
 test('INE et NIR restent deux champs distincts et aucune valeur n’est inventée',()=>{
   assert(server.includes("['INE','Numero_INE','Numero_national']"),'aliases INE absents');
   assert(server.includes("['NIR','Numero_securite_sociale','Numero_securite_sociale_eleve','Numero_securite','SSN']"),'aliases NIR absents');
@@ -107,6 +125,15 @@ test('les correspondances validées Pronote sont conservées au prochain import'
   assert(rich.includes("'FIXECOMPLET'")&&rich.includes("'PORTABLECOMPLET'")&&rich.includes("'TELBUREAUCOMPLET'")&&rich.includes("'L PROFESSION'")&&rich.includes("heberge:ix('HEBERGE')"),'coordonnées responsables incomplètes');
   assert(rich.includes('responsableEnCharge:EUC_IMPORT_boolOuiRich_'),'hébergement Pronote non raccordé');
   assert(importHtml.includes("add('LIEU NAISS','LIEU NAISS'")&&importHtml.includes("add('DERNETAB','DERNETAB'")&&importHtml.includes("add('AP CLASSE','AP_CLASSE'"),'convertisseur largeur fixe incomplet');
+});
+
+test('l’import Pronote permet de cocher uniquement les classes utiles à PFMP',()=>{
+  const importScripts=read('Import_Pronote_PFMP_Scripts.html');
+  assert(importHtml.includes('Sélection des classes Pronote à intégrer dans PFMP'),'rubrique de sélection absente');
+  assert(importHtml.includes('Inclure dans PFMP'),'colonne d’inclusion absente');
+  assert(importScripts.includes('input[data-include]'),'cases d’inclusion absentes');
+  assert(importScripts.includes('if(include&&!include.checked)classesExclues.push(p)'),'classe décochée non transmise comme exclusion');
+  assert(importScripts.includes('EUC_CORRESPONDANCE_enregistrerChoix'),'choix non mémorisables');
 });
 
 test('les données responsables et apprenti sont lues seulement pour l’élève choisi',()=>{

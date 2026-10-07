@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 octobre 2026 — DEV502 (cohorte courante et sélection des classes Pronote)
+
+- La recherche du dossier d’apprentissage mélangeait les inscriptions annuelles : un même jeune pouvait apparaître en `1MVA1` dans la cohorte historique 2025-2026 et en `TMVA1` dans la cohorte courante 2026-2027. Les deux lignes Grist sont légitimes et restent conservées ; l’erreur provenait de l’index applicatif qui filtrait seulement `Actif` et `Present_dernier_import` sans filtrer l’année scolaire.
+- L’index du dossier d’apprentissage résout maintenant la référence `Annee_scolaire` par la table `Annees_Scolaires` et ne propose que l’année scolaire courante. Aucune inscription historique n’est supprimée ni modifiée.
+- La page d’import Pronote possédait déjà la persistance des correspondances et exclusions de classes. Son écran rend désormais le choix explicite : après analyse, chaque classe Pronote dispose d’une case `Inclure dans PFMP`. Une classe décochée est exclue de la prévisualisation et de l’import, et le choix peut être mémorisé pour l’année et la source LP/LGT.
+- Tests ciblés du dossier et de la sélection des classes : `28/28`. Suite complète : `624/624`.
+- À ce stade, le correctif n’est pas encore promu sur le vert. La production Grist et les imports Pronote réels restent inchangés.
+
 ## Mise à jour du 7 octobre 2026 — DEV501 (table complémentaire absente en recette)
 
 - Le contrôle métier du dossier d’apprentissage bleu a révélé un cas que l’audit des routes ne couvrait pas : la page HTML répondait correctement, mais le choix d’un élève déclenchait une lecture de `EUC_APPRENTISSAGE_PFMP`, table absente de la recette, puis un `404 Table not found`.
