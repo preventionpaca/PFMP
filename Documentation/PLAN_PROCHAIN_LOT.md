@@ -1,23 +1,16 @@
 # Prochain lot après DEV492
 
-DEV492 est publié uniquement sur le `HEAD` du projet bleu au commit `ee73160`.
-Les `25/25` routes bleues sont valides et la suite complète compte `598/598`
-tests verts. Les deux Web Apps de production restent sur la version immuable
-`885`, avec leurs URL inchangées.
+DEV492 est publié sur le `HEAD` bleu et sur les deux Web Apps vertes existantes
+dans la version Apps Script immuable `886`, à partir du commit applicatif
+`ee73160`. Les URL sont inchangées. Les `25/25` routes bleues et les `25/25`
+routes vertes sont valides ; la suite complète compte `598/598` tests verts.
 
-La prochaine étape est une recette humaine du dialogue d’envoi sur le canal
-bleu : vérifier le destinataire annoncé, la copie BFE, l’objet, le corps et le
-type de pièce jointe, puis annuler. Le canal bleu bloque volontairement l’envoi
-réel. Aucun clic sur « Confirmer l’envoi » n’est nécessaire pour homologuer
-l’interface.
-
-Après validation visuelle, homologuer le SHA exact avec
-`scripts/pfmp-release.sh approve-development ee7316061a5d67d32365c31d8eeeb0cc240a336f 25-ROUTES-VALIDEES`,
-puis seulement sur demande explicite promouvoir exactement ce candidat vers les
-deux Web Apps vertes existantes. Un essai réel devra être autorisé séparément :
-il enverra un courriel et générera un ordre de mission. Contrôler alors une seule
-adresse institutionnelle et la copie `bfe@lycee-les-eucalyptus.org`, sans
-utiliser de données inventées.
+La prochaine étape éventuelle est un essai réel unique du courriel d’ordre de
+mission. Il doit être autorisé séparément, car il générera un PDF et enverra un
+message à une adresse institutionnelle réelle ainsi qu’à la copie
+`bfe@lycee-les-eucalyptus.org`. Vérifier le dialogue, le destinataire, l’objet,
+le corps et le type de pièce jointe avant de confirmer. Le canal bleu reste
+volontairement incapable d’envoyer.
 
 Conserver la séparation stricte : projet bleu uniquement sur la recette Camin
 `kB8bvDag8x7D`, projet vert uniquement sur sa cible configurée non-recette, et
