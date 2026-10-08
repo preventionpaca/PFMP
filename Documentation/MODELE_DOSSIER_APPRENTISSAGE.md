@@ -28,8 +28,14 @@ n’est jamais modifié.
 - La pagination utilise `{{PAGE_COURANTE}}` et `{{NB_PAGES}}` dans le PDF.
 - `{{DATE_HEURE_IMPRESSION}}` est remplacé au moment de la génération et figure
   sur les huit pages.
-- Une balise reconnue sans donnée disponible est remplacée par une valeur vide ;
-  aucune information n’est inventée.
+- Une balise reconnue sans donnée disponible est effacée puis remplacée par une
+  ligne jaune : elle signale une information à compléter à la main.
+- Le masque de fusion reste strictement limité aux caractères de la balise : il
+  ne doit jamais recouvrir le libellé qui la précède ou la suit.
+- Une valeur longue est réduite juste assez pour rester dans la largeur réservée
+  par la balise, sans empiéter sur le champ voisin. Il faut donc donner à chaque
+  balise, dans Word, une largeur cohérente avec la donnée attendue.
+- Dans tous les cas, aucune information n’est inventée.
 
 ## Contrôles automatiques
 

@@ -164,6 +164,30 @@ test('la fusion se fait directement dans le PDF exporté depuis Word',()=>{
   assert(!server.includes('DocumentApp')&&!server.includes('EUC_DEV499_generateDossierPdf'),'ancienne fusion Google Docs encore active');
 });
 
+test('la fusion protège les libellés voisins et signale en jaune les données absentes',()=>{
+  assert(html.includes('function markerBounds(marker)'),'bornes précises des balises absentes');
+  assert(!html.includes('x:f.x-3.75')&&!html.includes('width:f.width+7.5'),'ancien masque débordant encore actif');
+  assert(html.includes("yellow=PDFLib.rgb(1,.91,.12)"),'couleur de complément manuel absente');
+  assert(html.includes('if(!value){')&&html.includes('return{missing:true,compact:false}'),'champ vide non signalé en jaune');
+  assert(html.includes('room=Math.max(2,bounds.width-.4)'),'valeur non bornée à son emplacement');
+  assert(html.includes('function pdfFontMetrics(page,items)')&&html.includes('fontExtraProperties:true'),'métriques du PDF non chargées');
+  assert(html.includes('mergeTokenGroups(content.items,content.styles,fontMetrics,font)'),'métriques du PDF non transmises au repérage');
+  assert(html.includes('exactTextWidth(text.slice(0,end),item,fontMetrics)/exactTotal'),'positionnement encore fondé sur une largeur approximative');
+  assert(html.includes("merged.missing+' champ(s) sans donnée signalé(s) en jaune"),'bilan des champs jaunes absent');
+  const fusionCode=html.slice(html.indexOf('function markerBounds(marker)'),html.indexOf('async function mergeTemplate'));
+  const ctx={Math,PDFLib:{rgb:(...parts)=>parts},clean:value=>String(value||'')};vm.createContext(ctx);vm.runInContext(fusionCode,ctx);
+  const rectangles=[],texts=[],page={drawRectangle:o=>rectangles.push(o),drawText:(value,o)=>texts.push({value,...o})},font={widthOfTextAtSize:(value,size)=>String(value).length*size};
+  const marker={key:'ELEVE_COURRIEL',fragments:[{x:100,y:200,width:40,height:10}]};
+  const empty=ctx.drawMergedValue(page,font,font,marker,'');
+  assert(empty.missing&&rectangles.length===2,'signal jaune non dessiné pour une donnée absente');
+  assert(rectangles[0].x>=99&&rectangles[0].x+rectangles[0].width<=141,'masque blanc hors de la balise');
+  assert(rectangles[0].y<=197.2&&rectangles[0].y+rectangles[0].height>=210.2,'masque blanc incomplet en hauteur');
+  assert(rectangles[1].x===100&&rectangles[1].width===40&&rectangles[1].color[0]===1&&rectangles[1].color[1]===.91,'ligne jaune incorrecte');
+  rectangles.length=0;const filled=ctx.drawMergedValue(page,font,font,marker,'adresse.longue@example.test');
+  assert(!filled.missing&&texts.length===1&&texts[0].x===100.2,'valeur non replacée dans la balise');
+  assert(font.widthOfTextAtSize(texts[0].value,texts[0].size)<=39.61,'valeur longue débordante');
+});
+
 test('le modèle Word emploie des alias courts qui restent continus dans le PDF',()=>{
   for(const alias of ['EL_PROJET','EL_SHN','PAA','PAE','PAO','PCE','PCO'])assert(html.includes(alias+':'),alias+' non reconnu par la fusion');
   assert(pdfTemplatePrep.includes('"ELEVE_PROJET_ENTREPRISE": "EL_PROJET"'),'alias projet entreprise absent');
@@ -271,7 +295,7 @@ test('la fusion suit les emplacements du modèle au lieu de coordonnées histori
   assert(html.includes('item.transform||[1,0,0,8,0,0]'),'coordonnées des balises PDF non lues');
   assert(html.includes('marker.fragments.forEach'),'fragments des balises non utilisés');
   assert(!html.includes('e.nom,65,549')&&!html.includes('e.telephone,210,455'),'coordonnées historiques encore présentes');
-  assert(html.includes('page.drawText(value,{x:minX-.5,y:first.y'),'valeur non dessinée à l’emplacement de la balise');
+  assert(html.includes('page.drawText(value,{x:bounds.minX+.2,y:first.y'),'valeur non dessinée à l’emplacement de la balise');
   assert(html.includes("DATE_HEURE_IMPRESSION:dateLabel"),'date d’édition non répétée dans le pied de page');
 });
 
