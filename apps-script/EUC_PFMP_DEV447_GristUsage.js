@@ -157,7 +157,13 @@ function EUC_DEV447_afficherUsage(e){
   var tpl=HtmlService.createTemplateFromFile('Consommation_API_Grist_DEV447');
   tpl.bootJson=JSON.stringify(EUC_DEV447_dashboardData_());
   tpl.adminUrl=ScriptApp.getService().getUrl()+'?page=admin-pfmp';
-  return tpl.evaluate().setTitle('Consommation API Grist — PFMP').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  var output=tpl.evaluate().setTitle('Consommation API Grist — PFMP').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  /* DEV447 intercepte cette route avant le routeur commun. Elle doit donc
+   * recevoir explicitement le même repère BLEU/VERT, la réécriture de canal
+   * et le contrat de chargement que toutes les autres sorties HTML. */
+  return typeof EUC_RELEASE_decorateOutput_==='function'
+    ?EUC_RELEASE_decorateOutput_(output)
+    :output;
 }
 
 function EUC_DEV447_injectAdminLink_(output){

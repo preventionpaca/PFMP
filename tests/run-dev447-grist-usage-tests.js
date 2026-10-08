@@ -7,6 +7,7 @@ const source=fs.readFileSync(path.join(__dirname,'..','apps-script','EUC_PFMP_DE
 const html=fs.readFileSync(path.join(__dirname,'..','apps-script','Consommation_API_Grist_DEV447.html'),'utf8');
 const enterpriseBridge=fs.readFileSync(path.join(__dirname,'..','apps-script','EUC_ENT_Grist.gs'),'utf8');
 const values={};
+let decorated=0;
 const props={
   getProperty(key){return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;},
   setProperty(key,value){values[key]=String(value);return this;},
@@ -22,6 +23,7 @@ const ctx={
   ScriptApp:{getService(){return{getUrl(){return'https://example.test/exec';}};}},
   HtmlService:{XFrameOptionsMode:{ALLOWALL:'ALLOWALL'},createHtmlOutput:output,createTemplateFromFile(name){return{bootJson:'',adminUrl:'',evaluate(){return output(name+'|'+this.bootJson+'|'+this.adminUrl);}};}},
   EUC_DEV368_admin(){return{role:'ADMIN_PFMP'};},
+  EUC_RELEASE_decorateOutput_(out){decorated++;out.content+='<b>CANAL</b>';return out;},
   EUC_ENT_grist(method,path,body){return{method,path,body};},
   EUC_DEV190_api_(){throw new Error('DEV190 Grist API 429 : Exceeded daily limit');},
   doGet(){return output('<a class="link" id="euc-snapshot-setting" href="x">Snapshot</a>');}
@@ -57,6 +59,8 @@ assert.match(admin.getContent(),/Consommation API Grist/);
 assert.match(admin.getContent(),/page=consommation-api-grist/);
 const page=ctx.doGet({parameter:{page:'consommation-api-grist'}});
 assert.match(page.getContent(),/Consommation_API_Grist_DEV447/);
+assert.match(page.getContent(),/CANAL/);
+assert.strictEqual(decorated,1,'la route interceptée doit recevoir exactement une fois le décor commun');
 
 assert.match(html,/Historique quotidien — 31 jours/);
 assert.match(html,/uniquement les appels Grist observés par PFMP/);
@@ -66,4 +70,4 @@ assert.match(html,/Origines techniques principales/);
 assert.doesNotMatch(html,/api\/docs\/[A-Za-z0-9_-]+/,'le tableau ne doit exposer aucun identifiant de document Grist');
 assert.match(enterpriseBridge,/EUC_DEV447_call_\(appel/,'la passerelle Entreprises doit instrumenter chaque appel réel');
 
-console.log('23 tests DEV447 consommation API Grist réussis.');
+console.log('24 tests DEV447 consommation API Grist réussis.');
