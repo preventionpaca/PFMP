@@ -1,20 +1,20 @@
 # Prochain lot après DEV510
 
-## Reprise immédiate après DEV510
+## DEV510 livré sur le vert
 
-Repréparer le candidat bleu contenant DEV505 à DEV510. Contrôler dans le
-navigateur les trois liens `Voir les classes` BAC PRO, BTS et CAP : aucun ne
-doit afficher une erreur Apps Script ni une zone blanche lorsque la recette
-n'a pas encore de snapshot. Ouvrir ensuite un détail public disponible et confirmer que le
-bouton `Ordres de mission` est absent du DOM public, tandis qu'il reste présent
-dans le détail administrateur. Refaire les 25 routes, puis seulement promouvoir
-le candidat exact après l'autorisation déjà donnée pour ce lot.
+Le candidat exact `ffdac5922034163a77e05f3d7840141b36a00447` a été promu
+sur la version Apps Script immuable `891` des deux Web Apps vertes existantes.
+Les contrôles ont obtenu `25/25` routes valides sur le bleu puis `25/25` sur le
+vert. La navigation publique réelle accueil → BAC PRO → TCAR → PFMP n°1 ne
+contient plus `Ordres de mission`; la même commande reste présente dans le
+détail administratif. Aucun import, aucune écriture Grist, aucun PDF, aucun
+courriel et aucun ordre de mission réel n'ont été déclenchés.
 
-Le contrôle ne doit déclencher ni import, ni écriture Grist, ni génération de
-PDF, ni courriel, ni ordre de mission réel. Si la recette vide ne fournit aucun
-détail de classe, rapporter ce contrôle métier comme impossible au lieu de le
-présenter comme réussi ; la suppression publique reste alors couverte par le
-test de rendu simulé.
+La recette Camin ne fournit pas encore de détail de classe dans ce parcours :
+le contrôle public complet a donc été fait en lecture sur le vert après la
+promotion autorisée, tandis que le bleu couvre la séparation public/admin par
+le test de rendu `16/16`. Ne pas transformer cette limitation en affirmation de
+validation métier bleue de bout en bout.
 
 ## Cas métier prioritaire — continuation après interruption
 

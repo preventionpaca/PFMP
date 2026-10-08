@@ -23,9 +23,26 @@
 - Les tests de régression couvrent précisément le premier routeur, les routes
   publiques, la sortie d'iframe et l'état vide. Tests ciblés DEV504 : `13/13`;
   vues canoniques : `16/16`; suite complète : `642/642`.
-- Le candidat doit encore être publié sur le bleu, contrôlé sur les 25 routes
-  et par navigation réelle avant la promotion verte déjà autorisée. Le vert
-  reste inchangé à ce stade.
+- Le candidat exact
+  `ffdac5922034163a77e05f3d7840141b36a00447` a été publié et relu sur le bleu.
+  Les `25/25` routes bleues sont valides. Le navigateur a parcouru l'accueil
+  public puis la famille BAC PRO : la coque s'affiche immédiatement et la
+  recette vide se termine par un état explicite au lieu d'une erreur Apps
+  Script. La recette ne fournissant pas de détail de classe, l'absence du
+  bouton public reste couverte sur le bleu par le test de rendu `16/16`, et
+  n'est pas présentée comme un parcours de bout en bout bleu.
+- Après l'autorisation explicite, ce candidat a été promu à l'identique sur les
+  deux Web Apps vertes existantes dans la version Apps Script immuable `891`.
+  Leurs URL sont inchangées et les `25/25` routes vertes sont valides ; aucun
+  retour à la version `890` n'a été nécessaire.
+- Le contrôle métier réel du vert a parcouru l'accueil public, BAC PRO, TCAR et
+  la PFMP n°1. Le détail public ne contient ni lien, ni bloc
+  `Ordres de mission`; le même détail administratif conserve ce lien. Le fil
+  administratif `Accueil PFMP` vise exactement
+  `https://alternance.loucodi.fr/`. La navigation publique rejoint bien le
+  déploiement public configuré, sans page blanche ni erreur Apps Script.
+- La publication et ses contrôles n'ont déclenché aucun import, aucune écriture
+  Grist, aucun PDF, aucun courriel et aucun ordre de mission réel.
 
 ## Mise à jour du 8 octobre 2026 — DEV506 (navigation famille réellement non bloquante)
 
