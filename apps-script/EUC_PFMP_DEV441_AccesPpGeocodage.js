@@ -247,4 +247,7 @@ function EUC_DEV441_render_(file,title,boot){var t=HtmlService.createTemplateFro
 function EUC_DEV441_afficherPpAdmin(e){EUC_DEV441_admin_();return EUC_DEV441_render_('Acces_PP_Admin_DEV441','Accès professeurs principaux');}
 function EUC_DEV441_afficherPp(e){return EUC_DEV441_render_('Acces_PP_DEV441','Accès professeur principal');}
 function EUC_DEV441_afficherGeoAdmin(e){EUC_DEV441_admin_();return EUC_DEV441_render_('Geocodage_PFMP_DEV441','Géocodage des entreprises');}
-function EUC_DEV441_afficherCarte(e){return EUC_DEV441_render_('Cartographie_PFMP_DEV441','Cartographie des entreprises',{current:EUC_DEV368_year(e&&e.parameter&&e.parameter.annee),baseUrl:EUC_DEV368_boot().baseUrl,params:e&&e.parameter||{}});}
+function EUC_DEV441_afficherCarte(e){
+  var output=EUC_DEV441_render_('Cartographie_PFMP_DEV441','Cartographie des entreprises',{current:EUC_DEV368_year(e&&e.parameter&&e.parameter.annee),baseUrl:EUC_DEV368_boot().baseUrl,params:e&&e.parameter||{}});
+  return typeof EUC_RELEASE_decorateOutput_==='function'?EUC_RELEASE_decorateOutput_(output):output;
+}

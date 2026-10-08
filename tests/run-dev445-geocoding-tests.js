@@ -85,4 +85,6 @@ assert.match(publicSummaryHtml,/BOOT=<\?!= summaryJson/,'public summary must emb
 assert.match(adminSummaryHtml,/BOOT=<\?!= summaryJson/,'admin summary must embed precomputed counts');
 assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must avoid the normal RPC round-trip');
 
-console.log('16 tests DEV445 géocodage/performance réussis.');
+assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
+
+console.log('17 tests DEV445 géocodage/performance réussis.');
