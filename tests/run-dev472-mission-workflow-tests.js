@@ -4,9 +4,10 @@ const mission=fs.readFileSync('apps-script/Ordres_Mission_PFMP_V368.html','utf8'
 const detail=fs.readFileSync('apps-script/Suivi_PFMP_Classe_Detail_V156.html','utf8');
 let n=0;function test(name,fn){fn();console.log('✓',name);n++}
 
-test('un seul bouton Ordres de mission est ajouté à la fiche de classe',()=>{
+test('un seul bouton Ordres de mission est conservé dans le gabarit administratif',()=>{
   assert.equal((detail.match(/id="missionOrders"/g)||[]).length,1);
   assert.match(detail,/>Ordres de mission<\/a>/);
+  assert.match(detail,/if\(missionOrders\)\{var missionUrl=/);
 });
 test('le lien transporte exactement le contexte de la fiche',()=>{
   for(const key of ['annee','famille','classe','classeNom','periode','periodeNom'])assert.match(detail,new RegExp("missionUrl\\.searchParams\\.set\\('"+key+"'"));

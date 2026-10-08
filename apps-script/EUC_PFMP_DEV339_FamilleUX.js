@@ -413,10 +413,25 @@ function EUC_DEV394_BASE_EUC_DEV339_familyData_(annee,famille){
   return {ok:true,ready:false,annee:annee,famille:famille,classes:[],source:'NONE'};
 }
 function EUC_DEV339_afficherFamille(e){
-  var annee=EUC_DEV339_year_(e),famille=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO',data=EUC_DEV339_familyData_(annee,famille);
+  var annee=EUC_DEV339_year_(e),famille=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO';
   var t=HtmlService.createTemplateFromFile('Suivi_Conventions_Admin_FamilleV190L');
-  t.paramsJson=JSON.stringify({annee:annee,famille:famille});t.dataJson=JSON.stringify(data||{});t.baseUrl='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+  /* DEV504 : rendre la coque avant toute lecture Grist. Le chargement métier
+   * est effectué ensuite par google.script.run ; une recette incomplète ne
+   * peut donc plus produire une page blanche ou une erreur Apps Script. */
+  t.paramsJson=JSON.stringify({annee:annee,famille:famille});t.dataJson=JSON.stringify({ok:true,ready:false,loading:true,classes:[]});t.baseUrl='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
   return t.evaluate().setTitle('Suivi des conventions — '+(famille==='BACPRO'?'BAC PRO':famille)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function EUC_DEV504_chargerFamille(payload){
+  payload=payload||{};var started=Date.now(),annee=EUC_DEV339_txt_(payload.annee),famille=EUC_DEV339_txt_(payload.famille)||'BACPRO';
+  if(!annee)throw new Error('Année scolaire obligatoire.');
+  try{
+    var data=EUC_DEV339_familyData_(annee,famille)||{};
+    data.durationMs=Date.now()-started;return data;
+  }catch(e){
+    console.error('[DEV504 famille] '+String(e&&e.message||e));
+    return {ok:false,ready:false,annee:annee,famille:famille,classes:[],durationMs:Date.now()-started,error:'Aucune synthèse n’est disponible pour cette famille.'};
+  }
 }
 
 

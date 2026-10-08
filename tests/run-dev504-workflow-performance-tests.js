@@ -2,6 +2,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require(
 const root=path.resolve(__dirname,'..');
 const atomic=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV425_AtomicFreshness.js'),'utf8');
 const family=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV339_FamilleUX.js'),'utf8');
+const familyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Admin_FamilleV190L.html'),'utf8');
 const migration=fs.readFileSync(path.join(root,'apps-script','Migration_JotForm_PFMP_V160.html'),'utf8');
 const pdf=fs.readFileSync(path.join(root,'apps-script','Convention_PFMP_PdfV95.html'),'utf8');
 let n=0;
@@ -46,6 +47,15 @@ test('le suivi de famille sert d’abord le snapshot persistant local',()=>{
   assert.match(base,/PERSISTENT_RECALCUL/);
   assert.match(family,/Classe_convention:selectedClassIds/);
   assert.match(family,/Classe:selectedClassIds/);
+});
+
+test('la route famille rend une coque avant le chargement métier',()=>{
+  const route=family.slice(family.indexOf('function EUC_DEV339_afficherFamille'),family.indexOf('function EUC_DEV504_chargerFamille'));
+  assert.doesNotMatch(route,/EUC_DEV339_familyData_\(/);
+  assert.match(familyHtml,/Chargement de la synthèse métier/);
+  assert.match(familyHtml,/\.EUC_DEV504_chargerFamille\(P\)/);
+  assert.match(familyHtml,/Le serveur travaille encore/);
+  assert.match(familyHtml,/Aucune synthèse n’est disponible pour cette famille/);
 });
 
 test('le rattachement JotForm possède une confirmation locale explicite',()=>{

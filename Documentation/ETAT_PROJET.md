@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV505 (séparation des commandes publiques)
+
+- Le détail public d'une classe ne contient plus le bouton administratif
+  `Ordres de mission`. Le lien est retiré du HTML public, avec un filet CSS de
+  sécurité ; le même gabarit conserve le bouton et son contexte complet dans
+  l'administration.
+- La synthèse administrative par famille rend désormais sa coque avant la
+  lecture métier, puis charge les données par appel asynchrone avec états de
+  chargement, délai prolongé, erreur exploitable et nouvelle tentative. Une
+  lecture Grist lente ne doit plus produire une page blanche.
+- Tests ciblés : vues publiques `16/16`, missions `12/12`, parcours DEV504
+  `8/8`. Suite complète finale : `637/637`. Ces résultats sont des tests
+  automatisés ; la publication bleue, les 25 routes et les parcours de
+  navigation restent à contrôler avant toute promotion verte.
+- La continuation après interruption est cadrée pour le prochain lot mais
+  n'est pas encore implémentée dans ce candidat.
+
 ## Mise à jour du 8 octobre 2026 — DEV504 (parcours métier et temps de réponse)
 
 - Le contrôle qualité distingue désormais quatre preuves : tests simulés,

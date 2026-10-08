@@ -146,6 +146,14 @@ function EUC_DEV459_adminBreadcrumb_(detail,p){
 function EUC_DEV459_navigationFeedback_(){
   return '<style id="EUC_DEV462_NAV_FEEDBACK">a.euc462-busy{pointer-events:none;opacity:.72}a.euc462-busy:after{content:"";display:inline-block;width:14px;height:14px;margin-left:7px;border:2px solid #b9ded6;border-top-color:#07856f;border-radius:50%;vertical-align:middle;animation:euc462spin .7s linear infinite}@keyframes euc462spin{to{transform:rotate(360deg)}}</style><script id="EUC_DEV462_NAV_FEEDBACK_JS">document.addEventListener("click",function(ev){var a=ev.target&&ev.target.closest?ev.target.closest("a[href]"):null;if(!a)return;a.classList.add("euc462-busy");a.setAttribute("aria-busy","true");},true);<\/script>';
 }
+function EUC_DEV505_retirerCommandesAdminPubliques_(html){
+  /* Le détail public partage le tableau administratif, mais aucune commande
+   * propre à l'administration ne doit rester dans son DOM. */
+  return String(html||'').replace(
+    /<a\b[^>]*\bid=["']missionOrders["'][^>]*>[\s\S]*?<\/a>/gi,
+    ''
+  );
+}
 function EUC_DEV459_detail_(e,isPublic){
   var p=EUC_DEV455_params_(e),detail;
   try{detail=EUC_DEV459_sanitizeDetail_(EUC_DEV455_fastDetail_(p.annee,p.famille,p.classe,p.periode));}
@@ -164,7 +172,8 @@ function EUC_DEV459_detail_(e,isPublic){
      * réécriture porte donc sur les noms de routes eux-mêmes, et pas seulement
      * sur les href déjà matérialisés dans le HTML initial. */
     html=html.replace(/suivi-pfmp-classe(?!-public)/g,'suivi-pfmp-classe-public').replace(/suivi-conventions-famille(?!-public)/g,'suivi-conventions-public-famille').replace(/suivi-conventions(?!-public)/g,'suivi-conventions-public');
-    html=html.replace(/<\/head>/i,'<style id="EUC_DEV459_READONLY">#assignToolbar,#assignStatus,#mailParams,#sendTable,#mailModal,#retModalV162,#selectHead,#tbody tr>td:first-child,.assignbar,.assign-status,.student-check,input[type="checkbox"].rowcheck,button[id^="retire"],#EUC_DEV183_BREADCRUMB{display:none!important}</style></head>');
+    html=EUC_DEV505_retirerCommandesAdminPubliques_(html);
+    html=html.replace(/<\/head>/i,'<style id="EUC_DEV459_READONLY">#assignToolbar,#assignStatus,#mailParams,#sendTable,#missionOrders,#mailModal,#retModalV162,#selectHead,#tbody tr>td:first-child,.assignbar,.assign-status,.student-check,input[type="checkbox"].rowcheck,button[id^="retire"],#EUC_DEV183_BREADCRUMB{display:none!important}</style></head>');
   }else{
     /* Un seul fil en administration : celui qui commence par Accueil PFMP. */
     html=html.replace(/<\/head>/i,'<style id="EUC_DEV459_ADMIN_CRUMB">#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB,#EUC_DEV175C_CRUMB,.euc186-crumb{display:none!important}</style></head>');
