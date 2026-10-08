@@ -847,10 +847,10 @@ btn.onclick = function(){
           r.eleve.nom;
 
         $('#class').textContent =
-          r.eleve.classeConvention || '';
+          r.eleve.classeConvention || r.eleve.classe || '';
 
         $('#year').textContent =
-          r.eleve.anneeConvention || '';
+          r.eleve.anneeConvention || r.eleve.anneeScolaire || r.eleve.annee || '';
 
         $('#dates').textContent =
           r.eleve.dateDebut &&
@@ -865,6 +865,15 @@ btn.onclick = function(){
 
         diag.textContent =
           r.diagnostic || 'DEV.140 OK';
+
+        if(r.saisieAutorisee === false){
+          $('#enterprise').hidden = true;
+          btn.disabled = false;
+          btn.textContent = 'Vérifier et continuer';
+          msg(r.messageQR || 'Ce QR ne permet plus la saisie. Présentez-vous au bureau PFMP.',true);
+          status.className = 'status error';
+          return;
+        }
 
         afficherEntreprise(r);
 

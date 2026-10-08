@@ -204,8 +204,10 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
       }
       var dernier=actif||list[0]||null;
       var st=typeof EUC_DEV340_status_==='function'?EUC_DEV340_status_(dernier):(dernier?{code:'AVEC_CONVENTION',libelle:'Avec convention',active:true}:{code:'SANS_CONVENTION',libelle:'Sans convention',active:false});
-      x.historiqueConventions=[];
-      x.conventionId=actif?Number(actif.id)||0:0;x.convention=!!actif;x.statutCode=st.code;x.statut=st.libelle;
+      var covered=!!(actif&&st.covered!==false);
+      x.historiqueConventions=list.slice();
+      x.sequenceId=dernier?Number(dernier.id)||0:0;
+      x.conventionId=covered?Number(actif.id)||0:0;x.convention=covered;x.statutCode=st.code;x.statut=st.libelle;
       x.numero=actif?(typeof EUC_ADMIN_WORKFLOW_numeroV144_==='function'?EUC_ADMIN_WORKFLOW_numeroV144_(actif):EUC_DEV339_txt_(actif.Numero_enregistrement||actif.Reference_convention)):'';
       if(dernier){
         x.entreprise=EUC_DEV339_txt_(dernier.Entreprise_raison_sociale)||EUC_DEV339_txt_(dernier.Entreprise_enseigne);

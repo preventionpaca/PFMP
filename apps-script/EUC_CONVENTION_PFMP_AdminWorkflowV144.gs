@@ -105,6 +105,10 @@ function EUC_ADMIN_WORKFLOW_assurerColonnesV144_(){
     c('Auteur_interruption','Auteur interruption'),
     c('Motif_interruption','Motif interruption'),
     c('Date_fin_reelle','Date fin réelle','Date'),
+    c('Type_sequence','Type de séquence'),
+    c('Numero_sequence','Numéro de séquence','Int'),
+    c('Convention_origine','Convention d’origine','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
+    c('Convention_remplacement','Convention de remplacement','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
     c('Historique_admin_JSON','Historique administratif JSON')
   ];
 
@@ -212,6 +216,8 @@ function EUC_ADMIN_WORKFLOW_vueV144(accesId){
       };
     });
 
+  var remplacementId=Number(EUC_PFMP_ref_(a.Convention_remplacement))||0;
+  var remplacement=remplacementId?(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(x){return Number(x.id)===remplacementId;})[0]:null;
   return {
     version:EUC_ADMIN_WORKFLOW_V144_,
     id:Number(a.id),
@@ -231,6 +237,14 @@ function EUC_ADMIN_WORKFLOW_vueV144(accesId){
       motif:a.Motif_interruption||'',
       dateFinReelle:a.Date_fin_reelle||''
     },
+    remplacement:remplacement?{
+      id:Number(remplacement.id),
+      reference:String(remplacement.Reference_convention||''),
+      statut:String(remplacement.Statut_administratif||remplacement.Statut||''),
+      dateDebut:EUC_IMPORT_dateExistanteISO_(remplacement.Date_debut),
+      dateFin:EUC_IMPORT_dateExistanteISO_(remplacement.Date_fin),
+      entreprise:String(remplacement.Entreprise_raison_sociale||'')
+    }:null,
     historique:EUC_ADMIN_WORKFLOW_historiqueV144_(a)
   };
 }
@@ -284,6 +298,7 @@ function EUC_ADMIN_WORKFLOW_annulerV144(accesId,motif){
   var now=EUC_ADMIN_WORKFLOW_nowV144_();
   var auteur=ctx.email||'';
   var h=EUC_ADMIN_WORKFLOW_historiqueV144_(a);
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_(a,'annulation-convention');
 
   h.push({
     date:now,
@@ -305,7 +320,9 @@ function EUC_ADMIN_WORKFLOW_annulerV144(accesId,motif){
     }}]}
   );
 
-  return EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  var vue=EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  vue.snapshot=EUC_CONVENTION_finRafraichissementV511_(refresh);
+  return vue;
 }
 
 function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
@@ -314,12 +331,15 @@ function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
   motif=EUC_ADMIN_WORKFLOW_txtV144_(motif,1000);
   if(!motif)throw new Error('Motif d’interruption obligatoire.');
 
-  var fin=EUC_ADMIN_WORKFLOW_txtV144_(dateFinReelle,20);
-  if(!fin)throw new Error('Date de fin réelle obligatoire.');
+  var fin=EUC_CONVENTION_dateISOStricte_(EUC_ADMIN_WORKFLOW_txtV144_(dateFinReelle,20),'Date de fin réelle');
+  var debutPrevu=EUC_IMPORT_dateExistanteISO_(a.Date_debut),finPrevue=EUC_IMPORT_dateExistanteISO_(a.Date_fin);
+  if(debutPrevu&&fin<debutPrevu)throw new Error('La date de rupture ne peut pas précéder le début de la PFMP.');
+  if(finPrevue&&fin>finPrevue)throw new Error('La date de rupture ne peut pas dépasser la fin prévue de la PFMP.');
 
   var now=EUC_ADMIN_WORKFLOW_nowV144_();
   var auteur=ctx.email||'';
   var h=EUC_ADMIN_WORKFLOW_historiqueV144_(a);
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_(a,'rupture-convention');
 
   h.push({
     date:now,
@@ -339,11 +359,85 @@ function EUC_ADMIN_WORKFLOW_interrompreV144(accesId,dateFinReelle,motif){
       Auteur_interruption:auteur,
       Date_fin_reelle:fin,
       Motif_interruption:motif,
+      Revoked:true,
       Historique_admin_JSON:JSON.stringify(h)
     }}]}
   );
 
-  return EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  var vue=EUC_ADMIN_WORKFLOW_vueV144(a.id);
+  vue.snapshot=EUC_CONVENTION_finRafraichissementV511_(refresh);
+  return vue;
+}
+
+function EUC_ADMIN_WORKFLOW_creerRemplacementV511(accesId,dateDebut,dateFin,motif){
+  var ctx=EUC_ADMIN_WORKFLOW_ctxV144_();
+  EUC_CONVENTION_assurerTableAcces_();
+  EUC_ADMIN_WORKFLOW_assurerColonnesV144_();
+  var a=EUC_ADMIN_WORKFLOW_lireDossierV144_(accesId);
+  if(String(a.Statut_administratif||'').toUpperCase()!=='INTERROMPUE')throw new Error('La convention d’origine doit d’abord être enregistrée comme interrompue.');
+  if(Number(EUC_PFMP_ref_(a.Convention_remplacement))>0)throw new Error('Une convention de remplacement existe déjà pour cette rupture.');
+  var existing=(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(x){
+    return Number(EUC_PFMP_ref_(x.Convention_origine))===Number(a.id)&&x.Supprimee_admin!==true;
+  });
+  if(existing.length)throw new Error('Une convention de remplacement existe déjà pour cette rupture.');
+
+  var dates=EUC_CONVENTION_validerDatesIndividuelles_(dateDebut,dateFin,motif);
+  var rupture=EUC_IMPORT_dateExistanteISO_(a.Date_fin_reelle);
+  if(rupture&&dates.debut<=rupture)throw new Error('La nouvelle PFMP doit commencer après la date de rupture de la convention précédente.');
+
+  var periodeId=Number(EUC_PFMP_ref_(a.Periode))||0,periodeRow=null;
+  if(periodeId){
+    periodeRow=(EUC_IMPORT_lireRecords_('Planning_Periodes')||[]).filter(function(x){return Number(x.id)===periodeId;})[0]||null;
+  }
+  var debutOfficiel=EUC_IMPORT_dateExistanteISO_(a.Date_officielle_debut||(periodeRow&&periodeRow.Date_debut)||a.Date_debut);
+  var finOfficielle=EUC_IMPORT_dateExistanteISO_(a.Date_officielle_fin||(periodeRow&&periodeRow.Date_fin)||a.Date_fin);
+  var p={
+    id:periodeId,
+    type:String((periodeRow&&periodeRow.Type)||a.Periode_libelle||'PFMP'),
+    debut:debutOfficiel,
+    fin:finOfficielle
+  };
+  var eleve={id:Number(EUC_PFMP_ref_(a.Eleve))||0};
+  var cl={id:Number(EUC_PFMP_ref_(a.Classe_convention))||0,nom:String(a.Classe_convention_nom||'')};
+  if(!eleve.id||!cl.id||!p.id||!p.debut||!p.fin)throw new Error('La convention d’origine ne contient pas assez d’informations pour créer son remplacement.');
+
+  var prepared=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,String(a.Annee_scolaire||''),{
+    scenarioDates:'REMPLACEMENT_APRES_RUPTURE',
+    dateDeclareeDebut:dates.debut,
+    dateDeclareeFin:dates.fin,
+    motifEcartDates:dates.motif,
+    typeSequence:'REMPLACEMENT_APRES_RUPTURE',
+    numeroSequence:Math.max(2,Number(a.Numero_sequence||1)+1),
+    conventionOrigine:Number(a.id),
+    statutAdministratif:'A_COMPLETER_ENTREPRISE'
+  });
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_(a,'remplacement-apres-rupture');
+  var created=EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[prepared.record]})||{};
+  var newId=Number(created.records&&created.records[0]&&created.records[0].id)||0;
+  if(!newId){
+    var createdRow=(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(x){return String(x.Reference_convention||'')===prepared.reference;})[0];
+    newId=Number(createdRow&&createdRow.id)||0;
+  }
+  if(!newId)throw new Error('La nouvelle convention a été créée mais son identifiant n’a pas pu être relu. Ne recommencez pas : contactez l’administrateur.');
+
+  var now=EUC_ADMIN_WORKFLOW_nowV144_(),h=EUC_ADMIN_WORKFLOW_historiqueV144_(a);
+  h.push({date:now,auteur:ctx.email||'',action:'REMPLACEMENT_CREE',statut:'INTERROMPUE',remplacementId:newId,dateDebut:dates.debut,dateFin:dates.fin,motif:dates.motif});
+  EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{id:Number(a.id),fields:{Convention_remplacement:newId,Historique_admin_JSON:JSON.stringify(h)}}]});
+
+  var snapshot=EUC_CONVENTION_finRafraichissementV511_(refresh);
+  var base=ScriptApp.getService().getUrl();
+  return {
+    ok:true,
+    origineId:Number(a.id),
+    remplacementId:newId,
+    reference:prepared.reference,
+    dateDebut:dates.debut,
+    dateFin:dates.fin,
+    urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(newId),
+    urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(prepared.token),
+    vue:EUC_ADMIN_WORKFLOW_vueV144(a.id),
+    snapshot:snapshot
+  };
 }
 
 function DIAGNOSTIC_DEV144_PFMP_000223(){
@@ -447,7 +541,9 @@ function EUC_ADMIN_WORKFLOW_listerDossiersV145(){
         a.Date_saisie_entreprise ||
         a.Numero_enregistrement ||
         a.Entreprise_raison_sociale ||
-        a.Statut==='ENTREPRISE_SAISIE'
+        a.Statut==='ENTREPRISE_SAISIE' ||
+        a.Statut_administratif==='A_COMPLETER_ENTREPRISE' ||
+        a.Type_sequence==='REMPLACEMENT_APRES_RUPTURE'
       );
     })
     .map(function(a){
@@ -494,7 +590,7 @@ function EUC_ADMIN_WORKFLOW_listerDossiersV146(){
   eleves.forEach(function(e){byEleve[Number(e.id)]=e;});
 
   return rows.filter(function(a){
-    return !!(a.Date_saisie_entreprise||a.Numero_enregistrement||a.Entreprise_raison_sociale||a.Statut==='ENTREPRISE_SAISIE');
+    return !!(a.Date_saisie_entreprise||a.Numero_enregistrement||a.Entreprise_raison_sociale||a.Statut==='ENTREPRISE_SAISIE'||a.Statut_administratif==='A_COMPLETER_ENTREPRISE'||a.Type_sequence==='REMPLACEMENT_APRES_RUPTURE');
   }).map(function(a){
     var e=byEleve[Number(EUC_PFMP_ref_(a.Eleve))]||{};
     var nom=String(e.Nom||a.Eleve_nom||a.Nom_eleve||'').trim();

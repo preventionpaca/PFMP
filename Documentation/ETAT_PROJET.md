@@ -1,5 +1,40 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV511 (dates individuelles et remplacement après rupture)
+
+- La génération unitaire d'une convention permet désormais de conserver la
+  période officielle de rattachement tout en enregistrant des dates réelles
+  différentes et un motif obligatoire. L'administration ne saisit aucune
+  entreprise dans ce parcours : l'entreprise, son responsable et le tuteur
+  restent renseignés par l'élève au moyen du QR de la nouvelle convention.
+- Une convention commencée peut être déclarée `INTERROMPUE` avec sa date de fin
+  réelle et son motif. Son QR est révoqué immédiatement ; l'enregistrement et
+  l'entreprise d'origine restent conservés dans l'historique.
+- Depuis cette convention interrompue, l'administration peut créer une seule
+  convention de remplacement, reliée à la même période officielle. Elle saisit
+  uniquement les nouvelles dates et leur motif. La nouvelle séquence commence
+  vide de toute entreprise, responsable ou tuteur et reçoit son propre QR.
+- Le suivi conserve une seule ligne élève, montre l'ancienne séquence en rouge
+  avec son ancien lieu et montre la nouvelle séquence comme
+  `À compléter par l'entreprise`. Tant que le QR n'a pas été complété, elle ne
+  compte pas comme convention couvrante et ne peut pas produire d'ordre de
+  mission. La séquence interrompue n'est jamais missionnable.
+- Un QR est utilisable avant la date réelle de début. À partir de cette date,
+  il oriente l'élève vers le bureau PFMP au lieu d'accepter une saisie tardive ;
+  après la date de fin, il est définitivement expiré. La validité est revérifiée
+  lors de chaque reprise et au moment de l'enregistrement final.
+- Les tests DEV511 couvrent `9/9` scénarios simulés, dont la révocation lors de
+  la rupture, l'absence de copie des données entreprise, l'unicité du
+  remplacement, le cycle de vie du QR, la visibilité dans le suivi et
+  l'exclusion des ordres de mission. La suite complète passe à `651/651` ; le
+  premier lancement depuis le worktree caché avait été refusé par le confinement
+  Snap de Chromium, puis le même arbre exact a été contrôlé avec succès depuis
+  un chemin visible par le navigateur.
+- À ce stade, il s'agit encore d'un candidat local bleu : aucune écriture métier
+  réelle, aucun QR réel, aucun ordre de mission, aucun courriel et aucun accès à
+  la production Grist n'ont été exécutés. La publication bleue et les contrôles
+  des 25 routes restent requis avant remise.
+
 ## Mise à jour du 8 octobre 2026 — DEV508 à DEV510 (navigation famille fiable)
 
 - Le contrôle navigateur après DEV507 a montré que `doGet` appelait d'abord

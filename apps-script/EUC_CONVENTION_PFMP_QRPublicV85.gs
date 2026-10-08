@@ -128,6 +128,29 @@ function EUC_CONVENTION_lireRepriseV117_(token){
 
   return EUC_CONVENTION_resoudreLienV113_(rid).acces;
 }
+function EUC_CONVENTION_etatQRV511_(a,aujourdhui){
+  a=a||{};
+  var statut=String(a.Statut_administratif||a.Statut||'').toUpperCase();
+  var debut=EUC_IMPORT_dateExistanteISO_(a.Date_declaree_debut||a.Date_debut);
+  var fin=EUC_IMPORT_dateExistanteISO_(a.Date_declaree_fin||a.Date_fin);
+  var today=String(aujourdhui||Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','yyyy-MM-dd'));
+  if(a.Revoked===true||a.Supprimee_admin===true||statut.indexOf('INTERROMP')>=0||statut.indexOf('ANNULEE')>=0){
+    return {saisieAutorisee:false,etat:'REVOQUE',debut:debut,fin:fin,message:'Cette convention n’est plus utilisable. Présentez-vous au bureau PFMP.'};
+  }
+  if(!debut||!fin){
+    return {saisieAutorisee:false,etat:'DATES_INVALIDES',debut:debut,fin:fin,message:'Les dates de cette convention sont incomplètes. Présentez-vous au bureau PFMP.'};
+  }
+  if(today<debut)return {saisieAutorisee:true,etat:'OUVERT',debut:debut,fin:fin,message:''};
+  if(today<=fin){
+    return {saisieAutorisee:false,etat:'PERIODE_COMMENCEE',debut:debut,fin:fin,message:'La PFMP a déjà commencé. Ce QR ne permet plus une saisie normale : présentez-vous au bureau PFMP pour recevoir une nouvelle convention adaptée.'};
+  }
+  return {saisieAutorisee:false,etat:'EXPIRE_DEFINITIF',debut:debut,fin:fin,message:'Ce QR est définitivement expiré depuis la fin de la PFMP. Présentez-vous au bureau PFMP.'};
+}
+function EUC_CONVENTION_exigerQRValideV511_(a){
+  var etat=EUC_CONVENTION_etatQRV511_(a);
+  if(!etat.saisieAutorisee)throw new Error(etat.message);
+  return etat;
+}
 function EUC_CONVENTION_verifierNaissanceV113_(resolved,jour,mois){
   var a=resolved.acces;
   jour=Number(jour||0);
@@ -159,18 +182,12 @@ function EUC_CONVENTION_verifierNaissanceV113_(resolved,jour,mois){
     throw new Error('[QR117-NAISSANCE] Accès trouvé, mais jour/mois ne correspondent pas à la date enregistrée.');
   }
 
-  EUC_ENT_grist(
-    'patch',
-    '/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',
-    {records:[{id:a.id,fields:{
-      Tentatives_echec:0,
-      Bloque_jusqua:null,
-      Date_derniere_utilisation:new Date().toISOString(),
-      Statut:'FORMULAIRE_OUVERT'
-    }}]}
-  );
+  var etatQR=EUC_CONVENTION_etatQRV511_(a);
+  var patchFields={Tentatives_echec:0,Bloque_jusqua:null,Date_derniere_utilisation:new Date().toISOString()};
+  if(etatQR.saisieAutorisee)patchFields.Statut='FORMULAIRE_OUVERT';
+  EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{id:a.id,fields:patchFields}]});
 
-  var resume=EUC_CONVENTION_creerRepriseV117_(a.id);
+  var resume=etatQR.saisieAutorisee?EUC_CONVENTION_creerRepriseV117_(a.id):'';
   var classe=String(a.Classe_convention_nom||'').trim();
   var periode=String(a.Periode_libelle||'').trim();
   var debutISO=EUC_IMPORT_dateExistanteISO_(a.Date_debut);
@@ -221,6 +238,9 @@ function EUC_CONVENTION_verifierNaissanceV113_(resolved,jour,mois){
     reference:a.Reference_convention||'',
     resume:resume,
     continuationUrl:'',
+    saisieAutorisee:etatQR.saisieAutorisee,
+    etatQR:etatQR.etat,
+    messageQR:etatQR.message,
 
     classe:classe,
     classeConvention:classe,
@@ -270,6 +290,7 @@ function EUC_CONVENTION_verifierIdentiteV113(rid,jour,mois){return EUC_CONVENTIO
 function EUC_CONVENTION_assurerColonnesEntrepriseV117_(){var t=EUC_CONVENTION_ACCES_TABLE_,cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[],p={};cols.forEach(function(c){p[c.id]=true;});var defs=[['Entreprise_siret','SIRET entreprise','Text'],['Entreprise_nis','NIS Monaco','Text'],['Entreprise_identifiant_type','Type identifiant entreprise','Text'],['Entreprise_validation_statut','Statut validation entreprise','Text'],['Entreprise_raison_sociale','Raison sociale entreprise','Text'],['Entreprise_enseigne','Enseigne entreprise','Text'],['Entreprise_adresse','Adresse entreprise','Text'],['Entreprise_complement','Complément adresse entreprise','Text'],['Entreprise_code_postal','Code postal entreprise','Text'],['Entreprise_commune','Commune entreprise','Text'],['Entreprise_pays','Pays entreprise','Text'],['Responsable_nom','Nom responsable','Text'],['Responsable_prenom','Prénom responsable','Text'],['Responsable_fonction','Fonction responsable','Text'],['Responsable_telephone','Téléphone responsable','Text'],['Responsable_courriel','Courriel responsable','Text'],['Tuteur_est_responsable','Tuteur = responsable','Bool'],['Tuteur_nom','Nom tuteur','Text'],['Tuteur_prenom','Prénom tuteur','Text'],['Tuteur_fonction','Fonction tuteur','Text'],['Tuteur_telephone','Téléphone tuteur','Text'],['Tuteur_courriel','Courriel tuteur','Text'],['Date_saisie_entreprise','Date saisie entreprise','DateTime']];var missing=defs.filter(function(d){return !p[d[0]];}).map(function(d){return {id:d[0],fields:{label:d[1],type:d[2]}};});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});}
 function EUC_CONVENTION_repriseEntrepriseV117(token){
   var a=EUC_CONVENTION_lireRepriseV117_(token);
+  EUC_CONVENTION_exigerQRValideV511_(a);
   var eleves=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP');
   var e=eleves.filter(function(x){
     return Number(x.id)===Number(EUC_PFMP_ref_(a.Eleve));
@@ -319,6 +340,7 @@ function EUC_CONVENTION_repriseEntrepriseV117(token){
 
 function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
   var a=EUC_CONVENTION_lireRepriseV117_(token);
+  EUC_CONVENTION_exigerQRValideV511_(a);
   d=d||{};
 
   function txt(v,n){
@@ -418,9 +440,11 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Tuteur_courriel:tCourriel,
     Date_saisie_entreprise:new Date().toISOString(),
     Statut:'ENTREPRISE_SAISIE',
+    Statut_administratif:'INFORMATIONS_ENREGISTREES',
     Date_derniere_utilisation:new Date().toISOString()
   };
 
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_(a,'saisie-entreprise-qr');
   EUC_ENT_grist(
     'patch',
     '/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',
@@ -444,13 +468,15 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
       erreur:String(err143&&err143.message?err143.message:err143)
     };
   }
+  var snapshot=EUC_CONVENTION_finRafraichissementV511_(refresh);
 
   return {
     ok:true,
     reference:a.Reference_convention||'',
     numeroEnregistrement:numeroEnregistrement,
     message:'Informations entreprise enregistrées.',
-    notification:notif
+    notification:notif,
+    snapshot:snapshot
   };
 }
 

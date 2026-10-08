@@ -35,7 +35,7 @@
     td{line-height:1.3;overflow-wrap:anywhere}.euc418-contact>div+div{margin-top:3px}.euc418-contact .name{font-weight:700}
     .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
     .s-SANS_CONVENTION{background:#fff1f2;color:#b42318}.s-ENREGISTREE,.s-DEPOSEE,.s-SIGNEE{background:#fff7ed;color:#b45309}
-    .s-FINALISEE,.s-REMISE,.s-AUTORISEE{background:#ecfdf3;color:#067647}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}
+    .s-FINALISEE,.s-REMISE,.s-AUTORISEE{background:#ecfdf3;color:#067647}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}.s-A_COMPLETER_ENTREPRISE{background:#fff7ed;color:#b45309}
     tr.row-situation-admin{background:#fff0db!important}tr.row-situation-admin td{border-bottom-color:#f7c77e!important}
     .status-date{display:block;margin-top:3px;font-size:10px;font-weight:700;opacity:.82}
     .modal{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
@@ -45,7 +45,7 @@
     @media(max-width:900px){.context,.summary,.assignbar{grid-template-columns:1fr}}
     @media print{#assignToolbar,#assignStatus,#mailParams,#sendTable,#mapPfmp,#exportPdf,#missionOrders,.back,.crumb,.euc186-crumb,#EUC_DEV175C_CRUMB,#EUC_V51_CRUMB,#EUC_V50_BREADCRUMB{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{font-size:9px}th,td{min-width:0!important;padding:5px!important}tr{break-inside:avoid}body{background:#fff}}
   
-    .hist-v162{margin-top:5px;color:#b42318;font-size:11px}.hist-v162 summary{cursor:pointer;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a}.hist-v162 span{font-weight:400}
+    .hist-v162{margin-top:7px;color:#b42318;font-size:11px;font-weight:800}.hist-v162 div{margin-top:4px;color:#7a271a;background:#fff1f2;border-left:3px solid #f04438;border-radius:5px;padding:5px}.hist-v162 span{font-weight:400}
     .retire-v162{background:#fff;color:#b42318!important;border:1px solid #f1aeb5!important}
     .modal-ret-v162{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px}.modal-ret-v162.show{display:flex}.modal-ret-card-v162{background:#fff;width:min(560px,96vw);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
 </style>
@@ -255,7 +255,20 @@ const DETAIL_INIT=<?!= detailJson ?>;
   }
   function showStatus(text,type){assignStatus.textContent=text||'';assignStatus.className='assign-status'+(text?' show':'')+(type?' '+type:'')}
   function selectedIds(){return Array.from(document.querySelectorAll('.student-check:checked')).map(x=>Number(x.value))}
-    function historyNoteV161(x){return '';}
+    function historyNoteV161(x){
+      const currentId=Number(x&&x.sequenceId||0);
+      const rows=(x&&Array.isArray(x.historiqueConventions)?x.historiqueConventions:[]).filter(function(a){return Number(a&&a.id||0)!==currentId});
+      if(!rows.length)return '';
+      return '<div class="hist-v162">Séquence(s) précédente(s)'+rows.map(function(a){
+        const raw=String(a.Statut_administratif||a.Statut||'').toUpperCase();
+        const state=raw.indexOf('INTERROMP')>=0?'Interrompue':(raw.indexOf('ANNULEE')>=0?'Annulée':'Historique');
+        const company=String(a.Entreprise_raison_sociale||a.Entreprise_enseigne||'Entreprise à compléter');
+        const start=fmtPfmpDate(a.Date_debut||'');
+        const end=fmtPfmpDate(a.Date_fin_reelle||a.Date_fin||'');
+        const reason=String(a.Motif_interruption||'');
+        return '<div>'+esc(state)+' — <span>'+esc(company)+' · '+esc([start,end].filter(Boolean).join(' → '))+(reason?' · '+esc(reason):'')+'</span></div>';
+      }).join('')+'</div>';
+    }
 
 function statusPill(x){
   var date=(x&&x.apprenti&&x.dateContrat)?'<span class="status-date">Début du contrat : '+esc(fmtPfmpDate(x.dateContrat))+'</span>':'';

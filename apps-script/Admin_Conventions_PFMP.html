@@ -37,6 +37,7 @@
     .exceptions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .exception{border:1px solid #f0caca;background:#fffafa;border-radius:13px;padding:16px}
     .exception h3{margin:0 0 12px;color:#8f1d1d}
+    .replacement{grid-column:1/-1;background:#f7fbff;border-color:#b9d6ef}.replacement h3{color:#164e7a}.replacement-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.replacement-result{margin-top:12px;padding:12px;border-radius:10px;background:#e9f8f2;color:#056c4d}.replacement-result a{color:#056c4d;font-weight:800;margin-right:12px}
     .history-item.correction{color:#b42318;font-weight:700;background:#fff4f2;padding:9px;border-radius:8px}\n    .history-item.suppression{color:#8b0000;font-weight:900;background:#ffe4e1;border:2px solid #d92d20;padding:10px;border-radius:8px}\n    .deleted-title{color:#b42318!important;background:#fff0f0;border-radius:10px;padding:10px}\n    .history-item{padding:8px 0;border-bottom:1px solid #edf0f4}
     .hidden{display:none}.ok{background:#e9f8f2;color:#056c4d;padding:10px;border-radius:10px}.err{background:#fff0f0;color:#a61b1b;padding:10px;border-radius:10px}
 
@@ -180,6 +181,17 @@
           <textarea id="stopReason" rows="3" placeholder="Motif obligatoire" style="margin-top:8px"></textarea>
           <button id="stopBtn" class="danger" style="margin-top:10px">Enregistrer l'interruption</button>
         </div>
+        <div id="replacementPanel" class="exception replacement hidden">
+          <h3>Créer la nouvelle convention après rupture</h3>
+          <p class="sub">Le bureau indique uniquement les nouvelles dates. Aucune entreprise, aucun responsable et aucun tuteur ne sont repris : le jeune et l’entreprise les renseigneront avec le nouveau QR.</p>
+          <div class="replacement-grid">
+            <label><span>Nouvelle date de début</span><input id="replacementStart" type="date"></label>
+            <label><span>Nouvelle date de fin</span><input id="replacementEnd" type="date"></label>
+          </div>
+          <textarea id="replacementReason" rows="3" placeholder="Motif / organisation du remplacement (obligatoire)" style="margin-top:8px"></textarea>
+          <button id="replacementBtn" class="primary" style="margin-top:10px">Créer la nouvelle convention et son QR</button>
+          <div id="replacementResult" class="replacement-result hidden"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -218,6 +230,9 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   const steps=document.getElementById('steps');
   const history=document.getElementById('history');
   const status=document.getElementById('status');
+  const replacementPanel=document.getElementById('replacementPanel');
+  const replacementBtn=document.getElementById('replacementBtn');
+  const replacementResult=document.getElementById('replacementResult');
 
   let dossiers=Array.isArray(DOSSIERS_INIT)?DOSSIERS_INIT:[],selected=null,current=null;
   let yearContext=ANNEE_CTX||{annees:[],active:''};
@@ -728,6 +743,16 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
     cls.textContent=detailClass;
     company.textContent=detailCompany;
     period.textContent=detailPeriod;
+    const interrupted=String(v.statut||'').toUpperCase()==='INTERROMPUE';
+    replacementPanel.classList.toggle('hidden',!interrupted);
+    replacementBtn.disabled=!!v.remplacement;
+    if(v.remplacement){
+      replacementResult.classList.remove('hidden');
+      replacementResult.textContent='Convention de remplacement '+(v.remplacement.reference||('#'+v.remplacement.id))+' — '+[v.remplacement.dateDebut,v.remplacement.dateFin].filter(Boolean).join(' au ')+' — '+(v.remplacement.entreprise||'à compléter par l’entreprise')+'.';
+    }else{
+      replacementResult.classList.add('hidden');
+      replacementResult.textContent='';
+    }
     const corr=v.correction||{};
     Array.from(document.querySelectorAll('[data-corr]')).forEach(function(el){
       el.value=corr[el.dataset.corr]||'';
@@ -860,6 +885,42 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
         setStatus('Erreur : '+(e&&e.message||e),'err');
       })
       .EUC_ADMIN_WORKFLOW_interrompreV145(current.id,date,motif);
+  };
+
+  replacementBtn.onclick=async function(){
+    if(!current||String(current.statut||'').toUpperCase()!=='INTERROMPUE')return;
+    const debut=document.getElementById('replacementStart').value;
+    const fin=document.getElementById('replacementEnd').value;
+    const motif=document.getElementById('replacementReason').value.trim();
+    if(!debut||!fin){setStatus('Les nouvelles dates de début et de fin sont obligatoires.','err');return}
+    if(!motif){setStatus('Le motif du remplacement est obligatoire.','err');return}
+    const ok=await askConfirm('Créer une nouvelle convention ?', 'Aucune donnée de l’ancienne entreprise ne sera copiée. Le jeune et la nouvelle entreprise compléteront les coordonnées avec le nouveau QR.', 'Créer la convention');
+    if(!ok)return;
+    const oldText=replacementBtn.innerHTML;
+    let finished=false;
+    replacementBtn.disabled=true;replacementBtn.classList.add('busy');replacementBtn.innerHTML='<span class="spinner"></span>Création en cours';
+    setStatus('Création de la nouvelle convention et du QR…','');
+    const timer=setTimeout(function(){
+      if(finished)return;
+      finished=true;replacementBtn.disabled=false;replacementBtn.classList.remove('busy');replacementBtn.innerHTML=oldText;
+      setStatus('Le serveur met trop de temps à répondre. Vérifiez le dossier avant de recommencer afin d’éviter un doublon.','err');
+    },30000);
+    google.script.run
+      .withSuccessHandler(function(r){
+        if(finished)return;finished=true;clearTimeout(timer);
+        replacementBtn.disabled=false;replacementBtn.classList.remove('busy');replacementBtn.innerHTML=oldText;
+        document.getElementById('replacementReason').value='';
+        render(r.vue);
+        replacementResult.classList.remove('hidden');
+        replacementResult.innerHTML='<b>Nouvelle convention créée :</b> '+esc(r.reference)+' — <a target="_blank" rel="noopener" href="'+esc(r.urlImpression)+'">Ouvrir / imprimer</a><a target="_blank" rel="noopener" href="'+esc(r.urlFormulaire)+'">Tester le nouveau QR</a>';
+        setStatus('Nouvelle convention créée sans reprendre l’ancienne entreprise.','ok');
+      })
+      .withFailureHandler(function(e){
+        if(finished)return;finished=true;clearTimeout(timer);
+        replacementBtn.disabled=false;replacementBtn.classList.remove('busy');replacementBtn.innerHTML=oldText;
+        setStatus('Erreur : '+(e&&e.message||e),'err');
+      })
+      .EUC_ADMIN_WORKFLOW_creerRemplacementV511(current.id,debut,fin,motif);
   };
 
   renderSchoolYears();

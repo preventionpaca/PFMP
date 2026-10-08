@@ -1,4 +1,27 @@
-# Prochain lot après DEV510
+# Prochain lot après DEV511
+
+## DEV511 — candidat bleu à homologuer
+
+DEV511 met en œuvre les deux procédures demandées :
+
+1. une convention unitaire à dates réelles différentes, toujours rattachée à
+   sa période officielle et justifiée par un motif ;
+2. une rupture suivie d'une nouvelle convention reliée à l'ancienne.
+
+Après rupture, le bureau ne renseigne pas le nouveau lieu de stage. Il saisit
+seulement les nouvelles dates et le motif. La remplaçante est créée vide de
+toute entreprise, de tout responsable et de tout tuteur ; le jeune remet ces
+informations par son nouveau QR après avoir fait compléter la convention par
+l'entreprise. L'ancienne séquence est figée, affichée en rouge et exclue des
+ordres de mission. La remplaçante reste visible mais non couvrante et non
+missionnable jusqu'à la saisie QR.
+
+Avant toute remise, il reste à exécuter une seule suite complète, relire le
+diff, publier le commit exact avec `prepare`, contrôler les 25 routes bleues et
+parcourir tous les liens de navigation visibles. Les écritures réelles de
+rupture, convention, QR et mission restent interdites sur la recette : leurs
+tests sont simulés et cette limite doit être annoncée. Aucune promotion verte
+n'est autorisée dans ce lot sans une demande explicite ultérieure.
 
 ## DEV510 livré sur le vert
 
@@ -16,54 +39,47 @@ promotion autorisée, tandis que le bleu couvre la séparation public/admin par
 le test de rendu `16/16`. Ne pas transformer cette limitation en affirmation de
 validation métier bleue de bout en bout.
 
-## Cas métier prioritaire — continuation après interruption
+## Historique de cadrage — continuation après interruption
 
 Le prochain candidat bleu doit traiter une PFMP commencée, interrompue, puis
 reprise au-delà de la période officielle, y compris après les vacances
 scolaires. Il ne faut ni modifier rétroactivement la convention interrompue, ni
 faire disparaître l'incident, ni créer un second élève dans les décomptes.
 
-Le centre administratif doit proposer, uniquement sur un dossier au statut
-`INTERROMPUE`, l'action `Créer une continuation / un report`. Le formulaire
-demande :
+Le centre administratif propose, uniquement sur un dossier au statut
+`INTERROMPUE`, l'action de créer une nouvelle convention reliée. Le formulaire
+demande seulement la date réelle de reprise, la date réelle de fin et le motif
+obligatoire. Il confirme le rattachement à la période officielle d'origine,
+même si la fin réelle la dépasse. Il ne demande ni l'entreprise, ni son
+responsable, ni le tuteur ; le QR de la nouvelle convention recueille ces
+éléments.
 
-- le mode `Même entreprise — report/avenant` ou `Nouvelle entreprise — nouvelle convention` ;
-- la date réelle de reprise, la date réelle de fin et le motif obligatoire ;
-- la confirmation du rattachement à la période officielle d'origine, même si
-  la fin réelle la dépasse ;
-- le choix explicite de conserver ou de revoir les deux affectations distinctes
-  de suivi téléphonique et de visite.
-
-La continuation est un enregistrement distinct lié à la convention d'origine.
+La remplaçante est un enregistrement distinct lié à la convention d'origine.
 La convention initiale reste `INTERROMPUE` avec sa date de fin réelle et son
-historique. La continuation conserve la classe, l'année et la période
-officielle d'origine, mais porte ses propres dates réelles, son entreprise et
-son statut. Une entreprise différente impose une nouvelle convention ; le
-système ne doit jamais transformer automatiquement une rupture dans une
-nouvelle convention signée.
+historique. La remplaçante conserve la classe, l'année et la période officielle
+d'origine, mais porte ses propres dates réelles. Elle commence sans donnée
+entreprise et ne devient exploitable qu'après la saisie du nouveau QR. Le
+système ne transforme jamais automatiquement une rupture en convention signée.
 
 Dans le tableau de suivi de classe et dans l'accès professeur principal :
 
 - afficher une seule ligne pour l'élève avec le badge
-  `Continuation après interruption` ;
+  `À compléter par l'entreprise`, puis son statut courant ;
 - afficher séparément les dates du segment interrompu et celles de la
   continuation, ainsi qu'un avertissement lorsque la fin dépasse la période
   officielle ;
-- compter l'élève une seule fois dans l'effectif et comme couvert si la
-  continuation est active, tout en conservant l'interruption dans le compteur
-  d'incidents ;
-- proposer la reconduction des professeurs déjà affectés sans la rendre
-  automatique ;
-- si l'entreprise ou l'adresse change, conserver l'historique de l'ancienne
-  visite mais placer la visite courante et tout ordre de mission dans l'état
-  `À REVALIDER` avant toute génération ou tout envoi.
+- compter l'élève une seule fois dans l'effectif et comme non couvert tant que
+  le QR de la remplaçante n'est pas complété, tout en conservant l'interruption
+  dans l'historique ;
+- ne jamais faire remonter la convention interrompue ni la remplaçante encore
+  vide dans les ordres de mission.
 
-Tests métier obligatoires sur le bleu avant livraison : même entreprise avec
-fin après vacances, nouvelle entreprise, refus d'une continuation sans dossier
-interrompu, absence de double comptage, reconduction/refus de reconduction des
-deux affectations, changement de destination et ordre de mission à revalider.
-Le canal bleu doit simuler les écritures ; aucune convention réelle, aucun
-courriel et aucun ordre de mission ne sont créés pendant ces tests.
+Tests métier obligatoires sur le bleu avant livraison : dates individuelles,
+fin après la période officielle, refus d'un remplacement sans dossier
+interrompu, absence de double comptage, absence de copie des données entreprise,
+ancien QR révoqué, nouveau QR utilisable avant le départ et exclusion des deux
+séquences non missionnables. Le canal bleu simule les écritures ; aucune
+convention réelle, aucun courriel et aucun ordre de mission ne sont créés.
 
 DEV504 distingue désormais les routes des parcours métier et traite les trois
 goulots observés lors de la recette utilisateur : l'import JotForm ne doit plus

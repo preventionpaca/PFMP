@@ -75,6 +75,9 @@ function EUC_V155_statutLibelle_(a){
   if(s.indexOf('INTERROMP')>=0){
     return {code:'INTERROMPUE',libelle:'Interrompue'};
   }
+  if(s==='A_COMPLETER_ENTREPRISE'){
+    return {code:'A_COMPLETER_ENTREPRISE',libelle:'À compléter par l’entreprise'};
+  }
   if(s==='PFMP_AUTORISEE'){
     return {code:'AUTORISEE',libelle:'PFMP autorisée'};
   }
@@ -188,11 +191,19 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
 
   var lignes=eleves.map(function(e){
     var eid=Number(e.id);
-    var d=(byEleve[eid]||[]).slice().sort(function(a,b){
+    var historique=(byEleve[eid]||[]).slice().sort(function(a,b){
       return Number(b.id)-Number(a.id);
-    })[0]||null;
+    });
+    var d=null,statut=null;
+    for(var i=0;i<historique.length;i++){
+      var candidat=historique[i],s=String(candidat.Statut_administratif||candidat.Statut||'').toUpperCase();
+      var actif=candidat.Supprimee_admin!==true&&candidat.Revoked!==true&&s.indexOf('ANNULEE')<0&&s.indexOf('INTERROMP')<0;
+      if(actif){d=candidat;break;}
+    }
+    d=d||historique[0]||null;
 
-    var statut=EUC_V155_statutLibelle_(d);
+    statut=EUC_V155_statutLibelle_(d);
+    var couverte=!!(d&&statut.code!=='A_COMPLETER_ENTREPRISE'&&statut.code!=='ANNULEE'&&statut.code!=='INTERROMPUE'&&statut.code!=='SUPPRIMEE');
 
     return {
       eleveId:eid,
@@ -200,10 +211,13 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
       prenom:EUC_V155_txt_(e.Prenom_usage||e.Prenom),
       classe:EUC_V154_classeNom_(classe),
 
-      conventionId:d?Number(d.id):0,
+      sequenceId:d?Number(d.id):0,
+      conventionId:couverte?Number(d.id):0,
+      convention:couverte,
       numero:d?EUC_ADMIN_WORKFLOW_numeroV144_(d):'',
       statutCode:statut.code,
       statut:statut.libelle,
+      historiqueConventions:historique,
 
       entreprise:d?EUC_V155_txt_(d.Entreprise_raison_sociale):'',
       adresseEntreprise:EUC_V155_adresseEntreprise_(d),
@@ -220,7 +234,7 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
 
   var stats={
     total:lignes.length,
-    avecConvention:lignes.filter(function(x){return x.conventionId>0 && x.statutCode!=='SUPPRIMEE';}).length,
+    avecConvention:lignes.filter(function(x){return x.conventionId>0;}).length,
     sansConvention:lignes.filter(function(x){return !x.conventionId;}).length,
     annulees:lignes.filter(function(x){return x.statutCode==='ANNULEE';}).length,
     interrompues:lignes.filter(function(x){return x.statutCode==='INTERROMPUE';}).length

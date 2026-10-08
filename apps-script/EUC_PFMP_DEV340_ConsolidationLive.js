@@ -22,6 +22,10 @@ function EUC_DEV340_compactAccess_(a){
     Classe_convention:a.Classe_convention,Periode:a.Periode,
     Statut:a.Statut,Statut_administratif:a.Statut_administratif,
     Revoked:a.Revoked===true,Supprimee_admin:a.Supprimee_admin===true,
+    Date_debut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),Date_fin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),Date_fin_reelle:EUC_IMPORT_dateExistanteISO_(a.Date_fin_reelle),
+    Date_interruption:a.Date_interruption||'',Motif_interruption:EUC_DEV340_txt_(a.Motif_interruption),
+    Type_sequence:EUC_DEV340_txt_(a.Type_sequence),Numero_sequence:Number(a.Numero_sequence)||1,
+    Convention_origine:a.Convention_origine,Convention_remplacement:a.Convention_remplacement,
     Reference_convention:EUC_DEV340_txt_(a.Reference_convention),
     Numero_enregistrement:EUC_DEV340_txt_(a.Numero_enregistrement),
     Entreprise_raison_sociale:EUC_DEV340_txt_(a.Entreprise_raison_sociale),
@@ -86,11 +90,13 @@ function EUC_DEV340_status_(a){
     try{return EUC_V50_statutDetail_(a);}catch(e){}
   }
   if(!a)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false};
-  if(a.Revoked===true||a.Supprimee_admin===true)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false};
+  if(a.Supprimee_admin===true)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false,covered:false};
   var s=EUC_DEV340_txt_(a.Statut_administratif||a.Statut).toUpperCase();
-  if(s.indexOf('ANNULEE')>=0)return {code:'ANNULEE',libelle:'Annulée',active:false};
-  if(s.indexOf('INTERROMP')>=0)return {code:'INTERROMPUE',libelle:'Interrompue',active:false};
-  return {code:'AVEC_CONVENTION',libelle:'Avec convention',active:true};
+  if(s.indexOf('ANNULEE')>=0)return {code:'ANNULEE',libelle:'Annulée',active:false,covered:false};
+  if(s.indexOf('INTERROMP')>=0)return {code:'INTERROMPUE',libelle:'Interrompue',active:false,covered:false};
+  if(a.Revoked===true)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false,covered:false};
+  if(s==='A_COMPLETER_ENTREPRISE')return {code:'A_COMPLETER_ENTREPRISE',libelle:'À compléter par l’entreprise',active:true,covered:false};
+  return {code:'AVEC_CONVENTION',libelle:'Avec convention',active:true,covered:true};
 }
 function EUC_DEV340_address_(a){
   if(!a)return '';
@@ -131,8 +137,10 @@ function EUC_DEV394_BASE_EUC_DEV340_enrichConventions_(detail,annee,classe,perio
     for(var i=0;i<list.length;i++){if(EUC_DEV340_status_(list[i]).active){actif=list[i];break;}}
     var dernier=actif||list[0]||null,st=EUC_DEV340_status_(dernier);
     x.historiqueConventions=list;
-    x.conventionId=actif?Number(actif.id)||0:0;
-    x.convention=!!actif;
+    var covered=!!(actif&&st.covered!==false);
+    x.sequenceId=dernier?Number(dernier.id)||0:0;
+    x.conventionId=covered?Number(actif.id)||0:0;
+    x.convention=covered;
     x.numero=actif?(typeof EUC_ADMIN_WORKFLOW_numeroV144_==='function'?EUC_ADMIN_WORKFLOW_numeroV144_(actif):EUC_DEV340_txt_(actif.Numero_enregistrement||actif.Reference_convention)):'';
     x.statutCode=st.code;x.statut=st.libelle;
     if(dernier){
@@ -148,7 +156,7 @@ function EUC_DEV394_BASE_EUC_DEV340_enrichConventions_(detail,annee,classe,perio
       x.entreprise='';x.adresseEntreprise='';x.contactEntreprise='';x.tuteurEntreprise='';
       x.telephoneEntreprise='';x.courrielEntreprise='';x.telephoneTuteur='';x.courrielTuteur='';
     }
-    if(st.active)avec++;
+    if(covered)avec++;
     if(st.code==='ANNULEE')ann++;
     if(st.code==='INTERROMPUE')intp++;
   });
