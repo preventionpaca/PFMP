@@ -1,4 +1,29 @@
-# Prochain lot après DEV511
+# Prochain lot après DEV512
+
+## DEV512 livré sur le vert
+
+Le moteur de fusion PDF respecte maintenant la zone exacte de chaque balise,
+utilise les métriques de la police incorporée et réduit seulement les valeurs
+qui dépassent. Une donnée absente produit une ligne jaune à compléter ; une
+donnée fusionnée ne reçoit aucun jaune. Le modèle PDF existant de huit pages a
+été rendu et contrôlé localement sans chevauchement visible ni accolade
+résiduelle.
+
+Le candidat exact `54760a0605ab77178ba14fc9ffa61b48dff64666` passe
+`656/656` tests et est publié dans la version Apps Script immuable `894` des
+deux Web Apps vertes existantes. Le bleu et le vert ont chacun couvert leurs
+`25` routes, tous les liens de navigation visibles détectés et les destinations
+supplémentaires. Les URL vertes restent inchangées. La version `893`, refusée
+pour un lien `Accueil PFMP` incorrect, a été retirée des deux déploiements avant
+la promotion du candidat corrigé.
+
+Prochaine validation métier : lorsque le Word retravaillé sera prêt, l'exporter
+en PDF, l'enregistrer comme modèle dans le bleu, générer un dossier sur un élève
+de recette et contrôler les huit pages. Il faut vérifier en particulier les
+libellés courts (`Né le`, `Photo d'identité`), les champs longs, les zones jaunes
+vides, la date d'édition et la pagination. Le moteur est testé et son ancien
+modèle a été vérifié ; le futur modèle utilisateur ne peut pas être déclaré
+validé avant cette génération.
 
 ## DEV511 — candidat bleu homologué
 

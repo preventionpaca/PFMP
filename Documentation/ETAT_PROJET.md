@@ -1,5 +1,48 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV512 (fusion PDF et signalement jaune)
+
+- Le moteur de fusion du dossier d'apprentissage mesure désormais le texte avec
+  les métriques exactes de la police incorporée au PDF. Il masque uniquement la
+  zone de la balise, sur toute sa hauteur, puis redimensionne les valeurs longues
+  dans cet emplacement. Les libellés voisins ne doivent plus perdre leurs
+  caractères et les accolades résiduelles sont supprimées.
+- Lorsqu'une balise reconnue n'a aucune donnée, sa zone devient une ligne jaune
+  à compléter manuellement. Une valeur réellement fusionnée reste sans jaune.
+  Le récapitulatif de génération indique le nombre de champs traités, de champs
+  absents signalés en jaune et de valeurs compactées.
+- Le contrôle visuel local du modèle PDF existant de huit pages a traité
+  `195` emplacements, dont `157` valeurs absentes signalées en jaune et `3`
+  valeurs compactées. Les huit pages ont été rendues et examinées sans accolade
+  résiduelle ni chevauchement visible. Ce contrôle utilise le modèle disponible,
+  pas encore le nouveau Word que l'utilisateur est en train de retravailler.
+- Le parcours navigateur a aussi révélé deux défauts hors moteur PDF : le lien
+  `Accueil PFMP` de `Fin de Terminale` repartait vers un alias Apps Script, et
+  la cartographie échappait au repère visuel de canal. Le lien vert vise
+  maintenant exactement `https://alternance.loucodi.fr/`; le bleu reste sur son
+  `/dev`. La cartographie reçoit le bandeau bleu ou vert, et l'enregistrement du
+  parcours différencié protège le double clic avec spinner et délai maximal.
+- Une première promotion en version immuable `893` a été rejetée par le contrôle
+  navigateur à cause du lien `Accueil PFMP` incorrect. Les deux Web Apps vertes
+  ont été remises immédiatement sur `892`, avant la correction et la création
+  d'un nouveau candidat.
+- Le candidat final exact `54760a0605ab77178ba14fc9ffa61b48dff64666`
+  passe `656/656` tests. Le bleu a été publié puis relu avec une empreinte
+  identique. Les `25/25` routes, `49` navigations internes visibles et `3`
+  destinations supplémentaires ont été contrôlées dans le navigateur. Les
+  chargements Google transitoires observés lors de certains passages ont été
+  rejoués avec succès sur les pages concernées.
+- Après autorisation explicite, ce candidat a été promu à l'identique sur les
+  deux Web Apps vertes existantes dans la version Apps Script immuable `894`.
+  Les URL sont inchangées. Le contrôle HTTP vert est à `25/25`; le navigateur a
+  couvert les `25` routes, `40` navigations internes visibles et les `3`
+  destinations supplémentaires. Un incident transitoire sur l'import des
+  professeurs a été rejoué isolément avec succès.
+- La publication n'a déclenché aucun import Pronote ou JotForm, aucune écriture
+  Grist métier, aucune distribution réelle, aucun courriel et aucun ordre de
+  mission. Une génération réelle avec le futur PDF exporté du Word retravaillé
+  reste nécessaire pour valider visuellement ce nouveau modèle particulier.
+
 ## Mise à jour du 8 octobre 2026 — DEV511 (dates individuelles et remplacement après rupture)
 
 - La génération unitaire d'une convention permet désormais de conserver la
