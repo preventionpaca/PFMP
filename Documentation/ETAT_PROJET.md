@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV506 (navigation famille réellement non bloquante)
+
+- La recette navigateur suivant les liens visibles a mis en évidence un défaut
+  que le contrôle `25/25` des URL de base ne pouvait pas voir : depuis
+  `Suivi des conventions`, le clic `Voir les classes` appelait encore le
+  routeur synchrone DEV340. Sur la recette bleue dépourvue de
+  `EUC_SUIVI_PFMP_INDEX`, ce routeur produisait une page d'erreur Apps Script
+  avant même que la coque asynchrone DEV504 soit rendue.
+- Le routeur prioritaire délègue désormais immédiatement à la coque DEV504.
+  L'absence de snapshot devient un état vide ou une erreur récupérable dans la
+  page ; elle ne peut plus casser la navigation.
+- Un test de régression contrôle l'ordre réel du routeur prioritaire. Tests
+  ciblés : DEV504 `9/9`, vues publiques `16/16`, missions `12/12`. Suite
+  complète : `638/638`.
+- Le premier candidat bleu `8677e46` n'a volontairement pas été promu après la
+  découverte de cette erreur. Le correctif DEV506 doit être commité, republié
+  sur le bleu, puis la navigation famille et le détail public doivent être
+  revérifiés avant toute promotion verte.
+
 ## Mise à jour du 8 octobre 2026 — DEV505 (séparation des commandes publiques)
 
 - Le détail public d'une classe ne contient plus le bouton administratif

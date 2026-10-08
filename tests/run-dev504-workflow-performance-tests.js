@@ -2,6 +2,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require(
 const root=path.resolve(__dirname,'..');
 const atomic=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV425_AtomicFreshness.js'),'utf8');
 const family=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV339_FamilleUX.js'),'utf8');
+const familyLive=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV340_ConsolidationLive.js'),'utf8');
 const familyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Admin_FamilleV190L.html'),'utf8');
 const migration=fs.readFileSync(path.join(root,'apps-script','Migration_JotForm_PFMP_V160.html'),'utf8');
 const pdf=fs.readFileSync(path.join(root,'apps-script','Convention_PFMP_PdfV95.html'),'utf8');
@@ -56,6 +57,15 @@ test('la route famille rend une coque avant le chargement métier',()=>{
   assert.match(familyHtml,/\.EUC_DEV504_chargerFamille\(P\)/);
   assert.match(familyHtml,/Le serveur travaille encore/);
   assert.match(familyHtml,/Aucune synthèse n’est disponible pour cette famille/);
+});
+
+test('le routeur famille prioritaire délègue lui aussi à la coque asynchrone',()=>{
+  const route=familyLive.slice(
+    familyLive.indexOf('function EUC_DEV394_BASE_EUC_DEV340_afficherFamille'),
+    familyLive.indexOf('function EUC_DEV340_afficherAdminClasse')
+  );
+  assert.match(route,/EUC_DEV339_afficherFamille\(e\)/);
+  assert.ok(route.indexOf('EUC_DEV339_afficherFamille(e)')<route.indexOf('EUC_DEV340_familyData_(annee,famille)'));
 });
 
 test('le rattachement JotForm possède une confirmation locale explicite',()=>{

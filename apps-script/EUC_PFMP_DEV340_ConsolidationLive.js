@@ -219,6 +219,15 @@ function EUC_DEV394_BASE_EUC_DEV340_familyData_(annee,famille){
   return {ok:true,ready:false,annee:annee,famille:famille,classes:[],source:'NONE'};
 }
 function EUC_DEV394_BASE_EUC_DEV340_afficherFamille(e){
+  /* DEV506 : ce routeur est prioritaire dans EDT. Il doit donc déléguer à la
+   * coque asynchrone DEV504 avant toute lecture du snapshot Grist. Sans cette
+   * délégation, une recette neuve qui ne possède pas encore
+   * EUC_SUIVI_PFMP_INDEX renvoie une page d'erreur Apps Script dès le clic sur
+   * « Voir les classes », alors que le chargeur client sait présenter un état
+   * vide ou une erreur récupérable. */
+  if(typeof EUC_DEV339_afficherFamille==='function'){
+    return EUC_DEV339_afficherFamille(e);
+  }
   var annee=EUC_DEV340_year_(e),famille=EUC_DEV340_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO';
   var data=EUC_DEV340_familyData_(annee,famille);
   /* La page famille doit être rendue dès que son snapshot est prêt.
