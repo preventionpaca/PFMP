@@ -1,8 +1,8 @@
-# Prochain lot après DEV508
+# Prochain lot après DEV509
 
-## Reprise immédiate après DEV508
+## Reprise immédiate après DEV509
 
-Repréparer le candidat bleu contenant DEV505 à DEV508. Contrôler dans le
+Repréparer le candidat bleu contenant DEV505 à DEV509. Contrôler dans le
 navigateur les trois liens `Voir les classes` BAC PRO, BTS et CAP : aucun ne
 doit afficher une erreur Apps Script ni une zone blanche lorsque la recette
 n'a pas encore de snapshot. Ouvrir ensuite un détail public disponible et confirmer que le

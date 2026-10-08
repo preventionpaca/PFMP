@@ -94,8 +94,7 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
 
 <main class="wrap">
 <div class="crumb">
-  <a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>
-  <span>›</span>
+  <span id="adminHomeCrumb"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> <span>›</span></span>
   <a id="homeLink">Suivi des conventions</a>
   <span>›</span>
   <strong id="familyCrumb"></strong>
@@ -177,7 +176,11 @@ const INITIAL_DATA=<?!= dataJson ?>;
 
   pageTitle.textContent=famLabel(P.famille);
   familyCrumb.textContent=famLabel(P.famille);
-  homeLink.href=BASE_URL+'?page=suivi-conventions&annee='+encodeURIComponent(P.annee);
+  if(P.publicMode){
+    var adminHomeCrumb=document.getElementById('adminHomeCrumb');
+    if(adminHomeCrumb)adminHomeCrumb.remove();
+  }
+  homeLink.href=BASE_URL+'?page='+(P.publicMode?'suivi-conventions-public':'suivi-conventions')+'&annee='+encodeURIComponent(P.annee);
 
   function render(DATA){
   settled=true;
@@ -275,7 +278,7 @@ const INITIAL_DATA=<?!= dataJson ?>;
   document.querySelectorAll('.period').forEach(function(p){
     p.onclick=function(){
       window.top.location.href=
-        BASE_URL+'?page=suivi-pfmp-classe'+
+        BASE_URL+'?page='+(P.publicMode?'suivi-pfmp-classe-public':'suivi-pfmp-classe')+
         '&annee='+encodeURIComponent(P.annee)+
         '&famille='+encodeURIComponent(P.famille)+
         '&classe='+encodeURIComponent(p.dataset.class)+
@@ -485,7 +488,7 @@ const INITIAL_DATA=<?!= dataJson ?>;
 <div id='euc339Loading'><div>Chargement des donnees...</div></div>
 <script id='EUC_DEV339_LOADING_JS'>(function(){function busy(el){var o=document.getElementById('euc339Loading');if(o)o.classList.add('show');if(el){el.classList.add('euc339-busy');if('disabled' in el)el.disabled=true;if(el.matches('[data-fam]'))el.textContent='Chargement...';}}document.addEventListener('click',function(ev){var b=ev.target.closest('[data-fam],.period,[data-period],article.card[data-class],a[href*="suivi-pfmp-classe"]');if(b)busy(b);},true);window.addEventListener('pageshow',function(){var o=document.getElementById('euc339Loading');if(o)o.classList.remove('show');});})();</script>
 
-<!-- EUC_DEV340_SNAPSHOT_FAMILY --><a id="euc340SnapshotFamily" href="#" style="position:fixed;right:22px;top:92px;z-index:50;background:#fff;border:1px solid #9ed6ca;border-radius:9px;padding:8px 11px;text-decoration:none;font-weight:800;color:#087f70;box-shadow:0 3px 12px rgba(0,0,0,.06)">Maintenance Snapshot</a><script id="EUC_DEV340_SNAPSHOT_FAMILY_JS">(function(){var a=document.getElementById("euc340SnapshotFamily");if(a)a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_FAMILY -->
+<!-- EUC_DEV340_SNAPSHOT_FAMILY --><a id="euc340SnapshotFamily" href="#" style="position:fixed;right:22px;top:92px;z-index:50;background:#fff;border:1px solid #9ed6ca;border-radius:9px;padding:8px 11px;text-decoration:none;font-weight:800;color:#087f70;box-shadow:0 3px 12px rgba(0,0,0,.06)">Maintenance Snapshot</a><script id="EUC_DEV340_SNAPSHOT_FAMILY_JS">(function(){var a=document.getElementById("euc340SnapshotFamily");if(!a)return;if(P.publicMode){a.remove();return;}a.href=location.pathname+"?page=snapshot-pfmp-admin";})();</script><!-- /EUC_DEV340_SNAPSHOT_FAMILY -->
 <!-- EUC_DEV383_PREWARM_BEGIN -->
 <script id="EUC_DEV383_PREWARM_JS">
 (function(){

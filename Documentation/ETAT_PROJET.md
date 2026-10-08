@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 8 octobre 2026 — DEV508 (premier routeur et état vide famille)
+## Mise à jour du 8 octobre 2026 — DEV508/DEV509 (routes famille non bloquantes)
 
 - Le contrôle navigateur après DEV507 a montré que `doGet` appelait d'abord
   `EUC_DEV455_routeDetail_`. Ce routeur rendait encore directement la vue
@@ -12,9 +12,13 @@
 - La vue canonique, encore utilisée par le canal public, affiche désormais un
   état vide explicite lorsqu'aucune classe n'est disponible au lieu d'une zone
   blanche.
-- Deux tests de régression couvrent précisément le premier routeur et l'état
-  vide. Tests ciblés DEV504 : `11/11`; vues canoniques : `16/16`; suite
-  complète : `640/640`.
+- Le contrôle navigateur du premier candidat DEV508 a ensuite montré que la
+  route famille publique restait synchrone et dépassait le délai. Elle utilise
+  désormais la même coque asynchrone, sans `Accueil PFMP`, sans maintenance
+  Snapshot et avec des destinations exclusivement publiques.
+- Les tests de régression couvrent précisément le premier routeur, les routes
+  publiques et l'état vide. Tests ciblés DEV504 : `12/12`; vues canoniques :
+  `16/16`; suite complète : `641/641`.
 - Le candidat doit encore être publié sur le bleu, contrôlé sur les 25 routes
   et par navigation réelle avant la promotion verte déjà autorisée. Le vert
   reste inchangé à ce stade.

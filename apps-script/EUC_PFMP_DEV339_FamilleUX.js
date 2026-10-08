@@ -422,6 +422,20 @@ function EUC_DEV339_afficherFamille(e){
   return t.evaluate().setTitle('Suivi des conventions — '+(famille==='BACPRO'?'BAC PRO':famille)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+function EUC_DEV508_afficherFamillePublique_(e){
+  var annee=EUC_DEV339_year_(e),famille=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO';
+  var t=HtmlService.createTemplateFromFile('Suivi_Conventions_Admin_FamilleV190L');
+  /* Même coque non bloquante que l'administration, mais navigation et
+   * commandes strictement publiques. La donnée métier arrive ensuite via le
+   * chargeur commun en lecture seule. */
+  t.paramsJson=JSON.stringify({annee:annee,famille:famille,publicMode:true});
+  t.dataJson=JSON.stringify({ok:true,ready:false,loading:true,classes:[]});
+  t.baseUrl=typeof EUC_DEV455_PUBLIC_URL_!=='undefined'
+    ?EUC_DEV455_PUBLIC_URL_
+    :'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+  return t.evaluate().setTitle('Point sur les stages — '+(famille==='BACPRO'?'BAC PRO':famille)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
 function EUC_DEV504_chargerFamille(payload){
   payload=payload||{};var started=Date.now(),annee=EUC_DEV339_txt_(payload.annee),famille=EUC_DEV339_txt_(payload.famille)||'BACPRO';
   if(!annee)throw new Error('Année scolaire obligatoire.');

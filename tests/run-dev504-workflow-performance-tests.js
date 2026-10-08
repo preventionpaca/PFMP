@@ -77,6 +77,15 @@ test('le tout premier routeur doGet ne court-circuite plus la coque asynchrone',
   );
   assert.match(route,/suivi-conventions-famille'[\s\S]*EUC_DEV339_afficherFamille\(e\)/);
   assert.ok(route.indexOf('EUC_DEV339_afficherFamille(e)')<route.indexOf('EUC_DEV459_family_(e,false)'));
+  assert.match(route,/suivi-conventions-public-famille'[\s\S]*EUC_DEV508_afficherFamillePublique_\(e\)/);
+  assert.ok(route.indexOf('EUC_DEV508_afficherFamillePublique_(e)')<route.indexOf('EUC_DEV459_family_(e,true)'));
+});
+
+test('la coque publique reste entièrement sur les routes publiques',()=>{
+  assert.match(family,/function EUC_DEV508_afficherFamillePublique_/);
+  assert.match(familyHtml,/P\.publicMode\?'suivi-conventions-public':'suivi-conventions'/);
+  assert.match(familyHtml,/P\.publicMode\?'suivi-pfmp-classe-public':'suivi-pfmp-classe'/);
+  assert.match(familyHtml,/if\(P\.publicMode\)\{a\.remove\(\)/);
 });
 
 test('la famille canonique affiche un état vide explicite',()=>{

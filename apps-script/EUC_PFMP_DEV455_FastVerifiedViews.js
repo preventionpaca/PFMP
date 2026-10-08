@@ -307,6 +307,7 @@ function EUC_DEV455_routeDetail_(e){
    * recette incomplète bloque le rendu initial pendant une lecture Grist. */
   if(page==='suivi-conventions-famille'&&typeof EUC_DEV339_afficherFamille==='function')return EUC_DEV339_afficherFamille(e);
   if(page==='suivi-conventions-famille'&&typeof EUC_DEV459_family_==='function')return EUC_DEV459_family_(e,false);
+  if(page==='suivi-conventions-public-famille'&&typeof EUC_DEV508_afficherFamillePublique_==='function')return EUC_DEV508_afficherFamillePublique_(e);
   if(page==='suivi-conventions-public-famille'&&typeof EUC_DEV459_family_==='function')return EUC_DEV459_family_(e,true);
   if(page==='suivi-conventions-public-famille'&&typeof EUC_DEV456_publicFamily==='function')return EUC_DEV456_publicFamily(e);
   if(page==='suivi-pfmp-classe-public')return typeof EUC_DEV459_detail_==='function'?EUC_DEV459_detail_(e,true):(typeof EUC_DEV456_publicDetail==='function'?EUC_DEV456_publicDetail(e):EUC_DEV455_publicDetail(e));
