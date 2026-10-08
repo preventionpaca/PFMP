@@ -57,10 +57,27 @@ test('les modules administratifs secondaires utilisent le sous-domaine', () => {
     'Apprentissage_PFMP_V190X.html',
     'Geocodage_PFMP_DEV441.html',
     'Migration_JotForm_PFMP_V160.html',
-    'Ordres_Mission_PFMP_V368.html'
+    'Ordres_Mission_PFMP_V368.html',
+    'Parcours_Differencie_PFMP_V190X.html'
   ]) {
     assert.ok(read(file).includes(homeUrl), file);
   }
+});
+
+test('le parcours différencié ouvre directement l’accueil canonique', () => {
+  const source = read('Parcours_Differencie_PFMP_V190X.html');
+  assert.match(source, /id="back" class="back" href="https:\/\/alternance\.loucodi\.fr\/" target="_top"/);
+  assert.doesNotMatch(source, /BOOT\.webappUrl\|\|''\).*admin-pfmp/);
+});
+
+test('l’enregistrement du parcours différencié protège le double clic et le délai', () => {
+  const source = read('Parcours_Differencie_PFMP_V190X.html');
+  assert.match(source, /btn\.disabled=true/);
+  assert.match(source, /btn\.classList\.add\('is-loading'\)/);
+  assert.match(source, /btn\.textContent='Enregistrement…'/);
+  assert.match(source, /setTimeout\(\(\)=>finish\('Délai dépassé — réessayez'\),30000\)/);
+  assert.match(source, /btn\.disabled=false/);
+  assert.match(source, /btn\.classList\.remove\('is-loading'\)/);
 });
 
 test('les ordres de mission ouvrent directement l’accueil canonique dans la fenêtre haute', () => {

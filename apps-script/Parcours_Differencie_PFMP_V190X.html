@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--g:#069879;--bg:#f5fbf9;--line:#c9e7df;--text:#123e36;--mut:#667085}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text)}
+    .wrap{max-width:1500px;margin:auto;padding:28px 22px 48px}
+    .top{display:flex;justify-content:space-between;gap:20px}
+    h1{margin:0;color:#075a49;font-size:30px}
+    .sub{margin-top:7px;font-size:15px}
+    .back{color:#08745f;font-weight:800;text-decoration:none}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
+    .filters{display:flex;gap:14px;flex-wrap:wrap}
+    label.field{display:grid;gap:6px;min-width:190px}
+    select,input[type="text"]{border:1px solid #bcded5;border-radius:8px;padding:9px 10px;background:#fff}
+    .info{margin-top:10px;color:var(--mut);font-size:13px}
+    .summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .chip{border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+    .u{background:#f2f4f7;color:#475467}
+    .l{background:#e7f0ff;color:#174ea6}
+    .e{background:#e9f8f1;color:#08745f}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #e5efec;padding:10px 8px;text-align:left;vertical-align:middle}
+    th{font-size:12px;color:#667085}
+    .student{font-weight:800;min-width:210px}
+    .radio{display:flex;align-items:flex-start;gap:7px;font-size:12px;line-height:1.25}
+    .radio small{display:block;color:#667085;margin-top:2px}
+    .save{border:0;border-radius:8px;background:var(--g);color:#fff;font-weight:800;padding:9px 13px}
+    .save[disabled]{opacity:.72;cursor:wait}
+    .save.is-loading::before{content:"";display:inline-block;width:12px;height:12px;margin-right:7px;border:2px solid rgba(255,255,255,.55);border-top-color:#fff;border-radius:50%;vertical-align:-2px;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .state{font-size:12px;font-weight:800}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Fin de Terminale</h1>
+      <div class="sub">Parcours différencié au lycée ou poursuite de la PFMP2 en entreprise.</div>
+    </div>
+    <a id="back" class="back" href="https://alternance.loucodi.fr/" target="_top">← Accueil PFMP</a>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <label class="field"><span>Année</span><select id="year"></select></label>
+      <label class="field"><span>Classe</span><select id="classe"><option value="">— Choisir une classe —</option></select></label>
+    </div>
+    <div class="info">
+      Un seul choix par élève. « À définir » reste volontairement neutre.
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="summary" class="summary"></div>
+    <div id="content">Choisissez une classe.</div>
+  </div>
+</div>
+
+<script>
+const BOOT=<?!= bootJson ?>;
+
+(function(){
+  const year=document.getElementById('year');
+  const classe=document.getElementById('classe');
+  const content=document.getElementById('content');
+  const summary=document.getElementById('summary');
+
+  function esc(v){
+    const d=document.createElement('div');
+    d.textContent=v==null?'':String(v);
+    return d.innerHTML;
+  }
+
+  function fillClasses(rows){
+    classe.innerHTML=
+      '<option value="">— Choisir une classe —</option>'+
+      (rows||[]).map(c=>
+        '<option value="'+Number(c.id||c.classeId||0)+'">'+
+        esc(c.nom||c.classe||c.libelle||c.code||'Classe')+
+        '</option>'
+      ).join('');
+  }
+
+  function modeOf(row){
+    const r=row.querySelector('input[type="radio"]:checked');
+    return r?r.value:'A_DEFINIR';
+  }
+
+  function updateSummary(){
+    let u=0,l=0,e=0;
+
+    content.querySelectorAll('tbody tr').forEach(row=>{
+      const m=modeOf(row);
+      if(m==='PARCOURS_DIFF_LYCEE')l++;
+      else if(m==='POURSUITE_PFMP2_ENTREPRISE')e++;
+      else u++;
+    });
+
+    summary.innerHTML=
+      '<span class="chip l">'+l+' parcours différencié lycée</span>'+
+      '<span class="chip e">'+e+' poursuite PFMP2 entreprise</span>'+
+      '<span class="chip u">'+u+' à définir</span>';
+  }
+
+  function render(r){
+    const students=(r&&r.students)||[];
+
+    content.innerHTML=
+      '<table><thead><tr>'+
+      '<th>Élève</th>'+
+      '<th>À définir</th>'+
+      '<th>Parcours différencié — lycée</th>'+
+      '<th>Poursuite PFMP2 — entreprise</th>'+
+      '<th>Remarque</th><th></th><th></th>'+
+      '</tr></thead><tbody>'+
+      students.map(s=>{
+        const n='m'+s.id,m=s.mode||'';
+
+        return '<tr data-id="'+s.id+'">'+
+          '<td class="student">'+esc(s.nom)+' '+esc(s.prenom)+'</td>'+
+          '<td><label class="radio"><input type="radio" name="'+n+'" value="A_DEFINIR"'+(!m?' checked':'')+'> À définir</label></td>'+
+          '<td><label class="radio"><input type="radio" name="'+n+'" value="PARCOURS_DIFF_LYCEE"'+(m==='PARCOURS_DIFF_LYCEE'?' checked':'')+'><span>Parcours différencié<small>Lycée — cours niveau BTS</small></span></label></td>'+
+          '<td><label class="radio"><input type="radio" name="'+n+'" value="POURSUITE_PFMP2_ENTREPRISE"'+(m==='POURSUITE_PFMP2_ENTREPRISE'?' checked':'')+'><span>Poursuite PFMP2<small>Entreprise jusqu’à fin P.dif.</small></span></label></td>'+
+          '<td><input class="rem" type="text" value="'+esc(s.remarque||'')+'"></td>'+
+          '<td><button class="save">OK</button></td>'+
+          '<td class="state"></td>'+
+          '</tr>';
+      }).join('')+
+      '</tbody></table>';
+
+    content.querySelectorAll('input[type="radio"]').forEach(x=>{
+      x.onchange=updateSummary;
+    });
+
+    content.querySelectorAll('.save').forEach(btn=>{
+      btn.onclick=()=>{
+        const row=btn.closest('tr');
+        const state=row.querySelector('.state');
+        const initialLabel=btn.textContent;
+        let finished=false;
+        const finish=(message)=>{
+          if(finished)return;
+          finished=true;
+          clearTimeout(timeout);
+          btn.disabled=false;
+          btn.classList.remove('is-loading');
+          btn.textContent=initialLabel;
+          state.textContent=message;
+        };
+        btn.disabled=true;
+        btn.classList.add('is-loading');
+        btn.textContent='Enregistrement…';
+        state.textContent='Enregistrement…';
+        const timeout=setTimeout(()=>finish('Délai dépassé — réessayez'),30000);
+
+        google.script.run
+          .withSuccessHandler(()=>{
+            finish('Enregistré');
+            updateSummary();
+          })
+          .withFailureHandler(err=>{
+            finish('Erreur');
+            alert(String(err&&err.message||err));
+          })
+          .EUC_DEV285B_saveChoice({
+            annee:year.value,
+            eleveId:Number(row.dataset.id)||0,
+            mode:modeOf(row),
+            remarque:row.querySelector('.rem').value||''
+          });
+      };
+    });
+
+    updateSummary();
+  }
+
+  function load(){
+    if(!classe.value){
+      content.textContent='Choisissez une classe.';
+      summary.innerHTML='';
+      return;
+    }
+
+    content.textContent='Chargement…';
+
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(err=>{
+        content.textContent='Erreur : '+String(err&&err.message||err);
+      })
+      .EUC_DEV285B_loadChoices(
+        year.value,
+        Number(classe.value),
+        classe.options[classe.selectedIndex].text
+      );
+  }
+
+  year.innerHTML=(BOOT.years||[BOOT.currentYear]).map(y=>
+    '<option value="'+esc(y)+'"'+
+    (String(y)===String(BOOT.currentYear)?' selected':'')+
+    '>'+esc(y)+'</option>'
+  ).join('');
+
+  fillClasses(BOOT.classes||[]);
+
+  year.onchange=()=>{
+    google.script.run
+      .withSuccessHandler(r=>{
+        fillClasses((r&&r.classes)||[]);
+        content.textContent='Choisissez une classe.';
+        summary.innerHTML='';
+      })
+      .withFailureHandler(err=>{
+        content.textContent='Erreur : '+String(err&&err.message||err);
+      })
+      .EUC_DEV190X_getClasses(year.value,true);
+  };
+
+  classe.onchange=load;
+})();
+</script>
+</body>
+</html>
