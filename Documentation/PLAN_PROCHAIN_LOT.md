@@ -1,6 +1,6 @@
 # Prochain lot après DEV511
 
-## DEV511 — candidat bleu à homologuer
+## DEV511 — candidat bleu homologué
 
 DEV511 met en œuvre les deux procédures demandées :
 
@@ -16,12 +16,14 @@ l'entreprise. L'ancienne séquence est figée, affichée en rouge et exclue des
 ordres de mission. La remplaçante reste visible mais non couvrante et non
 missionnable jusqu'à la saisie QR.
 
-Avant toute remise, il reste à exécuter une seule suite complète, relire le
-diff, publier le commit exact avec `prepare`, contrôler les 25 routes bleues et
-parcourir tous les liens de navigation visibles. Les écritures réelles de
-rupture, convention, QR et mission restent interdites sur la recette : leurs
-tests sont simulés et cette limite doit être annoncée. Aucune promotion verte
-n'est autorisée dans ce lot sans une demande explicite ultérieure.
+Le commit applicatif exact `10476433ab2fc27afb0960b188d302e7402bd7f1` a passé
+`651/651` tests, a été publié et relu à l'identique sur le bleu. Les `25/25`
+routes ainsi que tous les liens de navigation visibles ont été parcourus dans
+le navigateur ; les sous-parcours BAC PRO, BTS et CAP sont également valides.
+Les écritures réelles de rupture, convention, QR et mission restent interdites
+sur la recette : leurs tests sont simulés et cette limite doit être annoncée.
+Aucune promotion verte n'est autorisée dans ce lot sans une demande explicite
+ultérieure.
 
 ## DEV510 livré sur le vert
 

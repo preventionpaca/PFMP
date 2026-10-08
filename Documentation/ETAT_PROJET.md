@@ -30,10 +30,22 @@
   premier lancement depuis le worktree caché avait été refusé par le confinement
   Snap de Chromium, puis le même arbre exact a été contrôlé avec succès depuis
   un chemin visible par le navigateur.
-- À ce stade, il s'agit encore d'un candidat local bleu : aucune écriture métier
-  réelle, aucun QR réel, aucun ordre de mission, aucun courriel et aucun accès à
-  la production Grist n'ont été exécutés. La publication bleue et les contrôles
-  des 25 routes restent requis avant remise.
+- Le commit applicatif exact
+  `10476433ab2fc27afb0960b188d302e7402bd7f1` a été poussé sur le `HEAD` bleu
+  puis relu avec une empreinte identique. Le contrôle HTTP et le parcours réel
+  dans le navigateur valident les `25/25` routes, le bandeau bleu, le maintien
+  de tous les liens visibles sur `/dev`, ainsi que les trois sous-parcours
+  BAC PRO, BTS et CAP. L'interface publique ne présente pas le bouton
+  `Ordres de mission`.
+- Le formulaire bleu affiche bien les dates individuelles, leur motif et
+  l'instruction selon laquelle l'entreprise, le responsable et le tuteur sont
+  saisis ultérieurement par le QR. La recette ne fournit toutefois aucun élève
+  exploitable pour exécuter une rupture réelle : aucune écriture métier, aucun
+  QR réel, aucun ordre de mission, aucun courriel et aucun accès à la production
+  Grist n'ont été exécutés. Le parcours métier complet reste donc validé par
+  simulation et tests, pas garanti de bout en bout sur une donnée réelle.
+- Le vert reste inchangé sur la version immuable `891`. Le candidat bleu est
+  prêt, mais aucune promotion n'est autorisée sans une demande explicite.
 
 ## Mise à jour du 8 octobre 2026 — DEV508 à DEV510 (navigation famille fiable)
 
