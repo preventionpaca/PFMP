@@ -18,6 +18,11 @@
   découverte de cette erreur. Le correctif DEV506 doit être commité, republié
   sur le bleu, puis la navigation famille et le détail public doivent être
   revérifiés avant toute promotion verte.
+- La première republication DEV506 a aussi révélé une divergence de
+  configuration : les garde-fous du code visaient de nouveau l'ancienne copie
+  personnelle `j1j…`, contrairement au contrat permanent. La cible bleue est
+  rétablie sur `https://camin.getgrist.com` / `kB8bvDag8x7D`; l'ancienne copie
+  est de nouveau refusée par les tests.
 
 ## Mise à jour du 8 octobre 2026 — DEV505 (séparation des commandes publiques)
 

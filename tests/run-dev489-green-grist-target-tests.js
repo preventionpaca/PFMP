@@ -5,8 +5,8 @@ const assert = require('assert');
 const source = fs.readFileSync('apps-script/EUC_ENT_Config.gs', 'utf8');
 const BLUE = '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo';
 const GREEN = '1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c';
-const RECIPE_HOST = 'https://docs.getgrist.com';
-const RECIPE = 'j1jDArBkzi7P';
+const RECIPE_HOST = 'https://camin.getgrist.com';
+const RECIPE = 'kB8bvDag8x7D';
 let passed = 0;
 
 function context(projectId, values, email) {
@@ -30,7 +30,7 @@ test('le projet bleu accepte uniquement la copie de recette', () => {
   assert.equal(ok.EUC_ENT_controlerCibleRecette_(), true);
   const refused = context(BLUE, {EUC_ENT_ENVIRONMENT:'recette', EUC_ENT_GRIST_API_URL:RECIPE_HOST, EUC_ENT_GRIST_DOC_ID:'document-non-recette'});
   assert.throws(() => refused.EUC_ENT_controlerCibleRecette_(), /recette invalide/);
-  const wrongHost = context(BLUE, {EUC_ENT_ENVIRONMENT:'recette', EUC_ENT_GRIST_API_URL:'https://camin.getgrist.com', EUC_ENT_GRIST_DOC_ID:RECIPE});
+  const wrongHost = context(BLUE, {EUC_ENT_ENVIRONMENT:'recette', EUC_ENT_GRIST_API_URL:'https://docs.getgrist.com', EUC_ENT_GRIST_DOC_ID:RECIPE});
   assert.throws(() => wrongHost.EUC_ENT_controlerCibleRecette_(), /recette invalide/);
 });
 
