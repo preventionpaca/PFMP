@@ -1,5 +1,54 @@
 # Prochain lot après DEV504
 
+## Cas métier prioritaire — continuation après interruption
+
+Le prochain candidat bleu doit traiter une PFMP commencée, interrompue, puis
+reprise au-delà de la période officielle, y compris après les vacances
+scolaires. Il ne faut ni modifier rétroactivement la convention interrompue, ni
+faire disparaître l'incident, ni créer un second élève dans les décomptes.
+
+Le centre administratif doit proposer, uniquement sur un dossier au statut
+`INTERROMPUE`, l'action `Créer une continuation / un report`. Le formulaire
+demande :
+
+- le mode `Même entreprise — report/avenant` ou `Nouvelle entreprise — nouvelle convention` ;
+- la date réelle de reprise, la date réelle de fin et le motif obligatoire ;
+- la confirmation du rattachement à la période officielle d'origine, même si
+  la fin réelle la dépasse ;
+- le choix explicite de conserver ou de revoir les deux affectations distinctes
+  de suivi téléphonique et de visite.
+
+La continuation est un enregistrement distinct lié à la convention d'origine.
+La convention initiale reste `INTERROMPUE` avec sa date de fin réelle et son
+historique. La continuation conserve la classe, l'année et la période
+officielle d'origine, mais porte ses propres dates réelles, son entreprise et
+son statut. Une entreprise différente impose une nouvelle convention ; le
+système ne doit jamais transformer automatiquement une rupture dans une
+nouvelle convention signée.
+
+Dans le tableau de suivi de classe et dans l'accès professeur principal :
+
+- afficher une seule ligne pour l'élève avec le badge
+  `Continuation après interruption` ;
+- afficher séparément les dates du segment interrompu et celles de la
+  continuation, ainsi qu'un avertissement lorsque la fin dépasse la période
+  officielle ;
+- compter l'élève une seule fois dans l'effectif et comme couvert si la
+  continuation est active, tout en conservant l'interruption dans le compteur
+  d'incidents ;
+- proposer la reconduction des professeurs déjà affectés sans la rendre
+  automatique ;
+- si l'entreprise ou l'adresse change, conserver l'historique de l'ancienne
+  visite mais placer la visite courante et tout ordre de mission dans l'état
+  `À REVALIDER` avant toute génération ou tout envoi.
+
+Tests métier obligatoires sur le bleu avant livraison : même entreprise avec
+fin après vacances, nouvelle entreprise, refus d'une continuation sans dossier
+interrompu, absence de double comptage, reconduction/refus de reconduction des
+deux affectations, changement de destination et ordre de mission à revalider.
+Le canal bleu doit simuler les écritures ; aucune convention réelle, aucun
+courriel et aucun ordre de mission ne sont créés pendant ces tests.
+
 DEV504 distingue désormais les routes des parcours métier et traite les trois
 goulots observés lors de la recette utilisateur : l'import JotForm ne doit plus
 réécrire les détails inchangés de toute une famille, le suivi sert d'abord son
