@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 octobre 2026 — DEV508 (premier routeur et état vide famille)
+
+- Le contrôle navigateur après DEV507 a montré que `doGet` appelait d'abord
+  `EUC_DEV455_routeDetail_`. Ce routeur rendait encore directement la vue
+  canonique synchrone et empêchait donc d'atteindre les deux délégations
+  asynchrones déjà corrigées plus bas dans la chaîne.
+- La route administrative `suivi-conventions-famille` délègue maintenant dès
+  ce premier aiguillage à la coque DEV504. Une recette lente ou sans snapshot
+  rend d'abord son interface et ses états de chargement, délai et erreur.
+- La vue canonique, encore utilisée par le canal public, affiche désormais un
+  état vide explicite lorsqu'aucune classe n'est disponible au lieu d'une zone
+  blanche.
+- Deux tests de régression couvrent précisément le premier routeur et l'état
+  vide. Tests ciblés DEV504 : `11/11`; vues canoniques : `16/16`; suite
+  complète : `640/640`.
+- Le candidat doit encore être publié sur le bleu, contrôlé sur les 25 routes
+  et par navigation réelle avant la promotion verte déjà autorisée. Le vert
+  reste inchangé à ce stade.
+
 ## Mise à jour du 8 octobre 2026 — DEV506 (navigation famille réellement non bloquante)
 
 - La recette navigateur suivant les liens visibles a mis en évidence un défaut

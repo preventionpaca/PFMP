@@ -1,11 +1,11 @@
-# Prochain lot après DEV504
+# Prochain lot après DEV508
 
-## Reprise immédiate après DEV506
+## Reprise immédiate après DEV508
 
-Repréparer le candidat bleu contenant DEV505 et DEV506. Contrôler dans le
+Repréparer le candidat bleu contenant DEV505 à DEV508. Contrôler dans le
 navigateur les trois liens `Voir les classes` BAC PRO, BTS et CAP : aucun ne
-doit afficher une erreur Apps Script lorsque la recette n'a pas encore de
-snapshot. Ouvrir ensuite un détail public disponible et confirmer que le
+doit afficher une erreur Apps Script ni une zone blanche lorsque la recette
+n'a pas encore de snapshot. Ouvrir ensuite un détail public disponible et confirmer que le
 bouton `Ordres de mission` est absent du DOM public, tandis qu'il reste présent
 dans le détail administrateur. Refaire les 25 routes, puis seulement promouvoir
 le candidat exact après l'autorisation déjà donnée pour ce lot.

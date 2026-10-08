@@ -3,7 +3,9 @@ const root=path.resolve(__dirname,'..');
 const atomic=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV425_AtomicFreshness.js'),'utf8');
 const family=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV339_FamilleUX.js'),'utf8');
 const familyLive=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV340_ConsolidationLive.js'),'utf8');
+const firstRouter=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV455_FastVerifiedViews.js'),'utf8');
 const familyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Admin_FamilleV190L.html'),'utf8');
+const canonicalFamilyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Famille_DEV459.html'),'utf8');
 const migration=fs.readFileSync(path.join(root,'apps-script','Migration_JotForm_PFMP_V160.html'),'utf8');
 const pdf=fs.readFileSync(path.join(root,'apps-script','Convention_PFMP_PdfV95.html'),'utf8');
 let n=0;
@@ -66,6 +68,20 @@ test('le routeur famille prioritaire délègue lui aussi à la coque asynchrone'
   );
   assert.match(route,/EUC_DEV339_afficherFamille\(e\)/);
   assert.ok(route.indexOf('EUC_DEV339_afficherFamille(e)')<route.indexOf('EUC_DEV340_familyData_(annee,famille)'));
+});
+
+test('le tout premier routeur doGet ne court-circuite plus la coque asynchrone',()=>{
+  const route=firstRouter.slice(
+    firstRouter.indexOf('function EUC_DEV455_routeDetail_'),
+    firstRouter.indexOf('return null;',firstRouter.indexOf('function EUC_DEV455_routeDetail_'))
+  );
+  assert.match(route,/suivi-conventions-famille'[\s\S]*EUC_DEV339_afficherFamille\(e\)/);
+  assert.ok(route.indexOf('EUC_DEV339_afficherFamille(e)')<route.indexOf('EUC_DEV459_family_(e,false)'));
+});
+
+test('la famille canonique affiche un état vide explicite',()=>{
+  assert.match(canonicalFamilyHtml,/Aucune synthèse n’est disponible pour cette famille dans cet environnement/);
+  assert.match(canonicalFamilyHtml,/role="status"/);
 });
 
 test('le rattachement JotForm possède une confirmation locale explicite',()=>{
