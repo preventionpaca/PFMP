@@ -6,6 +6,7 @@ const familyLive=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV340_C
 const firstRouter=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV455_FastVerifiedViews.js'),'utf8');
 const familyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Admin_FamilleV190L.html'),'utf8');
 const canonicalFamilyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Famille_DEV459.html'),'utf8');
+const publicSummaryHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Public_Summary_V348.html'),'utf8');
 const migration=fs.readFileSync(path.join(root,'apps-script','Migration_JotForm_PFMP_V160.html'),'utf8');
 const pdf=fs.readFileSync(path.join(root,'apps-script','Convention_PFMP_PdfV95.html'),'utf8');
 let n=0;
@@ -86,6 +87,11 @@ test('la coque publique reste entièrement sur les routes publiques',()=>{
   assert.match(familyHtml,/P\.publicMode\?'suivi-conventions-public':'suivi-conventions'/);
   assert.match(familyHtml,/P\.publicMode\?'suivi-pfmp-classe-public':'suivi-pfmp-classe'/);
   assert.match(familyHtml,/if\(P\.publicMode\)\{a\.remove\(\)/);
+});
+
+test('le bouton public Voir les classes sort du cadre Apps Script',()=>{
+  assert.match(publicSummaryHtml,/window\.top\.location\.href=url\(b\.dataset\.f\)/);
+  assert.doesNotMatch(publicSummaryHtml,/(?<!top\.)location\.href=url\(b\.dataset\.f\)/);
 });
 
 test('la famille canonique affiche un état vide explicite',()=>{

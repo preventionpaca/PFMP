@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 8 octobre 2026 — DEV508/DEV509 (routes famille non bloquantes)
+## Mise à jour du 8 octobre 2026 — DEV508 à DEV510 (navigation famille fiable)
 
 - Le contrôle navigateur après DEV507 a montré que `doGet` appelait d'abord
   `EUC_DEV455_routeDetail_`. Ce routeur rendait encore directement la vue
@@ -16,9 +16,13 @@
   route famille publique restait synchrone et dépassait le délai. Elle utilise
   désormais la même coque asynchrone, sans `Accueil PFMP`, sans maintenance
   Snapshot et avec des destinations exclusivement publiques.
+- Le clic réel `Voir les classes` de l'accueil public a aussi révélé une
+  navigation confinée dans l'iframe Apps Script, interprétée par Google comme
+  un accès à une ressource Drive. Le bouton navigue maintenant explicitement
+  dans la fenêtre haute vers la route Web App publique.
 - Les tests de régression couvrent précisément le premier routeur, les routes
-  publiques et l'état vide. Tests ciblés DEV504 : `12/12`; vues canoniques :
-  `16/16`; suite complète : `641/641`.
+  publiques, la sortie d'iframe et l'état vide. Tests ciblés DEV504 : `13/13`;
+  vues canoniques : `16/16`; suite complète : `642/642`.
 - Le candidat doit encore être publié sur le bleu, contrôlé sur les 25 routes
   et par navigation réelle avant la promotion verte déjà autorisée. Le vert
   reste inchangé à ce stade.
