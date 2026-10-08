@@ -44,8 +44,11 @@
   QR réel, aucun ordre de mission, aucun courriel et aucun accès à la production
   Grist n'ont été exécutés. Le parcours métier complet reste donc validé par
   simulation et tests, pas garanti de bout en bout sur une donnée réelle.
-- Le vert reste inchangé sur la version immuable `891`. Le candidat bleu est
-  prêt, mais aucune promotion n'est autorisée sans une demande explicite.
+- Après autorisation explicite, exactement ce candidat bleu a été copié vers le
+  projet stable et promu sur les deux Web Apps vertes existantes dans la version
+  Apps Script immuable `892`. Leurs URL sont inchangées ; les `25/25` routes
+  vertes sont valides et le retour automatique vers `891` n'a pas été
+  nécessaire.
 
 ## Mise à jour du 8 octobre 2026 — DEV508 à DEV510 (navigation famille fiable)
 
