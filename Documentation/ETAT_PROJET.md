@@ -27,7 +27,7 @@
   formulaire QR, aucune convention et aucune donnée Grist n'ont été écrits
   pendant le diagnostic et les tests.
 - Les tests ciblés DEV519 passent `6/6`, les contrôles connexes DEV513,
-  DEV459 et DEV511 passent `42/42`, et la suite complète passe `685/685`.
+  DEV459 et DEV511 passent `42/42`, et la suite complète passe `686/686`.
   Le correctif est validé localement mais n'est pas encore publié sur le vert.
 
 ## Mise à jour du 9 octobre 2026 — DEV518 (spinner des boutons réellement occupés)
@@ -43,9 +43,15 @@
   classe `busy`. Le marqueur temporaire est supprimé dès que le bouton redevient
   disponible.
 - La simulation couvre les trois états : indisponible sans animation, traitement
-  réel animé et retour à l'état normal. Tests ciblés : `8/8` pour le canal de
+  réel animé et retour à l'état normal. Tests ciblés : `9/9` pour le canal de
   rendu et `13/13` pour le workflow de publication. Suite complète : `679/679`.
   Ce correctif est validé localement mais n'est pas encore publié sur le vert.
+- Le contrôle de non-régression nomme maintenant les deux autres écrans signalés :
+  le bouton « Ouvrir le dossier » de l'administration des conventions et le
+  bouton de vérification de la saisie QR restent immobiles tant qu'aucune action
+  n'est en cours. Le point d'entrée commun du paquet applique ce contrat à toutes
+  les routes vertes.
+- Après ajout de cette couverture explicite, la suite complète passe `686/686`.
 
 ## Mise à jour du 9 octobre 2026 — DEV517 (géocodage vert durable)
 

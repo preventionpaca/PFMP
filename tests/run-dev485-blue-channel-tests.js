@@ -6,6 +6,9 @@ const release = fs.readFileSync('apps-script/EUC_PFMP_ReleaseChannel.js', 'utf8'
 const adminAuth = fs.readFileSync('apps-script/EUC_PFMP_AdminAuth.gs', 'utf8');
 const suivi = fs.readFileSync('apps-script/EUC_SUIVI_PFMP_WebApp.gs', 'utf8');
 const tools = fs.readFileSync('apps-script/EUC_PFMP_DEV370_AdminTools.js', 'utf8');
+const adminConventions = fs.readFileSync('apps-script/Admin_Conventions_PFMP.html', 'utf8');
+const accesQr = fs.readFileSync('apps-script/PFMP_Acces_QR_V116.html', 'utf8');
+const packageBuilder = fs.readFileSync('scripts/build-pfmp-apps-script-package.sh', 'utf8');
 let n = 0;
 
 function test(name, fn) {
@@ -153,6 +156,51 @@ test('toutes les sorties ajoutent le spinner transversal des boutons occupés', 
   observer([{target: button}]);
   assert.equal(classes.has('pfmp-auto-busy'), false, 'le spinner doit disparaître à la fin');
   assert.equal(attrs['data-pfmp-auto-pending'], undefined, 'le marqueur temporaire doit être nettoyé');
+});
+
+test('les boutons inactifs des conventions et du QR restent immobiles', () => {
+  assert.match(adminConventions, /<button id="openBtn" class="primary" disabled>/);
+  assert.match(accesQr, /<button id="go" disabled>/);
+  assert.match(packageBuilder, /return EUC_RELEASE_doGet_\(e\)/,
+    'le paquet publié doit décorer toutes les routes, y compris conventions et QR');
+
+  const ctx = releaseContext('PROJET_VERT');
+  [
+    '<button id="openBtn" class="primary" disabled>Ouvrir le dossier</button>',
+    '<button id="go" disabled>Vérifier et continuer</button>'
+  ].forEach(markup => {
+    const out = output('<html><head></head><body>' + markup + '</body></html>');
+    ctx.EUC_RELEASE_decorateOutput_(out);
+    const code = out.content.match(/<script data-pfmp-busy-script="1">([\s\S]*?)<\/script>/)[1];
+    let observer;
+    const classes = new Set();
+    const button = {
+      disabled: true,
+      getAttribute: () => null,
+      removeAttribute: () => {},
+      querySelector: () => null,
+      closest: selector => selector === 'button' ? button : null,
+      classList: {
+        contains: value => classes.has(value),
+        toggle: (value, force) => force ? classes.add(value) : classes.delete(value)
+      }
+    };
+    const document = {
+      documentElement: {contains: value => value === button},
+      addEventListener: () => {}
+    };
+    vm.runInNewContext(code, {
+      document,
+      setTimeout: fn => fn(),
+      MutationObserver: function(callback) {
+        observer = callback;
+        this.observe = () => {};
+      }
+    });
+    observer([{target: button}]);
+    assert.equal(classes.has('pfmp-auto-busy'), false,
+      'un bouton indisponible au repos ne doit afficher aucun spinner');
+  });
 });
 
 if (!process.exitCode) console.log(`\n${n} tests DEV485 canal bleu réussis.`);
