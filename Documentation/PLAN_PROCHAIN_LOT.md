@@ -8,6 +8,10 @@ par le générateur général, qui ne porterait pas le lien avec l'ancienne
 séquence. Après publication verte, contrôler en lecture seule qu'au moins une
 convention interrompue est visible dans son année ; la création réelle du
 remplacement reste interdite sans autorisation explicite d'écriture métier.
+Le correctif est publié dans la version verte immuable `906` et les `25/25`
+routes sont valides. Le contrôle nominatif d'un dossier interrompu reste à
+faire par l'utilisateur ou après autorisation explicite de lecture de la
+production.
 
 ## Lot précédent — DEV521
 

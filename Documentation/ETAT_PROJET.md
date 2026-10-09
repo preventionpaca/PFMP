@@ -19,6 +19,12 @@
   d'éligibilité, vérifie sa présence dans la bonne année et son absence d'une
   autre année. Les tests ciblés passent et la suite complète passe `698/698`.
   Aucune donnée Grist ni convention réelle n'a été créée ou modifiée.
+- Le commit applicatif `3a38bed91430375aeb2ab9d31b26d9779cbf012f` a été
+  publié sur les deux Web Apps vertes existantes dans la version Apps Script
+  immuable `906`. Le projet distant a été relu après le push et les `25/25`
+  routes vertes sont valides ; aucun rollback n'a été nécessaire. La présence
+  du dossier réel interrompu n'a pas été contrôlée nominativement afin de ne
+  pas lire les données de production sans autorisation explicite.
 
 ## Mise à jour du 9 octobre 2026 — DEV521 (noms des jeunes dans l’administration des conventions)
 
