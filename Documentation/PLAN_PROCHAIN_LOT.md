@@ -3,10 +3,12 @@
 DEV521 rétablit les noms des jeunes dans la recherche et le détail de
 « Administration des conventions ». Le lecteur commun des références Grist
 reconnaît maintenant la forme `["L", id]` au lieu de perdre l'identifiant de
-l'élève. La route ne consomme plus l'ancien cache HTML nominatif P3.2. Après
-publication verte automatique et contrôle des 25 routes, vérifier en lecture
-seule qu'une recherche par nom propose le jeune attendu puis ouvre son dossier,
-sans enregistrer de correction, d'annulation ou d'interruption.
+l'élève. La route ne consomme plus l'ancien cache HTML nominatif P3.2. Le lot a
+été publié dans la version verte immuable `905` et les `25/25` routes sont
+valides. Le contrôle réel en lecture seule affiche `20` propositions nommées et
+aucun « Jeune non renseigné ». L'ouverture d'un dossier puis toute correction,
+annulation ou interruption restent volontairement hors de ce contrôle afin de
+ne déclencher aucune écriture métier.
 
 ## Lot précédent — DEV520
 

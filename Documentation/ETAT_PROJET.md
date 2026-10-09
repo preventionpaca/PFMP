@@ -20,6 +20,15 @@
   le détail et le repli historique. Les tests ciblés connexes passent et la
   suite complète passe `697/697`. Aucune donnée Grist ni convention n'a été
   modifiée par le correctif ou ses tests.
+- Le commit applicatif `b779e5f41e9fe40e876633bc5d90578f46171e4f` a été
+  publié sur les deux Web Apps vertes existantes dans la version Apps Script
+  immuable `905`. Le projet distant a été relu après le push et les `25/25`
+  routes vertes sont valides ; aucun rollback n'a été nécessaire.
+- Le contrôle réel en lecture seule sur la Web App verte administrateur a
+  chargé `129` dossiers pour `2026-2027`. Une recherche générique a affiché
+  `20` propositions avec une identité élève et `0` occurrence de « Jeune non
+  renseigné ». Aucun dossier n'a été ouvert et aucune action métier n'a été
+  exécutée.
 
 ## Mise à jour du 9 octobre 2026 — DEV520 (canaux du centre et responsable entreprise)
 
