@@ -98,9 +98,24 @@ function maybeReady(){
   if(erreursChargement.length||absents.length){status.className='status err';status.textContent=erreursChargement.length?'Chargement impossible — '+erreursChargement.join(' ; '):'Chargement incomplet : aucune donnée pour '+absents.join(', ')+'. Rechargez la page ; si le problème persiste, signalez ce message.'}
   refreshPeriods();updateButton()
 }
-google.script.run.withSuccessHandler(r=>finChargement('meta',r)).withFailureHandler(e=>echecChargement('meta','classes et périodes',e)).EUC_CONVENTION_lireClassesEtPeriodesAdmin();
-google.script.run.withSuccessHandler(r=>finChargement('eleves',r)).withFailureHandler(e=>echecChargement('eleves','élèves',e)).EUC_CONVENTION_lireElevesAdmin();
-google.script.run.withSuccessHandler(r=>finChargement('groupes',r)).withFailureHandler(e=>echecChargement('groupes','promotions',e)).EUC_CONVENTION_lireGroupesClassesElevesAdmin();
+let chargementTermine=false;
+const delaiChargement=setTimeout(()=>{
+  if(chargementTermine)return;
+  chargementTermine=true;
+  erreursChargement.push('le serveur n’a pas répondu sous 20 secondes ; rechargez la page');
+  chargements={meta:true,eleves:true,groupes:true};
+  maybeReady();
+},20000);
+google.script.run.withSuccessHandler(r=>{
+  if(chargementTermine)return;
+  chargementTermine=true;clearTimeout(delaiChargement);r=r||{};
+  finChargement('meta',r.meta);finChargement('eleves',r.eleves);finChargement('groupes',r.groupes);
+}).withFailureHandler(e=>{
+  if(chargementTermine)return;
+  chargementTermine=true;clearTimeout(delaiChargement);
+  erreursChargement.push('données du générateur : '+messageErreur(e));
+  chargements={meta:true,eleves:true,groupes:true};maybeReady();
+}).EUC_CONVENTION_chargerGenerateurAdmin();
 btn.onclick=()=>{
   if(btn.disabled)return;
   if(mode==='eleve'&&!generationRequestId)generationRequestId=newRequestId();

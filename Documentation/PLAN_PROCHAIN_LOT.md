@@ -1,4 +1,18 @@
-# Prochain lot après DEV523
+# Prochain lot après DEV524
+
+DEV524 remplace les trois chargements concurrents du générateur de conventions
+par une réponse serveur unique et borne l'attente à vingt secondes. Après
+publication verte, ouvrir `Générer les conventions`, vérifier que la liste des
+élèves et la liste des promotions quittent immédiatement « Chargement… », puis
+choisir un élève et une classe afin de confirmer que les périodes autorisées
+s'affichent. Ce contrôle doit rester en lecture seule : ne pas cliquer sur
+« Générer la convention et son accès QR ».
+
+La suite complète locale passe `707/707`. La publication doit encore valider
+les `25/25` routes vertes. Le vert actif est resté sur la version `906` pendant
+la première tentative interrompue.
+
+## Lot précédent — DEV523
 
 DEV523 rend le géocodage des entreprises françaises reprenable : contrôle et
 mise à niveau de la table avant écriture, sous-lots de dix et repli unitaire si
@@ -13,7 +27,8 @@ validées ni masquer un refus Grist.
 
 Le lot corrige aussi le voile bloquant de la synthèse famille, le champ
 administratif « Nom commercial / enseigne » et les alias historiques des
-coordonnées du responsable entreprise. Les tests locaux passent `706/706`.
+coordonnées du responsable entreprise. Les tests locaux combinés avec DEV524
+passent `707/707`.
 La validation de publication doit encore confirmer les `25/25` routes vertes ;
 aucun géocodage réel ne doit être lancé par la recette automatisée.
 

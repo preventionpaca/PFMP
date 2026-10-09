@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV524 (chargement du générateur consolidé)
+
+- Le blocage « Chargement… » du générateur de conventions a été reproduit sur
+  le vert. La page lançait trois exécutions Apps Script concurrentes ; elles
+  relisaient au total trois fois les classes et deux fois les élèves, puis la
+  page attendait les trois réponses sans aucun délai maximal.
+- Le générateur utilise maintenant un seul point serveur cohérent. Il lit une
+  seule fois les classes, une seule fois les élèves et une seule fois les
+  périodes, puis construit dans la même exécution les listes d'élèves, de
+  promotions et de périodes officielles.
+- Un délai de vingt secondes garantit que l'interface quitte toujours l'état
+  « Chargement… ». En cas de panne durable, les trois listes affichent leur
+  état vide et un message précis demande de recharger, au lieu de laisser la
+  page bloquée sans explication.
+- Le test DEV488 vérifie le nombre exact de lectures, la réponse consolidée,
+  l'absence des trois anciens appels concurrents et le délai maximal. Les tests
+  ciblés passent et la suite complète passe `707/707`.
+- Une première publication du seul lot DEV523 a été interrompue dès le
+  signalement utilisateur. Les deux Web Apps actives sont restées sur la
+  version immuable `906` ; aucun déploiement n'a été déplacé.
+
 ## Mise à jour du 9 octobre 2026 — DEV523 (géocodage Grist résilient et régressions opérationnelles)
 
 - La cause du refus Grist `400` pendant le géocodage a été isolée : la table
@@ -23,7 +44,8 @@
   administrative d'une convention et normalise les anciens alias JotForm pour
   restaurer le responsable entreprise dans les listes de classe.
 - Les tests ciblés passent (`25/25` géocodage, `11/11` coordonnées entreprise,
-  `4/4` régressions opérationnelles) et la suite complète passe `706/706`.
+  `4/4` régressions opérationnelles) et la suite complète combinée avec
+  DEV524 passe `707/707`.
   Aucun géocodage réel, aucune convention et aucune donnée nominative n'ont été
   écrits pendant les tests.
 

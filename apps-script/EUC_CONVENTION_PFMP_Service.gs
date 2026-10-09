@@ -63,25 +63,31 @@ function EUC_CONVENTION_finaliserRafraichissementV513(token){
   return EUC_CONVENTION_finRafraichissementV511_(safe);
 }
 
-function EUC_CONVENTION_lireElevesAdmin(){
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;}),byNom={},byId={};
+function EUC_DEV524_construireElevesGenerateur_(classes,rows){
+  var byNom={},byId={};
   classes.forEach(function(c){byId[String(c.id)]=c;byNom[EUC_CONVENTION_norm_(c.nom)]=c;if(c.libelle)byNom[EUC_CONVENTION_norm_(c.libelle)]=c;});
-  var rows=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP');
-  return rows.filter(function(r){return r.Actif!==false;}).map(function(r){
+  return(rows||[]).filter(function(r){return r.Actif!==false;}).map(function(r){
     var classeRef=EUC_PFMP_ref_(r.Classe),clRef=byId[String(classeRef)]||null;
     var classeNom=r.Code_classe_importe||r.Classe_nom||(clRef&&clRef.nom)||'',cl=byNom[EUC_CONVENTION_norm_(classeNom)]||clRef;
     return {id:r.id,nom:r.Nom||'',prenom:r.Prenom_usage||r.Prenom||'',dateNaissance:EUC_IMPORT_dateExistanteISO_(r.Date_naissance),classe:classeNom,classeId:cl?cl.id:0,annee:r.Annee_scolaire_code||r.Annee_scolaire||'',numeroNational:r.Numero_national||''};
   }).sort(function(a,b){return String(a.classe).localeCompare(String(b.classe),'fr')||String(a.nom).localeCompare(String(b.nom),'fr')||String(a.prenom).localeCompare(String(b.prenom),'fr');});
 }
-
-function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
+function EUC_CONVENTION_lireElevesAdmin(){
   EUC_IMPORT_exigerAdminTexte_();
   var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});
-  var periodes=EUC_IMPORT_lireRecords_('Planning_Periodes').filter(function(r){return r.Actif!==false;}).map(function(r){return {
+  return EUC_DEV524_construireElevesGenerateur_(classes,EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'));
+}
+
+function EUC_DEV524_construireMetaGenerateur_(classes,rows){
+  var periodes=(rows||[]).filter(function(r){return r.Actif!==false;}).map(function(r){return {
     id:r.id,annee:String(r.Annee_scolaire||''),classe:String(r.Classe||''),classePfmp:String(r.Classe_PFMP||''),classesConcernees:Array.isArray(r.Classes_concernees)?r.Classes_concernees.slice():[],formation:String(r.Formation||''),niveau:String(r.Niveau||''),groupe:String(r.Groupe||''),debut:EUC_IMPORT_dateExistanteISO_(r.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(r.Date_fin),type:String(r.Type||''),commentaire:String(r.Commentaire||'')
   };}).filter(function(r){return r.debut&&r.fin;});
   return {classes:classes,periodes:periodes};
+}
+function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
+  EUC_IMPORT_exigerAdminTexte_();
+  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});
+  return EUC_DEV524_construireMetaGenerateur_(classes,EUC_IMPORT_lireRecords_('Planning_Periodes'));
 }
 
 function EUC_CONVENTION_periodeCompatibleClasse_(p,c){

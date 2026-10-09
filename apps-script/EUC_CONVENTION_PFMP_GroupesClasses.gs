@@ -33,14 +33,11 @@ function EUC_CONVENTION_resoudreClasseEleve_(classeEleve, classes) {
   return bestScore >= 80 ? best : null;
 }
 
-function EUC_CONVENTION_lireGroupesClassesElevesAdmin() {
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
+function EUC_DEV524_construireGroupesGenerateur_(classes, rows) {
   var classesById = {};
   classes.forEach(function(c){ classesById[String(c.id)] = c; });
-  var rows = EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP').filter(function(r){ return r.Actif !== false; });
   var groups = {};
-  rows.forEach(function(r){
+  (rows || []).filter(function(r){ return r.Actif !== false; }).forEach(function(r){
     var classeRef = EUC_PFMP_ref_(r.Classe), classe = classesById[String(classeRef)] || null;
     var raw = String(r.Code_classe_importe || r.Classe_nom || (classe && classe.nom) || '').trim();
     if (!raw) return;
@@ -57,6 +54,27 @@ function EUC_CONVENTION_lireGroupesClassesElevesAdmin() {
     g.eleves.sort(function(a,b){ return String(a.nom).localeCompare(String(b.nom),'fr') || String(a.prenom).localeCompare(String(b.prenom),'fr'); });
     return g;
   }).sort(function(a,b){ return String(a.nom).localeCompare(String(b.nom),'fr'); });
+}
+
+function EUC_CONVENTION_lireGroupesClassesElevesAdmin() {
+  EUC_IMPORT_exigerAdminTexte_();
+  var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
+  return EUC_DEV524_construireGroupesGenerateur_(classes, EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'));
+}
+
+/* DEV524 — le générateur chargeait trois exécutions concurrentes qui lisaient
+ * trois fois les classes et deux fois les élèves. Une seule réponse cohérente
+ * évite qu'une exécution lente laisse toutes les listes sur « Chargement… ». */
+function EUC_CONVENTION_chargerGenerateurAdmin() {
+  EUC_IMPORT_exigerAdminTexte_();
+  var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
+  var eleveRows = EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP') || [];
+  var periodeRows = EUC_IMPORT_lireRecords_('Planning_Periodes') || [];
+  return {
+    meta:EUC_DEV524_construireMetaGenerateur_(classes, periodeRows),
+    eleves:EUC_DEV524_construireElevesGenerateur_(classes, eleveRows),
+    groupes:EUC_DEV524_construireGroupesGenerateur_(classes, eleveRows)
+  };
 }
 
 function EUC_CONVENTION_preparerAccesClasseNom(payload) {
