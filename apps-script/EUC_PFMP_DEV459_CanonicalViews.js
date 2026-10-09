@@ -1,6 +1,6 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.515';
-var EUC_DEV459_CANONICAL_='DEV515-C7';
+var EUC_DEV459_VERSION_='1.0.0-dev.516';
+var EUC_DEV459_CANONICAL_='DEV516-C8';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}
@@ -128,31 +128,11 @@ function EUC_DEV459_sanitizeDetail_(detail){
   }
   return detail;
 }
-function EUC_DEV459_findPeriod_(data,p){
-  var found=null;
-  (data&&data.classes||[]).some(function(c){
-    if(EUC_DEV459_n_(c.classeId||c.id)!==EUC_DEV459_n_(p.classe))return false;
-    (c.periodes||[]).some(function(x){
-      if(EUC_DEV459_n_(x.id||x.periodeId)!==EUC_DEV459_n_(p.periode))return false;
-      found=x;return true;
-    });
-    return !!found;
-  });
-  return found;
-}
-function EUC_DEV459_quickSignature_(quick){
-  quick=quick||{};
-  function names(key){return (quick[key]||[]).map(EUC_DEV459_t_).filter(Boolean).sort(function(a,b){return a.localeCompare(b,'fr');}).join('|');}
-  return ['avec','sans','apprentis','annuleesInterrompues'].map(function(k){return k+':'+names(k);}).join('||');
-}
-function EUC_DEV459_detailMatchesQuick_(detail,expected){
-  if(!detail||!Array.isArray(detail.lignes)||!expected)return false;
-  try{return EUC_DEV459_quickSignature_(EUC_DEV422_quickFromDetail_(detail))===EUC_DEV459_quickSignature_(expected);}catch(e){return false;}
-}
 function EUC_DEV459_canonicalDetail_(p){
-  var family=EUC_DEV459_familyData_(p.annee,p.famille),period=EUC_DEV459_findPeriod_(family,p),expected=period&&period.quick;
   var detail=EUC_DEV455_fastDetail_(p.annee,p.famille,p.classe,p.periode);
-  if(expected&&!EUC_DEV459_detailMatchesQuick_(detail,expected)&&typeof EUC_DEV455_buildTargeted_==='function'){
+  /* Une nouvelle revision canonique invalide le contenu metier du detail,
+   * sans reconstruire toute la famille sur le chemin utilisateur. */
+  if(detail.__dev459CanonicalDetail!==EUC_DEV459_CANONICAL_&&typeof EUC_DEV455_buildTargeted_==='function'){
     var rebuilt=EUC_DEV455_buildTargeted_(p.annee,p.famille,p.classe,p.periode);
     if(rebuilt&&Array.isArray(rebuilt.lignes)){
       detail=rebuilt;detail.__dev459CanonicalDetail=EUC_DEV459_CANONICAL_;
