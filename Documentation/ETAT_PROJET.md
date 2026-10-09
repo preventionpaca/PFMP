@@ -38,12 +38,31 @@
 - Les tests ciblés couvrent les régressions observées : absence de calcul lourd
   dans le rendu famille, conservation du dernier snapshot, résumé rapide
   embarqué, délai visible, idempotence de la génération, historique lisible,
-  QR agrandi et repli du géocodage. La suite complète passe à `671/671`.
+  QR agrandi et repli du géocodage.
+- La maintenance du snapshot contenait encore l'identifiant d'une ancienne
+  base Grist (`b2CyeMEdVEMS`). Le bleu refusait donc lui-même la reconstruction
+  avant toute lecture métier. La cible est maintenant déterminée strictement
+  par le canal : recette `kB8bvDag8x7D` sur le bleu, production
+  `3pnVrygfNn7c` seulement sur le vert. Toute cible incohérente ou inconnue est
+  refusée. Un test interdit le retour de l'ancien identifiant.
+- La suite complète passe à `672/672`. Le code applicatif exact
+  `5206f6802f1fd738f1e919df0bacb3b957d9b748` a été poussé puis relu sur le
+  projet bleu. Le contrôle HTTP valide `25/25` routes. Le navigateur a ouvert
+  les `25` routes contractuelles, toutes leurs destinations de navigation
+  visibles et les quatre destinations supplémentaires détectées (consommation
+  API et familles BAC PRO, BTS et CAP), soit `29/29` pages sans erreur, page
+  blanche, authentification inattendue ni sortie du canal `/dev`.
+- La reconstruction bleue s'est terminée en `12,8 s` au lieu d'échouer sur la
+  cible Grist. L'audit de recette retourne toutefois `0` période et `0` résumé
+  BAC PRO. L'interface termine donc par un état vide explicite et une action de
+  reprise, mais la parité métier TCAR (`effectif`, `conventions`, `apprentis`,
+  `sans convention`, `parcours différencié`) ne peut pas être certifiée avec
+  cette recette vide.
 - Ce lot ne touche ni la production Grist, ni les données élève/convention, ni
-  les courriels ou ordres de mission. À ce stade de la note, le vert reste
-  inchangé et le contrôle navigateur des 25 routes bleues reste à exécuter sur
-  le candidat publié. Les valeurs métier affichées ne pourront être déclarées
-  actualisées qu'après reconstruction du snapshot de recette.
+  les courriels ou ordres de mission. Le vert reste inchangé en version
+  immuable `894`. Aucune promotion ne doit être faite tant que la recette ne
+  contient pas un jeu BAC PRO représentatif permettant d'homologuer les
+  décomptes observés par l'utilisateur.
 
 ## Mise à jour du 8 octobre 2026 — DEV512 (fusion PDF et signalement jaune)
 

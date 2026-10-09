@@ -1,6 +1,6 @@
 # Prochain lot après DEV513
 
-## DEV513 — candidat de stabilisation à homologuer sur le bleu
+## DEV513 — candidat bleu techniquement contrôlé, homologation métier bloquée par la recette vide
 
 DEV513 retire le recalcul lourd du parcours de consultation BAC PRO. Une page
 famille sert toujours le dernier snapshot complet, y compris lorsqu'un nouveau
@@ -12,16 +12,29 @@ La génération unitaire ne dépend plus du temps de reconstruction des vues et
 porte un identifiant de requête stable. Les QR sont agrandis et renforcés pour
 la photocopie ; l'historique des classes écarte les fausses « séquences
 précédentes » ; le géocodage retrouve les entreprises actives même lorsque les
-détails matérialisés ne sont pas prêts. La suite locale passe `671/671`.
+détails matérialisés ne sont pas prêts. La maintenance ne référence plus
+l'ancienne base `b2CyeMEdVEMS` : elle sélectionne exclusivement la base du
+canal courant et refuse tout mélange bleu/vert. La suite locale passe
+`672/672`.
+
+Le code exact `5206f6802f1fd738f1e919df0bacb3b957d9b748` a été poussé et
+relu sur le projet Apps Script bleu. Le contrôle automatisé obtient `25/25`
+routes. Le navigateur obtient `29/29` pages valides : les `25` routes du contrat
+plus la consommation API et les trois familles BAC PRO, BTS et CAP. Toutes les
+destinations de navigation visibles découvertes ont été ouvertes et restent sur
+le même `/dev`.
+
+La reconstruction de recette se termine en `12,8 s`, mais son audit retourne
+`0` période et `0` résumé BAC PRO. Le spinner infini est donc éliminé et remplacé
+par un état vide explicite, sans que les décomptes TCAR puissent être homologués.
 
 Avant toute promotion verte, il reste obligatoirement à :
 
-1. publier ce commit sur le projet Apps Script bleu et relire le distant ;
-2. reconstruire le snapshot de recette sans toucher à la production Grist ;
-3. parcourir les 25 routes bleues et toutes leurs navigations visibles ;
-4. vérifier sur le bleu la cohérence d'une classe témoin entre effectif,
+1. fournir au bleu un jeu de recette BAC PRO représentatif sans lecture ni
+   copie implicite depuis la production ;
+2. vérifier sur le bleu la cohérence d'une classe témoin entre effectif,
    conventions, apprentis, sans convention et parcours différencié ;
-5. documenter les parcours qui ne peuvent être exécutés réellement sans une
+3. documenter les parcours qui ne peuvent être exécutés réellement sans une
    écriture métier interdite.
 
 Le vert ne doit être modifié qu'après une nouvelle autorisation explicite de
