@@ -1,6 +1,6 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.514';
-var EUC_DEV459_CANONICAL_='DEV514-C6';
+var EUC_DEV459_VERSION_='1.0.0-dev.515';
+var EUC_DEV459_CANONICAL_='DEV515-C7';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}
@@ -99,6 +99,15 @@ function EUC_DEV459_familyData_(annee,famille){
         try{detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,p)||detail;}catch(eEnrich){}
       }
       if(!EUC_DEV459_isPdif_(p))(detail.lignes||[]).forEach(function(x){x.parcoursDifferencie=false;});
+      /* La synthese et la fiche de classe doivent partager le meme detail
+       * enrichi. Sans cette ecriture, la carte pouvait etre correcte tandis
+       * que le clic rouvrait un ancien snapshot de classe reste en cache. */
+      detail.__dev459CanonicalDetail=EUC_DEV459_CANONICAL_;
+      try{
+        if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function'){
+          EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),detail);
+        }
+      }catch(eDetailCache){}
       try{if(typeof EUC_DEV422_quickFromDetail_==='function')q=EUC_DEV422_quickFromDetail_(detail);}catch(eQuick){}
       q=EUC_DEV459_mergeQuickSources_(c,p,q,rosters&&rosters[String(EUC_DEV459_n_(c.classeId||c.id))]||[]);
       EUC_DEV459_applyCanonicalQuick_(c,p,q);
@@ -118,6 +127,43 @@ function EUC_DEV459_sanitizeDetail_(detail){
     detail.stats=detail.stats||{};detail.stats.parcoursDifferencies=0;detail.__dev459OrdinaryPeriod=true;
   }
   return detail;
+}
+function EUC_DEV459_findPeriod_(data,p){
+  var found=null;
+  (data&&data.classes||[]).some(function(c){
+    if(EUC_DEV459_n_(c.classeId||c.id)!==EUC_DEV459_n_(p.classe))return false;
+    (c.periodes||[]).some(function(x){
+      if(EUC_DEV459_n_(x.id||x.periodeId)!==EUC_DEV459_n_(p.periode))return false;
+      found=x;return true;
+    });
+    return !!found;
+  });
+  return found;
+}
+function EUC_DEV459_quickSignature_(quick){
+  quick=quick||{};
+  function names(key){return (quick[key]||[]).map(EUC_DEV459_t_).filter(Boolean).sort(function(a,b){return a.localeCompare(b,'fr');}).join('|');}
+  return ['avec','sans','apprentis','annuleesInterrompues'].map(function(k){return k+':'+names(k);}).join('||');
+}
+function EUC_DEV459_detailMatchesQuick_(detail,expected){
+  if(!detail||!Array.isArray(detail.lignes)||!expected)return false;
+  try{return EUC_DEV459_quickSignature_(EUC_DEV422_quickFromDetail_(detail))===EUC_DEV459_quickSignature_(expected);}catch(e){return false;}
+}
+function EUC_DEV459_canonicalDetail_(p){
+  var family=EUC_DEV459_familyData_(p.annee,p.famille),period=EUC_DEV459_findPeriod_(family,p),expected=period&&period.quick;
+  var detail=EUC_DEV455_fastDetail_(p.annee,p.famille,p.classe,p.periode);
+  if(expected&&!EUC_DEV459_detailMatchesQuick_(detail,expected)&&typeof EUC_DEV455_buildTargeted_==='function'){
+    var rebuilt=EUC_DEV455_buildTargeted_(p.annee,p.famille,p.classe,p.periode);
+    if(rebuilt&&Array.isArray(rebuilt.lignes)){
+      detail=rebuilt;detail.__dev459CanonicalDetail=EUC_DEV459_CANONICAL_;
+      try{
+        if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function'){
+          EUC_DEV416_cachePut_(EUC_DEV416_key_(p.annee,p.famille,p.classe,p.periode),detail);
+        }
+      }catch(eCache){}
+    }
+  }
+  return EUC_DEV459_sanitizeDetail_(detail);
 }
 function EUC_DEV459_jump_(detail,p){
   var data=EUC_DEV459_familyData_(p.annee,p.famille),selected=0;
@@ -156,7 +202,7 @@ function EUC_DEV505_retirerCommandesAdminPubliques_(html){
 }
 function EUC_DEV459_detail_(e,isPublic){
   var p=EUC_DEV455_params_(e),detail;
-  try{detail=EUC_DEV459_sanitizeDetail_(EUC_DEV455_fastDetail_(p.annee,p.famille,p.classe,p.periode));}
+  try{detail=EUC_DEV459_canonicalDetail_(p);}
   catch(err){if(err&&err.code==='DEV455_REFRESHING')return EUC_DEV455_refreshing_(!!isPublic,p);throw err;}
   detail.peutModifier=!isPublic;
   if(!isPublic){try{detail.peutModifier=!!EUC_V156_contexteAdmin_();}catch(eAdmin){detail.peutModifier=false;}}
