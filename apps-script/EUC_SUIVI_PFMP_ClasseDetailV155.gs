@@ -105,8 +105,8 @@ function EUC_V155_contactEntreprise_(a){
   ].filter(Boolean);
 
   var nom=parts.join(' ');
-  var tel=EUC_V155_txt_(a.Responsable_telephone);
-  var mail=EUC_V155_txt_(a.Responsable_courriel);
+  var tel=EUC_V155_txt_(a.Responsable_telephone||a.Entreprise_telephone||a.Entreprise_telephone_snapshot);
+  var mail=EUC_V155_txt_(a.Responsable_courriel||a.Entreprise_courriel||a.Entreprise_courriel_snapshot);
 
   return [nom,tel,mail].filter(Boolean).join(' · ');
 }
@@ -176,6 +176,9 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
     var an=EUC_V154_anneeDossier_(a,map);
     return !codeAnnee || !an || an===codeAnnee;
   });
+  if(typeof EUC_DEV519_enrichAccessCompanyContacts_==='function'){
+    try{dossiers=EUC_DEV519_enrichAccessCompanyContacts_(dossiers)||dossiers;}catch(eContacts){}
+  }
 
   var byEleve={};
 

@@ -1,5 +1,37 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV530 (coordonnées et contrat visuel du suivi)
+
+- Le repli des anciens imports JotForm n'exige plus systématiquement un SIRET.
+  Il rapproche d'abord l'élève, la classe et les dates exactes, puis seulement
+  une correspondance unique élève-classe ou élève. Une divergence de nom,
+  téléphone ou courriel rend la clé ambiguë et interdit tout choix arbitraire.
+- Les anciens alias d'élève, de classe, de responsable et de dates sont
+  normalisés. Les champs déjà portés par la convention, les références Grist
+  entreprise/contact et les valeurs canoniques restent prioritaires.
+- Le chemin ancien de détail de classe applique le même enrichissement que la
+  vue canonique. Si aucun téléphone ou courriel nominatif n'existe, les
+  coordonnées générales de l'entreprise restent le dernier repli affichable.
+- Le marqueur de détail passe à `DEV530-C13` : toutes les fiches de classe
+  précédemment mises en cache sont rejetées et reconstruites.
+- Lors d'un chargement ciblé, les accès convention sont filtrés par année et
+  classe avant les lectures entreprise, contact et JotForm. Le changement de
+  classe n'enrichit donc plus les centaines de conventions de l'année.
+- « Convention enregistrée » et « APPRENTI » sont verts à texte blanc. Le
+  repère `A` et le fond jaune apprenti restent inchangés. Les absences de
+  convention et les ruptures restent rouges sur fond rose. Une nouvelle
+  convention active après rupture redevient l'état courant vert, sans effacer
+  l'historique rouge.
+- La pastille technique « ENVIRONNEMENT VERT — VERSION EN LIGNE » est retirée
+  du vert. Le bandeau bleu reste seulement dans l'archive de recette.
+- Le contrat anti-régression est inscrit dans `DECISIONS_METIER.md` et dans le
+  contrat qualité. Treize tests ciblés DEV528/DEV530 couvrent les sources de
+  coordonnées, les ambiguïtés, le filtrage avant enrichissement, les couleurs,
+  le fond apprenti et les deux rendus. La suite complète passe `744/744`.
+- Aucun accès à la production Grist ni aucune écriture métier n'a été exécuté
+  par ces tests. La validation nominative réelle reste distincte de la
+  validation du code et des routes.
+
 ## Mise à jour du 9 octobre 2026 — DEV529 (placement précis du PDF de convention)
 
 - La page « Paramètres de la convention » expose maintenant les douze zones

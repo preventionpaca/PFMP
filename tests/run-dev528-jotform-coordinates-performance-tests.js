@@ -40,6 +40,22 @@ test('une ligne JotForm non validée ne complète jamais une convention',()=>{
   const row={Eleve:7,Classe_convention:24,Entreprise_siret:'73282932000074'};
   ctx.EUC_DEV528_enrichJotformContacts_([row]);assert.equal(row.Responsable_nom,undefined);
 });
+test('une ancienne convention sans SIRET retrouve le contact par élève, classe et dates',()=>{
+  const ctx=context([{id:10,Decision:'VALIDEE',Eleve_match_id:8,Classe_match_id:24,Date_debut_brut:'28/09/2026',Date_fin_brut:'16/10/2026',Raw_JSON:JSON.stringify(raw)}]);
+  const row={Eleve:8,Classe_convention:24,Date_debut:'2026-09-28',Date_fin:'2026-10-16'};
+  ctx.EUC_DEV528_enrichJotformContacts_([row]);
+  assert.equal(row.Responsable_nom,'Responsable Exemple');
+  assert.equal(row.Responsable_telephone,'04 00 00 00 00');
+});
+test('le repli élève-classe refuse deux responsables contradictoires',()=>{
+  const ctx=context([
+    {id:11,Decision:'VALIDEE',Eleve_match_id:8,Classe_match_id:24,Raw_JSON:JSON.stringify(raw)},
+    {id:12,Decision:'VALIDEE',Eleve_match_id:8,Classe_match_id:24,Raw_JSON:JSON.stringify(Object.assign({},raw,{'Nom du responsable':'Autre Responsable'}))}
+  ]);
+  const row={Eleve:8,Classe_convention:24};
+  ctx.EUC_DEV528_enrichJotformContacts_([row]);
+  assert.equal(row.Responsable_nom,undefined);
+});
 test('les prochains imports écrivent les coordonnées canoniques',()=>{
   const ctx=context([]),columns={Entreprise_telephone:1,Entreprise_courriel:1,Responsable_nom:1,Responsable_telephone:1,Responsable_courriel:1};
   const out=ctx.EUC_DEV528_companyFields_({SIRET_normalise:'73282932000074',Raw_JSON:JSON.stringify(raw)},{},columns);
@@ -57,6 +73,12 @@ test('le premier chargement lit tous les blocs persistants en un seul appel',()=
   assert.doesNotMatch(body,/p\.getProperty\(/);
 });
 test('les anciennes fiches de classe sont invalidées pour reconstruire les coordonnées',()=>{
-  assert.match(canonical,/EUC_DEV459_CANONICAL_='DEV528-C12'/);
+  assert.match(canonical,/EUC_DEV459_CANONICAL_='DEV530-C13'/);
+});
+test('le chargement de classe filtre les accès avant leur enrichissement coûteux',()=>{
+  const filter=consolidation;
+  const family=read('EUC_PFMP_DEV339_FamilleUX.js');
+  const scope=family.slice(family.indexOf('function EUC_DEV422_batchSources_'),family.indexOf('function EUC_DEV422_enrichDetailBatch_'));
+  assert.ok(scope.indexOf('rows=rows.filter(function(a)')<scope.indexOf('rows=EUC_DEV519_enrichAccessCompanyContacts_(rows)'));
 });
 if(!process.exitCode)console.log(`\n${n} tests DEV528 coordonnées JotForm et premier chargement réussis.`);

@@ -101,3 +101,26 @@ un second échec de la même route reste bloquant.
 Les limites de contrôle doivent être annoncées. Un courriel, un import, une
 écriture Grist ou un document réel ne peut servir de test sans autorisation
 explicite.
+
+## 5. Invariants anti-régression du tableau de classe
+
+Toute évolution qui touche le suivi, les conventions, les entreprises, les
+imports ou les caches doit conserver et tester les invariants suivants :
+
+- « Coordonnées entreprise » affiche le responsable disponible avec son nom,
+  son prénom, son téléphone et son courriel, quelle que soit l'origine
+  historique autorisée de la convention (QR, JotForm validé, référence
+  entreprise/contact ou ancien alias) ;
+- un rapprochement ambigu reste vide et n'attribue jamais un contact au hasard ;
+- « Convention enregistrée » et « APPRENTI » restent verts à texte blanc ; le
+  repère `A` et le fond jaune de la ligne apprenti sont conservés ; « Sans
+  convention », « Annulée » et « Interrompue » restent rouges sur fond rose ;
+- une convention de remplacement active est l'état courant vert, tandis que la
+  rupture d'origine reste présente dans l'historique rouge ;
+- le vert n'affiche aucun badge technique d'environnement ;
+- une fiche de classe filtre d'abord sa classe et sa période avant tout
+  enrichissement entreprise/contact/JotForm, et ses anciens caches sont
+  invalidés lors d'un changement de contrat de données.
+
+Ces règles ont des tests dédiés. Les supprimer, les contourner ou affaiblir
+leurs assertions bloque la publication.

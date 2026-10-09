@@ -141,6 +141,16 @@ function EUC_DEV422_batchSources_(annee,classIds){
     }else{
       rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
     }
+    /* DEV530 — enrichir uniquement les conventions des classes demandées.
+     * L'ancien ordre enrichissait toutes les conventions annuelles avant le
+     * filtre local : il relisait inutilement entreprises, contacts et tampon
+     * JotForm pour plusieurs centaines de lignes lors d'un simple changement
+     * de classe. */
+    rows=rows.filter(function(a){
+      var y=EUC_DEV339_txt_(a.Annee_scolaire);
+      var cid=typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe_convention):Number(a.Classe_convention)||0;
+      return (!y||y===annee)&&!!classIds[String(cid)];
+    });
     if(typeof EUC_DEV519_enrichAccessCompanyContacts_==='function'){
       rows=EUC_DEV519_enrichAccessCompanyContacts_(rows);
     }

@@ -85,6 +85,15 @@ test('le projet vert conserve ses URL canoniques', () => {
   assert.equal(ctx.EUC_RELEASE_blueEditorContext_(), null);
 });
 
+test('le projet vert ne montre plus de pastille environnement', () => {
+  const ctx = releaseContext('PROJET_VERT');
+  const out = output('<html><head></head><body><main>Page</main></body></html>');
+  ctx.EUC_RELEASE_decorateOutput_(out);
+  assert.doesNotMatch(out.content, /ENVIRONNEMENT VERT|data-pfmp-release-channel="green"/);
+  assert.match(out.content, /data-pfmp-busy-style/);
+  assert.match(out.content, /data-pfmp-busy-script/);
+});
+
 test('le /dev bleu fournit un contexte administrateur limité au projet bleu', () => {
   const ctx = releaseContext('1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo');
   const auth = ctx.EUC_RELEASE_blueEditorContext_();

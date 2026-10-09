@@ -1,4 +1,24 @@
-# Prochain lot après DEV529
+# Prochain lot après DEV530
+
+Après publication, le contrôle utilisateur prioritaire est une actualisation
+forcée d'une fiche TMELEC puis TMP3D. Pour une convention récente issue du QR
+et une convention historique JotForm, « Coordonnées entreprise » doit montrer
+le responsable disponible, son téléphone et son courriel. Le changement de
+classe doit quitter l'état de chargement sans enrichir toute l'année.
+
+Vérifier dans les mêmes fiches : convention et apprenti en vert à texte blanc,
+ligne apprenti toujours jaune avec son repère `A`, sans convention et rupture
+en rouge sur fond rose, et absence du badge technique vert. Lorsqu'un élève a
+une rupture puis une nouvelle convention, la nouvelle doit être l'état courant
+vert et la rupture doit rester dans l'historique rouge.
+
+La cartographie et le géocodage constituent un parcours séparé : les contrôler
+après ce lot, sans lancer de géocodage réel tant qu'une autorisation d'écriture
+métier n'a pas été donnée. Les contrôles automatisés ne consultent pas les
+données nominatives de production ; une donnée réelle encore absente exigera
+un diagnostic de lecture explicitement autorisé.
+
+## Lot précédent — DEV529
 
 DEV529 rend les coordonnées du PDF de convention réglables sans changement de
 code. Le contrôle métier doit charger l'aperçu des pages 1 et 2, déplacer une

@@ -78,7 +78,7 @@ test('le paquet publie un point d entrée commun avec repère bleu ou vert', () 
   assert.match(builder, /function doGet\(e\).*EUC_RELEASE_doGet_\(e\)/s);
   assert.match(builder, /Routeur doGet inattendu/);
   assert.match(channel, /MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE/);
-  assert.match(channel, /ENVIRONNEMENT VERT — VERSION EN LIGNE/);
+  assert.doesNotMatch(channel, /ENVIRONNEMENT VERT — VERSION EN LIGNE/);
   assert.match(channel, /data-pfmp-release-channel/);
 });
 

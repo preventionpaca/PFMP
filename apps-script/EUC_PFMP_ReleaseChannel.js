@@ -112,19 +112,17 @@ function EUC_RELEASE_decorateOutput_(output) {
       typeof output.setContent !== 'function') return output;
 
   var blue = EUC_RELEASE_isBlue_();
-  var color = blue ? '#0d47a1' : '#18864b';
-  var label = blue
-    ? 'MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE'
-    : 'ENVIRONNEMENT VERT — VERSION EN LIGNE';
-  var banner = '<div data-pfmp-release-channel="' + (blue ? 'blue' : 'green') + '" '
-    + 'style="position:fixed;' + (blue ? 'top:0;left:0;right:0;' : 'top:8px;right:12px;')
-    + 'z-index:2147483647;padding:' + (blue ? '11px 16px' : '7px 11px') + ';'
-    + (blue ? '' : 'border-radius:999px;') + 'background:' + color + ';color:#fff;'
-    + 'text-align:center;font:800 ' + (blue ? '14px' : '11px') + '/1.2 Arial,sans-serif;'
-    + 'letter-spacing:.05em;box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none">'
-    + label + '</div>';
+  /* Le vert est le canal usuel : aucun badge permanent ne doit masquer ses
+   * écrans. Le bandeau bleu reste indispensable pour identifier la recette. */
+  var banner = blue
+    ? '<div data-pfmp-release-channel="blue" style="position:fixed;top:0;left:0;right:0;'
+      + 'z-index:2147483647;padding:11px 16px;background:#0d47a1;color:#fff;'
+      + 'text-align:center;font:800 14px/1.2 Arial,sans-serif;letter-spacing:.05em;'
+      + 'box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none">'
+      + 'MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE</div>'
+    : '';
   var content = EUC_RELEASE_blueNavigation_(output.getContent());
-  if (content.indexOf('data-pfmp-release-channel=') >= 0) return output;
+  if (blue && content.indexOf('data-pfmp-release-channel=') >= 0) return output;
   var busyStyle='<style data-pfmp-busy-style="1">'+
     'button.pfmp-auto-busy::before{content:"";display:inline-block;width:13px;height:13px;'+
     'margin-right:7px;border:2px solid currentColor;border-right-color:transparent;'+

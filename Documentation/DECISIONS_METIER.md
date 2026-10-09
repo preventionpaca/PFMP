@@ -30,3 +30,11 @@
 - Une balise du dossier d’apprentissage doit rester un texte continu sur une seule ligne après export PDF. Les zones étroites utilisent les alias courts documentés dans `Documentation/BALISES_DOSSIER_APPRENTISSAGE.md`. La date d’édition et la pagination utilisent `{{DATE_HEURE_IMPRESSION}}`, `{{PAGE_COURANTE}}` et `{{NB_PAGES}}` dans le pied de chaque page.
 - La convention PFMP de référence doit tenir strictement sur un recto-verso A4, sans page blanche ni grandes zones vides, avec une mise en page compacte mais lisible.
 - Lorsque le modèle de convention sera stabilisé, il devra être exportable au format Word `.docx` modifiable afin de pouvoir être corrigé ultérieurement puis réintégré comme modèle de référence.
+# Décision permanente du 9 octobre 2026 — contrat anti-régression du suivi PFMP
+
+- Une fonctionnalité validée et en service ne peut plus être modifiée sans un test ciblé qui décrit son comportement attendu et un passage de la suite complète avant publication.
+- Dans chaque liste d'élèves par classe, la colonne « Coordonnées entreprise » affiche, lorsqu'ils existent, le nom et le prénom du responsable, son téléphone et son courriel. Les sources QR canoniques, les anciens alias, les fiches entreprise/contact et le tampon JotForm validé sont supportés. Un rapprochement ambigu ne doit jamais choisir arbitrairement un contact.
+- La pastille « Convention enregistrée » et la pastille « APPRENTI » utilisent un fond vert et une écriture blanche. Le fond jaune de la ligne apprenti et le repère `A` devant le nom sont conservés. « Sans convention », « Annulée » et « Interrompue » restent rouges sur fond rose.
+- Lorsqu'une convention interrompue possède une convention de remplacement active, la ligne courante montre la nouvelle convention en vert ; l'interruption reste visible dans l'historique rouge.
+- Le site vert ne montre plus la pastille technique « ENVIRONNEMENT VERT — VERSION EN LIGNE ». Le bandeau bleu reste un garde-fou propre à la recette.
+- Le premier chargement d'une classe filtre les conventions de cette classe avant l'enrichissement des entreprises, contacts et données JotForm. Il est interdit de réintroduire un enrichissement de toutes les conventions annuelles sur ce parcours.
