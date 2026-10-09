@@ -25,6 +25,10 @@ test('le repère A et le fond jaune apprenti sont conservés',()=>{
   assert.match(admin,/tr\.app172\{background:#fff7bf!important\}/);
   assert.match(publicView,/\.app\{background:#fffbd0\}/);
 });
+test('la date de début du contrat reste dans la pastille et est lisible',()=>{
+  assert.match(admin,/Début du contrat :/);
+  assert.match(admin,/\.status-date\{[^}]*font-size:12px[^}]*font-weight:800[^}]*opacity:1/);
+});
 test('les deux rendus affichent le responsable et les coordonnées générales disponibles',()=>{
   assert.match(admin,/contactVal\(x\.contactEntreprise\)/);
   assert.match(publicView,/contact\(x\.contactEntreprise,x\.telephoneEntreprise,x\.courrielEntreprise\)/);

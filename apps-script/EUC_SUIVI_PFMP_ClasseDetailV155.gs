@@ -76,6 +76,9 @@ function EUC_V155_statutLibelle_(a){
     return {code:'INTERROMPUE',libelle:'Interrompue'};
   }
   if(s==='A_COMPLETER_ENTREPRISE'){
+    if(typeof EUC_DEV533_companySubmissionComplete_==='function'&&EUC_DEV533_companySubmissionComplete_(a)){
+      return {code:'ENREGISTREE',libelle:'Convention enregistrée'};
+    }
     return {code:'A_COMPLETER_ENTREPRISE',libelle:'À compléter par l’entreprise'};
   }
   if(s==='PFMP_AUTORISEE'){

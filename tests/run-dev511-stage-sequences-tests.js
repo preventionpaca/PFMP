@@ -78,6 +78,8 @@ test('une convention à compléter reste visible mais non couverte et non missio
   const c=baseContext();c.EUC_IMPORT_dateExistanteISO_=v=>String(v||'').slice(0,10);vm.runInContext(live,c);
   const pending=c.EUC_DEV340_status_({Statut_administratif:'A_COMPLETER_ENTREPRISE'});
   assert.equal(pending.active,true);assert.equal(pending.covered,false);assert.equal(pending.code,'A_COMPLETER_ENTREPRISE');
+  const complete=c.EUC_DEV340_status_({Statut_administratif:'A_COMPLETER_ENTREPRISE',Entreprise_siret:'73282932000074',Entreprise_raison_sociale:'ENTREPRISE TEST',Entreprise_adresse:'12 RUE TEST',Entreprise_code_postal:'06300',Entreprise_commune:'NICE',Responsable_nom:'EXEMPLE',Responsable_prenom:'Rita',Responsable_fonction:'Direction',Responsable_telephone:'0102030405',Responsable_courriel:'resp@example.test',Tuteur_nom:'TEST',Tuteur_prenom:'Tom',Tuteur_fonction:'Tuteur',Tuteur_telephone:'0102030405',Tuteur_courriel:'tuteur@example.test'});
+  assert.equal(complete.active,true);assert.equal(complete.covered,true);assert.equal(complete.code,'ENREGISTREE');
   const interrupted=c.EUC_DEV340_status_({Statut_administratif:'INTERROMPUE',Revoked:true});
   assert.equal(interrupted.code,'INTERROMPUE');assert.equal(interrupted.active,false);
   assert.match(missions,/compact\.indexOf\('ANNULEE'\)>=0\|\|compact\.indexOf\('INTERROMP'\)>=0/);
@@ -108,6 +110,7 @@ test('le chemin de secours du suivi garde les deux séquences et ne compte pas l
   const fallback=read('EUC_SUIVI_PFMP_ClasseDetailV155.gs');
   assert.match(fallback,/historiqueConventions:historique/);assert.match(fallback,/sequenceId:d\?Number\(d\.id\):0/);
   assert.match(fallback,/statut\.code!==\'A_COMPLETER_ENTREPRISE\'/);assert.match(fallback,/conventionId:couverte\?Number\(d\.id\):0/);
+  assert.match(fallback,/EUC_DEV533_companySubmissionComplete_/);
 });
 
 test('la saisie QR réévalue la date et finalise le statut administratif',()=>{

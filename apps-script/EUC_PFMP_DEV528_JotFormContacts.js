@@ -6,8 +6,8 @@
  * de l'entreprise et son courriel dans l'acces convention. La vue peut donc
  * completer ces champs en lecture seule, sans modifier la convention signee.
  */
-var EUC_DEV528_VERSION_='1.0.0-dev.530';
-var EUC_DEV528_JOTFORM_CACHE_='EUC_DEV530_JOTFORM_CONTACTS_V2';
+var EUC_DEV528_VERSION_='1.0.0-dev.533';
+var EUC_DEV528_JOTFORM_CACHE_='EUC_DEV533_JOTFORM_CONTACTS_V3';
 
 function EUC_DEV528_t_(v){return String(v==null?'':v).trim();}
 function EUC_DEV528_ref_(v){
@@ -80,6 +80,16 @@ function EUC_DEV530_mergeContact_(a,b){
   ['nom','telephone','courriel'].forEach(function(k){if(!EUC_DEV528_t_(out[k]))out[k]=EUC_DEV528_t_(older&&older[k]);});
   return out;
 }
+function EUC_DEV533_importedJotformRow_(row){
+  var value=row&&row.Importer;
+  return value===true||Number(value)===1||['OUI','YES','TRUE','VRAI'].indexOf(EUC_DEV528_t_(value).toUpperCase())>=0;
+}
+function EUC_DEV533_eligibleJotformRow_(row){
+  /* Les dossiers historiques réellement importés sont restés marqués
+   * A_CONTROLER dans le tampon. Le booléen Importer constitue la preuve
+   * d'import ; les lignes seulement analysées restent exclues. */
+  return EUC_DEV528_t_(row&&row.Decision).toUpperCase()==='VALIDEE'||EUC_DEV533_importedJotformRow_(row);
+}
 function EUC_DEV528_jotformContactIndex_(){
   var cache=CacheService.getScriptCache(),cached='';
   try{cached=cache.get(EUC_DEV528_JOTFORM_CACHE_)||'';if(cached)return JSON.parse(cached);}catch(eCache){}
@@ -92,7 +102,7 @@ function EUC_DEV528_jotformContactIndex_(){
     else bucket[key]=c;
   }
   rows.forEach(function(row){
-    if(EUC_DEV528_t_(row.Decision).toUpperCase()!=='VALIDEE')return;
+    if(!EUC_DEV533_eligibleJotformRow_(row))return;
     var c=EUC_DEV528_contactFromBuffer_(row);
     if(!c.eleve||!(c.nom||c.telephone||c.courriel))return;
     if(c.siret.length===14){

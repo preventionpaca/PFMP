@@ -109,7 +109,7 @@ imports ou les caches doit conserver et tester les invariants suivants :
 
 - « Coordonnées entreprise » affiche le responsable disponible avec son nom,
   son prénom, son téléphone et son courriel, quelle que soit l'origine
-  historique autorisée de la convention (QR, JotForm validé, référence
+  historique autorisée de la convention (QR, JotForm validé ou réellement importé, référence
   entreprise/contact ou ancien alias) ;
 - un rapprochement ambigu reste vide et n'attribue jamais un contact au hasard ;
 - « Convention enregistrée » et « APPRENTI » restent verts à texte blanc ; le

@@ -1,4 +1,21 @@
-# Prochain lot prioritaire — DEV531 stockage Grist
+# Prochain lot prioritaire — validation DEV533 sur le vert
+
+Publier le correctif de cohérence des responsables JotForm et des remplacements
+complets. Contrôler TCAR et TMP3D sur une convention historique importée : nom,
+téléphone et courriel du responsable doivent apparaître. Contrôler ensuite le
+remplacement après rupture complet : il doit être vert et enregistré, tandis
+que l'ancienne interruption reste dans l'historique rouge.
+
+Après publication, exécuter l'audit borné DEV533. Il doit désigner exactement
+les remplacements complets encore bloqués à `A_COMPLETER_ENTREPRISE`; la
+réparation ne doit modifier que leurs deux statuts et la date de saisie absente,
+jamais les coordonnées de l'entreprise, du responsable ou du tuteur.
+
+La pastille apprenti conserve le fond vert et le texte blanc ; la date de début
+du contrat doit être lisible sans zoom. Le marqueur `DEV533-C14` doit forcer la
+reconstruction des anciennes fiches.
+
+## Lot terminé — DEV531/DEV532 stockage Grist
 
 La priorité est de publier d'abord le correctif de non-croissance des vues
 matérialisées, sans nettoyage simultané. Avant livraison, exécuter la suite
@@ -10,10 +27,9 @@ un parcours froid puis chaud. Contrôler en lecture seule le statut du
 déclencheur planifié, le nombre d'actifs par clé et l'évolution du nombre de
 lignes et des octets JSON. Aucune suppression ne doit intervenir à ce stade.
 
-Le nettoyage constitue une opération distincte : sauvegarde vérifiée,
-inventaire exact des identifiants inactifs/redondants, validation explicite de
-l'utilisateur, suppression ciblée, contrôle fonctionnel puis mesure officielle
-Grist. Le plan complet est dans
+Le nettoyage a été exécuté après sauvegarde et audit : `6 007` lignes
+techniques supprimées, `130` lignes courantes conservées, aucun candidat
+restant. Le plan et les preuves sont dans
 `Documentation/INCIDENT_STOCKAGE_GRIST_2026-10-09.md`.
 
 ## Lot fonctionnel en attente après DEV530

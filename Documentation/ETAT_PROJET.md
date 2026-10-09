@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — DEV533 (cohérence des coordonnées et remplacements)
+
+- Le diagnostic hors ligne de la sauvegarde verte démontre que `78` lignes du
+  tampon JotForm sont à la fois `Importer = true` et encore libellées
+  `A_CONTROLER`. DEV528 refusait ces lignes et ne conservait que les `7`
+  `VALIDEE`, ce qui expliquait que la majorité des responsables entreprise ne
+  remontaient pas. DEV533 accepte désormais une ligne validée **ou** une ligne
+  portant la preuve d'import, tout en conservant les contrôles de rapprochement
+  exact et le refus des ambiguïtés. Les `4` lignes `A_CONTROLER` non importées
+  et les `41` lignes ignorées restent exclues.
+- Un seul remplacement après rupture est incohérent dans la sauvegarde : tous
+  les champs obligatoires entreprise, responsable et tuteur sont présents,
+  mais son statut est resté `A_COMPLETER_ENTREPRISE`. La lecture le considère
+  maintenant comme `Convention enregistrée`; une réparation Grist à deux
+  étapes, limitée aux remplacements complets et protégée par audit, corrige le
+  statut persistant sans modifier les coordonnées saisies.
+- La date de début du contrat apprenti reste dans la pastille verte mais passe
+  à `12 px`, graisse `800` et opacité complète. Le marqueur canonique devient
+  `DEV533-C14` afin de reconstruire les anciens détails mis en cache.
+- Tests ciblés DEV511/DEV528/DEV530/DEV533 puis suite complète : `759/759`
+  réussis avant publication.
+
 ## Mise à jour du 9 octobre 2026 — DEV531/DEV532 (incident de stockage Grist)
 
 - Le code exact de la version verte `919` démontre que les vues matérialisées
@@ -19,14 +41,17 @@
   `9eb2c4117ed93fda837bbe58766b9f569066916ee362e18720622e3ebe3dbc64`.
   L'analyse hors ligne conserve 68 index et 62 détails actifs, tous valides, et
   identifie exactement 6 007 lignes techniques redondantes représentant
-  194 044 589 octets de JSON. Aucune suppression n'est encore exécutée.
+  194 044 589 octets de JSON dans la sauvegarde préalable.
 - DEV532 retire l'ancien Doc ID codé dans la garde DEV424 et aligne le
   reconstructeur sur la cible verte protégée par DEV489. Il ajoute un nettoyage
   à deux étapes : audit armé trente minutes, relecture sous verrou, conservation
   de la ligne active la plus récente de chaque clé, puis contrôle post-opération.
-- Tests : `753/753` réussis. Le candidat DEV532 doit encore être publié sur les
-  deux Web Apps vertes, puis l'audit réel doit être exécuté avant la confirmation
-  finale de suppression.
+- DEV532 a été publié en version verte immuable `921`, puis l'audit et le
+  nettoyage confirmés ont supprimé exactement `6 007` anciennes lignes
+  techniques. Le contrôle post-opération conserve `130` lignes courantes et ne
+  trouve aucun candidat restant. L'exécution a mesuré `193 885 504` octets de
+  payload supprimé dans l'état réel au moment de l'opération. Aucune table
+  métier n'a été modifiée.
 - Le diagnostic détaillé, le plan de nettoyage réversible et les limites de la
   preuve sont consignés dans
   `Documentation/INCIDENT_STOCKAGE_GRIST_2026-10-09.md`.

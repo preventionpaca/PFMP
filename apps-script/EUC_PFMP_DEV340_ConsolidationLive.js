@@ -77,6 +77,16 @@ function EUC_DEV520_isResponsibleContact_(contact){
   try{role=role.normalize('NFD').replace(/[\u0300-\u036f]/g,'');}catch(e){}
   return /RESPONSABLE|REPRESENTANT|SIGNATAIRE|DIRIGEANT|DIRECTION|GERANT/i.test(role);
 }
+function EUC_DEV533_companySubmissionComplete_(row){
+  row=EUC_DEV520_normalizeResponsible_(row||{});
+  var hasCompanyId=EUC_DEV340_txt_(row.Entreprise_siret).replace(/\D/g,'').length===14||!!EUC_DEV340_txt_(row.Entreprise_nis);
+  var required=[
+    row.Entreprise_raison_sociale,row.Entreprise_adresse,row.Entreprise_code_postal,row.Entreprise_commune,
+    row.Responsable_nom,row.Responsable_prenom,row.Responsable_fonction,row.Responsable_telephone,row.Responsable_courriel,
+    row.Tuteur_nom,row.Tuteur_prenom,row.Tuteur_fonction,row.Tuteur_telephone,row.Tuteur_courriel
+  ];
+  return hasCompanyId&&required.every(function(value){return !!EUC_DEV340_txt_(value);});
+}
 /* DEV519 — les anciennes conventions peuvent ne conserver que les références
  * vers la fiche entreprise et son contact. L'enrichissement est groupé : au
  * plus une lecture des entreprises et une lecture des contacts pour toute la
@@ -207,12 +217,16 @@ function EUC_DEV394_BASE_EUC_DEV340_primeAccessIndex_(annee,data){
   return {ok:true,keys:n};
 }
 function EUC_DEV340_status_(a){
+  var early=EUC_DEV340_txt_(a&&(a.Statut_administratif||a.Statut)).toUpperCase();
+  if(a&&early==='A_COMPLETER_ENTREPRISE'&&a.Revoked!==true&&a.Supprimee_admin!==true&&EUC_DEV533_companySubmissionComplete_(a)){
+    return {code:'ENREGISTREE',libelle:'Convention enregistrée',active:true,covered:true,repairedStaleStatus:true};
+  }
   if(typeof EUC_V50_statutDetail_==='function'){
     try{return EUC_V50_statutDetail_(a);}catch(e){}
   }
   if(!a)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false};
   if(a.Supprimee_admin===true)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false,covered:false};
-  var s=EUC_DEV340_txt_(a.Statut_administratif||a.Statut).toUpperCase();
+  var s=early;
   if(s.indexOf('ANNULEE')>=0)return {code:'ANNULEE',libelle:'Annulée',active:false,covered:false};
   if(s.indexOf('INTERROMP')>=0)return {code:'INTERROMPUE',libelle:'Interrompue',active:false,covered:false};
   if(a.Revoked===true)return {code:'SANS_CONVENTION',libelle:'Sans convention',active:false,covered:false};

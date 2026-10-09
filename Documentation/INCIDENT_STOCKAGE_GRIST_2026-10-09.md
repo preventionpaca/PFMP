@@ -14,8 +14,10 @@ Grist sur `Actif = true`. Les 25 routes vertes ont répondu correctement.
 
 DEV532 corrige en plus la garde du reconstructeur : le projet vert utilise sa
 cible Grist protégée configurée, comme DEV489, et non un ancien identifiant
-codé dans Git. Son nettoyeur sécurisé est préparé mais la suppression attend
-encore l'étape de confirmation finale.
+codé dans Git. Le nettoyeur sécurisé a ensuite été exécuté après confirmation.
+Il a supprimé exactement `6 007` lignes techniques, conservé `130` lignes
+courantes et confirmé `0` candidat restant. Son bilan d'exécution mesure
+`193 885 504` octets de payload supprimé. Aucune table métier n'a été touchée.
 
 ## Inventaire exact sur la sauvegarde PFMP active
 
@@ -155,7 +157,9 @@ Il s'agit d'une dette secondaire, pas de la cause des 199,58 Mo.
 par périmètre et mesurée à 0,72 Mo. Elle n'est pas la cause principale de
 l'incident JSON.
 
-## Nettoyage sécurisé proposé — non exécuté
+## Nettoyage sécurisé exécuté
+
+Les huit étapes ci-dessous ont été suivies :
 
 1. Publier et valider le correctif de non-croissance avant toute suppression.
 2. Sauvegarder le document entier ou, au minimum, exporter intégralement les
@@ -175,10 +179,11 @@ l'incident JSON.
    ne pas réduire immédiatement le stockage interne ; une compaction ou une
    copie propre du document peut rester nécessaire avec l'assistance Grist.
 
-Le maximum théorique récupérable est proche des 199,58 Mo moins la somme des
-JSON actifs conservés. Le gain exact n'est pas calculable sans l'inventaire
-production actif/inactif. Aucun pourcentage de récupération n'est donc garanti
-à ce stade.
+La différence entre l'inventaire de la sauvegarde (`194 044 589` octets) et le
+bilan d'exécution (`193 885 504` octets) correspond aux évolutions intervenues
+entre la copie préalable et l'opération. Le stockage interne officiel de Grist
+peut rester supérieur aux octets logiques supprimés tant qu'aucune compaction
+n'est réalisée.
 
 ## Retour arrière
 
@@ -191,7 +196,6 @@ production actif/inactif. Aucun pourcentage de récupération n'est donc garanti
 ## Reste à vérifier
 
 - présence et état réel du déclencheur planifié ;
-- nombre exact de clés actives, doublons actifs et lignes inactives ;
 - volume officiel Grist avant puis après nettoyage ;
 - mesures de temps et d'appels réseau avant/après sur un parcours froid puis
   chaud ;
@@ -203,5 +207,7 @@ production actif/inactif. Aucun pourcentage de récupération n'est donc garanti
   et redirection des trois écrivains historiques ;
 - tests ciblés réussis : vues rapides, import JotForm, affectations,
   géocodage, performances de workflow et contrat de livraison ;
-- suite complète locale réussie : `749/749` ;
-- aucun déploiement, aucune écriture production et aucune suppression réalisés.
+- suite complète locale DEV532 réussie : `753/753` ;
+- publication verte immuable `921` et contrôle `25/25` routes réussis ;
+- nettoyage exécuté avec `6 007` suppressions techniques, `130` lignes
+  conservées et `0` candidat restant.
