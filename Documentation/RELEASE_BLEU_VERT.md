@@ -1,121 +1,89 @@
-# Publication PFMP bleu / vert
+# Publication PFMP — Git vers le vert
 
-## Objectif
+## Décision active depuis le 9 octobre 2026
 
-Une modification ne doit plus remplacer immédiatement la version utilisée par
-les personnels. Depuis le 7 octobre 2026, deux projets Apps Script réellement
-séparés ont des rôles stricts :
+Le canal applicatif actif est le **vert**. Les deux Web Apps vertes existantes
+restent les seules applications publiées et conservent leurs URL, leurs droits
+d'accès et leur exécution sous `USER_DEPLOYING`.
 
-- **bleu — développement** : projet `Eucalyptus PFMP — Développement BLEU`,
-  propriétés isolées, cible Grist de recette exclusivement, modes d'écriture
-  forcés à `DRY_RUN`/`DISABLED`, URL `/dev` réservée aux éditeurs ;
-- **vert — stable** : les deux Web Apps existantes `/exec`, l'une
-  administrative et l'autre publique, qui conservent leurs URL et leurs règles
-  d'accès.
+L'ancien projet Apps Script bleu et sa recette Grist sont des archives
+techniques. Ils ne font plus partie du développement, de la recette ni de la
+publication courante. Il est interdit de les publier, de les consulter ou de
+les utiliser comme étape intermédiaire sans une nouvelle demande explicite de
+l'utilisateur.
 
-Le projet bleu et le projet vert affichent un macaron fixe en haut à droite :
-bleu « DÉVELOPPEMENT », vert « VERSION EN LIGNE ». Les sous-domaines continuent
-de viser exclusivement les déploiements verts connus.
+Le nom historique de ce fichier est conservé pour ne pas casser les liens de
+documentation existants ; son contenu décrit uniquement le workflow actif
+**Git → vert**.
 
-## Liens du canal bleu
+## Publication directe et sûre
 
-- éditeur : `https://script.google.com/home/projects/1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo/edit` ;
-- application de test : `https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ/dev?page=admin-pfmp`.
+Une livraison suit obligatoirement cet ordre :
 
-L'URL `/dev` requiert un compte éditeur du projet. Elle n'est jamais utilisée
-par les personnels ni par les sous-domaines publics.
+1. partir d'une branche et d'un commit Git explicites ;
+2. relire le diff, contrôler secrets et données nominatives, puis lancer les
+   tests ciblés et la suite complète ;
+3. exécuter `scripts/pfmp-release.sh release-stable` ;
+4. la commande clone le commit exact dans un répertoire temporaire propre,
+   relance la suite complète et construit le paquet Apps Script ;
+5. elle pousse ce paquet sur le projet vert, relit le distant et exige une
+   empreinte identique avant de toucher aux Web Apps ;
+6. elle crée une version Apps Script immuable et met à jour uniquement les deux
+   déploiements verts existants ;
+7. elle contrôle les 25 routes vertes. Tout échec remet automatiquement les
+   deux Web Apps sur leurs versions immuables précédentes ;
+8. le navigateur parcourt ensuite les routes et toutes les destinations de
+   navigation internes visibles. Les parcours métier modifiés sont vérifiés en
+   lecture ou par simulation sûre quand une écriture réelle est interdite.
 
-## Principe de promotion
+Une route HTTP valide ne vaut pas validation métier. Le compte rendu sépare
+toujours les tests automatisés, les routes, la navigation réelle et les
+actions métier effectivement exécutées.
 
-1. Le candidat doit être un commit Git explicite.
-2. `prepare` reconstruit ce commit dans un clone temporaire propre, lance la
-   suite complète, fabrique le paquet Apps Script complet puis pousse seulement
-   le `HEAD` du projet bleu.
-3. Le contenu distant est relu et comparé par empreinte au paquet testé.
-4. Les 25 routes critiques sont ouvertes sur le canal bleu. Une erreur Apps
-   Script, une redirection de connexion ou un titre inattendu bloque le lot.
-   Comme `/dev` est privé, le contrôle terminal peut s'arrêter sur
-   `Authorization needed`. Le paquet reste alors « en attente » : après contrôle
-   réel des 25 routes dans un navigateur éditeur, l'homologation manuelle exige
-   le SHA exact et la formule explicite `25-ROUTES-VALIDEES`; elle relit encore
-   l'empreinte distante avant de rendre le candidat promouvable.
-5. `promote` exige le même commit et la même empreinte distante, relance les
-   contrôles, copie exactement ce paquet dans le projet vert, le relit, crée une
-   version Apps Script immuable puis attache cette même version aux deux
-   déploiements verts existants.
-6. Les 25 routes sont à nouveau contrôlées sur les URL vertes. Si ce contrôle
-   échoue, les deux déploiements reviennent automatiquement à leurs versions
-   immuables précédentes.
-
-Le canal bleu protège la disponibilité et les propriétés du code vert. Il vise
-uniquement la copie Grist Camin `kB8bvDag8x7D` sur
-`https://camin.getgrist.com`, avec une clé de service limitée en lecture à cette copie.
-Aucun import réel, envoi, ordre de mission ou écriture métier ne doit y être
-activé.
-
-### Initialisation sécurisée du projet bleu
-
-1. Dans l'éditeur bleu, exécuter une fois `EUC_RELEASE_configurerProjetBleu`.
-   Cette fonction ne peut pas s'exécuter sur le projet vert. Elle renseigne les
-   valeurs non sensibles, impose l'hôte Camin et `kB8bvDag8x7D`, puis désactive les mutations.
-   La même garde est rejouée automatiquement avant chaque page bleue : une
-   modification accidentelle de ces modes est donc corrigée avant le routeur.
-2. Dans **Paramètres du projet > Propriétés du script**, ajouter manuellement
-   `EUC_ENT_GRIST_API_KEY` avec une clé limitée à la copie de recette. Ne jamais
-   réutiliser une clé pouvant écrire dans la production.
-3. Exécuter `EUC_RELEASE_controlerProjetBleu`. Le diagnostic doit indiquer
-   `projetCorrect`, `recetteCorrecte` et `cleRecettePresente` à `true`, avec les
-   quatre modes à `DRY_RUN` ou `DISABLED`. Aucune valeur de clé n'est renvoyée.
-
-Tant que cette étape n'est pas terminée, les pages dépendant de Grist doivent
-échouer fermement au lieu de se rabattre sur la production.
-
-## Commandes
+## Commandes actives
 
 Depuis la racine du dépôt :
 
 ```bash
-# État des déploiements et éventuel candidat en attente
+# État des deux déploiements verts existants
 scripts/pfmp-release.sh status
 
-# Tests, paquet complet, push sur le bleu et contrôle des 25 routes
-scripts/pfmp-release.sh prepare
+# Publication du commit courant directement sur le vert
+scripts/pfmp-release.sh release-stable
 
-# Contrôle HTTP seul du bleu ou du vert
-scripts/pfmp-release.sh check-development
+# Nouveau contrôle HTTP des 25 routes vertes
 scripts/pfmp-release.sh check-stable
 
-# Après contrôle humain des 25 routes sur le /dev privé
-scripts/pfmp-release.sh approve-development COMMIT 25-ROUTES-VALIDEES
-
-# Promotion explicite du candidat déjà validé
-scripts/pfmp-release.sh promote
-
-# Retour explicite vers une version immuable connue
+# Retour explicite des deux Web Apps vers une version immuable connue
 scripts/pfmp-release.sh rollback VERSION
 ```
 
-Les identifiants de déploiement non secrets et la matrice des routes sont dans
-`scripts/pfmp-release-config.json`. Le candidat validé est mémorisé uniquement
-dans `.git/pfmp-release-candidate.json` et n'est jamais ajouté au dépôt.
+Les anciennes commandes `prepare`, `approve-development`,
+`check-development` et `promote` ont été retirées du script pour empêcher une
+publication accidentelle sur l'ancien canal.
 
-## Règles permanentes
+Les identifiants non secrets des deux déploiements existants et la matrice des
+25 routes sont dans `scripts/pfmp-release-config.json`. Aucun secret et aucune
+donnée personnelle ne doivent être placés dans Git ou dans les journaux.
 
-- développer et publier toute évolution sur le bleu avant toute promotion ;
-- contrôler les 25 routes et tous les contrôles de navigation internes visibles
-  sur l’ensemble du site ;
+## Contrôles permanents
+
+- ne jamais construire depuis des modifications non commitées ;
+- ne jamais diminuer la version Apps Script ni déplacer un tag Git publié ;
+- ne jamais créer une troisième Web App pour contourner un échec ;
+- préserver les URL, `DOMAIN`, `ANYONE_ANONYMOUS` et `USER_DEPLOYING` ;
 - conserver `https://alternance.loucodi.fr/` comme destination exacte de tout
-  accès vert libellé `Accueil PFMP`, le bleu restant sur son propre `/dev` ;
-- imposer un spinner, la protection contre le double clic et la restauration
-  en succès comme en erreur à chaque bouton de traitement asynchrone du
-  candidat livré, avec test ou simulation sûre pour les actions interdites ;
-- ne plus exécuter directement `clasp deploy` pour une évolution ordinaire ;
-- ne jamais promouvoir un autre commit que le candidat bleu contrôlé ;
-- ne jamais utiliser un paquet construit depuis les modifications non
-  commitées du répertoire de travail ;
-- conserver les deux URL vertes et leur configuration actuelle
-  `ANYONE_ANONYMOUS` / `USER_DEPLOYING`, nécessaire au parcours QR public par
-  jeton ;
-- ne jamais créer un troisième Web App pour contourner un échec ;
-- ne jamais affaiblir la matrice de tests ou supprimer une route pour faire
-  passer une publication.
+  lien ou bouton vert libellé `Accueil PFMP` ;
+- refuser toute page Apps Script en erreur, page blanche, authentification
+  inattendue ou lien vers l'ancien canal bleu ;
+- protéger chaque bouton de traitement asynchrone contre le double clic,
+  afficher immédiatement un spinner et rétablir le bouton en succès, erreur ou
+  dépassement de délai ;
+- contrôler les états vide, chargement, succès et erreur des pages modifiées ;
+- ne jamais affaiblir un test ou retirer une route pour faire passer une
+  publication ;
+- ne jamais déclencher pour la recette un import réel, un courriel, un ordre de
+  mission ou une écriture Grist non explicitement autorisés.
+
+Le projet bleu ne doit apparaître dans aucun compte rendu courant, sauf pour
+indiquer explicitement qu'il est resté inutilisé.

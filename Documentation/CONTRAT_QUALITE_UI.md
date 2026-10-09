@@ -3,18 +3,19 @@
 Ce contrat s’applique à chaque évolution, sans que l’utilisateur ait à le
 rappeler.
 
-## 1. Développement uniquement sur le bleu
+## 1. Publication directe sur le vert
 
-1. Partir d’un commit Git explicite contenant tout le code vert déjà publié.
-2. Développer et tester localement.
-3. Publier avec `scripts/pfmp-release.sh prepare`, exclusivement sur le projet
-   bleu et sa recette Grist isolée.
-4. Relire le projet distant et comparer son empreinte au paquet testé.
-5. Ne promouvoir le candidat exact qu’après autorisation explicite.
+1. Partir d'un commit Git explicite contenant tout le code vert déjà publié.
+2. Développer et tester localement sur une branche Git.
+3. Après demande explicite de publication, utiliser uniquement
+   `scripts/pfmp-release.sh release-stable`.
+4. Reconstruire le commit exact dans un clone propre, relire le projet vert
+   distant et comparer son empreinte au paquet testé.
+5. Créer une version Apps Script immuable et mettre à jour seulement les deux
+   Web Apps vertes existantes.
 
-Une correction directe sur le projet vert est interdite. Une modification de
-documentation postérieure au candidat ne doit pas conduire à reconstruire un
-autre paquet applicatif : la promotion repart du SHA candidat exact.
+Le bleu est archivé et ne doit être publié ou consulté sans demande explicite.
+Une modification non commitée ne doit jamais entrer dans le paquet livré.
 
 ## 2. Navigation et liens
 
@@ -28,10 +29,9 @@ l’ensemble de ces routes :
 - les états sans donnée et avec erreur.
 
 Sur le vert, `Accueil PFMP` vise exactement
-`https://alternance.loucodi.fr/`. Sur le bleu, ces mêmes accès restent dans le
-déploiement `/dev`. Une page Apps Script en erreur, une page blanche, une
-connexion inattendue ou un passage silencieux du bleu vers le vert bloque la
-livraison.
+`https://alternance.loucodi.fr/`. Une page Apps Script en erreur, une page
+blanche, une connexion inattendue ou un lien vers l'ancien canal bleu bloque
+la livraison.
 
 La matrice automatisée des routes reste un minimum. Le parcours navigateur de
 tous les contrôles de navigation visibles du site est également obligatoire,
@@ -75,22 +75,23 @@ fonctionnels ». Une opération restée sur un spinner, terminée côté serveur
 confirmation côté écran, ou dont le résultat final n'a pas été relu est un
 échec de parcours métier.
 
-Pour chaque domaine modifié, le bleu doit exécuter au moins un scénario complet
-sur une donnée de recette autorisée. Les actions interdites (courriel réel,
-production, import Pronote réel, ordre de mission réel) restent simulées et
-sont explicitement listées comme non exécutées.
+Pour chaque domaine modifié, le vert doit exécuter au moins un scénario complet
+autorisé. Les actions interdites (courriel réel, import Pronote réel, ordre de
+mission réel, écriture métier non demandée) restent simulées et sont
+explicitement listées comme non exécutées.
 
 - tests ciblés du lot ;
 - une seule suite complète finale ;
 - diff relu et absence de secret ou donnée nominative dans Git ;
-- publication bleue et relecture distante ;
-- `25/25` routes bleues ;
+- publication verte et relecture distante ;
+- version Apps Script immuable attachée uniquement aux deux Web Apps existantes ;
+- `25/25` routes vertes ;
 - parcours de tous les liens et boutons de navigation internes des 25 routes ;
 - documentation d’état mise à jour.
 
-Après promotion autorisée : version immuable, URL inchangées, `25/25` routes
-vertes et retour automatique si la recette échoue.
+Les URL restent inchangées. Un échec des contrôles verts déclenche le retour
+automatique aux deux versions immuables précédentes.
 
-Les limites de recette doivent être annoncées. Un courriel, un import, une
+Les limites de contrôle doivent être annoncées. Un courriel, un import, une
 écriture Grist ou un document réel ne peut servir de test sans autorisation
 explicite.

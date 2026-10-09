@@ -49,39 +49,28 @@ test('la matrice contrôle toutes les routes de l’accueil et le public', () =>
   }
 });
 
-test('prepare ne modifie aucun déploiement stable', () => {
-  const start = script.indexOf('prepare()');
-  const end = script.indexOf('\npromote()', start);
-  const prepare = script.slice(start, end);
-  assert.match(prepare, /clasp push --force/);
-  assert.match(prepare, /write_clasp_project "\$package_dir" "\$development_project_id"/);
-  assert.doesNotMatch(prepare, /deploy_version|clasp deploy/);
-  assert.match(prepare, /--channel development/);
-  assert.match(prepare, /write_pending "\$commit" "\$package_hash"/);
-  assert.match(prepare, /approve-development \$commit 25-ROUTES-VALIDEES/);
-});
-
-test('l homologation manuelle exige le commit exact et relit le distant bleu', () => {
-  const start = script.indexOf('approve_development()');
-  const end = script.indexOf('\npromote()', start);
-  const approve = script.slice(start, end);
-  assert.match(approve, /25-ROUTES-VALIDEES/);
-  assert.match(approve, /approved_commit.*pending_commit.*current/s);
-  assert.match(approve, /package_hash.*pending_hash/s);
-  assert.match(approve, /remote_hash.*pending_hash/s);
-  assert.match(approve, /manual-browser-25-routes/);
-  assert.doesNotMatch(approve, /clasp deploy|deploy_version/);
-});
-
-test('promote relit le bleu puis copie le même paquet vers le projet stable', () => {
-  const start = script.indexOf('promote()');
+test('release-stable publie directement le commit exact sur le vert', () => {
+  const start = script.indexOf('release_stable()');
   const end = script.indexOf('\nrollback()', start);
-  const promote = script.slice(start, end);
-  const blue = promote.indexOf('write_clasp_project "$package_dir" "$development_project_id"');
-  const green = promote.indexOf('write_clasp_project "$package_dir" "$stable_project_id"');
-  assert.ok(blue >= 0 && green > blue);
-  assert.match(promote, /clasp push --force/);
-  assert.match(promote, /Copie exacte du candidat valide vers le projet stable/);
+  const release = script.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(release, /node tests\/run-tests\.js/);
+  assert.match(release, /write_clasp_project "\$package_dir" "\$stable_project_id"/);
+  assert.match(release, /clasp push --force/);
+  assert.match(release, /pull_remote "\$package_dir" "\$remote_dir"/);
+  assert.match(release, /package_hash.*remote_hash/s);
+  assert.match(release, /clasp version/);
+  assert.match(release, /deploy_version "\$package_dir" "\$admin_id"/);
+  assert.match(release, /deploy_version "\$package_dir" "\$public_id"/);
+  assert.match(release, /--channel stable/);
+  assert.doesNotMatch(release, /development_project_id|--channel development/);
+});
+
+test('le script de publication ne propose plus aucune commande bleue', () => {
+  const commandSwitch = script.slice(script.indexOf('case "$command" in'));
+  assert.doesNotMatch(commandSwitch, /prepare\)|approve-development\)|check-development\)|promote\)/);
+  assert.doesNotMatch(script.slice(0, script.indexOf('tree_hash()')), /development_project_id|development_id/);
+  assert.match(commandSwitch, /release-stable\) release_stable/);
 });
 
 test('le paquet publie un point d entrée commun avec repère bleu ou vert', () => {
@@ -117,12 +106,6 @@ test('la relecture distante normalise uniquement l extension serveur clasp', () 
   assert.match(script, /fs\.readFileSync\(path\.join\(dir, file\)\)/);
 });
 
-test('promote exige le même commit et le même contenu distant', () => {
-  assert.match(script, /commit.*candidate_commit/s);
-  assert.match(script, /remote_hash.*candidate_hash/s);
-  assert.match(script, /Le HEAD distant a changé depuis la recette bleue/);
-});
-
 test('une recette verte en échec déclenche le retour automatique', () => {
   assert.match(script, /Recette verte en échec : retour automatique/);
   assert.match(script, /admin_previous/);
@@ -140,13 +123,14 @@ test('le vérificateur refuse erreurs runtime, login et contenu inattendu', () =
   assert.match(verifier, /body\.includes\(route\.expected\)/);
 });
 
-test('le contrat permanent impose le développement bleu avant le vert', () => {
+test('le contrat permanent retire le bleu du workflow courant', () => {
   assert.match(agents, /Toute évolution applicative commence sur une branche Git/);
-  assert.match(agents, /publiée d’abord, et uniquement, sur le projet Apps Script bleu/);
-  assert.match(agents, /promotion vers le vert exige l’autorisation explicite/);
-  assert.match(qualityContract, /Développement uniquement sur le bleu/);
-  assert.match(qualityContract, /Ne promouvoir le candidat exact qu’après autorisation explicite/);
-  assert.match(qualityContract, /25\/25.*routes bleues/);
+  assert.match(agents, /Le canal bleu est retiré du workflow courant/);
+  assert.match(agents, /scripts\/pfmp-release\.sh release-stable/);
+  assert.match(agents, /25 routes vertes/);
+  assert.match(qualityContract, /Publication directe sur le vert/);
+  assert.match(qualityContract, /scripts\/pfmp-release\.sh release-stable/);
+  assert.match(qualityContract, /25\/25.*routes vertes/);
 });
 
 test('le contrat permanent protège accueil, navigation et boutons asynchrones', () => {
@@ -157,8 +141,8 @@ test('le contrat permanent protège accueil, navigation et boutons asynchrones',
     assert.match(contents, /double clic/i);
     assert.match(contents, /succès, erreur/);
   }
-  assert.match(agents, /même `\/dev`/);
-  assert.match(qualityContract, /passage silencieux du bleu vers le vert bloque la\s+livraison/);
+  assert.match(agents, /bleu.*sans une demande explicite/i);
+  assert.match(qualityContract, /bleu.*sans demande explicite/i);
 });
 
 if (!process.exitCode) {

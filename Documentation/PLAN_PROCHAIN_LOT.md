@@ -1,4 +1,32 @@
-# Prochain lot après DEV513
+# Prochain lot après DEV514
+
+## Décision de livraison active — Git vers vert
+
+À la demande explicite de l'utilisateur du 9 octobre 2026, le projet bleu est
+retiré du workflow courant et conservé uniquement comme archive. Les prochaines
+évolutions partent d'une branche Git et sont livrées directement sur les deux
+Web Apps vertes existantes par `scripts/pfmp-release.sh release-stable`. Cette
+commande relit le distant, crée une version immuable, contrôle les 25 routes et
+revient automatiquement aux versions précédentes en cas d'échec. Le bleu ne
+doit plus être publié, consulté ou testé sans une nouvelle demande explicite.
+
+## DEV514 — correction des conventions TCAR et des candidats au géocodage
+
+L'accès annuel aux conventions ne filtre plus prématurément les références
+Grist de classe et de période côté serveur. Les références sont normalisées et
+filtrées en mémoire, après lecture, afin que les conventions historiques des
+élèves témoins restent rattachées à TCAR / PFMP n°1. Le géocodage suit
+la même règle et combine systématiquement le snapshot avec les conventions
+actives avant dédoublonnage, même lorsque le snapshot existe mais est
+incomplet. Le marqueur canonique est renouvelé pour invalider l'ancienne
+synthèse erronée.
+
+Les tests ciblés DEV513, DEV445, DEV504 et DEV459 passent respectivement
+`13/13`, `18/18`, `15/15` et `16/16`. Après le retrait des anciens tests du
+workflow bleu, la suite complète locale passe `671/671`. La validation verte
+réelle doit encore confirmer les décomptes TCAR
+et l'apparition de candidats au géocodage sans déclencher d'écriture de
+coordonnées.
 
 ## DEV513 — candidat bleu techniquement contrôlé, homologation métier bloquée par la recette vide
 

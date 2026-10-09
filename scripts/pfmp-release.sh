@@ -4,16 +4,12 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_file="$repo_root/scripts/pfmp-release-config.json"
 git_dir="$(git -C "$repo_root" rev-parse --absolute-git-dir)"
-candidate_file="$git_dir/pfmp-release-candidate.json"
-pending_file="$git_dir/pfmp-release-pending.json"
 last_release_file="$git_dir/pfmp-release-last.json"
 
 cfg() {
   node -e "const c=require(process.argv[1]); console.log($2);" "$config_file"
 }
 
-development_id="$(cfg config_file 'c.channels.development.deploymentId')"
-development_project_id="$(cfg config_file 'c.channels.development.projectId')"
 stable_project_id="$(cfg config_file 'c.channels.stableAdmin.projectId')"
 admin_id="$(cfg config_file 'c.channels.stableAdmin.deploymentId')"
 public_id="$(cfg config_file 'c.channels.stablePublic.deploymentId')"
@@ -22,14 +18,11 @@ usage() {
   cat <<'EOF'
 Usage: scripts/pfmp-release.sh COMMAND
 
-  prepare           construit et publie uniquement le canal bleu /dev
-  approve-development COMMIT 25-ROUTES-VALIDEES
-                    homologue manuellement le bleu privé après recette navigateur
-  check-development contrôle les 25 routes du canal bleu
+  release-stable    teste le commit courant et le publie directement sur les
+                    deux Web Apps vertes existantes, avec retour automatique
   check-stable      contrôle les 25 routes du canal vert
-  promote           promeut exactement le candidat bleu vers les URLs stables
   rollback VERSION  replace les deux URLs stables sur une version immuable
-  status            affiche les déploiements et le candidat préparé
+  status            affiche les déploiements verts
 EOF
 }
 
@@ -94,26 +87,6 @@ pull_remote() {
   (cd "$remote_dir" && clasp pull >/dev/null)
 }
 
-write_pending() {
-  local commit="$1"
-  local hash="$2"
-  node -e '
-    const fs=require("fs");
-    fs.writeFileSync(process.argv[1], JSON.stringify({
-      commit:process.argv[2],
-      treeHash:process.argv[3],
-      preparedAt:new Date().toISOString(),
-      channel:"development",
-      validation:"pending-browser"
-    }, null, 2)+"\n");
-  ' "$pending_file" "$commit" "$hash"
-}
-
-read_candidate_field() {
-  node -e 'const x=require(process.argv[1]); console.log(x[process.argv[2]]||"");' \
-    "$candidate_file" "$1"
-}
-
 deployment_version() {
   local deployments="$1"
   local id="$2"
@@ -131,181 +104,68 @@ deploy_version() {
     --description "$description")
 }
 
-prepare() {
-  local commit release_root clone_root package_dir remote_dir package_hash remote_hash
-  commit="$(git -C "$repo_root" rev-parse HEAD)"
-  release_root="$(new_release_clone)"
-  clone_root="$release_root/repo"
-  package_dir="$release_root/package"
-  remote_dir="$release_root/remote"
-  mkdir -p "$package_dir" "$remote_dir"
-
-  echo "[1/5] Tests complets du commit $commit"
-  (cd "$clone_root" && node tests/run-tests.js)
-  echo "[2/5] Construction du paquet complet"
-  build_package "$clone_root" "$package_dir"
-  write_clasp_project "$package_dir" "$development_project_id"
-  package_hash="$(tree_hash "$package_dir")"
-  echo "[3/5] Publication sur HEAD uniquement (canal bleu)"
-  (cd "$package_dir" && clasp push --force)
-  echo "[4/5] Relecture distante"
-  pull_remote "$package_dir" "$remote_dir"
-  remote_hash="$(tree_hash "$remote_dir")"
-  [[ "$package_hash" == "$remote_hash" ]] || {
-    echo "Le contenu distant diffère du paquet candidat." >&2
-    exit 1
-  }
-  write_pending "$commit" "$package_hash"
-  echo "[5/5] Contrôle HTTP des routes du canal bleu"
-  if (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development); then
-    mv "$pending_file" "$candidate_file"
-  else
-    echo >&2
-    echo "Le paquet bleu est exact mais son URL /dev privée exige une session éditeur." >&2
-    echo "Après contrôle navigateur des 25 routes, homologuer explicitement avec :" >&2
-    echo "scripts/pfmp-release.sh approve-development $commit 25-ROUTES-VALIDEES" >&2
-    exit 1
-  fi
-  echo
-  echo "Candidat bleu prêt. Les déploiements verts n'ont pas été modifiés."
-  echo "URL de test : https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/$development_id/dev?page=admin-pfmp"
-}
-
-approve_development() {
-  local approved_commit="${1:-}"
-  local confirmation="${2:-}"
-  [[ "$confirmation" == "25-ROUTES-VALIDEES" ]] || {
-    echo "Confirmation explicite attendue : 25-ROUTES-VALIDEES" >&2
-    exit 1
-  }
-  [[ -f "$pending_file" ]] || {
-    echo "Aucun paquet bleu en attente de recette navigateur." >&2
-    exit 1
-  }
-
-  local pending_commit pending_hash current release_root clone_root package_dir remote_dir
-  local package_hash remote_hash
-  pending_commit="$(node -e 'const x=require(process.argv[1]); console.log(x.commit||"")' "$pending_file")"
-  pending_hash="$(node -e 'const x=require(process.argv[1]); console.log(x.treeHash||"")' "$pending_file")"
-  current="$(git -C "$repo_root" rev-parse HEAD)"
-  [[ "$approved_commit" == "$pending_commit" && "$current" == "$pending_commit" ]] || {
-    echo "Le commit approuvé ne correspond pas exactement au bleu en attente." >&2
-    exit 1
-  }
-
-  release_root="$(new_release_clone)"
-  clone_root="$release_root/repo"
-  package_dir="$release_root/package"
-  remote_dir="$release_root/remote"
-  mkdir -p "$package_dir" "$remote_dir"
-  build_package "$clone_root" "$package_dir"
-  write_clasp_project "$package_dir" "$development_project_id"
-  package_hash="$(tree_hash "$package_dir")"
-  [[ "$package_hash" == "$pending_hash" ]] || {
-    echo "Le paquet local diffère du bleu contrôlé dans le navigateur." >&2
-    exit 1
-  }
-  pull_remote "$package_dir" "$remote_dir"
-  remote_hash="$(tree_hash "$remote_dir")"
-  [[ "$remote_hash" == "$pending_hash" ]] || {
-    echo "Le projet bleu a changé depuis la recette navigateur." >&2
-    exit 1
-  }
-
-  node -e '
-    const fs=require("fs"); const f=process.argv[1]; const x=require(f);
-    x.validation="manual-browser-25-routes";
-    x.approvedAt=new Date().toISOString();
-    fs.writeFileSync(f, JSON.stringify(x,null,2)+"\n");
-  ' "$pending_file"
-  mv "$pending_file" "$candidate_file"
-  echo "Candidat bleu homologué pour le commit $approved_commit."
-}
-
-promote() {
-  [[ -f "$candidate_file" ]] || {
-    echo "Aucun candidat bleu préparé. Lancez prepare." >&2
-    exit 1
-  }
-
-  local commit candidate_commit candidate_hash release_root clone_root package_dir
-  local remote_dir package_hash remote_hash deployments admin_previous public_previous
+release_stable() {
+  local commit release_root clone_root package_dir remote_dir
+  local package_hash remote_hash deployments admin_previous public_previous
   local version_output version description promoted_admin promoted_public
   commit="$(git -C "$repo_root" rev-parse HEAD)"
-  candidate_commit="$(read_candidate_field commit)"
-  candidate_hash="$(read_candidate_field treeHash)"
-  [[ "$commit" == "$candidate_commit" ]] || {
-    echo "Le commit courant n'est plus le candidat bleu validé." >&2
-    exit 1
-  }
-
   release_root="$(new_release_clone)"
   clone_root="$release_root/repo"
   package_dir="$release_root/package"
   remote_dir="$release_root/remote"
   mkdir -p "$package_dir" "$remote_dir"
 
-  echo "[1/6] Tests complets avant promotion"
+  echo "[1/6] Tests complets du commit $commit"
   (cd "$clone_root" && node tests/run-tests.js)
+  echo "[2/6] Construction du paquet complet depuis le commit exact"
   build_package "$clone_root" "$package_dir"
-  package_hash="$(tree_hash "$package_dir")"
-  [[ "$package_hash" == "$candidate_hash" ]] || {
-    echo "Le paquet local n'est plus le candidat validé." >&2
-    exit 1
-  }
-  echo "[2/6] Comparaison avec le HEAD distant"
-  write_clasp_project "$package_dir" "$development_project_id"
-  pull_remote "$package_dir" "$remote_dir"
-  remote_hash="$(tree_hash "$remote_dir")"
-  [[ "$remote_hash" == "$candidate_hash" ]] || {
-    echo "Le HEAD distant a changé depuis la recette bleue." >&2
-    exit 1
-  }
-  echo "[3/6] Nouveau contrôle du canal bleu"
-  (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel development)
-
-  # Aucune URL verte ne bouge pendant la recette. Seulement apres sa
-  # validation, le meme paquet est pousse sur le projet stable afin d'y creer
-  # une version immuable et de rattacher les deux deploiements existants.
   write_clasp_project "$package_dir" "$stable_project_id"
-  echo "[3b/6] Copie exacte du candidat valide vers le projet stable"
-  (cd "$package_dir" && clasp push --force)
+  package_hash="$(tree_hash "$package_dir")"
 
   deployments="$(cd "$package_dir" && clasp deployments)"
   admin_previous="$(deployment_version "$deployments" "$admin_id")"
   public_previous="$(deployment_version "$deployments" "$public_id")"
   [[ "$admin_previous" =~ ^[0-9]+$ && "$public_previous" =~ ^[0-9]+$ ]] || {
-    echo "Versions stables précédentes introuvables." >&2
+    echo "Versions stables précédentes introuvables ; publication annulée." >&2
     exit 1
   }
 
-  echo "[4/6] Création de la version immuable"
-  version_output="$(cd "$package_dir" && clasp version "Promotion PFMP $commit")"
-  version="$(sed -nE 's/^Created version ([0-9]+)$/\1/p' <<<"$version_output")"
-  [[ "$version" =~ ^[0-9]+$ ]] || {
-    echo "Numéro de version immuable introuvable." >&2
+  echo "[3/6] Publication directe sur le projet vert et relecture distante"
+  (cd "$package_dir" && clasp push --force)
+  pull_remote "$package_dir" "$remote_dir"
+  remote_hash="$(tree_hash "$remote_dir")"
+  [[ "$package_hash" == "$remote_hash" ]] || {
+    echo "Le contenu distant vert diffère du paquet testé ; aucun déploiement n'est déplacé." >&2
     exit 1
   }
-  description="Release PFMP ${commit:0:12} - candidat bleu validé"
+
+  echo "[4/6] Création de la version Apps Script immuable"
+  version_output="$(cd "$package_dir" && clasp version "Release directe PFMP $commit")"
+  version="$(sed -nE 's/^Created version ([0-9]+)$/\1/p' <<<"$version_output")"
+  [[ "$version" =~ ^[0-9]+$ ]] || {
+    echo "Numéro de version immuable introuvable ; les déploiements restent inchangés." >&2
+    exit 1
+  }
+  description="Release PFMP directe ${commit:0:12}"
 
   promoted_admin=false
   promoted_public=false
-  echo "[5/6] Promotion contrôlée vers les deux URLs vertes"
+  echo "[5/6] Mise à jour des deux Web Apps vertes existantes"
   if deploy_version "$package_dir" "$admin_id" "$version" "$description"; then
     promoted_admin=true
   else
-    echo "Échec du déploiement admin, aucune promotion complète." >&2
+    echo "Échec du déploiement admin ; les URL publiques restent sur leur version précédente." >&2
     exit 1
   fi
   if deploy_version "$package_dir" "$public_id" "$version" "$description"; then
     promoted_public=true
   else
-    echo "Échec du déploiement public, retour immédiat de l'admin sur @$admin_previous." >&2
+    echo "Échec du déploiement public : retour immédiat de l'admin sur @$admin_previous." >&2
     deploy_version "$package_dir" "$admin_id" "$admin_previous" "Rollback automatique"
     exit 1
   fi
 
-  echo "[6/6] Contrôle HTTP des URLs vertes"
+  echo "[6/6] Contrôle HTTP des 25 routes vertes"
   if ! (cd "$clone_root" && node scripts/verify-pfmp-release.js --channel stable); then
     echo "Recette verte en échec : retour automatique sur les versions précédentes." >&2
     [[ "$promoted_admin" == true ]] && deploy_version "$package_dir" "$admin_id" "$admin_previous" "Rollback automatique"
@@ -313,9 +173,15 @@ promote() {
     exit 1
   fi
 
-  mv "$candidate_file" "$last_release_file"
+  node -e '
+    const fs=require("fs");
+    fs.writeFileSync(process.argv[1], JSON.stringify({
+      commit:process.argv[2], treeHash:process.argv[3], version:Number(process.argv[4]),
+      releasedAt:new Date().toISOString(), channel:"stable-direct"
+    }, null, 2)+"\n");
+  ' "$last_release_file" "$commit" "$package_hash" "$version"
   echo
-  echo "Release verte réussie : version immuable @$version."
+  echo "Release directe verte réussie : version immuable @$version."
 }
 
 rollback() {
@@ -340,26 +206,12 @@ rollback() {
 
 command="${1:-}"
 case "$command" in
-  prepare) prepare ;;
-  approve-development) approve_development "${2:-}" "${3:-}" ;;
-  check-development) node "$repo_root/scripts/verify-pfmp-release.js" --channel development ;;
+  release-stable) release_stable ;;
   check-stable) node "$repo_root/scripts/verify-pfmp-release.js" --channel stable ;;
-  promote) promote ;;
   rollback) rollback "${2:-}" ;;
   status)
-    echo "BLEU  : https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/$development_id/dev?page=admin-pfmp"
-    echo "VERT  : deploiements stables inchanges tant qu'aucune promotion ne reussit"
+    echo "VERT : deux deploiements stables existants"
     clasp deployments
-    if [[ -f "$candidate_file" ]]; then
-      echo
-      echo "Candidat bleu :"
-      node -e 'const x=require(process.argv[1]); console.log(x.commit, x.preparedAt);' "$candidate_file"
-    fi
-    if [[ -f "$pending_file" ]]; then
-      echo
-      echo "Bleu en attente de recette navigateur :"
-      node -e 'const x=require(process.argv[1]); console.log(x.commit, x.preparedAt);' "$pending_file"
-    fi
     ;;
   *) usage; exit 1 ;;
 esac

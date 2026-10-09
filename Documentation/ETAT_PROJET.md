@@ -1,5 +1,28 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV514 et workflow direct vers le vert
+
+- À la demande explicite de l'utilisateur, le canal bleu est retiré du workflow
+  courant et devient une archive technique. Les évolutions partent de Git et
+  sont publiées directement sur les deux Web Apps vertes existantes avec
+  `scripts/pfmp-release.sh release-stable`. Le script reconstruit le commit
+  exact, relit le projet vert, crée une version immuable, contrôle les 25 routes
+  et revient automatiquement aux versions précédentes si le contrôle échoue.
+- La régression TCAR provenait d'un filtre Grist trop précoce sur des colonnes
+  de référence. Des conventions existantes étaient absentes de la vue annuelle
+  avant même la normalisation des identifiants, ce qui classait deux élèves
+  témoins à tort « Sans convention » pour PFMP n°1.
+- DEV514 lit désormais les accès de l'année puis applique en mémoire les
+  filtres normalisés de classe et de période. Le géocodage utilise la même
+  stratégie et complète toujours le snapshot par les conventions actives,
+  même lorsque ce snapshot est seulement incomplet. Le marqueur canonique
+  passe à `DEV514-C6` pour forcer le renouvellement de la synthèse erronée.
+- Les tests ciblés passent (`13/13`, `18/18`, `15/15`, `16/16`) et, après le
+  retrait des anciens tests du workflow bleu, la suite complète locale passe
+  `671/671`. La publication et la validation réelle sur
+  le vert sont consignées après leur exécution ; aucune écriture métier de
+  production n'est utilisée comme test.
+
 ## Mise à jour du 9 octobre 2026 — DEV513 (stabilisation des suivis et des parcours QR)
 
 - La cause de l'attente infinie de la synthèse BAC PRO et du chargement très
