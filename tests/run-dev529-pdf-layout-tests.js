@@ -52,10 +52,13 @@ test('l’interface explique le repère et expose page X Y largeur hauteur',()=>
   assert.match(paramsHtml,/L’origine \(0,0\) est le coin inférieur gauche/);
   assert.match(paramsHtml,/Pour descendre un élément, diminuez Y/);
   for(const key of ['page','x','y','w','h'])assert(paramsHtml.includes(`data-k="${key}"`),`champ ${key} absent`);
-  assert.match(paramsHtml,/EUC_CONVENTION_enregistrerMiseEnPageV529/);
+  assert.match(pdfServer,/type==='LAYOUT_LIST'.*EUC_CONVENTION_listerMiseEnPageV529/);
+  assert.match(pdfServer,/type==='LAYOUT_SAVE'.*EUC_CONVENTION_enregistrerMiseEnPageV529/);
+  assert.match(pdfServer,/type==='LAYOUT_PREVIEW'.*EUC_CONVENTION_apercuMiseEnPageV529/);
+  assert.match(paramsHtml,/EUC_dispatchUploadV95\('LAYOUT_SAVE',items\)/);
 });
 test('l’aperçu superpose les zones et leur point d’ancrage au PDF maître',()=>{
-  assert.match(paramsHtml,/EUC_CONVENTION_apercuMiseEnPageV529/);
+  assert.match(paramsHtml,/EUC_dispatchUploadV95\('LAYOUT_PREVIEW',null\)/);
   assert.match(paramsHtml,/class="anchor"/);
   assert.match(paramsHtml,/pdfjsLib\.getDocument/);
   assert.match(paramsHtml,/bottom:'\+\(x\.y\/842\*100\)/);
@@ -69,6 +72,11 @@ test('les deux nouvelles actions ont spinner, anti-double-clic, délai et restau
   assert.match(paramsHtml,/if\(!finish\(\)\)return/g);
   assert.match(paramsHtml,/Le serveur n’a pas répondu sous 20 secondes/);
   assert.match(paramsHtml,/Le serveur n’a pas répondu sous 30 secondes/);
+});
+test('le chargement initial réutilise le pont serveur éprouvé et ne reste pas bloqué',()=>{
+  assert.match(paramsHtml,/EUC_dispatchUploadV95\('LAYOUT_LIST',null\)/);
+  assert.match(paramsHtml,/layoutLoadTimer=setTimeout/);
+  assert.match(paramsHtml,/Coordonnées non chargées : aucun enregistrement n’est possible/);
 });
 test('les scripts intégrés des deux pages restent syntaxiquement valides',()=>{
   inlineScripts(paramsHtml,{'const C=<?!= config ?>;':'const C={baseUrl:"https://example.test"};'}).forEach(code=>new vm.Script(code));

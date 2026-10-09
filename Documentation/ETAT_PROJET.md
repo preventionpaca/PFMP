@@ -18,7 +18,10 @@
   aucun schéma métier ni donnée de convention n'est modifié. Les valeurs sont
   validées contre la page A4 avant enregistrement et le moteur garde les
   coordonnées historiques comme repli.
-- Huit tests DEV529 couvrent les limites A4, la persistance, le transport dans
+- Le chargement, la sauvegarde et l'aperçu passent par le pont serveur déjà
+  éprouvé par les modèles Word/PDF. Le chargement initial possède lui aussi un
+  délai borné et ne peut plus rester indéfiniment sur « Chargement ».
+- Neuf tests DEV529 couvrent les limites A4, la persistance, le transport dans
   le payload PDF, le QR, l'aperçu, le contrat des boutons asynchrones et la
   syntaxe des scripts intégrés. La suite complète passe `735/735`.
 
