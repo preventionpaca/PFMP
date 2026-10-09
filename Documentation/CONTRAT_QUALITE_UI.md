@@ -90,7 +90,9 @@ explicitement listées comme non exécutées.
 - documentation d’état mise à jour.
 
 Les URL restent inchangées. Un échec des contrôles verts déclenche le retour
-automatique aux deux versions immuables précédentes.
+automatique aux deux versions immuables précédentes. Un unique dépassement de
+délai attribuable au démarrage à froid Apps Script peut être rejoué une fois ;
+un second échec de la même route reste bloquant.
 
 Les limites de contrôle doivent être annoncées. Un courriel, un import, une
 écriture Grist ou un document réel ne peut servir de test sans autorisation

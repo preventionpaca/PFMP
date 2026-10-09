@@ -30,8 +30,9 @@ Une livraison suit obligatoirement cet ordre :
    empreinte identique avant de toucher aux Web Apps ;
 6. elle crée une version Apps Script immuable et met à jour uniquement les deux
    déploiements verts existants ;
-7. elle contrôle les 25 routes vertes. Tout échec remet automatiquement les
-   deux Web Apps sur leurs versions immuables précédentes ;
+7. elle contrôle les 25 routes vertes. Une route expirée lors du démarrage à
+   froid peut être rejouée une fois ; tout second échec remet automatiquement
+   les deux Web Apps sur leurs versions immuables précédentes ;
 8. le navigateur parcourt ensuite les routes et toutes les destinations de
    navigation internes visibles. Les parcours métier modifiés sont vérifiés en
    lecture ou par simulation sûre quand une écriture réelle est interdite.

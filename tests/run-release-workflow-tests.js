@@ -123,6 +123,13 @@ test('le vérificateur refuse erreurs runtime, login et contenu inattendu', () =
   assert.match(verifier, /body\.includes\(route\.expected\)/);
 });
 
+test('le vérificateur rejoue une seule fois les démarrages à froid', () => {
+  assert.match(verifier, /const firstFailures = results\.filter\(result => !result\.ok\)/);
+  assert.match(verifier, /Promise\.all\(firstFailures\.map\(result => verify\(result\.route\)\)\)/);
+  assert.match(verifier, /OK \(2e tentative\)/);
+  assert.doesNotMatch(verifier, /while\s*\(/);
+});
+
 test('le contrat permanent retire le bleu du workflow courant', () => {
   assert.match(agents, /Toute évolution applicative commence sur une branche Git/);
   assert.match(agents, /Le canal bleu est retiré du workflow courant/);

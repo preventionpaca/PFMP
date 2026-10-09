@@ -19,7 +19,7 @@
   passe à `DEV514-C6` pour forcer le renouvellement de la synthèse erronée.
 - Les tests ciblés passent (`13/13`, `18/18`, `15/15`, `16/16`) et, après le
   retrait des anciens tests du workflow bleu, la suite complète locale passe
-  `671/671`. La publication et la validation réelle sur
+  `672/672`. La publication et la validation réelle sur
   le vert sont consignées après leur exécution ; aucune écriture métier de
   production n'est utilisée comme test.
 

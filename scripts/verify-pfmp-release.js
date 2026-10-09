@@ -77,15 +77,28 @@ async function verify(route) {
 }
 
 async function main() {
-  const results = [];
+  let results = [];
   for (let index = 0; index < config.routes.length; index += 6) {
     const batch = config.routes.slice(index, index + 6);
     results.push(...await Promise.all(batch.map(verify)));
   }
 
+  // Une nouvelle version Apps Script peut subir un unique démarrage à froid :
+  // la requête expire alors que la route répond normalement quelques secondes
+  // plus tard. Rejouer uniquement les échecs une fois ne masque pas une panne
+  // durable ; le second échec reste bloquant et déclenche le rollback.
+  const firstFailures = results.filter(result => !result.ok);
+  if (firstFailures.length) {
+    const retried = await Promise.all(firstFailures.map(result => verify(result.route)));
+    const byPage = new Map(retried.map(result => [result.route.page, result]));
+    results = results.map(result => byPage.get(result.route.page) || result);
+  }
+
   for (const result of results) {
     const detail = result.ok
-      ? 'OK'
+      ? (firstFailures.some(first => first.route.page === result.route.page)
+          ? 'OK (2e tentative)'
+          : 'OK')
       : [
           `HTTP ${result.response.status}`,
           result.login ? 'connexion Google' : '',

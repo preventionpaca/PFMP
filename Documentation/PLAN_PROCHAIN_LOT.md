@@ -23,7 +23,7 @@ synthèse erronée.
 
 Les tests ciblés DEV513, DEV445, DEV504 et DEV459 passent respectivement
 `13/13`, `18/18`, `15/15` et `16/16`. Après le retrait des anciens tests du
-workflow bleu, la suite complète locale passe `671/671`. La validation verte
+workflow bleu, la suite complète locale passe `672/672`. La validation verte
 réelle doit encore confirmer les décomptes TCAR
 et l'apparition de candidats au géocodage sans déclencher d'écriture de
 coordonnées.
