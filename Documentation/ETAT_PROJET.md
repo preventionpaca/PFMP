@@ -31,7 +31,11 @@
   période`. Le lien et la taille sont conservés dans la convention Grist et
   réaffichés dans l'administration. Un échec d'archivage ne retire jamais le
   PDF déjà produit au navigateur.
-- Les tests dédiés DEV526 passent `7/7` et la suite complète passe `715/715`.
+- Le remappage SIRET strict conserve désormais explicitement `numeroVoie`, le
+  nom donné par le service entreprise et le cache Grist à la rue normalisée.
+  Le test reproduit la réponse exacte où raison sociale, code postal et ville
+  étaient présents mais où la rue disparaissait avant l'affichage QR.
+- Les tests dédiés DEV526 passent `8/8` et la suite complète passe `716/716`.
   Les actions réelles d'affectation, de création de convention, d'ordre de
   mission et d'archivage n'ont pas été déclenchées par les tests.
 

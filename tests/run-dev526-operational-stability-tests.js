@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
+const vm=require('vm');
 
 const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,'apps-script',name),'utf8');
@@ -16,6 +17,7 @@ const conventionPdfServer=read('EUC_CONVENTION_PFMP_PdfV95.gs');
 const conventionPdfClient=read('Convention_PFMP_PdfV95.html');
 const adminServer=read('EUC_CONVENTION_PFMP_AdminWorkflowV144.gs');
 const adminClient=read('Admin_Conventions_PFMP.html');
+const strictSiret=read('EUC_SIRET_NIS_StrictV161.gs');
 
 let n=0;
 function test(name,fn){try{fn();console.log('✓',name);n++;}catch(e){console.error('✗',name,e.stack||e.message);process.exitCode=1;}}
@@ -83,6 +85,15 @@ test('le PDF est archivé dans Drive avec une arborescence et un lien conservé 
   assert.match(conventionPdfClient,/EUC_PDF_archiverV525/);
   assert.match(conventionPdfClient,/PDF prêt et téléchargeable, mais archivage Drive impossible/);
   assert.match(adminClient,/openConventionDrive/);
+});
+
+test('un SIRET trouvé conserve la voie normalisée jusqu’au formulaire QR',()=>{
+  const ctx={};vm.createContext(ctx);vm.runInContext(strictSiret,ctx);
+  const out=ctx.EUC_V161_mapperEntrepriseFrance_({source:'grist',entreprise:{raisonSociale:'ENTREPRISE TEST',numeroVoie:'12 RUE DES TESTS',codePostal:'06000',commune:'NICE',pays:'France'}},'73282932000074');
+  assert.equal(out.found,true);
+  assert.equal(out.entrepriseAdresse,'12 RUE DES TESTS');
+  assert.equal(out.entrepriseCodePostal,'06000');
+  assert.equal(out.entrepriseCommune,'NICE');
 });
 
 if(!process.exitCode)console.log(`\n${n} tests DEV526 stabilité opérationnelle réussis.`);

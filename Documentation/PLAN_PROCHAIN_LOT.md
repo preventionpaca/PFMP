@@ -13,7 +13,7 @@ de réédition. Les écritures d'affectation, de convention et d'archive restent
 hors du contrôle automatisé : elles doivent être réalisées seulement sur un
 cas réel choisi par l'utilisateur.
 
-La suite complète locale passe `715/715`. La publication doit valider les
+La suite complète locale passe `716/716`. La publication doit valider les
 `25/25` routes vertes, la navigation interne et les quatre parcours en lecture
 seule. Une réédition PDF réelle archivera le document dans Drive ; ce clic ne
 doit donc pas être utilisé par le contrôle automatique.

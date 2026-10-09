@@ -17,7 +17,11 @@ function EUC_V161_mapperEntrepriseFrance_(rep,siret){
     d.nomComplet,d.nom_commercial
   );
 
-  var adresse=p(d.adresse,d.adresse_complete,d.adresseComplete);
+  /* EUC_ENT_mapperReponseApi et le cache Grist exposent la voie normalisée
+   * sous `numeroVoie`. Garder aussi les anciens noms pour les réponses déjà
+   * connues, mais ne jamais accepter qu'un SIRET trouvé perde sa rue pendant
+   * le second remappage strict. */
+  var adresse=p(d.numeroVoie,d.adresse,d.adresse_complete,d.adresseComplete);
   var cp=p(d.codePostal,d.code_postal,d.cp);
   var commune=p(d.commune,d.ville,d.localite);
 
