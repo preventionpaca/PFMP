@@ -31,6 +31,16 @@
 - Aucun accès à la production Grist ni aucune écriture métier n'a été exécuté
   par ces tests. La validation nominative réelle reste distincte de la
   validation du code et des routes.
+- Le commit applicatif `fc34d47` est publié sur les deux Web Apps vertes en
+  version immuable `919`. Les `25/25` routes sont valides ;
+  `suivi-conventions` a réussi au second essai autorisé après son démarrage à
+  froid. Le rollback n'a donc pas été déclenché.
+- Le contrôle navigateur non nominatif confirme l'accueil administratif et ses
+  destinations admin/public, l'absence du badge vert et le parcours public
+  `Point sur les stages` → `BAC PRO`. Après démarrage, la synthèse BAC PRO a
+  quitté « Chargement » en environ douze secondes. Aucune fiche d'élève de
+  production, affectation, génération, mission ou écriture Grist n'a été
+  ouverte ou déclenchée par ce contrôle.
 
 ## Mise à jour du 9 octobre 2026 — DEV529 (placement précis du PDF de convention)
 
