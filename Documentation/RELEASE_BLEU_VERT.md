@@ -18,6 +18,12 @@ documentation existants ; son contenu décrit uniquement le workflow actif
 
 ## Publication directe et sûre
 
+L'utilisateur a donné une autorisation permanente pour publier automatiquement
+chaque lot terminé sur le vert. Il ne faut plus lui demander une confirmation de
+déploiement. Cette autorisation couvre seulement la mise à jour des deux Web Apps
+vertes existantes ; elle ne couvre aucune action métier réelle ni aucune écriture
+dans les données.
+
 Une livraison suit obligatoirement cet ordre :
 
 1. partir d'une branche et d'un commit Git explicites ;

@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — autorisation permanente de publication verte
+
+- Chaque lot applicatif terminé est désormais publié automatiquement sur les
+  deux Web Apps vertes existantes après tests complets, relecture du diff,
+  commit et push Git. Aucune nouvelle confirmation de déploiement n'est requise.
+- Cette règle ne modifie aucune protection métier : production Grist, import
+  réel, écriture élève ou convention, courriel, ordre de mission et activation
+  LIVE restent interdits sans autorisation explicite propre à l'action.
+- Le contrat est protégé par un test dédié et la suite complète passe `687/687`.
+
 ## Mise à jour du 9 octobre 2026 — DEV519 (QR et coordonnées entreprise PFMP)
 
 - Le formulaire QR pouvait afficher un SIRET prérempli de quatorze chiffres
@@ -27,7 +37,7 @@
   formulaire QR, aucune convention et aucune donnée Grist n'ont été écrits
   pendant le diagnostic et les tests.
 - Les tests ciblés DEV519 passent `6/6`, les contrôles connexes DEV513,
-  DEV459 et DEV511 passent `42/42`, et la suite complète passe `686/686`.
+  DEV459 et DEV511 passent `42/42`, et la suite complète passe `687/687`.
   Le correctif est validé localement mais n'est pas encore publié sur le vert.
 
 ## Mise à jour du 9 octobre 2026 — DEV518 (spinner des boutons réellement occupés)
@@ -51,7 +61,7 @@
   bouton de vérification de la saisie QR restent immobiles tant qu'aucune action
   n'est en cours. Le point d'entrée commun du paquet applique ce contrat à toutes
   les routes vertes.
-- Après ajout de cette couverture explicite, la suite complète passe `686/686`.
+- Après ajout de cette couverture explicite, la suite complète passe `687/687`.
 
 ## Mise à jour du 9 octobre 2026 — DEV517 (géocodage vert durable)
 

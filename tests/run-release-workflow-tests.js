@@ -140,6 +140,15 @@ test('le contrat permanent retire le bleu du workflow courant', () => {
   assert.match(qualityContract, /25\/25.*routes vertes/);
 });
 
+test('le contrat permanent autorise la publication verte sans nouvelle confirmation', () => {
+  assert.match(agents, /autorisation permanente de publier automatiquement/);
+  assert.match(agents, /sans lui redemander une autorisation de déploiement/);
+  assert.match(qualityContract, /L'autorisation de publication sur le vert est permanente/);
+  for (const contents of [agents, qualityContract]) {
+    assert.match(contents, /n'autorise aucun(?:e)? (?:action métier réelle|import)/i);
+  }
+});
+
 test('le contrat permanent protège accueil, navigation et boutons asynchrones', () => {
   for (const contents of [agents, qualityContract]) {
     assert.ok(contents.includes('https://alternance.loucodi.fr/'));

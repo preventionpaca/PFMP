@@ -7,7 +7,7 @@ Architecture : sources GitHub dans ce dépôt, projet Google Apps Script vert av
 ## Workflow obligatoire Git → vert
 
 - Toute évolution applicative commence sur une branche Git. Tester et relire le commit exact avant toute publication.
-- Une publication explicitement demandée passe uniquement par `scripts/pfmp-release.sh release-stable`. Cette commande reconstruit le commit dans un clone propre, pousse le paquet sur le projet vert, relit et compare le distant, crée une version Apps Script immuable et met à jour uniquement les deux Web Apps vertes existantes.
+- L'utilisateur donne une autorisation permanente de publier automatiquement chaque lot applicatif terminé sur le vert, sans lui redemander une autorisation de déploiement. Après tests verts, diff relu, commit explicite et push Git, exécuter uniquement `scripts/pfmp-release.sh release-stable`. Cette commande reconstruit le commit dans un clone propre, pousse le paquet sur le projet vert, relit et compare le distant, crée une version Apps Script immuable et met à jour uniquement les deux Web Apps vertes existantes.
 - Après publication, contrôler les 25 routes vertes, puis parcourir dans le navigateur tous les liens et boutons de navigation internes visibles sur l'ensemble de ces routes, pas seulement sur les pages modifiées. Aucun lien ne doit conduire à une erreur Apps Script, une page blanche, une demande de connexion inattendue ou un ancien canal.
 - Toute route verte en échec impose le retour automatique aux versions immuables précédentes des deux Web Apps.
 - Sur le vert, tout lien ou bouton libellé `Accueil PFMP` vise exactement `https://alternance.loucodi.fr/`.
@@ -26,6 +26,8 @@ Tests : `node tests/run-tests.js`. Pendant un lot, privilégier les tests ciblé
 Git : préserver les changements extérieurs, contrôler secrets et données nominatives, utiliser un commit explicite, pousser seulement après tests verts. Ne jamais réécrire l’historique ni déplacer un tag publié.
 
 Version et déploiement : ne jamais diminuer la version ; créer une version Apps Script immuable ; mettre à jour uniquement les deux Web Apps vertes existantes ; conserver leurs URL, `DOMAIN` et `USER_DEPLOYING`. Relire et comparer le distant après `clasp push`. Ne jamais réactiver le workflow bleu sans une nouvelle demande explicite.
+
+L'autorisation permanente de déploiement concerne uniquement la publication du code testé sur les deux Web Apps vertes existantes. Elle n'autorise aucune action métier réelle.
 
 Interdictions permanentes sans autorisation explicite : production Grist, import Pronote réel, écriture élève ou convention, suppression physique, personnel inventé, courriel, ordre de mission, activation LIVE/ENABLED, nouveau Web App, secret ou donnée personnelle dans Git ou les journaux.
 

@@ -7,8 +7,10 @@ rappeler.
 
 1. Partir d'un commit Git explicite contenant tout le code vert déjà publié.
 2. Développer et tester localement sur une branche Git.
-3. Après demande explicite de publication, utiliser uniquement
-   `scripts/pfmp-release.sh release-stable`.
+3. L'autorisation de publication sur le vert est permanente : après validation
+   complète d'un lot, utiliser automatiquement
+   `scripts/pfmp-release.sh release-stable`, sans redemander une autorisation de
+   déploiement.
 4. Reconstruire le commit exact dans un clone propre, relire le projet vert
    distant et comparer son empreinte au paquet testé.
 5. Créer une version Apps Script immuable et mettre à jour seulement les deux
@@ -16,6 +18,8 @@ rappeler.
 
 Le bleu est archivé et ne doit être publié ou consulté sans demande explicite.
 Une modification non commitée ne doit jamais entrer dans le paquet livré.
+Cette autorisation permanente porte seulement sur le déploiement du code. Elle
+n'autorise aucun import, courriel, ordre de mission ou écriture métier réelle.
 
 ## 2. Navigation et liens
 
