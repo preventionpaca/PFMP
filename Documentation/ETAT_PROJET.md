@@ -9,6 +9,10 @@
   réel, écriture élève ou convention, courriel, ordre de mission et activation
   LIVE restent interdits sans autorisation explicite propre à l'action.
 - Le contrat est protégé par un test dédié et la suite complète passe `687/687`.
+- Le commit exact `c994f107c066ae0c746653b69d2e29f2efbbf1ce` a été publié
+  automatiquement sur les deux Web Apps vertes existantes dans la version Apps
+  Script immuable `902`. Le projet distant a été relu après le push et les
+  `25/25` routes vertes sont valides ; aucun rollback n'a été nécessaire.
 
 ## Mise à jour du 9 octobre 2026 — DEV519 (QR et coordonnées entreprise PFMP)
 
@@ -38,7 +42,7 @@
   pendant le diagnostic et les tests.
 - Les tests ciblés DEV519 passent `6/6`, les contrôles connexes DEV513,
   DEV459 et DEV511 passent `42/42`, et la suite complète passe `687/687`.
-  Le correctif est validé localement mais n'est pas encore publié sur le vert.
+  Le correctif est publié sur le vert dans la version immuable `902`.
 
 ## Mise à jour du 9 octobre 2026 — DEV518 (spinner des boutons réellement occupés)
 
@@ -55,13 +59,17 @@
 - La simulation couvre les trois états : indisponible sans animation, traitement
   réel animé et retour à l'état normal. Tests ciblés : `9/9` pour le canal de
   rendu et `13/13` pour le workflow de publication. Suite complète : `679/679`.
-  Ce correctif est validé localement mais n'est pas encore publié sur le vert.
+  Ce correctif est publié sur le vert dans la version immuable `902`.
 - Le contrôle de non-régression nomme maintenant les deux autres écrans signalés :
   le bouton « Ouvrir le dossier » de l'administration des conventions et le
   bouton de vérification de la saisie QR restent immobiles tant qu'aucune action
   n'est en cours. Le point d'entrée commun du paquet applique ce contrat à toutes
   les routes vertes.
 - Après ajout de cette couverture explicite, la suite complète passe `687/687`.
+- Le contrôle HTTP ciblé des pages vertes « Administration des conventions » et
+  « Accès sécurisé PFMP » confirme le contrat corrigé : bouton inactif sans
+  spinner, absence d'erreur d'exécution et bandeau vert. Aucune convention,
+  donnée Grist, recherche SIRET ou autre action métier n'a été enregistrée.
 
 ## Mise à jour du 9 octobre 2026 — DEV517 (géocodage vert durable)
 
