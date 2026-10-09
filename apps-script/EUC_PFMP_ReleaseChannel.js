@@ -133,11 +133,15 @@ function EUC_RELEASE_decorateOutput_(output) {
     '</style>';
   var busyScript='<script data-pfmp-busy-script="1">(function(){'+
     'function sync(b){if(!b||!document.documentElement.contains(b))return;'+
-      'var active=b.disabled||b.getAttribute("aria-busy")==="true"||b.classList.contains("busy");'+
+      'var explicit=b.getAttribute("aria-busy")==="true"||b.classList.contains("busy");'+
+      'var tracked=b.getAttribute("data-pfmp-auto-pending")==="1";'+
+      'var active=explicit||(tracked&&b.disabled);'+
       'var own=b.querySelector&&b.querySelector(".spinner,.loader,[role=progressbar]");'+
-      'b.classList.toggle("pfmp-auto-busy",!!active&&!own)}'+
+      'b.classList.toggle("pfmp-auto-busy",!!active&&!own);'+
+      'if(!b.disabled&&!explicit)b.removeAttribute("data-pfmp-auto-pending")}'+
     'document.addEventListener("click",function(e){var b=e.target&&e.target.closest&&e.target.closest("button");'+
-      'if(!b)return;setTimeout(function(){sync(b)},0);setTimeout(function(){sync(b)},60)},false);'+
+      'if(!b||b.disabled)return;b.setAttribute("data-pfmp-auto-pending","1");'+
+      'setTimeout(function(){sync(b)},0);setTimeout(function(){sync(b)},60)},false);'+
     'new MutationObserver(function(ms){ms.forEach(function(m){var b=m.target&&m.target.closest&&m.target.closest("button");if(b)sync(b)})})'+
       '.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:["disabled","class","aria-busy"],childList:true});'+
     '})()<\/script>';

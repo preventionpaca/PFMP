@@ -106,13 +106,53 @@ test('toutes les sorties ajoutent le spinner transversal des boutons occupés', 
   assert.match(release, /button\.pfmp-auto-busy::before/);
   assert.match(release, /data-pfmp-busy-script/);
   assert.match(release, /MutationObserver/);
-  assert.match(release, /b\.disabled\|\|b\.getAttribute\("aria-busy"\)/);
+  assert.match(release, /data-pfmp-auto-pending/);
+  assert.match(release, /tracked&&b\.disabled/);
+  assert.doesNotMatch(release, /active=b\.disabled\|\|/);
   assert.match(release, /b\.querySelector\("\.spinner,\.loader,\[role=progressbar\]"\)/);
   const ctx = releaseContext('1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo');
   const out = output('<html><head></head><body><button>Action</button></body></html>');
   ctx.EUC_RELEASE_decorateOutput_(out);
   const code = out.content.match(/<script data-pfmp-busy-script="1">([\s\S]*?)<\/script>/)[1];
   assert.doesNotThrow(() => new Function(code));
+
+  let observer;
+  const attrs = {};
+  const classes = new Set();
+  const button = {
+    disabled: true,
+    getAttribute: key => attrs[key] || null,
+    setAttribute: (key, value) => { attrs[key] = String(value); },
+    removeAttribute: key => { delete attrs[key]; },
+    querySelector: () => null,
+    closest: selector => selector === 'button' ? button : null,
+    classList: {
+      contains: value => classes.has(value),
+      toggle: (value, force) => force ? classes.add(value) : classes.delete(value)
+    }
+  };
+  const document = {
+    documentElement: {contains: value => value === button},
+    addEventListener: () => {}
+  };
+  const sandbox = {
+    document,
+    setTimeout: fn => fn(),
+    MutationObserver: function(callback) {
+      observer = callback;
+      this.observe = () => {};
+    }
+  };
+  vm.runInNewContext(code, sandbox);
+  observer([{target: button}]);
+  assert.equal(classes.has('pfmp-auto-busy'), false, 'un bouton simplement indisponible ne doit pas tourner');
+  attrs['data-pfmp-auto-pending'] = '1';
+  observer([{target: button}]);
+  assert.equal(classes.has('pfmp-auto-busy'), true, 'un bouton déclenché puis désactivé doit tourner');
+  button.disabled = false;
+  observer([{target: button}]);
+  assert.equal(classes.has('pfmp-auto-busy'), false, 'le spinner doit disparaître à la fin');
+  assert.equal(attrs['data-pfmp-auto-pending'], undefined, 'le marqueur temporaire doit être nettoyé');
 });
 
 if (!process.exitCode) console.log(`\n${n} tests DEV485 canal bleu réussis.`);

@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV518 (spinner des boutons réellement occupés)
+
+- Le spinner transversal confondait l'état fonctionnel `disabled` avec une
+  opération asynchrone en cours. Les boutons `Affecter`, normalement
+  indisponibles tant qu'aucun élève et aucun professeur ne sont sélectionnés,
+  tournaient donc dès le rendu de la fiche sans qu'aucune action ait été
+  déclenchée.
+- Un bouton désactivé reste désormais immobile. Le spinner transversal ne
+  s'affiche que si le bouton vient d'être cliqué puis est désactivé par son
+  traitement, ou si la page le marque explicitement avec `aria-busy` ou la
+  classe `busy`. Le marqueur temporaire est supprimé dès que le bouton redevient
+  disponible.
+- La simulation couvre les trois états : indisponible sans animation, traitement
+  réel animé et retour à l'état normal. Tests ciblés : `8/8` pour le canal de
+  rendu et `13/13` pour le workflow de publication. Suite complète : `679/679`.
+  Ce correctif est validé localement mais n'est pas encore publié sur le vert.
+
 ## Mise à jour du 9 octobre 2026 — DEV517 (géocodage vert durable)
 
 - Le faux résultat « zéro entreprise » de la cartographie provenait du délai
