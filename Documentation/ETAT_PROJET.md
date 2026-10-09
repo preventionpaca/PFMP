@@ -1,5 +1,25 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV522 (remplacement après rupture retrouvable)
+
+- Une convention enregistrée comme `INTERROMPUE` pouvait disparaître de la
+  recherche annuelle de « Administration des conventions » lorsque les champs
+  utilisés par l'ancien filtre d'éligibilité étaient absents. Le bureau ne
+  pouvait alors plus rouvrir la convention d'origine pour créer son
+  remplacement relié.
+- Le filtre commun conserve désormais explicitement les conventions
+  `INTERROMPUE`, y compris après révocation de leur ancien QR. Elles restent
+  consultables dans l'administration, tandis que la création du remplacement
+  continue d'exiger l'ouverture de la convention d'origine, de nouvelles dates
+  et un motif.
+- Le générateur général n'est pas utilisé pour ce parcours : le bouton
+  « Créer la nouvelle convention après rupture » maintient le lien historique,
+  ne copie aucune entreprise et génère un nouveau QR propre au remplacement.
+- Un test dédié reproduit une convention interrompue sans les anciens champs
+  d'éligibilité, vérifie sa présence dans la bonne année et son absence d'une
+  autre année. Les tests ciblés passent et la suite complète passe `698/698`.
+  Aucune donnée Grist ni convention réelle n'a été créée ou modifiée.
+
 ## Mise à jour du 9 octobre 2026 — DEV521 (noms des jeunes dans l’administration des conventions)
 
 - La liste « Administration des conventions » affichait « Jeune non

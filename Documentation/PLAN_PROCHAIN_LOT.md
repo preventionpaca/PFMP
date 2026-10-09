@@ -1,4 +1,15 @@
-# Prochain lot après DEV521
+# Prochain lot après DEV522
+
+DEV522 maintient les conventions `INTERROMPUE` dans la recherche annuelle de
+« Administration des conventions ». Le parcours métier reste : ouvrir la
+convention interrompue, renseigner les nouvelles dates et le motif, puis
+utiliser « Créer la nouvelle convention après rupture ». Il ne faut pas passer
+par le générateur général, qui ne porterait pas le lien avec l'ancienne
+séquence. Après publication verte, contrôler en lecture seule qu'au moins une
+convention interrompue est visible dans son année ; la création réelle du
+remplacement reste interdite sans autorisation explicite d'écriture métier.
+
+## Lot précédent — DEV521
 
 DEV521 rétablit les noms des jeunes dans la recherche et le détail de
 « Administration des conventions ». Le lecteur commun des références Grist

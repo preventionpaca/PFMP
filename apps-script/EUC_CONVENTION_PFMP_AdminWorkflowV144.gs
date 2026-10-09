@@ -610,15 +610,29 @@ function EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve){
   return {id:id,nom:nom,prenom:prenom,jeune:[prenom,nom].filter(Boolean).join(' ')};
 }
 
+/* Une rupture reste administrable : elle doit demeurer dans la recherche afin
+   que le bureau puisse créer la convention de remplacement reliée. */
+function EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a){
+  a=a||{};
+  var statut=String(a.Statut_administratif||'').toUpperCase();
+  return !!(
+    a.Date_saisie_entreprise ||
+    a.Numero_enregistrement ||
+    a.Entreprise_raison_sociale ||
+    a.Statut==='ENTREPRISE_SAISIE' ||
+    statut==='A_COMPLETER_ENTREPRISE' ||
+    statut==='INTERROMPUE' ||
+    a.Type_sequence==='REMPLACEMENT_APRES_RUPTURE'
+  );
+}
+
 function EUC_ADMIN_WORKFLOW_listerDossiersV146(){
   EUC_ADMIN_WORKFLOW_ctxV144_();
   var rows=EUC_CONVENTION_lireAccesFraisV108_();
   var eleves=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'),byEleve={};
   eleves.forEach(function(e){byEleve[Number(e.id)]=e;});
 
-  return rows.filter(function(a){
-    return !!(a.Date_saisie_entreprise||a.Numero_enregistrement||a.Entreprise_raison_sociale||a.Statut==='ENTREPRISE_SAISIE'||a.Statut_administratif==='A_COMPLETER_ENTREPRISE'||a.Type_sequence==='REMPLACEMENT_APRES_RUPTURE');
-  }).map(function(a){
+  return rows.filter(EUC_ADMIN_WORKFLOW_estDossierVisibleV522_).map(function(a){
     var identite=EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve);
     var nom=identite.nom;
     var prenom=identite.prenom;
@@ -853,7 +867,7 @@ function EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(codeAnnee){
 
   return rows
     .filter(function(a){
-      if(!(a.Date_saisie_entreprise||a.Numero_enregistrement||a.Entreprise_raison_sociale||a.Statut==='ENTREPRISE_SAISIE')){
+      if(!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)){
         return false;
       }
 

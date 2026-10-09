@@ -61,4 +61,20 @@ test('le détail administratif utilise la même résolution que la recherche',()
   assert.equal(detail.jeune.nom,'BERNARD');
 });
 
+test('une convention interrompue reste recherchable pour créer son remplacement',()=>{
+  c.EUC_ADMIN_WORKFLOW_ctxV144_=()=>({email:'admin@example.test'});
+  c.EUC_CONVENTION_lireAccesFraisV108_=()=>[{
+    id:903,Eleve:['L',777],Annee_scolaire:'2026-2027',
+    Statut_administratif:'INTERROMPUE',Revoked:true
+  }];
+  c.EUC_IMPORT_lireRecords_=table=>table==='EUC_ELEVES_PFMP'
+    ?[{id:777,Nom:'TEMOIN',Prenom_usage:'Élève'}]:[];
+  c.EUC_IMPORT_dateExistanteISO_=value=>String(value||'').slice(0,10);
+  const rows=c.EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148('2026-2027');
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].statut,'INTERROMPUE');
+  assert.equal(rows[0].jeune,'Élève TEMOIN');
+  assert.equal(c.EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148('2025-2026').length,0);
+});
+
 if(!process.exitCode)console.log(`\n${passed} tests DEV521 résolution des jeunes réussis.`);
