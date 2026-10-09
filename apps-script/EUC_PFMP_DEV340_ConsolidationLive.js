@@ -125,6 +125,12 @@ function EUC_DEV519_enrichAccessCompanyContacts_(rows){
     a.Responsable_courriel=EUC_DEV520_firstText_(a.Responsable_courriel,contact.Courriel_direct,contact.Courriel,company.Responsable_courriel,company.Courriel_responsable);
     EUC_DEV520_normalizeResponsible_(a);
   });
+  /* DEV528 : les imports JotForm historiques ont garde le responsable dans
+   * Raw_JSON sans le recopier dans l'acces convention. Le repli est groupe,
+   * strictement en lecture seule et ne s'applique qu'aux champs manquants. */
+  if(typeof EUC_DEV528_enrichJotformContacts_==='function'){
+    try{rows=EUC_DEV528_enrichJotformContacts_(rows)||rows;}catch(eJotform){}
+  }
   return rows;
 }
 function EUC_DEV340_compactAccess_(a){

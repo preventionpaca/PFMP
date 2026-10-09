@@ -1,5 +1,28 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV528 (responsables JotForm et démarrage public)
+
+- Les exports JotForm réels contiennent bien `Nom du responsable`,
+  `Téléphone entreprise` et `Adresse e-mail de l'entreprise`. L'ancien mapping
+  importait le tuteur mais ne transportait pas ces trois informations dans
+  l'accès convention, alors qu'elles restaient disponibles dans le `Raw_JSON`
+  du tampon validé.
+- Les vues de classe et les ordres de mission complètent désormais en lecture
+  seule les champs manquants depuis la ligne JotForm validée correspondant au
+  même élève, à la même classe et au même SIRET. Un rapprochement ambigu ou une
+  ligne non validée est ignoré ; les valeurs déjà portées par la convention
+  restent prioritaires.
+- Les prochains imports JotForm écrivent directement le nom et les coordonnées
+  du responsable dans les colonnes canoniques de la convention.
+- Le premier affichage public relisait un snapshot volumineux avec jusqu'à
+  soixante appels successifs à `getProperty`, puis devenait rapide grâce au
+  cache. Les blocs persistants sont maintenant obtenus par un seul
+  `getProperties`, sans reconstruction métier sur le chemin de consultation.
+- Le marqueur de détail passe à `DEV528-C12` afin de rejeter les anciennes
+  fiches de classe dépourvues des coordonnées JotForm. Six tests dédiés couvrent
+  restauration, refus des lignes non validées, prochains imports, invalidation
+  du cache et lecture groupée du premier chargement.
+
 ## Mise à jour du 9 octobre 2026 — DEV527 (adresse SIRET complète)
 
 - Le diagnostic comparatif des SIRET `45218779200034` et `49141406600036`

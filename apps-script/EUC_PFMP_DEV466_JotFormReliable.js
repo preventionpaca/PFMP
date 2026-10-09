@@ -276,7 +276,7 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
       }
       var prepared=EUC_CONVENTION_preparerRecordAcces_(ctx,genStudent,classBy[realClassId],period,year,{lot:'MIGRATION_JOTFORM_DEV466'});
       var preparedFields=(prepared.record&&prepared.record.fields)||prepared.record||{};
-      var companyFields=EUC_DEV307_companyFields_(row,ctx,columns),specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
+      var companyFields=typeof EUC_DEV528_companyFields_==='function'?EUC_DEV528_companyFields_(row,ctx,columns):EUC_DEV307_companyFields_(row,ctx,columns),specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
       if(existing&&EUC_DEV466_isSubmitted_(existing)){
         mode='EXISTING';fields={};accessId=Number(existing.id)||0;
       }else if(existing){

@@ -25,8 +25,12 @@ function EUC_DEV456_familyTransientDrop_(annee,famille){
   try{c.removeAll(keys);}catch(e){keys.forEach(function(x){try{c.remove(x);}catch(e2){}});}
 }
 function EUC_DEV456_familyPersistentGet_(annee,famille){
-  var p=PropertiesService.getScriptProperties(),k=EUC_DEV456_familyKey_(annee,famille),n=0,raw='';
-  try{n=Number(p.getProperty(k+'_PN'))||0;if(!n||n>60)return null;for(var i=0;i<n;i++){var part=p.getProperty(k+'_P'+i);if(part==null)return null;raw+=part;}return JSON.parse(raw);}catch(e){return null;}
+  var p=PropertiesService.getScriptProperties(),k=EUC_DEV456_familyKey_(annee,famille),n=0,raw='',all={};
+  /* DEV528 : un snapshot BAC PRO peut occuper plusieurs dizaines de blocs.
+   * Les relire avec autant de getProperty successifs expliquait le premier
+   * affichage proche d'une minute, puis les suivants rapides grâce au cache.
+   * getProperties effectue une seule lecture distante. */
+  try{all=p.getProperties()||{};n=Number(all[k+'_PN'])||0;if(!n||n>60)return null;for(var i=0;i<n;i++){var part=all[k+'_P'+i];if(part==null)return null;raw+=part;}return JSON.parse(raw);}catch(e){return null;}
 }
 function EUC_DEV456_familyPersistentPut_(annee,famille,data){
   var p=PropertiesService.getScriptProperties(),k=EUC_DEV456_familyKey_(annee,famille),raw='',size=7000,items={};

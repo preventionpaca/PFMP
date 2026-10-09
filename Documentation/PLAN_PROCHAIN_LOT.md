@@ -1,4 +1,19 @@
-# Prochain lot après DEV527
+# Prochain lot après DEV528
+
+DEV528 restaure dans les fiches de classe et les ordres de mission les
+coordonnées du responsable conservées dans les imports JotForm validés. Le
+contrôle métier doit comparer une convention saisie par QR et une convention
+historique JotForm : les deux doivent afficher nom, téléphone et courriel dans
+« Coordonnées entreprise », sans modifier les données Grist. Un dossier ambigu
+doit rester vide plutôt que choisir une mauvaise personne.
+
+Le premier accès public à une famille utilise maintenant une seule lecture
+groupée des propriétés persistantes. Après publication, mesurer un premier
+chargement BAC PRO après démarrage à froid puis un second chargement ; le
+premier ne doit plus approcher soixante secondes et aucun recalcul complet ne
+doit être lancé depuis la page publique.
+
+## Lot précédent — DEV527
 
 DEV527 empêche une fiche entreprise locale incomplète de masquer l'adresse
 officielle d'un SIRET. Le contrôle métier obligatoire porte dorénavant sur les
