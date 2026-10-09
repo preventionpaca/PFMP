@@ -5,7 +5,6 @@
  * recette séparée sur le bleu, production sur le vert.
  */
 var EUC_DEV424_RECIPE_DOC_='kB8bvDag8x7D';
-var EUC_DEV424_PRODUCTION_DOC_='3pnVrygfNn7c';
 var EUC_DEV424_HANDLER_='EUC_DEV424_refreshScheduled';
 var EUC_DEV424_INTERVAL_MINUTES_=15;
 var EUC_DEV424_STATUS_PROP_='EUC_DEV424_SNAPSHOT_STATUS_V1';
@@ -22,8 +21,16 @@ function EUC_DEV424_assertTarget_(){
   var cfg=typeof EUC_ENT_lireConfiguration==='function'?EUC_ENT_lireConfiguration():{};
   var doc=EUC_DEV424_txt_(cfg&&cfg.EUC_ENT_GRIST_DOC_ID);
   var canal=typeof EUC_ENT_canalProjet_==='function'?EUC_ENT_canalProjet_():'';
-  var expected=canal==='BLUE'?EUC_DEV424_RECIPE_DOC_:(canal==='GREEN'?EUC_DEV424_PRODUCTION_DOC_:'');
-  if(!expected||doc!==expected)throw new Error('DEV424 : cible Grist refusée pour le canal '+(canal||'INCONNU')+'.');
+  if(canal==='BLUE'&&doc!==EUC_DEV424_RECIPE_DOC_)
+    throw new Error('DEV424 : cible Grist refusée pour le canal BLUE.');
+  /* DEV532 : le Doc ID vert est une propriété protégée, jamais une constante
+   * versionnée. DEV489 contrôle déjà que le projet vert ne peut viser ni une
+   * cible vide, ni la recette bleue. Répéter ici un ancien Doc ID rendait le
+   * reconstructeur inutilisable dès que la cible officielle changeait. */
+  if(canal==='GREEN'&&(!doc||doc===EUC_DEV424_RECIPE_DOC_))
+    throw new Error('DEV424 : cible Grist refusée pour le canal GREEN.');
+  if(canal!=='BLUE'&&canal!=='GREEN')
+    throw new Error('DEV424 : cible Grist refusée pour le canal '+(canal||'INCONNU')+'.');
   return doc;
 }
 

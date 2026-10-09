@@ -1,23 +1,32 @@
 # État du projet Eucalyptus PFMP
 
-## Audit du 9 octobre 2026 — DEV531 (incident de stockage Grist)
+## Mise à jour du 9 octobre 2026 — DEV531/DEV532 (incident de stockage Grist)
 
 - Le code exact de la version verte `919` démontre que les vues matérialisées
   `EUC_SUIVI_PFMP_INDEX` et `EUC_SUIVI_PFMP_DETAIL_SNAPSHOT` conservaient une
   nouvelle copie JSON complète à chaque recalcul, puis désactivaient l'ancienne
   sans la supprimer. Les deux colonnes totalisent 199 580 538 octets UTF-8
   estimés dans le diagnostic fourni.
-- Le correctif DEV531 préparé remplace la ligne active par `PATCH`, ne crée une
+- Le correctif DEV531 publié en version verte immuable `920` remplace la ligne active par `PATCH`, ne crée une
   ligne qu'en l'absence de cache, ignore un JSON identique et filtre les
   lectures Grist sur les lignes actives. Les trois anciens écrivains DEV190
   sont redirigés dans le paquet de publication vers ce comportement borné.
 - Les tables concernées restent des caches utiles aux performances ; aucune
   table métier ni aucun historique fonctionnel n'est modifié. Les anciennes
   versions inactives ne sont consommées par aucun lecteur courant contrôlé.
-- Aucun déploiement, aucune écriture dans la production Grist et aucune
-  suppression n'ont été réalisés. L'inventaire exact actif/inactif, la présence
-  du déclencheur planifié et le volume officiel Grist restent à vérifier avec un
-  accès lecture production.
+- La sauvegarde complète avec historique du document Camin actif pèse
+  `431 001 600` octets et porte le SHA-256
+  `9eb2c4117ed93fda837bbe58766b9f569066916ee362e18720622e3ebe3dbc64`.
+  L'analyse hors ligne conserve 68 index et 62 détails actifs, tous valides, et
+  identifie exactement 6 007 lignes techniques redondantes représentant
+  194 044 589 octets de JSON. Aucune suppression n'est encore exécutée.
+- DEV532 retire l'ancien Doc ID codé dans la garde DEV424 et aligne le
+  reconstructeur sur la cible verte protégée par DEV489. Il ajoute un nettoyage
+  à deux étapes : audit armé trente minutes, relecture sous verrou, conservation
+  de la ligne active la plus récente de chaque clé, puis contrôle post-opération.
+- Tests : `753/753` réussis. Le candidat DEV532 doit encore être publié sur les
+  deux Web Apps vertes, puis l'audit réel doit être exécuté avant la confirmation
+  finale de suppression.
 - Le diagnostic détaillé, le plan de nettoyage réversible et les limites de la
   preuve sont consignés dans
   `Documentation/INCIDENT_STOCKAGE_GRIST_2026-10-09.md`.

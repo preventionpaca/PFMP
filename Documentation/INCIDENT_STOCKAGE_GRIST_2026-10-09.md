@@ -7,10 +7,34 @@ conservent une nouvelle ligne JSON complète à chaque recalcul. Ces lignes ne
 constituent pas l'historique métier des conventions : les lecteurs courants ne
 consomment que la version active la plus récente.
 
-Le correctif DEV531 est préparé mais n'est pas publié. Il remplace désormais le
-JSON de la ligne active, crée une ligne uniquement lorsqu'une clé de cache est
-absente et filtre les lectures Grist sur `Actif = true`. Aucun nettoyage Grist
-n'a été exécuté.
+Le correctif DEV531 est publié directement sur les deux Web Apps vertes en
+version immuable `920`. Il remplace désormais le JSON de la ligne active, crée
+une ligne uniquement lorsqu'une clé de cache est absente et filtre les lectures
+Grist sur `Actif = true`. Les 25 routes vertes ont répondu correctement.
+
+DEV532 corrige en plus la garde du reconstructeur : le projet vert utilise sa
+cible Grist protégée configurée, comme DEV489, et non un ancien identifiant
+codé dans Git. Son nettoyeur sécurisé est préparé mais la suppression attend
+encore l'étape de confirmation finale.
+
+## Inventaire exact sur la sauvegarde PFMP active
+
+Une sauvegarde Grist complète avec historique du document Camin actif a été
+téléchargée avant toute suppression. Taille : `431 001 600` octets ; SHA-256 :
+`9eb2c4117ed93fda837bbe58766b9f569066916ee362e18720622e3ebe3dbc64`.
+
+L'analyse SQLite hors ligne, limitée aux métadonnées et aux longueurs JSON,
+établit le plan suivant :
+
+| Table | Lignes actuelles | Clés actives conservées | Lignes candidates | JSON candidat |
+| --- | ---: | ---: | ---: | ---: |
+| `EUC_SUIVI_PFMP_INDEX` | 4 892 | 68 | 4 824 | 142 387 917 octets |
+| `EUC_SUIVI_PFMP_DETAIL_SNAPSHOT` | 1 245 | 62 | 1 183 | 51 656 672 octets |
+| **Total** | **6 137** | **130** | **6 007** | **194 044 589 octets** |
+
+Chaque clé possède au moins une ligne active. Les 130 lignes conservées sont
+les plus récentes par clé et leurs 130 JSON sont valides. Le plan ne touche à
+aucune table métier.
 
 ## Mesures fournies par le diagnostic Grist
 

@@ -41,8 +41,9 @@ test('une mutation garde la publication complète précédente pendant le recalc
 
 test('la maintenance snapshot reconnaît strictement la recette bleue actuelle',()=>{
   assert.match(planned,/EUC_DEV424_RECIPE_DOC_='kB8bvDag8x7D'/);
-  assert.match(planned,/canal==='BLUE'\?EUC_DEV424_RECIPE_DOC_/);
-  assert.match(planned,/canal==='GREEN'\?EUC_DEV424_PRODUCTION_DOC_/);
+  assert.match(planned,/canal==='BLUE'&&doc!==EUC_DEV424_RECIPE_DOC_/);
+  assert.match(planned,/canal==='GREEN'&&\(!doc\|\|doc===EUC_DEV424_RECIPE_DOC_\)/);
+  assert.doesNotMatch(planned,/EUC_DEV424_PRODUCTION_DOC_/);
   assert.doesNotMatch(planned,/b2CyeMEdVEMS/);
 });
 
