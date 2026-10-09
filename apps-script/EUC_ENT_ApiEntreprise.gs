@@ -2,10 +2,14 @@
 function EUC_ENT_rechercherSiret(valeur) {
   EUC_ENT_controlerAccesUtilisateur_();
   var v=EUC_ENT_validerSiret(valeur); if(!v.valide) throw new Error(v.message);
-  var existante=EUC_ENT_verifierDoublonGrist(v.siret); if(existante) return {source:'grist',entreprise:EUC_ENT_mapperEntrepriseGrist_(existante)};
+  var existante=EUC_ENT_verifierDoublonGrist(v.siret),locale=existante?EUC_ENT_mapperEntrepriseGrist_(existante):null;
+  /* Une ancienne fiche locale partielle ne doit jamais masquer les données
+   * officielles. C'était notamment le cas lorsqu'elle possédait le code postal
+   * et la commune mais aucune voie. */
+  if(locale&&EUC_ENT_identiteEntrepriseComplete_(locale)) return {source:'grist',entreprise:locale};
   var c=EUC_ENT_lireConfiguration(); var base=c.EUC_ENT_API_RECHERCHE_URL||'https://recherche-entreprises.api.gouv.fr/search';
   if(base!=='https://recherche-entreprises.api.gouv.fr/search') throw new Error('URL de l’API Recherche d’entreprises non autorisée.');
-  return {source:'api_navigateur',siret:v.siret,url:base+'?q='+encodeURIComponent(v.siret)+'&page=1&per_page=1'};
+  return {source:'api_navigateur',siret:v.siret,url:base+'?q='+encodeURIComponent(v.siret)+'&page=1&per_page=1',gristIncomplet:!!existante};
 }
 function EUC_ENT_traiterReponseApiNavigateur(json,valeur) {
   EUC_ENT_controlerAccesUtilisateur_();
@@ -20,6 +24,7 @@ function EUC_ENT_mapperReponseApi(u,siret) {
   var adresse=EUC_ENT_normaliserAdresse_({numero:e.numero_voie,indice:e.indice_repetition,typeVoie:e.type_voie,voie:e.libelle_voie,complement:e.complement_adresse,codePostal:e.code_postal,ville:e.libelle_commune_etranger||e.libelle_commune,pays:e.libelle_pays_etranger||'France',codePays:e.code_pays_etranger,adresseComplete:e.adresse||e.geo_adresse});
   return {siret:siret,siren:u.siren||siret.slice(0,9),raisonSociale:u.nom_raison_sociale||u.nom_complet||'',enseigne:e.nom_commercial||(e.liste_enseignes||[])[0]||'',estSiege:!!e.est_siege,etat:e.etat_administratif==='A'?'Actif':'Fermé',formeJuridique:u.nature_juridique||'',codeApe:e.activite_principale||u.activite_principale||'',libelleActivite:'',dateCreation:e.date_creation||'',complementAdresse:adresse.complement,numeroVoie:adresse.adresse,codePostal:adresse.codePostal,commune:adresse.ville,pays:adresse.pays,adresseComplete:adresse.adresse,diffusionPartielle:(u.statut_diffusion!=='O'||e.statut_diffusion_etablissement!=='O')};
 }
+function EUC_ENT_identiteEntrepriseComplete_(e){return !!(e&&String(e.raisonSociale||'').trim()&&String(e.numeroVoie||e.adresseComplete||'').trim()&&String(e.codePostal||'').trim()&&String(e.commune||'').trim());}
 function EUC_ENT_echapperRegExp_(v){return String(v||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function EUC_ENT_normaliserAdresse_(d){
   d=d||{};var espace=function(v){return String(v||'').trim().replace(/\s+/g,' ');};

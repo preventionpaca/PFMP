@@ -1509,7 +1509,7 @@ init();
                       clearIdentity(false);
                       lockIdentity(true,false);
                       lockOne('entrepriseEnseigne',false);
-                      status('SIRET non retrouvé : enregistrement impossible.',true);
+                      status(x&&x.incomplete?'Entreprise retrouvée, mais données officielles incomplètes ('+(x.champsManquants||[]).join(', ')+'). Contactez le bureau PFMP.':'SIRET non retrouvé : enregistrement impossible.',true);
                       return;
                     }
 
@@ -1553,7 +1553,7 @@ init();
               clearIdentity(false);
               lockIdentity(true,false);
               lockOne('entrepriseEnseigne',false);
-              status('SIRET non retrouvé : enregistrement impossible.',true);
+              status(r&&r.incomplete?'Entreprise retrouvée, mais données officielles incomplètes ('+(r.champsManquants||[]).join(', ')+'). Contactez le bureau PFMP.':'SIRET non retrouvé : enregistrement impossible.',true);
               return;
             }
 

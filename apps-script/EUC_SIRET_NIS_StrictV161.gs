@@ -1,4 +1,17 @@
-/** Eucalyptus PFMP — DEV.161 FIX10 — SIRET France strict / NIS Monaco. */
+/** Eucalyptus PFMP — DEV.527 — SIRET France strict / NIS Monaco. */
+
+var EUC_V161_SIRET_CACHE_PREFIX_='EUC_V161_SIRET_OFFICIEL_V527_';
+function EUC_V161_siretCacheGet_(siret){
+  try{
+    var raw=CacheService.getScriptCache().get(EUC_V161_SIRET_CACHE_PREFIX_+siret),d=raw?JSON.parse(raw):null;
+    return d&&d.found&&d.entrepriseRaisonSociale&&d.entrepriseAdresse&&d.entrepriseCodePostal&&d.entrepriseCommune?d:null;
+  }catch(e){return null;}
+}
+function EUC_V161_siretCachePut_(d){
+  if(!d||!d.found)return d;
+  try{CacheService.getScriptCache().put(EUC_V161_SIRET_CACHE_PREFIX_+d.entrepriseSiret,JSON.stringify(d),900);}catch(e){}
+  return d;
+}
 
 function EUC_V161_mapperEntrepriseFrance_(rep,siret){
   if(!rep)return {found:false};
@@ -25,8 +38,13 @@ function EUC_V161_mapperEntrepriseFrance_(rep,siret){
   var cp=p(d.codePostal,d.code_postal,d.cp);
   var commune=p(d.commune,d.ville,d.localite);
 
-  if(!raison && !adresse && !cp && !commune){
-    return {found:false};
+  var manquants=[];
+  if(!raison)manquants.push('raison sociale');
+  if(!adresse)manquants.push('adresse');
+  if(!cp)manquants.push('code postal');
+  if(!commune)manquants.push('ville');
+  if(manquants.length){
+    return {found:false,incomplete:true,champsManquants:manquants};
   }
 
   return {
@@ -49,6 +67,8 @@ function EUC_V161_verifierSiretFrance(siret){
     throw new Error('Le SIRET doit comporter exactement 14 chiffres.');
   }
 
+  var cached=EUC_V161_siretCacheGet_(siret);
+  if(cached)return cached;
   var r=EUC_ENT_rechercherSiret(siret);
   if(!r)return {found:false};
 
@@ -61,7 +81,7 @@ function EUC_V161_verifierSiretFrance(siret){
     };
   }
 
-  return EUC_V161_mapperEntrepriseFrance_(r,siret);
+  return EUC_V161_siretCachePut_(EUC_V161_mapperEntrepriseFrance_(r,siret));
 }
 
 function EUC_V161_traiterSiretFranceNavigateur(json,siret){
@@ -72,7 +92,7 @@ function EUC_V161_traiterSiretFranceNavigateur(json,siret){
   }
 
   var r=EUC_ENT_traiterReponseApiNavigateur(json,siret);
-  return EUC_V161_mapperEntrepriseFrance_(r,siret);
+  return EUC_V161_siretCachePut_(EUC_V161_mapperEntrepriseFrance_(r,siret));
 }
 
 function EUC_V161_normaliserNIS_(nis){

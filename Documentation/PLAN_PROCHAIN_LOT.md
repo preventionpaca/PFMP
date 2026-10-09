@@ -1,4 +1,17 @@
-# Prochain lot après DEV526
+# Prochain lot après DEV527
+
+DEV527 empêche une fiche entreprise locale incomplète de masquer l'adresse
+officielle d'un SIRET. Le contrôle métier obligatoire porte dorénavant sur les
+quatre champs raison sociale, voie, code postal et ville. La validation par le
+navigateur reste disponible quinze minutes pour l'enregistrement final sans
+écriture automatique dans le référentiel d'entreprises Grist.
+
+La suite complète locale passe `721/721`. Après publication, contrôler les
+`25/25` routes vertes. Un essai manuel de recherche avec le SIRET
+`49141406600036` doit afficher la voie `43 B BOULEVARD PIERRE SEMARD`, le
+complément `IMMEUBLE BEL CANTO`, le code postal `06300` et la ville `NICE`.
+
+## Lot précédent — DEV526
 
 DEV526 consolide ensemble les quatre parcours signalés : coordonnées du
 responsable dans les fiches de classe, affectation des professeurs, accès aux
@@ -13,7 +26,7 @@ de réédition. Les écritures d'affectation, de convention et d'archive restent
 hors du contrôle automatisé : elles doivent être réalisées seulement sur un
 cas réel choisi par l'utilisateur.
 
-La suite complète locale passe `716/716`. La publication doit valider les
+La suite complète locale passait `716/716`. La publication devait valider les
 `25/25` routes vertes, la navigation interne et les quatre parcours en lecture
 seule. Une réédition PDF réelle archivera le document dans Drive ; ce clic ne
 doit donc pas être utilisé par le contrôle automatique.

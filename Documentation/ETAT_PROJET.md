@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV527 (adresse SIRET complète)
+
+- Le diagnostic comparatif des SIRET `45218779200034` et `49141406600036`
+  confirme que l'API officielle fournit une adresse complète dans les deux cas.
+  Pour le second, elle fournit `43 B BOULEVARD PIERRE SEMARD`, le complément
+  `IMMEUBLE BEL CANTO`, le code postal `06300` et la ville `NICE`.
+- La différence provenait du chemin local : une fiche Grist trouvée par SIRET
+  était utilisée même si sa rue était vide, empêchant l'appel à l'API. Une
+  fiche locale n'est désormais prioritaire que si raison sociale, voie, code
+  postal et ville sont tous renseignés.
+- La réponse officielle complète est gardée quinze minutes côté serveur pour
+  la validation finale du formulaire QR. Aucun enregistrement entreprise Grist
+  n'est modifié automatiquement par cette réparation.
+- Cinq tests dédiés couvrent fiche complète, fiche locale partielle, réponse
+  NGE exacte, validation finale et refus d'une identité sans rue. La suite
+  complète passe `721/721`.
+
 ## Mise à jour du 9 octobre 2026 — DEV526 (stabilité des parcours opérationnels)
 
 - La colonne « Coordonnées entreprise » restait vide pour les PFMP alors que
