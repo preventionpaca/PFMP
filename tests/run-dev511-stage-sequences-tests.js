@@ -6,6 +6,7 @@ const qr=read('EUC_CONVENTION_PFMP_QRPublicV85.gs');
 const workflow=read('EUC_CONVENTION_PFMP_AdminWorkflowV144.gs');
 const live=read('EUC_PFMP_DEV340_ConsolidationLive.js');
 const generator=read('Convention_PFMP_Generateur.html');
+const groups=read('EUC_CONVENTION_PFMP_GroupesClasses.gs');
 const admin=read('Admin_Conventions_PFMP.html');
 const detail=read('Suivi_PFMP_Classe_Detail_V156.html');
 const missions=read('EUC_PFMP_DEV370_AdminTools.js');
@@ -84,9 +85,23 @@ test('une convention à compléter reste visible mais non couverte et non missio
 });
 
 test('les interfaces exposent la procédure sans saisie d’entreprise au bureau',()=>{
-  assert.match(generator,/Utiliser des dates individuelles pour cet élève/);assert.match(generator,/scenarioDates/);assert.match(generator,/motifEcartDates/);assert.match(generator,/setTimeout\(.*30000/s);
+  assert.match(generator,/Utiliser des dates individuelles pour cet élève/);assert.match(generator,/scenarioDates/);assert.match(generator,/motifEcartDates/);assert.match(generator,/setTimeout\(.*45000/s);
+  assert.match(generator,/requestId:generationRequestId/);assert.match(generator,/EUC_CONVENTION_finaliserRafraichissementV513/);
   assert.match(admin,/Créer la nouvelle convention après rupture/);assert.match(admin,/Aucune entreprise, aucun responsable et aucun tuteur ne sont repris/);assert.match(admin,/EUC_ADMIN_WORKFLOW_creerRemplacementV511/);assert.match(admin,/spinner/);
-  assert.match(detail,/Séquence\(s\) précédente\(s\)/);assert.match(detail,/Entreprise à compléter/);assert.match(detail,/s-A_COMPLETER_ENTREPRISE/);
+  assert.match(detail,/Historique rupture \/ remplacement/);assert.match(detail,/Entreprise à compléter/);assert.match(detail,/s-A_COMPLETER_ENTREPRISE/);
+});
+
+test('la génération est rejouable sans doublon et sépare le recalcul',()=>{
+  const body=service.slice(service.indexOf('function EUC_CONVENTION_preparerAcces(payload)'),service.indexOf('function EUC_CONVENTION_preparerAccesParEleve'));
+  assert.match(service,/c\('Request_id','Identifiant de requête'\)/);
+  assert.match(body,/EUC_CONVENTION_accesParRequestIdV513_\(requestId\)/);
+  assert.match(body,/idempotent:!!existing/);
+  assert.match(body,/refreshToken:refresh/);
+  assert.doesNotMatch(body,/EUC_CONVENTION_finRafraichissementV511_\(refresh\)/);
+  const batch=groups.slice(groups.indexOf('function EUC_CONVENTION_preparerAccesClasseNom'),groups.indexOf('function EUC_CONVENTION_donneesImpressionLot'));
+  assert.match(batch,/EUC_CONVENTION_debutRafraichissementV511_/);
+  assert.match(batch,/refreshToken:refresh/);
+  assert.doesNotMatch(batch,/EUC_CONVENTION_finRafraichissementV511_/);
 });
 
 test('le chemin de secours du suivi garde les deux séquences et ne compte pas la remplaçante vide comme couverte',()=>{

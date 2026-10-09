@@ -1,4 +1,31 @@
-# Prochain lot après DEV512
+# Prochain lot après DEV513
+
+## DEV513 — candidat de stabilisation à homologuer sur le bleu
+
+DEV513 retire le recalcul lourd du parcours de consultation BAC PRO. Une page
+famille sert toujours le dernier snapshot complet, y compris lorsqu'un nouveau
+calcul est demandé, et le signale comme en cours de rafraîchissement. Les cartes
+et infobulles consomment le même résumé embarqué. Un délai maximal et une action
+de reprise remplacent tout chargement sans fin.
+
+La génération unitaire ne dépend plus du temps de reconstruction des vues et
+porte un identifiant de requête stable. Les QR sont agrandis et renforcés pour
+la photocopie ; l'historique des classes écarte les fausses « séquences
+précédentes » ; le géocodage retrouve les entreprises actives même lorsque les
+détails matérialisés ne sont pas prêts. La suite locale passe `671/671`.
+
+Avant toute promotion verte, il reste obligatoirement à :
+
+1. publier ce commit sur le projet Apps Script bleu et relire le distant ;
+2. reconstruire le snapshot de recette sans toucher à la production Grist ;
+3. parcourir les 25 routes bleues et toutes leurs navigations visibles ;
+4. vérifier sur le bleu la cohérence d'une classe témoin entre effectif,
+   conventions, apprentis, sans convention et parcours différencié ;
+5. documenter les parcours qui ne peuvent être exécutés réellement sans une
+   écriture métier interdite.
+
+Le vert ne doit être modifié qu'après une nouvelle autorisation explicite de
+l'utilisateur et uniquement avec le candidat bleu exact homologué.
 
 ## DEV512 livré sur le vert
 

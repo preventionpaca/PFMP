@@ -1,5 +1,50 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV513 (stabilisation des suivis et des parcours QR)
+
+- La cause de l'attente infinie de la synthèse BAC PRO et du chargement très
+  lent des infobulles était une reconstruction complète de la famille Grist
+  déclenchée dans le parcours utilisateur. Une création de convention
+  supprimait en outre le dernier snapshot complet avant cette reconstruction :
+  le suivi n'avait alors plus rien à servir et repartait dans le calcul lourd.
+- Une invalidation conserve désormais le dernier snapshot complet et ne retire
+  que ses données transitoires. Pendant le recalcul, la famille sert cette
+  version cohérente avec la mention « recalcul en cours » ; elle ne lance plus
+  de reconstruction lourde depuis la page. Les cartes et les contrôles rapides
+  utilisent le même résumé canonique embarqué, sans une requête par infobulle.
+  Un délai maximal de quinze secondes remplace tout spinner infini par une
+  erreur explicite et une action de nouvelle tentative.
+- La création unitaire d'une convention, notamment un rattrapage, utilise un
+  identifiant de requête stable contre les doublons. Elle rend la convention et
+  son QR sans attendre la reconstruction des vues, laquelle est finalisée en
+  arrière-plan. En cas de délai dépassé, une nouvelle tentative avec le même
+  identifiant est sûre.
+- Les historiques du suivi n'affichent plus les enregistrements initiaux comme
+  « séquences précédentes » et convertissent proprement les dates ISO ou Unix.
+  Seules une rupture, une annulation ou une vraie séquence de remplacement sont
+  présentées comme historique. Le parcours différencié reste un décompte de la
+  période P.dif. et ne devient pas artificiellement un statut de PFMP n°1 ; ce
+  choix futur ne retire toutefois jamais l'élève de l'effectif de PFMP n°1 ou
+  n°2.
+- Les QR des conventions ont été agrandis à environ 30 mm, rendus en haute
+  définition et avec une correction d'erreur supérieure pour mieux résister à
+  la photocopie. Leur règle métier ne change pas : utilisables avant la date
+  réelle de début, passage obligatoire par le bureau à partir du début, puis
+  expiration définitive après la fin.
+- Le géocodage peut maintenant établir sa liste à partir des conventions
+  actives lorsque les détails de suivi ne sont pas encore matérialisés. Il ne
+  doit plus conclure à tort qu'il existe zéro entreprise dans ce cas ; les
+  dossiers révoqués, supprimés, interrompus ou annulés restent exclus.
+- Les tests ciblés couvrent les régressions observées : absence de calcul lourd
+  dans le rendu famille, conservation du dernier snapshot, résumé rapide
+  embarqué, délai visible, idempotence de la génération, historique lisible,
+  QR agrandi et repli du géocodage. La suite complète passe à `671/671`.
+- Ce lot ne touche ni la production Grist, ni les données élève/convention, ni
+  les courriels ou ordres de mission. À ce stade de la note, le vert reste
+  inchangé et le contrôle navigateur des 25 routes bleues reste à exécuter sur
+  le candidat publié. Les valeurs métier affichées ne pourront être déclarées
+  actualisées qu'après reconstruction du snapshot de recette.
+
 ## Mise à jour du 8 octobre 2026 — DEV512 (fusion PDF et signalement jaune)
 
 - Le moteur de fusion du dossier d'apprentissage mesure désormais le texte avec

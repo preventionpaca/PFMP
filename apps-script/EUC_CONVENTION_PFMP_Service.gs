@@ -3,16 +3,18 @@ var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_CONVENTION_assurerTableAcces_(){
+  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V513';
+  try{if(cache.get(schemaKey)==='OK')return {cache:true};}catch(eCache){}
   var t=EUC_CONVENTION_ACCES_TABLE_,c=EUC_CONVENTION_colonne_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;});
   var cols=[
-    c('Token_hash','Empreinte du jeton'),c('Eleve','Élève','Ref:EUC_ELEVES_PFMP'),c('Annee_scolaire','Année scolaire'),c('Classe_convention','Classe convention','Ref:Classes'),c('Classe_convention_nom','Classe convention nom'),c('Periode','Période','Ref:Planning_Periodes'),c('Periode_libelle','Période libellé'),c('Date_debut','Date début','Date'),c('Date_fin','Date fin','Date'),
+    c('Token_hash','Empreinte du jeton'),c('Request_id','Identifiant de requête'),c('Eleve','Élève','Ref:EUC_ELEVES_PFMP'),c('Annee_scolaire','Année scolaire'),c('Classe_convention','Classe convention','Ref:Classes'),c('Classe_convention_nom','Classe convention nom'),c('Periode','Période','Ref:Planning_Periodes'),c('Periode_libelle','Période libellé'),c('Date_debut','Date début','Date'),c('Date_fin','Date fin','Date'),
     c('Scenario_dates','Situation des dates'),c('Date_officielle_debut','Date officielle début','Date'),c('Date_officielle_fin','Date officielle fin','Date'),c('Date_declaree_debut','Date réelle début','Date'),c('Date_declaree_fin','Date réelle fin','Date'),c('Motif_ecart_dates','Motif écart de dates'),
     c('Type_sequence','Type de séquence'),c('Numero_sequence','Numéro de séquence','Int'),c('Convention_origine','Convention d’origine','Ref:EUC_ACCES_FORMULAIRES_PFMP'),c('Convention_remplacement','Convention de remplacement','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
     c('PDIF_periode','Période PDIF','Ref:Planning_Periodes'),c('PDIF_mode','Parcours différencié'),c('Lot_generation','Lot de génération'),
     c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool')
   ];
-  if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});return {tableCreee:true};}
-  var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var missing=cols.filter(function(x){return !presentes[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});return {tableCreee:false,colonnesCreees:missing.map(function(x){return x.id;})};
+  if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});try{cache.put(schemaKey,'OK',21600);}catch(eNew){}return {tableCreee:true};}
+  var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var missing=cols.filter(function(x){return !presentes[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});try{cache.put(schemaKey,'OK',21600);}catch(ePut){}return {tableCreee:false,colonnesCreees:missing.map(function(x){return x.id;})};
 }
 function EUC_CONVENTION_token_(){var raw=[Utilities.getUuid(),Utilities.getUuid(),new Date().getTime(),Math.random()].join('|');return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,raw,Utilities.Charset.UTF_8)).replace(/=+$/,'');}
 function EUC_CONVENTION_hash_(v){return EUC_PFMP_hash_(String(v||''));}
@@ -40,6 +42,25 @@ function EUC_CONVENTION_debutRafraichissementV511_(a,reason){
 function EUC_CONVENTION_finRafraichissementV511_(token){
   if(!token||typeof EUC_DEV425_finishMutation_!=='function')return null;
   try{return EUC_DEV425_finishMutation_(token);}catch(e){console.log('DEV511_REFRESH_FINISH '+String(e&&e.message||e));return {ok:false,error:String(e&&e.message||e)};}
+}
+function EUC_CONVENTION_requestIdV513_(value){
+  value=String(value||'').trim();
+  return /^REQ-[A-Za-z0-9_-]{40,180}$/.test(value)?value:'';
+}
+function EUC_CONVENTION_accesParRequestIdV513_(requestId){
+  if(!requestId)return null;var rows=[];
+  try{
+    if(typeof EUC_DEV190G_fastRecords_==='function')rows=EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{Request_id:[requestId]})||[];
+    else rows=EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_)||[];
+  }catch(e){rows=[];}
+  var row=rows.filter(function(r){return String((r.fields||r).Request_id||'')===requestId;})[0];
+  if(!row)return null;var out={id:Number(row.id)||0},f=row.fields||row;Object.keys(f).forEach(function(k){out[k]=f[k];});return out;
+}
+function EUC_CONVENTION_finaliserRafraichissementV513(token){
+  EUC_IMPORT_exigerAdminTexte_();token=token||{};
+  var safe={annee:String(token.annee||''),families:(token.families||[]).map(String),targets:(token.targets||[]).map(function(t){return{classe:Number(t.classe)||0,periode:Number(t.periode)||0,famille:String(t.famille||'')};}),revision:String(token.revision||''),reason:String(token.reason||'convention-v513')};
+  if(!/^20\d{2}-20\d{2}$/.test(safe.annee)||!safe.revision||!safe.families.length)throw new Error('Jeton de mise à jour invalide.');
+  return EUC_CONVENTION_finRafraichissementV511_(safe);
 }
 
 function EUC_CONVENTION_lireElevesAdmin(){
@@ -88,9 +109,9 @@ function EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,opt){
   }else{
     debutReel=p.debut;finReelle=finOfficielle;motif='';
   }
-  var token=EUC_CONVENTION_token_(),hash=EUC_CONVENTION_hash_(token),now=new Date().toISOString(),ref='PFMP-'+annee.replace('-','')+'-'+eleve.id+'-'+String(new Date().getTime()).slice(-6)+'-'+String(Math.floor(Math.random()*90)+10);
+  var requestId=EUC_CONVENTION_requestIdV513_(opt.requestId),token=requestId||EUC_CONVENTION_token_(),hash=EUC_CONVENTION_hash_(token),now=new Date().toISOString(),ref='PFMP-'+annee.replace('-','')+'-'+eleve.id+'-'+String(new Date().getTime()).slice(-6)+'-'+String(Math.floor(Math.random()*90)+10);
   var lib=p.type+' '+p.debut+' → '+p.fin;if(pdif&&pdifMode==='ENTREPRISE')lib+=' + '+pdif.type+' '+pdif.debut+' → '+pdif.fin+' en entreprise';
-  var fields={Token_hash:hash,Eleve:eleve.id,Annee_scolaire:annee,Classe_convention:cl.id,Classe_convention_nom:cl.nom,Periode:p.id,Periode_libelle:lib,Date_debut:debutReel,Date_fin:finReelle,Scenario_dates:scenario,Date_officielle_debut:p.debut,Date_officielle_fin:finOfficielle,Date_declaree_debut:debutReel,Date_declaree_fin:finReelle,Motif_ecart_dates:motif,Type_sequence:String(opt.typeSequence||'INITIALE'),Numero_sequence:Number(opt.numeroSequence||1),Convention_origine:Number(opt.conventionOrigine||0)||null,PDIF_periode:pdif?pdif.id:null,PDIF_mode:pdifMode||'',Lot_generation:lot,Statut:'CONVENTION_GENEREE',Tentatives_echec:0,Bloque_jusqua:null,Date_creation:now,Date_derniere_utilisation:null,Auteur:ctx.email||'',Reference_convention:ref,Revoked:false};
+  var fields={Token_hash:hash,Request_id:requestId,Eleve:eleve.id,Annee_scolaire:annee,Classe_convention:cl.id,Classe_convention_nom:cl.nom,Periode:p.id,Periode_libelle:lib,Date_debut:debutReel,Date_fin:finReelle,Scenario_dates:scenario,Date_officielle_debut:p.debut,Date_officielle_fin:finOfficielle,Date_declaree_debut:debutReel,Date_declaree_fin:finReelle,Motif_ecart_dates:motif,Type_sequence:String(opt.typeSequence||'INITIALE'),Numero_sequence:Number(opt.numeroSequence||1),Convention_origine:Number(opt.conventionOrigine||0)||null,PDIF_periode:pdif?pdif.id:null,PDIF_mode:pdifMode||'',Lot_generation:lot,Statut:'CONVENTION_GENEREE',Tentatives_echec:0,Bloque_jusqua:null,Date_creation:now,Date_derniere_utilisation:null,Auteur:ctx.email||'',Reference_convention:ref,Revoked:false};
   if(opt.statutAdministratif)fields.Statut_administratif=String(opt.statutAdministratif);
   return {token:token,reference:ref,dateDebut:debutReel,dateFin:finReelle,record:{fields:fields}};
 }
@@ -101,11 +122,23 @@ function EUC_CONVENTION_preparerAcces(payload){
   var eleves=EUC_CONVENTION_lireElevesAdmin(),eleve=eleves.filter(function(e){return e.id===eleveId;})[0];if(!eleve)throw new Error('Élève introuvable.');var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),cl=meta.classes.filter(function(c){return c.id===classeId;})[0],p=meta.periodes.filter(function(x){return x.id===periodeId;})[0],pdif=pdifId?meta.periodes.filter(function(x){return x.id===pdifId;})[0]:null;if(!cl||!p)throw new Error('Classe ou période introuvable.');EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,periodeId,'Période officielle');if(pdif)EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,pdifId,'Période PDIF');
   var scenario=String(payload.scenarioDates||'DATES_OFFICIELLES').trim().toUpperCase();
   if(['DATES_OFFICIELLES','DEBUT_RETARDE','DATES_INDIVIDUELLES'].indexOf(scenario)<0)throw new Error('Situation de dates inconnue.');
-  EUC_CONVENTION_assurerTableAcces_();var a=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,{pdif:pdif,pdifMode:pdifMode,scenarioDates:scenario,dateDeclareeDebut:payload.dateDeclareeDebut,dateDeclareeFin:payload.dateDeclareeFin,motifEcartDates:payload.motifEcartDates});
-  var refresh=scenario==='DATES_OFFICIELLES'?null:EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},'dates-individuelles');
-  EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]});
-  var snapshot=EUC_CONVENTION_finRafraichissementV511_(refresh);
-  var base=ScriptApp.getService().getUrl();return {ok:true,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee,pdifMode:pdifMode,scenarioDates:scenario,dateDebut:a.dateDebut,dateFin:a.dateFin,snapshot:snapshot};
+  var requestId=EUC_CONVENTION_requestIdV513_(payload.requestId),existing=null,a,requestLock=requestId?LockService.getScriptLock():null;
+  if(requestLock&&!requestLock.tryLock(10000))throw new Error('Une génération identique est déjà en cours. Patientez quelques secondes puis relancez.');
+  try{
+    EUC_CONVENTION_assurerTableAcces_();existing=EUC_CONVENTION_accesParRequestIdV513_(requestId);
+    if(existing){
+      if(Number(EUC_PFMP_ref_(existing.Eleve))!==eleveId||Number(EUC_PFMP_ref_(existing.Classe_convention))!==classeId||Number(EUC_PFMP_ref_(existing.Periode))!==periodeId)throw new Error('Cette requête de génération correspond déjà à une autre convention. Rechargez la page.');
+      a={token:requestId,reference:String(existing.Reference_convention||''),dateDebut:EUC_IMPORT_dateExistanteISO_(existing.Date_debut),dateFin:EUC_IMPORT_dateExistanteISO_(existing.Date_fin)};
+    }else{
+      a=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,{pdif:pdif,pdifMode:pdifMode,scenarioDates:scenario,dateDeclareeDebut:payload.dateDeclareeDebut,dateDeclareeFin:payload.dateDeclareeFin,motifEcartDates:payload.motifEcartDates,requestId:requestId});
+      EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]});
+    }
+  }finally{if(requestLock)try{requestLock.releaseLock();}catch(eLock){}}
+  /* Toute convention modifie les compteurs, y compris avec les dates
+   * officielles. Le recalcul complet ne bloque plus cette requête : le client
+   * le finalise séparément et le déclencheur DEV425 sert de filet de sécurité. */
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},existing?'reprise-idempotente':'creation-convention');
+  var base=ScriptApp.getService().getUrl();return {ok:true,idempotent:!!existing,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee,pdifMode:pdifMode,scenarioDates:scenario,dateDebut:a.dateDebut,dateFin:a.dateFin,refreshToken:refresh};
 }
 
 function EUC_CONVENTION_preparerAccesClasse(payload){
@@ -116,8 +149,9 @@ function EUC_CONVENTION_preparerAccesClasse(payload){
   var lot='LOT-'+Utilities.getUuid(),records=[],items=[],base=ScriptApp.getService().getUrl();EUC_CONVENTION_assurerTableAcces_();
   eleves.forEach(function(e){var mode=String(parcours[String(e.id)]||'').toUpperCase();if(pdif&&mode!=='LYCEE'&&mode!=='ENTREPRISE')throw new Error('Parcours différencié à préciser pour '+e.nom+' '+e.prenom+'.');var a=EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,p,annee,{pdif:pdif,pdifMode:mode,lot:lot});records.push(a.record);items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),annee:annee,classe:cl.nom,debut:p.debut,fin:a.dateFin,pdifMode:mode,pdif:pdif?{type:pdif.type,debut:pdif.debut,fin:pdif.fin}:null});});
   EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
+  var refresh=EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},'creation-lot-conventions');
   CacheService.getScriptCache().put('EUC_CONV_LOT_'+lot,JSON.stringify({lot:lot,classe:cl.nom,annee:annee,periode:p,items:items}),21600);
-  return {ok:true,total:items.length,lot:lot,classeElevesId:classeElevesId,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot)};
+  return {ok:true,total:items.length,lot:lot,classeElevesId:classeElevesId,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
 }
 
 function EUC_CONVENTION_donneesImpressionLot(lot){

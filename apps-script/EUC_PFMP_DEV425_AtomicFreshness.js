@@ -175,11 +175,15 @@ function EUC_DEV425_removeDetailCache_(annee,famille,classe,periode){
   try{cache.removeAll(keys);}catch(e){keys.forEach(function(k){try{cache.remove(k);}catch(e2){}});}
 }
 function EUC_DEV425_invalidateFamily_(annee,famille,payload){
-  /* DEV466 : le cache familial persistant est une copie de publication, pas
-   * une source métier. Il doit disparaître dès le passage à DIRTY ; sinon
-   * DEV459 peut continuer à servir pendant six heures la convention
-   * précédente alors que l'écriture JotForm a bien réussi dans Grist. */
-  try{if(typeof EUC_DEV456_familyCacheDrop_==='function')EUC_DEV456_familyCacheDrop_(annee,famille);}catch(e0){}
+  /* DEV513 : la dernière publication complète reste lisible pendant DIRTY.
+   * On invalide uniquement le cache volatil : supprimer aussi la copie
+   * persistante forçait la page publique à recalculer toute la famille dans
+   * la requête de l'utilisateur et pouvait la laisser tourner indéfiniment.
+   * EUC_DEV425_payloadFresh_ la marque explicitement comme "en cours de
+   * recalcul" ; elle n'est donc jamais présentée comme fraîche. */
+  try{
+    if(typeof EUC_DEV456_familyTransientDrop_==='function')EUC_DEV456_familyTransientDrop_(annee,famille);
+  }catch(e0){}
   try{if(typeof EUC_DEV421_familyCacheInvalidate_==='function')EUC_DEV421_familyCacheInvalidate_(annee,famille);}catch(e){}
   try{if(typeof EUC_DEV396_invalidateAppSnapshots_==='function')EUC_DEV396_invalidateAppSnapshots_(annee);}catch(e2){}
   try{if(typeof EUC_SUIVI_invaliderCacheSynthese_==='function')EUC_SUIVI_invaliderCacheSynthese_(annee);}catch(e3){}

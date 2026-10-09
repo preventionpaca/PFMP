@@ -58,8 +58,26 @@ test('la route famille rend une coque avant le chargement métier',()=>{
   assert.doesNotMatch(route,/EUC_DEV339_familyData_\(/);
   assert.match(familyHtml,/Chargement de la synthèse métier/);
   assert.match(familyHtml,/\.EUC_DEV504_chargerFamille\(P\)/);
-  assert.match(familyHtml,/Le serveur travaille encore/);
+  assert.match(familyHtml,/Le chargement a dépassé 15 secondes/);
+  assert.match(familyHtml,/if\(!settled\)fail\('Le chargement a dépassé 15 secondes[\s\S]*\},15000\)/);
   assert.match(familyHtml,/Aucune synthèse n’est disponible pour cette famille/);
+});
+
+test('une lecture de famille ne lance jamais de reconstruction lourde',()=>{
+  const base=family.slice(family.indexOf('function EUC_DEV394_BASE_EUC_DEV339_familyData_'),family.indexOf('function EUC_DEV339_afficherFamille'));
+  const fast=family.slice(family.indexOf('function EUC_DEV421_fastFamilySnapshot_'),family.indexOf('function EUC_DEV394_BASE_EUC_DEV339_familyData_'));
+  assert.doesNotMatch(base,/EUC_APP172_chargerFamille/);
+  assert.doesNotMatch(base,/EUC_DEV190E_heavyFamily_/);
+  assert.doesNotMatch(fast,/EUC_DEV190E_heavyFamily_/);
+  assert.match(fast,/SNAPSHOT_NON_ENRICHI/);
+});
+
+test('les infobulles utilisent le détail déjà inclus dans la synthèse',()=>{
+  assert.match(familyHtml,/var family=window\.EUC_FAMILY_DATA,local=null/);
+  assert.match(familyHtml,/if\(p\.quick\)\{local=p\.quick;return true;\}/);
+  assert.match(familyHtml,/if\(local\)\{cache\[k\]=local;render\(el,local\);return;\}/);
+  assert.match(familyHtml,/embedded=!!x\.quick/);
+  assert.match(familyHtml,/if\(embedded\)return/);
 });
 
 test('le routeur famille prioritaire délègue lui aussi à la coque asynchrone',()=>{

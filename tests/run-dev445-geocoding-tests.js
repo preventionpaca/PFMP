@@ -33,6 +33,20 @@ assert.equal(writes.length,1,'one Grist write for one homogeneous batch');
 assert.equal(writes[0].method,'post');
 assert.equal(result.candidats.length,2);
 
+const fallbackCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Object,Array,RegExp,
+  EUC_DEV190E_INDEX_TABLE_:'IDX',EUC_DEV190I_TABLE_:'DETAIL',EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP',
+  EUC_DEV368_year:v=>String(v||'2026-2027'),EUC_DEV368_admin:()=>({email:'admin@example.test'}),
+  EUC_DEV368_catalog:()=>({classes:[{famille:'BACPRO',classeId:28,classe:'TMP3D',periodes:[{id:65,libelle:'PFMP n°1'}]}]}),
+  EUC_DEV190G_fastRecords_:(table)=>table==='EUC_ACCES_FORMULAIRES_PFMP'?[{id:99,fields:{Annee_scolaire:'2026-2027',Classe_convention:28,Classe_convention_nom:'TMP3D',Periode:65,Periode_libelle:'PFMP n°1',Entreprise_raison_sociale:'GARAGE TEST',Entreprise_adresse:'2 AVENUE DU TEST',Entreprise_code_postal:'06000',Entreprise_commune:'NICE',Entreprise_siret:'12345678901234',Statut_administratif:'INFORMATIONS_ENREGISTREES'}}]:[],
+  EUC_IMPORT_lireRecords_:()=>[],
+  Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
+  MailApp:{},LockService:{},PropertiesService:{},CacheService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
+};
+vm.createContext(fallbackCtx);vm.runInContext(code,fallbackCtx);
+const fallbackCandidates=fallbackCtx.EUC_DEV441_geoCandidates_({annee:'2026-2027',famille:'BACPRO'});
+assert.equal(fallbackCandidates.length,1,'geocoding must fall back to active convention records when detail snapshots are absent');
+assert.equal(fallbackCandidates[0].entreprise,'GARAGE TEST');
+
 const familyCode=fs.readFileSync('apps-script/EUC_PFMP_DEV339_FamilleUX.js','utf8');
 let heavyCalls=0;
 const familyCtx={console,Date,Math,JSON,String,Number,Object,Array,
@@ -87,4 +101,4 @@ assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must 
 
 assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
 
-console.log('17 tests DEV445 géocodage/performance réussis.');
+console.log('18 tests DEV445 géocodage/performance réussis.');

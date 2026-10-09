@@ -161,8 +161,8 @@ const INITIAL_DATA=<?!= dataJson ?>;
     loadStatus.innerHTML='<span class="load-spin"></span><span>Chargement de la synthèse métier…</span>';
     clearTimeout(watchdog);
     watchdog=setTimeout(function(){
-      if(!settled)loadStatus.innerHTML='<span class="load-spin"></span><span>Le serveur travaille encore. La page reste utilisable ; ne recliquez pas.</span>';
-    },20000);
+      if(!settled)fail('Le chargement a dépassé 15 secondes. La synthèse n’a pas été recalculée dans votre navigateur : vous pouvez réessayer.',15000);
+    },15000);
   }
 
   function fail(message,durationMs){
@@ -189,7 +189,11 @@ const INITIAL_DATA=<?!= dataJson ?>;
     fail(DATA&&DATA.error||'Aucune synthèse n’est disponible pour cette famille.',DATA&&DATA.durationMs);
     return;
   }
-  loadStatus.hidden=true;
+  if(DATA.__snapshotRecalculating===true){
+    loadStatus.hidden=false;
+    loadStatus.className='load-status';
+    loadStatus.innerHTML='<span>Actualisation en arrière-plan : la dernière synthèse complète reste affichée.</span>';
+  }else loadStatus.hidden=true;
 
   var groups={};
 
@@ -235,13 +239,18 @@ const INITIAL_DATA=<?!= dataJson ?>;
           '</div>'+
 
           (c.periodes||[]).map(function(p){
+            var effectif=Number(p.effectifTotal);
+            if(!isFinite(effectif)||effectif<=0)effectif=(Number(p.conventions)||0)+(Number(p.apprentis)||0)+(Number(p.sansConvention!==undefined?p.sansConvention:p.manquantes)||0)+(Number(p.situationsAdministratives)||0)+(Number(p.annuleesInterrompues)||0);
+            var couverts=Math.min(effectif,(Number(p.conventions)||0)+(Number(p.apprentis)||0)+(Number(p.situationsAdministratives)||0));
+            var missingRaw=p.sansConvention!==undefined?p.sansConvention:p.manquantes;
+            var manquants=isFinite(Number(missingRaw))?Math.max(0,Number(missingRaw)):Math.max(0,effectif-couverts-(Number(p.annuleesInterrompues)||0));
             return '<div class="period" data-class="'+classeId+'" data-period="'+p.id+'">'+
               '<div class="row">'+
                 '<div>'+
                   '<div class="label">'+esc(p.libelle||p.nom||'Période')+'</div>'+
                   '<div class="small">'+esc([p.debutFr,p.finFr].filter(Boolean).join(' → '))+'</div>'+
                 '</div>'+
-                '<div class="count '+colorClass(p)+'">'+(p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':('<span class="euc390-count-main">'+((Number(p.conventions)||0)+(Number(p.apprentis)||0))+' / '+((Number(p.total)||0)+(Number(p.apprentis)||0))+'</span><div class="euc390-count-detail">'+(Number(p.conventions)||0)+' convention'+((Number(p.conventions)||0)>1?'s':'')+((Number(p.apprentis)||0)?' + '+(Number(p.apprentis)||0)+' apprenti'+((Number(p.apprentis)||0)>1?'s':''):'')+'</div><div class="euc390-count-missing">'+Math.max(0,(Number(p.total)||0)-(Number(p.conventions)||0))+' sans convention</div>'))+'</div>'+
+                '<div class="count '+colorClass({total:effectif,conventions:couverts})+'">'+(p.isPdif?'<span class="dev291-pdif-main">'+(Number(p.parcoursDifferencies)||0)+' parcours différencié(s)</span>'+'<div class="dev291-pdif-ent">'+(Number(p.poursuitePfmp2)||0)+' poursuite PFMP2 entreprise</div>'+'<div class="dev291-pdif-wait">'+(Number(p.aDefinirFinTerminale)||0)+' à définir</div>':('<span class="euc390-count-main">'+couverts+' / '+effectif+'</span><div class="euc390-count-detail">'+(Number(p.conventions)||0)+' convention'+((Number(p.conventions)||0)>1?'s':'')+((Number(p.apprentis)||0)?' + '+(Number(p.apprentis)||0)+' apprenti'+((Number(p.apprentis)||0)>1?'s':''):'')+((Number(p.situationsAdministratives)||0)?' + '+(Number(p.situationsAdministratives)||0)+' situation(s)':'')+'</div><div class="euc390-count-missing">'+manquants+' sans convention</div>'))+'</div>'+
               '</div>'+
             '</div>';
           }).join('')+
@@ -463,7 +472,10 @@ const INITIAL_DATA=<?!= dataJson ?>;
   }
 
   function apply(r){
-    (r.classes||[]).forEach(applyClass);
+    /* DEV513 : ce correctif historique réécrivait les fractions et les
+     * compteurs après le rendu canonique, avec l'ancien total scolaire hors
+     * apprentis. Le rendu principal utilise maintenant quick pour la carte et
+     * l'infobulle ; aucune seconde couche ne doit le modifier. */
   }
 
   function load(){
@@ -607,6 +619,15 @@ const INITIAL_DATA=<?!= dataJson ?>;
     }
     var k=[year,fam,x.classe,x.periode].join('|');
     if(cache[k]){render(el,cache[k]);return;}
+    var family=window.EUC_FAMILY_DATA,local=null;
+    ((family&&family.classes)||[]).some(function(c){
+      if(Number(c.classeId||c.id)!==x.classe)return false;
+      return (c.periodes||[]).some(function(p){
+        if(Number(p.id||p.periodeId)!==x.periode)return false;
+        if(p.quick){local=p.quick;return true;}return false;
+      });
+    });
+    if(local){cache[k]=local;render(el,local);return;}
     loading(el);
     google.script.run
       .withSuccessHandler(function(r){
@@ -659,6 +680,9 @@ const INITIAL_DATA=<?!= dataJson ?>;
   function warm(el){
     if(!el||!window.google||!google.script||!google.script.run)return;
     var p=data(el); if(!p)return;
+    var family=window.EUC_FAMILY_DATA,embedded=false;
+    ((family&&family.classes)||[]).some(function(c){if(Number(c.classeId||c.id)!==p.classe)return false;return(c.periodes||[]).some(function(x){if(Number(x.id||x.periodeId)!==p.periode)return false;embedded=!!x.quick;return embedded;});});
+    if(embedded)return;
     var k=p.annee+'|'+p.famille+'|'+p.classe+'|'+p.periode;
     if(seen[k])return; seen[k]=1;
     google.script.run.withFailureHandler(function(){}).EUC_DEV416_prewarm(p);

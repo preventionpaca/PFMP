@@ -19,6 +19,11 @@ function EUC_DEV456_familyCachePut_(annee,famille,data){
   try{for(var i=0;i<n;i++)c.put(k+'_'+i,raw.slice(i*size,(i+1)*size),21600);c.put(k+'_N',String(n),21600);}catch(e2){}
   return data;
 }
+function EUC_DEV456_familyTransientDrop_(annee,famille){
+  var k=EUC_DEV456_familyKey_(annee,famille),c=CacheService.getScriptCache(),keys=[k+'_N'];
+  for(var i=0;i<12;i++)keys.push(k+'_'+i);
+  try{c.removeAll(keys);}catch(e){keys.forEach(function(x){try{c.remove(x);}catch(e2){}});}
+}
 function EUC_DEV456_familyPersistentGet_(annee,famille){
   var p=PropertiesService.getScriptProperties(),k=EUC_DEV456_familyKey_(annee,famille),n=0,raw='';
   try{n=Number(p.getProperty(k+'_PN'))||0;if(!n||n>60)return null;for(var i=0;i<n;i++){var part=p.getProperty(k+'_P'+i);if(part==null)return null;raw+=part;}return JSON.parse(raw);}catch(e){return null;}

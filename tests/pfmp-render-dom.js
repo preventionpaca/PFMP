@@ -1,4 +1,4 @@
-const fs=require('fs'),path=require('path'),cp=require('child_process');
+const fs=require('fs'),path=require('path'),cp=require('child_process'),os=require('os');
 const root=path.resolve(__dirname,'..');
 let html=fs.readFileSync(path.join(root,'apps-script','PFMP.html'),'utf8');
 const css=fs.readFileSync(path.join(root,'apps-script','PFMP_Styles.html'),'utf8');
@@ -13,7 +13,12 @@ const stub=`<script>window.scrollTo=()=>{};RadioNodeList.prototype.dispatchEvent
 const probe=`<script>(function(){const f=document.querySelector('#pfmpForm'),q=n=>f.elements[n],step4=document.querySelector('[data-step="4"]'),wrap=document.querySelector('#motifWrap'),motif=q('motif'),scenario=q('scenarioDates');step4.classList.add('active');q('statutJeune').value='Scolaire';q('statutJeune').dispatchEvent(new Event('change'));q('offreId').value='1';q('offreId').onchange();q('periodeId').value='2';q('periodeId').onchange();const official={banner:document.querySelector('#officialDates').textContent,period:q('periodeId').selectedOptions[0].textContent,display:getComputedStyle(wrap).display,hidden:wrap.hidden,ariaHidden:wrap.getAttribute('aria-hidden'),required:motif.required,tabIndex:motif.tabIndex,start:q('dateDeclareeDebut').value,end:q('dateDeclareeFin').value};scenario.value='Début retardé';scenario.onchange();const delayed={display:getComputedStyle(wrap).display,hidden:wrap.hidden,required:motif.required};motif.value='À effacer';scenario.value='Dates officielles';scenario.onchange();const back={display:getComputedStyle(wrap).display,hidden:wrap.hidden,required:motif.required,tabIndex:motif.tabIndex,value:motif.value};scenario.value='Autre situation exceptionnelle';scenario.onchange();const exceptional={display:getComputedStyle(wrap).display,hidden:wrap.hidden,required:motif.required};document.body.dataset.renderResult=btoa(unescape(encodeURIComponent(JSON.stringify({official,delayed,back,exceptional,version:document.querySelector('.version').textContent}))));})();<\/script>`;
 const summaryProbe=`<script>(function(){const scenario=document.querySelector('#scenarioDates');scenario.value='Dates officielles';scenario.onchange();const button=document.querySelector('.edit-step');button.dataset.editStep='6';button.click();const result=JSON.parse(decodeURIComponent(escape(atob(document.body.dataset.renderResult))));result.summary=document.querySelector('#summary').textContent;document.body.dataset.renderResult=btoa(unescape(encodeURIComponent(JSON.stringify(result))));})();<\/script>`;
 html=html.replace('<head>','<head>'+stub).replace('</body>',probe+summaryProbe+'</body>');
-const file=path.join(root,'tests','.pfmp-render.tmp.html');fs.writeFileSync(file,html);
-const out=cp.execFileSync('chromium',['--headless','--no-sandbox','--disable-gpu','--disable-background-networking','--allow-file-access-from-files','--virtual-time-budget=1200','--dump-dom','file://'+file],{encoding:'utf8',stdio:['ignore','pipe','ignore']});
-const m=out.match(/data-render-result="([^"]+)"/);if(!m)throw new Error('Résultat DOM Chromium absent dans '+file+'.');fs.rmSync(file,{force:true});
+/* Chromium installé par Snap ne peut pas ouvrir un fichier placé sous le
+ * dossier caché .codex d'un worktree. Utiliser un répertoire temporaire
+ * explicite sous le home rend ce test identique en dépôt principal, worktree
+ * et clone de publication. */
+const tmpDir=fs.mkdtempSync(path.join(os.homedir(),'pfmp-chromium-test.'));
+const file=path.join(tmpDir,'pfmp-render.html');fs.writeFileSync(file,html);
+let out;try{out=cp.execFileSync('chromium',['--headless','--no-sandbox','--disable-gpu','--disable-background-networking','--allow-file-access-from-files','--virtual-time-budget=1200','--dump-dom','file://'+file],{encoding:'utf8',stdio:['ignore','pipe','ignore']});}finally{fs.rmSync(tmpDir,{recursive:true,force:true});}
+const m=out.match(/data-render-result="([^"]+)"/);if(!m)throw new Error('Résultat DOM Chromium absent.');
 process.stdout.write(Buffer.from(m[1],'base64').toString('utf8'));

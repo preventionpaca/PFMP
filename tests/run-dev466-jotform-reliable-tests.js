@@ -184,8 +184,10 @@ test('la collision QR JotForm ne peut pas écraser un autre SIRET',()=>{
   assert.match(code,/existingSiret&&existingSiret!==siret/);
 });
 
-test('la publication atomique invalide aussi le cache familial persistant',()=>{
-  assert.match(atomic,/function EUC_DEV425_invalidateFamily_[\s\S]*EUC_DEV456_familyCacheDrop_\(annee,famille\)/);
+test('une mutation conserve le dernier snapshot persistant pendant sa reconstruction',()=>{
+  const invalidate=atomic.slice(atomic.indexOf('function EUC_DEV425_invalidateFamily_'),atomic.indexOf('function EUC_DEV425_beginMutation_'));
+  assert.match(invalidate,/EUC_DEV456_familyTransientDrop_\(annee,famille\)/);
+  assert.doesNotMatch(invalidate,/EUC_DEV456_familyCacheDrop_\(annee,famille\)/);
   assert.match(family,/EUC_DEV425_payloadFresh_\(annee,famille,cached\)/);
   assert.match(family,/EUC_DEV425_payloadFresh_\(annee,famille,persisted\)/);
   assert.match(canonical,/__dev459Canonical===EUC_DEV459_CANONICAL_[\s\S]*EUC_DEV425_payloadFresh_/);

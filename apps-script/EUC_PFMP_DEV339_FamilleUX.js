@@ -252,27 +252,16 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
   if(typeof EUC_DEV420_enrichDetail_==='function'){
     try{detail=EUC_DEV420_enrichDetail_(detail,annee,famille,cid,pid)||detail;}catch(eSituations){}
   }
-  /* DEV432 — un élève affecté au parcours différencié appartient à la vue
-   * P.dif. uniquement. Les anciens enrichissements DEV174 conservaient le
-   * drapeau sur toutes les PFMP de la classe ; il ne doit ni être rendu ni
-   * entrer dans leurs compteurs. La période P.dif. reste inchangée. */
+  /* DEV513 — un choix futur de parcours différencié ne doit jamais retirer
+   * l'élève de l'effectif de PFMP n°1 ou n°2. Il est uniquement masqué comme
+   * badge/statut sur ces périodes ordinaires ; la ligne reste présente et
+   * continue donc à compter comme convention, apprenti ou sans convention.
+   * La période P.dif. conserve, elle, son traitement propre. */
   var isPdif=typeof EUC_DEV387_isPdifPeriod_==='function'
     ?EUC_DEV387_isPdifPeriod_(period)
     :EUC_DEV422_normStatus_(period.libelle||period.nom).indexOf('P_DIF')>=0;
   if(!isPdif){
-    detail.lignes=(detail.lignes||[]).filter(function(x){
-      var authoritativeMode='';
-      try{
-        authoritativeMode=typeof EUC_DEV285B_modeFor_==='function'
-          ?EUC_DEV285B_modeFor_(Number(x&&x.eleveId)||0,annee)
-          :'';
-      }catch(eMode){}
-      var mode=EUC_DEV422_normStatus_(authoritativeMode||(x&&(
-        x.modeFinTerminale||x.statutCode||x.statut
-      )));
-      if(mode.indexOf('POURSUITE_PFMP2')>=0)return true;
-      return mode.indexOf('PARCOURS_DIFF_LYCEE')<0&&!(x&&x.parcoursDifferencie===true);
-    });
+    (detail.lignes||[]).forEach(function(x){if(x)x.parcoursDifferencie=false;});
     detail.__dev434PdifFiltered=true;
   }
   var quick=EUC_DEV422_quickFromDetail_(detail);
@@ -385,12 +374,9 @@ function EUC_DEV421_fastFamilySnapshot_(payload){
     EUC_DEV421_familyCachePut_(annee,famille,data);
     return {ok:true,ready:true,payload:data,source:fresh?'SNAPSHOT_ENRICHI':'SNAPSHOT_EN_COURS_DE_RECALCUL'};
   }
-  if(typeof EUC_DEV425_payloadFresh_==='function'&&!EUC_DEV425_payloadFresh_(annee,famille,data)){
-    try{data=EUC_DEV190E_heavyFamily_({annee:annee,famille:famille})||data;}catch(eLive){}
-  }
-  data=EUC_DEV422_hydrateFamily_(data,annee,famille);
-  EUC_DEV421_familyCachePut_(annee,famille,data);
-  return {ok:true,ready:!!data,payload:data,source:'SNAPSHOT'};
+  /* Une requête d'affichage ne reconstruit jamais une famille. Le recalcul
+   * appartient exclusivement au pipeline DEV425/au déclencheur de reprise. */
+  return {ok:true,ready:false,payload:null,source:'SNAPSHOT_NON_ENRICHI'};
 }
 function EUC_DEV394_BASE_EUC_DEV339_familyData_(annee,famille){
   var data=null;
@@ -409,10 +395,10 @@ function EUC_DEV394_BASE_EUC_DEV339_familyData_(annee,famille){
     }
   }catch(eStored){}
   /* Le snapshot indexé est précisément la vue de lecture destinée à cette
-   * page. Le recalcul APP172 reste le repli de sécurité si le snapshot manque. */
+   * page. Aucun repli APP172 n'est autorisé sur le chemin d'affichage : il
+   * recroisait toutes les tables et bloquait la page pendant des minutes. */
   try{var fast=EUC_DEV421_fastFamilySnapshot_({annee:annee,famille:famille});if(fast&&fast.ready&&fast.payload){data=fast.payload;data.ready=true;data.source='FAST_INDEX';return data;}}catch(e1){}
-  try{data=EUC_APP172_chargerFamille({annee:annee,famille:famille})||null;if(data&&Array.isArray(data.classes)&&data.classes.length){data.ready=true;data.source='APP172';return data;}}catch(e2){}
-  return {ok:true,ready:false,annee:annee,famille:famille,classes:[],source:'NONE'};
+  return {ok:true,ready:false,annee:annee,famille:famille,classes:[],source:'NONE',error:'La synthèse publiée est absente. Lancez la reconstruction depuis la maintenance Snapshot PFMP.'};
 }
 function EUC_DEV339_afficherFamille(e){
   var annee=EUC_DEV339_year_(e),famille=EUC_DEV339_txt_(e&&e.parameter&&e.parameter.famille)||'BACPRO';
