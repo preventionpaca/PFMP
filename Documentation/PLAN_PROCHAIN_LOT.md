@@ -1,4 +1,13 @@
-# Prochain lot après DEV528
+# Prochain lot après DEV529
+
+DEV529 rend les coordonnées du PDF de convention réglables sans changement de
+code. Le contrôle métier doit charger l'aperçu des pages 1 et 2, déplacer une
+zone test, vérifier son point d'ancrage, puis générer une convention de test.
+Le QR doit être entièrement contenu dans sa case, rester scannable après
+impression et photocopie, et les lignes « Classe », « Diplôme préparé »,
+« Proviseur » et « Professeur référent » ne doivent couper aucun trait du fond.
+
+## Lot précédent — DEV528
 
 DEV528 restaure dans les fiches de classe et les ordres de mission les
 coordonnées du responsable conservées dans les imports JotForm validés. Le

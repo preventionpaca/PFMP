@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV529 (placement précis du PDF de convention)
+
+- La page « Paramètres de la convention » expose maintenant les douze zones
+  imprimées : onze lignes métier et le QR code. Pour chacune, l'administrateur
+  peut régler la page, X, Y, la largeur et la hauteur en points PDF.
+- Le repère est documenté dans l'interface : origine au coin inférieur gauche
+  de l'A4, X vers la droite, Y vers le haut et `1 mm = 2,835 points`. Pour
+  descendre une zone, il faut donc diminuer Y.
+- Un aperçu du PDF maître superpose les cadres et un point d'ancrage au coin
+  inférieur gauche. Le changement de page et les modifications de coordonnées
+  sont visibles avant enregistrement.
+- Le QR conserve sa taille renforcée de `92 × 92 pt` et sa position par défaut
+  descend de `12 pt` (`Y 716` vers `Y 704`) afin de rester sous le bord
+  supérieur du tableau du nouveau modèle.
+- La mise en page est conservée dans les propriétés Apps Script, hors Grist :
+  aucun schéma métier ni donnée de convention n'est modifié. Les valeurs sont
+  validées contre la page A4 avant enregistrement et le moteur garde les
+  coordonnées historiques comme repli.
+- Huit tests DEV529 couvrent les limites A4, la persistance, le transport dans
+  le payload PDF, le QR, l'aperçu, le contrat des boutons asynchrones et la
+  syntaxe des scripts intégrés. La suite complète passe `735/735`.
+
 ## Mise à jour du 9 octobre 2026 — DEV528 (responsables JotForm et démarrage public)
 
 - Les exports JotForm réels contiennent bien `Nom du responsable`,
