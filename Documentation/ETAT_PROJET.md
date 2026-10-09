@@ -1,5 +1,30 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV517 (géocodage vert durable)
+
+- Le faux résultat « zéro entreprise » de la cartographie provenait du délai
+  d'analyse, pas de l'absence d'entreprises. À froid, l'écran relisait
+  successivement l'index annuel des suivis, les accès de convention et la table
+  des coordonnées ; le premier appel dépassait 20 secondes et sa réponse était
+  ignorée par l'interface, tandis qu'un second essai bénéficiait du cache Grist.
+- Les candidats sont maintenant réunis dans un index annuel persistant,
+  fragmenté sous la limite des propriétés Apps Script. Les filtres famille,
+  classe et période sont appliqués en mémoire. L'index est lié aux révisions du
+  snapshot canonique et de la table géographique, expire après six heures et
+  est réenregistré après chaque lot de géocodage ou validation manuelle.
+- Le contrôle dynamique confirme la présence de `112` adresses uniques pour
+  2026-2027, dont `107` adresses françaises encore à géocoder. Après amorçage,
+  une analyse complète répond en environ `6,8 s`. La cartographie TCAR PFMP n°1
+  affiche encore `0` point pour une raison désormais exacte : aucune
+  coordonnée validée n'existe encore pour ce filtre. Aucun géocodage réel ni
+  aucune écriture Grist n'a été lancé pendant cette recette.
+- Les contrôles ciblés de géocodage passent `22/22` et la suite complète
+  `679/679`. Le commit exact
+  `9982e81bc32cf5348a48d835c39f778d52b79098` a été publié directement sur les
+  deux Web Apps vertes existantes en version Apps Script immuable `901`. Le
+  contrôle post-publication valide `25/25` routes vertes. Le bleu demeure une
+  archive technique et n'a été ni consulté, ni testé, ni publié pour ce lot.
+
 ## Mise à jour du 9 octobre 2026 — DEV514 et workflow direct vers le vert
 
 - À la demande explicite de l'utilisateur, le canal bleu est retiré du workflow
