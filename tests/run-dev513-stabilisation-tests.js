@@ -49,6 +49,7 @@ test('le chargement de famille se termine ou échoue explicitement sous quinze s
   assert.match(familyHtml,/if\(!settled\)fail\('Le chargement a dépassé 15 secondes[\s\S]*\},15000\)/);
   assert.match(familyHtml,/Le chargement a dépassé 15 secondes/);
   assert.match(familyHtml,/load-retry/);
+  assert.match(familyHtml,/\.load-status\[hidden\]\{display:none!important\}/);
 });
 
 test('cartes et infobulles consomment la même donnée quick déjà embarquée',()=>{
