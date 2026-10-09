@@ -1,4 +1,23 @@
-# Prochain lot après DEV522
+# Prochain lot après DEV523
+
+DEV523 rend le géocodage des entreprises françaises reprenable : contrôle et
+mise à niveau de la table avant écriture, sous-lots de dix et repli unitaire si
+Grist refuse un lot. Après publication verte, le parcours attendu est
+`Entreprises et cartographie` → analyse → géocodage de toutes les adresses
+françaises. Pour environ 570 entreprises, plusieurs exécutions de quarante
+adresses se succèdent ; les résultats sont persistés entre deux exécutions. Si
+une adresse reste refusée, relever uniquement le nombre affiché et son statut,
+sans copier de donnée nominative dans les journaux, puis corriger cette adresse
+ou la valider manuellement. Le code ne doit jamais relancer les adresses déjà
+validées ni masquer un refus Grist.
+
+Le lot corrige aussi le voile bloquant de la synthèse famille, le champ
+administratif « Nom commercial / enseigne » et les alias historiques des
+coordonnées du responsable entreprise. Les tests locaux passent `706/706`.
+La validation de publication doit encore confirmer les `25/25` routes vertes ;
+aucun géocodage réel ne doit être lancé par la recette automatisée.
+
+## Lot précédent — DEV522
 
 DEV522 maintient les conventions `INTERROMPUE` dans la recherche annuelle de
 « Administration des conventions ». Le parcours métier reste : ouvrir la

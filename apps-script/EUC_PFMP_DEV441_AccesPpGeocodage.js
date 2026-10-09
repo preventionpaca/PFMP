@@ -5,6 +5,8 @@
 var EUC_DEV441_PP_TABLE_='EUC_ACCES_PP_PFMP';
 var EUC_DEV441_GEO_TABLE_='EUC_GEO_ENTREPRISES_PFMP';
 var EUC_DEV441_GEO_URL_='https://data.geopf.fr/geocodage/search';
+var EUC_DEV523_GEO_SCHEMA_CACHE_='EUC_DEV523_GEO_SCHEMA_V2';
+var EUC_DEV523_GEO_SCHEMA_READY_=false;
 var EUC_DEV444_PP_SIGN_TABLE_='EUC_RESPONSABLES_CAMPAGNES_PP_PFMP';
 var EUC_DEV444_PUBLIC_SITE_='https://pfmp.loucodi.fr/';
 
@@ -183,9 +185,18 @@ function EUC_DEV441_geoClassify_(adresse){
   return{pays:'INDETERMINE',codePostal:'',statut:'COORDONNEES_A_RENSEIGNER'};
 }
 function EUC_DEV441_ensureGeoTable_(){
+  if(EUC_DEV523_GEO_SCHEMA_READY_)return true;
+  try{
+    if(CacheService.getScriptCache().get(EUC_DEV523_GEO_SCHEMA_CACHE_)==='1'){
+      EUC_DEV523_GEO_SCHEMA_READY_=true;return true;
+    }
+  }catch(eCache){}
   var tables=EUC_ENT_grist('get','/tables').tables||[],c=EUC_DEV441_col_,cols=[c('Cle_adresse','Clé adresse'),c('SIRET','SIRET'),c('Entreprise','Entreprise'),c('Adresse_source','Adresse source'),c('Adresse_normalisee','Adresse normalisée'),c('Pays','Pays'),c('Code_postal','Code postal'),c('Commune','Commune'),c('Latitude','Latitude','Numeric'),c('Longitude','Longitude','Numeric'),c('Score','Score','Numeric'),c('Precision','Précision'),c('Fournisseur','Fournisseur'),c('Statut','Statut'),c('Date_geocodage','Date géocodage','DateTime'),c('Valide_par','Validé par'),c('Date_validation','Date validation','DateTime'),c('Commentaire','Commentaire')],exists=tables.some(function(t){return t.id===EUC_DEV441_GEO_TABLE_;});
   if(!exists)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV441_GEO_TABLE_,columns:cols}]});
   else{var current=EUC_ENT_grist('get','/tables/'+EUC_DEV441_GEO_TABLE_+'/columns').columns||[],have={};current.forEach(function(x){have[x.id]=true;});var missing=cols.filter(function(x){return!have[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+EUC_DEV441_GEO_TABLE_+'/columns',{columns:missing});}
+  EUC_DEV523_GEO_SCHEMA_READY_=true;
+  try{CacheService.getScriptCache().put(EUC_DEV523_GEO_SCHEMA_CACHE_,'1',21600);}catch(ePut){}
+  return true;
 }
 function EUC_DEV441_geoRows_(){try{return EUC_IMPORT_lireRecords_(EUC_DEV441_GEO_TABLE_)||[];}catch(e){return[];}}
 function EUC_DEV441_geoTargets_(q){
@@ -328,21 +339,43 @@ function EUC_DEV517_geoCandidatesAll_(year){
 function EUC_DEV441_geoCandidates_(q){
   q=q||{};return EUC_DEV517_geoFilter_(EUC_DEV517_geoCandidatesAll_(q.annee),q);
 }
-function EUC_DEV441_geoAdminData(q){EUC_DEV441_admin_();var c=EUC_DEV441_geoCandidates_(q);return{ok:true,total:c.length,france:c.filter(function(x){return x.pays==='FRANCE';}).length,manuel:c.filter(function(x){return x.pays!=='FRANCE';}).length,candidats:c};}
+function EUC_DEV441_geoAdminData(q){EUC_DEV441_admin_();EUC_DEV441_ensureGeoTable_();var c=EUC_DEV441_geoCandidates_(q);return{ok:true,total:c.length,france:c.filter(function(x){return x.pays==='FRANCE';}).length,manuel:c.filter(function(x){return x.pays!=='FRANCE';}).length,candidats:c};}
 function EUC_DEV445_geoFields_(item,fields){var all={Cle_adresse:item.key,SIRET:item.siret||'',Entreprise:item.entreprise,Adresse_source:item.adresse};Object.keys(fields||{}).forEach(function(k){all[k]=fields[k];});return all;}
+function EUC_DEV523_geoWriteGroup_(method,items){
+  var saved=[],errors=[],url='/tables/'+EUC_DEV441_GEO_TABLE_+'/records';
+  for(var i=0;i<items.length;i+=10){
+    var chunk=items.slice(i,i+10),records=chunk.map(function(x){var r={fields:EUC_DEV445_geoFields_(x.item,x.fields)};if(method==='patch')r.id=x.item._recordId;return r;});
+    try{
+      var result=EUC_ENT_grist(method,url,{records:records})||{},created=result.records||[];
+      chunk.forEach(function(x,j){if(method==='post'&&created[j]&&created[j].id)x.item._recordId=EUC_DEV441_n_(created[j].id);saved.push(x);});
+    }catch(eBatch){
+      chunk.forEach(function(x){
+        var record={fields:EUC_DEV445_geoFields_(x.item,x.fields)};if(method==='patch')record.id=x.item._recordId;
+        try{var one=EUC_ENT_grist(method,url,{records:[record]})||{},row=one.records&&one.records[0];if(method==='post'&&row&&row.id)x.item._recordId=EUC_DEV441_n_(row.id);saved.push(x);}
+        catch(eOne){errors.push({key:x.item.key,message:'Écriture Grist refusée pour cette adresse.'});}
+      });
+    }
+  }
+  return{saved:saved,errors:errors};
+}
 function EUC_DEV445_geoBatchUpsert_(items){
-  var patches=[],posts=[];(items||[]).forEach(function(x){var record={fields:EUC_DEV445_geoFields_(x.item,x.fields)};if(x.item._recordId){record.id=x.item._recordId;patches.push(record);}else posts.push(record);});
-  if(patches.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV441_GEO_TABLE_+'/records',{records:patches});
-  if(posts.length){var created=EUC_ENT_grist('post','/tables/'+EUC_DEV441_GEO_TABLE_+'/records',{records:posts})||{},createdRows=created.records||[];posts.forEach(function(p,i){if(createdRows[i]&&createdRows[i].id)p.item._recordId=EUC_DEV441_n_(createdRows[i].id);});}
+  EUC_DEV441_ensureGeoTable_();
+  var patches=[],posts=[];(items||[]).forEach(function(x){if(x.item._recordId)patches.push(x);else posts.push(x);});
+  var a=EUC_DEV523_geoWriteGroup_('patch',patches),b=EUC_DEV523_geoWriteGroup_('post',posts);
+  return{saved:a.saved.concat(b.saved),errors:a.errors.concat(b.errors)};
 }
 function EUC_DEV445_geoApply_(item,fields){Object.keys(fields||{}).forEach(function(k){var map={Adresse_normalisee:'adresseNormalisee',Pays:'pays',Code_postal:'codePostal',Latitude:'latitude',Longitude:'longitude',Score:'score',Precision:'precision',Statut:'statut',Commentaire:'commentaire'},target=map[k];if(target)item[target]=fields[k];});return item;}
 function EUC_DEV441_geocodeFrance(q){
   EUC_DEV441_admin_();q=q||{};var keys=q.keys||[],annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),c=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER')&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,40),done=0,manual=0,writes=[];
-  c.forEach(function(x){var url=EUC_DEV441_GEO_URL_+'?q='+encodeURIComponent(EUC_DEV443_normalizeAddress_(x.adresse))+'&limit=3'+(x.codePostal?'&postcode='+encodeURIComponent(x.codePostal):''),res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}}),json={};try{json=JSON.parse(res.getContentText()||'{}');}catch(e){}var feature=json.features&&json.features[0],coords=feature&&feature.geometry&&feature.geometry.coordinates,props=feature&&feature.properties||{},score=Number(props.score)||0,fields;if(feature&&coords&&coords.length>=2){var needsReview=score<0.45;fields={Adresse_normalisee:EUC_DEV441_t_(props.label),Pays:'FRANCE',Code_postal:EUC_DEV443_postal_(props.postcode||x.codePostal),Commune:EUC_DEV441_t_(props.city),Latitude:Number(coords[1]),Longitude:Number(coords[0]),Score:score,Precision:EUC_DEV441_t_(props.type),Fournisseur:'Géoplateforme / BAN',Statut:needsReview?'A_VALIDER_MANUELLEMENT':'GEOCODE_AUTOMATIQUE',Date_geocodage:new Date().toISOString(),Commentaire:needsReview?'Résultat automatique peu précis : contrôlez le point proposé.':''};if(needsReview)manual++;else done++;}else{fields={Pays:'FRANCE',Code_postal:x.codePostal,Latitude:null,Longitude:null,Fournisseur:'Géoplateforme / BAN',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point trouvé automatiquement. Recherchez le lieu puis renseignez latitude et longitude.'};manual++;}writes.push({item:x,fields:fields});EUC_DEV445_geoApply_(x,fields);Utilities.sleep(30);});
-  EUC_DEV445_geoBatchUpsert_(writes);EUC_DEV517_geoIndexStore_(q.annee,annual);return{ok:true,geocodes:done,aValider:manual,candidats:all};
+  c.forEach(function(x){var url=EUC_DEV441_GEO_URL_+'?q='+encodeURIComponent(EUC_DEV443_normalizeAddress_(x.adresse))+'&limit=3'+(x.codePostal?'&postcode='+encodeURIComponent(x.codePostal):''),res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}}),json={};try{json=JSON.parse(res.getContentText()||'{}');}catch(e){}var feature=json.features&&json.features[0],coords=feature&&feature.geometry&&feature.geometry.coordinates,props=feature&&feature.properties||{},score=Number(props.score)||0,fields;if(feature&&coords&&coords.length>=2){var needsReview=score<0.45;fields={Adresse_normalisee:EUC_DEV441_t_(props.label),Pays:'FRANCE',Code_postal:EUC_DEV443_postal_(props.postcode||x.codePostal),Commune:EUC_DEV441_t_(props.city),Latitude:Number(coords[1]),Longitude:Number(coords[0]),Score:score,Precision:EUC_DEV441_t_(props.type),Fournisseur:'Géoplateforme / BAN',Statut:needsReview?'A_VALIDER_MANUELLEMENT':'GEOCODE_AUTOMATIQUE',Date_geocodage:new Date().toISOString(),Commentaire:needsReview?'Résultat automatique peu précis : contrôlez le point proposé.':''};}else{fields={Pays:'FRANCE',Code_postal:x.codePostal,Latitude:null,Longitude:null,Fournisseur:'Géoplateforme / BAN',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point trouvé automatiquement. Recherchez le lieu puis renseignez latitude et longitude.'};}writes.push({item:x,fields:fields});Utilities.sleep(30);});
+  var persisted=EUC_DEV445_geoBatchUpsert_(writes);
+  persisted.saved.forEach(function(x){EUC_DEV445_geoApply_(x.item,x.fields);if(x.fields.Statut==='GEOCODE_AUTOMATIQUE')done++;else manual++;});
+  EUC_DEV517_geoIndexStore_(q.annee,annual);
+  var remaining=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER');}).length;
+  return{ok:!persisted.errors.length,geocodes:done,aValider:manual,traites:persisted.saved.length,restants:remaining,erreurs:persisted.errors,candidats:all};
 }
 function EUC_DEV441_saveManualGeo(q){
-  q=q||{};var ctx=EUC_DEV441_admin_(),key=EUC_DEV441_t_(q.key),rawLat=EUC_DEV441_t_(q.latitude),rawLon=EUC_DEV441_t_(q.longitude),lat=Number(rawLat),lon=Number(rawLon),annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),item=all.filter(function(x){return x.key===key;})[0];if(!item)throw new Error('Adresse introuvable.');if(!rawLat||!rawLon||!isFinite(lat)||lat<-90||lat>90||!isFinite(lon)||lon<-180||lon>180)throw new Error('Renseignez une latitude et une longitude valides.');var fields={Adresse_normalisee:EUC_DEV441_t_(q.adresseNormalisee)||item.adresse,Pays:item.pays,Code_postal:item.codePostal,Latitude:lat,Longitude:lon,Score:1,Precision:'validation manuelle',Fournisseur:'MANUEL',Statut:'VALIDE_MANUELLEMENT',Valide_par:EUC_DEV441_t_(ctx.email),Date_validation:new Date().toISOString(),Commentaire:EUC_DEV441_t_(q.commentaire)};EUC_DEV445_geoBatchUpsert_([{item:item,fields:fields}]);EUC_DEV445_geoApply_(item,fields);EUC_DEV517_geoIndexStore_(q.annee,annual);return{ok:true,candidats:all};
+  q=q||{};var ctx=EUC_DEV441_admin_(),key=EUC_DEV441_t_(q.key),rawLat=EUC_DEV441_t_(q.latitude),rawLon=EUC_DEV441_t_(q.longitude),lat=Number(rawLat),lon=Number(rawLon),annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),item=all.filter(function(x){return x.key===key;})[0];if(!item)throw new Error('Adresse introuvable.');if(!rawLat||!rawLon||!isFinite(lat)||lat<-90||lat>90||!isFinite(lon)||lon<-180||lon>180)throw new Error('Renseignez une latitude et une longitude valides.');var fields={Adresse_normalisee:EUC_DEV441_t_(q.adresseNormalisee)||item.adresse,Pays:item.pays,Code_postal:item.codePostal,Latitude:lat,Longitude:lon,Score:1,Precision:'validation manuelle',Fournisseur:'MANUEL',Statut:'VALIDE_MANUELLEMENT',Valide_par:EUC_DEV441_t_(ctx.email),Date_validation:new Date().toISOString(),Commentaire:EUC_DEV441_t_(q.commentaire)},persisted=EUC_DEV445_geoBatchUpsert_([{item:item,fields:fields}]);if(persisted.errors.length)throw new Error('Grist a refusé l’enregistrement de cette adresse. Réessayez après actualisation.');EUC_DEV445_geoApply_(item,fields);EUC_DEV517_geoIndexStore_(q.annee,annual);return{ok:true,candidats:all};
 }
 function EUC_DEV441_mapData(q){var c=EUC_DEV441_geoCandidates_(q).filter(function(x){return isFinite(x.latitude)&&isFinite(x.longitude)&&x.latitude!==null&&x.longitude!==null&&(x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT');});return{ok:true,total:c.length,points:c};}
 

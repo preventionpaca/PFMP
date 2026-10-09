@@ -672,7 +672,8 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
     motif:String(a.Motif_suppression_admin||'')
   };
   base.correction={
-    Entreprise_raison_sociale:String(a.Entreprise_raison_sociale||''),Entreprise_siret:String(a.Entreprise_siret||''),
+    Entreprise_raison_sociale:String(a.Entreprise_raison_sociale||''),Entreprise_enseigne:String(a.Entreprise_enseigne||''),
+    Entreprise_siret:String(a.Entreprise_siret||''),
     Entreprise_adresse:String(a.Entreprise_adresse||''),Entreprise_code_postal:String(a.Entreprise_code_postal||''),
     Entreprise_commune:String(a.Entreprise_commune||''),Responsable_nom:String(a.Responsable_nom||''),
     Responsable_prenom:String(a.Responsable_prenom||''),Responsable_fonction:String(a.Responsable_fonction||''),
@@ -936,7 +937,7 @@ function INSTALLER_DEV149_CORRECTIONS_SUPPRESSIONS(){
 
 function EUC_ADMIN_WORKFLOW_champsModifiablesV149_(){
   return {
-    Entreprise_raison_sociale:'Entreprise',Entreprise_siret:'SIRET',Entreprise_adresse:'Adresse entreprise',
+    Entreprise_raison_sociale:'Entreprise',Entreprise_enseigne:'Nom commercial / enseigne',Entreprise_siret:'SIRET',Entreprise_adresse:'Adresse entreprise',
     Entreprise_code_postal:'Code postal entreprise',Entreprise_commune:'Commune entreprise',
     Responsable_nom:'Nom responsable',Responsable_prenom:'Prénom responsable',Responsable_fonction:'Fonction responsable',
     Responsable_telephone:'Téléphone responsable',Responsable_courriel:'Courriel responsable',

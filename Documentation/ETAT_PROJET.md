@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV523 (géocodage Grist résilient et régressions opérationnelles)
+
+- La cause du refus Grist `400` pendant le géocodage a été isolée : la table
+  `EUC_GEO_ENTREPRISES_PFMP` pouvait avoir été créée avant l'ajout de la
+  colonne `Commune`, alors que le moteur tentait ensuite de l'écrire. Le
+  contrôle de schéma existait mais n'était jamais appelé par le parcours
+  courant.
+- L'ouverture de l'outil et toute écriture de coordonnées contrôlent maintenant
+  le schéma et ajoutent uniquement les colonnes structurelles absentes. Le
+  contrôle réussi est mémorisé six heures sous une nouvelle clé de version.
+- Les adresses sont enregistrées par sous-lots de dix. Si Grist refuse un
+  sous-lot, chaque adresse est rejouée séparément : les adresses valides restent
+  acquises, l'adresse fautive demeure à traiter et l'interface affiche le bilan
+  partiel au lieu de perdre les quarante résultats du lot.
+- Le géocodage complet reste plafonné à quarante recherches par exécution et
+  reprend automatiquement les adresses restantes. Il s'arrête proprement sur
+  une adresse refusée et peut être relancé sans retraiter les coordonnées déjà
+  enregistrées.
+- Le même lot corrige le voile « Chargement des données... » déclenché par des
+  cartes non navigables, ajoute « Nom commercial / enseigne » à la correction
+  administrative d'une convention et normalise les anciens alias JotForm pour
+  restaurer le responsable entreprise dans les listes de classe.
+- Les tests ciblés passent (`25/25` géocodage, `11/11` coordonnées entreprise,
+  `4/4` régressions opérationnelles) et la suite complète passe `706/706`.
+  Aucun géocodage réel, aucune convention et aucune donnée nominative n'ont été
+  écrits pendant les tests.
+
 ## Mise à jour du 9 octobre 2026 — DEV522 (remplacement après rupture retrouvable)
 
 - Une convention enregistrée comme `INTERROMPUE` pouvait disparaître de la

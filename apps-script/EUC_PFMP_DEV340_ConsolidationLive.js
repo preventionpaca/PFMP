@@ -40,12 +40,30 @@ function EUC_DEV520_true_(value){
   if(value===true)return true;
   return ['1','TRUE','VRAI','OUI','YES'].indexOf(EUC_DEV340_txt_(value).toUpperCase())>=0;
 }
-function EUC_DEV520_normalizeResponsible_(row){
+/* DEV523 — plusieurs générations d'import ont utilisé des identifiants de
+ * colonnes différents. La vue de suivi travaille sur une forme canonique afin
+ * que les coordonnées déjà présentes dans Grist ne disparaissent pas selon
+ * l'origine de la convention (QR, JotForm ou ancien snapshot). */
+function EUC_DEV523_normalizeAccessCompany_(row){
   row=row||{};
-  row.Responsable_nom=EUC_DEV520_firstText_(row.Responsable_nom,row.Responsable,row.Nom_responsable_entreprise,row.Nom_responsable);
-  row.Responsable_prenom=EUC_DEV520_firstText_(row.Responsable_prenom,row.Prenom_responsable_entreprise,row.Prenom_responsable);
-  row.Responsable_telephone=EUC_DEV520_firstText_(row.Responsable_telephone,row.Telephone_responsable,row.Responsable_tel);
-  row.Responsable_courriel=EUC_DEV520_firstText_(row.Responsable_courriel,row.Courriel_responsable,row.Email_responsable,row.Responsable_email);
+  row.Entreprise_siret=EUC_DEV520_firstText_(row.Entreprise_siret,row.Entreprise_siret_snapshot,row.SIRET,row.Siret,row.SIRET_normalise,row.SIRET_brut);
+  row.Entreprise_raison_sociale=EUC_DEV520_firstText_(row.Entreprise_raison_sociale,row.Entreprise_raison_sociale_snapshot,row.Raison_sociale,row.Entreprise_saisie,row.Nom_entreprise);
+  row.Entreprise_enseigne=EUC_DEV520_firstText_(row.Entreprise_enseigne,row.Entreprise_enseigne_snapshot,row.Nom_commercial,row.Enseigne);
+  row.Entreprise_adresse=EUC_DEV520_firstText_(row.Entreprise_adresse,row.Entreprise_adresse_snapshot,row.Adresse_entreprise,row.Adresse);
+  row.Entreprise_complement=EUC_DEV520_firstText_(row.Entreprise_complement,row.Entreprise_complement_adresse_snapshot,row.Complement_adresse_entreprise,row.Complement_adresse);
+  row.Entreprise_code_postal=EUC_DEV520_firstText_(row.Entreprise_code_postal,row.Entreprise_code_postal_snapshot,row.CP_entreprise,row.Code_postal,row.CodePostal,row.CP);
+  row.Entreprise_commune=EUC_DEV520_firstText_(row.Entreprise_commune,row.Entreprise_commune_snapshot,row.Ville_entreprise,row.Ville,row.Commune);
+  row.Entreprise_pays=EUC_DEV520_firstText_(row.Entreprise_pays,row.Entreprise_pays_snapshot,row.Pays_entreprise,row.Pays);
+  row.Entreprise_telephone=EUC_DEV520_firstText_(row.Entreprise_telephone,row.Entreprise_telephone_snapshot,row.Telephone_entreprise,row.Telephone_societe,row.Telephone);
+  row.Entreprise_courriel=EUC_DEV520_firstText_(row.Entreprise_courriel,row.Entreprise_courriel_snapshot,row.Courriel_entreprise,row.Email_entreprise,row.Email_societe,row.Courriel,row.Email);
+  return row;
+}
+function EUC_DEV520_normalizeResponsible_(row){
+  row=EUC_DEV523_normalizeAccessCompany_(row||{});
+  row.Responsable_nom=EUC_DEV520_firstText_(row.Responsable_nom,row.Responsable,row.Nom_responsable_entreprise,row.Nom_responsable,row.Nom_representant,row.Representant_nom,row.Responsable_legal_nom);
+  row.Responsable_prenom=EUC_DEV520_firstText_(row.Responsable_prenom,row.Prenom_responsable_entreprise,row.Prenom_responsable,row.Prenom_representant,row.Representant_prenom,row.Responsable_legal_prenom);
+  row.Responsable_telephone=EUC_DEV520_firstText_(row.Responsable_telephone,row.Telephone_responsable,row.Responsable_tel,row.Telephone_responsable_entreprise,row.Telephone_representant,row.Representant_telephone);
+  row.Responsable_courriel=EUC_DEV520_firstText_(row.Responsable_courriel,row.Courriel_responsable,row.Email_responsable,row.Responsable_email,row.Email_responsable_entreprise,row.Courriel_representant,row.Email_representant,row.Representant_courriel);
   if(EUC_DEV520_true_(row.Tuteur_est_responsable)){
     row.Responsable_nom=EUC_DEV520_firstText_(row.Responsable_nom,row.Tuteur_nom);
     row.Responsable_prenom=EUC_DEV520_firstText_(row.Responsable_prenom,row.Tuteur_prenom);
@@ -110,6 +128,7 @@ function EUC_DEV519_enrichAccessCompanyContacts_(rows){
   return rows;
 }
 function EUC_DEV340_compactAccess_(a){
+  a=EUC_DEV520_normalizeResponsible_(a||{});
   return {
     id:Number(a.id)||0,Eleve:a.Eleve,Annee_scolaire:EUC_DEV340_txt_(a.Annee_scolaire),
     Classe_convention:a.Classe_convention,Periode:a.Periode,

@@ -83,6 +83,27 @@ test('les anciens alias et le tuteur responsable alimentent la colonne responsab
   assert.match(c.EUC_DEV340_contact_(same),/Tom Tuteur · 06 12 34 56 78 · tom@example\.test/);
 });
 
+test('les alias historiques JotForm conservent le responsable et les coordonnées générales',()=>{
+  const c=context({});
+  const row=c.EUC_DEV519_enrichAccessCompanyContacts_([{
+    SIRET_brut:'123 456 789 00012',Entreprise_saisie:'SOCIETE TEST',Nom_commercial:'ATELIER TEST',
+    Adresse_entreprise:'1 RUE DU TEST',CP_entreprise:'06000',Ville_entreprise:'NICE',
+    Telephone_entreprise:'04 93 10 20 30',Email_entreprise:'accueil@example.test',
+    Nom_representant:'Direction',Prenom_representant:'Rita',
+    Telephone_representant:'06 10 20 30 40',Email_representant:'rita@example.test'
+  }])[0];
+  assert.equal(row.Entreprise_raison_sociale,'SOCIETE TEST');
+  assert.equal(row.Entreprise_enseigne,'ATELIER TEST');
+  assert.equal(row.Entreprise_telephone,'04 93 10 20 30');
+  assert.equal(row.Entreprise_courriel,'accueil@example.test');
+  assert.equal(row.Responsable_nom,'Direction');
+  assert.equal(row.Responsable_prenom,'Rita');
+  assert.match(c.EUC_DEV340_contact_(row),/Rita Direction · 06 10 20 30 40 · rita@example\.test/);
+  const compact=c.EUC_DEV340_compactAccess_(row);
+  assert.equal(compact.Entreprise_telephone,'04 93 10 20 30');
+  assert.equal(compact.Responsable_courriel,'rita@example.test');
+});
+
 test('le rendu utilise les coordonnées générales de l’entreprise en dernier recours',()=>{
   const c=context({});
   c.EUC_V155_contactEntreprise_=()=>'';

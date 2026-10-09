@@ -2,6 +2,7 @@ const fs=require('fs');
 const vm=require('vm');
 const assert=require('assert');
 const code=fs.readFileSync('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js','utf8');
+const geoHtml=fs.readFileSync('apps-script/Geocodage_PFMP_DEV441.html','utf8');
 let reads=0,writes=[];
 const detail={famille:'BACPRO',classe:{id:28,nom:'TMP3D'},periode:{id:65,libelle:'PFMP n°1'},lignes:[
   {entreprise:'ACME',adresseEntreprise:'14 RUE DES ETOILES, 06000 NICE',siretEntreprise:'12345678901234'},
@@ -16,7 +17,12 @@ const ctx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Obje
   EUC_DEV368_catalog:()=>({classes:[{famille:'BACPRO',classeId:28,classe:'TMP3D',periodes:[{id:65,libelle:'PFMP n°1'}]}]}),
   EUC_DEV190G_fastRecords_:(table,filter)=>{reads++;return table==='IDX'?indexRows:[]},
   EUC_IMPORT_lireRecords_:table=>{reads++;return table==='EUC_GEO_ENTREPRISES_PFMP'?geoRows:[]},
-  EUC_ENT_grist:(method,path,body)=>{writes.push({method,path,body});return{records:(body&&body.records)||[]}},
+  EUC_ENT_grist:(method,path,body)=>{
+    if(method==='get'&&path==='/tables')return{tables:[{id:'EUC_GEO_ENTREPRISES_PFMP'}]};
+    if(method==='get'&&/\/columns$/.test(path))return{columns:['Cle_adresse','SIRET','Entreprise','Adresse_source','Adresse_normalisee','Pays','Code_postal','Commune','Latitude','Longitude','Score','Precision','Fournisseur','Statut','Date_geocodage','Valide_par','Date_validation','Commentaire'].map(id=>({id}))};
+    writes.push({method,path,body});
+    return{records:(body&&body.records)||[]};
+  },
   UrlFetchApp:{fetch:()=>({getContentText:()=>JSON.stringify({features:[{geometry:{coordinates:[7.25,43.71]},properties:{score:.9,label:'14 Rue des Étoiles 06000 Nice',postcode:'06000',city:'Nice',type:'housenumber'}}]})})},
   Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
   MailApp:{},LockService:{},PropertiesService:{},CacheService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
@@ -33,6 +39,40 @@ assert.equal(reads,3,'geocode batch must not rebuild candidates after writes');
 assert.equal(writes.length,1,'one Grist write for one homogeneous batch');
 assert.equal(writes[0].method,'post');
 assert.equal(result.candidats.length,2);
+
+let schemaCalls=[];
+const schemaCache={};
+const schemaCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Object,Array,RegExp,
+  CacheService:{getScriptCache:()=>({get:k=>schemaCache[k]||null,put:(k,v)=>{schemaCache[k]=v;}})},
+  EUC_ENT_grist:(method,path,body)=>{schemaCalls.push({method,path,body});if(method==='get'&&path==='/tables')return{tables:[{id:'EUC_GEO_ENTREPRISES_PFMP'}]};if(method==='get'&&/\/columns$/.test(path))return{columns:[{id:'Cle_adresse'}]};return{};},
+  Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
+  MailApp:{},LockService:{},PropertiesService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
+};
+vm.createContext(schemaCtx);vm.runInContext(code,schemaCtx);
+schemaCtx.EUC_DEV441_ensureGeoTable_();
+const addColumns=schemaCalls.find(x=>x.method==='post'&&/\/columns$/.test(x.path));
+assert.ok(addColumns,'the existing geocoding table must be upgraded before the first write');
+assert.ok(addColumns.body.columns.some(x=>x.id==='Commune'),'the missing Commune column must be installed');
+const schemaCount=schemaCalls.length;schemaCtx.EUC_DEV441_ensureGeoTable_();
+assert.equal(schemaCalls.length,schemaCount,'the verified schema must be cached');
+
+let resilientCalls=[];
+const resilientCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Object,Array,RegExp,
+  EUC_DEV523_GEO_SCHEMA_READY_:true,
+  EUC_ENT_grist:(method,path,body)=>{resilientCalls.push(body.records.length);if(body.records.length>1)throw new Error('400');const key=body.records[0].fields.Cle_adresse;if(key==='bad')throw new Error('400');return{records:[{id:key==='new'?99:body.records[0].id}]};},
+  Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
+  MailApp:{},LockService:{},PropertiesService:{},CacheService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
+};
+vm.createContext(resilientCtx);vm.runInContext(code,resilientCtx);resilientCtx.EUC_DEV523_GEO_SCHEMA_READY_=true;
+const resilient=resilientCtx.EUC_DEV445_geoBatchUpsert_([
+  {item:{key:'new',entreprise:'N',adresse:'A'},fields:{Statut:'GEOCODE_AUTOMATIQUE'}},
+  {item:{key:'bad',entreprise:'B',adresse:'B'},fields:{Statut:'GEOCODE_AUTOMATIQUE'}}
+]);
+assert.equal(resilient.saved.length,1,'a valid address must survive a rejected batch');
+assert.equal(resilient.errors.length,1,'the rejected address must remain explicitly retryable');
+assert.deepEqual(resilientCalls,[2,1,1],'a rejected chunk must be retried one address at a time');
+assert.match(geoHtml,/if\(r\.erreurs&&r\.erreurs\.length\)/,'the browser must stop automatic chaining when Grist rejects an address');
+assert.match(geoHtml,/adresse\(s\) enregistrée\(s\).*refusée\(s\) par Grist/,'the browser must report partial progress instead of losing the whole lot');
 
 const fallbackCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Object,Array,RegExp,
   EUC_DEV190E_INDEX_TABLE_:'IDX',EUC_DEV190I_TABLE_:'DETAIL',EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP',
@@ -147,4 +187,4 @@ assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must 
 
 assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
 
-console.log('22 tests DEV445 géocodage/performance réussis.');
+console.log('25 tests DEV445 géocodage/performance réussis.');
