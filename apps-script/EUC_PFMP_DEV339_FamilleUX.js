@@ -413,7 +413,7 @@ function EUC_DEV339_afficherFamille(e){
   /* DEV504 : rendre la coque avant toute lecture Grist. Le chargement métier
    * est effectué ensuite par google.script.run ; une recette incomplète ne
    * peut donc plus produire une page blanche ou une erreur Apps Script. */
-  t.paramsJson=JSON.stringify({annee:annee,famille:famille});t.dataJson=JSON.stringify({ok:true,ready:false,loading:true,classes:[]});t.baseUrl='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+  t.paramsJson=JSON.stringify({annee:annee,famille:famille});t.dataJson=JSON.stringify({ok:true,ready:false,loading:true,classes:[]});t.baseUrl=typeof EUC_DEV459_ADMIN_URL_!=='undefined'?EUC_DEV459_ADMIN_URL_:'https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
   return t.evaluate().setTitle('Suivi des conventions — '+(famille==='BACPRO'?'BAC PRO':famille)).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 

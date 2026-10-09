@@ -28,13 +28,13 @@ test('le détail rapide public reste en lecture seule et l’admin reste contrô
 
 test('la page dossier est réservée à l’administration et reliée au centre',()=>{
   assert(server.includes('EUC_DEV464_admin_();'),'garde admin absente');
-  assert(server.includes("EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec'"),'configuration serveur encore branchée sur le déploiement public');
+  assert(server.includes("EUC_DEV464_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec'"),'configuration serveur non branchée sur le déploiement administrateur');
   assert(router.includes("'dossier-apprentissage-pfmp'"),'route absente');
   assert(admin.includes('Dossier de demande d’apprentissage'),'tuile absente');
   assert(admin.includes("?page=dossier-apprentissage-pfmp"),'lien absent');
-  assert(admin.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=dossier-apprentissage-pfmp'),'déploiement administrateur absolu absent');
+  assert(admin.includes('href="<?= adminBase ?>?page=dossier-apprentissage-pfmp"'),'destination administrateur du dossier absente');
   assert(/(?:target=["']_top["']|\.target=["']_top["'])/.test(admin),'sortie de l’iframe technique absente');
-  assert(html.includes('AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-pfmp'),'retour administrateur absolu absent');
+  assert(html.includes("$('#back').href=CONFIG.baseUrl+'?page=admin-pfmp'"),'retour administrateur dynamique absent');
   assert(html.includes("$('#back').target='_top'"),'retour administrateur encore enfermé dans l’iframe');
 });
 

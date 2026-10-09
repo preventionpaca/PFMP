@@ -13,8 +13,12 @@ const form=read('Apprentissage_PFMP_V190X.html');
 const loader=read('EUC_PFMP_DEV208_ClassDetailSnapshot.js');
 const bridge=read('EUC_PFMP_DEV235_JsonBridge.js');
 
-test('le centre et les outils admin utilisent le déploiement courant',()=>{
-  assert(admin.includes('baseUrl:EUC_DEV368_boot().baseUrl'),'centre non relié au boot admin');
+test('le centre distingue explicitement les déploiements admin et public',()=>{
+  assert(admin.includes('baseUrl:adminBase'),'centre non relié au déploiement admin explicite');
+  assert(admin.includes('adminBase:adminBase'),'URL admin absente de la configuration');
+  assert(admin.includes('publicBase:publicBase'),'URL publique absente de la configuration');
+  assert(admin.includes("typeof EUC_DEV459_ADMIN_URL_!=='undefined'"),'constante admin canonique absente');
+  assert(admin.includes("typeof EUC_DEV455_PUBLIC_URL_!=='undefined'"),'constante publique canonique absente');
   const boot=tools.slice(tools.indexOf('function EUC_DEV368_boot'),tools.indexOf('function EUC_DEV368_afficherSans'));
   assert(boot.includes('EUC_RELEASE_serviceBase_()'),'URL canonique du déploiement courant absente');
   assert(!boot.includes('AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg'),'boot encore figé sur le vert admin');

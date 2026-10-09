@@ -61,6 +61,26 @@ test('les deux écrans administratifs reviennent à l’accueil canonique', () =
   }
 });
 
+test('le centre envoie chaque outil vers le déploiement correspondant à son rôle', () => {
+  const home = read('Admin_PFMP.html');
+  const server = read('EUC_CENTRE_ADMIN_PFMP_WebApp.gs');
+  assert.match(home, /href="<\?= adminBase \?>\?page=admin-conventions-pfmp"/);
+  assert.match(home, /href="<\?= adminBase \?>\?page=conventions-pfmp"/);
+  assert.match(home, /href="<\?= publicBase \?>\?page=apprentissage-public-pfmp"/);
+  assert.match(home, /href="<\?= publicBase \?>\?page=suivi-conventions-public"/);
+  assert.doesNotMatch(home, /AKfycby6ykCxT|AKfycbwQoKZOD/);
+  assert.match(server, /tpl\.adminBase=adminBase/);
+  assert.match(server, /tpl\.publicBase=publicBase/);
+  assert.ok(server.indexOf('tpl.adminBase=adminBase') < server.indexOf('tpl.evaluate()'));
+});
+
+test('les vues administratives n’embarquent plus l’URL du déploiement public', () => {
+  const publicId = 'AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA';
+  assert.doesNotMatch(read('EUC_PFMP_DEV340_ConsolidationLive.js').split('\n')[1], new RegExp(publicId));
+  assert.doesNotMatch(read('EUC_PFMP_DEV464_DossierApprentissage.js').split('\n')[2], new RegExp(publicId));
+  assert.match(read('Suivi_PFMP_Classe_Detail_V156.html'), /var BASE=String\(C&&C\.baseUrl\|\|''\)/);
+});
+
 test('le catalogue géocodage réutilise le catalogue autonome déjà publié', () => {
   const source = read('EUC_PFMP_DEV441_AccesPpGeocodage.js');
   assert.doesNotMatch(source, /EUC_DEV190G1_fastFamilyIndex\(\{annee:year,famille:f\}\)/);

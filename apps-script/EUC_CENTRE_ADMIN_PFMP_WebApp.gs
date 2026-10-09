@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP - v1.0.0-dev.270b - centre admin multi-domaines. */
+/** Eucalyptus PFMP - v1.0.0-dev.520 - centre admin multi-domaines. */
 function EUC_CENTRE_ADMIN_afficherApplication(e){
   var auth=String(e&&e.parameter&&e.parameter.auth||'').trim();
   var ctx=null;
@@ -31,11 +31,23 @@ function EUC_CENTRE_ADMIN_afficherApplication(e){
   }
 
   var tpl=HtmlService.createTemplateFromFile('Admin_PFMP');
+  var adminBase=typeof EUC_DEV459_ADMIN_URL_!=='undefined'
+    ?String(EUC_DEV459_ADMIN_URL_||'').trim()
+    :'';
+  var publicBase=typeof EUC_DEV455_PUBLIC_URL_!=='undefined'
+    ?String(EUC_DEV455_PUBLIC_URL_||'').trim()
+    :'';
+  if(!adminBase)adminBase=EUC_DEV368_boot().baseUrl;
+  if(!publicBase)publicBase=EUC_DEV368_boot().baseUrl;
+  tpl.adminBase=adminBase;
+  tpl.publicBase=publicBase;
 
   tpl.config=JSON.stringify({
-    version:'Eucalyptus PFMP - v1.0.0-dev.270b',
+    version:'Eucalyptus PFMP - v1.0.0-dev.520',
     role:ctx.role,
-    baseUrl:EUC_DEV368_boot().baseUrl
+    baseUrl:adminBase,
+    adminBase:adminBase,
+    publicBase:publicBase
   });
 
   return tpl.evaluate()

@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV520 (canaux du centre et responsable entreprise)
+
+- Le centre d'administration inversait les deux Web Apps vertes : les outils
+  d'administration, dont « Administration des conventions », étaient envoyés
+  vers le déploiement public, tandis que les deux accès de consultation
+  utilisaient le déploiement administrateur. Les destinations sont maintenant
+  injectées explicitement selon leur rôle avant le rendu ; aucun identifiant de
+  déploiement n'est conservé dans le modèle du centre.
+- La même correction est appliquée aux navigations administratives secondaires
+  du suivi, du dossier d'apprentissage et du changement de classe. Une page
+  publique conserve son URL publique et une page d'administration conserve son
+  URL administrateur, même si les deux déploiements partagent le même projet
+  Apps Script.
+- La colonne « Coordonnées entreprise » ne délègue plus son rendu à l'ancien
+  formateur qui ignorait les coordonnées générales déjà enrichies. Elle affiche
+  le responsable explicite, reconnaît les anciens noms de colonnes, respecte la
+  case « tuteur identique au responsable », puis utilise téléphone et courriel
+  généraux de l'entreprise en dernier recours.
+- Lorsqu'une entreprise possède plusieurs contacts, un contact explicitement
+  qualifié de responsable, représentant, signataire ou dirigeant est retenu
+  seulement s'il est unique. En cas d'ambiguïté, aucune personne n'est choisie
+  arbitrairement. L'enrichissement reste groupé et strictement en lecture seule.
+- Le marqueur canonique passe à `DEV520-C10` pour invalider les anciennes vues
+  de classe où la colonne restait vide. Les tests ciblés couvrent les liens des
+  deux canaux, les alias historiques, le responsable distinct du tuteur, le cas
+  « tuteur responsable », le repli entreprise et le refus d'un choix ambigu.
+
 ## Mise à jour du 9 octobre 2026 — autorisation permanente de publication verte
 
 - Chaque lot applicatif terminé est désormais publié automatiquement sur les

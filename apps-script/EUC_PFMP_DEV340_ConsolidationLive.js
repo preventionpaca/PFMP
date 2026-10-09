@@ -1,5 +1,5 @@
 /** PFMP — v1.0.0-dev.340 */
-var EUC_DEV340_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
+var EUC_DEV340_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV340_txt_(v){return String(v==null?'':v).trim();}
 function EUC_DEV340_ref_(v){
@@ -29,13 +29,43 @@ function EUC_DEV519_referenceRows_(table){
   }catch(e){rows=[];}
   return rows.map(EUC_DEV519_flatRecord_);
 }
+function EUC_DEV520_firstText_(){
+  for(var i=0;i<arguments.length;i++){
+    var value=EUC_DEV340_txt_(arguments[i]);
+    if(value)return value;
+  }
+  return '';
+}
+function EUC_DEV520_true_(value){
+  if(value===true)return true;
+  return ['1','TRUE','VRAI','OUI','YES'].indexOf(EUC_DEV340_txt_(value).toUpperCase())>=0;
+}
+function EUC_DEV520_normalizeResponsible_(row){
+  row=row||{};
+  row.Responsable_nom=EUC_DEV520_firstText_(row.Responsable_nom,row.Responsable,row.Nom_responsable_entreprise,row.Nom_responsable);
+  row.Responsable_prenom=EUC_DEV520_firstText_(row.Responsable_prenom,row.Prenom_responsable_entreprise,row.Prenom_responsable);
+  row.Responsable_telephone=EUC_DEV520_firstText_(row.Responsable_telephone,row.Telephone_responsable,row.Responsable_tel);
+  row.Responsable_courriel=EUC_DEV520_firstText_(row.Responsable_courriel,row.Courriel_responsable,row.Email_responsable,row.Responsable_email);
+  if(EUC_DEV520_true_(row.Tuteur_est_responsable)){
+    row.Responsable_nom=EUC_DEV520_firstText_(row.Responsable_nom,row.Tuteur_nom);
+    row.Responsable_prenom=EUC_DEV520_firstText_(row.Responsable_prenom,row.Tuteur_prenom);
+    row.Responsable_telephone=EUC_DEV520_firstText_(row.Responsable_telephone,row.Tuteur_telephone);
+    row.Responsable_courriel=EUC_DEV520_firstText_(row.Responsable_courriel,row.Tuteur_courriel);
+  }
+  return row;
+}
+function EUC_DEV520_isResponsibleContact_(contact){
+  var role=EUC_DEV340_txt_(contact&&(contact.Type_contact||contact.Type||contact.Fonction));
+  try{role=role.normalize('NFD').replace(/[\u0300-\u036f]/g,'');}catch(e){}
+  return /RESPONSABLE|REPRESENTANT|SIGNATAIRE|DIRIGEANT|DIRECTION|GERANT/i.test(role);
+}
 /* DEV519 — les anciennes conventions peuvent ne conserver que les références
  * vers la fiche entreprise et son contact. L'enrichissement est groupé : au
  * plus une lecture des entreprises et une lecture des contacts pour toute la
  * famille, jamais une requête Grist par élève. Les instantanés portés par la
  * convention restent prioritaires afin de préserver l'historique signé. */
 function EUC_DEV519_enrichAccessCompanyContacts_(rows){
-  rows=(rows||[]).map(EUC_DEV519_flatRecord_);
+  rows=(rows||[]).map(function(row){return EUC_DEV520_normalizeResponsible_(EUC_DEV519_flatRecord_(row));});
   var needsCompanies=false,needsContacts=false;
   rows.forEach(function(a){
     var companyId=EUC_DEV340_ref_(a.Entreprise),contactId=EUC_DEV340_ref_(a.Contact_entreprise);
@@ -64,13 +94,18 @@ function EUC_DEV519_enrichAccessCompanyContacts_(rows){
     var company=companies[EUC_DEV340_ref_(a.Entreprise)]||companiesBySiret[siret]||{};
     var contact=contacts[EUC_DEV340_ref_(a.Contact_entreprise)]||{};
     var companyContacts=contactsByCompany[Number(company.id)||0]||[];
-    if(!Number(contact.id)&&companyContacts.length===1)contact=companyContacts[0];
+    if(!Number(contact.id)){
+      var responsibleContacts=companyContacts.filter(EUC_DEV520_isResponsibleContact_);
+      if(responsibleContacts.length===1)contact=responsibleContacts[0];
+      else if(!responsibleContacts.length&&companyContacts.length===1)contact=companyContacts[0];
+    }
     a.Entreprise_telephone=EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot)||EUC_DEV340_txt_(company.Telephone)||EUC_DEV340_txt_(company.Telephone_2);
     a.Entreprise_courriel=EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot)||EUC_DEV340_txt_(company.Courriel);
-    a.Responsable_nom=EUC_DEV340_txt_(a.Responsable_nom)||EUC_DEV340_txt_(contact.Nom);
-    a.Responsable_prenom=EUC_DEV340_txt_(a.Responsable_prenom)||EUC_DEV340_txt_(contact.Prenom);
-    a.Responsable_telephone=EUC_DEV340_txt_(a.Responsable_telephone)||EUC_DEV340_txt_(contact.Telephone_direct);
-    a.Responsable_courriel=EUC_DEV340_txt_(a.Responsable_courriel)||EUC_DEV340_txt_(contact.Courriel_direct);
+    a.Responsable_nom=EUC_DEV520_firstText_(a.Responsable_nom,contact.Nom,company.Responsable_nom,company.Responsable,company.Nom_responsable_entreprise);
+    a.Responsable_prenom=EUC_DEV520_firstText_(a.Responsable_prenom,contact.Prenom,company.Responsable_prenom,company.Prenom_responsable_entreprise);
+    a.Responsable_telephone=EUC_DEV520_firstText_(a.Responsable_telephone,contact.Telephone_direct,contact.Telephone,company.Responsable_telephone,company.Telephone_responsable);
+    a.Responsable_courriel=EUC_DEV520_firstText_(a.Responsable_courriel,contact.Courriel_direct,contact.Courriel,company.Responsable_courriel,company.Courriel_responsable);
+    EUC_DEV520_normalizeResponsible_(a);
   });
   return rows;
 }
@@ -101,6 +136,7 @@ function EUC_DEV340_compactAccess_(a){
     Responsable_prenom:EUC_DEV340_txt_(a.Responsable_prenom),
     Responsable_telephone:EUC_DEV340_txt_(a.Responsable_telephone),
     Responsable_courriel:EUC_DEV340_txt_(a.Responsable_courriel),
+    Tuteur_est_responsable:EUC_DEV520_true_(a.Tuteur_est_responsable),
     Tuteur_nom:EUC_DEV340_txt_(a.Tuteur_nom),
     Tuteur_prenom:EUC_DEV340_txt_(a.Tuteur_prenom),
     Tuteur_telephone:EUC_DEV340_txt_(a.Tuteur_telephone),
@@ -172,12 +208,13 @@ function EUC_DEV340_address_(a){
 }
 function EUC_DEV340_contact_(a){
   if(!a)return '';
-  if(typeof EUC_V155_contactEntreprise_==='function'){
-    try{return EUC_V155_contactEntreprise_(a)||'';}catch(e){}
-  }
+  EUC_DEV520_normalizeResponsible_(a);
   var r=[EUC_DEV340_txt_(a.Responsable_prenom),EUC_DEV340_txt_(a.Responsable_nom)].filter(Boolean).join(' ').trim();
-  var t=[EUC_DEV340_txt_(a.Tuteur_prenom),EUC_DEV340_txt_(a.Tuteur_nom)].filter(Boolean).join(' ').trim();
-  return [r||t,EUC_DEV340_txt_(a.Responsable_telephone)||EUC_DEV340_txt_(a.Tuteur_telephone),EUC_DEV340_txt_(a.Responsable_courriel)||EUC_DEV340_txt_(a.Tuteur_courriel)].filter(Boolean).join(' · ');
+  return [
+    r,
+    EUC_DEV520_firstText_(a.Responsable_telephone,a.Entreprise_telephone),
+    EUC_DEV520_firstText_(a.Responsable_courriel,a.Entreprise_courriel)
+  ].filter(Boolean).join(' · ');
 }
 function EUC_DEV340_tuteur_(a){
   if(!a)return '';

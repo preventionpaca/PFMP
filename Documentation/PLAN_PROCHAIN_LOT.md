@@ -1,14 +1,24 @@
-# Prochain lot après DEV519
+# Prochain lot après DEV520
 
-DEV519 corrige localement les deux régressions signalées sur le vert : le
+DEV520 corrige les deux régressions vertes signalées : le centre
+d'administration sépare désormais sans ambiguïté ses destinations
+administratives et publiques, et la colonne « Coordonnées entreprise » affiche
+le responsable disponible au lieu de rester vide derrière l'ancien formateur.
+Le renouvellement `DEV520-C10` force la reconstruction des anciennes vues
+matérialisées. Le lot doit être publié automatiquement sur les deux Web Apps
+vertes existantes après suite complète, puis contrôlé sur les 25 routes et par
+un parcours réel en lecture seule depuis le centre vers « Administration des
+conventions » et une fiche de classe.
+
+DEV519 avait corrigé les deux régressions signalées sur le vert : le
 formulaire QR ne reste plus bloqué sur des champs tuteur masqués et les
 coordonnées entreprise des élèves en PFMP sont complétées en lecture seule
 depuis les références déjà présentes dans Grist. La suite complète est à
-`685/685`. Le lot n'est pas publié : la prochaine action est une publication
-explicite par `scripts/pfmp-release.sh release-stable`, puis le contrôle des 25
-routes vertes et une vérification en lecture d'une classe PFMP montrant les
-coordonnées entreprise. Le parcours d'enregistrement QR réel restera non testé
-tant qu'aucune autorisation explicite d'écriture de convention n'est donnée.
+`687/687`. Le lot a été publié dans la version immuable `902`, mais le contrôle
+utilisateur a révélé que l'ancien formateur de la colonne ignorait encore les
+coordonnées enrichies ; DEV520 remplace ce formateur. Le parcours
+d'enregistrement QR réel reste non testé tant qu'aucune autorisation explicite
+d'écriture de convention n'est donnée.
 
 ## Décision de livraison active — Git vers vert
 

@@ -48,6 +48,47 @@ test('une entreprise sans référence directe est retrouvée par son SIRET sans 
   assert.equal(out[0].Responsable_prenom,'Unique');
 });
 
+test('le responsable est distingué du tuteur quand plusieurs contacts existent',()=>{
+  const c=context({
+    EUC_ENTREPRISES:[{id:12,fields:{SIRET:'12345678900012'}}],
+    EUC_CONTACTS_ENTREPRISES:[
+      {id:31,fields:{Entreprise:[12],Actif:true,Type_contact:'Tuteur',Prenom:'Tom',Nom:'Tuteur',Telephone_direct:'06 30 00 00 00'}},
+      {id:32,fields:{Entreprise:[12],Actif:true,Type_contact:'Responsable entreprise',Prenom:'Rita',Nom:'Direction',Telephone_direct:'06 31 00 00 00',Courriel_direct:'rita@example.test'}}
+    ]
+  });
+  const out=c.EUC_DEV519_enrichAccessCompanyContacts_([{id:4,Entreprise:[12]}]);
+  assert.equal(out[0].Responsable_prenom,'Rita');
+  assert.equal(out[0].Responsable_nom,'Direction');
+  assert.equal(out[0].Responsable_telephone,'06 31 00 00 00');
+});
+
+test('deux responsables possibles ne sont jamais choisis arbitrairement',()=>{
+  const c=context({
+    EUC_ENTREPRISES:[{id:12,fields:{}}],
+    EUC_CONTACTS_ENTREPRISES:[
+      {id:41,fields:{Entreprise:[12],Actif:true,Type_contact:'Responsable',Nom:'Premier'}},
+      {id:42,fields:{Entreprise:[12],Actif:true,Type_contact:'Direction',Nom:'Second'}}
+    ]
+  });
+  const out=c.EUC_DEV519_enrichAccessCompanyContacts_([{id:5,Entreprise:[12]}]);
+  assert.equal(out[0].Responsable_nom,'');
+});
+
+test('les anciens alias et le tuteur responsable alimentent la colonne responsable',()=>{
+  const c=context({});
+  const alias=c.EUC_DEV519_enrichAccessCompanyContacts_([{Nom_responsable_entreprise:'Nom historique',Prenom_responsable_entreprise:'Prénom',Telephone_responsable:'04 93 00 00 00',Courriel_responsable:'resp@example.test'}])[0];
+  assert.equal(alias.Responsable_nom,'Nom historique');
+  assert.match(c.EUC_DEV340_contact_(alias),/Prénom Nom historique · 04 93 00 00 00 · resp@example\.test/);
+  const same=c.EUC_DEV519_enrichAccessCompanyContacts_([{Tuteur_est_responsable:true,Tuteur_prenom:'Tom',Tuteur_nom:'Tuteur',Tuteur_telephone:'06 12 34 56 78',Tuteur_courriel:'tom@example.test'}])[0];
+  assert.match(c.EUC_DEV340_contact_(same),/Tom Tuteur · 06 12 34 56 78 · tom@example\.test/);
+});
+
+test('le rendu utilise les coordonnées générales de l’entreprise en dernier recours',()=>{
+  const c=context({});
+  c.EUC_V155_contactEntreprise_=()=>'';
+  assert.equal(c.EUC_DEV340_contact_({Entreprise_telephone:'04 93 10 20 30',Entreprise_courriel:'accueil@example.test'}),'04 93 10 20 30 · accueil@example.test');
+});
+
 test('les instantanés de la convention restent prioritaires et évitent les lectures inutiles',()=>{
   const c=context({});
   const out=c.EUC_DEV519_enrichAccessCompanyContacts_([{

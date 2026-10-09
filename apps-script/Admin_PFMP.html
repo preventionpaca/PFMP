@@ -48,9 +48,9 @@
       <h2>Apprentis / parcours</h2>
       <p>Gestion et consultation de l’apprentissage.</p>
       <div class="links">
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=apprentissage-pfmp">Gestion des apprentis</a>
-        <a class="link" target="_top" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=dossier-apprentissage-pfmp">Dossier de demande d’apprentissage<small>Préremplir et imprimer les 8 pages</small></a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=apprentissage-public-pfmp">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=apprentissage-pfmp">Gestion des apprentis</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=dossier-apprentissage-pfmp">Dossier de demande d’apprentissage<small>Préremplir et imprimer les 8 pages</small></a>
+        <a class="link" target="_top" href="<?= publicBase ?>?page=apprentissage-public-pfmp">
           Consultation apprentis
           <small>Mode consultation</small>
         </a>
@@ -61,11 +61,11 @@
       <h2>Scolaire / conventions</h2>
       <p>Génération, administration et suivi des PFMP.</p>
       <div class="links">
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=conventions-pfmp">Générer les conventions</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=parcours-differencie-pfmp">Parcours différencié</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=suivi-conventions">Suivi des PFMP par classe</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=admin-conventions-pfmp">Administration des conventions</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-conventions-public">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=conventions-pfmp">Générer les conventions</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=parcours-differencie-pfmp">Parcours différencié</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-conventions">Suivi des PFMP par classe</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=admin-conventions-pfmp">Administration des conventions</a>
+        <a class="link" target="_top" href="<?= publicBase ?>?page=suivi-conventions-public">
           Suivi des PFMP
           <small>Mode consultation</small>
         </a>
@@ -74,83 +74,23 @@
 
   </section>
 
-  <!-- EUC_DEV368_ADMIN_TOOLS_BEGIN --><section class="card"><h2>Pilotage PFMP</h2><p>Contrôle des conventions et préparation des visites.</p><div class="links"><a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=sans-convention-pfmp">Élèves sans convention<small>Filtres classe / période - export PDF</small></a><a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=ordres-mission-pfmp">Ordres de mission - visites PFMP<small>Transport par élève - export PDF</small></a><a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=acces-pp-admin">Accès professeurs principaux<small>Codes temporaires limités à une classe et une période</small></a><a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=geocodage-pfmp-admin">Entreprises et cartographie<small>Géocodage France, validation manuelle Monaco / étranger</small></a></div></section><!-- EUC_DEV368_ADMIN_TOOLS_END --><details class="settings">
+  <!-- EUC_DEV368_ADMIN_TOOLS_BEGIN --><section class="card"><h2>Pilotage PFMP</h2><p>Contrôle des conventions et préparation des visites.</p><div class="links"><a class="link" target="_top" href="<?= adminBase ?>?page=sans-convention-pfmp">Élèves sans convention<small>Filtres classe / période - export PDF</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=ordres-mission-pfmp">Ordres de mission - visites PFMP<small>Transport par élève - export PDF</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=acces-pp-admin">Accès professeurs principaux<small>Codes temporaires limités à une classe et une période</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=geocodage-pfmp-admin">Entreprises et cartographie<small>Géocodage France, validation manuelle Monaco / étranger</small></a></div></section><!-- EUC_DEV368_ADMIN_TOOLS_END --><details class="settings">
     <summary>Paramétrage</summary>
     <div class="settings-body">
       <p>Référentiels, imports, synchronisations et outils techniques.</p>
       <div class="links">
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=import-pronote-pfmp">Importer les élèves / exclusions de classes Pronote</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=diplomes-classes-pfmp">Diplômes par classe</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=parametres-convention-pfmp">Paramètres de la convention</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=destinataires-envois-pfmp">Destinataires &amp; envois</a>
-        <a class="link" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=migration-jotform-pfmp">Migration JotForm PFMP</a>
-        <a class="link" id="euc-snapshot-setting" href="https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=import-pronote-pfmp">Importer les élèves / exclusions de classes Pronote</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=diplomes-classes-pfmp">Diplômes par classe</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=parametres-convention-pfmp">Paramètres de la convention</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=destinataires-envois-pfmp">Destinataires &amp; envois</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Migration JotForm PFMP</a>
+        <a class="link" target="_top" id="euc-snapshot-setting" href="<?= adminBase ?>?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>
       </div>
     </div>
   </details>
 
-  <footer>Eucalyptus PFMP — v1.0.0-dev.297a</footer>
+  <footer>Eucalyptus PFMP — v1.0.0-dev.520</footer>
 </main>
-<!-- EUC_DEV351_PUBLIC_LINKS_BEGIN -->
-<script id="EUC_DEV351_PUBLIC_LINKS_JS">
-(function(){
-  var PUBLIC='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
-  function n(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-  function run(){
-    document.querySelectorAll('a').forEach(function(a){
-      var t=n(a.textContent),id=String(a.id||'').toLowerCase();
-      if(t.indexOf('consultation apprent')>=0 || id.indexOf('apprentissage-public')>=0){
-        a.href=PUBLIC+'?page=apprentissage-public-pfmp'; a.target='_top';
-      }
-      if((t.indexOf('suivi des pfmp')>=0 && t.indexOf('consultation')>=0) ||
-         (t.indexOf('mode consultation')>=0 && t.indexOf('pfmp')>=0) ||
-         id.indexOf('suivi-public')>=0){
-        a.href=PUBLIC+'?page=suivi-conventions-public'; a.target='_top';
-      }
-    });
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-})();
-</script>
-<!-- EUC_DEV351_PUBLIC_LINKS_END -->
-
-<!-- EUC_DEV352_PUBLIC_LINK_GUARD_BEGIN -->
-<script id="EUC_DEV352_PUBLIC_LINK_GUARD_JS">
-(function(){
- var PUBLIC='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
- function n(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
- function fix(){
-  document.querySelectorAll('a').forEach(function(a){
-   var t=n(a.textContent),id=n(a.id);
-   if(t.indexOf('consultation apprent')>=0 || id.indexOf('apprentissage-public')>=0){
-     a.href=PUBLIC+'?page=apprentissage-public-pfmp'; a.target='_top';
-   }
-   if((t.indexOf('suivi des pfmp')>=0 && t.indexOf('consultation')>=0) ||
-      id.indexOf('suivi-public')>=0){
-     a.href=PUBLIC+'?page=suivi-conventions-public'; a.target='_top';
-   }
-  });
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();
- setTimeout(fix,50);
-})();
-</script>
-<!-- EUC_DEV352_PUBLIC_LINK_GUARD_END -->
-
-<script id="EUC_DEV365_CONSULTATION_LINKS">
-(function(){
- const APP='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=apprentissage-public-pfmp';
- const SUIVI='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec?page=suivi-conventions-public';
- function apply(){
-  document.querySelectorAll('a').forEach(function(a){
-   var t=String(a.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
-   if(t.indexOf('consultation apprentis')>=0)a.href=APP;
-   if(t.indexOf('suivi des pfmp')>=0 && t.indexOf('mode consultation')>=0)a.href=SUIVI;
-  });
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
-})();
-</script>
 </body>
 </html>

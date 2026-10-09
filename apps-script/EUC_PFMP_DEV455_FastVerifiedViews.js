@@ -255,7 +255,7 @@ function EUC_DEV455_publicRuntime_(){
   catch(e){return false;}
 }
 function EUC_DEV455_refreshing_(isPublic,p){
-  var base=isPublic?EUC_DEV455_PUBLIC_URL_:ScriptApp.getService().getUrl();
+  var base=isPublic?EUC_DEV455_PUBLIC_URL_:(typeof EUC_DEV459_ADMIN_URL_!=='undefined'?EUC_DEV459_ADMIN_URL_:ScriptApp.getService().getUrl());
   var url=base+'?page='+(isPublic?'suivi-pfmp-classe-public':'suivi-pfmp-classe')+
     '&annee='+encodeURIComponent(p.annee)+'&famille='+encodeURIComponent(p.famille)+
     '&classe='+encodeURIComponent(p.classe)+'&periode='+encodeURIComponent(p.periode);
@@ -278,7 +278,7 @@ function EUC_DEV455_adminDetail(e){
   try{detail.peutModifier=!!EUC_V156_contexteAdmin_();}catch(eAdmin){detail.peutModifier=false;}
   detail.professeursDisponibles=[];detail.professeursDisponiblesCharges=false;
   var t=HtmlService.createTemplateFromFile('Suivi_PFMP_Classe_Detail_V156');
-  t.config=JSON.stringify({baseUrl:ScriptApp.getService().getUrl(),readonly:false,publicMode:false});
+  t.config=JSON.stringify({baseUrl:typeof EUC_DEV459_ADMIN_URL_!=='undefined'?EUC_DEV459_ADMIN_URL_:ScriptApp.getService().getUrl(),readonly:false,publicMode:false});
   t.anneeContextJson=JSON.stringify({active:p.annee,annees:[{code:p.annee,libelle:p.annee}]});
   t.detailJson=JSON.stringify(detail);
   var jump=[];
