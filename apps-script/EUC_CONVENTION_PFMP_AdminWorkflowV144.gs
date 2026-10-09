@@ -583,6 +583,33 @@ function EUC_ADMIN_WORKFLOW_interrompreV145(accesId,dateFinReelle,motif){
 }
 
 /* DEV.146 — Centre administratif des conventions */
+function EUC_ADMIN_WORKFLOW_refEleveV521_(a){
+  a=a||{};
+  var refs=[
+    a.Eleve,a['Élève'],a.Eleve_id,a.EleveId,a.ID_eleve,
+    a.Jeune,a.Jeune_id,a.Eleve_match_id
+  ];
+  for(var i=0;i<refs.length;i++){
+    var id=Number(EUC_PFMP_ref_(refs[i]))||0;
+    if(id>0)return id;
+  }
+  return 0;
+}
+
+function EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve){
+  a=a||{};byEleve=byEleve||{};
+  var id=EUC_ADMIN_WORKFLOW_refEleveV521_(a);
+  var e=byEleve[id]||{};
+  var nom=String(
+    e.Nom||a.Eleve_nom||a.Nom_eleve||a.Jeune_nom||a.Nom_jeune||''
+  ).trim();
+  var prenom=String(
+    e.Prenom_usage||e.Prenom||a.Eleve_prenom||a.Prenom_eleve||
+    a.Jeune_prenom||a.Prenom_jeune||''
+  ).trim();
+  return {id:id,nom:nom,prenom:prenom,jeune:[prenom,nom].filter(Boolean).join(' ')};
+}
+
 function EUC_ADMIN_WORKFLOW_listerDossiersV146(){
   EUC_ADMIN_WORKFLOW_ctxV144_();
   var rows=EUC_CONVENTION_lireAccesFraisV108_();
@@ -592,14 +619,14 @@ function EUC_ADMIN_WORKFLOW_listerDossiersV146(){
   return rows.filter(function(a){
     return !!(a.Date_saisie_entreprise||a.Numero_enregistrement||a.Entreprise_raison_sociale||a.Statut==='ENTREPRISE_SAISIE'||a.Statut_administratif==='A_COMPLETER_ENTREPRISE'||a.Type_sequence==='REMPLACEMENT_APRES_RUPTURE');
   }).map(function(a){
-    var e=byEleve[Number(EUC_PFMP_ref_(a.Eleve))]||{};
-    var nom=String(e.Nom||a.Eleve_nom||a.Nom_eleve||'').trim();
-    var prenom=String(e.Prenom_usage||e.Prenom||a.Eleve_prenom||'').trim();
+    var identite=EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve);
+    var nom=identite.nom;
+    var prenom=identite.prenom;
     return {
       id:Number(a.id),
       numero:EUC_ADMIN_WORKFLOW_numeroV144_(a),
       nom:nom,prenom:prenom,
-      jeune:[prenom,nom].filter(Boolean).join(' '),
+      jeune:identite.jeune,
       classe:String(a.Classe_convention_nom||''),
       entreprise:String(a.Entreprise_raison_sociale||''),
       statut:String(a.Statut_administratif||'INFORMATIONS_ENREGISTREES'),
@@ -614,11 +641,11 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
   EUC_ADMIN_WORKFLOW_ctxV144_();
   var base=EUC_ADMIN_WORKFLOW_vueV144(accesId);
   var a=EUC_ADMIN_WORKFLOW_lireDossierV144_(accesId);
-  var e=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP').filter(function(x){
-    return Number(x.id)===Number(EUC_PFMP_ref_(a.Eleve));
-  })[0]||{};
+  var eleves=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'),byEleve={};
+  eleves.forEach(function(x){byEleve[Number(x.id)]=x;});
+  var identite=EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve);
 
-  base.jeune={nom:String(e.Nom||a.Eleve_nom||a.Nom_eleve||''),prenom:String(e.Prenom_usage||e.Prenom||a.Eleve_prenom||'')};
+  base.jeune={nom:identite.nom,prenom:identite.prenom};
   base.classe=String(a.Classe_convention_nom||'');
   base.periode={debut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),libelle:String(a.Periode_libelle||'')};
   base.etapes=(base.etapes||[]).map(function(x){return Object.assign({},x,{dateLisible:x.date?EUC_ADMIN_WORKFLOW_dateLisibleV144_(x.date):''});});
@@ -656,7 +683,6 @@ function EUC_ADMIN_CONVENTIONS_afficherV146(e){
   tpl.dossiersJson=JSON.stringify(
     EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(ctxAnnee.active)
   );
-  tpl.dossiersJson=JSON.stringify(EUC_ADMIN_WORKFLOW_listerDossiersV146());
 
   return tpl.evaluate()
     .setTitle('Administration des conventions PFMP')
@@ -835,9 +861,9 @@ function EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(codeAnnee){
       return !codeAnnee || anneeDossier===codeAnnee;
     })
     .map(function(a){
-      var e=byEleve[Number(EUC_PFMP_ref_(a.Eleve))]||{};
-      var nom=String(e.Nom||a.Eleve_nom||a.Nom_eleve||'').trim();
-      var prenom=String(e.Prenom_usage||e.Prenom||a.Eleve_prenom||'').trim();
+      var identite=EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve);
+      var nom=identite.nom;
+      var prenom=identite.prenom;
       var anneeDossier=EUC_PFMP_anneeDossierV148_(a);
       var trace=EUC_ADMIN_WORKFLOW_etatsTraceV154_(a);
 
@@ -848,7 +874,7 @@ function EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(codeAnnee){
         numero:EUC_ADMIN_WORKFLOW_numeroV144_(a),
         nom:nom,
         prenom:prenom,
-        jeune:[prenom,nom].filter(Boolean).join(' '),
+        jeune:identite.jeune,
         classe:String(a.Classe_convention_nom||''),
         entreprise:String(a.Entreprise_raison_sociale||''),
         statut:String(a.Statut_administratif||'INFORMATIONS_ENREGISTREES'),

@@ -86,7 +86,12 @@ function EUC_DEV498_contexteAnnees_(){
 
 function EUC_DEV498_afficherAdminConventions_(e){
   try{
-    return EUC_P7_adminConventions(e);
+    /* La couche P3.2 historique met en cache le HTML nominatif complet avec
+       une clé indépendante de la version publiée. Un ancien onglet pouvait
+       donc réinjecter pendant quelques secondes une liste périmée. La route
+       prioritaire appelle le chargeur courant, qui effectue seulement les
+       lectures groupées nécessaires. */
+    return EUC_ADMIN_CONVENTIONS_afficherV146(e);
   }catch(err){
     if(!EUC_DEV498_tableAbsente_(err))throw err;
   }

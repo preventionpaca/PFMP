@@ -235,6 +235,11 @@ test('les quatre routes fragiles s’ouvrent sans lecture Grist bloquante', () =
 
   assert.match(routes, /case 'admin-conventions-pfmp':[\s\S]*EUC_DEV498_afficherAdminConventions_/);
   assert.match(routes, /EUC_DEV498_tableAbsente_/);
+  assert.match(routes, /return EUC_ADMIN_CONVENTIONS_afficherV146\(e\)/);
+  assert.doesNotMatch(
+    routes.slice(routes.indexOf('function EUC_DEV498_afficherAdminConventions_'), routes.indexOf('function EUC_DEV481_afficherSuivi_')),
+    /EUC_P7_adminConventions/
+  );
   assert.match(routes, /tpl\.dossiersJson='\[\]'/);
   assert.doesNotMatch(
     clean.slice(clean.indexOf('function EUC_DEV190X_afficherPdif'), clean.indexOf('function EUC_DEV190X_getClasses')),

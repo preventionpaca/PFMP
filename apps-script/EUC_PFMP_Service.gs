@@ -7,7 +7,23 @@ function EUC_PFMP_lireTable_(table) {
   var r=EUC_ENT_grist('get','/tables/'+encodeURIComponent(table)+'/records');
   return r.records||[];
 }
-function EUC_PFMP_ref_(v) { return Array.isArray(v)?Number(v[0]||0):Number(v||0); }
+function EUC_PFMP_ref_(v) {
+  if(Array.isArray(v)){
+    /* Grist peut sérialiser une référence sous la forme ["L", id].
+       L'ancien lecteur prenait "L" pour l'identifiant et renvoyait NaN. */
+    for(var i=0;i<v.length;i++){
+      var item=Number(v[i]);
+      if(isFinite(item)&&item>0)return item;
+    }
+    return 0;
+  }
+  if(v&&typeof v==='object'){
+    var objectId=Number(v.id||v.rowId||v.recordId||0);
+    return isFinite(objectId)&&objectId>0?objectId:0;
+  }
+  var id=Number(v||0);
+  return isFinite(id)&&id>0?id:0;
+}
 function EUC_PFMP_dateIso_(v) {
   if(!v)return '';
   if(typeof v==='number')return new Date(v*1000).toISOString().slice(0,10);

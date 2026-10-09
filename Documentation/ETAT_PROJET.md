@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV521 (noms des jeunes dans l’administration des conventions)
+
+- La liste « Administration des conventions » affichait « Jeune non
+  renseigné » alors que la convention était bien reliée à un élève. La cause
+  était le lecteur commun des références Grist : pour la forme sérialisée
+  `["L", id]`, il tentait de convertir le marqueur `L` en identifiant et ne
+  retrouvait donc jamais la fiche élève.
+- Le lecteur accepte désormais les références numériques, les listes Grist,
+  les objets portant un identifiant et les alias historiques réellement
+  utilisés. La liste, la recherche et le détail d'une convention partagent la
+  même résolution ; les instantanés de nom restent un repli lorsque la
+  référence n'existe pas.
+- La route prioritaire n'utilise plus l'ancien cache HTML nominatif P3.2, dont
+  la clé ne distinguait pas les versions publiées. Elle appelle directement le
+  chargeur courant et ses lectures groupées afin qu'un ancien onglet ne puisse
+  pas réinjecter une liste périmée après publication.
+- Quatre tests dédiés couvrent la forme `["L", id]`, l'affichage, la recherche,
+  le détail et le repli historique. Les tests ciblés connexes passent et la
+  suite complète passe `697/697`. Aucune donnée Grist ni convention n'a été
+  modifiée par le correctif ou ses tests.
+
 ## Mise à jour du 9 octobre 2026 — DEV520 (canaux du centre et responsable entreprise)
 
 - Le centre d'administration inversait les deux Web Apps vertes : les outils

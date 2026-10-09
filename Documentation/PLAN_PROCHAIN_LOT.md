@@ -1,4 +1,14 @@
-# Prochain lot après DEV520
+# Prochain lot après DEV521
+
+DEV521 rétablit les noms des jeunes dans la recherche et le détail de
+« Administration des conventions ». Le lecteur commun des références Grist
+reconnaît maintenant la forme `["L", id]` au lieu de perdre l'identifiant de
+l'élève. La route ne consomme plus l'ancien cache HTML nominatif P3.2. Après
+publication verte automatique et contrôle des 25 routes, vérifier en lecture
+seule qu'une recherche par nom propose le jeune attendu puis ouvre son dossier,
+sans enregistrer de correction, d'annulation ou d'interruption.
+
+## Lot précédent — DEV520
 
 DEV520 corrige les deux régressions vertes signalées : le centre
 d'administration sépare désormais sans ambiguïté ses destinations
