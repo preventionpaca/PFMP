@@ -371,9 +371,15 @@ function statusPill(x){
     if(!ids.length){showStatus('Sélectionnez au moins un élève avant l’affectation.','err');return}
     if(!prof){showStatus('Sélectionnez un professeur dans la liste.','err');return}
     if(!detail.periode){showStatus('Aucune période PFMP sélectionnée.','err');return}
-    const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='Affectation en cours...';showStatus('Affectation en cours...','info');
+    const old=btn.innerHTML;let finished=false;
+    function restore(){btn.innerHTML=old;refreshAssignButtons()}
+    btn.disabled=true;btn.innerHTML='<span class="euc405-spin"></span>Affectation en cours...';showStatus('Affectation en cours...','info');
+    const timer=setTimeout(function(){
+      if(finished)return;finished=true;restore();
+      showStatus('Le serveur n’a pas répondu sous 25 secondes. Rechargez la classe pour vérifier le résultat avant de relancer : une affectation existante sera mise à jour, pas dupliquée.','err');
+    },25000);
     google.script.run.withSuccessHandler(function(r){
-      btn.innerHTML=old;
+      if(finished)return;finished=true;clearTimeout(timer);restore();
       const selected={};(r.eleveIds||[]).forEach(function(id){selected[Number(id)]=true});
       (detail.lignes||[]).forEach(function(x){
         if(!selected[Number(x.eleveId)])return;
@@ -383,9 +389,9 @@ function statusPill(x){
           x.professeurVisiteur=r.professeur.nom;x.professeurVisiteurId=r.professeur.id;
         }
       });
-      showStatus((r.warning||'Affectation enregistrée.')+' ('+Number(r.durationMs||0)+' ms)','ok');render();
+      showStatus((r.warning||'Affectation enregistrée.')+' ('+Number(r.durationMs||0)+' ms)','ok');render();refreshAssignButtons();
     })
-      .withFailureHandler(function(e){btn.innerHTML=old;showStatus('Erreur : '+(e&&e.message||e),'err');refreshAssignButtons()})
+      .withFailureHandler(function(e){if(finished)return;finished=true;clearTimeout(timer);restore();showStatus('Erreur : '+(e&&e.message||e),'err')})
       .EUC_DEV448_affecterAdmin({annee:detail.annee,famille:detail.famille||(new URLSearchParams(location.search).get('famille')||'BACPRO'),classeId:detail.classe.id,periodeId:detail.periode.id,type:type,profId:prof.id,eleveIds:ids,scopeIds:(detail.lignes||[]).map(function(x){return Number(x.eleveId)||0}).filter(Boolean)});
   }
 
@@ -415,7 +421,7 @@ function statusPill(x){
   function render(){
     window.EUC_DEV417_DETAIL_CURRENT=detail;
     back.href=C.baseUrl+'?page=suivi-conventions';mailParams.href=C.baseUrl+'?page=parametres-envois-pfmp';
-    if(missionOrders){var missionUrl=new URL(C.baseUrl);missionUrl.searchParams.set('page','ordres-mission-pfmp');missionUrl.searchParams.set('annee',detail.annee||'');missionUrl.searchParams.set('famille',detail.famille||(new URLSearchParams(location.search).get('famille')||''));missionUrl.searchParams.set('classe',detail.classe&&detail.classe.id||'');missionUrl.searchParams.set('classeNom',detail.classe&&detail.classe.nom||'');missionUrl.searchParams.set('periode',detail.periode&&detail.periode.id||'');missionUrl.searchParams.set('periodeNom',detail.periode&&detail.periode.libelle||'');missionOrders.href=missionUrl.toString();}
+    if(missionOrders){var missionUrl=new URL(C.baseUrl);missionUrl.searchParams.set('page','ordres-mission-pfmp');missionUrl.searchParams.set('annee',detail.annee||'');missionUrl.searchParams.set('famille',detail.famille||(new URLSearchParams(location.search).get('famille')||''));missionUrl.searchParams.set('classe',detail.classe&&detail.classe.id||'');missionUrl.searchParams.set('classeNom',detail.classe&&detail.classe.nom||'');missionUrl.searchParams.set('periode',detail.periode&&detail.periode.id||'');missionUrl.searchParams.set('periodeNom',detail.periode&&detail.periode.libelle||'');missionUrl.searchParams.set('periodeDebut',detail.periode&&(detail.periode.debutFr||detail.periode.debut)||'');missionUrl.searchParams.set('periodeFin',detail.periode&&(detail.periode.finFr||detail.periode.fin)||'');missionOrders.href=missionUrl.toString();}
     pageTitle.textContent='Suivi PFMP : '+(detail.classe&&detail.classe.nom||'Classe');
     pageSub.textContent=detail.periode?[detail.periode.libelle,detail.periode.debut,detail.periode.fin].filter(Boolean).join(' · '):'Aucune période sélectionnée';
     classLabel.textContent=(detail.classe&&detail.classe.nom||'')+' — '+detail.annee;

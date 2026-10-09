@@ -3,7 +3,7 @@ var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_CONVENTION_assurerTableAcces_(){
-  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V513';
+  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V526';
   try{if(cache.get(schemaKey)==='OK')return {cache:true};}catch(eCache){}
   var t=EUC_CONVENTION_ACCES_TABLE_,c=EUC_CONVENTION_colonne_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;});
   var cols=[
@@ -11,7 +11,8 @@ function EUC_CONVENTION_assurerTableAcces_(){
     c('Scenario_dates','Situation des dates'),c('Date_officielle_debut','Date officielle début','Date'),c('Date_officielle_fin','Date officielle fin','Date'),c('Date_declaree_debut','Date réelle début','Date'),c('Date_declaree_fin','Date réelle fin','Date'),c('Motif_ecart_dates','Motif écart de dates'),
     c('Type_sequence','Type de séquence'),c('Numero_sequence','Numéro de séquence','Int'),c('Convention_origine','Convention d’origine','Ref:EUC_ACCES_FORMULAIRES_PFMP'),c('Convention_remplacement','Convention de remplacement','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
     c('PDIF_periode','Période PDIF','Ref:Planning_Periodes'),c('PDIF_mode','Parcours différencié'),c('Lot_generation','Lot de génération'),
-    c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool')
+    c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool'),
+    c('Drive_pdf_file_id','Identifiant PDF Drive'),c('Drive_pdf_url','URL PDF Drive'),c('Drive_pdf_nom','Nom PDF Drive'),c('Drive_pdf_date','Date archivage PDF','DateTime'),c('Drive_pdf_taille','Taille PDF','Int')
   ];
   if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});try{cache.put(schemaKey,'OK',21600);}catch(eNew){}return {tableCreee:true};}
   var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var missing=cols.filter(function(x){return !presentes[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});try{cache.put(schemaKey,'OK',21600);}catch(ePut){}return {tableCreee:false,colonnesCreees:missing.map(function(x){return x.id;})};
@@ -56,6 +57,21 @@ function EUC_CONVENTION_accesParRequestIdV513_(requestId){
   var row=rows.filter(function(r){return String((r.fields||r).Request_id||'')===requestId;})[0];
   if(!row)return null;var out={id:Number(row.id)||0},f=row.fields||row;Object.keys(f).forEach(function(k){out[k]=f[k];});return out;
 }
+function EUC_CONVENTION_rowV525_(row){
+  if(!row)return null;var out={id:Number(row.id)||0},f=row.fields||row;Object.keys(f).forEach(function(k){out[k]=f[k];});return out;
+}
+function EUC_CONVENTION_accesActifsV525_(eleveId,periodeId,annee){
+  var rows=[];
+  try{
+    if(typeof EUC_DEV190G_fastRecords_==='function')rows=EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{Eleve:[Number(eleveId)],Periode:[Number(periodeId)],Annee_scolaire:[String(annee)]})||[];
+    else rows=EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_)||[];
+  }catch(e){rows=EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_)||[];}
+  return rows.map(EUC_CONVENTION_rowV525_).filter(function(r){
+    if(!r||!r.id||Number(EUC_PFMP_ref_(r.Eleve))!==Number(eleveId)||Number(EUC_PFMP_ref_(r.Periode))!==Number(periodeId)||String(r.Annee_scolaire||'')!==String(annee))return false;
+    var statut=String(r.Statut_administratif||r.Statut||'').toUpperCase();
+    return r.Revoked!==true&&r.Supprimee_admin!==true&&['INTERROMPUE','ANNULEE_AVANT_DEMARRAGE','SUPPRIMEE_ADMIN'].indexOf(statut)<0;
+  });
+}
 function EUC_CONVENTION_finaliserRafraichissementV513(token){
   EUC_IMPORT_exigerAdminTexte_();token=token||{};
   var safe={annee:String(token.annee||''),families:(token.families||[]).map(String),targets:(token.targets||[]).map(function(t){return{classe:Number(t.classe)||0,periode:Number(t.periode)||0,famille:String(t.famille||'')};}),revision:String(token.revision||''),reason:String(token.reason||'convention-v513')};
@@ -73,9 +89,8 @@ function EUC_DEV524_construireElevesGenerateur_(classes,rows){
   }).sort(function(a,b){return String(a.classe).localeCompare(String(b.classe),'fr')||String(a.nom).localeCompare(String(b.nom),'fr')||String(a.prenom).localeCompare(String(b.prenom),'fr');});
 }
 function EUC_CONVENTION_lireElevesAdmin(){
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});
-  return EUC_DEV524_construireElevesGenerateur_(classes,EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'));
+  if(typeof EUC_DEV526_generateurPayload_==='function')return EUC_DEV526_generateurPayload_().eleves;
+  EUC_IMPORT_exigerAdminTexte_();var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});return EUC_DEV524_construireElevesGenerateur_(classes,EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'));
 }
 
 function EUC_DEV524_construireMetaGenerateur_(classes,rows){
@@ -85,9 +100,8 @@ function EUC_DEV524_construireMetaGenerateur_(classes,rows){
   return {classes:classes,periodes:periodes};
 }
 function EUC_CONVENTION_lireClassesEtPeriodesAdmin(){
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});
-  return EUC_DEV524_construireMetaGenerateur_(classes,EUC_IMPORT_lireRecords_('Planning_Periodes'));
+  if(typeof EUC_DEV526_generateurPayload_==='function')return EUC_DEV526_generateurPayload_().meta;
+  EUC_IMPORT_exigerAdminTexte_();var classes=EUC_IMPORT_chargerClassesCamin_().filter(function(c){return c.actif;});return EUC_DEV524_construireMetaGenerateur_(classes,EUC_IMPORT_lireRecords_('Planning_Periodes'));
 }
 
 function EUC_CONVENTION_periodeCompatibleClasse_(p,c){
@@ -134,17 +148,29 @@ function EUC_CONVENTION_preparerAcces(payload){
     EUC_CONVENTION_assurerTableAcces_();existing=EUC_CONVENTION_accesParRequestIdV513_(requestId);
     if(existing){
       if(Number(EUC_PFMP_ref_(existing.Eleve))!==eleveId||Number(EUC_PFMP_ref_(existing.Classe_convention))!==classeId||Number(EUC_PFMP_ref_(existing.Periode))!==periodeId)throw new Error('Cette requête de génération correspond déjà à une autre convention. Rechargez la page.');
-      a={token:requestId,reference:String(existing.Reference_convention||''),dateDebut:EUC_IMPORT_dateExistanteISO_(existing.Date_debut),dateFin:EUC_IMPORT_dateExistanteISO_(existing.Date_fin)};
+      if(existing.Revoked===true)throw new Error('Cette convention a été révoquée. Ouvrez son dossier dans « Administration des conventions » pour retrouver son remplacement.');
+      a={id:Number(existing.id)||0,token:requestId,reference:String(existing.Reference_convention||''),dateDebut:EUC_IMPORT_dateExistanteISO_(existing.Date_debut),dateFin:EUC_IMPORT_dateExistanteISO_(existing.Date_fin)};
     }else{
       a=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,{pdif:pdif,pdifMode:pdifMode,scenarioDates:scenario,dateDeclareeDebut:payload.dateDeclareeDebut,dateDeclareeFin:payload.dateDeclareeFin,motifEcartDates:payload.motifEcartDates,requestId:requestId});
-      EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]});
+      var actifs=EUC_CONVENTION_accesActifsV525_(eleveId,periodeId,annee);
+      if(actifs.length>1)throw new Error('Plusieurs conventions actives existent déjà pour cet élève et cette période. Ouvrez « Administration des conventions » avant toute nouvelle génération.');
+      if(actifs.length===1){
+        var ex=actifs[0],exDebut=EUC_IMPORT_dateExistanteISO_(ex.Date_debut),exFin=EUC_IMPORT_dateExistanteISO_(ex.Date_fin);
+        if(exDebut!==a.dateDebut||exFin!==a.dateFin)throw new Error('Une convention existe déjà pour cet élève et cette période, avec les dates '+exDebut+' au '+exFin+'. Corrigez-la ou créez son remplacement depuis « Administration des conventions » : aucune nouvelle convention n’a été créée.');
+        existing=ex;a={id:Number(ex.id)||0,token:'',reference:String(ex.Reference_convention||''),dateDebut:exDebut,dateFin:exFin};
+      }else{
+        var created=EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]})||{};
+        a.id=Number(created.records&&created.records[0]&&created.records[0].id)||0;
+        if(!a.id){var relu=EUC_CONVENTION_accesActifsV525_(eleveId,periodeId,annee).filter(function(x){return String(x.Reference_convention||'')===String(a.reference);})[0];a.id=Number(relu&&relu.id)||0;}
+        if(!a.id)throw new Error('La convention a été créée mais son identifiant durable n’a pas pu être relu. Ne recommencez pas : ouvrez « Administration des conventions ».');
+      }
     }
   }finally{if(requestLock)try{requestLock.releaseLock();}catch(eLock){}}
   /* Toute convention modifie les compteurs, y compris avec les dates
    * officielles. Le recalcul complet ne bloque plus cette requête : le client
    * le finalise séparément et le déclencheur DEV425 sert de filet de sécurité. */
   var refresh=EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},existing?'reprise-idempotente':'creation-convention');
-  var base=ScriptApp.getService().getUrl();return {ok:true,idempotent:!!existing,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee,pdifMode:pdifMode,scenarioDates:scenario,dateDebut:a.dateDebut,dateFin:a.dateFin,refreshToken:refresh};
+  var base=ScriptApp.getService().getUrl(),rid=Number(a.id)||0;return {ok:true,idempotent:!!existing,accessId:rid,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(rid),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(rid),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee,pdifMode:pdifMode,scenarioDates:scenario,dateDebut:a.dateDebut,dateFin:a.dateFin,refreshToken:refresh};
 }
 
 function EUC_CONVENTION_preparerAccesClasse(payload){

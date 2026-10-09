@@ -1,5 +1,40 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV526 (stabilité des parcours opérationnels)
+
+- La colonne « Coordonnées entreprise » restait vide pour les PFMP alors que
+  les responsables étaient présents dans Grist. Le code d'enrichissement était
+  correct, mais les fiches de classe acceptaient encore le marqueur de cache
+  antérieur à cet enrichissement. Le marqueur canonique passe à `DEV526-C11` :
+  les anciennes fiches sont rejetées et reconstruites avec le nom, le prénom,
+  le téléphone et le courriel du responsable disponibles.
+- Les boutons d'affectation téléphonique et visiteur rendent maintenant leur
+  état initial après succès, erreur et délai de vingt-cinq secondes. Une
+  réponse tardive est ignorée et le message demande de recharger la classe
+  avant de relancer ; l'écriture serveur reste un upsert et ne crée pas de
+  doublon.
+- Depuis une fiche de classe, « Ordres de mission » transmet la cible exacte
+  et les dates affichées. La page charge immédiatement ce seul détail sans
+  reconstruire le catalogue des trois familles. Son bouton est rétabli après
+  succès, erreur ou délai de trente secondes.
+- Le générateur de conventions lit Classes, Élèves et Périodes en un seul
+  appel réseau parallèle, puis mémorise le résultat dix minutes avec une clé
+  liée aux révisions Grist. Il ne dépend plus de trois lectures successives qui
+  pouvaient dépasser le délai de vingt secondes.
+- Une convention existante de mêmes élève, période et dates est reprise sans
+  doublon. Si les dates diffèrent, la génération est refusée et renvoie vers le
+  dossier administratif. Toutes les impressions utilisent désormais
+  l'identifiant durable `rid`, ce qui permet de rééditer une convention après
+  fermeture du navigateur, y compris le remplacement relié à une rupture.
+- Après fusion locale, le PDF reste téléchargeable immédiatement puis est
+  archivé dans Drive sous `Eucalyptus PFMP/Conventions PDF/année/niveau/classe/
+  période`. Le lien et la taille sont conservés dans la convention Grist et
+  réaffichés dans l'administration. Un échec d'archivage ne retire jamais le
+  PDF déjà produit au navigateur.
+- Les tests dédiés DEV526 passent `7/7` et la suite complète passe `715/715`.
+  Les actions réelles d'affectation, de création de convention, d'ordre de
+  mission et d'archivage n'ont pas été déclenchées par les tests.
+
 ## Mise à jour du 9 octobre 2026 — DEV524 (chargement du générateur consolidé)
 
 - Le blocage « Chargement… » du générateur de conventions a été reproduit sur

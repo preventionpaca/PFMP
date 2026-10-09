@@ -22,7 +22,16 @@ function EUC_DEV368_catalog(y){
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')});return{annee:y,classes:out};
 }
 function EUC_DEV368_detail(y,c,p){var r=EUC_DEV190I_readOne({annee:y,classe:c,periode:p}),d=r&&r.ready&&r.detail?r.detail:null;if(!d&&typeof EUC_DEV190_buildHistoricalDetail_==='function')d=EUC_DEV190_buildHistoricalDetail_(y,c,p);d=d||{annee:y,classe:{id:c,nom:''},periode:{id:p},lignes:[]};try{if(typeof EUC_APP172_enrichirDetail==='function')d=EUC_APP172_enrichirDetail(d)||d}catch(e){}try{var a=EUC_V156_affectations_(y,c,p)||[],m={};a.forEach(function(x){var id=Number(EUC_PFMP_ref_(x.Eleve))||0,t=EUC_DEV368_t(x.Type_suivi).toUpperCase();if(id&&t)m[id+'|'+t]=x});(d.lignes||[]).forEach(function(x){var v=m[EUC_DEV368_n(x.eleveId)+'|VISITE'];if(v)x.professeurVisiteur=EUC_DEV368_t(v.Nom_professeur_snapshot)})}catch(e2){}return d}
-function EUC_DEV368_targets(q){q=q||{};var y=EUC_DEV368_year(q.annee),f=EUC_DEV368_t(q.famille),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),o=[];EUC_DEV368_catalog(y).classes.forEach(function(c){if(f&&c.famille!==f)return;if(cid&&c.classeId!==cid)return;(c.periodes||[]).forEach(function(p){if(pid&&p.id!==pid)return;o.push({annee:y,famille:c.famille,classeId:c.classeId,classe:c.classe,periode:p})})});return o}
+function EUC_DEV368_targets(q){
+  q=q||{};var y=EUC_DEV368_year(q.annee),f=EUC_DEV368_t(q.famille),cid=EUC_DEV368_n(q.classeId),pid=EUC_DEV368_n(q.periodeId),o=[];
+  /* Depuis une fiche de classe, la cible est deja certaine. Recharger les
+   * trois familles et toutes leurs periodes avant de lire ce seul detail
+   * pouvait immobiliser la page Ordres de mission plusieurs minutes. */
+  if(cid&&pid){
+    return[{annee:y,famille:f||'BACPRO',classeId:cid,classe:EUC_DEV368_t(q.classeNom)||('Classe '+cid),periode:{id:pid,libelle:EUC_DEV368_t(q.periodeNom)||('Periode '+pid),debut:EUC_DEV368_t(q.periodeDebut),fin:EUC_DEV368_t(q.periodeFin)}}];
+  }
+  EUC_DEV368_catalog(y).classes.forEach(function(c){if(f&&c.famille!==f)return;if(cid&&c.classeId!==cid)return;(c.periodes||[]).forEach(function(p){if(pid&&p.id!==pid)return;o.push({annee:y,famille:c.famille,classeId:c.classeId,classe:c.classe,periode:p})})});return o
+}
 function EUC_DEV368_sansConvention(q){EUC_DEV368_admin();var o=[];EUC_DEV368_targets(q).forEach(function(t){var d=EUC_DEV368_detail(t.annee,t.classeId,t.periode.id);(d.lignes||[]).forEach(function(x){if(x.apprenti)return;var code=EUC_DEV368_t(x.statutCode||x.statut).toUpperCase();if(code.indexOf('ANNULEE')>=0||code.indexOf('INTERROMP')>=0)return;if(EUC_DEV368_n(x.conventionId)>0)return;o.push({classe:t.classe,periode:t.periode.libelle,eleve:[x.nom,x.prenom].filter(Boolean).join(' '),professeurPrincipal:EUC_DEV368_t(x.professeurPrincipal)})})});return{ok:true,total:o.length,lignes:o}}
 function EUC_DEV368_col(id,label,type){return{id:id,fields:{label:label,type:type||'Text'}}}
 function EUC_DEV368_ensure(){var ts=EUC_ENT_grist('get','/tables').tables||[],ex=ts.some(function(t){return t.id===EUC_DEV368_TABLE_}),c=EUC_DEV368_col;var cols=[c('Annee_scolaire','Année scolaire'),c('Classe_id','Classe ID','Int'),c('Classe_nom','Classe'),c('Periode_id','Période ID','Int'),c('Periode_libelle','Période'),c('Eleve_id','Élève ID','Int'),c('Eleve_nom','Élève'),c('Professeur_visiteur','Professeur visiteur'),c('Moyen_transport','Moyen de transport'),c('Date_modification','Date modification','DateTime')];if(!ex)EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV368_TABLE_,columns:cols}]})}
@@ -34,10 +43,15 @@ function EUC_DEV368_pdfSans(q){var d=EUC_DEV368_sansConvention(q);return EUC_DEV
 function EUC_DEV368_prof(name){var n=EUC_DEV368_t(name).toUpperCase(),p=(EUC_IMPORT_lireRecords_('EUC_PROFESSEURS_PFMP')||[]).filter(function(x){return [x.Civilite,x.Prenom,x.Nom].filter(Boolean).join(' ').trim().toUpperCase()===n})[0]||{},disc=EUC_DEV368_t(p.Discipline);return{nom:EUC_DEV368_t(p.Nom)||name,prenom:EUC_DEV368_t(p.Prenom),civilite:EUC_DEV368_t(p.Civilite),discipline:disc,fonction:disc?'Professeur — '+disc:'Professeur'}}
 function EUC_DEV368_pdfMission(q){q=q||{};var g=EUC_DEV368_missions(q).groups.filter(function(x){return x.key===EUC_DEV368_t(q.groupKey)})[0];if(!g)throw new Error('Groupe introuvable');if(g.lignes.some(function(x){return !x.transport}))throw new Error('Choisissez un moyen de transport pour chaque élève.');var p=EUC_DEV368_prof(g.professeur),safe=(g.professeur+'_'+g.classe+'_'+g.periode).replace(/[^A-Za-z0-9À-ÿ_-]+/g,'_');return EUC_DEV368_pdf('Ordre_de_mission_'+safe,function(b){b.appendParagraph('LYCÉE LES EUCALYPTUS').setBold(true);b.appendParagraph('ORDRE DE MISSION').setHeading(DocumentApp.ParagraphHeading.HEADING1);b.appendParagraph('NOM / PRÉNOM : '+p.nom);b.appendParagraph('FONCTION : '+p.fonction);b.appendParagraph('MOTIF : Visites en entreprise des élèves en PFMP');b.appendParagraph('CLASSE : '+g.classe);b.appendParagraph('PÉRIODE DE MISSION : '+(g.debut||'')+' au '+(g.fin||'')+' — '+g.periode);var rows=[['Élève','Entreprise','Adresse','Moyen de transport']];g.lignes.forEach(function(x){rows.push([x.eleve,x.entreprise||'',x.adresse||'',x.transport])});b.appendTable(rows);b.appendParagraph('Fait à Nice, le '+Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','dd/MM/yyyy'));b.appendParagraph('Le Proviseur').setBold(true);b.appendParagraph('* Les visites en visio n’ouvrent pas droit à des frais de déplacement.').setItalic(true)})}
 function EUC_DEV368_boot(){var c=EUC_PFMP_contexteAnneeLectureV155_(),ys=(c.annees||[]).map(function(x){return x.code||x}).filter(Boolean);if(c.active&&ys.indexOf(c.active)<0)ys.unshift(c.active);var base='';try{base=EUC_RELEASE_serviceBase_()}catch(e){}return{current:c.active||'',years:ys,baseUrl:base}}
+function EUC_DEV526_bootMissions_(p){
+  p=p||{};var requested=EUC_DEV368_t(p.annee),now=new Date(),start=now.getMonth()>=7?now.getFullYear():now.getFullYear()-1,current=requested||start+'-'+(start+1),years=[current];
+  [start-1,start,start+1].forEach(function(y){var code=y+'-'+(y+1);if(years.indexOf(code)<0)years.push(code);});
+  return{current:current,years:years,baseUrl:''};
+}
 function EUC_DEV368_afficherSans(e){EUC_DEV368_admin();var t=HtmlService.createTemplateFromFile('Sans_Convention_PFMP_V368');t.bootJson=JSON.stringify(EUC_DEV368_boot());return t.evaluate().setTitle('Élèves sans convention').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)}
 function EUC_DEV368_afficherMissions(e){
-  EUC_DEV368_admin();var t=HtmlService.createTemplateFromFile('Ordres_Mission_PFMP_V368'),b=EUC_DEV368_boot(),p=e&&e.parameter||{};
-  b.params={annee:EUC_DEV368_t(p.annee),famille:EUC_DEV368_t(p.famille),classe:EUC_DEV368_t(p.classe),classeNom:EUC_DEV368_t(p.classeNom),periode:EUC_DEV368_t(p.periode),periodeNom:EUC_DEV368_t(p.periodeNom)};
+  EUC_DEV368_admin();var t=HtmlService.createTemplateFromFile('Ordres_Mission_PFMP_V368'),p=e&&e.parameter||{},b=EUC_DEV526_bootMissions_(p);
+  b.params={annee:EUC_DEV368_t(p.annee),famille:EUC_DEV368_t(p.famille),classe:EUC_DEV368_t(p.classe),classeNom:EUC_DEV368_t(p.classeNom),periode:EUC_DEV368_t(p.periode),periodeNom:EUC_DEV368_t(p.periodeNom),periodeDebut:EUC_DEV368_t(p.periodeDebut),periodeFin:EUC_DEV368_t(p.periodeFin)};
   t.bootJson=JSON.stringify(b);return t.evaluate().setTitle('Ordres de mission PFMP').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
 }
 
@@ -228,6 +242,11 @@ function EUC_DEV374_missions(q){
     var detailStarted=new Date().getTime();
     var d=EUC_DEV374_missionDetail_(t.annee,t.famille,t.classeId,t.periode.id);
     detailMs+=new Date().getTime()-detailStarted;
+    var dp=d&&d.periode||{},dc=d&&d.classe||{};
+    t.classe=EUC_DEV368_t(t.classe)||EUC_DEV368_t(dc.nom)||('Classe '+t.classeId);
+    t.periode.libelle=EUC_DEV368_t(t.periode.libelle)||EUC_DEV368_t(dp.libelle||dp.nom)||('Periode '+t.periode.id);
+    t.periode.debut=EUC_DEV368_t(t.periode.debut)||EUC_DEV368_t(dp.debutFr||dp.debut);
+    t.periode.fin=EUC_DEV368_t(t.periode.fin)||EUC_DEV368_t(dp.finFr||dp.fin);
     (d.lignes||[]).forEach(function(x){
       var prof=EUC_DEV368_t(x.professeurVisiteur);if(!prof||!EUC_DEV374_missionEligible_(x))return;
       var k=prof+'|'+t.classeId+'|'+t.periode.id;

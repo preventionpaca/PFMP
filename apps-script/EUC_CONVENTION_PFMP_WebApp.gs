@@ -11,9 +11,9 @@ function EUC_CONVENTION_htmlLienDrive_(titre,texte,url,folderUrl){
 }
 function EUC_CONVENTION_afficherImpression(e){
   var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');
-  var token=String(e&&e.parameter&&e.parameter.token||'').trim();if(!token)throw new Error('Jeton manquant.');
-  if(String(e.parameter&&e.parameter.format||'').toLowerCase()==='word'){var d=EUC_DOCX_genererDepuisToken(token);return EUC_CONVENTION_htmlLienDrive_('Convention PFMP Word','Convention générée : '+d.nom,d.url,d.folderUrl);}
-  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_PdfV95');tpl.payload=JSON.stringify(EUC_PDF_payloadTokenV95(token));return tpl.evaluate().setTitle('Convention PFMP — PDF').addMetaTag('viewport','width=device-width, initial-scale=1');
+  var token=String(e&&e.parameter&&e.parameter.token||'').trim(),rid=Number(e&&e.parameter&&e.parameter.rid||0);if(!token&&!rid)throw new Error('Identifiant de convention manquant.');
+  if(String(e.parameter&&e.parameter.format||'').toLowerCase()==='word'){if(!token)throw new Error('La réédition Word historique exige encore le lien d’origine. Utilisez la réédition PDF durable.');var d=EUC_DOCX_genererDepuisToken(token);return EUC_CONVENTION_htmlLienDrive_('Convention PFMP Word','Convention générée : '+d.nom,d.url,d.folderUrl);}
+  var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_PdfV95');tpl.payload=JSON.stringify(rid?EUC_PDF_payloadAccesIdV525(rid):EUC_PDF_payloadTokenV95(token));return tpl.evaluate().setTitle('Convention PFMP — PDF').addMetaTag('viewport','width=device-width, initial-scale=1');
 }
 function EUC_CONVENTION_afficherImpressionLot(e){
   var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');

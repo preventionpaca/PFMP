@@ -59,6 +59,7 @@
     .edit-actions{display:flex;justify-content:flex-end;margin-top:14px}
     .archive-box{border:1px solid #f3b7b7;background:#fff8f8;border-radius:14px;padding:16px}
     .archive-box h3{margin:0 0 8px;color:#a61b1b}
+    .document-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.document-actions a{display:inline-block;text-decoration:none;border-radius:10px;padding:10px 14px;font-weight:700}.document-actions .print{background:var(--accent);color:#fff}.document-actions .qr{background:#e9f8f2;color:#056c4d;border:1px solid #a7dfca}.document-actions .drive{background:#fff7df;color:#7a5200;border:1px solid #ead393}
     @media(max-width:850px){
       .identity,.exceptions{grid-template-columns:1fr}
       .step{grid-template-columns:38px 1fr}.step-actions{grid-column:2;flex-direction:column}
@@ -107,6 +108,11 @@
         <div class="info"><span>Classe</span><b id="class">—</b></div>
         <div class="info"><span>Entreprise</span><b id="company">—</b></div>
         <div class="info"><span>Période PFMP</span><b id="period">—</b></div>
+      </div>
+      <div id="documentActions" class="document-actions">
+        <a id="reprintConvention" class="print" target="_blank" rel="noopener">Rééditer / imprimer le PDF</a>
+        <a id="openConventionQr" class="qr" target="_blank" rel="noopener">Ouvrir le QR / formulaire</a>
+        <a id="openConventionDrive" class="drive hidden" target="_blank" rel="noopener">Ouvrir le PDF archivé dans Drive</a>
       </div>
     </div>
 
@@ -228,6 +234,9 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   const cls=document.getElementById('class');
   const company=document.getElementById('company');
   const period=document.getElementById('period');
+  const reprintConvention=document.getElementById('reprintConvention');
+  const openConventionQr=document.getElementById('openConventionQr');
+  const openConventionDrive=document.getElementById('openConventionDrive');
   const steps=document.getElementById('steps');
   const history=document.getElementById('history');
   const status=document.getElementById('status');
@@ -744,12 +753,18 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
     cls.textContent=detailClass;
     company.textContent=detailCompany;
     period.textContent=detailPeriod;
+    reprintConvention.href=v.urlImpression||'#';
+    openConventionQr.href=v.urlFormulaire||'#';
+    const drivePdf=v.drivePdf||{};
+    openConventionDrive.classList.toggle('hidden',!drivePdf.url);
+    openConventionDrive.href=drivePdf.url||'#';
+    openConventionDrive.textContent=drivePdf.nom?'Ouvrir dans Drive — '+drivePdf.nom:'Ouvrir le PDF archivé dans Drive';
     const interrupted=String(v.statut||'').toUpperCase()==='INTERROMPUE';
     replacementPanel.classList.toggle('hidden',!interrupted);
     replacementBtn.disabled=!!v.remplacement;
     if(v.remplacement){
       replacementResult.classList.remove('hidden');
-      replacementResult.textContent='Convention de remplacement '+(v.remplacement.reference||('#'+v.remplacement.id))+' — '+[v.remplacement.dateDebut,v.remplacement.dateFin].filter(Boolean).join(' au ')+' — '+(v.remplacement.entreprise||'à compléter par l’entreprise')+'.';
+      replacementResult.innerHTML='<b>Convention de remplacement '+esc(v.remplacement.reference||('#'+v.remplacement.id))+'</b> — '+esc([v.remplacement.dateDebut,v.remplacement.dateFin].filter(Boolean).join(' au '))+' — '+esc(v.remplacement.entreprise||'à compléter par l’entreprise')+'.<br><a target="_blank" rel="noopener" href="'+esc(v.remplacement.urlImpression||'#')+'">Rééditer / imprimer</a><a target="_blank" rel="noopener" href="'+esc(v.remplacement.urlFormulaire||'#')+'">Ouvrir le QR / formulaire</a>'+(v.remplacement.drivePdf&&v.remplacement.drivePdf.url?'<a target="_blank" rel="noopener" href="'+esc(v.remplacement.drivePdf.url)+'">Ouvrir dans Drive</a>':'');
     }else{
       replacementResult.classList.add('hidden');
       replacementResult.textContent='';

@@ -1,4 +1,24 @@
-# Prochain lot après DEV524
+# Prochain lot après DEV526
+
+DEV526 consolide ensemble les quatre parcours signalés : coordonnées du
+responsable dans les fiches de classe, affectation des professeurs, accès aux
+ordres de mission et chargement du générateur de conventions. Il ajoute la
+réédition durable par identifiant et l'archivage Drive des PDF.
+
+Après publication, les contrôles verts autorisés sont : ouvrir une fiche de
+classe et vérifier les coordonnées déjà présentes, ouvrir les ordres de mission
+depuis cette fiche sans générer ni envoyer de document, ouvrir le générateur et
+attendre ses listes, puis ouvrir un dossier administratif et vérifier les liens
+de réédition. Les écritures d'affectation, de convention et d'archive restent
+hors du contrôle automatisé : elles doivent être réalisées seulement sur un
+cas réel choisi par l'utilisateur.
+
+La suite complète locale passe `715/715`. La publication doit valider les
+`25/25` routes vertes, la navigation interne et les quatre parcours en lecture
+seule. Une réédition PDF réelle archivera le document dans Drive ; ce clic ne
+doit donc pas être utilisé par le contrôle automatique.
+
+## Lot précédent — DEV524
 
 DEV524 remplace les trois chargements concurrents du générateur de conventions
 par une réponse serveur unique et borne l'attente à vingt secondes. Après

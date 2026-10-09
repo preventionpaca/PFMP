@@ -57,24 +57,51 @@ function EUC_DEV524_construireGroupesGenerateur_(classes, rows) {
 }
 
 function EUC_CONVENTION_lireGroupesClassesElevesAdmin() {
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
-  return EUC_DEV524_construireGroupesGenerateur_(classes, EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'));
+  return EUC_DEV526_generateurPayload_().groupes;
+}
+
+function EUC_DEV526_generateurCacheKey_(){
+  var rev=['Classes','EUC_ELEVES_PFMP','Planning_Periodes'].map(function(t){try{return EUC_DEV457_revision_(t);}catch(e){return'0';}}).join('|');
+  var digest='';try{digest=Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,rev)).replace(/=+$/,'').slice(0,36);}catch(e2){digest=rev.replace(/[^A-Za-z0-9]/g,'_').slice(-36);}
+  return'EUC_DEV526_GENERATEUR_'+digest;
+}
+function EUC_DEV526_generateurCacheGet_(key){
+  if(typeof CacheService==='undefined')return null;
+  var c=CacheService.getScriptCache(),n=Number(c.get(key+'_N'))||0,raw='';if(!n||n>12)return null;
+  for(var i=0;i<n;i++){var part=c.get(key+'_'+i);if(part==null)return null;raw+=part;}
+  try{return JSON.parse(raw);}catch(e){return null;}
+}
+function EUC_DEV526_generateurCachePut_(key,value){
+  if(typeof CacheService==='undefined')return value;
+  var raw=JSON.stringify(value),size=65000,n=Math.ceil(raw.length/size);if(!n||n>12)return value;var c=CacheService.getScriptCache();
+  for(var i=0;i<n;i++)c.put(key+'_'+i,raw.slice(i*size,(i+1)*size),600);c.put(key+'_N',String(n),600);return value;
+}
+function EUC_DEV526_lireTablesGenerateurParallele_(){
+  if(typeof UrlFetchApp==='undefined'){
+    return {
+      Classes:(EUC_IMPORT_chargerClassesCamin_()||[]).map(function(r){return{id:r.id,fields:{Nom:r.nom,Libelle:r.libelle,Formation:r.formation,Niveau:r.niveau,Etab:r.etab,Actif:r.actif}};}),
+      EUC_ELEVES_PFMP:(EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP')||[]).map(function(r){return{id:r.id,fields:r};}),
+      Planning_Periodes:(EUC_IMPORT_lireRecords_('Planning_Periodes')||[]).map(function(r){return{id:r.id,fields:r};})
+    };
+  }
+  EUC_ENT_controlerCibleRecette_();var c=EUC_ENT_lireConfiguration();
+  if(!c.EUC_ENT_GRIST_API_URL||!c.EUC_ENT_GRIST_DOC_ID||!c.EUC_ENT_GRIST_API_KEY)throw new Error('Configuration Grist incomplète.');
+  var tables=['Classes','EUC_ELEVES_PFMP','Planning_Periodes'],root=c.EUC_ENT_GRIST_API_URL.replace(/\/$/,'')+'/api/docs/'+encodeURIComponent(c.EUC_ENT_GRIST_DOC_ID)+'/tables/',headers={Authorization:'Bearer '+c.EUC_ENT_GRIST_API_KEY,Accept:'application/json'};
+  var responses=UrlFetchApp.fetchAll(tables.map(function(t){return{url:root+encodeURIComponent(t)+'/records',method:'get',muteHttpExceptions:true,headers:headers};})),out={};
+  responses.forEach(function(r,i){var code=r.getResponseCode();if(code<200||code>=300)throw new Error('Lecture Grist refusée pour '+tables[i]+' ('+code+').');var parsed=JSON.parse(r.getContentText()||'{}');out[tables[i]]=parsed.records||[];});
+  return out;
+}
+function EUC_DEV526_generateurPayload_(){
+  EUC_IMPORT_exigerAdminTexte_();var key=EUC_DEV526_generateurCacheKey_(),cached=EUC_DEV526_generateurCacheGet_(key);if(cached)return cached;
+  var rows=EUC_DEV526_lireTablesGenerateurParallele_(),classes=(rows.Classes||[]).map(function(r){var f=r.fields||{};return{id:r.id,nom:String(f.Nom||f.Libelle||'').trim(),libelle:String(f.Libelle||f.Nom||'').trim(),formation:String(f.Formation||'').trim(),niveau:String(f.Niveau||'').trim(),etab:String(f.Etab||'').trim(),actif:f.Actif!==false};}).filter(function(r){return r.id&&r.nom&&r.actif;}),eleves=(rows.EUC_ELEVES_PFMP||[]).map(function(r){return Object.assign({id:r.id},r.fields||{});}),periodes=(rows.Planning_Periodes||[]).map(function(r){return Object.assign({id:r.id},r.fields||{});});
+  return EUC_DEV526_generateurCachePut_(key,{meta:EUC_DEV524_construireMetaGenerateur_(classes,periodes),eleves:EUC_DEV524_construireElevesGenerateur_(classes,eleves),groupes:EUC_DEV524_construireGroupesGenerateur_(classes,eleves)});
 }
 
 /* DEV524 — le générateur chargeait trois exécutions concurrentes qui lisaient
  * trois fois les classes et deux fois les élèves. Une seule réponse cohérente
  * évite qu'une exécution lente laisse toutes les listes sur « Chargement… ». */
 function EUC_CONVENTION_chargerGenerateurAdmin() {
-  EUC_IMPORT_exigerAdminTexte_();
-  var classes = EUC_IMPORT_chargerClassesCamin_().filter(function(c){ return c.actif; });
-  var eleveRows = EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP') || [];
-  var periodeRows = EUC_IMPORT_lireRecords_('Planning_Periodes') || [];
-  return {
-    meta:EUC_DEV524_construireMetaGenerateur_(classes, periodeRows),
-    eleves:EUC_DEV524_construireElevesGenerateur_(classes, eleveRows),
-    groupes:EUC_DEV524_construireGroupesGenerateur_(classes, eleveRows)
-  };
+  return EUC_DEV526_generateurPayload_();
 }
 
 function EUC_CONVENTION_preparerAccesClasseNom(payload) {

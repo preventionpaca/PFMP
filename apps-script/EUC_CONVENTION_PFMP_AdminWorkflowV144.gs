@@ -434,8 +434,8 @@ function EUC_ADMIN_WORKFLOW_creerRemplacementV511(accesId,dateDebut,dateFin,moti
     dateDebut:dates.debut,
     dateFin:dates.fin,
     urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(newId),
-    urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(prepared.token),
-    vue:EUC_ADMIN_WORKFLOW_vueV144(a.id),
+    urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(newId),
+    vue:EUC_ADMIN_WORKFLOW_vueV146(a.id),
     snapshot:snapshot
   };
 }
@@ -658,8 +658,18 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
   var eleves=EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP'),byEleve={};
   eleves.forEach(function(x){byEleve[Number(x.id)]=x;});
   var identite=EUC_ADMIN_WORKFLOW_identiteEleveV521_(a,byEleve);
+  var serviceUrl=(typeof ScriptApp!=='undefined'&&ScriptApp.getService)?ScriptApp.getService().getUrl():'',rid=Number(a.id)||0;
 
   base.jeune={nom:identite.nom,prenom:identite.prenom};
+  base.urlImpression=serviceUrl+'?page=convention-pfmp-print&rid='+encodeURIComponent(rid);
+  base.urlFormulaire=serviceUrl+'?page=pfmp&rid='+encodeURIComponent(rid);
+  base.drivePdf={url:String(a.Drive_pdf_url||''),nom:String(a.Drive_pdf_nom||''),date:String(a.Drive_pdf_date||''),taille:Number(a.Drive_pdf_taille||0)};
+  if(base.remplacement&&base.remplacement.id){
+    var rr=(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(x){return Number(x.id)===Number(base.remplacement.id);})[0]||{};
+    base.remplacement.urlImpression=serviceUrl+'?page=convention-pfmp-print&rid='+encodeURIComponent(base.remplacement.id);
+    base.remplacement.urlFormulaire=serviceUrl+'?page=pfmp&rid='+encodeURIComponent(base.remplacement.id);
+    base.remplacement.drivePdf={url:String(rr.Drive_pdf_url||''),nom:String(rr.Drive_pdf_nom||''),date:String(rr.Drive_pdf_date||''),taille:Number(rr.Drive_pdf_taille||0)};
+  }
   base.classe=String(a.Classe_convention_nom||'');
   base.periode={debut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),fin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),libelle:String(a.Periode_libelle||'')};
   base.etapes=(base.etapes||[]).map(function(x){return Object.assign({},x,{dateLisible:x.date?EUC_ADMIN_WORKFLOW_dateLisibleV144_(x.date):''});});
