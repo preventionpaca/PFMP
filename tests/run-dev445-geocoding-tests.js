@@ -147,4 +147,4 @@ assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must 
 
 assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
 
-console.log('22 contrôles DEV445/DEV517 géocodage et performance réussis.');
+console.log('22 tests DEV445 géocodage/performance réussis.');
