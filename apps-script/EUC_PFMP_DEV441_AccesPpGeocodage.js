@@ -222,10 +222,11 @@ function EUC_DEV445_geoSnapshotDetails_(q){
   return out;
 }
 function EUC_DEV513_geoAccessDetails_(q){
-  q=q||{};var y=EUC_DEV368_year(q.annee),fam=EUC_DEV441_t_(q.famille).toUpperCase(),cid=EUC_DEV441_n_(q.classeId),pid=EUC_DEV441_n_(q.periodeId),allowed={},rows=[],groups={};
+  q=q||{};var y=EUC_DEV368_year(q.annee),fam=EUC_DEV441_t_(q.famille).toUpperCase(),cid=EUC_DEV441_n_(q.classeId),pid=EUC_DEV441_n_(q.periodeId),allowed={},classInfo={},rows=[],groups={};
+  try{(EUC_DEV441_catalog_(y,false).classes||[]).forEach(function(c){var id=EUC_DEV441_n_(c.classeId);if(id)classInfo[String(id)]={famille:EUC_DEV441_t_(c.famille).toUpperCase(),nom:EUC_DEV441_t_(c.classe)};});}catch(eCatalog){}
   if(cid)allowed[String(cid)]=true;
   else if(fam){
-    try{(EUC_DEV441_catalog_(y,false).classes||[]).forEach(function(c){if(EUC_DEV441_t_(c.famille).toUpperCase()===fam)allowed[String(EUC_DEV441_n_(c.classeId))]=true;});}catch(eCatalog){}
+    Object.keys(classInfo).forEach(function(id){if(classInfo[id].famille===fam)allowed[id]=true;});
     if(!Object.keys(allowed).length)return [];
   }
   /* DEV514 — même règle que le suivi canonique : les anciennes références
@@ -240,35 +241,108 @@ function EUC_DEV513_geoAccessDetails_(q){
   rows.forEach(function(r){
     var a=r.fields||r,ac=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe_convention):a.Classe_convention),ap=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Periode):a.Periode),status=EUC_DEV441_t_(a.Statut_administratif||a.Statut).toUpperCase();
     if(EUC_DEV441_t_(a.Annee_scolaire)!==y||!ac||!ap||(Object.keys(allowed).length&&!allowed[String(ac)])||(pid&&ap!==pid)||a.Revoked===true||a.Supprimee_admin===true||status.indexOf('INTERROMP')>=0||status.indexOf('ANNULEE')>=0)return;
-    var key=ac+'|'+ap,g=groups[key]||(groups[key]={famille:fam,classe:{id:ac,nom:EUC_DEV441_t_(a.Classe_convention_nom)},periode:{id:ap,libelle:EUC_DEV441_t_(a.Periode_libelle)},lignes:[]});
+    var info=classInfo[String(ac)]||{},key=ac+'|'+ap,g=groups[key]||(groups[key]={famille:fam||EUC_DEV441_t_(info.famille),classe:{id:ac,nom:EUC_DEV441_t_(a.Classe_convention_nom)||EUC_DEV441_t_(info.nom)},periode:{id:ap,libelle:EUC_DEV441_t_(a.Periode_libelle)},lignes:[]});
     var address=[a.Entreprise_adresse,a.Entreprise_complement,a.Entreprise_code_postal,a.Entreprise_commune].map(EUC_DEV441_t_).filter(Boolean).join(', ');
     g.lignes.push({entreprise:EUC_DEV441_t_(a.Entreprise_raison_sociale||a.Entreprise_enseigne),adresseEntreprise:address,siretEntreprise:EUC_DEV441_t_(a.Entreprise_siret)});
   });
   return Object.keys(groups).map(function(k){return groups[k];});
 }
-function EUC_DEV441_geoCandidates_(q){
+/* DEV517 — index géographique annuel persistant.
+ *
+ * L'analyse « Toutes les classes » relisait l'index des snapshots, les accès
+ * annuels et la table des coordonnées à chaque nouvelle instance Apps Script.
+ * Le premier clic dépassait donc le délai du navigateur, puis le second
+ * fonctionnait uniquement grâce au cache mémoire de Grist. L'index ci-dessous
+ * est durable, fragmenté sous la limite de 9 Ko des Script Properties et lié
+ * aux révisions de l'index canonique et de la table géographique. Les filtres
+ * famille / classe / période sont ensuite appliqués en mémoire.
+ */
+var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV517-GEO-1';
+var EUC_DEV517_GEO_INDEX_TTL_MS_=21600000;
+function EUC_DEV517_geoIndexKey_(year){return'DEV517_GEO_INDEX_'+EUC_DEV441_t_(year).replace(/[^0-9A-Za-z_-]/g,'_');}
+function EUC_DEV517_geoIndexRevision_(){
+  var parts=[EUC_DEV517_GEO_INDEX_SCHEMA_];
+  try{
+    if(typeof EUC_DEV457_revision_==='function'){
+      parts.push(EUC_DEV457_revision_(EUC_DEV190E_INDEX_TABLE_));
+      parts.push(EUC_DEV457_revision_(EUC_DEV441_GEO_TABLE_));
+    }
+  }catch(e){}
+  return parts.join('|');
+}
+function EUC_DEV517_geoIndexRead_(year){
+  var key=EUC_DEV517_geoIndexKey_(year),rev=EUC_DEV517_geoIndexRevision_(),raw='',count=0,at=0;
+  try{
+    var cache=CacheService.getScriptCache();count=Number(cache.get(key+'_N'))||0;
+    if(count>0&&count<=20&&cache.get(key+'_R')===rev){
+      var cacheParts=[];for(var ci=0;ci<count;ci++){var cp=cache.get(key+'_C'+ci);if(cp==null){cacheParts=[];break;}cacheParts.push(cp);}
+      if(cacheParts.length===count)raw=cacheParts.join('');
+    }
+  }catch(eCache){}
+  if(!raw){
+    try{
+      var props=PropertiesService.getScriptProperties();count=Number(props.getProperty(key+'_COUNT'))||0;at=Number(props.getProperty(key+'_AT'))||0;
+      if(count<=0||count>80||props.getProperty(key+'_REV')!==rev||!at||Date.now()-at>EUC_DEV517_GEO_INDEX_TTL_MS_)return null;
+      var parts=[];for(var i=0;i<count;i++){var part=props.getProperty(key+'_'+i);if(part==null)return null;parts.push(part);}raw=parts.join('');
+    }catch(eProps){return null;}
+  }
+  try{return JSON.parse(raw);}catch(eJson){return null;}
+}
+function EUC_DEV517_geoIndexStore_(year,items){
+  var raw='';try{raw=JSON.stringify(items||[]);}catch(e){return items||[];}
+  var key=EUC_DEV517_geoIndexKey_(year),rev=EUC_DEV517_geoIndexRevision_();
+  try{
+    var props=PropertiesService.getScriptProperties(),size=7000,count=Math.ceil(raw.length/size)||1,values={};
+    if(count>80)return items||[];
+    values[key+'_COUNT']=String(count);values[key+'_REV']=rev;values[key+'_AT']=String(Date.now());
+    for(var i=0;i<count;i++)values[key+'_'+i]=raw.slice(i*size,(i+1)*size);
+    props.setProperties(values,false);
+  }catch(eProps){}
+  try{
+    var cache=CacheService.getScriptCache(),chunk=70000,n=Math.ceil(raw.length/chunk)||1;
+    if(n<=20){for(var j=0;j<n;j++)cache.put(key+'_C'+j,raw.slice(j*chunk,(j+1)*chunk),21600);cache.put(key+'_N',String(n),21600);cache.put(key+'_R',rev,21600);}
+  }catch(eCache){}
+  return items||[];
+}
+function EUC_DEV517_geoScope_(d){
+  return{famille:EUC_DEV441_t_(d&&d.famille).toUpperCase(),classeId:EUC_DEV441_n_(d&&d.classe&&(d.classe.id||d.classe.classeId)),periodeId:EUC_DEV441_n_(d&&d.periode&&(d.periode.id||d.periode.periodeId))};
+}
+function EUC_DEV517_geoFilter_(items,q){
+  q=q||{};var fam=EUC_DEV441_t_(q.famille).toUpperCase(),cid=EUC_DEV441_n_(q.classeId),pid=EUC_DEV441_n_(q.periodeId);
+  if(!fam&&!cid&&!pid)return items||[];
+  return(items||[]).filter(function(x){return(x.scopes||[]).some(function(s){return(!fam||s.famille===fam)&&(!cid||s.classeId===cid)&&(!pid||s.periodeId===pid);});});
+}
+function EUC_DEV517_buildGeoCandidates_(q){
   var saved={},savedIdentity={},out=[],byIdentity={};EUC_DEV441_geoRows_().forEach(function(r){saved[EUC_DEV441_t_(r.Cle_adresse)]=r;savedIdentity[EUC_DEV443_geoIdentity_(r.Entreprise,r.Adresse_source,r.SIRET)]=r;});
   /* Un snapshot peut exister tout en étant incomplet. Les conventions actives
    * sont donc toujours fusionnées avec lui ; la déduplication par identité
    * entreprise/adresse/SIRET ci-dessous empêche les doublons. */
   var details=EUC_DEV445_geoSnapshotDetails_(q).concat(EUC_DEV513_geoAccessDetails_(q));
-  details.forEach(function(d){var cn=EUC_DEV441_t_(d&&d.classe&&(d.classe.nom||d.classe.libelle)),pn=EUC_DEV441_t_(d&&d.periode&&(d.periode.libelle||d.periode.nom)),perimetre=[cn,pn].filter(Boolean).join(' · ');(d.lignes||[]).forEach(function(x){var entreprise=EUC_DEV441_t_(x.entreprise),adresse=EUC_DEV443_normalizeAddress_(x.adresseEntreprise),siret=EUC_DEV441_t_(x.siretEntreprise||x.siret).replace(/\D/g,'');if(!entreprise||!adresse)return;var identity=EUC_DEV443_geoIdentity_(entreprise,adresse,siret),key=EUC_DEV441_geoKey_(entreprise,adresse,siret),r=saved[key]||savedIdentity[identity]||{},existing=byIdentity[identity];if(existing){if(EUC_DEV443_addressRank_(adresse)>EUC_DEV443_addressRank_(existing.adresse)){var preferred=EUC_DEV441_geoClassify_(adresse),source=savedIdentity[identity]||{};existing.adresse=adresse;existing.pays=preferred.pays;existing.codePostal=preferred.codePostal;if(source.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(source.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse)){existing.statut=preferred.pays==='FRANCE'?'A_REGEOCODER':'COORDONNEES_A_RENSEIGNER';existing.latitude=null;existing.longitude=null;existing.adresseNormalisee='';existing.score=null;existing.precision='';existing.commentaire='Adresse modifiée depuis le dernier géocodage.';}}if(perimetre&&existing.perimetres.indexOf(perimetre)<0)existing.perimetres.push(perimetre);existing.classe=existing.perimetres.join(' / ');return}if(r.Cle_adresse)key=EUC_DEV441_t_(r.Cle_adresse);var cls=EUC_DEV441_geoClassify_(adresse),changed=!!r.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(r.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse),status=changed&&cls.pays==='FRANCE'?'A_REGEOCODER':EUC_DEV443_savedStatus_(r,cls),item={key:key,_recordId:EUC_DEV441_n_(r.id),siret:siret,entreprise:entreprise,adresse:adresse,pays:changed?cls.pays:EUC_DEV443_savedCountry_(r,cls),codePostal:changed?cls.codePostal:(EUC_DEV443_postal_(r.Code_postal)||cls.codePostal),statut:status,latitude:changed?null:(r.Latitude==null?null:Number(r.Latitude)),longitude:changed?null:(r.Longitude==null?null:Number(r.Longitude)),adresseNormalisee:changed?'':EUC_DEV441_t_(r.Adresse_normalisee),score:changed?null:(r.Score==null?null:Number(r.Score)),precision:changed?'':EUC_DEV441_t_(r.Precision),commentaire:changed?'Adresse modifiée depuis le dernier géocodage.':EUC_DEV441_t_(r.Commentaire),classe:perimetre,periode:'',perimetres:perimetre?[perimetre]:[]};byIdentity[identity]=item;out.push(item);});});return out;
+  details.forEach(function(d){var cn=EUC_DEV441_t_(d&&d.classe&&(d.classe.nom||d.classe.libelle)),pn=EUC_DEV441_t_(d&&d.periode&&(d.periode.libelle||d.periode.nom)),perimetre=[cn,pn].filter(Boolean).join(' · '),scope=EUC_DEV517_geoScope_(d),scopeKey=[scope.famille,scope.classeId,scope.periodeId].join('|');(d.lignes||[]).forEach(function(x){var entreprise=EUC_DEV441_t_(x.entreprise),adresse=EUC_DEV443_normalizeAddress_(x.adresseEntreprise),siret=EUC_DEV441_t_(x.siretEntreprise||x.siret).replace(/\D/g,'');if(!entreprise||!adresse)return;var identity=EUC_DEV443_geoIdentity_(entreprise,adresse,siret),key=EUC_DEV441_geoKey_(entreprise,adresse,siret),r=saved[key]||savedIdentity[identity]||{},existing=byIdentity[identity];if(existing){if(EUC_DEV443_addressRank_(adresse)>EUC_DEV443_addressRank_(existing.adresse)){var preferred=EUC_DEV441_geoClassify_(adresse),source=savedIdentity[identity]||{};existing.adresse=adresse;existing.pays=preferred.pays;existing.codePostal=preferred.codePostal;if(source.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(source.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse)){existing.statut=preferred.pays==='FRANCE'?'A_REGEOCODER':'COORDONNEES_A_RENSEIGNER';existing.latitude=null;existing.longitude=null;existing.adresseNormalisee='';existing.score=null;existing.precision='';existing.commentaire='Adresse modifiée depuis le dernier géocodage.';}}if(perimetre&&existing.perimetres.indexOf(perimetre)<0)existing.perimetres.push(perimetre);if(!existing._scopeKeys[scopeKey]){existing._scopeKeys[scopeKey]=true;existing.scopes.push(scope);}existing.classe=existing.perimetres.join(' / ');return}if(r.Cle_adresse)key=EUC_DEV441_t_(r.Cle_adresse);var cls=EUC_DEV441_geoClassify_(adresse),changed=!!r.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(r.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse),status=changed&&cls.pays==='FRANCE'?'A_REGEOCODER':EUC_DEV443_savedStatus_(r,cls),item={key:key,_recordId:EUC_DEV441_n_(r.id),siret:siret,entreprise:entreprise,adresse:adresse,pays:changed?cls.pays:EUC_DEV443_savedCountry_(r,cls),codePostal:changed?cls.codePostal:(EUC_DEV443_postal_(r.Code_postal)||cls.codePostal),statut:status,latitude:changed?null:(r.Latitude==null?null:Number(r.Latitude)),longitude:changed?null:(r.Longitude==null?null:Number(r.Longitude)),adresseNormalisee:changed?'':EUC_DEV441_t_(r.Adresse_normalisee),score:changed?null:(r.Score==null?null:Number(r.Score)),precision:changed?'':EUC_DEV441_t_(r.Precision),commentaire:changed?'Adresse modifiée depuis le dernier géocodage.':EUC_DEV441_t_(r.Commentaire),classe:perimetre,periode:'',perimetres:perimetre?[perimetre]:[],scopes:[scope],_scopeKeys:{}};item._scopeKeys[scopeKey]=true;byIdentity[identity]=item;out.push(item);});});
+  out.forEach(function(x){delete x._scopeKeys;});return out;
+}
+function EUC_DEV517_geoCandidatesAll_(year){
+  var y=EUC_DEV368_year(year),cached=EUC_DEV517_geoIndexRead_(y);if(cached)return cached;
+  return EUC_DEV517_geoIndexStore_(y,EUC_DEV517_buildGeoCandidates_({annee:y}));
+}
+function EUC_DEV441_geoCandidates_(q){
+  q=q||{};return EUC_DEV517_geoFilter_(EUC_DEV517_geoCandidatesAll_(q.annee),q);
 }
 function EUC_DEV441_geoAdminData(q){EUC_DEV441_admin_();var c=EUC_DEV441_geoCandidates_(q);return{ok:true,total:c.length,france:c.filter(function(x){return x.pays==='FRANCE';}).length,manuel:c.filter(function(x){return x.pays!=='FRANCE';}).length,candidats:c};}
 function EUC_DEV445_geoFields_(item,fields){var all={Cle_adresse:item.key,SIRET:item.siret||'',Entreprise:item.entreprise,Adresse_source:item.adresse};Object.keys(fields||{}).forEach(function(k){all[k]=fields[k];});return all;}
 function EUC_DEV445_geoBatchUpsert_(items){
   var patches=[],posts=[];(items||[]).forEach(function(x){var record={fields:EUC_DEV445_geoFields_(x.item,x.fields)};if(x.item._recordId){record.id=x.item._recordId;patches.push(record);}else posts.push(record);});
   if(patches.length)EUC_ENT_grist('patch','/tables/'+EUC_DEV441_GEO_TABLE_+'/records',{records:patches});
-  if(posts.length)EUC_ENT_grist('post','/tables/'+EUC_DEV441_GEO_TABLE_+'/records',{records:posts});
+  if(posts.length){var created=EUC_ENT_grist('post','/tables/'+EUC_DEV441_GEO_TABLE_+'/records',{records:posts})||{},createdRows=created.records||[];posts.forEach(function(p,i){if(createdRows[i]&&createdRows[i].id)p.item._recordId=EUC_DEV441_n_(createdRows[i].id);});}
 }
 function EUC_DEV445_geoApply_(item,fields){Object.keys(fields||{}).forEach(function(k){var map={Adresse_normalisee:'adresseNormalisee',Pays:'pays',Code_postal:'codePostal',Latitude:'latitude',Longitude:'longitude',Score:'score',Precision:'precision',Statut:'statut',Commentaire:'commentaire'},target=map[k];if(target)item[target]=fields[k];});return item;}
 function EUC_DEV441_geocodeFrance(q){
-  EUC_DEV441_admin_();q=q||{};var keys=q.keys||[],all=EUC_DEV441_geoCandidates_(q),c=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER')&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,40),done=0,manual=0,writes=[];
+  EUC_DEV441_admin_();q=q||{};var keys=q.keys||[],annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),c=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER')&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,40),done=0,manual=0,writes=[];
   c.forEach(function(x){var url=EUC_DEV441_GEO_URL_+'?q='+encodeURIComponent(EUC_DEV443_normalizeAddress_(x.adresse))+'&limit=3'+(x.codePostal?'&postcode='+encodeURIComponent(x.codePostal):''),res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}}),json={};try{json=JSON.parse(res.getContentText()||'{}');}catch(e){}var feature=json.features&&json.features[0],coords=feature&&feature.geometry&&feature.geometry.coordinates,props=feature&&feature.properties||{},score=Number(props.score)||0,fields;if(feature&&coords&&coords.length>=2){var needsReview=score<0.45;fields={Adresse_normalisee:EUC_DEV441_t_(props.label),Pays:'FRANCE',Code_postal:EUC_DEV443_postal_(props.postcode||x.codePostal),Commune:EUC_DEV441_t_(props.city),Latitude:Number(coords[1]),Longitude:Number(coords[0]),Score:score,Precision:EUC_DEV441_t_(props.type),Fournisseur:'Géoplateforme / BAN',Statut:needsReview?'A_VALIDER_MANUELLEMENT':'GEOCODE_AUTOMATIQUE',Date_geocodage:new Date().toISOString(),Commentaire:needsReview?'Résultat automatique peu précis : contrôlez le point proposé.':''};if(needsReview)manual++;else done++;}else{fields={Pays:'FRANCE',Code_postal:x.codePostal,Latitude:null,Longitude:null,Fournisseur:'Géoplateforme / BAN',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point trouvé automatiquement. Recherchez le lieu puis renseignez latitude et longitude.'};manual++;}writes.push({item:x,fields:fields});EUC_DEV445_geoApply_(x,fields);Utilities.sleep(30);});
-  EUC_DEV445_geoBatchUpsert_(writes);return{ok:true,geocodes:done,aValider:manual,candidats:all};
+  EUC_DEV445_geoBatchUpsert_(writes);EUC_DEV517_geoIndexStore_(q.annee,annual);return{ok:true,geocodes:done,aValider:manual,candidats:all};
 }
 function EUC_DEV441_saveManualGeo(q){
-  var ctx=EUC_DEV441_admin_(),key=EUC_DEV441_t_(q&&q.key),rawLat=EUC_DEV441_t_(q&&q.latitude),rawLon=EUC_DEV441_t_(q&&q.longitude),lat=Number(rawLat),lon=Number(rawLon),all=EUC_DEV441_geoCandidates_(q),item=all.filter(function(x){return x.key===key;})[0];if(!item)throw new Error('Adresse introuvable.');if(!rawLat||!rawLon||!isFinite(lat)||lat<-90||lat>90||!isFinite(lon)||lon<-180||lon>180)throw new Error('Renseignez une latitude et une longitude valides.');var fields={Adresse_normalisee:EUC_DEV441_t_(q.adresseNormalisee)||item.adresse,Pays:item.pays,Code_postal:item.codePostal,Latitude:lat,Longitude:lon,Score:1,Precision:'validation manuelle',Fournisseur:'MANUEL',Statut:'VALIDE_MANUELLEMENT',Valide_par:EUC_DEV441_t_(ctx.email),Date_validation:new Date().toISOString(),Commentaire:EUC_DEV441_t_(q.commentaire)};EUC_DEV445_geoBatchUpsert_([{item:item,fields:fields}]);EUC_DEV445_geoApply_(item,fields);return{ok:true,candidats:all};
+  q=q||{};var ctx=EUC_DEV441_admin_(),key=EUC_DEV441_t_(q.key),rawLat=EUC_DEV441_t_(q.latitude),rawLon=EUC_DEV441_t_(q.longitude),lat=Number(rawLat),lon=Number(rawLon),annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),item=all.filter(function(x){return x.key===key;})[0];if(!item)throw new Error('Adresse introuvable.');if(!rawLat||!rawLon||!isFinite(lat)||lat<-90||lat>90||!isFinite(lon)||lon<-180||lon>180)throw new Error('Renseignez une latitude et une longitude valides.');var fields={Adresse_normalisee:EUC_DEV441_t_(q.adresseNormalisee)||item.adresse,Pays:item.pays,Code_postal:item.codePostal,Latitude:lat,Longitude:lon,Score:1,Precision:'validation manuelle',Fournisseur:'MANUEL',Statut:'VALIDE_MANUELLEMENT',Valide_par:EUC_DEV441_t_(ctx.email),Date_validation:new Date().toISOString(),Commentaire:EUC_DEV441_t_(q.commentaire)};EUC_DEV445_geoBatchUpsert_([{item:item,fields:fields}]);EUC_DEV445_geoApply_(item,fields);EUC_DEV517_geoIndexStore_(q.annee,annual);return{ok:true,candidats:all};
 }
 function EUC_DEV441_mapData(q){var c=EUC_DEV441_geoCandidates_(q).filter(function(x){return isFinite(x.latitude)&&isFinite(x.longitude)&&x.latitude!==null&&x.longitude!==null&&(x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT');});return{ok:true,total:c.length,points:c};}
 

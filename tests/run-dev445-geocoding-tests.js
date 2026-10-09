@@ -70,6 +70,29 @@ const mergedCandidates=mergedCtx.EUC_DEV441_geoCandidates_({annee:'2026-2027',fa
 assert.equal(mergedCandidates.length,2,'an incomplete snapshot must be supplemented with active convention companies');
 assert.deepEqual(mergedFilter,{Annee_scolaire:['2026-2027']},'Ref columns must be filtered in memory after one annual read');
 
+let durableReads=0;
+const durableGeoProps={},durableGeoCache={};
+const durableGeoCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Object,Array,RegExp,
+  EUC_DEV190E_INDEX_TABLE_:'IDX',EUC_DEV190I_TABLE_:'DETAIL',EUC_CONVENTION_ACCES_TABLE_:'ACCES',
+  EUC_DEV368_year:v=>String(v||'2026-2027'),EUC_DEV368_admin:()=>({email:'admin@example.test'}),
+  EUC_DEV368_catalog:()=>({classes:[{famille:'BACPRO',classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]}),
+  EUC_DEV457_revision_:table=>'rev-'+table,
+  EUC_DEV190G_fastRecords_:(table)=>{durableReads++;if(table==='IDX')return [{id:1,fields:{Annee_scolaire:'2026-2027',Famille:'__DEV427_DETAIL__BACPRO_24_62',Payload_JSON:JSON.stringify({famille:'BACPRO',classe:{id:24,nom:'TCAR'},periode:{id:62,libelle:'PFMP n°1'},lignes:[{entreprise:'INDEX DURABLE',adresseEntreprise:'3 RUE DU TEST 06000 NICE',siretEntreprise:'33333333333333'}]}),Updated_at:'2026-10-09T08:00:00Z',Actif:true}}];return[];},
+  EUC_IMPORT_lireRecords_:()=>{durableReads++;return[];},
+  PropertiesService:{getScriptProperties:()=>({getProperty:k=>durableGeoProps[k]??null,setProperties:values=>Object.assign(durableGeoProps,values)})},
+  CacheService:{getScriptCache:()=>({get:k=>durableGeoCache[k]??null,put:(k,v)=>{durableGeoCache[k]=v;}})},
+  Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
+  MailApp:{},LockService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
+};
+vm.createContext(durableGeoCtx);vm.runInContext(code,durableGeoCtx);
+const durableFirst=durableGeoCtx.EUC_DEV441_geoCandidates_({annee:'2026-2027'}),readsAfterFirst=durableReads;
+Object.keys(durableGeoCache).forEach(k=>delete durableGeoCache[k]);
+const durableFiltered=durableGeoCtx.EUC_DEV441_geoCandidates_({annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:62});
+assert.equal(durableFirst.length,1,'annual geographic index must contain the snapshot company');
+assert.equal(durableFiltered.length,1,'family/class/period filters must be applied to the durable annual index');
+assert.equal(durableReads,readsAfterFirst,'a fresh Apps Script instance must restore the annual index without a Grist read');
+assert.ok(Object.keys(durableGeoProps).some(k=>/_COUNT$/.test(k)),'the annual index must be chunked into durable properties');
+
 const familyCode=fs.readFileSync('apps-script/EUC_PFMP_DEV339_FamilleUX.js','utf8');
 let heavyCalls=0;
 const familyCtx={console,Date,Math,JSON,String,Number,Object,Array,
@@ -124,4 +147,4 @@ assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must 
 
 assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
 
-console.log('18 tests DEV445 géocodage/performance réussis.');
+console.log('22 contrôles DEV445/DEV517 géocodage et performance réussis.');
