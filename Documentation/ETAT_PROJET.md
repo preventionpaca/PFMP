@@ -1,5 +1,35 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 octobre 2026 — DEV519 (QR et coordonnées entreprise PFMP)
+
+- Le formulaire QR pouvait afficher un SIRET prérempli de quatorze chiffres
+  tout en conservant le compteur à `0 / 14`. Le remplissage JavaScript ne
+  déclenchait pas le contrôle `input`. Le compteur, l'état du bouton de
+  recherche et la validation sont désormais recalculés après chaque
+  préremplissage ou résultat officiel.
+- Lorsque « tuteur identique au responsable » était coché, les cinq champs
+  tuteur masqués restaient marqués `required` par une seconde couche de
+  validation. La validation applicative les ignorait, puis la validation HTML
+  native bloquait l'enregistrement avec le message générique observé. Leur
+  caractère obligatoire et leur astérisque suivent maintenant réellement la
+  case. Une autre erreur HTML nomme désormais le champ concerné.
+- Dans le suivi de classe, les apprentis recevaient leurs coordonnées depuis la
+  fiche apprentissage, mais les PFMP n'utilisaient que les copies présentes sur
+  la convention. Lorsqu'elles étaient vides, les coordonnées pourtant
+  disponibles dans la fiche entreprise ou le contact lié n'étaient pas
+  affichées. Le détail privilégie toujours les valeurs historiques de la
+  convention, puis complète en lecture seule depuis la fiche entreprise et le
+  contact explicitement lié. Une entreprise sans référence directe peut être
+  retrouvée par son SIRET ; un contact non lié n'est repris que s'il est unique
+  et actif, afin de ne jamais choisir arbitrairement entre plusieurs personnes.
+- L'enrichissement est groupé pour toute la famille : au plus une lecture des
+  entreprises et une lecture des contacts, jamais une requête par élève. Aucun
+  formulaire QR, aucune convention et aucune donnée Grist n'ont été écrits
+  pendant le diagnostic et les tests.
+- Les tests ciblés DEV519 passent `6/6`, les contrôles connexes DEV513,
+  DEV459 et DEV511 passent `42/42`, et la suite complète passe `685/685`.
+  Le correctif est validé localement mais n'est pas encore publié sur le vert.
+
 ## Mise à jour du 9 octobre 2026 — DEV518 (spinner des boutons réellement occupés)
 
 - Le spinner transversal confondait l'état fonctionnel `disabled` avec une

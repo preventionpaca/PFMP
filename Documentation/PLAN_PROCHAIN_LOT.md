@@ -1,4 +1,14 @@
-# Prochain lot après DEV514
+# Prochain lot après DEV519
+
+DEV519 corrige localement les deux régressions signalées sur le vert : le
+formulaire QR ne reste plus bloqué sur des champs tuteur masqués et les
+coordonnées entreprise des élèves en PFMP sont complétées en lecture seule
+depuis les références déjà présentes dans Grist. La suite complète est à
+`685/685`. Le lot n'est pas publié : la prochaine action est une publication
+explicite par `scripts/pfmp-release.sh release-stable`, puis le contrôle des 25
+routes vertes et une vérification en lecture d'une classe PFMP montrant les
+coordonnées entreprise. Le parcours d'enregistrement QR réel restera non testé
+tant qu'aucune autorisation explicite d'écriture de convention n'est donnée.
 
 ## Décision de livraison active — Git vers vert
 

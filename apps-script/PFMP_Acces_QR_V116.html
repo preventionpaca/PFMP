@@ -737,6 +737,19 @@ function afficherEntreprise(r){
 
   });
 
+  /* Un remplissage JavaScript ne déclenche pas l'évènement input. Sans ce
+     recalcul, un SIRET pourtant complet restait affiché comme « 0 / 14 ». */
+  controleSiret();
+
+  if(
+    normaliserSiretValeur(field('entrepriseSiret').value).length === 14 &&
+    String(field('entrepriseRaisonSociale').value || '').trim() &&
+    String(field('entrepriseAdresse').value || '').trim() &&
+    String(field('entrepriseCommune').value || '').trim()
+  ){
+    document.documentElement.dataset.eucFranceVerified = '1';
+  }
+
   $('#same').checked =
     !!(r.tuteur || {}).estResponsable;
 
@@ -1145,8 +1158,21 @@ function(){
       b.textContent =
         'Enregistrer les informations';
 
+      const labels = {
+        entrepriseSiret:'SIRET', entrepriseRaisonSociale:'raison sociale',
+        entrepriseAdresse:'adresse', entrepriseCommune:'ville',
+        responsableNom:'nom du responsable', responsablePrenom:'prénom du responsable',
+        responsableFonction:'fonction du responsable', responsableTelephone:'téléphone du responsable',
+        responsableCourriel:'e-mail du responsable', tuteurNom:'nom du tuteur',
+        tuteurPrenom:'prénom du tuteur', tuteurFonction:'fonction du tuteur',
+        tuteurTelephone:'téléphone du tuteur', tuteurCourriel:'e-mail du tuteur'
+      };
+      const badLabel = bad && (labels[bad.name] || bad.name || bad.id);
+
       msg(
-        'Impossible d’enregistrer : vérifiez le champ signalé.',
+        badLabel
+          ? 'Impossible d’enregistrer : le champ « '+badLabel+' » est incomplet ou incorrect.'
+          : 'Impossible d’enregistrer : vérifiez le champ signalé.',
         true
       );
 
@@ -1369,6 +1395,9 @@ init();
     V('entrepriseCodePostal',r.entrepriseCodePostal||r.cp||r.codePostal||'');
     V('entrepriseCommune',r.entrepriseCommune||r.ville||r.commune||'');
     V('entreprisePays',r.entreprisePays||r.pays||'');
+    if(typeof controleSiret==='function'){
+      try{ controleSiret(); }catch(e){}
+    }
   }
 
   function boot(){
@@ -1393,7 +1422,8 @@ init();
       lockOne('entrepriseEnseigne',false);
       document.documentElement.dataset.eucFranceVerified='0';
       document.documentElement.dataset.eucMonacoManual='0';
-      search.disabled=ident.value.length!==14;
+      if(typeof controleSiret==='function') controleSiret();
+      else search.disabled=ident.value.length!==14;
     }
 
     function monacoMode(){
@@ -1425,7 +1455,8 @@ init();
         clearIdentity(false);
         lockIdentity(true,false);
         lockOne('entrepriseEnseigne',false);
-        search.disabled=ident.value.length!==14;
+        if(typeof controleSiret==='function') controleSiret();
+        else search.disabled=ident.value.length!==14;
       }else{
         ident.value=nisNorm(ident.value);
         document.documentElement.dataset.eucMonacoManual='0';
@@ -1654,6 +1685,13 @@ init();
     'tuteurTelephone',
     'tuteurCourriel'
   ];
+  var TUTOR_REQUIRED=[
+    'tuteurNom',
+    'tuteurPrenom',
+    'tuteurFonction',
+    'tuteurTelephone',
+    'tuteurCourriel'
+  ];
 
   function fieldByName(name){
     return document.querySelector('[name="'+name+'"]') ||
@@ -1694,6 +1732,23 @@ init();
       if(firstText) firstText.after(star);
       else label.insertBefore(star,label.firstChild);
     }
+  }
+
+  function setRequired(el,on){
+    if(!el)return;
+    el.required=!!on;
+    el.setAttribute('aria-required',on?'true':'false');
+    var label=el.closest('label');
+    var star=label && label.querySelector('.euc-required-star');
+    if(star)star.hidden=!on;
+  }
+
+  function syncTutorRequirements(){
+    var same=fieldByName('tuteurEstResponsable');
+    var required=!(same && same.checked);
+    TUTOR_REQUIRED.forEach(function(name){
+      setRequired(fieldByName(name),required);
+    });
   }
 
   function txt(name){
@@ -1764,6 +1819,10 @@ init();
     REQUIRED.forEach(function(name){
       markRequired(fieldByName(name));
     });
+
+    var same=fieldByName('tuteurEstResponsable');
+    if(same)same.addEventListener('change',syncTutorRequirements);
+    syncTutorRequirements();
 
     var save=document.getElementById('save');
     if(save){

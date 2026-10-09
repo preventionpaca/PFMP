@@ -16,6 +16,64 @@ function EUC_DEV340_year_(e){
 function EUC_DEV340_accessKey_(annee,classe,periode){
   return 'EUC_DEV418_ACC_'+EUC_DEV340_txt_(annee)+'_'+Number(classe||0)+'_'+Number(periode||0);
 }
+function EUC_DEV519_flatRecord_(r){
+  var f=r&&r.fields||r||{},x={id:Number(r&&r.id||f.id)||0};
+  Object.keys(f).forEach(function(k){x[k]=f[k];});
+  return x;
+}
+function EUC_DEV519_referenceRows_(table){
+  var rows=[];
+  try{
+    if(typeof EUC_DEV190G_fastRecords_==='function')rows=EUC_DEV190G_fastRecords_(table,{})||[];
+    else if(typeof EUC_IMPORT_lireRecords_==='function')rows=EUC_IMPORT_lireRecords_(table)||[];
+  }catch(e){rows=[];}
+  return rows.map(EUC_DEV519_flatRecord_);
+}
+/* DEV519 — les anciennes conventions peuvent ne conserver que les références
+ * vers la fiche entreprise et son contact. L'enrichissement est groupé : au
+ * plus une lecture des entreprises et une lecture des contacts pour toute la
+ * famille, jamais une requête Grist par élève. Les instantanés portés par la
+ * convention restent prioritaires afin de préserver l'historique signé. */
+function EUC_DEV519_enrichAccessCompanyContacts_(rows){
+  rows=(rows||[]).map(EUC_DEV519_flatRecord_);
+  var needsCompanies=false,needsContacts=false;
+  rows.forEach(function(a){
+    var companyId=EUC_DEV340_ref_(a.Entreprise),contactId=EUC_DEV340_ref_(a.Contact_entreprise);
+    var siret=EUC_DEV340_txt_(a.Entreprise_siret||a.Entreprise_siret_snapshot).replace(/\D/g,'');
+    if((companyId||siret)&&(
+      !(EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot))||
+      !(EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot))
+    ))needsCompanies=true;
+    if((contactId||companyId||siret)&&(
+      !(EUC_DEV340_txt_(a.Responsable_nom)||EUC_DEV340_txt_(a.Responsable_prenom))||
+      !EUC_DEV340_txt_(a.Responsable_telephone)||!EUC_DEV340_txt_(a.Responsable_courriel)
+    ))needsContacts=true;
+  });
+  var companies={},companiesBySiret={},contacts={},contactsByCompany={};
+  if(needsCompanies||needsContacts)EUC_DEV519_referenceRows_('EUC_ENTREPRISES').forEach(function(x){
+    var id=Number(x.id)||0,siret=EUC_DEV340_txt_(x.SIRET).replace(/\D/g,'');
+    if(id)companies[id]=x;if(siret)companiesBySiret[siret]=x;
+  });
+  if(needsContacts)EUC_DEV519_referenceRows_('EUC_CONTACTS_ENTREPRISES').forEach(function(x){
+    var id=Number(x.id)||0,companyId=EUC_DEV340_ref_(x.Entreprise);
+    if(id)contacts[id]=x;
+    if(companyId&&x.Actif!==false)(contactsByCompany[companyId]=contactsByCompany[companyId]||[]).push(x);
+  });
+  rows.forEach(function(a){
+    var siret=EUC_DEV340_txt_(a.Entreprise_siret||a.Entreprise_siret_snapshot).replace(/\D/g,'');
+    var company=companies[EUC_DEV340_ref_(a.Entreprise)]||companiesBySiret[siret]||{};
+    var contact=contacts[EUC_DEV340_ref_(a.Contact_entreprise)]||{};
+    var companyContacts=contactsByCompany[Number(company.id)||0]||[];
+    if(!Number(contact.id)&&companyContacts.length===1)contact=companyContacts[0];
+    a.Entreprise_telephone=EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot)||EUC_DEV340_txt_(company.Telephone)||EUC_DEV340_txt_(company.Telephone_2);
+    a.Entreprise_courriel=EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot)||EUC_DEV340_txt_(company.Courriel);
+    a.Responsable_nom=EUC_DEV340_txt_(a.Responsable_nom)||EUC_DEV340_txt_(contact.Nom);
+    a.Responsable_prenom=EUC_DEV340_txt_(a.Responsable_prenom)||EUC_DEV340_txt_(contact.Prenom);
+    a.Responsable_telephone=EUC_DEV340_txt_(a.Responsable_telephone)||EUC_DEV340_txt_(contact.Telephone_direct);
+    a.Responsable_courriel=EUC_DEV340_txt_(a.Responsable_courriel)||EUC_DEV340_txt_(contact.Courriel_direct);
+  });
+  return rows;
+}
 function EUC_DEV340_compactAccess_(a){
   return {
     id:Number(a.id)||0,Eleve:a.Eleve,Annee_scolaire:EUC_DEV340_txt_(a.Annee_scolaire),
@@ -35,8 +93,10 @@ function EUC_DEV340_compactAccess_(a){
     Entreprise_code_postal:EUC_DEV340_txt_(a.Entreprise_code_postal),
     Entreprise_commune:EUC_DEV340_txt_(a.Entreprise_commune),
     Entreprise_pays:EUC_DEV340_txt_(a.Entreprise_pays),
-    Entreprise_telephone:EUC_DEV340_txt_(a.Entreprise_telephone),
-    Entreprise_courriel:EUC_DEV340_txt_(a.Entreprise_courriel),
+    Entreprise:a.Entreprise,Contact_entreprise:a.Contact_entreprise,
+    Entreprise_siret:EUC_DEV340_txt_(a.Entreprise_siret)||EUC_DEV340_txt_(a.Entreprise_siret_snapshot),
+    Entreprise_telephone:EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot),
+    Entreprise_courriel:EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot),
     Responsable_nom:EUC_DEV340_txt_(a.Responsable_nom),
     Responsable_prenom:EUC_DEV340_txt_(a.Responsable_prenom),
     Responsable_telephone:EUC_DEV340_txt_(a.Responsable_telephone),
@@ -50,7 +110,7 @@ function EUC_DEV340_compactAccess_(a){
 function EUC_DEV394_BASE_EUC_DEV340_accessRows_(annee,classe,periode){
   var cache=CacheService.getScriptCache(),key=EUC_DEV340_accessKey_(annee,classe,periode),got=cache.get(key);
   if(got){try{return JSON.parse(got);}catch(e){}}
-  var rows=(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(a){
+  var rows=EUC_DEV519_enrichAccessCompanyContacts_(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(a){
     if(EUC_DEV340_ref_(a.Classe_convention)!==Number(classe))return false;
     if(Number(periode)>0&&EUC_DEV340_ref_(a.Periode)!==Number(periode))return false;
     var y=EUC_DEV340_txt_(a.Annee_scolaire);
@@ -69,7 +129,7 @@ function EUC_DEV394_BASE_EUC_DEV340_primeAccessIndex_(annee,data){
     });
   });
   if(!Object.keys(wanted).length)return {ok:true,keys:0};
-  (EUC_CONVENTION_lireAccesFraisV108_()||[]).forEach(function(a){
+  EUC_DEV519_enrichAccessCompanyContacts_(EUC_CONVENTION_lireAccesFraisV108_()||[]).forEach(function(a){
     var y=EUC_DEV340_txt_(a.Annee_scolaire);
     if(annee&&y&&y!==annee)return;
     var k=EUC_DEV340_ref_(a.Classe_convention)+'|'+EUC_DEV340_ref_(a.Periode);

@@ -141,6 +141,9 @@ function EUC_DEV422_batchSources_(annee,classIds){
     }else{
       rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
     }
+    if(typeof EUC_DEV519_enrichAccessCompanyContacts_==='function'){
+      rows=EUC_DEV519_enrichAccessCompanyContacts_(rows);
+    }
     out.accessAvailable=true;
     rows.forEach(function(a){
       var y=EUC_DEV339_txt_(a.Annee_scolaire);
