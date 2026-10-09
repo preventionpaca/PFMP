@@ -23,7 +23,11 @@
   délai borné et ne peut plus rester indéfiniment sur « Chargement ».
 - Neuf tests DEV529 couvrent les limites A4, la persistance, le transport dans
   le payload PDF, le QR, l'aperçu, le contrat des boutons asynchrones et la
-  syntaxe des scripts intégrés. La suite complète passe `735/735`.
+  syntaxe des scripts intégrés. La suite complète passe `736/736`.
+- Le commit applicatif `b91745a` est publié sur les deux Web Apps vertes en
+  version immuable `918` ; les `25/25` routes sont valides. Le contrôle visuel
+  authentifié confirme le chargement des douze zones, l'aperçu du PDF maître,
+  dix repères sur la page 1 et deux repères sur la page 2.
 
 ## Mise à jour du 9 octobre 2026 — DEV528 (responsables JotForm et démarrage public)
 
