@@ -1,6 +1,6 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.462';
-var EUC_DEV459_CANONICAL_='DEV462-C5';
+var EUC_DEV459_VERSION_='1.0.0-dev.514';
+var EUC_DEV459_CANONICAL_='DEV514-C6';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}

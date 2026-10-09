@@ -129,8 +129,12 @@ function EUC_DEV422_batchSources_(annee,classIds){
   try{
     var rows=[];
     if(typeof EUC_DEV190G_fastRecords_==='function'&&typeof EUC_CONVENTION_ACCES_TABLE_!=='undefined'){
+      /* DEV514 — le filtre Grist sur une colonne Ref écartait certains accès
+       * historiques pourtant rattachés à la classe lorsqu'ils étaient relus
+       * par l'application. On conserve une seule lecture annuelle, puis le
+       * filtrage fiable ci-dessous avec EUC_DEV340_ref_. */
       rows=(EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,{
-        Annee_scolaire:[annee],Classe_convention:selectedClassIds
+        Annee_scolaire:[annee]
       })||[]).map(function(r){
         var x={id:Number(r.id)||0},f=r.fields||{};Object.keys(f).forEach(function(k){x[k]=f[k];});return x;
       });

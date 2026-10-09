@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
+const vm=require('vm');
 
 const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,'apps-script',name),'utf8');
@@ -105,8 +106,33 @@ test('l’historique masque les initiales dupliquées et formate les dates Unix'
 
 test('le géocodage retombe sur les conventions actives si les snapshots sont absents',()=>{
   assert.match(geo,/function EUC_DEV513_geoAccessDetails_/);
-  assert.match(geo,/if\(!details\.length\)details=EUC_DEV513_geoAccessDetails_\(q\)/);
+  assert.match(geo,/EUC_DEV445_geoSnapshotDetails_\(q\)\.concat\(EUC_DEV513_geoAccessDetails_\(q\)\)/);
+  assert.doesNotMatch(geo,/filters\.Classe_convention|filters\.Periode/);
   assert.match(geo,/Entreprise_raison_sociale/);
+});
+
+test('la lecture annuelle conserve les conventions écartées par le filtre Ref Grist',()=>{
+  const calls=[];
+  const c={console,Date,Math,JSON,String,Number,Object,Array,RegExp,
+    CacheService:{getScriptCache:()=>({put:()=>{}})},
+    EUC_CONVENTION_ACCES_TABLE_:'ACCES',
+    EUC_DEV190G_fastRecords_:(table,filter)=>{
+      calls.push({table,filter});
+      if(table!=='ACCES')return [];
+      return [
+        {id:701,fields:{Annee_scolaire:'2026-2027',Classe_convention:24,Periode:62,Eleve:34,Statut_administratif:'INFORMATIONS_ENREGISTREES'}},
+        {id:702,fields:{Annee_scolaire:'2026-2027',Classe_convention:24,Periode:62,Eleve:53,Statut_administratif:'INFORMATIONS_ENREGISTREES'}}
+      ];
+    },
+    EUC_DEV340_ref_:v=>Number(v)||0,
+    EUC_DEV340_accessKey_:()=> 'access-key',
+    EUC_DEV340_compactAccess_:v=>v
+  };
+  vm.createContext(c);vm.runInContext(family,c);
+  const batch=c.EUC_DEV422_batchSources_('2026-2027',{'24':{}});
+  assert.deepEqual(calls[0].filter,{Annee_scolaire:['2026-2027']});
+  assert.equal(batch.access['24|62|34'].length,1);
+  assert.equal(batch.access['24|62|53'].length,1);
 });
 
 test('les actions de géocodage protègent le double clic et bornent l’attente',()=>{

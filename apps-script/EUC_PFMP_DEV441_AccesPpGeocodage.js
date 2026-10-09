@@ -228,7 +228,11 @@ function EUC_DEV513_geoAccessDetails_(q){
     try{(EUC_DEV441_catalog_(y,false).classes||[]).forEach(function(c){if(EUC_DEV441_t_(c.famille).toUpperCase()===fam)allowed[String(EUC_DEV441_n_(c.classeId))]=true;});}catch(eCatalog){}
     if(!Object.keys(allowed).length)return [];
   }
-  var filters={Annee_scolaire:[y]};if(cid)filters.Classe_convention=[cid];if(pid)filters.Periode=[pid];
+  /* DEV514 — même règle que le suivi canonique : les anciennes références
+   * Grist ne doivent pas être éliminées par un filtre serveur sur les Ref.
+   * La lecture reste annuelle et le périmètre classe/période est appliqué
+   * juste après avec les références normalisées. */
+  var filters={Annee_scolaire:[y]};
   try{
     if(typeof EUC_DEV190G_fastRecords_==='function')rows=EUC_DEV190G_fastRecords_(EUC_CONVENTION_ACCES_TABLE_,filters)||[];
     else if(typeof EUC_CONVENTION_lireAccesFraisV108_==='function')rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
@@ -244,7 +248,10 @@ function EUC_DEV513_geoAccessDetails_(q){
 }
 function EUC_DEV441_geoCandidates_(q){
   var saved={},savedIdentity={},out=[],byIdentity={};EUC_DEV441_geoRows_().forEach(function(r){saved[EUC_DEV441_t_(r.Cle_adresse)]=r;savedIdentity[EUC_DEV443_geoIdentity_(r.Entreprise,r.Adresse_source,r.SIRET)]=r;});
-  var details=EUC_DEV445_geoSnapshotDetails_(q);if(!details.length)details=EUC_DEV513_geoAccessDetails_(q);
+  /* Un snapshot peut exister tout en étant incomplet. Les conventions actives
+   * sont donc toujours fusionnées avec lui ; la déduplication par identité
+   * entreprise/adresse/SIRET ci-dessous empêche les doublons. */
+  var details=EUC_DEV445_geoSnapshotDetails_(q).concat(EUC_DEV513_geoAccessDetails_(q));
   details.forEach(function(d){var cn=EUC_DEV441_t_(d&&d.classe&&(d.classe.nom||d.classe.libelle)),pn=EUC_DEV441_t_(d&&d.periode&&(d.periode.libelle||d.periode.nom)),perimetre=[cn,pn].filter(Boolean).join(' · ');(d.lignes||[]).forEach(function(x){var entreprise=EUC_DEV441_t_(x.entreprise),adresse=EUC_DEV443_normalizeAddress_(x.adresseEntreprise),siret=EUC_DEV441_t_(x.siretEntreprise||x.siret).replace(/\D/g,'');if(!entreprise||!adresse)return;var identity=EUC_DEV443_geoIdentity_(entreprise,adresse,siret),key=EUC_DEV441_geoKey_(entreprise,adresse,siret),r=saved[key]||savedIdentity[identity]||{},existing=byIdentity[identity];if(existing){if(EUC_DEV443_addressRank_(adresse)>EUC_DEV443_addressRank_(existing.adresse)){var preferred=EUC_DEV441_geoClassify_(adresse),source=savedIdentity[identity]||{};existing.adresse=adresse;existing.pays=preferred.pays;existing.codePostal=preferred.codePostal;if(source.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(source.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse)){existing.statut=preferred.pays==='FRANCE'?'A_REGEOCODER':'COORDONNEES_A_RENSEIGNER';existing.latitude=null;existing.longitude=null;existing.adresseNormalisee='';existing.score=null;existing.precision='';existing.commentaire='Adresse modifiée depuis le dernier géocodage.';}}if(perimetre&&existing.perimetres.indexOf(perimetre)<0)existing.perimetres.push(perimetre);existing.classe=existing.perimetres.join(' / ');return}if(r.Cle_adresse)key=EUC_DEV441_t_(r.Cle_adresse);var cls=EUC_DEV441_geoClassify_(adresse),changed=!!r.Cle_adresse&&EUC_DEV445_geoAddressFingerprint_(r.Adresse_source)!==EUC_DEV445_geoAddressFingerprint_(adresse),status=changed&&cls.pays==='FRANCE'?'A_REGEOCODER':EUC_DEV443_savedStatus_(r,cls),item={key:key,_recordId:EUC_DEV441_n_(r.id),siret:siret,entreprise:entreprise,adresse:adresse,pays:changed?cls.pays:EUC_DEV443_savedCountry_(r,cls),codePostal:changed?cls.codePostal:(EUC_DEV443_postal_(r.Code_postal)||cls.codePostal),statut:status,latitude:changed?null:(r.Latitude==null?null:Number(r.Latitude)),longitude:changed?null:(r.Longitude==null?null:Number(r.Longitude)),adresseNormalisee:changed?'':EUC_DEV441_t_(r.Adresse_normalisee),score:changed?null:(r.Score==null?null:Number(r.Score)),precision:changed?'':EUC_DEV441_t_(r.Precision),commentaire:changed?'Adresse modifiée depuis le dernier géocodage.':EUC_DEV441_t_(r.Commentaire),classe:perimetre,periode:'',perimetres:perimetre?[perimetre]:[]};byIdentity[identity]=item;out.push(item);});});return out;
 }
 function EUC_DEV441_geoAdminData(q){EUC_DEV441_admin_();var c=EUC_DEV441_geoCandidates_(q);return{ok:true,total:c.length,france:c.filter(function(x){return x.pays==='FRANCE';}).length,manuel:c.filter(function(x){return x.pays!=='FRANCE';}).length,candidats:c};}

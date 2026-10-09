@@ -49,7 +49,8 @@ test('le suivi de famille sert d’abord le snapshot persistant local',()=>{
   assert.ok(base.indexOf('EUC_DEV456_familyPersistentGet_')<base.indexOf('EUC_DEV421_fastFamilySnapshot_'));
   assert.match(base,/PERSISTENT_IMMEDIAT/);
   assert.match(base,/PERSISTENT_RECALCUL/);
-  assert.match(family,/Classe_convention:selectedClassIds/);
+  assert.match(family,/filtrage fiable ci-dessous avec EUC_DEV340_ref_[\s\S]*Annee_scolaire:\[annee\]/);
+  assert.doesNotMatch(family,/Annee_scolaire:\[annee\],Classe_convention:selectedClassIds/);
   assert.match(family,/Classe:selectedClassIds/);
 });
 
