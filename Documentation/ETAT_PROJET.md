@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Audit du 9 octobre 2026 — DEV531 (incident de stockage Grist)
+
+- Le code exact de la version verte `919` démontre que les vues matérialisées
+  `EUC_SUIVI_PFMP_INDEX` et `EUC_SUIVI_PFMP_DETAIL_SNAPSHOT` conservaient une
+  nouvelle copie JSON complète à chaque recalcul, puis désactivaient l'ancienne
+  sans la supprimer. Les deux colonnes totalisent 199 580 538 octets UTF-8
+  estimés dans le diagnostic fourni.
+- Le correctif DEV531 préparé remplace la ligne active par `PATCH`, ne crée une
+  ligne qu'en l'absence de cache, ignore un JSON identique et filtre les
+  lectures Grist sur les lignes actives. Les trois anciens écrivains DEV190
+  sont redirigés dans le paquet de publication vers ce comportement borné.
+- Les tables concernées restent des caches utiles aux performances ; aucune
+  table métier ni aucun historique fonctionnel n'est modifié. Les anciennes
+  versions inactives ne sont consommées par aucun lecteur courant contrôlé.
+- Aucun déploiement, aucune écriture dans la production Grist et aucune
+  suppression n'ont été réalisés. L'inventaire exact actif/inactif, la présence
+  du déclencheur planifié et le volume officiel Grist restent à vérifier avec un
+  accès lecture production.
+- Le diagnostic détaillé, le plan de nettoyage réversible et les limites de la
+  preuve sont consignés dans
+  `Documentation/INCIDENT_STOCKAGE_GRIST_2026-10-09.md`.
+
 ## Mise à jour du 9 octobre 2026 — DEV530 (coordonnées et contrat visuel du suivi)
 
 - Le repli des anciens imports JotForm n'exige plus systématiquement un SIRET.

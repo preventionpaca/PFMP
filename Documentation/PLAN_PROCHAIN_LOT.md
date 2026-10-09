@@ -1,4 +1,22 @@
-# Prochain lot après DEV530
+# Prochain lot prioritaire — DEV531 stockage Grist
+
+La priorité est de publier d'abord le correctif de non-croissance des vues
+matérialisées, sans nettoyage simultané. Avant livraison, exécuter la suite
+complète, relire le paquet reconstruit et confirmer que les anciens writers
+DEV190 sont bien redirigés vers les upserts DEV531.
+
+Après publication autorisée, vérifier les 25 routes du canal prévu et mesurer
+un parcours froid puis chaud. Contrôler en lecture seule le statut du
+déclencheur planifié, le nombre d'actifs par clé et l'évolution du nombre de
+lignes et des octets JSON. Aucune suppression ne doit intervenir à ce stade.
+
+Le nettoyage constitue une opération distincte : sauvegarde vérifiée,
+inventaire exact des identifiants inactifs/redondants, validation explicite de
+l'utilisateur, suppression ciblée, contrôle fonctionnel puis mesure officielle
+Grist. Le plan complet est dans
+`Documentation/INCIDENT_STOCKAGE_GRIST_2026-10-09.md`.
+
+## Lot fonctionnel en attente après DEV530
 
 Après publication, le contrôle utilisateur prioritaire est une actualisation
 forcée d'une fiche TMELEC puis TMP3D. Pour une convention récente issue du QR

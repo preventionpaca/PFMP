@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Le commit ci-dessous est la dernière récupération complète du projet Apps
 # Script. La branche courante ne contient historiquement qu'un sous-ensemble
 # des fichiers distants : un `git archive HEAD` seul produit donc un paquet
@@ -28,6 +30,11 @@ while IFS= read -r source_file; do
 
   git show "HEAD:$source_file" > "$destination"
 done < <(git ls-files apps-script)
+
+# Le socle complet contient encore trois écrivains historiques append-only.
+# Le paquet final les redirige explicitement vers les upserts DEV531 suivis
+# dans HEAD, sans recopier le monolithe historique dans chaque branche.
+node "$script_dir/patch-pfmp-storage-writers.js" "$target_dir/apps-script"
 
 # Le socle complet historique contient encore l'instrumentation temporaire
 # P7.1B. Ce fichier redéfinit les fonctions du générateur de conventions et
