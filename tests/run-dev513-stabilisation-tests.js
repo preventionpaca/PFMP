@@ -6,6 +6,7 @@ const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,'apps-script',name),'utf8');
 const family=read('EUC_PFMP_DEV339_FamilleUX.js');
 const atomic=read('EUC_PFMP_DEV425_AtomicFreshness.js');
+const planned=read('EUC_PFMP_DEV424_SnapshotPlanifie.js');
 const restore=read('EUC_PFMP_DEV456_RestaurationExacte.js');
 const familyHtml=read('Suivi_Conventions_Admin_FamilleV190L.html');
 const service=read('EUC_CONVENTION_PFMP_Service.gs');
@@ -35,6 +36,13 @@ test('une mutation garde la publication complète précédente pendant le recalc
   assert.match(restore,/function EUC_DEV456_familyTransientDrop_/);
   assert.match(invalidate,/EUC_DEV456_familyTransientDrop_/);
   assert.doesNotMatch(invalidate,/EUC_DEV456_familyCacheDrop_/);
+});
+
+test('la maintenance snapshot reconnaît strictement la recette bleue actuelle',()=>{
+  assert.match(planned,/EUC_DEV424_RECIPE_DOC_='kB8bvDag8x7D'/);
+  assert.match(planned,/canal==='BLUE'\?EUC_DEV424_RECIPE_DOC_/);
+  assert.match(planned,/canal==='GREEN'\?EUC_DEV424_PRODUCTION_DOC_/);
+  assert.doesNotMatch(planned,/b2CyeMEdVEMS/);
 });
 
 test('le chargement de famille se termine ou échoue explicitement sous quinze secondes',()=>{

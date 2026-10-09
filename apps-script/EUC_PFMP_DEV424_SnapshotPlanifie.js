@@ -1,9 +1,11 @@
 /**
  * PFMP — DEV424
  * Snapshot enrichi partagé, construit hors du chemin de consultation.
- * Cible strictement bornée à la base PFMP active autorisée b2CyeMEdVEMS.
+ * Cible strictement bornée au document attendu pour le projet Apps Script :
+ * recette séparée sur le bleu, production sur le vert.
  */
-var EUC_DEV424_ALLOWED_DOC_='b2CyeMEdVEMS';
+var EUC_DEV424_RECIPE_DOC_='kB8bvDag8x7D';
+var EUC_DEV424_PRODUCTION_DOC_='3pnVrygfNn7c';
 var EUC_DEV424_HANDLER_='EUC_DEV424_refreshScheduled';
 var EUC_DEV424_INTERVAL_MINUTES_=15;
 var EUC_DEV424_STATUS_PROP_='EUC_DEV424_SNAPSHOT_STATUS_V1';
@@ -19,7 +21,9 @@ function EUC_DEV424_assertTarget_(){
   if(typeof EUC_ENT_controlerCibleRecette_==='function')EUC_ENT_controlerCibleRecette_();
   var cfg=typeof EUC_ENT_lireConfiguration==='function'?EUC_ENT_lireConfiguration():{};
   var doc=EUC_DEV424_txt_(cfg&&cfg.EUC_ENT_GRIST_DOC_ID);
-  if(doc!==EUC_DEV424_ALLOWED_DOC_)throw new Error('DEV424 : cible Grist refusée.');
+  var canal=typeof EUC_ENT_canalProjet_==='function'?EUC_ENT_canalProjet_():'';
+  var expected=canal==='BLUE'?EUC_DEV424_RECIPE_DOC_:(canal==='GREEN'?EUC_DEV424_PRODUCTION_DOC_:'');
+  if(!expected||doc!==expected)throw new Error('DEV424 : cible Grist refusée pour le canal '+(canal||'INCONNU')+'.');
   return doc;
 }
 
@@ -41,14 +45,14 @@ function EUC_DEV424_statusWrite_(value){
 }
 
 function EUC_DEV424_status(){
-  EUC_DEV424_assertTarget_();
+  var target=EUC_DEV424_assertTarget_();
   var state={};
   try{state=JSON.parse(PropertiesService.getScriptProperties().getProperty(EUC_DEV424_STATUS_PROP_)||'{}');}catch(e){}
   var triggers=[];
   try{
     triggers=ScriptApp.getProjectTriggers().filter(function(t){return t.getHandlerFunction()===EUC_DEV424_HANDLER_;});
   }catch(e2){}
-  return {ok:true,target:EUC_DEV424_ALLOWED_DOC_,intervalMinutes:EUC_DEV424_INTERVAL_MINUTES_,triggerCount:triggers.length,lastRun:state};
+  return {ok:true,target:target,intervalMinutes:EUC_DEV424_INTERVAL_MINUTES_,triggerCount:triggers.length,lastRun:state};
 }
 
 function EUC_DEV424_installSnapshotTrigger(){
@@ -179,14 +183,14 @@ function EUC_DEV424_refreshScheduled(){
   try{got=lock.tryLock(1000);}catch(e){}
   if(!got)return {ok:true,skipped:'overlap'};
   try{
-    EUC_DEV424_assertTarget_();
+    var target=EUC_DEV424_assertTarget_();
     annee=EUC_DEV424_txt_(EUC_PFMP_contexteAnneeLectureV155_().active);
     if(!annee)throw new Error('DEV424 : année active introuvable.');
     EUC_DEV424_statusWrite_({running:true,startedAt:started,year:annee});
     var result=EUC_DEV424_buildAll_(annee);
     var state=EUC_DEV424_statusWrite_({ok:true,startedAt:started,finishedAt:new Date().toISOString(),durationMs:Date.now()-t0,
       year:annee,families:result.families,details:result.details,changedDetails:result.changedDetails});
-    return {ok:true,target:EUC_DEV424_ALLOWED_DOC_,year:annee,durationMs:state.durationMs,
+    return {ok:true,target:target,year:annee,durationMs:state.durationMs,
       families:result.families,details:result.details,changedDetails:result.changedDetails};
   }catch(err){
     EUC_DEV424_statusWrite_({ok:false,startedAt:started,finishedAt:new Date().toISOString(),durationMs:Date.now()-t0,year:annee,error:String(err&&err.message||err)});

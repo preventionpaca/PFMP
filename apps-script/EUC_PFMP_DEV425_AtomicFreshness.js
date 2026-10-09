@@ -713,7 +713,7 @@ function EUC_DEV426_finalizeRecovery(){
 }
 
 function EUC_DEV425_status(){
-  EUC_DEV424_assertTarget_();var annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active),states={};
+  var target=EUC_DEV424_assertTarget_(),annee=EUC_DEV425_txt_(EUC_PFMP_contexteAnneeLectureV155_().active),states={};
   EUC_DEV425_FAMILIES_.forEach(function(f){states[f]=EUC_DEV425_readState_(annee,f);});
-  return {ok:true,target:EUC_DEV424_ALLOWED_DOC_,annee:annee,states:states,triggerHandler:EUC_DEV424_HANDLER_,intervalMinutes:EUC_DEV424_INTERVAL_MINUTES_};
+  return {ok:true,target:target,annee:annee,states:states,triggerHandler:EUC_DEV424_HANDLER_,intervalMinutes:EUC_DEV424_INTERVAL_MINUTES_};
 }
