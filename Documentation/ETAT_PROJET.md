@@ -16,10 +16,18 @@
   page bloquée sans explication.
 - Le test DEV488 vérifie le nombre exact de lectures, la réponse consolidée,
   l'absence des trois anciens appels concurrents et le délai maximal. Les tests
-  ciblés passent et la suite complète passe `707/707`.
+  ciblés passent.
 - Une première publication du seul lot DEV523 a été interrompue dès le
   signalement utilisateur. Les deux Web Apps actives sont restées sur la
   version immuable `906` ; aucun déploiement n'a été déplacé.
+- Une première publication combinée en version `907` a ensuite validé `24/25`
+  routes mais la route publique `suivi-conventions-public` a dépassé deux fois
+  le délai de soixante secondes. Le rollback automatique a remis les deux Web
+  Apps sur `906`. Isolée après le rollback, cette route a répondu en `4,848 s`.
+- Son démarrage sans paramètre d'année appelait encore le contexte annuel
+  Grist. Il utilise maintenant l'année scolaire courante calculée localement ;
+  la consultation d'une année explicitement demandée reste inchangée. La suite
+  complète finale passe `708/708`.
 
 ## Mise à jour du 9 octobre 2026 — DEV523 (géocodage Grist résilient et régressions opérationnelles)
 
@@ -45,7 +53,7 @@
   restaurer le responsable entreprise dans les listes de classe.
 - Les tests ciblés passent (`25/25` géocodage, `11/11` coordonnées entreprise,
   `4/4` régressions opérationnelles) et la suite complète combinée avec
-  DEV524 passe `707/707`.
+  DEV524 et l'allègement de la route publique passe `708/708`.
   Aucun géocodage réel, aucune convention et aucune donnée nominative n'ont été
   écrits pendant les tests.
 

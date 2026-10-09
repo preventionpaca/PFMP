@@ -8,9 +8,11 @@ choisir un élève et une classe afin de confirmer que les périodes autorisées
 s'affichent. Ce contrôle doit rester en lecture seule : ne pas cliquer sur
 « Générer la convention et son accès QR ».
 
-La suite complète locale passe `707/707`. La publication doit encore valider
+La suite complète locale passe `708/708`. La publication doit encore valider
 les `25/25` routes vertes. Le vert actif est resté sur la version `906` pendant
-la première tentative interrompue.
+la première tentative interrompue, puis y est revenu automatiquement lorsque
+la version `907` n'a validé que `24/25` routes. La route publique en échec ne
+consulte plus Grist pour déterminer l'année courante avant de rendre sa coque.
 
 ## Lot précédent — DEV523
 
@@ -28,7 +30,7 @@ validées ni masquer un refus Grist.
 Le lot corrige aussi le voile bloquant de la synthèse famille, le champ
 administratif « Nom commercial / enseigne » et les alias historiques des
 coordonnées du responsable entreprise. Les tests locaux combinés avec DEV524
-passent `707/707`.
+passent `708/708`.
 La validation de publication doit encore confirmer les `25/25` routes vertes ;
 aucun géocodage réel ne doit être lancé par la recette automatisée.
 

@@ -1,7 +1,7 @@
 var EUC_DEV348_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 var EUC_DEV348_PUBLIC_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA/exec';
 function EUC_DEV348_t(v){return String(v==null?'':v).trim();}
-function EUC_DEV394_BASE_EUC_DEV348_y(e){var y=EUC_DEV348_t(e&&e.parameter&&e.parameter.annee);if(y)return y;try{return EUC_DEV348_t(EUC_PFMP_contexteAnneeLectureV155_().active);}catch(err){return '';}}
+function EUC_DEV394_BASE_EUC_DEV348_y(e){var y=EUC_DEV348_t(e&&e.parameter&&e.parameter.annee);if(y)return y;if(typeof EUC_DEV190X_currentYear_==='function')return EUC_DEV348_t(EUC_DEV190X_currentYear_());try{return EUC_DEV348_t(EUC_PFMP_contexteAnneeLectureV155_().active);}catch(err){return '';}}
 function EUC_DEV348_summary_(annee){if(typeof EUC_DEV347_summary_==='function')return EUC_DEV347_summary_(annee);return EUC_DEV335_resumeAccueil({annee:annee})||{};}
 function EUC_DEV348_resumeAccueil(p){
   p=p||{};

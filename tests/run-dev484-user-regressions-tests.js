@@ -3,6 +3,7 @@ const server=fs.readFileSync('apps-script/EUC_PFMP_DEV370_AdminTools.js','utf8')
 const routes=fs.readFileSync('apps-script/EUC_PFMP_DEV481_AdminRoutes.js','utf8');
 const apprentices=fs.readFileSync('apps-script/Apprentissage_PFMP_V190X.html','utf8');
 const publicSummary=fs.readFileSync('apps-script/Suivi_Conventions_Public_Summary_V348.html','utf8');
+const summaryServer=fs.readFileSync('apps-script/EUC_PFMP_DEV348_Finitions.js','utf8');
 let n=0;
 function test(name,fn){fn();console.log('✓',name);n++;}
 
@@ -50,6 +51,13 @@ test('la consultation publique utilise sa route dédiée sans Accueil PFMP',()=>
   assert.match(routes,/case 'suivi-conventions-public':\s*return EUC_DEV348_publicSummary\(e\)/);
   assert.doesNotMatch(publicSummary,/Accueil PFMP/);
   assert.doesNotMatch(publicSummary,/EUC_DEV484_SUIVI_ADMIN_STYLE/);
+});
+
+test('l accueil public déduit l année courante sans lecture Grist au démarrage',()=>{
+  const ctx={console,Date,JSON,EUC_DEV190X_currentYear_:()=> '2026-2027',EUC_PFMP_contexteAnneeLectureV155_:()=>{throw new Error('lecture Grist interdite')}};
+  vm.createContext(ctx);vm.runInContext(summaryServer,ctx);
+  assert.equal(ctx.EUC_DEV394_BASE_EUC_DEV348_y({parameter:{}}),'2026-2027');
+  assert.equal(ctx.EUC_DEV394_BASE_EUC_DEV348_y({parameter:{annee:'2025-2026'}}),'2025-2026');
 });
 
 console.log(`${n} tests DEV484 régressions utilisateur réussis.`);
