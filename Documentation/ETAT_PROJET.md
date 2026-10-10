@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat DEV540
+## Mise à jour du 10 octobre 2026 — DEV540 publié sur le site en ligne (@933)
 
 - Le tableau des quotas utilise désormais une typographie plus grande pour les
   nombres, les libellés et les cellules. Les indicateurs précisent que
@@ -31,6 +31,19 @@
 - Aucun modèle PDF ni aucune donnée métier existante n'est modifié par ce lot.
   Les géocodages et téléversements réels restent déclenchés uniquement par une
   action explicite de l'administrateur dans l'interface.
+- Le commit applicatif exact `be33367` a été publié sur les deux Web Apps
+  existantes en version Apps Script immuable `933`. La suite complète compte
+  `801/801` tests réussis et le contrôle de livraison valide les `25/25` routes.
+  La version immuable `929`, taguée `pfmp-online-929-stable`, reste le point de
+  retour vérifié avant ce lot.
+- Le contrôle navigateur de la version publiée confirme les libellés et les
+  compteurs du tableau des quotas, l'absence de doublon pour Nabil Mesbah et
+  Optimus Prime, ainsi que l'ouverture d'une fiche entreprise avec responsables,
+  tuteurs, élèves, périodes et professeurs visiteurs. Le book consolide `134`
+  entreprises et aucun avertissement ni erreur navigateur n'est présent sur les
+  pages quotas, géocodage et book. Le géocodage réel et le téléversement d'une
+  photo n'ont pas été déclenchés pendant ce contrôle afin de ne pas écrire de
+  coordonnées ou de fichier sans action explicite de l'administrateur.
 
 ## Mise à jour du 10 octobre 2026 — DEV539 publié sur le site en ligne (@929)
 
