@@ -1,11 +1,12 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat DEV537 prêt pour le site en ligne
+## Mise à jour du 10 octobre 2026 — DEV537 publié sur le site en ligne (@927)
 
-- Le point de retour vert reste la version immuable `925`, protégée par le tag
-  publié `pfmp-green-925-stable`. Le présent candidat est développé sur la
-  branche isolée `codex/pfmp-performance-cartography`; il n'a modifié ni le
-  projet vert ni les données Grist.
+- Le commit applicatif `8b582c6` est publié sur les deux Web Apps existantes en
+  version Apps Script immuable `927`. La livraison directe a exécuté la suite
+  complète `780/780`, relu le distant après `clasp push` et validé les `25/25`
+  routes. Les versions immuables `925`, `926` et `927` restent disponibles pour
+  un retour arrière sans reconstruction du code.
 - Le détail compact reconstruit avec un effectif vérifié porte désormais cette
   preuve dans le snapshot. Tant qu'aucune invalidation métier ne survient, son
   ouverture ne relit plus l'effectif courant dans Grist. Les anciens snapshots
@@ -22,13 +23,19 @@
 - Le générateur de conventions propose une recherche locale par quelques
   lettres sur la liste d'élèves déjà chargée, avec navigation au clavier et
   sans appel serveur à chaque frappe.
-- Les tests ciblés et la suite complète passent : `780/780`. Les scripts des
-  trois pages HTML modifiées passent aussi une vérification de syntaxe.
-  L'authentification Google du poste a été renouvelée le 10 octobre 2026. Le
+- Le contrôle navigateur post-publication confirme la recherche locale du
+  générateur, les deux commandes de géocodage France/Monaco, le filtre « Toutes
+  les années », `228` entreprises cartographiées et le nombre d'élèves
+  accueillis dans les infobulles. Une PFMP TCAR a effectué sa migration unique
+  de l'ancien détail vers `DEV537-D17`, puis sa seconde ouverture complète a
+  pris `6,6 s`, coordonnées d'entreprise comprises. Aucun géocodage réel ni
+  aucune génération de convention n'a été déclenché pendant ces contrôles.
+- L'authentification Google du poste a été renouvelée le 10 octobre 2026. Le
   workflow courant publie directement le commit testé sur les deux Web Apps
   existantes avec version immuable, contrôle des 25 routes et retour
-  automatique à `925` si la livraison échoue. L'ancien canal bleu reste une
-  archive technique et n'intervient plus dans les publications ordinaires.
+  automatique à la version immuable précédente si la livraison échoue.
+  L'ancien canal bleu reste une archive technique et n'intervient plus dans
+  les publications ordinaires.
 
 ## Mise à jour du 10 octobre 2026 — référence verte 925 figée
 
