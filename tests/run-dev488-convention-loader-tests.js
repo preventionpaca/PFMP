@@ -85,4 +85,14 @@ test('un chargement incomplet quitte Chargement et affiche une erreur exploitabl
   assert.doesNotMatch(html, /\.EUC_CONVENTION_lireGroupesClassesElevesAdmin\(\)/);
 });
 
+test('la recherche élève filtre localement la liste déjà chargée', () => {
+  assert.match(html, /id="eleveSearch"/);
+  assert.match(html, /function renderStudentResults\(\)/);
+  assert.match(html, /norm\(\[e\.nom,e\.prenom,e\.classe\]\.join\(' '\)\)\.includes\(term\)/);
+  assert.match(html, /slice\(0,15\)/);
+  const searchBlock=html.slice(html.indexOf('function renderStudentResults'),html.indexOf('function currentGroup'));
+  assert.doesNotMatch(searchBlock,/google\.script\.run/);
+  assert.match(html,/aria-autocomplete="list"/);
+});
+
 if (!process.exitCode) console.log(`\n${count} tests DEV488 chargement conventions réussis.`);

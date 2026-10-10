@@ -1,5 +1,25 @@
 # Prochain lot prioritaire — performance du détail, Monaco et book entreprises
 
+## Candidat DEV537 prêt pour recette bleue
+
+Le candidat regroupe la suppression de la relecture d'effectif sur un détail
+déjà vérifié, le géocodage automatique de Monaco par Nominatim, le filtre
+cartographique « Toutes les années », le nombre d'élèves distincts accueillis
+et l'autocomplétion locale du générateur de conventions. La suite locale passe
+`780/780`; le vert demeure sur la référence immuable `925`.
+
+La prochaine action autorisée est exclusivement la préparation du candidat sur
+le bleu, puis le contrôle des 25 routes et de tous les liens de navigation. Elle
+est actuellement bloquée par l'authentification Google expirée et par l'absence
+des commandes `prepare` / `promote` attendues dans le script de livraison. Ne
+pas contourner ces deux garde-fous par une publication directe sur le vert.
+
+Après une recette bleue complète, mesurer TMP3D et TCAR à froid puis à chaud,
+vérifier les coordonnées entreprise et les affectations, tester France et
+Monaco sans donnée nominative, contrôler les trois périmètres de comptage et
+tester la recherche élève au clavier. La promotion verte nécessitera alors une
+nouvelle autorisation explicite et le candidat bleu exact.
+
 ## 1. Réduire l'ouverture d'une PFMP sans modifier le rendu
 
 Le chemin à froid peut encore lire successivement le détail persistant,

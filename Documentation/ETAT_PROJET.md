@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — candidat DEV537 non publié
+
+- Le point de retour vert reste la version immuable `925`, protégée par le tag
+  publié `pfmp-green-925-stable`. Le présent candidat est développé sur la
+  branche isolée `codex/pfmp-performance-cartography`; il n'a modifié ni le
+  projet vert ni les données Grist.
+- Le détail compact reconstruit avec un effectif vérifié porte désormais cette
+  preuve dans le snapshot. Tant qu'aucune invalidation métier ne survient, son
+  ouverture ne relit plus l'effectif courant dans Grist. Les anciens snapshots
+  non marqués et les parcours d'invalidation conservent la réconciliation
+  complète avant de devenir autonomes.
+- La cartographie sait agréger une période, une année scolaire ou toutes les
+  années et affiche le nombre d'élèves distincts accueillis dans le périmètre
+  choisi. La réponse publique ne transporte ni nom, ni identifiant d'élève :
+  seules des clés opaques servent au décompte côté serveur.
+- Monaco dispose d'un second géocodeur Nominatim/OpenStreetMap, limité à huit
+  adresses par lot et environ une requête par seconde. Seule l'adresse de
+  l'entreprise est envoyée ; un résultat incertain reste à valider.
+- Le générateur de conventions propose une recherche locale par quelques
+  lettres sur la liste d'élèves déjà chargée, avec navigation au clavier et
+  sans appel serveur à chaque frappe.
+- Les tests ciblés et la suite complète passent : `780/780`. Les scripts des
+  trois pages HTML modifiées passent aussi une vérification de syntaxe. La
+  publication bleue, les 25 routes et le parcours navigateur restent à faire
+  après rétablissement de l'authentification Google et résolution de la
+  divergence du script de livraison avec le workflow `prepare` / `promote`.
+
 ## Mise à jour du 10 octobre 2026 — référence verte 925 figée
 
 - Le commit applicatif servi par la version verte immuable `925` est désormais

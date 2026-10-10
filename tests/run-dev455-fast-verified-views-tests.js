@@ -138,6 +138,16 @@ test('une révision affectations inchangée ne consomme aucune lecture Grist',()
   c.EUC_DEV455_refreshAssignments_(d,'2026-2027',1,1);
   assert.equal(reads,0);assert.equal(d.lignes[0].professeurVisiteur,'M. Stable');
 });
+test('un détail dont l effectif est vérifié ne relit pas la table des élèves',()=>{
+  let studentReads=0;const d=ordinary();d.__dev455RosterVerified=true;d.__dev455AssignmentRevision='0_r2';
+  const c=ctx({
+    EUC_DEV416_key_:()=> 'k',EUC_DEV416_cacheGet_:()=>d,EUC_DEV416_cachePut_:()=>{},EUC_DEV416_cacheDrop_:()=>{},
+    EUC_DEV425_payloadFresh_:()=>true,EUC_DEV457_revision_:()=> '0_r2',
+    EUC_DEV190G_fastRecords_:(table)=>{if(table==='EUC_ELEVES_PFMP')studentReads++;return[];}
+  });
+  const out=c.EUC_DEV455_fastDetail_('2026-2027','BACPRO',1,1);
+  assert.equal(out.__dev455Source,'CACHE_VERIFIE');assert.equal(studentReads,0);
+});
 test('un retrait durable efface les deux anciennes valeurs du cache',()=>{
   const d=ordinary();d.__dev455AssignmentRevision='0_r1';Object.assign(d.lignes[0],{professeurTelephone:'Mme Ancienne',professeurTelephoneId:7,affectationTelephoneId:81,professeurVisiteur:'M. Ancien',professeurVisiteurId:8,affectationVisiteId:82});
   const c=ctx({EUC_DEV457_revision_:()=> '0_r3',EUC_DEV448_rows_:()=>[]});

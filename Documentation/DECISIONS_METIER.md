@@ -60,3 +60,22 @@
 - Le book entreprises est une vue relationnelle sur les entreprises et les
   accueils existants. Les photos de devanture sont stockées dans Drive ; Grist
   ne conserve que leur identifiant, lien, source, date et droits d'usage.
+
+# Décision permanente du 10 octobre 2026 — cartographie et recherche d'élève
+
+- Le nombre affiché pour une entreprise est le nombre d'élèves distincts
+  accueillis dans le périmètre actif : période sélectionnée, ensemble de
+  l'année scolaire, ou ensemble de toutes les années. Plusieurs séquences du
+  même élève dans ce périmètre ne doivent pas le compter deux fois.
+- La carte publique reste non nominative. Elle reçoit uniquement l'identité de
+  l'entreprise, son adresse, ses coordonnées géographiques, le périmètre
+  demandé et le total agrégé. Les identifiants et noms d'élèves, même hachés,
+  ne sont jamais transmis au navigateur public.
+- Pour la France, le fournisseur de référence reste Géoplateforme / Base
+  Adresse Nationale. Pour Monaco, Nominatim/OpenStreetMap est un moteur de
+  repli en petit lot, temporisé et mis en cache. Il ne reçoit que l'adresse de
+  l'entreprise ; les résultats insuffisamment sûrs exigent une validation.
+- Dans le générateur de conventions, la recherche d'un élève s'effectue dans
+  la liste déjà chargée. La frappe de quelques lettres ne déclenche aucun
+  nouvel appel Grist et la valeur métier conservée reste l'identifiant durable
+  de l'élève sélectionné.

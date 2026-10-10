@@ -128,6 +128,16 @@ function EUC_DEV455_mergeRoster_(detail,annee,classe){
   }catch(eStats){}
   detail.__dev455RosterVerified=true;return detail;
 }
+/* DEV537 — un détail marqué a déjà été construit depuis l'effectif courant.
+ * Le relire à chaque ouverture ajoutait un appel Grist inutile (et plusieurs
+ * secondes sur une instance froide). Les anciens détails, dépourvus du
+ * marqueur, conservent la réconciliation complète ci-dessus. Les imports et
+ * mutations d'effectif invalident toujours les caches/snapshots concernés. */
+function EUC_DEV537_verifiedRoster_(detail,annee,classe){
+  return detail&&detail.__dev455RosterVerified===true
+    ?detail
+    :EUC_DEV455_mergeRoster_(detail,annee,classe);
+}
 function EUC_DEV455_buildTargeted_(annee,famille,classe,periode){
   if((typeof EUC_DEV456_familyData_!=='function'&&typeof EUC_DEV421_fastFamilySnapshot_!=='function')||
      typeof EUC_DEV422_batchSources_!=='function'||
@@ -162,6 +172,9 @@ function EUC_DEV455_buildTargeted_(annee,famille,classe,periode){
   var classIds={};classIds[String(Number(classe))]=card;
   detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,Number(classe),Number(periode),EUC_DEV422_batchSources_(annee,classIds),periodCard)||detail;
   detail.__dev425Revision=data.__dev425Revision||'';
+  /* Le roster vient d'être lu pour cette classe : il est autonome jusqu'à la
+   * prochaine invalidation d'effectif et peut être servi sans seconde lecture. */
+  detail.__dev455RosterVerified=true;
   detail.__dev455Targeted=true;detail.__dev455BuiltAt=Date.now();
   if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
   return detail;
@@ -220,7 +233,7 @@ function EUC_DEV455_fastDetail_(annee,famille,classe,periode){
     try{cacheFresh=EUC_DEV425_payloadFresh_(annee,famille,detail);}catch(eFresh){cacheFresh=false;}
   }
   if(detail&&cacheFresh){
-    detail=EUC_DEV455_sanitizePeriod_(EUC_DEV455_mergeRoster_(detail,annee,classe));
+    detail=EUC_DEV455_sanitizePeriod_(EUC_DEV537_verifiedRoster_(detail,annee,classe));
     var assignmentRevisionBefore=EUC_DEV455_t_(detail.__dev455AssignmentRevision);
     detail=EUC_DEV455_refreshAssignments_(detail,annee,classe,periode);
     if(EUC_DEV455_t_(detail.__dev455AssignmentRevision)!==assignmentRevisionBefore)EUC_DEV416_cachePut_(key,detail);
@@ -239,7 +252,7 @@ function EUC_DEV455_fastDetail_(annee,famille,classe,periode){
     var err=new Error('Les informations de cette classe sont en cours de mise à jour.');
     err.code='DEV455_REFRESHING';throw err;
   }
-  detail=EUC_DEV455_sanitizePeriod_(EUC_DEV455_mergeRoster_(detail,annee,classe));
+  detail=EUC_DEV455_sanitizePeriod_(EUC_DEV537_verifiedRoster_(detail,annee,classe));
   detail=EUC_DEV455_refreshAssignments_(detail,annee,classe,periode);
   detail.__dev455Source='SNAPSHOT_CIBLE_VERIFIE';detail.__dev455DurationMs=Date.now()-started;
   EUC_DEV416_cachePut_(key,detail);

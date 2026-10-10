@@ -1,5 +1,5 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.536';
+var EUC_DEV459_VERSION_='1.0.0-dev.537';
 /* DEV528 : les details DEV526 ne contenaient pas encore le repli vers le
  * responsable conserve dans le tampon JotForm. Le marqueur doit changer :
  * sinon la fiche de classe reutilise indefiniment l'ancien detail en cache et
@@ -143,6 +143,12 @@ function EUC_DEV459_canonicalDetail_(p){
   if(detail.__dev459CanonicalDetail!==EUC_DEV459_DETAIL_CANONICAL_&&typeof EUC_DEV455_buildTargeted_==='function'){
     var rebuilt=EUC_DEV455_buildTargeted_(p.annee,p.famille,p.classe,p.periode);
     if(rebuilt&&Array.isArray(rebuilt.lignes)){
+      /* La première reconstruction d'un ancien détail paie une fois les deux
+       * contrôles de cohérence. Le snapshot durable obtenu est ensuite
+       * autonome : les ouvertures suivantes ne relisent ni effectif ni
+       * affectations lorsque leurs révisions sont inchangées. */
+      if(typeof EUC_DEV537_verifiedRoster_==='function')rebuilt=EUC_DEV537_verifiedRoster_(rebuilt,p.annee,p.classe);
+      if(typeof EUC_DEV455_refreshAssignments_==='function')rebuilt=EUC_DEV455_refreshAssignments_(rebuilt,p.annee,p.classe,p.periode);
       detail=rebuilt;detail.__dev459CanonicalDetail=EUC_DEV459_DETAIL_CANONICAL_;
       if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
       try{

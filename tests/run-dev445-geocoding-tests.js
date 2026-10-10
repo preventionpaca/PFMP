@@ -3,6 +3,7 @@ const vm=require('vm');
 const assert=require('assert');
 const code=fs.readFileSync('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js','utf8');
 const geoHtml=fs.readFileSync('apps-script/Geocodage_PFMP_DEV441.html','utf8');
+const mapHtml=fs.readFileSync('apps-script/Cartographie_PFMP_DEV441.html','utf8');
 let reads=0,writes=[];
 const detail={famille:'BACPRO',classe:{id:28,nom:'TMP3D'},periode:{id:65,libelle:'PFMP n°1'},lignes:[
   {entreprise:'ACME',adresseEntreprise:'14 RUE DES ETOILES, 06000 NICE',siretEntreprise:'12345678901234'},
@@ -187,4 +188,37 @@ assert.match(publicSummaryHtml,/if\(BOOT&&BOOT\.familles\)/,'public counts must 
 
 assert.match(code,/function EUC_DEV441_afficherCarte\(e\)\{[\s\S]*EUC_RELEASE_decorateOutput_\(output\)/,'the map route must receive the blue or green release marker before its early return');
 
-console.log('25 tests DEV445 géocodage/performance réussis.');
+const countItem={entreprise:'ENTREPRISE TEST',adresse:'1 RUE TEST',scopes:[
+  {annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:62},
+  {annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:63}
+],accueils:[
+  {eleveKey:'A',scope:{annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:62}},
+  {eleveKey:'B',scope:{annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:62}},
+  {eleveKey:'A',scope:{annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:63}}
+]};
+assert.equal(ctx.EUC_DEV517_geoFilter_([countItem],{annee:'2026-2027',periodeId:62})[0].elevesAccueillis,2,'a precise period must count distinct students in that period');
+assert.equal(ctx.EUC_DEV517_geoFilter_([countItem],{annee:'2026-2027'})[0].elevesAccueillis,2,'a school year must deduplicate the same student across periods');
+const annualSource={
+  '2025-2026':[Object.assign({},countItem,{scopes:[{annee:'2025-2026',famille:'BACPRO',classeId:24,periodeId:50}],accueils:[{eleveKey:'A',scope:{annee:'2025-2026',famille:'BACPRO',classeId:24,periodeId:50}}]})],
+  '2026-2027':[countItem]
+};
+const originalAnnual=ctx.EUC_DEV517_geoCandidatesAll_;ctx.EUC_DEV517_geoCandidatesAll_=year=>annualSource[year]||[];
+const mergedAll=ctx.EUC_DEV537_mergeAnnualCandidates_(['2025-2026','2026-2027']);
+assert.equal(ctx.EUC_DEV517_geoFilter_(mergedAll,{annee:'ALL'})[0].elevesAccueillis,2,'all years must deduplicate the same student across the full history');
+ctx.EUC_DEV517_geoCandidatesAll_=originalAnnual;
+
+let nominatimUrl='',nominatimOptions=null,sleeps=[];writes=[];
+const monaco={key:'mc',entreprise:'MONACO TEST',adresse:'1 AVENUE DE MONTE CARLO, 98000 MONACO',pays:'MONACO',codePostal:'98000',statut:'COORDONNEES_A_RENSEIGNER',latitude:null,longitude:null,scopes:[{annee:'2026-2027',famille:'BACPRO',classeId:24,periodeId:62}],accueils:[]};
+ctx.EUC_DEV517_geoCandidatesAll_=()=>[monaco];ctx.UrlFetchApp.fetch=(url,options)=>{nominatimUrl=url;nominatimOptions=options;return{getResponseCode:()=>200,getContentText:()=>JSON.stringify([{lat:'43.7384',lon:'7.4246',display_name:'1 Avenue de Monte Carlo, Monaco',type:'house',address:{country_code:'mc',postcode:'98000',city:'Monaco'}}])}};ctx.Utilities.sleep=ms=>sleeps.push(ms);
+const monacoResult=ctx.EUC_DEV537_geocodeMonaco({annee:'2026-2027',keys:['mc']});
+assert.match(nominatimUrl,/countrycodes=mc/,'Monaco requests must be restricted to Monaco');
+assert.match(nominatimOptions.headers['User-Agent'],/Eucalyptus-PFMP/,'Nominatim requests must identify the application');
+assert.equal(sleeps.length,0,'a one-address batch must not sleep after its last request');
+assert.equal(monacoResult.geocodes,1,'a valid Monaco result must be persisted automatically');
+assert.equal(monaco.latitude,43.7384);assert.equal(monaco.longitude,7.4246);
+
+assert.match(mapHtml,/Toutes les années/,'the map must offer a full-history scope');
+assert.match(mapHtml,/elevesAccueillis/,'the map popup must display the hosted-student count');
+assert.match(geoHtml,/EUC_DEV537_geocodeMonaco/,'the Monaco button must call the second server-side engine');
+
+console.log('34 tests DEV445 géocodage/performance réussis.');
