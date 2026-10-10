@@ -43,12 +43,14 @@ au CFA. La réponse publique est exclusivement agrégée et ne contient aucun no
 identifiant d'élève, dossier nominatif ou relance. La gestion éventuelle d'une
 liste complémentaire reste hors de ce lot.
 
-## Candidat DEV542 — périmètre des classes en apprentissage
+## DEV542 publié (@935) — périmètre des classes en apprentissage
 
 Le réglage des quotas ajoute une activation par classe et année. Une classe
 inactive reste réactivable dans ce seul écran mais sort des totaux, bilans,
 dossiers, relances et sélecteurs de gestion. Toutes les classes sont actives
 par défaut afin de garantir la compatibilité avec les réglages existants.
+Pour `2026-2027`, `1MELEC G` et `TMELEC G` sont désactivées conformément à la
+demande métier ; leurs données ne sont ni supprimées ni altérées.
 
 ## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 

@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 11 octobre 2026 — candidat DEV542
+## Mise à jour du 11 octobre 2026 — DEV542 publié sur le site en ligne (@935)
 
 - La page « Quotas et relances apprentissage » permet désormais d'activer ou
   d'exclure chaque classe pour une année scolaire. Les classes existantes sont
@@ -14,6 +14,17 @@
   donnée élève, contrat ou historique Grist n'est supprimée ou modifiée.
 - Les tests ciblés couvrent le comportement historique par défaut, l'exclusion
   complète d'une classe et la persistance distincte des quotas et activations.
+- Le commit applicatif exact `6eac220` a été publié sur les deux Web Apps
+  existantes en version Apps Script immuable `935`. La suite complète passe
+  `810/810` tests et le contrôle de livraison valide les `25/25` routes. La
+  version immuable `934`, taguée `pfmp-online-934-stable`, reste le point de
+  retour immédiatement antérieur.
+- Le contrôle navigateur de la version publiée confirme les quatre lignes
+  techniques `1MELEC G` et `TMELEC G` en état « Exclue » pour `2026-2027`.
+  Elles ont disparu du bilan et du sélecteur de classe en administration comme
+  sur `apprentis.loucodi.fr`. Aucun avertissement ni aucune erreur navigateur
+  n'a été relevé. Cette opération a uniquement écrit la configuration Apps
+  Script demandée ; aucune donnée métier Grist n'a été modifiée.
 
 ## Mise à jour du 10 octobre 2026 — DEV541 publié sur le site en ligne (@934)
 
