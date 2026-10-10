@@ -82,7 +82,7 @@ test('le premier chargement lit tous les blocs persistants en un seul appel',()=
 });
 test('les anciennes fiches de classe sont invalidées pour reconstruire les coordonnées',()=>{
   assert.match(canonical,/EUC_DEV459_CANONICAL_='DEV533-C14'/);
-  assert.match(canonical,/EUC_DEV459_DETAIL_CANONICAL_='DEV535-D16'/);
+  assert.match(canonical,/EUC_DEV459_DETAIL_CANONICAL_='DEV537-D17'/);
 });
 test('le chargement de classe filtre les accès avant leur enrichissement coûteux',()=>{
   const filter=consolidation;

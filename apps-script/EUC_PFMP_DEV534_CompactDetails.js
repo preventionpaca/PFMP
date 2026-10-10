@@ -80,7 +80,7 @@ function EUC_DEV534_recoverCompletedReplacementSnapshot(){
       var detail=EUC_DEV455_buildTargeted_(annee,famille,classe,periode);
       if(!detail||!Array.isArray(detail.lignes))throw new Error('DEV534 : détail ciblé indisponible pour '+classe+'/'+periode+'.');
       detail.__dev425Revision=revision;
-      detail.__dev459CanonicalDetail=typeof EUC_DEV459_DETAIL_CANONICAL_==='string'?EUC_DEV459_DETAIL_CANONICAL_:'DEV535-D16';
+      detail.__dev459CanonicalDetail=typeof EUC_DEV459_DETAIL_CANONICAL_==='string'?EUC_DEV459_DETAIL_CANONICAL_:'DEV537-D17';
       detail=EUC_DEV534_compactDetail_(detail);
       EUC_DEV427_writeDetails_(annee,famille,[{classe:classe,periode:periode,detail:detail}]);
       try{EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,classe,periode),detail);}catch(eCache){}

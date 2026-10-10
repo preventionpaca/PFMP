@@ -7,7 +7,7 @@ var EUC_DEV459_VERSION_='1.0.0-dev.537';
 var EUC_DEV459_CANONICAL_='DEV533-C14';
 /* Le schéma du détail évolue indépendamment de la synthèse familiale. Cela
  * invalide une classe sans reconstruire les 34 classes sur le clic utilisateur. */
-var EUC_DEV459_DETAIL_CANONICAL_='DEV535-D16';
+var EUC_DEV459_DETAIL_CANONICAL_='DEV537-D17';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}

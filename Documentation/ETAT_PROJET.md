@@ -9,8 +9,9 @@
 - Le détail compact reconstruit avec un effectif vérifié porte désormais cette
   preuve dans le snapshot. Tant qu'aucune invalidation métier ne survient, son
   ouverture ne relit plus l'effectif courant dans Grist. Les anciens snapshots
-  non marqués et les parcours d'invalidation conservent la réconciliation
-  complète avant de devenir autonomes.
+  `D16` sont invalidés une seule fois par le marqueur `DEV537-D17`; les parcours
+  d'invalidation conservent la réconciliation complète avant de devenir
+  autonomes.
 - La cartographie sait agréger une période, une année scolaire ou toutes les
   années et affiche le nombre d'élèves distincts accueillis dans le périmètre
   choisi. La réponse publique ne transporte ni nom, ni identifiant d'élève :
