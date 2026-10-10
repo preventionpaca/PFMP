@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — DEV535 (contact entreprise toujours exploitable)
+
+- Le contrôle réel de TMP3D et TCAR après la reprise DEV534 confirme que les
+  responsables issus des conventions et du tampon JotForm remontent de nouveau
+  dans la colonne « Coordonnées entreprise ».
+- Quelques anciennes conventions ne portent toutefois aucun responsable
+  distinct, alors que leur tuteur, son téléphone et son courriel sont bien
+  enregistrés. La vue conserve désormais l'ordre strict suivant : responsable
+  explicite, coordonnées générales de l'entreprise, puis tuteur en dernier
+  recours. Cette règle est uniquement une règle d'affichage : aucune convention
+  ni coordonnée Grist n'est modifiée ou inventée.
+- Le marqueur de détail devient `DEV535-D16` pour écarter tous les détails
+  persistants antérieurs. Deux tests vérifient le dernier recours et la priorité
+  du responsable explicite.
+
 ## Mise à jour du 10 octobre 2026 — DEV534 (détails compacts et reprise du cache vert)
 
 - Le `413 request entity too large` n'était pas causé par les données métier :

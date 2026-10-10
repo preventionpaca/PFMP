@@ -1,4 +1,18 @@
-# Prochain lot prioritaire — validation DEV534 sur le vert
+# Prochain lot prioritaire — validation DEV535 sur le vert
+
+Publier le dernier recours de contact entreprise. Une convention scolaire avec
+un responsable explicite doit continuer d'afficher celui-ci. Lorsqu'une ancienne
+convention ne contient aucun responsable distinct, mais possède un tuteur, la
+colonne « Coordonnées entreprise » doit afficher le nom, le téléphone et le
+courriel du tuteur au lieu d'un tiret. Cette règle ne doit provoquer aucune
+écriture métier dans Grist.
+
+Reconstruire les détails persistants en `DEV535-D16`, puis contrôler TMP3D et
+TCAR sur le vert. Toutes les lignes couvertes doivent disposer d'un contact
+opérationnel dès qu'un responsable, une coordonnée générale ou un tuteur existe.
+Les élèves sans convention peuvent naturellement rester sans coordonnées.
+
+## Lot terminé — DEV534
 
 Publier le compactage des détails et la navigation de classe indépendante de la
 reconstruction familiale. Exécuter ensuite la reprise technique bornée : elle

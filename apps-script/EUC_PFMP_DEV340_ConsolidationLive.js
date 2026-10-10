@@ -248,11 +248,17 @@ function EUC_DEV340_address_(a){
 function EUC_DEV340_contact_(a){
   if(!a)return '';
   EUC_DEV520_normalizeResponsible_(a);
+  /* DEV535 : les imports historiques ne distinguaient pas toujours le
+   * responsable du tuteur. La colonne « Coordonnées entreprise » doit rester
+   * opérationnelle sans inventer un responsable : le responsable explicite
+   * reste prioritaire, les coordonnées générales viennent ensuite et le
+   * tuteur déjà enregistré n'est utilisé qu'en dernier recours. */
   var r=[EUC_DEV340_txt_(a.Responsable_prenom),EUC_DEV340_txt_(a.Responsable_nom)].filter(Boolean).join(' ').trim();
+  if(!r)r=[EUC_DEV340_txt_(a.Tuteur_prenom),EUC_DEV340_txt_(a.Tuteur_nom)].filter(Boolean).join(' ').trim();
   return [
     r,
-    EUC_DEV520_firstText_(a.Responsable_telephone,a.Entreprise_telephone),
-    EUC_DEV520_firstText_(a.Responsable_courriel,a.Entreprise_courriel)
+    EUC_DEV520_firstText_(a.Responsable_telephone,a.Entreprise_telephone,a.Tuteur_telephone),
+    EUC_DEV520_firstText_(a.Responsable_courriel,a.Entreprise_courriel,a.Tuteur_courriel)
   ].filter(Boolean).join(' · ');
 }
 function EUC_DEV340_tuteur_(a){

@@ -1,5 +1,5 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.534';
+var EUC_DEV459_VERSION_='1.0.0-dev.535';
 /* DEV528 : les details DEV526 ne contenaient pas encore le repli vers le
  * responsable conserve dans le tampon JotForm. Le marqueur doit changer :
  * sinon la fiche de classe reutilise indefiniment l'ancien detail en cache et
@@ -7,7 +7,7 @@ var EUC_DEV459_VERSION_='1.0.0-dev.534';
 var EUC_DEV459_CANONICAL_='DEV533-C14';
 /* Le schéma du détail évolue indépendamment de la synthèse familiale. Cela
  * invalide une classe sans reconstruire les 34 classes sur le clic utilisateur. */
-var EUC_DEV459_DETAIL_CANONICAL_='DEV534-D15';
+var EUC_DEV459_DETAIL_CANONICAL_='DEV535-D16';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}

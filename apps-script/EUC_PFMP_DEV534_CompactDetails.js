@@ -7,7 +7,7 @@
  * ancienne convention. L'interface n'utilise qu'un sous-ensemble précis pour
  * afficher l'historique rupture / remplacement.
  */
-var EUC_DEV534_VERSION_='1.0.0-dev.534';
+var EUC_DEV534_VERSION_='1.0.0-dev.535';
 var EUC_DEV534_GRIST_BATCH_BYTES_=80000;
 var EUC_DEV534_HISTORY_FIELDS_=[
   'id','Statut_administratif','Statut','Type_sequence','Numero_sequence',
@@ -80,7 +80,7 @@ function EUC_DEV534_recoverCompletedReplacementSnapshot(){
       var detail=EUC_DEV455_buildTargeted_(annee,famille,classe,periode);
       if(!detail||!Array.isArray(detail.lignes))throw new Error('DEV534 : détail ciblé indisponible pour '+classe+'/'+periode+'.');
       detail.__dev425Revision=revision;
-      detail.__dev459CanonicalDetail=typeof EUC_DEV459_DETAIL_CANONICAL_==='string'?EUC_DEV459_DETAIL_CANONICAL_:'DEV534-D15';
+      detail.__dev459CanonicalDetail=typeof EUC_DEV459_DETAIL_CANONICAL_==='string'?EUC_DEV459_DETAIL_CANONICAL_:'DEV535-D16';
       detail=EUC_DEV534_compactDetail_(detail);
       EUC_DEV427_writeDetails_(annee,famille,[{classe:classe,periode:periode,detail:detail}]);
       try{EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,classe,periode),detail);}catch(eCache){}
