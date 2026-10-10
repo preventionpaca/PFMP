@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat correctif DEV539
+## Mise à jour du 10 octobre 2026 — DEV539 publié sur le site en ligne (@929)
 
 - Le problème du modèle PDF a été résolu directement par l'utilisateur et sort
   du lot applicatif : aucun modèle de convention n'est modifié par DEV539.
@@ -23,8 +23,8 @@
   lors de l'ouverture d'une infobulle, qui reste défilable. Le mode parents
   distinct agrège strictement les trois dernières années et ne transmet aucun
   nom d'élève, de professeur ni SIRET au navigateur.
-- Le point de retour avant livraison reste la version Apps Script immuable
-  `927`, commit `8b582c6`, tag `pfmp-online-927-stable`.
+- Le point de retour antérieur reste la version Apps Script immuable `927`,
+  commit `8b582c6`, tag `pfmp-online-927-stable`.
 - Le premier contrôle visuel de la version `928` a détecté, avant remise, qu'une
   entreprise pouvait apparaître deux fois lorsque le snapshot ancien ne portait
   pas de SIRET et que la convention enrichie le portait. DEV539 consolide le
@@ -32,6 +32,16 @@
   le SIRET enrichi, déduplique les accueils et ignore les lignes anonymes quand
   l'historique nominatif est disponible. Deux tests de non-régression couvrent
   désormais ce cas. Suite complète : `793/793` tests réussis.
+- Le commit exact `2ec8315` a été relu après publication puis déployé sur les
+  deux Web Apps existantes en version Apps Script immuable `929`. Les `25/25`
+  routes de livraison sont valides. Les contrôles navigateur complémentaires
+  ont validé la page quotas, le book administratif et personnels, la carte
+  personnels avec élève et professeur visiteur chargés à l'ouverture de
+  l'infobulle, ainsi que la carte parents limitée à trois ans sans donnée
+  nominative. Le book consolide désormais `138` établissements au lieu des
+  `248` cartes artificiellement séparées par la présence ou l'absence du SIRET.
+  La version `928` reste immuable mais n'est pas la référence de remise ; `927`
+  reste le repli antérieur vérifié.
 
 ## Mise à jour du 10 octobre 2026 — DEV537 publié sur le site en ligne (@927)
 
