@@ -146,4 +146,18 @@ test('les actions de géocodage protègent le double clic et bornent l’attente
   assert.match(geoHtml,/Géocodage…/);
 });
 
+test('le géocodage Monaco ne retente jamais le même lot en boucle',()=>{
+  const source=geoHtml.match(/function geocodeBatchPlan\(keys,limit\)\{[^\n]+\}/);
+  assert.ok(source,'planificateur de lot absent');
+  const c={};vm.createContext(c);vm.runInContext(source[0],c);
+  const first=c.geocodeBatchPlan(['a','b','c','d','e'],3);
+  assert.deepEqual(Array.from(first.batch),['a','b','c']);
+  assert.deepEqual(Array.from(first.remaining),['d','e']);
+  const geocode=body(geoHtml,'function geocodeKeys','$(\'analyze\').onclick');
+  assert.match(geocode,/geocodeBatchPlan\(keys,limit\)/);
+  assert.match(geocode,/keys:plan\.batch/);
+  assert.match(geocode,/geocodeKeys\(plan\.remaining,true,b,isMonaco,progress\)/);
+  assert.doesNotMatch(geocode,/remaining=ROWS\.filter/);
+});
+
 if(!process.exitCode)console.log(`\n${n} tests DEV513 stabilisation réussis.`);

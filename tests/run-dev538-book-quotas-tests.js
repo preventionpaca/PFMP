@@ -21,7 +21,7 @@ function context(){
 }
 
 test('les deux nouvelles pages et la carte parents ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.542/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.543/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
@@ -64,6 +64,22 @@ test('le calcul quota et les relances J+14 consolident les données existantes',
   c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[{id:1,fields:{Nom:'ALPHA',Prenom:'Ana',Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}},{id:2,fields:{Nom:'BETA',Prenom:'Bilal',Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}}]:[];
   c.EUC_DEV538_optionalRecords_=table=>table==='EUC_APPRENTISSAGE_PFMP'?[{id:10,fields:{Eleve:1,Annee_scolaire:'2026-2027',Date_contrat_officielle:ago(30),Date_debut:ago(20),Date_fin:future(200),Actif:true}},{id:11,fields:{Eleve:2,Annee_scolaire:'2026-2027',Dossier_distribue:true,Date_distribution_dossier:ago(16)}}]:[];
   const d=c.EUC_DEV538_apprentissageDashboard('2026-2027'),r=d.groups[0].lignes[0];assert.equal(r.effectif,2);assert.equal(r.quota,1);assert.equal(r.apprentis,1);assert.equal(r.distribues,1);assert.equal(d.relances.length,1);assert.equal(d.relances[0].eleve,'BETA Bilal');assert.ok(d.relances[0].jours>=15);
+});
+
+test('les effectifs apprentissage excluent tous les élèves déjà sortis',()=>{
+  const c=context();c.EUC_DEV538_admin_=()=>true;c.EUC_DEV368_year=()=> '2026-2027';c.EUC_DEV368_catalog=()=>({classes:[{classeId:24,classe:'TCAR',famille:'BACPRO'}]});c.EUC_DEV538_schoolYearMap_=()=>({});c.EUC_DEV538_diplomas_=()=>({24:'BAC PRO Carrossier Peintre Automobile'});c.EUC_DEV538_quotaConfig_=()=>({'2026-2027':{24:100}});
+  const base={Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true};
+  c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[
+    {id:1,fields:{...base,Nom:'PRESENT',Prenom:'Actuel',Statut_scolarite:'PRESENT'}},
+    {id:2,fields:{...base,Nom:'SORTI',Prenom:'Statut',Statut_scolarite:'SORTI'}},
+    {id:3,fields:{...base,Nom:'SORTI',Prenom:'Date',Statut_scolarite:'PRESENT',Date_sortie:'2026-09-01'}},
+    {id:4,fields:{...base,Nom:'ABSENT',Prenom:'Import',Present_dernier_import:false}},
+    {id:5,fields:{...base,Nom:'INACTIF',Prenom:'Actif',Actif:false}},
+    {id:6,fields:{...base,Nom:'PRESENT',Prenom:'Sortie future',Statut_scolarite:'PRESENT',Date_sortie:'2099-09-01'}}
+  ]:[];
+  c.EUC_DEV538_optionalRecords_=()=>[];
+  const d=c.EUC_DEV538_apprentissageDashboard('2026-2027'),r=d.groups[0].lignes[0];
+  assert.equal(r.effectif,2);assert.equal(r.quota,2);assert.equal(d.totals.effectif,2);
 });
 
 test('une classe est active par défaut tant qu’aucun réglage contraire n’existe',()=>{

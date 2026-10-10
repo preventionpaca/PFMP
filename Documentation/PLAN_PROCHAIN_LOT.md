@@ -52,6 +52,17 @@ par défaut afin de garantir la compatibilité avec les réglages existants.
 Pour `2026-2027`, `1MELEC G` et `TMELEC G` sont désactivées conformément à la
 demande métier ; leurs données ne sont ni supprimées ni altérées.
 
+## Candidat DEV543 — terminaison Monaco et effectifs présents
+
+Le traitement automatique Monaco consomme une file finie par lots de trois et
+ne réessaie plus dans la même demande les adresses restées sans coordonnées.
+L'interface revient toujours à l'état disponible avec un bilan explicite.
+
+Les effectifs servant aux quotas et aux bilans apprentissage excluent les
+élèves déjà sortis selon les indicateurs d'activité, de dernier import, de
+statut scolaire et de date de sortie. Les sorties futures restent comptées
+jusqu'à leur date effective.
+
 ## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 
 Le tableau de quotas est agrandi et explicite la différence entre contrats à

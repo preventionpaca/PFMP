@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV543
+
+- Le géocodage Monaco traite désormais la liste demandée comme une file finie :
+  chaque adresse est examinée une seule fois par clic, par lots de trois. Une
+  adresse sans résultat exploitable passe à contrôler ou à renseigner, sans
+  être réinjectée automatiquement dans le lot suivant. Le bouton est restauré
+  en fin de file, en erreur et après le délai maximal de vingt secondes.
+- Les effectifs du bilan apprentissage utilisent uniquement les élèves encore
+  présents dans l'établissement. Sont exclus les élèves inactifs, absents du
+  dernier import, porteurs d'un statut de sortie/radiation ou dont la date de
+  sortie est déjà atteinte. Une date de sortie future maintient l'élève dans
+  l'effectif jusqu'à cette date.
+- Les tests ciblés couvrent la terminaison du géocodage Monaco et tous les
+  marqueurs de sortie. La suite complète passe `812/812` tests.
+
 ## Mise à jour du 11 octobre 2026 — DEV542 publié sur le site en ligne (@935)
 
 - La page « Quotas et relances apprentissage » permet désormais d'activer ou

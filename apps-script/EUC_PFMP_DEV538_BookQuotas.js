@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.542';
+var EUC_DEV538_VERSION_='1.0.0-dev.543';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV538_RELANCE_DAYS_=14;
@@ -66,6 +66,17 @@ function EUC_DEV538_studentYear_(f,yearsById){
   var direct=EUC_DEV538_t_(EUC_DEV538_pick_(f,['Annee_scolaire_code','Annee_code','Annee_scolaire_libelle']));if(/^20\d{2}-20\d{2}$/.test(direct))return direct;
   var raw=f&&f.Annee_scolaire;if(/^20\d{2}-20\d{2}$/.test(EUC_DEV538_t_(raw)))return EUC_DEV538_t_(raw);return EUC_DEV538_t_((yearsById||{})[EUC_DEV538_ref_(raw)]);
 }
+function EUC_DEV543_explicitFalse_(value){
+  if(value===false)return true;var s=EUC_DEV538_norm_(value);return s==='0'||s==='FALSE'||s==='NON'||s==='NO'||s==='INACTIF';
+}
+function EUC_DEV543_studentPresent_(f,now){
+  f=f||{};now=now||new Date();
+  if(EUC_DEV543_explicitFalse_(f.Actif)||EUC_DEV543_explicitFalse_(f.Present_dernier_import))return false;
+  var status=EUC_DEV538_norm_(EUC_DEV538_pick_(f,['Statut_scolarite','Statut_scolarité','Situation_scolarite','Situation']));
+  if(/(?:^| )(?:SORTI|SORTIE|RADIE|INACTIF)(?: |$)/.test(status))return false;
+  var sortie=EUC_DEV538_date_(EUC_DEV538_pick_(f,['Date_sortie','Date_fin_scolarite','Fin_scolarite']));
+  return!sortie||sortie.getTime()>now.getTime();
+}
 function EUC_DEV538_diplomas_(){
   var out={};EUC_DEV538_optionalRecords_('EUC_CLASSES_DIPLOMES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r);if(f.Actif===false)return;var cid=EUC_DEV538_ref_(EUC_DEV538_pick_(f,['Classe','Classe_id'])),label=EUC_DEV538_t_(EUC_DEV538_pick_(f,['Intitule_diplome','Intitule','Diplome','Diplome_imprime','Libelle']));if(cid&&label)out[cid]=label;});return out;
 }
@@ -102,8 +113,8 @@ function EUC_DEV541_apprentissageClasses_(annee){
 }
 function EUC_DEV538_apprentissageDashboard_(annee){
   annee=EUC_DEV538_t_(annee)||EUC_DEV368_year('');var classes=EUC_DEV541_apprentissageClasses_(annee),classById={},classByName={};classes.forEach(function(c){classById[c.id]=c;classByName[EUC_DEV538_norm_(c.classe)]=c;});
-  var yearsById=EUC_DEV538_schoolYearMap_(),students=[],studentById={};EUC_DEV538_records_('EUC_ELEVES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),id=EUC_DEV538_n_(r.id||f.id);if(!id||f.Actif===false||f.Present_dernier_import===false||EUC_DEV538_studentYear_(f,yearsById)!==annee)return;var cid=EUC_DEV538_ref_(f.Classe),label=EUC_DEV538_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),cl=classById[cid]||classByName[EUC_DEV538_norm_(label)];if(!cl)return;var s={id:id,nom:[EUC_DEV538_t_(f.Nom),EUC_DEV538_t_(f.Prenom_usage||f.Prenom)].filter(Boolean).join(' '),classeId:cl.id,classe:cl.classe};students.push(s);studentById[id]=s;});
-  var latest=EUC_DEV538_latestByStudent_(EUC_DEV538_optionalRecords_('EUC_APPRENTISSAGE_PFMP',{}),annee),prints=EUC_DEV538_distributionByStudent_(EUC_DEV538_optionalRecords_('EUC_DOSSIER_APPRENTISSAGE_IMPRESSIONS',{}),annee),now=new Date(),diplomas=EUC_DEV538_diplomas_(),config=EUC_DEV538_quotaConfig_(),yearConfig=config[annee]||{},activeConfig=EUC_DEV542_activeClassesConfig_(),rowByClass={};
+  var now=new Date(),yearsById=EUC_DEV538_schoolYearMap_(),students=[],studentById={};EUC_DEV538_records_('EUC_ELEVES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),id=EUC_DEV538_n_(r.id||f.id);if(!id||!EUC_DEV543_studentPresent_(f,now)||EUC_DEV538_studentYear_(f,yearsById)!==annee)return;var cid=EUC_DEV538_ref_(f.Classe),label=EUC_DEV538_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),cl=classById[cid]||classByName[EUC_DEV538_norm_(label)];if(!cl)return;var s={id:id,nom:[EUC_DEV538_t_(f.Nom),EUC_DEV538_t_(f.Prenom_usage||f.Prenom)].filter(Boolean).join(' '),classeId:cl.id,classe:cl.classe};students.push(s);studentById[id]=s;});
+  var latest=EUC_DEV538_latestByStudent_(EUC_DEV538_optionalRecords_('EUC_APPRENTISSAGE_PFMP',{}),annee),prints=EUC_DEV538_distributionByStudent_(EUC_DEV538_optionalRecords_('EUC_DOSSIER_APPRENTISSAGE_IMPRESSIONS',{}),annee),diplomas=EUC_DEV538_diplomas_(),config=EUC_DEV538_quotaConfig_(),yearConfig=config[annee]||{},activeConfig=EUC_DEV542_activeClassesConfig_(),rowByClass={};
   classes.forEach(function(c){rowByClass[c.id]={classeId:c.id,classe:c.classe,famille:c.famille,niveau:c.niveau,diplome:diplomas[c.id]||EUC_DEV538_fallbackDiploma_(c),active:EUC_DEV542_classActive_(activeConfig,annee,c.id),effectif:0,quotaPercent:EUC_DEV538_n_(yearConfig[c.id]),quota:0,apprentis:0,futurs:0,distribues:0,retournes:0,transmisCfa:0,relances:[],dossiers:[]};});
   students.forEach(function(s){var out=rowByClass[s.classeId];if(!out)return;out.effectif++;var state=EUC_DEV538_apprenticeState_(latest[s.id],prints[s.id],now);if(state.current)out.apprentis++;if(state.future)out.futurs++;if(state.distributed&&!state.returned)out.distribues++;if(state.returned&&!state.cfa)out.retournes++;if(state.cfa)out.transmisCfa++;if(state.distributed||state.returned||state.cfa)out.dossiers.push({eleveId:s.id,eleve:s.nom,classe:s.classe,dateDistribution:state.distribution,jours:state.days,statut:state.cfa?'Transmis au CFA':state.returned?'Dossier retourné':'Dossier distribué',aRelancer:state.reminder});if(state.reminder)out.relances.push({eleveId:s.id,eleve:s.nom,classe:s.classe,dateDistribution:state.distribution,jours:state.days});});
   var groups={},totals={effectif:0,quota:0,apprentis:0,futurs:0,distribues:0,retournes:0,transmisCfa:0,relances:0};Object.keys(rowByClass).forEach(function(k){var r=rowByClass[k];r.quota=Math.round(r.effectif*r.quotaPercent/100);var key=r.diplome;if(!groups[key])groups[key]={diplome:key,famille:r.famille,lignes:[]};groups[key].lignes.push(r);if(r.active)Object.keys(totals).forEach(function(x){if(x==='relances')totals[x]+=r.relances.length;else totals[x]+=EUC_DEV538_n_(r[x]);});});

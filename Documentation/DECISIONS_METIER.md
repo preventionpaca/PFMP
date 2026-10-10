@@ -95,6 +95,9 @@
   Adresse Nationale. Pour Monaco, Nominatim/OpenStreetMap est un moteur de
   repli en petit lot, temporisé et mis en cache. Il ne reçoit que l'adresse de
   l'entreprise ; les résultats insuffisamment sûrs exigent une validation.
+  Dans une demande de masse, chaque adresse monégasque n'est interrogée qu'une
+  seule fois. Une absence de résultat ne relance jamais automatiquement la même
+  adresse en boucle ; une nouvelle tentative exige une nouvelle action humaine.
 - Dans le générateur de conventions, la recherche d'un élève s'effectue dans
   la liste déjà chargée. La frappe de quelques lettres ne déclenche aucun
   nouvel appel Grist et la valeur métier conservée reste l'identifiant durable
@@ -112,6 +115,11 @@
   réactivée, mais elle est exclue des bilans public et administratif, des
   totaux, des dossiers, des relances et du sélecteur de classe. Cette exclusion
   ne supprime ni élève, ni contrat, ni historique.
+- L'effectif utilisé pour calculer les quotas comprend uniquement les élèves
+  encore présents dans l'établissement pour l'année sélectionnée. Un élève
+  inactif, absent du dernier import, sorti/radié ou dont la date de sortie est
+  atteinte est exclu de l'effectif et des indicateurs apprentissage. Une date de
+  sortie future ne l'exclut qu'à compter du jour effectif de son départ.
 - L'impression ou la confirmation de distribution d'un dossier alimente le
   registre existant. Un dossier distribué et non retourné apparaît dans la
   liste de relance à partir du quatorzième jour. Cette alerte n'envoie aucun
