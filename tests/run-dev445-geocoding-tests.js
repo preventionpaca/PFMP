@@ -6,7 +6,7 @@ const geoHtml=fs.readFileSync('apps-script/Geocodage_PFMP_DEV441.html','utf8');
 const mapHtml=fs.readFileSync('apps-script/Cartographie_PFMP_DEV441.html','utf8');
 let reads=0,writes=[];
 const detail={famille:'BACPRO',classe:{id:28,nom:'TMP3D'},periode:{id:65,libelle:'PFMP n°1'},lignes:[
-  {entreprise:'ACME',adresseEntreprise:'14 RUE DES ETOILES, 06000 NICE',siretEntreprise:'12345678901234'},
+  {entreprise:'ACME',adresseEntreprise:'14 RUE DES ETOILES, 06000 NICE',siretEntreprise:''},
   {entreprise:'ACME',adresseEntreprise:'14 RUE DES ETOILES, 06000 NICE',siretEntreprise:'12345678901234'},
   {entreprise:'BETA',adresseEntreprise:'1 AVENUE DE FRANCE, 06100 NICE',siretEntreprise:'99999999999999'}
 ]};
@@ -30,8 +30,10 @@ const ctx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Obje
 };
 vm.createContext(ctx);vm.runInContext(code,ctx);
 assert.equal(ctx.EUC_DEV441_geoClassify_('15 RUE DE BELGIQUE, 06000 NICE').pays,'FRANCE','a French postal code must override a country word used in a street name');
+assert.equal(ctx.EUC_DEV443_savedCountry_({Pays:'ETRANGER'},ctx.EUC_DEV441_geoClassify_('15 RUE DE BELGIQUE, 06000 NICE')),'FRANCE','a legacy foreign classification must be corrected from the French postal code');
 assert.equal(ctx.EUC_DEV443_normalizeAddress_('10 BOULEVARD PRESIDENT WILSON, 06600 ANTIBES, 06600 ANTIBES'),'10 BOULEVARD PRESIDENT WILSON, 06600 ANTIBES','duplicated postal/city suffixes must be collapsed');
 assert.equal(ctx.EUC_DEV540_geoCandidate_([{geometry:{coordinates:[7.1,43.6]},properties:{score:.9,label:'Jardin Président René Cassin 06600 Antibes',postcode:'06600',type:'locality'}}],'10 BOULEVARD PRESIDENT WILSON 06600 ANTIBES','06600'),null,'an unrelated street result must be rejected even with the right postal code');
+assert.equal(ctx.EUC_DEV540_geoSavedRelevant_('10 BOULEVARD PRESIDENT WILSON 06600 ANTIBES','Jardin Président René Cassin 06600 Antibes'),false,'a legacy unrelated suggestion must be invalidated on read');
 assert.equal(ctx.EUC_DEV540_monacoQuery_('PLACE DU CASINO, 98000 ROQUEBRUNE CAP MARTIN'),'PLACE DU CASINO, 98000 MONACO','a Monaco query must discard a contradictory French locality');
 let candidates=ctx.EUC_DEV441_geoCandidates_({annee:'2026-2027',famille:'BACPRO'});
 assert.equal(reads,3,'candidate build must merge one snapshot read, one annual access read and one geo read');
