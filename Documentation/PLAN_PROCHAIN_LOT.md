@@ -43,6 +43,13 @@ au CFA. La réponse publique est exclusivement agrégée et ne contient aucun no
 identifiant d'élève, dossier nominatif ou relance. La gestion éventuelle d'une
 liste complémentaire reste hors de ce lot.
 
+## Candidat DEV542 — périmètre des classes en apprentissage
+
+Le réglage des quotas ajoute une activation par classe et année. Une classe
+inactive reste réactivable dans ce seul écran mais sort des totaux, bilans,
+dossiers, relances et sélecteurs de gestion. Toutes les classes sont actives
+par défaut afin de garantir la compatibilité avec les réglages existants.
+
 ## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 
 Le tableau de quotas est agrandi et explicite la différence entre contrats à

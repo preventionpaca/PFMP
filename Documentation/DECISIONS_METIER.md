@@ -106,6 +106,12 @@
   scolaire. Le nombre de places affiché est l'arrondi mathématique de
   `effectif réel × pourcentage / 100`. Le pourcentage est une configuration
   Apps Script ; il ne duplique pas les états d'apprentissage dans Grist.
+- Le périmètre apprentissage est paramétrable par classe et année scolaire.
+  Toute classe est active par défaut pour préserver l'existant. Une classe
+  désactivée reste visible dans la page de réglage afin de pouvoir être
+  réactivée, mais elle est exclue des bilans public et administratif, des
+  totaux, des dossiers, des relances et du sélecteur de classe. Cette exclusion
+  ne supprime ni élève, ni contrat, ni historique.
 - L'impression ou la confirmation de distribution d'un dossier alimente le
   registre existant. Un dossier distribué et non retourné apparaît dans la
   liste de relance à partir du quatorzième jour. Cette alerte n'envoie aucun

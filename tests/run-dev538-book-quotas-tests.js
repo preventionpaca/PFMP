@@ -21,15 +21,17 @@ function context(){
 }
 
 test('les deux nouvelles pages et la carte parents ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.541/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.542/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
+test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
 test('la page quota protège les actions asynchrones',()=>{assert.match(quotaHtml,/button:disabled/);assert.match(quotaHtml,/class="spin"/);assert.match(quotaHtml,/setTimeout\(\(\)=>/);assert.match(quotaHtml,/busy\('save',false\)/)});
 test('le book combine les filtres demandés',()=>{for(const id of ['year','window','family','diploma','level','classe','period','company','student','teacher'])assert.ok(bookHtml.includes('id="'+id+'"'),id)});
 test('le book propose export Excel compatible et impression PDF',()=>{assert.match(bookHtml,/Exporter Excel \(CSV\)/);assert.match(bookHtml,/window\.print/);assert.match(bookHtml,/text\/csv;charset=utf-8/)});
 test('le book propose filtres assistés fiche entreprise photo et retour',()=>{assert.match(bookHtml,/datalist id="companiesOptions"/);assert.match(bookHtml,/id="detail"/);assert.match(bookHtml,/EUC_DEV540_companyPhoto/);assert.match(bookHtml,/EUC_DEV540_saveCompanyPhoto/);assert.match(bookHtml,/class="breadcrumb"/);assert.match(server,/EUC_ENTREPRISES_PHOTOS_PFMP/)});
 test('le tableau des quotas rend les chiffres lisibles et explique les compteurs',()=>{assert.match(quotaHtml,/td\.num\{font-size:16px/);assert.match(quotaHtml,/Futurs — début à venir/);assert.match(quotaHtml,/Transmis au CFA — total/)});
 test('la gestion des apprentis intègre le bilan par diplôme dans les deux modes',()=>{assert.match(apprenticesHtml,/Bilan des apprentis par diplôme et classe/);assert.match(apprenticesHtml,/EUC_DEV541_apprentissageDashboardPublic/);assert.match(apprenticesHtml,/Quota fixé/);assert.match(apprenticesHtml,/Apprentis actuels/);assert.match(apprenticesHtml,/Futurs apprentis/);assert.match(apprenticesHtml,/Dossiers distribués/);assert.match(apprenticesHtml,/Transmis au CFA/);assert.match(apprenticesHtml,/body\.dev252-readonly #dev541QuotaAdmin/)});
+test('les classes exclues disparaissent aussi du sélecteur apprentissage',()=>{assert.match(apprenticesHtml,/activeClassNames/);assert.match(apprenticesHtml,/option\.disabled=!active/);assert.match(apprenticesHtml,/option\.hidden=!active/);assert.match(apprenticesHtml,/MutationObserver\(filterClassOptions\)/)});
 test('le bilan intégré protège son chargement asynchrone',()=>{assert.match(apprenticesHtml,/reload\.disabled=!!on/);assert.match(apprenticesHtml,/setTimeout\(function\(\)/);assert.match(apprenticesHtml,/Le bilan n’a pas répondu sous 20 secondes/);assert.match(apprenticesHtml,/withFailureHandler/)});
 test('la carte utilise le service nominatif paresseux et une histoire défilante',()=>{assert.match(mapHtml,/EUC_DEV538_mapData/);assert.match(mapHtml,/EUC_DEV538_companyHistory/);assert.match(mapHtml,/popup-history\{max-height:230px;overflow:auto/);assert.match(mapHtml,/Professeur visiteur/);assert.match(mapHtml,/PARENT/);assert.match(server,/function EUC_DEV538_companyHistory/)});
 test('la donnée cartographique conserve le SIRET pour la jointure',()=>assert.match(geo,/key:x\.key,siret:x\.siret\|\|''/));
@@ -62,6 +64,24 @@ test('le calcul quota et les relances J+14 consolident les données existantes',
   c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[{id:1,fields:{Nom:'ALPHA',Prenom:'Ana',Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}},{id:2,fields:{Nom:'BETA',Prenom:'Bilal',Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}}]:[];
   c.EUC_DEV538_optionalRecords_=table=>table==='EUC_APPRENTISSAGE_PFMP'?[{id:10,fields:{Eleve:1,Annee_scolaire:'2026-2027',Date_contrat_officielle:ago(30),Date_debut:ago(20),Date_fin:future(200),Actif:true}},{id:11,fields:{Eleve:2,Annee_scolaire:'2026-2027',Dossier_distribue:true,Date_distribution_dossier:ago(16)}}]:[];
   const d=c.EUC_DEV538_apprentissageDashboard('2026-2027'),r=d.groups[0].lignes[0];assert.equal(r.effectif,2);assert.equal(r.quota,1);assert.equal(r.apprentis,1);assert.equal(r.distribues,1);assert.equal(d.relances.length,1);assert.equal(d.relances[0].eleve,'BETA Bilal');assert.ok(d.relances[0].jours>=15);
+});
+
+test('une classe est active par défaut tant qu’aucun réglage contraire n’existe',()=>{
+  const c=context();assert.equal(c.EUC_DEV542_classActive_({},'2026-2027',24),true);assert.equal(c.EUC_DEV542_classActive_({'2026-2027':{24:true}},'2026-2027',24),true);assert.equal(c.EUC_DEV542_classActive_({'2026-2027':{24:false}},'2026-2027',24),false);
+});
+
+test('une classe exclue reste réglable mais sort des totaux listes et bilan public',()=>{
+  const c=context(),now=Date.now(),ago=new Date(now-20*86400000).toISOString(),future=new Date(now+200*86400000).toISOString();
+  c.EUC_DEV538_admin_=()=>true;c.EUC_DEV368_year=()=> '2026-2027';c.EUC_DEV541_apprentissageClasses_=()=>[{id:24,classe:'TCAR',famille:'BACPRO',niveau:'Terminale'},{id:41,classe:'1MELEC G',famille:'BACPRO',niveau:'Première'}];c.EUC_DEV538_schoolYearMap_=()=>({});c.EUC_DEV538_diplomas_=()=>({24:'BAC PRO Carrosserie',41:'BAC PRO MELEC G'});c.EUC_DEV538_quotaConfig_=()=>({'2026-2027':{24:30,41:30}});c.EUC_DEV542_activeClassesConfig_=()=>({'2026-2027':{24:true,41:false}});
+  c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[{id:1,fields:{Nom:'ACTIVE',Prenom:'Ana',Classe:24,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}},{id:2,fields:{Nom:'EXCLU',Prenom:'Eva',Classe:41,Annee_scolaire_code:'2026-2027',Actif:true,Present_dernier_import:true}}]:[];
+  c.EUC_DEV538_optionalRecords_=table=>table==='EUC_APPRENTISSAGE_PFMP'?[{id:10,fields:{Eleve:1,Annee_scolaire:'2026-2027',Date_contrat_officielle:ago,Date_debut:ago,Date_fin:future,Actif:true}},{id:11,fields:{Eleve:2,Annee_scolaire:'2026-2027',Dossier_distribue:true,Date_distribution_dossier:ago}}]:[];
+  const adminData=c.EUC_DEV538_apprentissageDashboard('2026-2027');assert.equal(adminData.groups.length,2);assert.equal(adminData.groups[1].lignes[0].active,false);assert.equal(adminData.totals.effectif,1);assert.equal(adminData.totals.apprentis,1);assert.equal(adminData.totals.distribues,0);assert.equal(adminData.dossiers.length,0);assert.equal(adminData.relances.length,0);
+  const publicData=c.EUC_DEV541_apprentissageDashboardPublic('2026-2027');assert.equal(publicData.groups.length,1);assert.equal(publicData.groups[0].lignes[0].classe,'TCAR');assert.equal(JSON.stringify(publicData).includes('1MELEC G'),false);
+});
+
+test('l’enregistrement conserve séparément quota et activation par année',()=>{
+  const c=context(),written={};c.EUC_DEV538_admin_=()=>true;c.EUC_DEV538_quotaConfig_=()=>({'2025-2026':{24:20}});c.EUC_DEV542_activeClassesConfig_=()=>({'2025-2026':{24:true}});c.PropertiesService={getScriptProperties:()=>({setProperties:values=>Object.assign(written,values)})};
+  const out=c.EUC_DEV538_saveQuotas({annee:'2026-2027',lignes:[{classeId:24,quotaPercent:30,active:true},{classeId:41,quotaPercent:25,active:false}]});assert.equal(out.actives,1);const quotas=JSON.parse(written[c.EUC_DEV538_QUOTAS_PROP_]),active=JSON.parse(written[c.EUC_DEV542_ACTIVE_CLASSES_PROP_]);assert.equal(quotas['2025-2026'][24],20);assert.equal(quotas['2026-2027'][41],25);assert.equal(active['2025-2026'][24],true);assert.equal(active['2026-2027'][41],false);
 });
 
 test('le bilan public ne renvoie aucune identité ni aucun dossier nominatif',()=>{

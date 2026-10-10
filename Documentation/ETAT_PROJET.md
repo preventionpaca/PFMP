@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV542
+
+- La page « Quotas et relances apprentissage » permet désormais d'activer ou
+  d'exclure chaque classe pour une année scolaire. Les classes existantes sont
+  actives par défaut ; aucun réglage antérieur n'est perdu.
+- Une classe exclue reste affichée en gris dans la page de réglage pour pouvoir
+  être réactivée. Elle ne contribue plus aux totaux, aux capacités, aux
+  dossiers ni aux relances, et disparaît des bilans public et administratif
+  ainsi que du sélecteur de classe de la gestion des apprentis.
+- Le pourcentage de quota est conservé pendant l'exclusion. La configuration
+  d'activation est stockée séparément dans les propriétés Apps Script ; aucune
+  donnée élève, contrat ou historique Grist n'est supprimée ou modifiée.
+- Les tests ciblés couvrent le comportement historique par défaut, l'exclusion
+  complète d'une classe et la persistance distincte des quotas et activations.
+
 ## Mise à jour du 10 octobre 2026 — DEV541 publié sur le site en ligne (@934)
 
 - Les pages « Gestion des apprentis » administrative et publique affichent
