@@ -7,6 +7,10 @@
 - Les photos de devanture sont stockées dans Drive et non dans Grist. Grist ne
   conserve que les métadonnées et l'identifiant Drive. Une photo rendue
   publique ne montre ni personne reconnaissable ni plaque lisible.
+- Dans le book et la cartographie, l'identité d'un établissement français est
+  d'abord son SIRET. Le couple entreprise/adresse canonique sert uniquement de
+  repli aux anciens accueils dépourvus de SIRET. Une variation de ponctuation ou
+  un code postal/une commune répétés ne créent pas une seconde entreprise.
 - Les filtres du book s'appliquent de façon identique à la liste, à la galerie,
   à la carte et aux exports. Un export respecte toujours le niveau de
   confidentialité de la vue qui l'a produit.

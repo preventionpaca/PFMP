@@ -167,7 +167,15 @@ function EUC_DEV443_normalizeAddress_(adresse){
   var s=EUC_DEV441_t_(adresse).replace(/[·•]/g,',').replace(/\s*,\s*/g,', ').replace(/\s+/g,' ').trim();
   /* Grist renvoie parfois un CP typé nombre : 06100 devient alors 6100.
      La correction reste strictement limitée au segment postal placé avant la commune. */
-  return s.replace(/(^|[,;]\s+|\s)(\d{4})(?=\s+[A-Za-zÀ-ÖØ-öø-ÿ'’ -]+$)/,function(all,prefix,cp){return prefix+EUC_DEV443_postal_(cp)});
+  s=s.replace(/(^|[,;]\s+|\s)(\d{4})(?=\s+[A-Za-zÀ-ÖØ-öø-ÿ'’ -]+$)/,function(all,prefix,cp){return prefix+EUC_DEV443_postal_(cp)});
+  /* Les imports historiques ont parfois concaténé deux fois le couple
+   * code postal / commune (« 06600 ANTIBES, 06600 ANTIBES »), ou l'ont
+   * séparé en deux segments (« 06000, NICE »). Ces variantes désignent la
+   * même adresse et ne doivent ni créer un doublon ni perturber le moteur. */
+  s=s.replace(/,\s*(\d{5})\s*,\s*([A-Za-zÀ-ÖØ-öø-ÿ'’ -]+)$/,' $1 $2');
+  var repeated=s.match(/\b(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ'’ -]+),\s*\1\s+\2$/i);
+  if(repeated)s=s.slice(0,repeated.index)+repeated[1]+' '+repeated[2];
+  return s.replace(/\s+,/g,',').replace(/,\s*,+/g,', ').replace(/\s+/g,' ').trim();
 }
 function EUC_DEV443_geoIdentity_(entreprise,adresse,siret){
   var sir=EUC_DEV441_t_(siret).replace(/\D/g,'');if(sir.length===14)return'SIRET|'+sir;
@@ -182,9 +190,37 @@ function EUC_DEV441_geoKey_(entreprise,adresse,siret){return EUC_DEV441_digest_(
 function EUC_DEV441_geoClassify_(adresse){
   var s=EUC_DEV443_normalizeAddress_(adresse).toUpperCase(),postals=s.match(/\b\d{5}\b/g)||[],cp=postals.length?postals[postals.length-1]:'';
   if(/\bMONACO\b/.test(s)||cp==='98000')return{pays:'MONACO',codePostal:cp||'98000',statut:'COORDONNEES_A_RENSEIGNER'};
+  /* Un nom de voie français peut contenir un pays (RUE DE BELGIQUE à Nice).
+   * Un code postal français explicite est donc prioritaire sur les mots de
+   * pays ; le pays étranger n'est retenu qu'en l'absence de CP français. */
+  if(cp&&/^(?:(?:0[1-9]|[1-8]\d|9[0-5])\d{3}|(?:97[1-6]|98[4-8])\d{2})$/.test(cp))return{pays:'FRANCE',codePostal:cp,statut:'A_GEOCODER'};
   if(/\b(ITALIE|ITALY|SUISSE|SWITZERLAND|ESPAGNE|SPAIN|ALLEMAGNE|GERMANY|BELGIQUE|BELGIUM)\b/.test(s))return{pays:'ETRANGER',codePostal:cp,statut:'COORDONNEES_A_RENSEIGNER'};
   if(cp)return{pays:'FRANCE',codePostal:cp,statut:'A_GEOCODER'};
   return{pays:'INDETERMINE',codePostal:'',statut:'COORDONNEES_A_RENSEIGNER'};
+}
+
+function EUC_DEV540_geoWords_(value){
+  var stop={RUE:1,AVENUE:1,AV:1,BOULEVARD:1,BD:1,ROUTE:1,CHEMIN:1,IMPASSE:1,PLACE:1,PL:1,PRESIDENT:1,DE:1,DU:1,DES:1,LA:1,LE:1,LES:1,ET:1,FRANCE:1};
+  var s=EUC_DEV441_t_(value).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\b\d{5}\b.*$/,'');return s.split(/[^A-Z0-9]+/).filter(function(w){return w.length>2&&!/^\d+$/.test(w)&&!stop[w];});
+}
+function EUC_DEV540_geoCandidate_(features,address,postal){
+  var requested=EUC_DEV540_geoWords_(address),best=null,bestRank=-1;
+  (features||[]).forEach(function(feature){
+    var p=feature&&feature.properties||{},coords=feature&&feature.geometry&&feature.geometry.coordinates,hitPostal=EUC_DEV443_postal_(p.postcode||''),label=EUC_DEV441_t_(p.label),words=EUC_DEV540_geoWords_(label),overlap=0;
+    if(!coords||coords.length<2||postal&&hitPostal&&hitPostal!==postal)return;
+    requested.forEach(function(w){if(words.indexOf(w)>=0)overlap++;});
+    var specific=['housenumber','street'].indexOf(EUC_DEV441_t_(p.type).toLowerCase())>=0,score=Number(p.score)||0,rank=score*10+overlap*2+(specific?2:0)+(postal&&hitPostal===postal?3:0);
+    /* Une proposition sans aucun mot significatif de la voie n'est jamais
+     * enregistrée automatiquement : cela évite par exemple de remplacer le
+     * boulevard Wilson par le jardin René-Cassin. */
+    if(requested.length&&overlap===0)return;if(rank>bestRank){bestRank=rank;best={feature:feature,overlap:overlap,specific:specific};}
+  });
+  return best;
+}
+function EUC_DEV540_monacoQuery_(address){
+  var s=EUC_DEV443_normalizeAddress_(address),i=s.search(/\b98000\b/);if(i>=0)s=s.slice(0,i).replace(/[\s,;]+$/,'');
+  s=s.replace(/\b(?:ROQUEBRUNE(?:[- ]CAP[- ]MARTIN)?|BEAUSOLEIL|CAP D['’]AIL)\b.*$/i,'').replace(/[\s,;]+$/,'');
+  return(s?s+', ':'')+'98000 MONACO';
 }
 function EUC_DEV441_ensureGeoTable_(){
   if(EUC_DEV523_GEO_SCHEMA_READY_)return true;
@@ -256,7 +292,7 @@ function EUC_DEV513_geoAccessDetails_(q){
     if(EUC_DEV441_t_(a.Annee_scolaire)!==y||!ac||!ap||(Object.keys(allowed).length&&!allowed[String(ac)])||(pid&&ap!==pid)||a.Revoked===true||a.Supprimee_admin===true||status.indexOf('INTERROMP')>=0||status.indexOf('ANNULEE')>=0)return;
     var info=classInfo[String(ac)]||{},key=ac+'|'+ap,g=groups[key]||(groups[key]={annee:y,famille:fam||EUC_DEV441_t_(info.famille),classe:{id:ac,nom:EUC_DEV441_t_(a.Classe_convention_nom)||EUC_DEV441_t_(info.nom)},periode:{id:ap,libelle:EUC_DEV441_t_(a.Periode_libelle)},lignes:[]});
     var address=[a.Entreprise_adresse,a.Entreprise_complement,a.Entreprise_code_postal,a.Entreprise_commune].map(EUC_DEV441_t_).filter(Boolean).join(', ');
-    g.lignes.push({eleveId:EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):a.Eleve),nom:EUC_DEV441_t_(a.Jeune_nom||a.Nom_eleve),prenom:EUC_DEV441_t_(a.Jeune_prenom||a.Prenom_eleve),professeurVisiteur:EUC_DEV441_t_(a.Professeur_visiteur||a.Professeur_visite_snapshot),entreprise:EUC_DEV441_t_(a.Entreprise_raison_sociale||a.Entreprise_enseigne),adresseEntreprise:address,siretEntreprise:EUC_DEV441_t_(a.Entreprise_siret)});
+    g.lignes.push({eleveId:EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):a.Eleve),nom:EUC_DEV441_t_(a.Jeune_nom||a.Nom_eleve),prenom:EUC_DEV441_t_(a.Jeune_prenom||a.Prenom_eleve),professeurVisiteur:EUC_DEV441_t_(a.Professeur_visiteur||a.Professeur_visite_snapshot),entreprise:EUC_DEV441_t_(a.Entreprise_raison_sociale||a.Entreprise_enseigne),adresseEntreprise:address,siretEntreprise:EUC_DEV441_t_(a.Entreprise_siret),contactEntreprise:[EUC_DEV441_t_(a.Responsable_prenom),EUC_DEV441_t_(a.Responsable_nom)].filter(Boolean).join(' '),telephoneEntreprise:EUC_DEV441_t_(a.Responsable_telephone||a.Entreprise_telephone),courrielEntreprise:EUC_DEV441_t_(a.Responsable_courriel||a.Entreprise_courriel),tuteurEntreprise:[EUC_DEV441_t_(a.Tuteur_prenom),EUC_DEV441_t_(a.Tuteur_nom)].filter(Boolean).join(' '),telephoneTuteur:EUC_DEV441_t_(a.Tuteur_telephone),courrielTuteur:EUC_DEV441_t_(a.Tuteur_courriel)});
   });
   return Object.keys(groups).map(function(k){return groups[k];});
 }
@@ -407,22 +443,22 @@ function EUC_DEV445_geoBatchUpsert_(items){
 function EUC_DEV445_geoApply_(item,fields){Object.keys(fields||{}).forEach(function(k){var map={Adresse_normalisee:'adresseNormalisee',Pays:'pays',Code_postal:'codePostal',Latitude:'latitude',Longitude:'longitude',Score:'score',Precision:'precision',Statut:'statut',Commentaire:'commentaire'},target=map[k];if(target)item[target]=fields[k];});return item;}
 function EUC_DEV441_geocodeFrance(q){
   EUC_DEV441_admin_();q=q||{};var keys=q.keys||[],annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),c=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER')&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,40),done=0,manual=0,writes=[];
-  c.forEach(function(x){var url=EUC_DEV441_GEO_URL_+'?q='+encodeURIComponent(EUC_DEV443_normalizeAddress_(x.adresse))+'&limit=3'+(x.codePostal?'&postcode='+encodeURIComponent(x.codePostal):''),res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}}),json={};try{json=JSON.parse(res.getContentText()||'{}');}catch(e){}var feature=json.features&&json.features[0],coords=feature&&feature.geometry&&feature.geometry.coordinates,props=feature&&feature.properties||{},score=Number(props.score)||0,fields;if(feature&&coords&&coords.length>=2){var needsReview=score<0.45;fields={Adresse_normalisee:EUC_DEV441_t_(props.label),Pays:'FRANCE',Code_postal:EUC_DEV443_postal_(props.postcode||x.codePostal),Commune:EUC_DEV441_t_(props.city),Latitude:Number(coords[1]),Longitude:Number(coords[0]),Score:score,Precision:EUC_DEV441_t_(props.type),Fournisseur:'Géoplateforme / BAN',Statut:needsReview?'A_VALIDER_MANUELLEMENT':'GEOCODE_AUTOMATIQUE',Date_geocodage:new Date().toISOString(),Commentaire:needsReview?'Résultat automatique peu précis : contrôlez le point proposé.':''};}else{fields={Pays:'FRANCE',Code_postal:x.codePostal,Latitude:null,Longitude:null,Fournisseur:'Géoplateforme / BAN',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point trouvé automatiquement. Recherchez le lieu puis renseignez latitude et longitude.'};}writes.push({item:x,fields:fields});Utilities.sleep(30);});
+  c.forEach(function(x){var clean=EUC_DEV443_normalizeAddress_(x.adresse),url=EUC_DEV441_GEO_URL_+'?q='+encodeURIComponent(clean)+'&limit=5'+(x.codePostal?'&postcode='+encodeURIComponent(x.codePostal):''),res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}}),json={};try{json=JSON.parse(res.getContentText()||'{}');}catch(e){}var selected=EUC_DEV540_geoCandidate_(json.features||[],clean,x.codePostal),feature=selected&&selected.feature,coords=feature&&feature.geometry&&feature.geometry.coordinates,props=feature&&feature.properties||{},score=Number(props.score)||0,fields;if(feature&&coords&&coords.length>=2){var needsReview=score<0.45||!selected.specific;fields={Adresse_normalisee:EUC_DEV441_t_(props.label),Pays:'FRANCE',Code_postal:EUC_DEV443_postal_(props.postcode||x.codePostal),Commune:EUC_DEV441_t_(props.city),Latitude:Number(coords[1]),Longitude:Number(coords[0]),Score:score,Precision:EUC_DEV441_t_(props.type),Fournisseur:'Géoplateforme / BAN',Statut:needsReview?'A_VALIDER_MANUELLEMENT':'GEOCODE_AUTOMATIQUE',Date_geocodage:new Date().toISOString(),Commentaire:needsReview?'Résultat automatique peu précis : contrôlez le point proposé.':''};}else{fields={Pays:'FRANCE',Code_postal:x.codePostal,Latitude:null,Longitude:null,Fournisseur:'Géoplateforme / BAN',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun résultat cohérent avec la voie et le code postal. Recherchez le lieu puis renseignez latitude et longitude.'};}writes.push({item:x,fields:fields});Utilities.sleep(30);});
   var persisted=EUC_DEV445_geoBatchUpsert_(writes);
   persisted.saved.forEach(function(x){EUC_DEV445_geoApply_(x.item,x.fields);if(x.fields.Statut==='GEOCODE_AUTOMATIQUE')done++;else manual++;});
   EUC_DEV517_geoIndexStore_(q.annee,annual);
   var remaining=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER');}).length;
   return{ok:!persisted.errors.length,geocodes:done,aValider:manual,traites:persisted.saved.length,restants:remaining,erreurs:persisted.errors,candidats:all};
 }
-/* DEV537 — second moteur réservé aux adresses monégasques. Nominatim public
- * impose au plus une requête par seconde : le lot serveur est limité à huit,
+/* DEV540 — second moteur réservé aux adresses monégasques. Nominatim public
+ * impose au plus une requête par seconde : le lot serveur est limité à trois,
  * exécuté séquentiellement et chaque résultat est immédiatement mis en cache
  * dans la table géographique. Aucun nom d'élève n'est transmis. */
 function EUC_DEV537_geocodeMonaco(q){
   EUC_DEV441_admin_();q=q||{};if(EUC_DEV441_t_(q.annee).toUpperCase()==='ALL')throw new Error('Choisissez une année scolaire pour géocoder Monaco.');
-  var keys=q.keys||[],annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),valid=function(x){return x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT';},c=all.filter(function(x){return x.pays==='MONACO'&&!valid(x)&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,8),done=0,manual=0,writes=[];
+  var keys=q.keys||[],annual=EUC_DEV517_geoCandidatesAll_(q.annee),all=EUC_DEV517_geoFilter_(annual,q),valid=function(x){return x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT';},c=all.filter(function(x){return x.pays==='MONACO'&&!valid(x)&&(!keys.length||keys.indexOf(x.key)>=0);}).slice(0,3),done=0,manual=0,writes=[];
   c.forEach(function(x,index){
-    var url=EUC_DEV537_MONACO_GEO_URL_+'?format=jsonv2&addressdetails=1&limit=3&countrycodes=mc&q='+encodeURIComponent(EUC_DEV443_normalizeAddress_(x.adresse)),json=[],fields;
+    var query=EUC_DEV540_monacoQuery_(x.adresse),url=EUC_DEV537_MONACO_GEO_URL_+'?format=jsonv2&addressdetails=1&limit=5&countrycodes=mc&q='+encodeURIComponent(query),json=[],fields;
     try{var res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json','Accept-Language':'fr','User-Agent':'Eucalyptus-PFMP/1.0 (https://alternance.loucodi.fr/)'}});if(Number(res.getResponseCode?res.getResponseCode():200)<400)json=JSON.parse(res.getContentText()||'[]');}catch(eFetch){json=[];}
     var hit=Array.isArray(json)&&json[0]||null,adr=hit&&hit.address||{},lat=hit&&Number(hit.lat),lon=hit&&Number(hit.lon),isMonaco=EUC_DEV441_t_(adr.country_code).toLowerCase()==='mc'||/\bMONACO\b/i.test(EUC_DEV441_t_(hit&&hit.display_name));
     if(hit&&isFinite(lat)&&isFinite(lon)&&isMonaco){var score=EUC_DEV443_postal_(adr.postcode)==='98000'?0.95:0.7;fields={Adresse_normalisee:EUC_DEV441_t_(hit.display_name),Pays:'MONACO',Code_postal:EUC_DEV443_postal_(adr.postcode||x.codePostal)||'98000',Commune:EUC_DEV441_t_(adr.city||adr.town||adr.village||'Monaco'),Latitude:lat,Longitude:lon,Score:score,Precision:EUC_DEV441_t_(hit.type||hit.addresstype),Fournisseur:'OpenStreetMap / Nominatim',Statut:score>=0.8?'GEOCODE_AUTOMATIQUE':'A_VALIDER_MANUELLEMENT',Date_geocodage:new Date().toISOString(),Commentaire:score>=0.8?'':'Résultat Monaco à contrôler avant validation.'};}

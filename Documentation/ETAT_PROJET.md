@@ -1,5 +1,37 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — candidat DEV540
+
+- Le tableau des quotas utilise désormais une typographie plus grande pour les
+  nombres, les libellés et les cellules. Les indicateurs précisent que
+  « Futurs — début à venir » désigne les contrats complets non commencés,
+  tandis que « Transmis au CFA — total » inclut aussi les contrats déjà actifs.
+  Le cas TCIEL contrôlé est donc cohérent : le dossier transmis appartient à un
+  apprenti dont le contrat a commencé le 15 septembre 2026.
+- Le classement géographique donne priorité à un code postal français sur un
+  mot de pays contenu dans le nom d'une rue. `15 rue de Belgique, 06000 Nice`
+  reste ainsi en France. Les suffixes code postal/ville répétés sont supprimés
+  et un résultat BAN sans correspondance avec la voie demandée n'est plus
+  accepté, même si son code postal est correct.
+- Le géocodage Monaco travaille par lots de trois avec une limite navigateur de
+  vingt secondes. La requête retire les communes françaises contradictoires
+  placées après `98000` et impose `98000 MONACO`, tout en conservant la cadence
+  maximale d'une requête Nominatim par seconde.
+- Le book utilise le SIRET comme identité prioritaire, puis l'entreprise et
+  l'adresse canonique pour les anciennes lignes. Les répétitions de code postal
+  et de commune ne créent plus de cartes séparées. Les filtres diplôme, niveau,
+  classe, période et professeur sont assistés ; entreprise et élève disposent
+  d'une autocomplétion.
+- Le nom de l'entreprise ouvre maintenant une fiche défilable avec responsables,
+  tuteurs, élèves accueillis et professeurs visiteurs par année. L'administrateur
+  peut joindre une photo de devanture réduite côté navigateur : le fichier est
+  conservé dans Drive et Grist ne reçoit que ses métadonnées. Une confirmation
+  explicite impose l'absence de personne reconnaissable et de plaque lisible.
+  Un fil d'Ariane permet de revenir à l'administration ou au suivi personnels.
+- Aucun modèle PDF ni aucune donnée métier existante n'est modifié par ce lot.
+  Les géocodages et téléversements réels restent déclenchés uniquement par une
+  action explicite de l'administrateur dans l'interface.
+
 ## Mise à jour du 10 octobre 2026 — DEV539 publié sur le site en ligne (@929)
 
 - Le problème du modèle PDF a été résolu directement par l'utilisateur et sort

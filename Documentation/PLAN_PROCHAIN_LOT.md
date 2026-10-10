@@ -34,11 +34,19 @@ distribués ainsi que les relances J+14. Restent à réaliser les vignettes de
 consultation en lecture seule et la gestion éventuelle d'une liste
 complémentaire.
 
-## Priorité suivante — photos et galerie
+## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 
-Ajouter les photos Drive, les droits d'usage et la galerie des devantures. Les
-exports tabulaires et imprimables DEV538 sont déjà présents ; la future galerie
-devra conserver l'anonymisation systématique des sorties parents.
+Le tableau de quotas est agrandi et explicite la différence entre contrats à
+démarrage futur et dossiers transmis au CFA. Les anomalies de classement
+France/étranger, les adresses répétées et les propositions BAN sans rapport avec
+la voie sont bloquées. Monaco est traité par petits lots bornés.
+
+Le book propose des filtres assistés, une identité SIRET prioritaire, un fil
+d'Ariane et une fiche entreprise avec contacts et historique. La photo de
+devanture est téléversée par l'administrateur dans Drive après confirmation des
+droits et de l'absence de personne ou plaque lisible ; Grist ne contient que
+les métadonnées. La galerie parents reste un lot distinct et devra conserver
+l'anonymisation systématique.
 
 ## Lot terminé — DEV537 publié en version 927
 

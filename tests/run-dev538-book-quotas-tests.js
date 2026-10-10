@@ -20,12 +20,14 @@ function context(){
 }
 
 test('les deux nouvelles pages et la carte parents ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.539/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.540/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota protège les actions asynchrones',()=>{assert.match(quotaHtml,/button:disabled/);assert.match(quotaHtml,/class="spin"/);assert.match(quotaHtml,/setTimeout\(\(\)=>/);assert.match(quotaHtml,/busy\('save',false\)/)});
 test('le book combine les filtres demandés',()=>{for(const id of ['year','window','family','diploma','level','classe','period','company','student','teacher'])assert.ok(bookHtml.includes('id="'+id+'"'),id)});
 test('le book propose export Excel compatible et impression PDF',()=>{assert.match(bookHtml,/Exporter Excel \(CSV\)/);assert.match(bookHtml,/window\.print/);assert.match(bookHtml,/text\/csv;charset=utf-8/)});
+test('le book propose filtres assistés fiche entreprise photo et retour',()=>{assert.match(bookHtml,/datalist id="companiesOptions"/);assert.match(bookHtml,/id="detail"/);assert.match(bookHtml,/EUC_DEV540_companyPhoto/);assert.match(bookHtml,/EUC_DEV540_saveCompanyPhoto/);assert.match(bookHtml,/class="breadcrumb"/);assert.match(server,/EUC_ENTREPRISES_PHOTOS_PFMP/)});
+test('le tableau des quotas rend les chiffres lisibles et explique les compteurs',()=>{assert.match(quotaHtml,/td\.num\{font-size:16px/);assert.match(quotaHtml,/Futurs — début à venir/);assert.match(quotaHtml,/Transmis au CFA — total/)});
 test('la carte utilise le service nominatif paresseux et une histoire défilante',()=>{assert.match(mapHtml,/EUC_DEV538_mapData/);assert.match(mapHtml,/EUC_DEV538_companyHistory/);assert.match(mapHtml,/popup-history\{max-height:230px;overflow:auto/);assert.match(mapHtml,/Professeur visiteur/);assert.match(mapHtml,/PARENT/);assert.match(server,/function EUC_DEV538_companyHistory/)});
 test('la donnée cartographique conserve le SIRET pour la jointure',()=>assert.match(geo,/key:x\.key,siret:x\.siret\|\|''/));
 
@@ -39,6 +41,16 @@ test('le book réunit une entreprise reçue avec puis sans SIRET',()=>{
 test('la carte agrège les doublons SIRET/adresse sans exposer le SIRET',()=>{
   const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);c.EUC_DEV441_digest_=v=>'digest-'+String(v);c.EUC_DEV537_scopeMatches_=()=>true;c.EUC_DEV517_geoFilter_=items=>items;c.EUC_DEV538_staffAllowed_=()=>true;c.EUC_DEV441_geoCandidates_=()=>[{entreprise:'GARAGE TEST',adresse:'1 RUE TEST 06000 NICE',siret:'',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',elevesAccueillis:1,classe:'TCAR',accueils:[{eleveKey:'E1',scope:{}}]},{entreprise:'GARAGE TEST',adresse:'1 RUE TEST 06000 NICE',siret:'12345678901234',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',elevesAccueillis:2,classe:'TMVA1',accueils:[{eleveKey:'E1',scope:{}},{eleveKey:'E2',scope:{}}]}];
   const out=c.EUC_DEV538_mapData({annee:'2026-2027'});assert.equal(out.total,1);assert.equal(out.points[0].elevesAccueillis,2);assert.equal(out.points[0].siret,undefined);
+});
+
+test('deux SIRET valides à la même adresse restent deux entreprises distinctes',()=>{
+  const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);c.EUC_DEV441_digest_=v=>'digest-'+String(v);c.EUC_DEV537_scopeMatches_=()=>true;c.EUC_DEV517_geoFilter_=items=>items;c.EUC_DEV538_staffAllowed_=()=>true;c.EUC_DEV441_geoCandidates_=()=>[{entreprise:'SOCIETE A',adresse:'1 RUE TEST 06000 NICE',siret:'11111111111111',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',accueils:[]},{entreprise:'SOCIETE B',adresse:'1 RUE TEST 06000 NICE',siret:'22222222222222',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',accueils:[]}];
+  assert.equal(c.EUC_DEV538_mapData({annee:'2026-2027'}).total,2);
+});
+
+test('une recherche photo vide ne peut jamais sélectionner une fiche vide',()=>{
+  const c=context();c.EUC_DEV443_normalizeAddress_=v=>String(v||'').trim();
+  assert.equal(c.EUC_DEV540_photoMatch_({fields:{Entreprise:'',Adresse:'',Actif:true}},{identity:'',siret:'',entreprise:'',adresse:''}),false);
 });
 
 test('le calcul quota et les relances J+14 consolident les données existantes',()=>{

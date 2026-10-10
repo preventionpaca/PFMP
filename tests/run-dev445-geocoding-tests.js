@@ -29,6 +29,10 @@ const ctx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Number,Obje
   MailApp:{},LockService:{},PropertiesService:{},CacheService:{},ScriptApp:{},HtmlService:{},Session:{},Logger:{log:()=>{}}
 };
 vm.createContext(ctx);vm.runInContext(code,ctx);
+assert.equal(ctx.EUC_DEV441_geoClassify_('15 RUE DE BELGIQUE, 06000 NICE').pays,'FRANCE','a French postal code must override a country word used in a street name');
+assert.equal(ctx.EUC_DEV443_normalizeAddress_('10 BOULEVARD PRESIDENT WILSON, 06600 ANTIBES, 06600 ANTIBES'),'10 BOULEVARD PRESIDENT WILSON, 06600 ANTIBES','duplicated postal/city suffixes must be collapsed');
+assert.equal(ctx.EUC_DEV540_geoCandidate_([{geometry:{coordinates:[7.1,43.6]},properties:{score:.9,label:'Jardin Président René Cassin 06600 Antibes',postcode:'06600',type:'locality'}}],'10 BOULEVARD PRESIDENT WILSON 06600 ANTIBES','06600'),null,'an unrelated street result must be rejected even with the right postal code');
+assert.equal(ctx.EUC_DEV540_monacoQuery_('PLACE DU CASINO, 98000 ROQUEBRUNE CAP MARTIN'),'PLACE DU CASINO, 98000 MONACO','a Monaco query must discard a contradictory French locality');
 let candidates=ctx.EUC_DEV441_geoCandidates_({annee:'2026-2027',famille:'BACPRO'});
 assert.equal(reads,3,'candidate build must merge one snapshot read, one annual access read and one geo read');
 assert.equal(candidates.length,2,'same SIRET must be deduplicated');
@@ -221,4 +225,4 @@ assert.match(mapHtml,/Toutes les années/,'the map must offer a full-history sco
 assert.match(mapHtml,/elevesAccueillis/,'the map popup must display the hosted-student count');
 assert.match(geoHtml,/EUC_DEV537_geocodeMonaco/,'the Monaco button must call the second server-side engine');
 
-console.log('34 tests DEV445 géocodage/performance réussis.');
+console.log('38 tests DEV445 géocodage/performance réussis.');
