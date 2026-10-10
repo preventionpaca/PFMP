@@ -163,6 +163,7 @@ function EUC_DEV455_buildTargeted_(annee,famille,classe,periode){
   detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,Number(classe),Number(periode),EUC_DEV422_batchSources_(annee,classIds),periodCard)||detail;
   detail.__dev425Revision=data.__dev425Revision||'';
   detail.__dev455Targeted=true;detail.__dev455BuiltAt=Date.now();
+  if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
   return detail;
 }
 function EUC_DEV455_readLegacyTargeted_(annee,classe,periode){

@@ -93,25 +93,28 @@ function EUC_DEV424_writeDetails_(items){
     var source=item.sourceRow&&item.sourceRow.row?item.sourceRow.row:null;
     if(!source||!source.id||!item.detail)return;
     var next=EUC_DEV424_clone_(item.detail);next.__dev424Enriched=true;
+    if(typeof EUC_DEV534_compactDetail_==='function')next=EUC_DEV534_compactDetail_(next);
     var json=JSON.stringify(next),old=EUC_DEV424_txt_((source.fields||{}).Payload_JSON);
     if(json===old)return;
-    changed.push({source:source,json:json,item:item});
+    changed.push({source:source,json:json,detail:next});
     payloadBytes+=typeof EUC_DEV531_bytes_==='function'?EUC_DEV531_bytes_(json):json.length;
   });
-  EUC_DEV424_chunks_(changed,10).forEach(function(chunk){
+  var records=changed.map(function(x){
+    var f=x.source.fields||{};
+    return {id:Number(x.source.id),fields:{
+      Annee_scolaire:f.Annee_scolaire,Famille:f.Famille,
+      Classe_id:Number(f.Classe_id)||0,Classe_nom:f.Classe_nom||'',
+      Periode_id:Number(f.Periode_id)||0,Periode_libelle:f.Periode_libelle||'',
+      Payload_JSON:x.json,Fingerprint:typeof EUC_DEV190I_hash_==='function'?EUC_DEV190I_hash_(x.detail):'',
+      Updated_at:now,Valid_to:'',Actif:true,Snapshot_version:EUC_DEV424_DETAIL_VERSION_
+    }};
+  });
+  var batches=typeof EUC_DEV534_recordChunks_==='function'?EUC_DEV534_recordChunks_(records,EUC_DEV534_GRIST_BATCH_BYTES_,10):EUC_DEV424_chunks_(records,10);
+  batches.forEach(function(records){
     /* DEV531 : cette table est une vue matérialisée, pas un historique.
      * Remplacer la ligne courante empêche chaque rafraîchissement de conserver
      * une nouvelle copie complète du même détail JSON. */
-    EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190I_TABLE_)+'/records',{records:chunk.map(function(x){
-      var f=x.source.fields||{};
-      return {id:Number(x.source.id),fields:{
-        Annee_scolaire:f.Annee_scolaire,Famille:f.Famille,
-        Classe_id:Number(f.Classe_id)||0,Classe_nom:f.Classe_nom||'',
-        Periode_id:Number(f.Periode_id)||0,Periode_libelle:f.Periode_libelle||'',
-        Payload_JSON:x.json,Fingerprint:typeof EUC_DEV190I_hash_==='function'?EUC_DEV190I_hash_(x.item.detail):'',
-        Updated_at:now,Valid_to:'',Actif:true,Snapshot_version:EUC_DEV424_DETAIL_VERSION_
-      }};
-    })});
+    EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190I_TABLE_)+'/records',{records:records});
   });
   if(typeof EUC_DEV531_log_==='function')EUC_DEV531_log_('EUC_SUIVI_PFMP_DETAIL_SNAPSHOT',changed.length?'PATCH':'UNCHANGED',payloadBytes,Date.now()-t0,{
     attempted:(items||[]).length,changed:changed.length,patched:changed.length,avoided:Math.max(0,(items||[]).length-changed.length)

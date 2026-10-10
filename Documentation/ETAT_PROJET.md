@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — DEV534 (détails compacts et reprise du cache vert)
+
+- Le `413 request entity too large` n'était pas causé par les données métier :
+  une fiche de classe technique recopiait le dictionnaire des `368` périodes,
+  le catalogue des professeurs et toutes les colonnes brutes de chaque ancienne
+  convention. La fiche TMP3D observée atteignait `105 571` octets, dont environ
+  `68 683` pour les historiques et `24 924` pour les périodes inutiles au rendu.
+- Les détails persistés ne conservent désormais que les treize champs réellement
+  affichés dans l'historique rupture/remplacement. Le dictionnaire annuel et le
+  catalogue des professeurs sont retirés du snapshot ; ces derniers restent
+  chargés à la demande. Sur la fiche mesurée, le JSON estimé descend à environ
+  `16 301` octets, soit une réduction de `84,6 %`.
+- Toutes les écritures des vues de classe sont compactées et les lots Grist sont
+  limités à `80 000` octets en plus de la limite en nombre de lignes. Un détail
+  volumineux ne peut donc plus entraîner avec ses voisins une requête multi-Mo.
+- L'ouverture d'une classe reconstruit au besoin cette seule classe. La liste de
+  navigation lit seulement les métadonnées familiales déjà persistées et ne
+  déclenche plus la reconstruction synchrone des `34` classes BAC PRO.
+- La réparation DEV533 ne lance plus de rafraîchissement familial puisque le
+  statut corrigé reste dans la même catégorie « convention couverte ». Une
+  reprise verte bornée sait remettre `READY` l'état technique laissé `DIRTY` par
+  l'ancien échec `413`, sans nouvelle écriture dans les conventions.
+- Le marqueur indépendant des détails devient `DEV534-D15`; le marqueur de la
+  synthèse familiale reste `DEV533-C14`. Sept nouveaux tests couvrent la
+  compaction, la limite par octets, l'absence de recalcul familial et la reprise
+  strictement bornée. Suite complète locale : `767/767` réussis.
+
 ## Mise à jour du 10 octobre 2026 — DEV533 (cohérence des coordonnées et remplacements)
 
 - Le diagnostic hors ligne de la sauvegarde verte démontre que `78` lignes du

@@ -22,12 +22,17 @@ test('l’audit sélectionne uniquement un remplacement complet encore bloqué',
 test('la réparation finalise le statut sans modifier les données entreprise',()=>{
   const row=complete(),f=fixture([row]);f.c.EUC_DEV533_auditCompletedReplacementRepair();const r=f.c.EUC_DEV533_repairCompletedReplacementStatus();
   assert.equal(r.repaired,1);assert.equal(r.remaining,0);assert.equal(row.Statut,'ENTREPRISE_SAISIE');assert.equal(row.Statut_administratif,'INFORMATIONS_ENREGISTREES');
-  assert.equal(row.Date_saisie_entreprise,'2026-10-09T08:00:00Z');assert.equal(row.Entreprise_raison_sociale,'ENTREPRISE TEST');assert.equal(f.calls.length,1);assert.deepEqual(f.tokens,['reparation-statut-remplacement']);
+  assert.equal(row.Date_saisie_entreprise,'2026-10-09T08:00:00Z');assert.equal(row.Entreprise_raison_sociale,'ENTREPRISE TEST');assert.equal(f.calls.length,1);assert.deepEqual(f.tokens,[]);
 });
 test('une modification entre audit et exécution bloque toute écriture',()=>{
   const row=complete(),f=fixture([row]);f.c.EUC_DEV533_auditCompletedReplacementRepair();row.Statut='AUTRE';assert.throws(()=>f.c.EUC_DEV533_repairCompletedReplacementStatus(),/changé/);assert.equal(f.calls.length,0);
 });
 test('la réparation est gardée sur le vert et ne journalise que des identifiants techniques',()=>{
   assert.match(repair,/EUC_DEV532_assertGreen_\(\)/);assert.doesNotMatch(repair,/Jeune_nom|Jeune_prenom|Responsable_courriel.*console/);
+});
+test('la réparation de statut ne reconstruit jamais toute la famille',()=>{
+  assert.doesNotMatch(repair,/EUC_CONVENTION_debutRafraichissementV511_/);
+  assert.doesNotMatch(repair,/EUC_CONVENTION_finRafraichissementV511_/);
+  assert.match(repair,/EUC_DEV416_cacheDrop_/);
 });
 if(!process.exitCode)console.log(`\n${n} tests DEV533 cohérence des remplacements réussis.`);

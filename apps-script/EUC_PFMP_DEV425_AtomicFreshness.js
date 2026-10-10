@@ -284,7 +284,9 @@ function EUC_DEV427_writeDetails_(annee,famille,items){
   });});
   var now=new Date().toISOString(),records=[],patches=[],changed=0;
   items.forEach(function(item){
-    var tech=EUC_DEV427_detailFamily_(famille,item.classe,item.periode),json=JSON.stringify(item.detail),old=oldByFamily[tech]||[],keeper=old[0]||null;
+    var tech=EUC_DEV427_detailFamily_(famille,item.classe,item.periode);
+    if(typeof EUC_DEV534_compactDetail_==='function')item.detail=EUC_DEV534_compactDetail_(item.detail);
+    var json=JSON.stringify(item.detail),old=oldByFamily[tech]||[],keeper=old[0]||null;
     payloadBytes+=typeof EUC_DEV531_bytes_==='function'?EUC_DEV531_bytes_(json):json.length;
     if(keeper&&EUC_DEV425_txt_((keeper.fields||{}).Payload_JSON)===json){
       old.slice(1).forEach(function(r){patches.push({id:Number(r.id),fields:{Actif:false,Updated_at:now}});});
@@ -296,10 +298,12 @@ function EUC_DEV427_writeDetails_(annee,famille,items){
       old.slice(1).forEach(function(r){patches.push({id:Number(r.id),fields:{Actif:false,Updated_at:now}});});
     }else records.push({fields:{Annee_scolaire:annee,Famille:tech,Payload_JSON:json,Updated_at:now,Actif:true}});
   });
-  EUC_DEV424_chunks_(records,10).forEach(function(chunk){
+  var recordChunks=typeof EUC_DEV534_recordChunks_==='function'?EUC_DEV534_recordChunks_(records,EUC_DEV534_GRIST_BATCH_BYTES_,10):EUC_DEV424_chunks_(records,10);
+  recordChunks.forEach(function(chunk){
     EUC_DEV190_api_('post','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:chunk});
   });
-  EUC_DEV424_chunks_(patches,20).forEach(function(chunk){
+  var patchChunks=typeof EUC_DEV534_recordChunks_==='function'?EUC_DEV534_recordChunks_(patches,EUC_DEV534_GRIST_BATCH_BYTES_,20):EUC_DEV424_chunks_(patches,20);
+  patchChunks.forEach(function(chunk){
     EUC_DEV190_api_('patch','/tables/'+encodeURIComponent(EUC_DEV190E_INDEX_TABLE_)+'/records',{records:chunk});
   });
   if(typeof EUC_DEV531_log_==='function')EUC_DEV531_log_('EUC_SUIVI_PFMP_INDEX/DETAIL',changed?'PATCH_OR_CREATE':'UNCHANGED',payloadBytes,Date.now()-t0,{
@@ -376,6 +380,7 @@ function EUC_DEV425_buildFamily_(token,famille){
     detail=EUC_DEV422_enrichDetailBatch_(detail,annee,famille,t.classe,t.periode,batch,t.p);
     detail.annee=annee;detail.famille=famille;
     detail.__dev425Revision=token.revision;detail.__dev425FreshAt=new Date().toISOString();
+    if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
     EUC_DEV426_applyQuick_(t.p,EUC_DEV422_quickFromDetail_(detail));built++;
     details.push({classe:t.classe,periode:t.periode,detail:detail});
     try{if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function')EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,t.classe,t.periode),detail);}catch(eCache){}

@@ -39,14 +39,19 @@ function EUC_DEV533_repairCompletedReplacementStatus(){
     if(signature!==armed.signature)throw new Error('DEV533 : les conventions ont changé depuis l’audit.');
     var repaired=[];
     rows.forEach(function(a){
-      var refresh=typeof EUC_CONVENTION_debutRafraichissementV511_==='function'?EUC_CONVENTION_debutRafraichissementV511_(a,'reparation-statut-remplacement'):null;
       EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[{id:Number(a.id),fields:{
         Statut:'ENTREPRISE_SAISIE',
         Statut_administratif:'INFORMATIONS_ENREGISTREES',
         Date_saisie_entreprise:a.Date_saisie_entreprise||a.Date_derniere_utilisation||new Date().toISOString()
       }}]});
       repaired.push(Number(a.id));
-      if(typeof EUC_CONVENTION_finRafraichissementV511_==='function')EUC_CONVENTION_finRafraichissementV511_(refresh);
+      /* Le changement reste dans la même catégorie « convention couverte » :
+       * reconstruire toute la famille est inutile et dépassait la limite 413.
+       * On invalide seulement la fiche ciblée ; DEV459 la republie compactée. */
+      try{
+        var y=EUC_DEV533_repairText_(a.Annee_scolaire),c=Number(EUC_PFMP_ref_(a.Classe_convention))||0,p=Number(EUC_PFMP_ref_(a.Periode))||0,f='BACPRO';
+        if(y&&c&&p&&typeof EUC_DEV416_cacheDrop_==='function')EUC_DEV416_cacheDrop_(EUC_DEV416_key_(y,f,c,p));
+      }catch(eInvalidate){}
     });
     props.deleteProperty(EUC_DEV533_REPAIR_ARM_);
     var remaining=EUC_DEV533_repairRows_();

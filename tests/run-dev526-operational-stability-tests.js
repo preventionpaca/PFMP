@@ -25,6 +25,7 @@ function body(source,start,end){const a=source.indexOf(start),b=end?source.index
 
 test('les coordonnées entreprise invalident réellement le cache antérieur',()=>{
   assert.match(canonical,/EUC_DEV459_CANONICAL_='DEV533-C14'/);
+  assert.match(canonical,/EUC_DEV459_DETAIL_CANONICAL_='DEV534-D15'/);
   assert.match(canonical,/responsable conserve dans le tampon JotForm/);
 });
 

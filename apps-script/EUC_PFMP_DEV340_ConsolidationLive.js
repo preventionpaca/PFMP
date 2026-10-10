@@ -272,7 +272,7 @@ function EUC_DEV394_BASE_EUC_DEV340_enrichConventions_(detail,annee,classe,perio
     var actif=null;
     for(var i=0;i<list.length;i++){if(EUC_DEV340_status_(list[i]).active){actif=list[i];break;}}
     var dernier=actif||list[0]||null,st=EUC_DEV340_status_(dernier);
-    x.historiqueConventions=list;
+    x.historiqueConventions=typeof EUC_DEV534_compactHistory_==='function'?EUC_DEV534_compactHistory_(list):list;
     var covered=!!(actif&&st.covered!==false);
     x.sequenceId=dernier?Number(dernier.id)||0:0;
     x.conventionId=covered?Number(actif.id)||0:0;

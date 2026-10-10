@@ -1,4 +1,24 @@
-# Prochain lot prioritaire — validation DEV533 sur le vert
+# Prochain lot prioritaire — validation DEV534 sur le vert
+
+Publier le compactage des détails et la navigation de classe indépendante de la
+reconstruction familiale. Exécuter ensuite la reprise technique bornée : elle
+ne doit accepter que l'état `DIRTY` créé par l'ancienne réparation DEV533,
+reconstruire uniquement TMP3D / sa période concernée et republier `READY`, sans
+modifier une convention, un élève ni une coordonnée.
+
+Contrôler d'abord TMP3D puis TCAR depuis le suivi public. Le premier chargement
+doit quitter son état d'attente sans reconstruction des 34 classes. Les
+coordonnées historiques JotForm doivent afficher le responsable disponible,
+son téléphone et son courriel. Le remplacement complet après rupture doit être
+vert, tandis que l'ancienne interruption reste dans l'historique rouge. La date
+de début du contrat apprenti doit rester lisible dans la pastille verte.
+
+Les snapshots de détail doivent porter `DEV534-D15`, rester compacts et être
+écrits par lots de moins de `80 000` octets. Le contrôle final comprend la suite
+complète (`767/767` au stade local), les 25 routes vertes et la vérification que
+les deux Web Apps existantes pointent vers la même version immuable.
+
+## Lot terminé — DEV533
 
 Publier le correctif de cohérence des responsables JotForm et des remplacements
 complets. Contrôler TCAR et TMP3D sur une convention historique importée : nom,

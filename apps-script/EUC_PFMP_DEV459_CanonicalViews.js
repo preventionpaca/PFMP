@@ -1,10 +1,13 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.533';
+var EUC_DEV459_VERSION_='1.0.0-dev.534';
 /* DEV528 : les details DEV526 ne contenaient pas encore le repli vers le
  * responsable conserve dans le tampon JotForm. Le marqueur doit changer :
  * sinon la fiche de classe reutilise indefiniment l'ancien detail en cache et
  * seule la branche apprenti, enrichie separement, affiche ses coordonnees. */
 var EUC_DEV459_CANONICAL_='DEV533-C14';
+/* Le schéma du détail évolue indépendamment de la synthèse familiale. Cela
+ * invalide une classe sans reconstruire les 34 classes sur le clic utilisateur. */
+var EUC_DEV459_DETAIL_CANONICAL_='DEV534-D15';
 var EUC_DEV459_ADMIN_URL_='https://script.google.com/a/macros/lycee-les-eucalyptus.org/s/AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg/exec';
 
 function EUC_DEV459_t_(v){return String(v==null?'':v).trim();}
@@ -106,7 +109,8 @@ function EUC_DEV459_familyData_(annee,famille){
       /* La synthese et la fiche de classe doivent partager le meme detail
        * enrichi. Sans cette ecriture, la carte pouvait etre correcte tandis
        * que le clic rouvrait un ancien snapshot de classe reste en cache. */
-      detail.__dev459CanonicalDetail=EUC_DEV459_CANONICAL_;
+      detail.__dev459CanonicalDetail=EUC_DEV459_DETAIL_CANONICAL_;
+      if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
       try{
         if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function'){
           EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,cid,pid),detail);
@@ -136,21 +140,41 @@ function EUC_DEV459_canonicalDetail_(p){
   var detail=EUC_DEV455_fastDetail_(p.annee,p.famille,p.classe,p.periode);
   /* Une nouvelle revision canonique invalide le contenu metier du detail,
    * sans reconstruire toute la famille sur le chemin utilisateur. */
-  if(detail.__dev459CanonicalDetail!==EUC_DEV459_CANONICAL_&&typeof EUC_DEV455_buildTargeted_==='function'){
+  if(detail.__dev459CanonicalDetail!==EUC_DEV459_DETAIL_CANONICAL_&&typeof EUC_DEV455_buildTargeted_==='function'){
     var rebuilt=EUC_DEV455_buildTargeted_(p.annee,p.famille,p.classe,p.periode);
     if(rebuilt&&Array.isArray(rebuilt.lignes)){
-      detail=rebuilt;detail.__dev459CanonicalDetail=EUC_DEV459_CANONICAL_;
+      detail=rebuilt;detail.__dev459CanonicalDetail=EUC_DEV459_DETAIL_CANONICAL_;
+      if(typeof EUC_DEV534_compactDetail_==='function')detail=EUC_DEV534_compactDetail_(detail);
       try{
         if(typeof EUC_DEV416_key_==='function'&&typeof EUC_DEV416_cachePut_==='function'){
           EUC_DEV416_cachePut_(EUC_DEV416_key_(p.annee,p.famille,p.classe,p.periode),detail);
         }
       }catch(eCache){}
+      /* Le premier affichage répare aussi le snapshot durable ciblé. Le JSON
+       * compact reste très en dessous de la limite Grist ; aucun recalcul
+       * familial n'est déclenché. */
+      try{
+        if(typeof EUC_DEV427_writeDetails_==='function')EUC_DEV427_writeDetails_(p.annee,p.famille,[{classe:p.classe,periode:p.periode,detail:detail}]);
+      }catch(ePersist){}
     }
   }
   return EUC_DEV459_sanitizeDetail_(detail);
 }
+function EUC_DEV459_navigationFamily_(annee,famille){
+  var data=null;
+  try{if(typeof EUC_DEV456_familyCacheGet_==='function')data=EUC_DEV456_familyCacheGet_(annee,famille);}catch(eCache){}
+  try{if((!data||!Array.isArray(data.classes)||!data.classes.length)&&typeof EUC_DEV456_familyPersistentGet_==='function')data=EUC_DEV456_familyPersistentGet_(annee,famille);}catch(eStored){}
+  try{
+    if((!data||!Array.isArray(data.classes)||!data.classes.length)&&typeof EUC_DEV421_fastFamilySnapshot_==='function'){
+      var fast=EUC_DEV421_fastFamilySnapshot_({annee:annee,famille:famille});data=fast&&fast.payload||data;
+    }
+  }catch(eIndex){}
+  return data&&Array.isArray(data.classes)?data:{classes:[]};
+}
 function EUC_DEV459_jump_(detail,p){
-  var data=EUC_DEV459_familyData_(p.annee,p.famille),selected=0;
+  /* La liste de navigation n'a besoin que des identifiants et libellés. Elle
+   * ne doit jamais déclencher la reconstruction canonique de toute la famille. */
+  var data=EUC_DEV459_navigationFamily_(p.annee,p.famille),selected=0;
   (detail.periodes||[]).some(function(x,i){if(EUC_DEV459_n_(x.id||x.periodeId)===p.periode){selected=i;return true;}return false;});
   return (data.classes||[]).map(function(c){var ps=c.periodes||[],period=ps[selected]||ps[0]||{};return{id:EUC_DEV459_n_(c.classeId||c.id),nom:EUC_DEV459_t_(c.classe||c.nom),classe:EUC_DEV459_t_(c.classe||c.nom),label:EUC_DEV459_t_(c.classe||c.nom),famille:p.famille,periode:EUC_DEV459_n_(period.id||period.periodeId),current:EUC_DEV459_n_(c.classeId||c.id)===p.classe};}).filter(function(x){return x.id&&x.nom&&x.periode;});
 }
