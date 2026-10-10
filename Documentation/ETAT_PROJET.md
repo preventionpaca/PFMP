@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat DEV537 non publié
+## Mise à jour du 10 octobre 2026 — candidat DEV537 prêt pour le site en ligne
 
 - Le point de retour vert reste la version immuable `925`, protégée par le tag
   publié `pfmp-green-925-stable`. Le présent candidat est développé sur la
@@ -22,10 +22,12 @@
   lettres sur la liste d'élèves déjà chargée, avec navigation au clavier et
   sans appel serveur à chaque frappe.
 - Les tests ciblés et la suite complète passent : `780/780`. Les scripts des
-  trois pages HTML modifiées passent aussi une vérification de syntaxe. La
-  publication bleue, les 25 routes et le parcours navigateur restent à faire
-  après rétablissement de l'authentification Google et résolution de la
-  divergence du script de livraison avec le workflow `prepare` / `promote`.
+  trois pages HTML modifiées passent aussi une vérification de syntaxe.
+  L'authentification Google du poste a été renouvelée le 10 octobre 2026. Le
+  workflow courant publie directement le commit testé sur les deux Web Apps
+  existantes avec version immuable, contrôle des 25 routes et retour
+  automatique à `925` si la livraison échoue. L'ancien canal bleu reste une
+  archive technique et n'intervient plus dans les publications ordinaires.
 
 ## Mise à jour du 10 octobre 2026 — référence verte 925 figée
 

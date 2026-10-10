@@ -1,6 +1,6 @@
 # Prochain lot prioritaire — performance du détail, Monaco et book entreprises
 
-## Candidat DEV537 prêt pour recette bleue
+## Candidat DEV537 prêt pour publication contrôlée
 
 Le candidat regroupe la suppression de la relecture d'effectif sur un détail
 déjà vérifié, le géocodage automatique de Monaco par Nominatim, le filtre
@@ -8,17 +8,17 @@ cartographique « Toutes les années », le nombre d'élèves distincts accueill
 et l'autocomplétion locale du générateur de conventions. La suite locale passe
 `780/780`; le vert demeure sur la référence immuable `925`.
 
-La prochaine action autorisée est exclusivement la préparation du candidat sur
-le bleu, puis le contrôle des 25 routes et de tous les liens de navigation. Elle
-est actuellement bloquée par l'authentification Google expirée et par l'absence
-des commandes `prepare` / `promote` attendues dans le script de livraison. Ne
-pas contourner ces deux garde-fous par une publication directe sur le vert.
+La prochaine action est la publication directe du commit testé sur les deux Web
+Apps existantes avec `scripts/pfmp-release.sh release-stable`. Le script relit
+le projet distant, crée une version immuable, conserve les URL et contrôle les
+25 routes. Tout échec doit replacer automatiquement les deux déploiements sur
+la référence `925`. L'ancien canal bleu ne doit pas être utilisé.
 
-Après une recette bleue complète, mesurer TMP3D et TCAR à froid puis à chaud,
+Après la publication contrôlée, mesurer TMP3D et TCAR à froid puis à chaud,
 vérifier les coordonnées entreprise et les affectations, tester France et
 Monaco sans donnée nominative, contrôler les trois périmètres de comptage et
-tester la recherche élève au clavier. La promotion verte nécessitera alors une
-nouvelle autorisation explicite et le candidat bleu exact.
+tester la recherche élève au clavier. Les opérations métier réelles restent
+interdites sans autorisation distincte.
 
 ## 1. Réduire l'ouverture d'une PFMP sans modifier le rendu
 
