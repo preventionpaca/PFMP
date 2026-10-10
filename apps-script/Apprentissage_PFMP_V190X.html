@@ -1317,6 +1317,22 @@ button{
 </div>
 </section>
 
+<section class="panel dev541-quota-panel" id="dev541QuotaPanel">
+  <div class="dev541-quota-head">
+    <div>
+      <h2>Bilan des apprentis par diplôme et classe</h2>
+      <p>Quota fixé, apprentis actuels, futurs apprentis et suivi des dossiers.</p>
+    </div>
+    <div class="dev541-quota-actions">
+      <a id="dev541QuotaAdmin" class="back" target="_top">Configurer les quotas et les relances</a>
+      <button id="dev541QuotaReload" type="button">Actualiser le bilan</button>
+    </div>
+  </div>
+  <div id="dev541QuotaStatus" class="dev541-quota-status" role="status"><span class="dev541-spin"></span> Chargement du bilan…</div>
+  <div id="dev541QuotaTotals" class="dev541-quota-totals" hidden></div>
+  <div id="dev541QuotaGroups" class="dev541-quota-groups" hidden></div>
+</section>
+
 <section class="panel">
   <div class="filters">
     <label>Année
@@ -5238,6 +5254,35 @@ body.dev252-readonly .dev259-maint-hidden{
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){apply();setTimeout(apply,250);});
   else{apply();setTimeout(apply,250);}
+})();
+</script>
+
+<style id="DEV541_APPRENTIS_QUOTA_SUMMARY">
+.dev541-quota-panel{padding:14px 16px}.dev541-quota-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.dev541-quota-head h2{margin:0 0 4px;font-size:21px;color:#0d4539}.dev541-quota-head p{margin:0;color:#667085;font-size:14px}.dev541-quota-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.dev541-quota-actions button{border:0;border-radius:8px;padding:9px 13px;background:#0b8f72;color:#fff;font-weight:800;cursor:pointer}.dev541-quota-actions button:disabled{opacity:.62;cursor:wait}.dev541-quota-status{padding:18px 4px;color:#667085;font-size:15px}.dev541-quota-status.error{color:#b42318;font-weight:800}.dev541-spin{display:inline-block;width:14px;height:14px;border:2px solid #b7dcd3;border-top-color:#0b8f72;border-radius:50%;animation:dev541spin .7s linear infinite;vertical-align:-2px;margin-right:5px}@keyframes dev541spin{to{transform:rotate(360deg)}}.dev541-quota-totals{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px;margin:14px 0}.dev541-total{border:1px solid #c7e1da;border-radius:10px;padding:10px;background:#f8fcfb}.dev541-total span{display:block;color:#667085;font-size:12px;margin-bottom:3px}.dev541-total strong{font-size:22px;color:#075f55}.dev541-quota-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.dev541-quota-group{border:1px solid #c7e1da;border-radius:12px;overflow:hidden;background:#fff}.dev541-quota-group h3{margin:0;padding:11px 12px;background:#eaf7f3;color:#0d4539;font-size:16px}.dev541-table-wrap{overflow:auto}.dev541-quota-group table{width:100%;border-collapse:collapse;min-width:720px}.dev541-quota-group th,.dev541-quota-group td{padding:9px 8px;border-bottom:1px solid #e5ecea;text-align:center;font-size:14px}.dev541-quota-group th{color:#475467;background:#fbfdfc;font-size:12px}.dev541-quota-group th:first-child,.dev541-quota-group td:first-child{text-align:left}.dev541-quota-group tbody tr:last-child td{border-bottom:0}.dev541-quota-badge{display:inline-block;border-radius:999px;padding:5px 8px;background:#eaf7f3;color:#075f55;font-weight:900;white-space:nowrap}.dev541-quota-empty{padding:22px;text-align:center;color:#667085;border:1px dashed #c7e1da;border-radius:10px;grid-column:1/-1}body.dev252-readonly #dev541QuotaAdmin{display:none!important}@media(max-width:1100px){.dev541-quota-groups{grid-template-columns:1fr}.dev541-quota-totals{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.dev541-quota-head{flex-direction:column}.dev541-quota-totals{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<script>
+/* DEV541 — bilan agrégé visible dans les deux modes de gestion. */
+(function(){
+  var yearEl=document.getElementById('year'),reload=document.getElementById('dev541QuotaReload'),statusEl=document.getElementById('dev541QuotaStatus'),totalsEl=document.getElementById('dev541QuotaTotals'),groupsEl=document.getElementById('dev541QuotaGroups'),adminLink=document.getElementById('dev541QuotaAdmin'),requestId=0;
+  if(!yearEl||!reload||!statusEl||!totalsEl||!groupsEl)return;
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function readonly(){try{return new URLSearchParams(location.search).get('page')==='apprentissage-public-pfmp'||!!BOOT.readonly}catch(e){return false}}
+  if(adminLink){adminLink.href=String(BOOT.webappUrl||location.href.split('?')[0])+'?page=quotas-apprentissage-pfmp';if(readonly())adminLink.hidden=true}
+  function busy(on){if(!reload.dataset.label)reload.dataset.label=reload.textContent;reload.disabled=!!on;reload.innerHTML=on?'<span class="dev541-spin"></span>Chargement…':esc(reload.dataset.label)}
+  function total(label,value){return '<div class="dev541-total"><span>'+esc(label)+'</span><strong>'+Number(value||0)+'</strong></div>'}
+  function render(data){
+    var t=data&&data.totals||{};
+    totalsEl.innerHTML=total('Effectif',t.effectif)+total('Capacité fixée',t.quota)+total('Apprentis actuels',t.apprentis)+total('Futurs apprentis',t.futurs)+total('Dossiers distribués',t.distribues)+total('Transmis au CFA',t.transmisCfa);
+    groupsEl.innerHTML=(data.groups||[]).map(function(g){var rows=(g.lignes||[]).map(function(r){return '<tr><td><strong>'+esc(r.niveau)+'</strong><br>'+esc(r.classe)+'</td><td><span class="dev541-quota-badge">'+Number(r.quotaPercent||0)+' % · '+Number(r.quota||0)+' place(s)</span></td><td>'+Number(r.apprentis||0)+'</td><td>'+Number(r.futurs||0)+'</td><td>'+Number(r.distribues||0)+'</td><td>'+Number(r.transmisCfa||0)+'</td></tr>'}).join('');return '<section class="dev541-quota-group"><h3>'+esc(g.diplome)+'</h3><div class="dev541-table-wrap"><table><thead><tr><th>Niveau / classe</th><th>Quota fixé</th><th>Actuels</th><th>Futurs</th><th>Distribués</th><th>Transmis CFA</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>'}).join('')||'<div class="dev541-quota-empty">Aucun diplôme ni classe disponible pour cette année.</div>';
+    statusEl.textContent='Bilan actualisé pour '+esc(data.annee||yearEl.value)+'.';statusEl.className='dev541-quota-status';totalsEl.hidden=false;groupsEl.hidden=false;
+  }
+  function load(){
+    var current=++requestId,done=false;busy(true);statusEl.className='dev541-quota-status';statusEl.innerHTML='<span class="dev541-spin"></span> Chargement du bilan par diplôme et classe…';totalsEl.hidden=true;groupsEl.hidden=true;
+    var timer=setTimeout(function(){if(done||current!==requestId)return;done=true;busy(false);statusEl.className='dev541-quota-status error';statusEl.textContent='Le bilan n’a pas répondu sous 20 secondes. Vous pouvez relancer sans double-cliquer.'},20000);
+    google.script.run.withSuccessHandler(function(data){if(done||current!==requestId)return;done=true;clearTimeout(timer);busy(false);render(data||{})}).withFailureHandler(function(err){if(done||current!==requestId)return;done=true;clearTimeout(timer);busy(false);statusEl.className='dev541-quota-status error';statusEl.textContent='Impossible de charger le bilan : '+String(err&&err.message||err)}).EUC_DEV541_apprentissageDashboardPublic(yearEl.value);
+  }
+  reload.addEventListener('click',load);yearEl.addEventListener('change',load);load();
 })();
 </script>
 

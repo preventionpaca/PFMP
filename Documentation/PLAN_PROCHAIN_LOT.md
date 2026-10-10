@@ -34,6 +34,15 @@ distribués ainsi que les relances J+14. Restent à réaliser les vignettes de
 consultation en lecture seule et la gestion éventuelle d'une liste
 complémentaire.
 
+## Candidat DEV541 — bilan apprentissage intégré
+
+La page de gestion administrative et sa consultation publique intègrent les
+vignettes de bilan par diplôme, niveau et classe. Elles présentent les quotas,
+apprentis actuels, futurs apprentis, dossiers distribués et dossiers transmis
+au CFA. La réponse publique est exclusivement agrégée et ne contient aucun nom,
+identifiant d'élève, dossier nominatif ou relance. La gestion éventuelle d'une
+liste complémentaire reste hors de ce lot.
+
 ## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 
 Le tableau de quotas est agrandi et explicite la différence entre contrats à

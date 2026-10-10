@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.540';
+var EUC_DEV538_VERSION_='1.0.0-dev.541';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV538_RELANCE_DAYS_=14;
 var EUC_DEV540_PHOTO_TABLE_='EUC_ENTREPRISES_PHOTOS_PFMP';
@@ -80,8 +80,18 @@ function EUC_DEV538_apprenticeState_(row,printDate,now){
   var distribution=EUC_DEV538_date_(EUC_DEV538_pick_(f,['Date_distribution_dossier']))||printDate||null,distributed=EUC_DEV538_bool_(f.Dossier_distribue)||!!distribution,returned=EUC_DEV538_bool_(f.Dossier_remis)||!!EUC_DEV538_date_(EUC_DEV538_pick_(f,['Date_remise_dossier','Date_dossier'])),cfa=EUC_DEV538_bool_(f.Dossier_transmis_CFA)||!!EUC_DEV538_date_(f.Date_transmission_CFA),days=distribution?Math.max(0,Math.floor((now.getTime()-distribution.getTime())/86400000)):0;
   return{current:current,future:future,distributed:distributed,returned:returned,cfa:cfa,reminder:distributed&&!returned&&days>=EUC_DEV538_RELANCE_DAYS_,days:days,distribution:EUC_DEV538_iso_(distribution)};
 }
-function EUC_DEV538_apprentissageDashboard(annee){
-  EUC_DEV538_admin_();annee=EUC_DEV538_t_(annee)||EUC_DEV368_year('');var catalog=EUC_DEV368_catalog(annee),classes=(catalog.classes||[]).map(function(c){return{id:EUC_DEV538_n_(c.classeId||c.id),classe:EUC_DEV538_t_(c.classe||c.nom),famille:EUC_DEV538_t_(c.famille),niveau:EUC_DEV538_level_(c)};}).filter(function(c){return c.id&&c.classe;}),classById={},classByName={};classes.forEach(function(c){classById[c.id]=c;classByName[EUC_DEV538_norm_(c.classe)]=c;});
+function EUC_DEV541_apprentissageClasses_(annee){
+  var rows=[];
+  if(typeof EUC_DEV190X_classes_==='function')rows=EUC_DEV190X_classes_(annee,false)||[];
+  else rows=(EUC_DEV368_catalog(annee).classes||[]);
+  return rows.map(function(c){
+    var classe=EUC_DEV538_t_(c.classe||c.nom),upper=classe.toUpperCase(),famille=EUC_DEV538_t_(c.famille).toUpperCase();
+    if(!famille)famille=/BTS/.test(upper)?'BTS':/CAP/.test(upper)?'CAP':'BACPRO';
+    return{id:EUC_DEV538_n_(c.classeId||c.id),classe:classe,famille:famille,niveau:EUC_DEV538_level_({classe:classe,famille:famille,niveau:c.niveau})};
+  }).filter(function(c){return c.id&&c.classe;});
+}
+function EUC_DEV538_apprentissageDashboard_(annee){
+  annee=EUC_DEV538_t_(annee)||EUC_DEV368_year('');var classes=EUC_DEV541_apprentissageClasses_(annee),classById={},classByName={};classes.forEach(function(c){classById[c.id]=c;classByName[EUC_DEV538_norm_(c.classe)]=c;});
   var yearsById=EUC_DEV538_schoolYearMap_(),students=[],studentById={};EUC_DEV538_records_('EUC_ELEVES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),id=EUC_DEV538_n_(r.id||f.id);if(!id||f.Actif===false||f.Present_dernier_import===false||EUC_DEV538_studentYear_(f,yearsById)!==annee)return;var cid=EUC_DEV538_ref_(f.Classe),label=EUC_DEV538_t_(f.Code_classe_importe||f.Classe_nom||f.Classe_snapshot),cl=classById[cid]||classByName[EUC_DEV538_norm_(label)];if(!cl)return;var s={id:id,nom:[EUC_DEV538_t_(f.Nom),EUC_DEV538_t_(f.Prenom_usage||f.Prenom)].filter(Boolean).join(' '),classeId:cl.id,classe:cl.classe};students.push(s);studentById[id]=s;});
   var latest=EUC_DEV538_latestByStudent_(EUC_DEV538_optionalRecords_('EUC_APPRENTISSAGE_PFMP',{}),annee),prints=EUC_DEV538_distributionByStudent_(EUC_DEV538_optionalRecords_('EUC_DOSSIER_APPRENTISSAGE_IMPRESSIONS',{}),annee),now=new Date(),diplomas=EUC_DEV538_diplomas_(),config=EUC_DEV538_quotaConfig_(),yearConfig=config[annee]||{},rowByClass={};
   classes.forEach(function(c){rowByClass[c.id]={classeId:c.id,classe:c.classe,famille:c.famille,niveau:c.niveau,diplome:diplomas[c.id]||EUC_DEV538_fallbackDiploma_(c),effectif:0,quotaPercent:EUC_DEV538_n_(yearConfig[c.id]),quota:0,apprentis:0,futurs:0,distribues:0,retournes:0,transmisCfa:0,relances:[],dossiers:[]};});
@@ -90,6 +100,14 @@ function EUC_DEV538_apprentissageDashboard(annee){
   var groupList=Object.keys(groups).map(function(k){groups[k].lignes.sort(function(a,b){return a.niveau.localeCompare(b.niveau,'fr')||a.classe.localeCompare(b.classe,'fr');});return groups[k];}).sort(function(a,b){return a.diplome.localeCompare(b.diplome,'fr');});
   var dossiers=[],relances=[];groupList.forEach(function(g){g.lignes.forEach(function(r){dossiers=dossiers.concat(r.dossiers||[]);relances=relances.concat(r.relances||[]);});});dossiers.sort(function(a,b){return(a.classe||'').localeCompare(b.classe||'','fr')||(a.eleve||'').localeCompare(b.eleve||'','fr');});relances.sort(function(a,b){return b.jours-a.jours||(a.eleve||'').localeCompare(b.eleve||'','fr');});
   return{ok:true,version:EUC_DEV538_VERSION_,annee:annee,groups:groupList,totals:totals,dossiers:dossiers,relances:relances,relanceApresJours:EUC_DEV538_RELANCE_DAYS_};
+}
+function EUC_DEV538_apprentissageDashboard(annee){EUC_DEV538_admin_();return EUC_DEV538_apprentissageDashboard_(annee);}
+/* Vue agrégée commune aux pages publique et administrative. Elle expose les
+ * capacités et compteurs par classe, mais jamais les dossiers ou les noms des
+ * élèves présents dans la réponse administrative complète. */
+function EUC_DEV541_apprentissageDashboardPublic(annee){
+  var data=EUC_DEV538_apprentissageDashboard_(annee),totals=data.totals||{};
+  return{ok:true,version:EUC_DEV538_VERSION_,annee:data.annee,totals:{effectif:EUC_DEV538_n_(totals.effectif),quota:EUC_DEV538_n_(totals.quota),apprentis:EUC_DEV538_n_(totals.apprentis),futurs:EUC_DEV538_n_(totals.futurs),distribues:EUC_DEV538_n_(totals.distribues),transmisCfa:EUC_DEV538_n_(totals.transmisCfa)},groups:(data.groups||[]).map(function(g){return{diplome:EUC_DEV538_t_(g.diplome),famille:EUC_DEV538_t_(g.famille),lignes:(g.lignes||[]).map(function(r){return{niveau:EUC_DEV538_t_(r.niveau),classe:EUC_DEV538_t_(r.classe),effectif:EUC_DEV538_n_(r.effectif),quotaPercent:EUC_DEV538_n_(r.quotaPercent),quota:EUC_DEV538_n_(r.quota),apprentis:EUC_DEV538_n_(r.apprentis),futurs:EUC_DEV538_n_(r.futurs),distribues:EUC_DEV538_n_(r.distribues),transmisCfa:EUC_DEV538_n_(r.transmisCfa)};})};})};
 }
 function EUC_DEV538_saveQuotas(q){
   EUC_DEV538_admin_();q=q||{};var year=EUC_DEV538_t_(q.annee),rows=Array.isArray(q.lignes)?q.lignes:[];if(!/^20\d{2}-20\d{2}$/.test(year))throw new Error('Année scolaire invalide.');var all=EUC_DEV538_quotaConfig_(),saved={};rows.forEach(function(r){var id=EUC_DEV538_n_(r.classeId),pct=Number(r.quotaPercent);if(!id||!isFinite(pct)||pct<0||pct>100)throw new Error('Pourcentage invalide pour une classe.');saved[id]=Math.round(pct*100)/100;});all[year]=saved;PropertiesService.getScriptProperties().setProperty(EUC_DEV538_QUOTAS_PROP_,JSON.stringify(all));return{ok:true,annee:year,lignes:Object.keys(saved).length};

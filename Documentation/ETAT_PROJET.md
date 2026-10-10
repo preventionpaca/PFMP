@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — candidat DEV541
+
+- Les pages « Gestion des apprentis » administrative et publique affichent
+  désormais, sous les indicateurs globaux, le bilan demandé regroupé par
+  diplôme puis par niveau et classe : quota en pourcentage et en places,
+  apprentis actuels, futurs apprentis, dossiers distribués et dossiers transmis
+  au CFA.
+- La vue administrative conserve un lien vers la page complète de réglage des
+  quotas et relances. Ce lien est absent du mode public, qui reste strictement
+  en lecture seule.
+- Le service commun au bilan public ne renvoie que des agrégats. Les noms et
+  identifiants d'élèves, les dossiers nominatifs et les relances ne sont jamais
+  présents dans sa réponse. Les classes publiques sont construites depuis le
+  référentiel déjà utilisé par la page Apprentis, sans exiger le catalogue
+  réservé à l'administration.
+- Le chargement initial, le changement d'année et le bouton d'actualisation ont
+  des états explicites de chargement, succès, absence de données, erreur et
+  dépassement de vingt secondes. La suite complète locale passe `805/805`.
+
 ## Mise à jour du 10 octobre 2026 — DEV540 publié sur le site en ligne (@933)
 
 - Le tableau des quotas utilise désormais une typographie plus grande pour les
