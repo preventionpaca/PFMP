@@ -173,7 +173,7 @@ function EUC_DEV443_normalizeAddress_(adresse){
    * séparé en deux segments (« 06000, NICE »). Ces variantes désignent la
    * même adresse et ne doivent ni créer un doublon ni perturber le moteur. */
   s=s.replace(/,\s*(\d{5})\s*,\s*([A-Za-zÀ-ÖØ-öø-ÿ'’ -]+)$/,' $1 $2');
-  var repeated=s.match(/\b(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ'’ -]+),\s*\1\s+\2$/i);
+  var repeated=s.match(/\b(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ'’ -]+?)(?:,\s*|\s+)\1\s+\2$/i);
   if(repeated)s=s.slice(0,repeated.index)+repeated[1]+' '+repeated[2];
   return s.replace(/\s+,/g,',').replace(/,\s*,+/g,', ').replace(/\s+/g,' ').trim();
 }
