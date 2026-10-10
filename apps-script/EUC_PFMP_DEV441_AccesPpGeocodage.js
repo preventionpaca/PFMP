@@ -310,7 +310,7 @@ function EUC_DEV513_geoAccessDetails_(q){
  * aux révisions de l'index canonique et de la table géographique. Les filtres
  * famille / classe / période sont ensuite appliqués en mémoire.
  */
-var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV540-GEO-3';
+var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV540-GEO-4';
 var EUC_DEV517_GEO_INDEX_TTL_MS_=21600000;
 function EUC_DEV517_geoIndexKey_(year){return'DEV517_GEO_INDEX_'+EUC_DEV441_t_(year).replace(/[^0-9A-Za-z_-]/g,'_');}
 function EUC_DEV517_geoIndexRevision_(){
