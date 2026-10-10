@@ -20,7 +20,7 @@ function context(){
 }
 
 test('les deux nouvelles pages et la carte parents ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.538/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.539/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota protège les actions asynchrones',()=>{assert.match(quotaHtml,/button:disabled/);assert.match(quotaHtml,/class="spin"/);assert.match(quotaHtml,/setTimeout\(\(\)=>/);assert.match(quotaHtml,/busy\('save',false\)/)});
@@ -28,6 +28,18 @@ test('le book combine les filtres demandés',()=>{for(const id of ['year','windo
 test('le book propose export Excel compatible et impression PDF',()=>{assert.match(bookHtml,/Exporter Excel \(CSV\)/);assert.match(bookHtml,/window\.print/);assert.match(bookHtml,/text\/csv;charset=utf-8/)});
 test('la carte utilise le service nominatif paresseux et une histoire défilante',()=>{assert.match(mapHtml,/EUC_DEV538_mapData/);assert.match(mapHtml,/EUC_DEV538_companyHistory/);assert.match(mapHtml,/popup-history\{max-height:230px;overflow:auto/);assert.match(mapHtml,/Professeur visiteur/);assert.match(mapHtml,/PARENT/);assert.match(server,/function EUC_DEV538_companyHistory/)});
 test('la donnée cartographique conserve le SIRET pour la jointure',()=>assert.match(geo,/key:x\.key,siret:x\.siret\|\|''/));
+
+test('le book réunit une entreprise reçue avec puis sans SIRET',()=>{
+  const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);c.EUC_DEV443_normalizeAddress_=v=>String(v||'').replace(/\s*,\s*/g,', ').trim();c.EUC_DEV441_geoClassify_=()=>({pays:'FRANCE'});c.EUC_DEV537_studentKey_=x=>x.eleveId?'E'+x.eleveId:'';c.EUC_DEV538_diplomas_=()=>({24:'BAC PRO Test'});c.EUC_DEV538_yearsForScope_=()=>['2026-2027'];
+  const detail=(siret,eleveId,nom)=>({famille:'BACPRO',classe:{id:24,nom:'TCAR'},periode:{id:62,libelle:'PFMP n°1'},lignes:[{entreprise:'ILES.COM',adresseEntreprise:"29 RUE D'ANGLETERRE 06000 NICE",siretEntreprise:siret,eleveId,nom,prenom:'Test'}]});
+  c.EUC_DEV445_geoSnapshotDetails_=()=>[detail('',1,'ALPHA')];c.EUC_DEV513_geoAccessDetails_=()=>[detail('52917963200011',1,'ALPHA'),detail('52917963200011',2,'BETA')];c.EUC_DEV537_mergeAnnualCandidates_=()=>[{entreprise:'ILES.COM',adresse:"29 RUE D'ANGLETERRE 06000 NICE",siret:'52917963200011',elevesAccueillis:2,latitude:43.7,longitude:7.2}];
+  const out=c.EUC_DEV538_history_({annee:'2026-2027'});assert.equal(out.length,1);assert.equal(out[0].siret,'52917963200011');assert.equal(out[0].historique.length,2);assert.equal(out[0].elevesAccueillis,2);
+});
+
+test('la carte agrège les doublons SIRET/adresse sans exposer le SIRET',()=>{
+  const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);c.EUC_DEV441_digest_=v=>'digest-'+String(v);c.EUC_DEV537_scopeMatches_=()=>true;c.EUC_DEV517_geoFilter_=items=>items;c.EUC_DEV538_staffAllowed_=()=>true;c.EUC_DEV441_geoCandidates_=()=>[{entreprise:'GARAGE TEST',adresse:'1 RUE TEST 06000 NICE',siret:'',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',elevesAccueillis:1,classe:'TCAR',accueils:[{eleveKey:'E1',scope:{}}]},{entreprise:'GARAGE TEST',adresse:'1 RUE TEST 06000 NICE',siret:'12345678901234',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',elevesAccueillis:2,classe:'TMVA1',accueils:[{eleveKey:'E1',scope:{}},{eleveKey:'E2',scope:{}}]}];
+  const out=c.EUC_DEV538_mapData({annee:'2026-2027'});assert.equal(out.total,1);assert.equal(out.points[0].elevesAccueillis,2);assert.equal(out.points[0].siret,undefined);
+});
 
 test('le calcul quota et les relances J+14 consolident les données existantes',()=>{
   const c=context(),now=Date.now(),ago=d=>new Date(now-d*86400000).toISOString(),future=d=>new Date(now+d*86400000).toISOString();
@@ -38,7 +50,7 @@ test('le calcul quota et les relances J+14 consolident les données existantes',
 });
 
 test('le mode parents limite la fenêtre à trois ans et ne renvoie aucun nom',()=>{
-  const c=context();let yearsArg=[];c.EUC_DEV538_yearsForScope_=q=>{assert.equal(q.fenetre,3);return['2026-2027','2025-2026','2024-2025']};c.EUC_DEV537_mergeAnnualCandidates_=ys=>{yearsArg=ys;return[{key:'k',siret:'123',entreprise:'ENTREPRISE',adresse:'1 RUE',pays:'FRANCE',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',scopes:[{annee:'2026-2027',famille:'BACPRO',classeId:1,periodeId:2}],accueils:[{eleveKey:'opaque',scope:{annee:'2026-2027',famille:'BACPRO',classeId:1,periodeId:2}}],classe:'TCAR'}]};c.EUC_DEV517_geoFilter_=(items)=>{items[0].elevesAccueillis=1;return items};c.EUC_DEV538_staffAllowed_=()=>true;
+  const c=context();let yearsArg=[];c.EUC_DEV538_yearsForScope_=q=>{assert.equal(q.fenetre,3);return['2026-2027','2025-2026','2024-2025']};c.EUC_DEV443_geoIdentity_=(entreprise,adresse)=>'ADRESSE|'+entreprise+'|'+adresse;c.EUC_DEV441_digest_=v=>'digest-'+v;c.EUC_DEV537_scopeMatches_=()=>true;c.EUC_DEV537_mergeAnnualCandidates_=ys=>{yearsArg=ys;return[{key:'k',siret:'123',entreprise:'ENTREPRISE',adresse:'1 RUE',pays:'FRANCE',latitude:43.7,longitude:7.2,statut:'GEOCODE_AUTOMATIQUE',scopes:[{annee:'2026-2027',famille:'BACPRO',classeId:1,periodeId:2}],accueils:[{eleveKey:'opaque',scope:{annee:'2026-2027',famille:'BACPRO',classeId:1,periodeId:2}}],classe:'TCAR'}]};c.EUC_DEV517_geoFilter_=(items)=>{items[0].elevesAccueillis=1;return items};c.EUC_DEV538_staffAllowed_=()=>true;
   const r=c.EUC_DEV538_mapData({annee:'ALL',mode:'PARENTS'});assert.equal(yearsArg.length,3);assert.equal(r.nominatif,false);assert.equal(r.points[0].historique,undefined);assert.equal(r.points[0].siret,undefined);assert.equal(JSON.stringify(r).includes('Élève Test'),false);
 });
 

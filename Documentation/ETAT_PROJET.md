@@ -1,9 +1,9 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat DEV538
+## Mise à jour du 10 octobre 2026 — candidat correctif DEV539
 
 - Le problème du modèle PDF a été résolu directement par l'utilisateur et sort
-  du lot applicatif : aucun modèle de convention n'est modifié par DEV538.
+  du lot applicatif : aucun modèle de convention n'est modifié par DEV539.
 - Une nouvelle page administrative « Quotas et relances » regroupe les classes
   par diplôme et niveau. Elle affiche l'effectif réel, un quota paramétrable en
   pourcentage, le nombre de places calculé, les apprentis actuels, futurs, les
@@ -25,6 +25,13 @@
   nom d'élève, de professeur ni SIRET au navigateur.
 - Le point de retour avant livraison reste la version Apps Script immuable
   `927`, commit `8b582c6`, tag `pfmp-online-927-stable`.
+- Le premier contrôle visuel de la version `928` a détecté, avant remise, qu'une
+  entreprise pouvait apparaître deux fois lorsque le snapshot ancien ne portait
+  pas de SIRET et que la convention enrichie le portait. DEV539 consolide le
+  book et la cartographie sur l'identité normalisée entreprise/adresse, conserve
+  le SIRET enrichi, déduplique les accueils et ignore les lignes anonymes quand
+  l'historique nominatif est disponible. Deux tests de non-régression couvrent
+  désormais ce cas. Suite complète : `793/793` tests réussis.
 
 ## Mise à jour du 10 octobre 2026 — DEV537 publié sur le site en ligne (@927)
 

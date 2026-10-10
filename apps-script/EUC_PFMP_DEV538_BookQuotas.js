@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.538';
+var EUC_DEV538_VERSION_='1.0.0-dev.539';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV538_RELANCE_DAYS_=14;
 
@@ -33,6 +33,10 @@ function EUC_DEV538_staffAllowed_(){
   return /@lycee-les-eucalyptus\.org$/i.test(EUC_DEV538_activeEmail_());
 }
 function EUC_DEV538_norm_(v){return EUC_DEV538_t_(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]+/g,' ').trim();}
+/* Un même établissement peut provenir d'un snapshot sans SIRET puis d'une
+ * convention enrichie avec SIRET. Pour le book et la carte, son identité
+ * fonctionnelle reste donc le couple normalisé entreprise/adresse. */
+function EUC_DEV538_companyIdentity_(entreprise,adresse){return EUC_DEV443_geoIdentity_(entreprise,adresse,'');}
 
 function EUC_DEV538_quotaConfig_(){
   var raw='';try{raw=PropertiesService.getScriptProperties().getProperty(EUC_DEV538_QUOTAS_PROP_)||'';}catch(e){}
@@ -92,20 +96,21 @@ function EUC_DEV538_history_(q){
   EUC_DEV538_yearsForScope_(q).forEach(function(year){var scoped={annee:year,famille:EUC_DEV538_t_(q.famille),classeId:EUC_DEV538_n_(q.classeId),periodeId:EUC_DEV538_n_(q.periodeId)},details=EUC_DEV445_geoSnapshotDetails_(scoped).concat(EUC_DEV513_geoAccessDetails_(scoped));
     details.forEach(function(d){var cid=EUC_DEV538_n_(d&&d.classe&&(d.classe.id||d.classe.classeId)),classe=EUC_DEV538_t_(d&&d.classe&&(d.classe.nom||d.classe.libelle)),famille=EUC_DEV538_t_(d&&d.famille),periode=EUC_DEV538_t_(d&&d.periode&&(d.periode.libelle||d.periode.nom)),niveau=EUC_DEV538_level_({classe:classe,famille:famille}),diplome=diplomas[cid]||EUC_DEV538_fallbackDiploma_({classe:classe,famille:famille});if(needleDiploma&&EUC_DEV538_norm_(diplome).indexOf(needleDiploma)<0||needleLevel&&EUC_DEV538_norm_(niveau).indexOf(needleLevel)<0||needleClass&&EUC_DEV538_norm_(classe).indexOf(needleClass)<0||needlePeriod&&EUC_DEV538_norm_(periode).indexOf(needlePeriod)<0)return;
       (d.lignes||[]).forEach(function(x){var entreprise=EUC_DEV538_t_(x.entreprise),adresse=EUC_DEV443_normalizeAddress_(x.adresseEntreprise),siret=EUC_DEV538_t_(x.siretEntreprise||x.siret).replace(/\D/g,''),eleve=[EUC_DEV538_t_(x.nom),EUC_DEV538_t_(x.prenom)].filter(Boolean).join(' '),prof=EUC_DEV538_t_(x.professeurVisiteur);if(!entreprise||!adresse||needleCompany&&EUC_DEV538_norm_(entreprise+' '+adresse).indexOf(needleCompany)<0||needleStudent&&EUC_DEV538_norm_(eleve).indexOf(needleStudent)<0||needleTeacher&&EUC_DEV538_norm_(prof).indexOf(needleTeacher)<0)return;
-        var identity=EUC_DEV443_geoIdentity_(entreprise,adresse,siret),c=companies[identity];if(!c)c=companies[identity]={identity:identity,siret:siret,entreprise:entreprise,adresse:adresse,pays:EUC_DEV441_geoClassify_(adresse).pays,historique:[],_seen:{},_students:{}};var studentKey=EUC_DEV537_studentKey_(x)||EUC_DEV538_norm_(eleve),key=[year,cid,EUC_DEV538_n_(d&&d.periode&&d.periode.id),studentKey].join('|');if(c._seen[key])return;c._seen[key]=true;if(studentKey)c._students[studentKey]=true;c.historique.push({annee:year,eleve:eleve,classe:classe,niveau:niveau,diplome:diplome,periode:periode,professeurVisiteur:prof});
+        var identity=EUC_DEV538_companyIdentity_(entreprise,adresse),c=companies[identity];if(!c)c=companies[identity]={identity:identity,siret:siret,entreprise:entreprise,adresse:adresse,pays:EUC_DEV441_geoClassify_(adresse).pays,historique:[],_seen:{},_students:{}};else if(!c.siret&&siret)c.siret=siret;var studentKey=EUC_DEV537_studentKey_(x)||EUC_DEV538_norm_(eleve);if(!studentKey)return;var key=[year,cid,EUC_DEV538_n_(d&&d.periode&&d.periode.id),studentKey].join('|');if(c._seen[key])return;c._seen[key]=true;c._students[studentKey]=true;c.historique.push({annee:year,eleve:eleve,classe:classe,niveau:niveau,diplome:diplome,periode:periode,professeurVisiteur:prof});
       });
     });
   });
-  var geoBy={};EUC_DEV537_mergeAnnualCandidates_(EUC_DEV538_yearsForScope_(q)).forEach(function(x){geoBy[EUC_DEV443_geoIdentity_(x.entreprise,x.adresse,x.siret)]=x;});
-  return Object.keys(companies).map(function(k){var c=companies[k],g=geoBy[k]||{};c.elevesAccueillis=Object.keys(c._students).length;c.latitude=g.latitude==null?null:Number(g.latitude);c.longitude=g.longitude==null?null:Number(g.longitude);c.historique.sort(function(a,b){return b.annee.localeCompare(a.annee,'fr')||a.eleve.localeCompare(b.eleve,'fr');});delete c._seen;delete c._students;return c;}).sort(function(a,b){return b.elevesAccueillis-a.elevesAccueillis||a.entreprise.localeCompare(b.entreprise,'fr');});
+  var geoBy={};EUC_DEV537_mergeAnnualCandidates_(EUC_DEV538_yearsForScope_(q)).forEach(function(x){var identity=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse),current=geoBy[identity];if(!current||(current.latitude==null||current.longitude==null)&&x.latitude!=null&&x.longitude!=null)geoBy[identity]=x;});
+  return Object.keys(companies).map(function(k){var c=companies[k],g=geoBy[k]||{},named=Object.keys(c._students).length;c.elevesAccueillis=Math.max(named,EUC_DEV538_n_(g.elevesAccueillis));if(!c.siret&&g.siret)c.siret=EUC_DEV538_t_(g.siret);c.latitude=g.latitude==null?null:Number(g.latitude);c.longitude=g.longitude==null?null:Number(g.longitude);c.historique.sort(function(a,b){return b.annee.localeCompare(a.annee,'fr')||a.eleve.localeCompare(b.eleve,'fr');});delete c._seen;delete c._students;return c;}).sort(function(a,b){return b.elevesAccueillis-a.elevesAccueillis||a.entreprise.localeCompare(b.entreprise,'fr');});
 }
 function EUC_DEV538_bookData(q){EUC_DEV538_admin_();var list=EUC_DEV538_history_(q);return{ok:true,version:EUC_DEV538_VERSION_,total:list.length,entreprises:list};}
 function EUC_DEV538_staffBookData(q){if(!EUC_DEV538_staffAllowed_())throw new Error('Accès réservé aux personnels authentifiés.');var list=EUC_DEV538_history_(q);return{ok:true,version:EUC_DEV538_VERSION_,total:list.length,entreprises:list};}
 function EUC_DEV538_mapBase_(items,q){
-  var points=EUC_DEV517_geoFilter_(items||[],q||{}).filter(function(x){return isFinite(x.latitude)&&isFinite(x.longitude)&&x.latitude!==null&&x.longitude!==null&&(x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT');}).map(function(x){return{key:x.key,siret:x.siret||'',entreprise:x.entreprise,adresse:x.adresse,pays:x.pays,latitude:x.latitude,longitude:x.longitude,classe:x.classe,elevesAccueillis:EUC_DEV538_n_(x.elevesAccueillis)};});return{ok:true,total:points.length,points:points};
+  var by={};EUC_DEV517_geoFilter_(items||[],q||{}).filter(function(x){return isFinite(x.latitude)&&isFinite(x.longitude)&&x.latitude!==null&&x.longitude!==null&&(x.statut==='GEOCODE_AUTOMATIQUE'||x.statut==='VALIDE_MANUELLEMENT');}).forEach(function(x){var identity=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse),p=by[identity];if(!p){p=by[identity]={key:EUC_DEV441_digest_(identity).slice(0,32),siret:x.siret||'',entreprise:x.entreprise,adresse:x.adresse,pays:x.pays,latitude:x.latitude,longitude:x.longitude,classe:x.classe||'',elevesAccueillis:0,_students:{},_classes:{}};}else if(!p.siret&&x.siret)p.siret=x.siret;if(x.classe)EUC_DEV538_t_(x.classe).split(' / ').forEach(function(c){if(c)p._classes[c]=true;});(x.accueils||[]).forEach(function(a){if(a.eleveKey&&EUC_DEV537_scopeMatches_(a.scope||{},q||{}))p._students[a.eleveKey]=true;});p.elevesAccueillis=Math.max(p.elevesAccueillis,EUC_DEV538_n_(x.elevesAccueillis));});
+  var points=Object.keys(by).map(function(k){var p=by[k],count=Object.keys(p._students).length;p.elevesAccueillis=Math.max(p.elevesAccueillis,count);var classes=Object.keys(p._classes);if(classes.length)p.classe=classes.join(' / ');delete p._students;delete p._classes;return p;});return{ok:true,total:points.length,points:points};
 }
 function EUC_DEV538_mapData(q){
-  q=q||{};var parent=EUC_DEV538_t_(q.mode).toUpperCase()==='PARENTS',years=parent?EUC_DEV538_yearsForScope_({annee:'ALL',fenetre:3}):[],base=parent?EUC_DEV538_mapBase_(EUC_DEV537_mergeAnnualCandidates_(years),{annee:'ALL',famille:q.famille,classeId:q.classeId,periodeId:q.periodeId}):EUC_DEV441_mapData(q),allowed=!parent&&EUC_DEV538_staffAllowed_();
+  q=q||{};var parent=EUC_DEV538_t_(q.mode).toUpperCase()==='PARENTS',years=parent?EUC_DEV538_yearsForScope_({annee:'ALL',fenetre:3}):[],scope=parent?{annee:'ALL',famille:q.famille,classeId:q.classeId,periodeId:q.periodeId}:q,items=parent?EUC_DEV537_mergeAnnualCandidates_(years):EUC_DEV441_geoCandidates_(q),base=EUC_DEV538_mapBase_(items,scope),allowed=!parent&&EUC_DEV538_staffAllowed_();
   (base.points||[]).forEach(function(p){delete p.siret;p.nominatif=allowed;});base.nominatif=allowed;return base;
 }
 function EUC_DEV538_companyHistory(q){
