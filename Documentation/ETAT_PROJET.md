@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — candidat DEV538
+
+- Le problème du modèle PDF a été résolu directement par l'utilisateur et sort
+  du lot applicatif : aucun modèle de convention n'est modifié par DEV538.
+- Une nouvelle page administrative « Quotas et relances » regroupe les classes
+  par diplôme et niveau. Elle affiche l'effectif réel, un quota paramétrable en
+  pourcentage, le nombre de places calculé, les apprentis actuels, futurs, les
+  dossiers distribués, retournés, transmis au CFA et les relances à effectuer
+  après quatorze jours. Les quotas sont une configuration légère dans les
+  propriétés Apps Script ; les états métier restent dans leurs tables
+  existantes.
+- Le registre append-only des dossiers imprimés alimente désormais un listing
+  visible. La relance J+14 est une alerte de tableau : aucun courriel n'est
+  envoyé automatiquement.
+- Le book entreprises administratif et personnels propose les filtres année ou
+  fenêtre 3/5/10/toutes, famille, diplôme, niveau, classe, période, entreprise,
+  élève et professeur visiteur. Il classe les entreprises par élèves accueillis
+  et fournit un export CSV compatible Excel ainsi qu'une impression PDF.
+- La cartographie des personnels charge d'abord uniquement les points et les
+  totaux. Le nom de l'élève et le professeur visiteur sont chargés à la demande
+  lors de l'ouverture d'une infobulle, qui reste défilable. Le mode parents
+  distinct agrège strictement les trois dernières années et ne transmet aucun
+  nom d'élève, de professeur ni SIRET au navigateur.
+- Le point de retour avant livraison reste la version Apps Script immuable
+  `927`, commit `8b582c6`, tag `pfmp-online-927-stable`.
+
 ## Mise à jour du 10 octobre 2026 — DEV537 publié sur le site en ligne (@927)
 
 - Le commit applicatif `8b582c6` est publié sur les deux Web Apps existantes en

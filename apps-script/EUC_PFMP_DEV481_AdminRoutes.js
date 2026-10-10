@@ -42,6 +42,12 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV190X_afficherPdif(e);
     case 'dossier-apprentissage-pfmp':
       return EUC_DEV464_afficherDossierApprentissage(e);
+    case 'quotas-apprentissage-pfmp':
+      return EUC_DEV538_afficherQuotas(e);
+    case 'book-entreprises-pfmp':
+      return EUC_DEV538_afficherBookAdmin(e);
+    case 'book-entreprises-public-pfmp':
+      return EUC_DEV538_afficherBookStaff(e);
 
     case 'suivi-conventions':
     case 'suivi-pfmp-classes':
@@ -63,6 +69,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV441_afficherGeoAdmin(e);
     case 'cartographie-pfmp':
       return EUC_DEV441_afficherCarte(e);
+    case 'cartographie-entreprises-parents':
+      return EUC_DEV538_afficherCarteParents(e);
     default:
       return null;
   }

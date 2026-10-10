@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quotas et relances apprentissage</title>
+  <style>
+    :root{--green:#087f70;--green2:#069b82;--bg:#f3f8f7;--line:#c7e1da;--ink:#172b27;--mut:#667085;--warn:#a15c00;--danger:#b42318}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--ink)}
+    .hero{background:linear-gradient(135deg,#075f55,#0d8b78);color:#fff;padding:24px}.wrap{max-width:1500px;margin:auto;padding:16px}
+    h1{margin:0 0 6px}.hero p{margin:0}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+    .toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.toolbar label{min-width:180px}label{display:grid;gap:5px;font-size:12px;font-weight:800;color:var(--mut)}select,input{padding:9px;border:1px solid #aacfc5;border-radius:8px;background:#fff;color:var(--ink)}
+    button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--green);color:#fff}button.secondary{background:#fff;color:var(--green);border:1px solid var(--green)}button:disabled{opacity:.62;cursor:wait}
+    .spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}@keyframes spin{to{transform:rotate(360deg)}}
+    .kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px}.kpi{border:1px solid var(--line);border-radius:11px;padding:11px;background:#f9fcfb}.kpi span{display:block;font-size:11px;color:var(--mut)}.kpi strong{font-size:24px}
+    .group{overflow:hidden}.group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#eaf7f3;padding:12px 14px;border-radius:10px 10px 0 0}.group-head h2{font-size:16px;margin:0}.apply{display:flex;align-items:center;gap:7px;font-size:12px}.apply input{width:85px}
+    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1160px}th,td{padding:9px 8px;border-bottom:1px solid #e5ecea;text-align:left;font-size:12px;vertical-align:middle}th{color:#475467;background:#fbfdfc;position:sticky;top:0}td.num,th.num{text-align:center}.quota{width:80px;text-align:right}.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-weight:800;background:#eaf7f3;color:#075f55}.badge.warn{background:#fff2df;color:var(--warn)}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{background:#fff;color:var(--green);border:1px solid var(--line)}.tabs button.active{background:var(--green);color:#fff}.hidden{display:none!important}.state{padding:18px;text-align:center;color:var(--mut)}.error{color:var(--danger);font-weight:800}.note{color:var(--mut);line-height:1.45}.relance{color:var(--danger);font-weight:900}.ok{color:#08745f;font-weight:800}
+    @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.group-head{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<header class="hero"><div class="wrap"><h1>Quotas et relances apprentissage</h1><p>Capacité par diplôme et classe, suivi des dossiers remis et relances à J+14.</p></div></header>
+<main class="wrap">
+  <section class="card toolbar">
+    <label>Année scolaire<select id="year"></select></label>
+    <button id="load">Actualiser</button>
+    <button id="save">Enregistrer les quotas</button>
+    <span id="message" class="note" role="status"></span>
+  </section>
+  <section class="card"><div id="kpis" class="kpis"></div></section>
+  <div class="tabs"><button id="tabQuotas" class="active">Quotas par diplôme</button><button id="tabDossiers">Dossiers distribués</button><button id="tabRelances">Relances J+14</button></div>
+  <section id="quotas"></section>
+  <section id="dossiers" class="card hidden"></section>
+  <section id="relances" class="card hidden"></section>
+</main>
+<script>
+const BOOT=<?!= bootJson ?>,$=id=>document.getElementById(id);let DATA=null;
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function busy(id,on,label){const b=$(id);if(!b.dataset.label)b.dataset.label=b.textContent;b.disabled=!!on;b.innerHTML=on?'<span class="spin"></span>'+esc(label||'Chargement…'):esc(b.dataset.label)}
+function invoke(method,args,success){let done=false,t=setTimeout(()=>{if(done)return;done=true;busy('load',false);busy('save',false);$('message').className='error';$('message').textContent='Le serveur n’a pas répondu sous 20 secondes. Réessayez sans double-cliquer.'},20000);google.script.run.withSuccessHandler(r=>{if(done)return;done=true;clearTimeout(t);success(r)}).withFailureHandler(e=>{if(done)return;done=true;clearTimeout(t);busy('load',false);busy('save',false);$('message').className='error';$('message').textContent='Erreur : '+(e&&e.message||e)})[method](args)}
+function kpis(t){let a=[['Effectif',t.effectif],['Quota calculé',t.quota],['Apprentis actuels',t.apprentis],['Futurs apprentis',t.futurs],['Dossiers distribués',t.distribues],['Transmis au CFA',t.transmisCfa]];$('kpis').innerHTML=a.map(x=>'<div class="kpi"><span>'+esc(x[0])+'</span><strong>'+Number(x[1]||0)+'</strong></div>').join('')}
+function group(g){let rows=(g.lignes||[]).map(r=>'<tr data-class="'+r.classeId+'"><td><strong>'+esc(r.niveau)+'</strong></td><td>'+esc(r.classe)+'</td><td class="num">'+r.effectif+'</td><td class="num"><input class="quota" type="number" min="0" max="100" step="0.1" value="'+Number(r.quotaPercent||0)+'" aria-label="Quota '+esc(r.classe)+' en pourcentage"></td><td class="num"><span class="badge quota-result">'+r.quota+'</span></td><td class="num">'+r.apprentis+'</td><td class="num">'+r.futurs+'</td><td class="num">'+r.distribues+'</td><td class="num">'+r.retournes+'</td><td class="num">'+r.transmisCfa+'</td><td class="num">'+(r.relances.length?'<span class="badge warn">'+r.relances.length+'</span>':'0')+'</td></tr>').join('');return '<section class="card group" data-diploma="'+esc(g.diplome)+'"><div class="group-head"><h2>'+esc(g.diplome)+'</h2><div class="apply"><label>Quota commun (%) <input class="group-quota" type="number" min="0" max="100" step="0.1"></label><button class="secondary apply-group" type="button">Appliquer aux classes</button></div></div><div class="table-wrap"><table><thead><tr><th>Niveau</th><th>Classe</th><th class="num">Effectif</th><th class="num">Quota %</th><th class="num">Nombre défini</th><th class="num">Apprentis</th><th class="num">Futurs</th><th class="num">Distribués</th><th class="num">Retournés</th><th class="num">Transmis CFA</th><th class="num">J+14</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>'}
+function listing(rows,relanceOnly){if(!rows.length)return '<div class="state">Aucun dossier dans cet état.</div>';return '<div class="table-wrap"><table><thead><tr><th>Élève</th><th>Classe</th><th>Date de distribution</th><th class="num">Délai</th><th>Statut</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><strong>'+esc(r.eleve)+'</strong></td><td>'+esc(r.classe)+'</td><td>'+esc(r.dateDistribution||'—')+'</td><td class="num '+(r.aRelancer||relanceOnly?'relance':'')+'">'+Number(r.jours||0)+' j</td><td>'+(relanceOnly?'<span class="badge warn">À relancer</span>':'<span class="badge '+(r.aRelancer?'warn':'')+'">'+esc(r.statut)+'</span>')+'</td></tr>').join('')+'</tbody></table></div>'}
+function render(d){DATA=d;kpis(d.totals||{});$('quotas').innerHTML=(d.groups||[]).map(group).join('')||'<section class="card state">Aucune classe disponible pour cette année.</section>';$('dossiers').innerHTML='<h2>Listing des dossiers distribués</h2><p class="note">Cette liste inclut les dossiers imprimés/distribués, retournés et transmis au CFA.</p>'+listing(d.dossiers||[],false);$('relances').innerHTML='<h2>Relances à effectuer</h2><p class="note">Une relance apparaît automatiquement '+Number(d.relanceApresJours||14)+' jours après la distribution tant que le dossier n’est pas revenu. Aucun courriel n’est envoyé automatiquement.</p>'+listing((d.relances||[]).map(r=>Object.assign({statut:'À relancer',aRelancer:true},r)),true);document.querySelectorAll('.quota').forEach(i=>i.oninput=recalc);document.querySelectorAll('.apply-group').forEach(b=>b.onclick=applyGroup)}
+function recalc(e){let tr=e.target.closest('tr'),effectif=Number(tr.children[2].textContent)||0,pct=Number(e.target.value)||0;tr.querySelector('.quota-result').textContent=Math.round(effectif*pct/100)}
+function applyGroup(e){let card=e.target.closest('.group'),v=Number(card.querySelector('.group-quota').value);if(!isFinite(v)||v<0||v>100){$('message').className='error';$('message').textContent='Saisissez un pourcentage compris entre 0 et 100.';return}card.querySelectorAll('.quota').forEach(i=>{i.value=v;i.dispatchEvent(new Event('input'))})}
+function load(){busy('load',true,'Actualisation…');$('message').className='note';$('message').textContent='Chargement des effectifs et des dossiers…';invoke('EUC_DEV538_apprentissageDashboard',$('year').value,d=>{busy('load',false);$('message').textContent='Données actualisées.';$('message').className='ok';render(d)})}
+function save(){let lignes=[...document.querySelectorAll('#quotas tbody tr')].map(tr=>({classeId:Number(tr.dataset.class),quotaPercent:Number(tr.querySelector('.quota').value)}));busy('save',true,'Enregistrement…');$('message').className='note';$('message').textContent='Enregistrement des pourcentages…';invoke('EUC_DEV538_saveQuotas',{annee:$('year').value,lignes:lignes},()=>{busy('save',false);$('message').className='ok';$('message').textContent='Quotas enregistrés. Recalcul en cours…';load()})}
+function tab(id){['Quotas','Dossiers','Relances'].forEach(x=>{$('tab'+x).classList.toggle('active',x===id);$(x.toLowerCase()).classList.toggle('hidden',x!==id)})}
+let years=(BOOT.years||[]).filter(Boolean);$('year').innerHTML=years.map(y=>'<option>'+esc(y)+'</option>').join('');$('year').value=BOOT.current||years[0]||'';$('load').onclick=load;$('save').onclick=save;$('year').onchange=load;$('tabQuotas').onclick=()=>tab('Quotas');$('tabDossiers').onclick=()=>tab('Dossiers');$('tabRelances').onclick=()=>tab('Relances');load();
+</script>
+</body></html>

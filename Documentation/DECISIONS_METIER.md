@@ -95,3 +95,22 @@
   la liste déjà chargée. La frappe de quelques lettres ne déclenche aucun
   nouvel appel Grist et la valeur métier conservée reste l'identifiant durable
   de l'élève sélectionné.
+
+# Décision permanente du 10 octobre 2026 — quotas, relances et confidentialité du book
+
+- Le quota d'apprentissage est saisi en pourcentage pour chaque classe et année
+  scolaire. Le nombre de places affiché est l'arrondi mathématique de
+  `effectif réel × pourcentage / 100`. Le pourcentage est une configuration
+  Apps Script ; il ne duplique pas les états d'apprentissage dans Grist.
+- L'impression ou la confirmation de distribution d'un dossier alimente le
+  registre existant. Un dossier distribué et non retourné apparaît dans la
+  liste de relance à partir du quatorzième jour. Cette alerte n'envoie aucun
+  courriel automatiquement.
+- La cartographie destinée aux parents agrège les trois dernières années
+  scolaires. Elle affiche seulement l'entreprise et le nombre d'élèves
+  distincts accueillis ; elle ne transmet ni nom d'élève, ni professeur
+  visiteur, ni SIRET au navigateur.
+- Les noms d'élèves et de professeurs visiteurs sont réservés à un personnel
+  authentifié ou à l'administration. Sur la carte, ils sont chargés seulement
+  à l'ouverture de l'infobulle afin de ne pas alourdir le chargement des
+  marqueurs.

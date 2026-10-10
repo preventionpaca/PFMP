@@ -115,7 +115,8 @@ période ou dates et professeur visiteur. Le panneau est limité en hauteur et
 défilable. Le survol affiche un résumé ; un clic ou une action clavier ouvre le
 détail persistant et défilable. Sur téléphone, le clic remplace le survol.
 
-En mode parents, la même bulle reste agrégée et non nominative.
+En mode parents, la même bulle reste agrégée et non nominative. Le périmètre
+par défaut et obligatoire est celui des trois dernières années scolaires.
 
 ## 4. Tableau de bord de l'apprentissage
 
@@ -196,28 +197,14 @@ contrat. Les ruptures ne libèrent une place qu'à partir de leur date effective
 
 1. contrat de données, droits d'accès et index entreprise en lecture seule ;
 2. book administratif et consultation personnels, liste et fiche ;
-3. vue parents anonymisée et sous-domaine ;
+3. vue parents anonymisée ; raccordement du sous-domaine lorsqu'il sera fourni ;
 4. cartographie historique détaillée et panneau défilable ;
-5. photos Drive, galerie et consignes d'accès ;
-6. exports PDF et Excel filtrés ;
-7. quotas et tableaux de bord apprentissage ;
+5. exports PDF et Excel filtrés ;
+6. quotas, registre visible des dossiers et relances J+14 ;
+7. photos Drive, galerie et consignes d'accès ;
 8. contrôle complet anti-régression et publication.
 
-## 8. Point PDF de convention constaté le 10 octobre 2026
+## 8. Modèle PDF hors périmètre
 
-Le modèle PDF actif du site est encore
-`Convention_PFMP_MODELE_DEV95_ok_vierge_7.pdf`. Cette ancienne version ne
-contient pas l'intégralité lisible des articles jusqu'à l'article 21. Le fichier
-local `Convention_PFMP_DEV101_texte_integral_stabilise.pdf` comporte deux pages
-et contient visuellement les articles 6 à 21 ainsi que les signatures.
-
-Avant remplacement du modèle actif, il faut :
-
-1. rendre impossible l'installation d'un modèle de deux pages qui ne contient
-   pas les articles 1 à 21 ;
-2. vérifier visuellement le recto, le verso, les signatures et les zones de
-   fusion sur le nouveau fond ;
-3. générer une convention de test autorisée et contrôler le PDF final ;
-4. conserver l'identifiant du modèle précédent pour un retour arrière avant de
-   remplacer le fond actif.
-
+Le modèle PDF a été corrigé directement par l'utilisateur et fonctionne. Il
+est exclu de ce lot et ne doit pas être modifié sans nouvelle demande explicite.

@@ -1,4 +1,4 @@
-# Prochains lots — book entreprises, apprentissage et modèle de convention
+# Prochains lots — book entreprises et apprentissage
 
 ## Référence publiée et règle de retour arrière
 
@@ -12,34 +12,33 @@ Le cahier des charges détaillé du book, des trois niveaux d'accès et du pilot
 de l'apprentissage est dans
 `Documentation/CAHIER_CHARGES_BOOK_ENTREPRISES_APPRENTISSAGE.md`.
 
-## Priorité 1 — sécuriser le modèle PDF complet
+## Hors lot — modèle PDF
 
-Le site utilise encore le PDF maître DEV95, incomplet après les premiers
-articles du verso. Le fichier DEV101 disponible localement contient bien les
-articles 6 à 21. Ajouter d'abord un contrôle empêchant l'installation d'un fond
-qui n'a pas les 21 articles, vérifier visuellement DEV101 et les zones de
-fusion, puis seulement remplacer le modèle actif après un essai autorisé et
-réversible.
+Le modèle PDF a été corrigé par l'utilisateur et fonctionne. Il ne doit pas être
+modifié dans les prochains lots tant qu'une nouvelle demande explicite ne le
+remet pas dans le périmètre.
 
-## Priorité 2 — socle en lecture seule du book
+## Candidat DEV538 — socle en lecture seule du book
 
-Construire un index léger par entreprise et les trois contrats de réponse :
-parents anonymisé, personnels autorisés et administration. Livrer d'abord la
-liste, la fiche et les filtres sans ajout de photo ni écriture métier. L'accès
-nominatif des personnels doit être protégé avant toute exposition d'un
-historique élève/professeur.
+La liste, les filtres combinés, le classement par nombre d'élèves, l'historique
+personnels, l'export CSV compatible Excel et l'impression PDF sont développés.
+Les noms de l'infobulle cartographique sont chargés uniquement à son ouverture.
+Le mode parents est agrégé sur trois ans et anonymisé. Le sous-domaine parents
+reste à raccorder lorsqu'il sera fourni.
 
-## Priorité 3 — quotas et vignettes apprentissage
+## Candidat DEV538 — quotas et relances apprentissage
 
-Ajouter le référentiel annuel des quotas et les agrégats établissement,
-diplôme, année de formation et classe. Réutiliser le circuit de dossier déjà
-présent dans la gestion administrative ; ne pas créer une seconde source de
-statut. Les vignettes publiques restent en lecture seule.
+La page administrative calcule les effectifs et états depuis les sources
+existantes, stocke uniquement les pourcentages de quota et expose les dossiers
+distribués ainsi que les relances J+14. Restent à réaliser les vignettes de
+consultation en lecture seule et la gestion éventuelle d'une liste
+complémentaire.
 
-## Priorité 4 — cartographie, photos et exports
+## Priorité suivante — photos et galerie
 
-Ajouter le détail historique défilable, les photos Drive, la galerie et les
-exports PDF/Excel, avec anonymisation systématique des sorties parents.
+Ajouter les photos Drive, les droits d'usage et la galerie des devantures. Les
+exports tabulaires et imprimables DEV538 sont déjà présents ; la future galerie
+devra conserver l'anonymisation systématique des sorties parents.
 
 ## Lot terminé — DEV537 publié en version 927
 
