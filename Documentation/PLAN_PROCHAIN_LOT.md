@@ -1,4 +1,14 @@
-# Prochain lot prioritaire — validation DEV535 sur le vert
+# Prochain lot prioritaire — validation DEV536 sur le vert
+
+## Lot terminé — DEV536
+
+Après le contrôle D16, ajouter un garde-fou identique dans le rendu initial et
+dans la normalisation tardive de la table : si le responsable distinct est
+absent, afficher les coordonnées du tuteur déjà présentes. Contrôler sur TMP3D
+et TCAR que toute convention couverte disposant d'au moins un contact n'affiche
+plus un tiret. Aucune donnée métier Grist ne doit être réécrite.
+
+## Lot terminé — DEV535
 
 Publier le dernier recours de contact entreprise. Une convention scolaire avec
 un responsable explicite doit continuer d'afficher celui-ci. Lorsqu'une ancienne

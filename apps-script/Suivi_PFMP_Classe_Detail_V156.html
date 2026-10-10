@@ -263,6 +263,15 @@ const DETAIL_INIT=<?!= detailJson ?>;
     if(mail)rows.push('<div>'+esc(mail)+'</div>');
     return '<div class="euc418-contact">'+(rows.length?rows.join(''):'<div>'+esc(raw)+'</div>')+'</div>';
   }
+  /* DEV536 — garde-fou pour les conventions historiques sans responsable
+   * distinct : le tuteur devient le contact entreprise de dernier recours. */
+  function companyContactVal(x){
+    x=x||{};
+    return contactVal(
+      x.contactEntreprise||x.coordonneesEntreprise||
+      x.tuteurEntreprise||x.coordonneesTuteur||''
+    );
+  }
   function showStatus(text,type){assignStatus.textContent=text||'';assignStatus.className='assign-status'+(text?' show':'')+(type?' '+type:'')}
   function selectedIds(){return Array.from(document.querySelectorAll('.student-check:checked')).map(x=>Number(x.value))}
     function historyNoteV161(x){
@@ -438,7 +447,7 @@ function statusPill(x){
     tbody.innerHTML=(detail.lignes||[]).map(function(x){
       const check=detail.peutModifier?'<input type="checkbox" class="rowcheck student-check" value="'+x.eleveId+'">':'';
       const rowClass=x.situationAdministrativeLibelle?' class="row-situation-admin"':'';
-      return '<tr'+rowClass+'><td class="select-cell">'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+contactVal(x.contactEntreprise)+'</td><td>'+contactVal(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
+      return '<tr'+rowClass+'><td class="select-cell">'+check+'</td><td><div class="student">'+(x.apprenti?'<span class="euc275b-a">A</span> ':'')+esc(x.nom)+' '+esc(x.prenom)+'</div><div class="small">'+esc(x.classe)+'</div></td><td>'+statusPill(x)+historyNoteV161(x)+'</td><td>'+val(x.entreprise)+'</td><td>'+val(x.adresseEntreprise)+'</td><td>'+companyContactVal(x)+'</td><td>'+contactVal(x.tuteurEntreprise)+'</td><td>'+val(x.professeurPrincipal)+'</td><td>'+val(x.professeurTelephone)+'</td><td>'+val(x.professeurVisiteur)+'</td></tr>';
     }).join('');
 
     document.body.classList.toggle('detail-readonly',!detail.peutModifier);
@@ -1247,9 +1256,10 @@ function statusPill(x){
         if(entIdx>=0 && cells[entIdx]){
           cells[entIdx].innerHTML=
             compact(
-              x.telephoneEntreprise,
-              x.courrielEntreprise,
-              x.coordonneesEntreprise||x.contactEntreprise
+              x.telephoneEntreprise||x.telephoneTuteur,
+              x.courrielEntreprise||x.courrielTuteur,
+              x.coordonneesEntreprise||x.contactEntreprise||
+                x.coordonneesTuteur||x.tuteurEntreprise
             );
         }
 

@@ -1,5 +1,5 @@
 /** PFMP DEV459 — vues canoniques, explicites et transversales. */
-var EUC_DEV459_VERSION_='1.0.0-dev.535';
+var EUC_DEV459_VERSION_='1.0.0-dev.536';
 /* DEV528 : les details DEV526 ne contenaient pas encore le repli vers le
  * responsable conserve dans le tampon JotForm. Le marqueur doit changer :
  * sinon la fiche de classe reutilise indefiniment l'ancien detail en cache et

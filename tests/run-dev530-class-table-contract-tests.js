@@ -34,8 +34,11 @@ test('la date de début du contrat reste dans la pastille et est lisible',()=>{
   assert.match(admin,/\.status-date\{[^}]*font-size:12px[^}]*font-weight:800[^}]*opacity:1/);
 });
 test('les deux rendus affichent le responsable et les coordonnées générales disponibles',()=>{
-  assert.match(admin,/contactVal\(x\.contactEntreprise\)/);
-  assert.match(publicView,/contact\(x\.contactEntreprise,x\.telephoneEntreprise,x\.courrielEntreprise\)/);
+  assert.match(admin,/companyContactVal\(x\)/);
+  assert.match(admin,/x\.telephoneEntreprise\|\|x\.telephoneTuteur/);
+  assert.match(admin,/x\.coordonneesEntreprise\|\|x\.contactEntreprise\|\|\s*x\.coordonneesTuteur\|\|x\.tuteurEntreprise/);
+  assert.match(publicView,/function companyContact\(x\)/);
+  assert.match(publicView,/x\.contactEntreprise\|\|x\.coordonneesEntreprise\|\|x\.tuteurEntreprise\|\|x\.coordonneesTuteur/);
   assert.match(legacy,/Responsable_telephone\|\|a\.Entreprise_telephone\|\|a\.Entreprise_telephone_snapshot/);
   assert.match(legacy,/EUC_DEV519_enrichAccessCompanyContacts_\(dossiers\)/);
 });

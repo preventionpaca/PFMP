@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — DEV536 (garde-fou final au rendu)
+
+- Le contrôle réel après reconstruction D16 a révélé quelques conventions
+  historiques dont le détail contient bien le tuteur, son téléphone et son
+  courriel, mais aucune propriété « responsable entreprise » distincte.
+- Les deux rendus de classe appliquent désormais le même dernier recours au
+  moment d'afficher la cellule : responsable explicite, coordonnées générales,
+  puis tuteur. Le script de normalisation tardif applique exactement la même
+  règle et ne peut plus réintroduire un tiret après le premier rendu.
+- Cette correction est uniquement visuelle : elle ne modifie aucune convention,
+  aucun élève et aucune coordonnée Grist. Suite complète : `769/769` réussis.
+
 ## Mise à jour du 10 octobre 2026 — DEV535 (contact entreprise toujours exploitable)
 
 - Le contrôle réel de TMP3D et TCAR après la reprise DEV534 confirme que les
