@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 octobre 2026 — référence verte 925 figée
+
+- Le commit applicatif servi par la version verte immuable `925` est désormais
+  marqué par le tag Git publié `pfmp-green-925-stable`, qui pointe exactement
+  sur `60e88114ac6b2406d10ed319eaf779bea65ebe65`.
+- Ce point de retour conserve la preuve de livraison `769/769`, `25/25` routes,
+  TMP3D `11/11` contacts couverts et TCAR `19/19`. Les invariants, la barrière
+  de livraison et le budget de lecture sont consignés dans
+  `Documentation/REFERENCE_STABLE_VERTE_925.md`.
+- Le défaut restant est la latence froide d'ouverture d'une PFMP (`20–30 s`).
+  L'audit différentiel identifie encore jusqu'à quatre sources séquentielles :
+  détail persistant, effectif de classe, affectations et index familial. Le
+  prochain lot doit ramener le chemin normal à une lecture distante du détail
+  compact et zéro lecture Grist à chaud, sans modifier le rendu métier.
+- Une revalidation automatique lancée après le marquage n'est pas exploitable :
+  le jeton Google du poste a expiré avec `invalid_rapt`. Les routes publiques
+  ont continué à répondre ; les routes administratives nécessitent une
+  reconnexion avant de fournir une nouvelle preuve complète.
+
 ## Mise à jour du 10 octobre 2026 — DEV536 (garde-fou final au rendu)
 
 - Le contrôle réel après reconstruction D16 a révélé quelques conventions

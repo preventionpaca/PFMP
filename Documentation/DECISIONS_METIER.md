@@ -39,3 +39,24 @@
 - Lorsqu'une convention interrompue possède une convention de remplacement active, la ligne courante montre la nouvelle convention en vert ; l'interruption reste visible dans l'historique rouge.
 - Le site vert ne montre plus la pastille technique « ENVIRONNEMENT VERT — VERSION EN LIGNE ». Le bandeau bleu reste un garde-fou propre à la recette.
 - Le premier chargement d'une classe filtre les conventions de cette classe avant l'enrichissement des entreprises, contacts et données JotForm. Il est interdit de réintroduire un enrichissement de toutes les conventions annuelles sur ce parcours.
+
+# Décision permanente du 10 octobre 2026 — référence 925 et sobriété des lectures
+
+- La version verte `925`, le commit `60e8811` et le tag
+  `pfmp-green-925-stable` forment le point de retour fonctionnel immuable. Le
+  tag ne doit jamais être déplacé. Les invariants et les preuves associées sont
+  détaillés dans `Documentation/REFERENCE_STABLE_VERTE_925.md`.
+- Une fiche de classe doit être rendue depuis un détail compact déjà enrichi.
+  Sur le chemin utilisateur, il est interdit de reconstruire une famille,
+  d'enrichir toute l'année ou d'enchaîner des lectures Grist dont les données
+  sont déjà présentes dans ce détail.
+- À froid, la cible est une seule lecture distante du détail. À chaud, aucune
+  lecture Grist n'est admise tant qu'aucune révision métier utile n'a changé.
+  Chaque lot touchant ce parcours doit mesurer et comparer le nombre d'appels,
+  la durée froide, la durée chaude et le volume JSON.
+- La cartographie transporte uniquement les marqueurs et un résumé léger.
+  L'historique des élèves et des professeurs visiteurs est chargé à la demande
+  pour l'entreprise ouverte, jamais pour tous les marqueurs en bloc.
+- Le book entreprises est une vue relationnelle sur les entreprises et les
+  accueils existants. Les photos de devanture sont stockées dans Drive ; Grist
+  ne conserve que leur identifiant, lien, source, date et droits d'usage.

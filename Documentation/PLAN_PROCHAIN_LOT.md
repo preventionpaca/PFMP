@@ -1,4 +1,55 @@
-# Prochain lot prioritaire — validation DEV536 sur le vert
+# Prochain lot prioritaire — performance du détail, Monaco et book entreprises
+
+## 1. Réduire l'ouverture d'une PFMP sans modifier le rendu
+
+Le chemin à froid peut encore lire successivement le détail persistant,
+l'effectif courant, les affectations et l'index familial. Cette séquence
+explique qu'une page très légère puisse attendre `20–30 s` alors que les
+accès suivants profitent des caches.
+
+Le lot doit faire du détail compact D16 la réponse autonome : effectif vérifié,
+affectations et navigation minimale sont préparés lors de la reconstruction,
+puis relus en une fois. Les vérifications de révision doivent invalider le
+cache au moment d'une écriture, pas relire les tables à chaque premier affichage
+d'une classe.
+
+Preuves obligatoires : compteur d'appels Grist froid/chaud, mesure TMP3D et
+TCAR, tests des coordonnées et des affectations, suite complète, 25 routes et
+parcours navigateur comparé à `pfmp-green-925-stable`.
+
+## 2. Géocodage Monaco / étranger
+
+Conserver Géoplateforme / BAN en premier choix pour la France. Les adresses
+non françaises ou refusées sont présentées dans une liste séparée et peuvent
+être traitées par un second fournisseur configurable. Pour Monaco, le candidat
+est Nominatim/OpenStreetMap, en recherche unitaire ou en très petit lot,
+résultat mis en cache et soumis à validation si le score est insuffisant.
+
+Le fournisseur de repli ne reçoit que l'adresse de l'entreprise, jamais le nom
+d'un élève ou d'un professeur. Son usage doit respecter la limite de service,
+l'identification du client et l'attribution exigées par le fournisseur.
+
+## 3. Cartographie historique légère
+
+La bulle de la période active ajoute le nom de l'élève et le professeur
+visiteur. Un filtre `Toutes les années` affiche un résumé par entreprise. Le
+détail historique complet — année, élève, classe/diplôme, période/dates et
+professeur visiteur — est chargé uniquement quand l'utilisateur ouvre la
+fiche de l'entreprise.
+
+Les noms d'élèves ne sont visibles que dans une vue authentifiée autorisée ; la
+cartographie publique conserve un résumé non nominatif.
+
+## 4. Book entreprises
+
+Créer une vue indépendante du périmètre de la carte, centrée sur l'entreprise,
+avec : identité, adresse, contacts autorisés, métiers/diplômes, photo de
+devanture Drive, nombre d'accueils et historique des stages. Filtres prévus :
+année ou toutes les années, filière/métier, diplôme, classe, période, élève,
+professeur visiteur et état du géocodage.
+
+La première version est en lecture seule et réutilise les données existantes.
+Elle ne duplique pas les conventions et ne stocke aucun binaire dans Grist.
 
 ## Lot terminé — DEV536
 
