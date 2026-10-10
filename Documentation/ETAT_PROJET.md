@@ -11,6 +11,12 @@
   règle et ne peut plus réintroduire un tiret après le premier rendu.
 - Cette correction est uniquement visuelle : elle ne modifie aucune convention,
   aucun élève et aucune coordonnée Grist. Suite complète : `769/769` réussis.
+- Le commit applicatif `60e8811` est publié sur les deux Web Apps vertes en
+  version immuable `925`; le contrôle automatique valide `25/25` routes.
+  Contrôle navigateur après publication : TMP3D `11/11` conventions couvertes
+  avec contact (`1` sans convention), TCAR `19/19` avec contact. Le remplacement
+  après rupture reste « Convention enregistrée » avec son historique visible.
+  La date apprenti est rendue en `12 px`, graisse `800`, blanc sur vert.
 
 ## Mise à jour du 10 octobre 2026 — DEV535 (contact entreprise toujours exploitable)
 

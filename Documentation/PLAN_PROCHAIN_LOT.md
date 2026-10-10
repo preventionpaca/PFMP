@@ -8,6 +8,9 @@ absent, afficher les coordonnées du tuteur déjà présentes. Contrôler sur TM
 et TCAR que toute convention couverte disposant d'au moins un contact n'affiche
 plus un tiret. Aucune donnée métier Grist ne doit être réécrite.
 
+Validation terminée sur le vert `925` : `25/25` routes, TMP3D `11/11` lignes
+couvertes avec contact, TCAR `19/19`, remplacement actif et historique conservé.
+
 ## Lot terminé — DEV535
 
 Publier le dernier recours de contact entreprise. Une convention scolaire avec
