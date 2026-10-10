@@ -34,7 +34,7 @@ distribués ainsi que les relances J+14. Restent à réaliser les vignettes de
 consultation en lecture seule et la gestion éventuelle d'une liste
 complémentaire.
 
-## Candidat DEV541 — bilan apprentissage intégré
+## DEV541 publié (@934) — bilan apprentissage intégré
 
 La page de gestion administrative et sa consultation publique intègrent les
 vignettes de bilan par diplôme, niveau et classe. Elles présentent les quotas,

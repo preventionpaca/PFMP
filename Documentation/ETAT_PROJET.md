@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 10 octobre 2026 — candidat DEV541
+## Mise à jour du 10 octobre 2026 — DEV541 publié sur le site en ligne (@934)
 
 - Les pages « Gestion des apprentis » administrative et publique affichent
   désormais, sous les indicateurs globaux, le bilan demandé regroupé par
@@ -17,7 +17,17 @@
   réservé à l'administration.
 - Le chargement initial, le changement d'année et le bouton d'actualisation ont
   des états explicites de chargement, succès, absence de données, erreur et
-  dépassement de vingt secondes. La suite complète locale passe `805/805`.
+  dépassement de vingt secondes.
+- Le commit applicatif exact `5a22df3` a été publié sur les deux Web Apps
+  existantes en version Apps Script immuable `934`. La suite complète passe
+  `805/805` tests et le contrôle de livraison valide les `25/25` routes. La
+  version immuable `933`, taguée `pfmp-online-933-stable`, reste le point de
+  retour immédiatement antérieur.
+- Le contrôle navigateur de la version publiée confirme l'affichage du bilan
+  sur `apprentis.loucodi.fr` et sur la page administrative, sans sélection de
+  classe préalable. Le lien de configuration n'apparaît que dans
+  l'administration et aucune erreur ni aucun avertissement navigateur n'a été
+  relevé. Aucune donnée métier n'a été écrite pendant ce contrôle.
 
 ## Mise à jour du 10 octobre 2026 — DEV540 publié sur le site en ligne (@933)
 
