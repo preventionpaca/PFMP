@@ -1,5 +1,21 @@
 # Décisions métier permanentes
 
+- Le book entreprises possède trois contrats distincts : parents anonymisé,
+  personnels autorisés et administration. Les noms d'élèves et de professeurs
+  ne sont jamais livrés au navigateur du mode parents, même sous forme masquée.
+  Une vue nominative destinée aux personnels exige un contrôle d'accès réel.
+- Les photos de devanture sont stockées dans Drive et non dans Grist. Grist ne
+  conserve que les métadonnées et l'identifiant Drive. Une photo rendue
+  publique ne montre ni personne reconnaissable ni plaque lisible.
+- Les filtres du book s'appliquent de façon identique à la liste, à la galerie,
+  à la carte et aux exports. Un export respecte toujours le niveau de
+  confidentialité de la vue qui l'a produit.
+- Le pilotage de l'apprentissage distingue le quota, les apprentis actuels, les
+  contrats signés à démarrage futur, les dossiers remis non retournés, les
+  dossiers retournés en attente et les dossiers transmis au CFA. Pour les
+  indicateurs courants, chaque jeune est compté dans son état le plus avancé.
+  Les places restantes et tout dépassement de quota sont affichés explicitement.
+
 - Pronote reste le progiciel officiel. Eucalyptus PFMP est l’outil opérationnel de suivi et de relation entreprise ; les informations utiles pourront être reportées dans Pronote.
 - Aucune signature électronique : les conventions sont imprimées et signées sur papier. L’élève saisit sa convention après signature par l’entreprise.
 - Le périmètre des classes utilisées par le module PFMP est commandé par l’import Élèves + responsables : les imports Classes/Professeurs ne font qu’enrichir ce périmètre et n’ajoutent pas de nouvelles classes PFMP.

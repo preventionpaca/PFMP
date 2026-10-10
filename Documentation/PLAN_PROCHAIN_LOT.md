@@ -1,24 +1,58 @@
-# Prochain lot prioritaire — performance du détail, Monaco et book entreprises
+# Prochains lots — book entreprises, apprentissage et modèle de convention
 
-## Candidat DEV537 prêt pour publication contrôlée
+## Référence publiée et règle de retour arrière
 
-Le candidat regroupe la suppression de la relecture d'effectif sur un détail
+La version Apps Script immuable `927`, commit `8b582c6` et tag
+`pfmp-online-927-stable`, est la référence fonctionnelle avant ces évolutions.
+Les performances, les coordonnées entreprise, les affectations, les statuts et
+la navigation existante ne doivent pas être modifiés par le nouveau lot. Toute
+régression lors d'une publication impose le retour immédiat à `927`.
+
+Le cahier des charges détaillé du book, des trois niveaux d'accès et du pilotage
+de l'apprentissage est dans
+`Documentation/CAHIER_CHARGES_BOOK_ENTREPRISES_APPRENTISSAGE.md`.
+
+## Priorité 1 — sécuriser le modèle PDF complet
+
+Le site utilise encore le PDF maître DEV95, incomplet après les premiers
+articles du verso. Le fichier DEV101 disponible localement contient bien les
+articles 6 à 21. Ajouter d'abord un contrôle empêchant l'installation d'un fond
+qui n'a pas les 21 articles, vérifier visuellement DEV101 et les zones de
+fusion, puis seulement remplacer le modèle actif après un essai autorisé et
+réversible.
+
+## Priorité 2 — socle en lecture seule du book
+
+Construire un index léger par entreprise et les trois contrats de réponse :
+parents anonymisé, personnels autorisés et administration. Livrer d'abord la
+liste, la fiche et les filtres sans ajout de photo ni écriture métier. L'accès
+nominatif des personnels doit être protégé avant toute exposition d'un
+historique élève/professeur.
+
+## Priorité 3 — quotas et vignettes apprentissage
+
+Ajouter le référentiel annuel des quotas et les agrégats établissement,
+diplôme, année de formation et classe. Réutiliser le circuit de dossier déjà
+présent dans la gestion administrative ; ne pas créer une seconde source de
+statut. Les vignettes publiques restent en lecture seule.
+
+## Priorité 4 — cartographie, photos et exports
+
+Ajouter le détail historique défilable, les photos Drive, la galerie et les
+exports PDF/Excel, avec anonymisation systématique des sorties parents.
+
+## Lot terminé — DEV537 publié en version 927
+
+Le lot regroupe la suppression de la relecture d'effectif sur un détail
 déjà vérifié, le géocodage automatique de Monaco par Nominatim, le filtre
 cartographique « Toutes les années », le nombre d'élèves distincts accueillis
 et l'autocomplétion locale du générateur de conventions. La suite locale passe
-`780/780`; le vert demeure sur la référence immuable `925`.
+`780/780`; les deux Web Apps existantes servent la version immuable `927`.
 
-La prochaine action est la publication directe du commit testé sur les deux Web
-Apps existantes avec `scripts/pfmp-release.sh release-stable`. Le script relit
-le projet distant, crée une version immuable, conserve les URL et contrôle les
-25 routes. Tout échec doit replacer automatiquement les deux déploiements sur
-la référence `925`. L'ancien canal bleu ne doit pas être utilisé.
-
-Après la publication contrôlée, mesurer TMP3D et TCAR à froid puis à chaud,
-vérifier les coordonnées entreprise et les affectations, tester France et
-Monaco sans donnée nominative, contrôler les trois périmètres de comptage et
-tester la recherche élève au clavier. Les opérations métier réelles restent
-interdites sans autorisation distincte.
+La publication a validé `25/25` routes. Le contrôle navigateur confirme les
+coordonnées entreprise, la recherche élève locale, les deux moteurs de
+géocodage et les trois périmètres de cartographie. Une seconde ouverture de la
+PFMP TCAR après migration D17 a pris `6,6 s`.
 
 ## 1. Réduire l'ouverture d'une PFMP sans modifier le rendu
 
