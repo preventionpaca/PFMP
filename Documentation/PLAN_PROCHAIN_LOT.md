@@ -1,6 +1,6 @@
 # Prochains lots — book entreprises et apprentissage
 
-## Candidat DEV551 — périmètres cartographiques et démarrage public
+## DEV551 publié (@943) — périmètres cartographiques et démarrage public
 
 - Une carte ouverte depuis une fiche doit contenir exactement un marqueur :
   l'entreprise sélectionnée. La carte globale du book reste distincte et
@@ -12,12 +12,16 @@
   administrative. Une identité Google masquée doit produire la vue publique
   anonymisée, jamais une page blanche ou une erreur d'authentification.
 - Les photos élèves/familles sont limitées aux fichiers dont le droit de
-  diffusion est confirmé. Le contrôle en ligne devra vérifier un cas avec photo
-  autorisée et un cas sans photo, sans téléversement ni écriture Grist.
+  diffusion est confirmé. Le contrôle en ligne a vérifié le parcours sans
+  photo, qui termine explicitement sur « Aucune photo de devanture », sans
+  téléversement ni écriture Grist. Un cas réel avec photo autorisée reste à
+  contrôler lorsqu'une fiche de ce type sera disponible dans le périmètre.
 - La réduction des appels Apps Script porte uniquement sur les lectures de
-  propriétés du cache public. Après publication, mesurer séparément le premier
-  chargement à froid et un rechargement à chaud ; ne pas annoncer une vitesse
-  garantie avant cette mesure réelle.
+  propriétés du cache public. Le rechargement chaud du book administratif est
+  mesuré à environ `11,5 s` ; le démarrage à froid reste dans la zone
+  `20–30 s`. Le prochain lot doit compter les appels par table et remplacer la
+  reconstruction nominative répétée par un agrégat révisionné côté serveur,
+  avec invalidation sur écriture et comparaison stricte au rendu `@943`.
 
 ## DEV550 publié (@942) — books paginés, cartes filtrées et rattachements fiables
 
@@ -71,12 +75,12 @@
 
 ## Référence publiée et règle de retour arrière
 
-La version Apps Script immuable `942` et le commit
-`ac557b52e1481ec562edfba8c2cd5ea0d0feb165` sont la référence fonctionnelle.
+La version Apps Script immuable `943` et le commit
+`66b015d1987b0c95bddc3a9eda7dd13497f4ad8f` sont la référence fonctionnelle.
 Les performances, les coordonnées entreprise, les affectations, les statuts et
 la navigation existante ne doivent pas être modifiés par le nouveau lot. Toute
 régression lors d'une publication impose le retour immédiat à la version
-immuable précédente `941`, puis à `940` si le défaut concerne aussi le cache
+immuable précédente `942`, puis à `941` si le défaut concerne aussi le cache
 public introduit en `941`.
 
 Le cahier des charges détaillé du book, des trois niveaux d'accès et du pilotage

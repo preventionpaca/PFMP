@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 11 octobre 2026 — candidat DEV551
+## Mise à jour du 11 octobre 2026 — DEV551 publié sur le site en ligne (@943)
 
 - Depuis une fiche entreprise, le bouton de localisation ne recharge plus la
   carte globale : il efface la couche courante et affiche uniquement
@@ -22,10 +22,26 @@
   au lieu d'enchaîner des appels unitaires. La carte des apprentis recalcule
   aussi sa taille après rendu pour éviter les tuiles incomplètes.
 - Les tests ciblés DEV538/DEV551 passent `60/60`, les tests géocodage et
-  performance `38/38`, et la suite complète passe `845/845`. La publication
-  immuable et le contrôle navigateur restent à exécuter. Tant que ces preuves
-  ne sont pas obtenues, la référence en ligne reste `@942` et le candidat ne
-  doit pas être présenté comme livré.
+  performance `38/38`, et la suite complète passe `845/845`. Le commit exact
+  `66b015d1987b0c95bddc3a9eda7dd13497f4ad8f` a été publié sur les deux Web
+  Apps vertes existantes en version Apps Script immuable `943`. Le contrôle
+  automatisé valide les `28/28` routes ; la version immuable `942` reste le
+  point de retour immédiat.
+- Le contrôle navigateur de la version publiée confirme un seul marqueur depuis
+  une fiche dans les modes familles, personnels et administration. La carte
+  globale familles conserve le filtre `BACPRO` (`113` points observés), la
+  carte de classe conserve `TMP3D` et `PFMP n°1` (`11` points), et la carte
+  publique des apprentis rend ses `7` marqueurs avec des tuiles complètes. Les
+  fils d'Ariane publics n'exposent plus l'accueil administratif ; les fiches
+  personnels affichent les coordonnées professionnelles, et l'absence de
+  photo aboutit à un état final explicite.
+- La lenteur n'est pas déclarée résolue : un rechargement chaud du book
+  administratif a été mesuré à environ `11,5 s`, mais le premier chargement
+  reste observé entre `20 et 30 s`. Les lectures unitaires des propriétés du
+  cache public ont bien été supprimées ; le coût résiduel vient surtout de la
+  reconstruction nominative complète de l'historique pour les books personnels
+  et administration. Le prochain lot performance devra instrumenter les appels
+  puis préparer un agrégat révisionné côté serveur, sans modifier le rendu.
 
 ## Mise à jour du 11 octobre 2026 — DEV550 publié sur le site en ligne (@942)
 
