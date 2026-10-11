@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV555 publié sur le site en ligne (@947)
+
+- Toutes les bulles cartographiques d'entreprise proposent désormais
+  « Itinéraire depuis ma position » : book élèves/familles, book personnels et
+  administration, carte PFMP et carte des apprentis.
+- Le lien ouvre Google Maps dans un nouvel onglet vers les coordonnées validées
+  de l'entreprise. PFMP ne demande, ne reçoit et ne stocke aucune position de
+  départ ; celle-ci reste gérée par l'application cartographique de
+  l'utilisateur. Le lien est absent si les coordonnées de destination ne sont
+  pas exploitables.
+- Le commit applicatif `77f26b40b4fc2e33d54f35f43b8582c7716e21eb` a été
+  publié sur les deux Web Apps vertes existantes en version immuable `947`.
+  La suite complète passe `852/852` et le contrôle automatisé valide `28/28`
+  routes. Le contrôle navigateur du book familles publié confirme l'affichage
+  du bouton dans une bulle réelle et une destination Google Maps construite
+  depuis les coordonnées de l'entreprise, avec ouverture sécurisée dans un
+  nouvel onglet. La version immuable `946` reste le point de retour immédiat.
+
 ## Mise à jour du 12 octobre 2026 — DEV554 publié sur le site en ligne (@946)
 
 - La page « Book des entreprises — élèves et familles » conserve son titre et

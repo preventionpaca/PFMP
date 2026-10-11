@@ -1,5 +1,16 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV555 publié (@947) — itinéraires depuis les bulles cartographiques
+
+- Chaque bulle d'entreprise des cartes familles, personnels, administration,
+  PFMP et apprentissage contient un bouton « Itinéraire depuis ma position ».
+- La destination est l'emplacement validé de l'entreprise. Le point de départ
+  est choisi ou déterminé par Google Maps : PFMP n'accède jamais à la position
+  de l'utilisateur et n'ajoute aucun appel Grist.
+- La référence publiée est la version Apps Script immuable `947`. En cas de
+  régression fonctionnelle, le retour immédiat est `946` ; les données Grist ne
+  sont pas concernées par ce retour de code.
+
 ## DEV554 publié (@946) — page familles épurée et contacts datés
 
 - Le titre « Book des entreprises — élèves et familles » reste seul dans le

@@ -1,5 +1,10 @@
 # Décisions métier permanentes
 
+- Une bulle cartographique d'entreprise peut ouvrir un itinéraire externe vers
+  ses coordonnées validées. PFMP transmet uniquement la destination à Google
+  Maps dans un nouvel onglet : la position de départ est choisie ou déterminée
+  par le service cartographique et n'est ni demandée, ni reçue, ni stockée par
+  PFMP. Une entreprise sans coordonnées exploitables n'affiche pas ce lien.
 - Une facette « Ville » est construite uniquement depuis une commune
   identifiable après un code postal. Sa clé est normalisée sans distinction de
   casse, d'accent, d'espace ou de tiret. Une voie, une corniche, une route, un
