@@ -1,6 +1,6 @@
 # Prochains lots — book entreprises et apprentissage
 
-## Candidat DEV547 — books paginés, cartes filtrées et rattachements fiables
+## DEV550 publié (@942) — books paginés, cartes filtrées et rattachements fiables
 
 - Les books administration, personnels et élèves/familles affichent dix
   entreprises au démarrage, proposent la pagination et les tailles
@@ -14,7 +14,12 @@
   conformément à la décision métier du 11 octobre 2026.
 - Les appellations explicitement rattachées utilisent la fiche canonique à la
   lecture. Une ligne d'accès QR incomplète ne crée plus un second accueil vide
-  lorsqu'un snapshot représente déjà le même élève et la même PFMP.
+  lorsqu'un snapshot représente déjà le même élève et la même PFMP. Les
+  archives sans SIRET portant l'ancienne appellation suivent également la cible
+  si ce nom source n'est pas ambigu.
+- Le book familles repose sur un cache révisionné strictement non nominatif,
+  partagé avec sa carte. Le cache publié a été préchauffé et le contrôle réel
+  confirme une seule fiche canonique pour le rattachement SACOME.
 - La page de réglage des quotas possède un fil d'Ariane vers l'administration
   et l'accueil. Aucune donnée métier Grist n'est modifiée par ce lot.
 
@@ -47,11 +52,13 @@
 
 ## Référence publiée et règle de retour arrière
 
-La version Apps Script immuable `927`, commit `8b582c6` et tag
-`pfmp-online-927-stable`, est la référence fonctionnelle avant ces évolutions.
+La version Apps Script immuable `942` et le commit
+`ac557b52e1481ec562edfba8c2cd5ea0d0feb165` sont la référence fonctionnelle.
 Les performances, les coordonnées entreprise, les affectations, les statuts et
 la navigation existante ne doivent pas être modifiés par le nouveau lot. Toute
-régression lors d'une publication impose le retour immédiat à `927`.
+régression lors d'une publication impose le retour immédiat à la version
+immuable précédente `941`, puis à `940` si le défaut concerne aussi le cache
+public introduit en `941`.
 
 Le cahier des charges détaillé du book, des trois niveaux d'accès et du pilotage
 de l'apprentissage est dans

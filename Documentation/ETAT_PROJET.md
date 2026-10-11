@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 11 octobre 2026 — DEV547 candidat
+## Mise à jour du 11 octobre 2026 — DEV550 publié sur le site en ligne (@942)
 
 - Les trois books sont paginés : dix entreprises au démarrage, choix de
   `10/30/40/50/100/200/Tous`, navigation page précédente/suivante et total
@@ -22,13 +22,26 @@
   même classe et de la même période sont dédoublonnées par identifiant durable.
   Une ligne technique vide ne masque donc plus le nom, la PFMP officielle ou le
   professeur visiteur. Aucune convention ni aucun snapshot Grist n'est réécrit.
+- Une appellation source explicitement rattachée reprend également ses archives
+  sans SIRET ou dont l'adresse était écrite différemment, à condition que le
+  nom source ne désigne qu'une seule cible canonique. Le contrôle en ligne
+  confirme une seule fiche `SACOME CONTI`, deux élèves, deux périodes
+  `PFMP n°1` et les deux professeurs visiteurs ; `SAM SACOME` n'est plus rendu.
+- Le book élèves/familles utilise un index persistant révisionné qui ne contient
+  aucune identité d'élève ou de professeur, aucun SIRET et aucun historique
+  nominatif. La première construction a été préchauffée après publication ; le
+  rechargement à chaud termine sans dépassement de vingt secondes et a été
+  observé chargé avant dix secondes. La carte réutilise le même index.
 - La page « Quotas et relances apprentissage » possède un fil d'Ariane vers
   l'administration et l'accueil. Un plan de reprise après sinistre est décrit
   dans `Documentation/PLAN_REPRISE_APRES_SINISTRE.md` sans créer de miroir ni de
   nouvelle Web App dans ce lot.
-- Les tests ciblés DEV538/DEV547 passent `51/51` et la suite complète passe
-  `836/836`. Le commit, la version Apps Script immuable et les contrôles en
-  ligne seront consignés après publication.
+- Les tests ciblés DEV538/DEV550 passent `53/53` et la suite complète passe
+  `838/838`. Le commit exact
+  `ac557b52e1481ec562edfba8c2cd5ea0d0feb165` a été publié directement sur les
+  deux Web Apps vertes existantes en version Apps Script immuable `942`. Les
+  `28/28` routes répondent correctement. Les versions immuables `941` et `940`
+  restent disponibles comme points de retour antérieurs.
 
 ## Mise à jour du 11 octobre 2026 — DEV546 publié sur le site en ligne (@938)
 
