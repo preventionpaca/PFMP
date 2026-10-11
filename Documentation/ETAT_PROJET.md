@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 11 octobre 2026 — candidat DEV543
+## Mise à jour du 11 octobre 2026 — DEV543 publié sur le site en ligne (@936)
 
 - Le géocodage Monaco traite désormais la liste demandée comme une file finie :
   chaque adresse est examinée une seule fois par clic, par lots de trois. Une
@@ -14,6 +14,20 @@
   l'effectif jusqu'à cette date.
 - Les tests ciblés couvrent la terminaison du géocodage Monaco et tous les
   marqueurs de sortie. La suite complète passe `812/812` tests.
+- Le commit applicatif exact
+  `8ba171b4b760610790ac4d51c93cef055da3642e` a été publié sur les deux Web Apps
+  existantes en version Apps Script immuable `936`. Le contrôle de livraison
+  valide les `25/25` routes. La version immuable `935` reste le point de retour
+  immédiatement antérieur.
+- Le contrôle navigateur de la version publiée confirme que le code de file
+  finie est présent sur l'écran Monaco, que le bouton est disponible et
+  qu'aucune erreur navigateur n'est remontée. Le géocodage réel n'a pas été
+  déclenché afin de ne provoquer aucune écriture Grist pendant la recette.
+- La page « Quotas et relances apprentissage » termine son chargement sans
+  erreur avec le statut « Données actualisées ». Son effectif global est passé
+  de `796` à `529` après exclusion des élèves sortis et des classes désactivées.
+  Les lignes `1MELEC G` et `TMELEC G` restent visibles comme « Exclue », avec
+  leur commande de réactivation, et ne contribuent pas aux calculs.
 
 ## Mise à jour du 11 octobre 2026 — DEV542 publié sur le site en ligne (@935)
 
