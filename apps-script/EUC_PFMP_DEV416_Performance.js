@@ -358,3 +358,97 @@ function EUC_DEV416_prewarm(payload){
   var d=EUC_DEV416_finalDetail_(annee,famille,classe,periode);
   return {ok:true,ms:Date.now()-t0,cached:!!(d&&d.__dev416Cache)};
 }
+
+/* DEV553 — préchauffage groupé depuis la page famille.
+ *
+ * Le préchauffage historique lançait une exécution Apps Script par vignette
+ * et, comme les cartes contiennent déjà un résumé `quick`, il ne se lançait
+ * finalement jamais dans le parcours normal. Le premier clic payait donc la
+ * lecture Grist du détail puis celle des affectations.
+ *
+ * Cette version reçoit toutes les vignettes en une seule fois, lit en un lot
+ * les détails persistants et en un second lot les affectations, puis remplit
+ * CacheService. Elle n'écrit aucune donnée métier et ignore tout snapshot qui
+ * n'est pas à la révision canonique courante.
+ */
+var EUC_DEV553_VERSION_='1.0.0-dev.553';
+
+function EUC_DEV553_detailFresh_(state,detail,classe,periode){
+  if(!detail)return false;
+  if(!state)return detail.__dev424Enriched===true;
+  if(state.status!=='READY'||!state.revision)return false;
+  if(String(detail.__dev425Revision||'')===String(state.revision))return true;
+  return !(state.targets||[]).some(function(t){
+    return Number(t.classe)===Number(classe)&&
+      (!Number(t.periode)||Number(t.periode)===Number(periode));
+  });
+}
+
+function EUC_DEV553_applyAssignments_(detail,rows,revision,classe,periode){
+  var newest={};
+  (rows||[]).forEach(function(r){
+    if(r.Actif===false||EUC_DEV455_ref_(r.Classe)!==Number(classe)||
+       EUC_DEV455_ref_(r.Periode)!==Number(periode))return;
+    var eid=EUC_DEV455_ref_(r.Eleve),type=EUC_DEV455_assignmentType_(r.Type_suivi),key=eid+'|'+type;
+    if(!eid||!type)return;
+    if(!newest[key]||Number(r.id||0)>Number(newest[key].id||0))newest[key]=r;
+  });
+  (detail.lignes||[]).forEach(function(x){
+    var eid=Number(x.eleveId)||0,tel=newest[eid+'|TELEPHONE'],vis=newest[eid+'|VISITE'];
+    x.professeurTelephone=tel?EUC_DEV455_t_(tel.Nom_professeur_snapshot):'';
+    x.professeurTelephoneId=tel?EUC_DEV455_ref_(tel.Professeur):0;
+    x.affectationTelephoneId=tel?Number(tel.id)||0:0;
+    x.professeurVisiteur=vis?EUC_DEV455_t_(vis.Nom_professeur_snapshot):'';
+    x.professeurVisiteurId=vis?EUC_DEV455_ref_(vis.Professeur):0;
+    x.affectationVisiteId=vis?Number(vis.id)||0:0;
+  });
+  detail.__dev455AssignmentRevision=revision;
+  return detail;
+}
+
+function EUC_DEV553_prewarmFamily(payload){
+  payload=payload||{};
+  var started=Date.now(),annee=String(payload.annee||'').trim();
+  var famille=String(payload.famille||'BACPRO').trim().toUpperCase()||'BACPRO';
+  var seen={},items=(payload.items||[]).map(function(x){
+    return {classe:Number(x&&x.classe)||0,periode:Number(x&&x.periode)||0};
+  }).filter(function(x){
+    var key=x.classe+'|'+x.periode;
+    if(!x.classe||!x.periode||seen[key])return false;
+    seen[key]=true;return true;
+  }).slice(0,120);
+  if(!annee||!items.length)return {ok:false,version:EUC_DEV553_VERSION_,cached:0,warmed:0,skipped:0,ms:Date.now()-started};
+
+  var missing=[],cached=0,assignmentRevision=EUC_DEV455_assignmentRevision_();
+  items.forEach(function(x){
+    var d=EUC_DEV416_cacheGet_(EUC_DEV416_key_(annee,famille,x.classe,x.periode));
+    if(d&&d.__dev459CanonicalDetail===EUC_DEV459_DETAIL_CANONICAL_&&
+       String(d.__dev455AssignmentRevision||'')===String(assignmentRevision))cached++;
+    else missing.push(x);
+  });
+  if(!missing.length)return {ok:true,version:EUC_DEV553_VERSION_,cached:cached,warmed:0,skipped:0,ms:Date.now()-started};
+
+  var details={},state=null,assignments=null;
+  try{details=EUC_DEV427_rawDetailMap_(annee,famille)||{};}catch(eDetails){details={};}
+  try{state=EUC_DEV425_readState_(annee,famille);}catch(eState){state=null;}
+  try{
+    assignments=EUC_DEV448_rows_(EUC_DEV455_ASSIGN_TABLE_,{Annee_scolaire:[annee],Actif:[true]})||[];
+  }catch(eAssignments){assignments=null;}
+
+  var warmed=0,skipped=0;
+  missing.forEach(function(x){
+    var detail=details[x.classe+'|'+x.periode];
+    if(!detail||!Array.isArray(detail.lignes)||
+       detail.__dev459CanonicalDetail!==EUC_DEV459_DETAIL_CANONICAL_||
+       !EUC_DEV553_detailFresh_(state,detail,x.classe,x.periode)){
+      skipped++;return;
+    }
+    try{detail=JSON.parse(JSON.stringify(detail));}catch(eClone){skipped++;return;}
+    detail.annee=annee;detail.famille=famille;
+    if(assignments!==null)detail=EUC_DEV553_applyAssignments_(detail,assignments,assignmentRevision,x.classe,x.periode);
+    detail.__dev455Source='PRECHAUFFE_PAR_FAMILLE';
+    if(EUC_DEV416_cachePut_(EUC_DEV416_key_(annee,famille,x.classe,x.periode),detail))warmed++;
+    else skipped++;
+  });
+  return {ok:true,version:EUC_DEV553_VERSION_,cached:cached,warmed:warmed,skipped:skipped,ms:Date.now()-started};
+}

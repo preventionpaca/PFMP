@@ -5,6 +5,7 @@ const family=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV339_Famil
 const familyLive=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV340_ConsolidationLive.js'),'utf8');
 const firstRouter=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV455_FastVerifiedViews.js'),'utf8');
 const familyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Admin_FamilleV190L.html'),'utf8');
+const detailPerformance=fs.readFileSync(path.join(root,'apps-script','EUC_PFMP_DEV416_Performance.js'),'utf8');
 const canonicalFamilyHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Famille_DEV459.html'),'utf8');
 const publicSummaryHtml=fs.readFileSync(path.join(root,'apps-script','Suivi_Conventions_Public_Summary_V348.html'),'utf8');
 const migration=fs.readFileSync(path.join(root,'apps-script','Migration_JotForm_PFMP_V160.html'),'utf8');
@@ -77,8 +78,38 @@ test('les infobulles utilisent le détail déjà inclus dans la synthèse',()=>{
   assert.match(familyHtml,/var family=window\.EUC_FAMILY_DATA,local=null/);
   assert.match(familyHtml,/if\(p\.quick\)\{local=p\.quick;return true;\}/);
   assert.match(familyHtml,/if\(local\)\{cache\[k\]=local;render\(el,local\);return;\}/);
-  assert.match(familyHtml,/embedded=!!x\.quick/);
-  assert.match(familyHtml,/if\(embedded\)return/);
+});
+
+test('le préchauffage des détails est groupé en une seule exécution',()=>{
+  assert.match(familyHtml,/\.EUC_DEV553_prewarmFamily\(\{annee:annee,famille:famille,items:list\}\)/);
+  assert.doesNotMatch(familyHtml,/\.EUC_DEV416_prewarm\(p\)/);
+  assert.match(familyHtml,/document\.addEventListener\('euc-family-ready',warmFamily\)/);
+  assert.match(familyHtml,/fallbackTimer=setTimeout\(navigate,8000\)/);
+  assert.match(detailPerformance,/function EUC_DEV553_prewarmFamily\(payload\)/);
+  assert.match(detailPerformance,/details=EUC_DEV427_rawDetailMap_\(annee,famille\)/);
+  assert.match(detailPerformance,/assignments=EUC_DEV448_rows_\(EUC_DEV455_ASSIGN_TABLE_,\{Annee_scolaire:\[annee\],Actif:\[true\]\}\)/);
+  assert.match(detailPerformance,/detail\.__dev455Source='PRECHAUFFE_PAR_FAMILLE'/);
+});
+
+test('le préchauffage groupé ne lit chaque source qu’une fois',()=>{
+  const c={console,JSON,Date,Math,Array,Object,String,Number,RegExp};
+  vm.createContext(c);vm.runInContext(detailPerformance,c,{filename:'EUC_PFMP_DEV416_Performance.js'});
+  let revisions=0,details=0,assignments=0,puts=0;
+  c.EUC_DEV459_DETAIL_CANONICAL_='CANON';
+  c.EUC_DEV455_assignmentRevision_=()=>{revisions++;return'A1';};
+  c.EUC_DEV416_cacheGet_=()=>null;
+  c.EUC_DEV427_rawDetailMap_=()=>{details++;return{
+    '1|2':{__dev459CanonicalDetail:'CANON',__dev425Revision:'R1',lignes:[]},
+    '3|4':{__dev459CanonicalDetail:'CANON',__dev425Revision:'R1',lignes:[]}
+  };};
+  c.EUC_DEV425_readState_=()=>({status:'READY',revision:'R1',targets:[]});
+  c.EUC_DEV448_rows_=()=>{assignments++;return[];};
+  c.EUC_DEV455_ASSIGN_TABLE_='AFFECTATIONS';
+  c.EUC_DEV455_ref_=v=>Number(v)||0;c.EUC_DEV455_assignmentType_=()=>'';c.EUC_DEV455_t_=v=>String(v||'');
+  c.EUC_DEV416_cachePut_=()=>{puts++;return true;};
+  const r=c.EUC_DEV553_prewarmFamily({annee:'2026-2027',famille:'BACPRO',items:[{classe:1,periode:2},{classe:3,periode:4}]});
+  assert.equal(r.ok,true);assert.equal(r.warmed,2);
+  assert.equal(revisions,1);assert.equal(details,1);assert.equal(assignments,1);assert.equal(puts,2);
 });
 
 test('le routeur famille prioritaire délègue lui aussi à la coque asynchrone',()=>{

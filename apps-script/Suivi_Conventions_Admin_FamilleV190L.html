@@ -668,31 +668,44 @@ const INITIAL_DATA=<?!= dataJson ?>;
 <script id="EUC_DEV416_PREWARM">
 (function(){
   'use strict';
-  var seen={};
+  var started=false,done=false,queued='',fallbackTimer=0;
   function q(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return '';}}
-  function data(el){
-    var card=el.closest('[data-class],[data-classe],.card');
-    var classe=el.dataset.class||el.dataset.classe||(card&&(card.dataset.class||card.dataset.classe))||'';
-    var periode=el.dataset.period||el.dataset.periode||el.dataset.p||'';
-    var annee=q('annee'),famille=q('famille')||'BACPRO';
-    if(!annee||!classe||!periode)return null;
-    return {annee:annee,famille:famille,classe:Number(classe),periode:Number(periode)};
+  function items(){
+    var seen={};
+    return Array.from(document.querySelectorAll('.period,[data-period],[data-periode]')).map(function(el){
+      var card=el.closest('[data-class],[data-classe],.card');
+      var classe=Number(el.dataset.class||el.dataset.classe||(card&&(card.dataset.class||card.dataset.classe))||0);
+      var periode=Number(el.dataset.period||el.dataset.periode||el.dataset.p||0),key=classe+'|'+periode;
+      if(!classe||!periode||seen[key])return null;seen[key]=1;return{classe:classe,periode:periode};
+    }).filter(Boolean);
   }
-  function warm(el){
-    if(!el||!window.google||!google.script||!google.script.run)return;
-    var p=data(el); if(!p)return;
-    var family=window.EUC_FAMILY_DATA,embedded=false;
-    ((family&&family.classes)||[]).some(function(c){if(Number(c.classeId||c.id)!==p.classe)return false;return(c.periodes||[]).some(function(x){if(Number(x.id||x.periodeId)!==p.periode)return false;embedded=!!x.quick;return embedded;});});
-    if(embedded)return;
-    var k=p.annee+'|'+p.famille+'|'+p.classe+'|'+p.periode;
-    if(seen[k])return; seen[k]=1;
-    google.script.run.withFailureHandler(function(){}).EUC_DEV416_prewarm(p);
+  function navigate(){
+    if(!queued)return;var href=queued;queued='';clearTimeout(fallbackTimer);window.top.location.href=href;
   }
-  document.addEventListener('mouseover',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
-  document.addEventListener('focusin',function(ev){var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;if(el)warm(el);},true);
-  function initial(){Array.from(document.querySelectorAll('.period,[data-period],[data-periode]')).slice(0,6).forEach(function(el,i){setTimeout(function(){warm(el);},300+i*250);});}
-  document.addEventListener('euc-family-ready',initial);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initial);else initial();
+  function finish(){done=true;navigate();}
+  function warmFamily(){
+    if(started||!window.google||!google.script||!google.script.run)return;
+    var list=items(),annee=String((P&&P.annee)||q('annee')||''),famille=String((P&&P.famille)||q('famille')||'BACPRO');
+    if(!annee||!list.length)return;started=true;
+    google.script.run.withSuccessHandler(finish).withFailureHandler(finish)
+      .EUC_DEV553_prewarmFamily({annee:annee,famille:famille,items:list});
+  }
+  document.addEventListener('click',function(ev){
+    var el=ev.target&&ev.target.closest?ev.target.closest('.period,[data-period],[data-periode]'):null;
+    if(!el||!started||done)return;
+    var href=el.href||el.getAttribute('href')||'';
+    if(!href&&el.classList.contains('period'))href=BASE_URL+'?page='+(P.publicMode?'suivi-pfmp-classe-public':'suivi-pfmp-classe')+
+      '&annee='+encodeURIComponent(P.annee)+'&famille='+encodeURIComponent(P.famille)+
+      '&classe='+encodeURIComponent(el.dataset.class||el.dataset.classe||'')+
+      '&periode='+encodeURIComponent(el.dataset.period||el.dataset.periode||el.dataset.p||'')+
+      '&origin=suivi-conventions';
+    if(!href)return;
+    ev.preventDefault();ev.stopImmediatePropagation();queued=href;
+    el.classList.add('euc339-busy');el.setAttribute('aria-busy','true');
+    clearTimeout(fallbackTimer);fallbackTimer=setTimeout(navigate,8000);
+  },true);
+  document.addEventListener('euc-family-ready',warmFamily);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',warmFamily);else warmFamily();
 })();
 </script>
 <!-- EUC_DEV416_PREWARM_END -->

@@ -58,8 +58,8 @@ test('cartes et infobulles consomment la même donnée quick déjà embarquée',
   assert.match(familyHtml,/p\.quick/);
   assert.match(familyHtml,/if\(p\.quick\)\{local=p\.quick;return true;\}/);
   assert.match(familyHtml,/if\(local\)\{cache\[k\]=local;render\(el,local\);return;\}/);
-  assert.match(familyHtml,/embedded=!!x\.quick/);
-  assert.match(familyHtml,/if\(embedded\)return/);
+  assert.match(familyHtml,/\.EUC_DEV553_prewarmFamily\(\{annee:annee,famille:famille,items:list\}\)/);
+  assert.doesNotMatch(familyHtml,/embedded=!!x\.quick/);
 });
 
 test('un choix futur P.dif ne retire aucun élève des PFMP ordinaires',()=>{
