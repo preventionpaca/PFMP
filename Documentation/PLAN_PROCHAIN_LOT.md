@@ -68,6 +68,28 @@ les deux Web Apps existantes en version immuable `936`. La suite complète passe
 `812/812` tests et les `25/25` routes en ligne sont valides. La version `935`
 reste disponible pour un retour immédiat.
 
+## Candidat DEV544 — ventilation des indicateurs apprentissage
+
+Les six indicateurs globaux affichent au survol et au clavier le total par
+établissement `LP` / `LGT`, puis le détail de chaque classe active. Le service
+réutilise les lignes agrégées déjà chargées et n'ajoute aucune lecture Grist.
+La consultation publique reçoit uniquement ces nombres et libellés de classe,
+sans élève ni dossier nominatif.
+
+## Proposition à valider — rattachement et archivage des entreprises
+
+Le SIRET reste l'identité canonique d'un établissement français. Une interface
+administrative devra permettre de rattacher plusieurs noms historiques ou
+commerciaux à une fiche canonique, sans réécrire ni supprimer les conventions
+passées. Deux SIRET distincts ne seront jamais fusionnés automatiquement, même
+à la même adresse.
+
+Une entreprise fermée devra conserver tout son historique avec un état
+`FERMEE` et une date de fermeture ; une entreprise archivée sera simplement
+masquée des sélections courantes. La suppression physique restera interdite.
+Ce lot nécessite la validation du schéma de correspondance avant toute écriture
+dans Grist.
+
 ## Candidat DEV540 — lisibilité, géocodage et fiche entreprise
 
 Le tableau de quotas est agrandi et explicite la différence entre contrats à

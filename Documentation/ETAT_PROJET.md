@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV544
+
+- Les six indicateurs globaux du pilotage apprentissage affichent désormais au
+  survol, et par prise de focus au clavier, leur décompte par établissement
+  `LP` / `LGT`, puis par classe : effectif, quota calculé, apprentis actuels,
+  futurs apprentis, dossiers distribués et dossiers transmis au CFA.
+- La même ventilation est utilisée dans la page complète des quotas et dans le
+  bilan intégré aux gestions administrative et publique des apprentis. Les
+  classes exclues restent absentes de tous les sous-totaux.
+- Le calcul est produit à partir des groupes déjà chargés ; il n'ajoute aucun
+  appel Grist et ne transmet aucune identité d'élève dans la réponse publique.
+- Les tests ciblés DEV538 passent `30/30`.
+
 ## Mise à jour du 11 octobre 2026 — DEV543 publié sur le site en ligne (@936)
 
 - Le géocodage Monaco traite désormais la liste demandée comme une file finie :

@@ -21,7 +21,7 @@ function context(){
 }
 
 test('les deux nouvelles pages et la carte parents ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.543/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.544/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
@@ -30,7 +30,9 @@ test('le book combine les filtres demandés',()=>{for(const id of ['year','windo
 test('le book propose export Excel compatible et impression PDF',()=>{assert.match(bookHtml,/Exporter Excel \(CSV\)/);assert.match(bookHtml,/window\.print/);assert.match(bookHtml,/text\/csv;charset=utf-8/)});
 test('le book propose filtres assistés fiche entreprise photo et retour',()=>{assert.match(bookHtml,/datalist id="companiesOptions"/);assert.match(bookHtml,/id="detail"/);assert.match(bookHtml,/EUC_DEV540_companyPhoto/);assert.match(bookHtml,/EUC_DEV540_saveCompanyPhoto/);assert.match(bookHtml,/class="breadcrumb"/);assert.match(server,/EUC_ENTREPRISES_PHOTOS_PFMP/)});
 test('le tableau des quotas rend les chiffres lisibles et explique les compteurs',()=>{assert.match(quotaHtml,/td\.num\{font-size:16px/);assert.match(quotaHtml,/Futurs — début à venir/);assert.match(quotaHtml,/Transmis au CFA — total/)});
+test('les indicateurs de quotas exposent leur ventilation au survol et au clavier',()=>{assert.match(quotaHtml,/class="kpi" tabindex="0"/);assert.match(quotaHtml,/class="kpi-detail"/);assert.match(quotaHtml,/detailByMetric/);assert.match(quotaHtml,/LP \/ LGT puis classe/)});
 test('la gestion des apprentis intègre le bilan par diplôme dans les deux modes',()=>{assert.match(apprenticesHtml,/Bilan des apprentis par diplôme et classe/);assert.match(apprenticesHtml,/EUC_DEV541_apprentissageDashboardPublic/);assert.match(apprenticesHtml,/Quota fixé/);assert.match(apprenticesHtml,/Apprentis actuels/);assert.match(apprenticesHtml,/Futurs apprentis/);assert.match(apprenticesHtml,/Dossiers distribués/);assert.match(apprenticesHtml,/Transmis au CFA/);assert.match(apprenticesHtml,/body\.dev252-readonly #dev541QuotaAdmin/)});
+test('les indicateurs intégrés reprennent la même ventilation accessible',()=>{assert.match(apprenticesHtml,/dev544-total-detail/);assert.match(apprenticesHtml,/tabindex="0"/);assert.match(apprenticesHtml,/dev544DetailByMetric/)});
 test('les classes exclues disparaissent aussi du sélecteur apprentissage',()=>{assert.match(apprenticesHtml,/activeClassNames/);assert.match(apprenticesHtml,/option\.disabled=!active/);assert.match(apprenticesHtml,/option\.hidden=!active/);assert.match(apprenticesHtml,/MutationObserver\(filterClassOptions\)/)});
 test('le bilan intégré protège son chargement asynchrone',()=>{assert.match(apprenticesHtml,/reload\.disabled=!!on/);assert.match(apprenticesHtml,/setTimeout\(function\(\)/);assert.match(apprenticesHtml,/Le bilan n’a pas répondu sous 20 secondes/);assert.match(apprenticesHtml,/withFailureHandler/)});
 test('la carte utilise le service nominatif paresseux et une histoire défilante',()=>{assert.match(mapHtml,/EUC_DEV538_mapData/);assert.match(mapHtml,/EUC_DEV538_companyHistory/);assert.match(mapHtml,/popup-history\{max-height:230px;overflow:auto/);assert.match(mapHtml,/Professeur visiteur/);assert.match(mapHtml,/PARENT/);assert.match(server,/function EUC_DEV538_companyHistory/)});
@@ -109,6 +111,21 @@ test('le bilan public ne renvoie aucune identité ni aucun dossier nominatif',()
 test('le bilan public construit ses classes sans exiger le catalogue administrateur',()=>{
   const c=context();let adminCatalogCalled=false;c.EUC_DEV190X_classes_=()=>[{id:24,nom:'TCAR'},{id:41,nom:'1BTS CIEL'},{id:52,nom:'1CAP'}];c.EUC_DEV368_catalog=()=>{adminCatalogCalled=true;throw new Error('catalogue admin interdit')};
   const rows=c.EUC_DEV541_apprentissageClasses_('2026-2027');assert.equal(adminCatalogCalled,false);assert.deepEqual(Array.from(rows,r=>r.famille),['BACPRO','BTS','CAP']);assert.deepEqual(Array.from(rows,r=>r.niveau),['Terminale','1re année','Première']);
+});
+
+test('le bilan ventile chaque indicateur par établissement puis par classe',()=>{
+  const c=context();
+  assert.equal(c.EUC_DEV544_establishment_({classe:'1BTS CIEL',famille:'BTS',Etablissement_Pronote:'LGT'}),'LGT');
+  assert.equal(c.EUC_DEV544_establishment_({classe:'TCAR',famille:'BACPRO',Etab:'LP'}),'LP');
+  assert.equal(c.EUC_DEV544_establishment_({classe:'2BTS MV',famille:'BTS'}),'LGT');
+  const breakdown=c.EUC_DEV544_dashboardBreakdown_([{lignes:[
+    {active:true,etablissement:'LP',classe:'TCAR',effectif:19,quota:5,apprentis:3,futurs:1,distribues:2,transmisCfa:3},
+    {active:true,etablissement:'LGT',classe:'1BTS CIEL',effectif:24,quota:7,apprentis:2,futurs:0,distribues:1,transmisCfa:2},
+    {active:false,etablissement:'LP',classe:'1MELEC G',effectif:30,quota:9,apprentis:4,futurs:0,distribues:0,transmisCfa:4}
+  ]}]);
+  assert.deepEqual(Array.from(breakdown,x=>x.code),['LP','LGT']);
+  assert.equal(breakdown[0].totals.effectif,19);assert.equal(breakdown[0].classes[0].classe,'TCAR');
+  assert.equal(breakdown[1].totals.quota,7);assert.equal(JSON.stringify(breakdown).includes('1MELEC G'),false);
 });
 
 test('le mode parents limite la fenêtre à trois ans et ne renvoie aucun nom',()=>{

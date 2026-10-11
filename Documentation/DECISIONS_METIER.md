@@ -120,6 +120,11 @@
   inactif, absent du dernier import, sorti/radié ou dont la date de sortie est
   atteinte est exclu de l'effectif et des indicateurs apprentissage. Une date de
   sortie future ne l'exclut qu'à compter du jour effectif de son départ.
+- Chaque indicateur global du pilotage apprentissage expose, au survol et au
+  clavier, le même total ventilé d'abord entre `LP` et `LGT`, puis par classe.
+  Cette ventilation ne comprend que les classes actives et ne déclenche aucune
+  lecture Grist supplémentaire : elle est calculée dans la réponse agrégée
+  déjà chargée. La réponse publique reste exclusivement non nominative.
 - L'impression ou la confirmation de distribution d'un dossier alimente le
   registre existant. Un dossier distribué et non retourné apparaît dans la
   liste de relance à partir du quatorzième jour. Cette alerte n'envoie aucun
