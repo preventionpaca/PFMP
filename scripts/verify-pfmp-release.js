@@ -9,10 +9,10 @@ const config = JSON.parse(fs.readFileSync(
   path.join(__dirname, 'pfmp-release-config.json'), 'utf8'
 ));
 const channelArg = process.argv.indexOf('--channel');
-const channel = channelArg >= 0 ? process.argv[channelArg + 1] : 'development';
+const channel = channelArg >= 0 ? process.argv[channelArg + 1] : 'stable';
 
-if (!['development', 'stable'].includes(channel)) {
-  throw new Error('Canal attendu : development ou stable.');
+if (channel !== 'stable') {
+  throw new Error('Seul le canal stable vert est autorisé.');
 }
 
 const claspPath = path.join(process.env.HOME, '.clasprc.json');
@@ -29,7 +29,6 @@ const runtimeErrors = [
 ];
 
 function targetFor(route) {
-  if (channel === 'development') return config.channels.development;
   return route.scope === 'public'
     ? config.channels.stablePublic
     : config.channels.stableAdmin;

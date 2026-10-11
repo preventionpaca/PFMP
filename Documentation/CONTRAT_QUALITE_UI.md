@@ -16,7 +16,8 @@ rappeler.
 5. Créer une version Apps Script immuable et mettre à jour seulement les deux
    Web Apps vertes existantes.
 
-Le bleu est archivé et ne doit être publié ou consulté sans demande explicite.
+Il n'existe aucun canal applicatif intermédiaire : la publication contrôlée va
+du commit Git exact vers les deux Web Apps vertes existantes.
 Une modification non commitée ne doit jamais entrer dans le paquet livré.
 Cette autorisation permanente porte seulement sur le déploiement du code. Elle
 n'autorise aucun import, courriel, ordre de mission ou écriture métier réelle.
@@ -34,7 +35,7 @@ l’ensemble de ces routes :
 
 Sur le vert, `Accueil PFMP` vise exactement
 `https://alternance.loucodi.fr/`. Une page Apps Script en erreur, une page
-blanche, une connexion inattendue ou un lien vers l'ancien canal bleu bloque
+blanche, une connexion inattendue ou un lien vers un autre déploiement bloque
 la livraison.
 
 La matrice automatisée des routes reste un minimum. Le parcours navigateur de

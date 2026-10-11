@@ -2,12 +2,6 @@
   "projectId": "1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c",
   "domain": "lycee-les-eucalyptus.org",
   "channels": {
-    "development": {
-      "name": "bleu",
-      "projectId": "1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo",
-      "deploymentId": "AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ",
-      "endpoint": "dev"
-    },
     "stableAdmin": {
       "name": "vert-admin",
       "projectId": "1UhU3xymABJ-3kAJ5wwBbnCNgiLwcvqpWKyOqVYqB8Mtc8_z4yzgSPl-c",

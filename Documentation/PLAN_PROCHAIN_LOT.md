@@ -2,7 +2,7 @@
 
 ## Candidat DEV546 en validation
 
-- Contrôler sur la recette bleue les trois books avec, pour une même entreprise,
+- Contrôler après publication sur le vert les trois books avec, pour une même entreprise,
   au moins un scolaire et un apprenti : total réconcilié, `A` rouge et période
   de contrat unique pour l'apprenti.
 - Inspecter la réponse réseau du book élèves/familles et confirmer l'absence de
@@ -10,8 +10,8 @@
   diplôme, de période et de coordonnées personnelles.
 - Contrôler la nouvelle route publique
   `book-entreprises-eleves-pfmp`, ses états vide, chargement, succès, erreur et
-  dépassement de délai, puis l'ajouter au lien Atrium seulement après promotion
-  autorisée du candidat exact.
+  dépassement de délai, puis l'ajouter au lien Atrium après validation de la
+  version verte immuable.
 - Aucune écriture Grist n'est nécessaire pour ce lot ; les contrats et accueils
   existants restent inchangés.
 

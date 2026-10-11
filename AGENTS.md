@@ -2,7 +2,7 @@
 
 Eucalyptus PFMP facilite le suivi opérationnel des conventions et la relation entreprise. Pronote reste le progiciel officiel ; l’application ne le remplace pas.
 
-Architecture : sources GitHub dans ce dépôt, projet Google Apps Script vert avec ses deux Web Apps existantes, données Grist. L'ancien projet bleu et sa recette Camin `kB8bvDag8x7D` sont conservés uniquement comme archive technique. Le canal bleu est retiré du workflow courant : ne jamais y publier ni le consulter sans une demande explicite de l'utilisateur.
+Architecture : sources GitHub dans ce dépôt, projet Google Apps Script vert avec ses deux Web Apps existantes, données Grist. Aucun canal applicatif intermédiaire n'existe dans le workflow : le seul parcours autorisé est Git vers les deux Web Apps vertes existantes.
 
 ## Workflow obligatoire Git → vert
 
@@ -25,7 +25,7 @@ Tests : `node tests/run-tests.js`. Pendant un lot, privilégier les tests ciblé
 
 Git : préserver les changements extérieurs, contrôler secrets et données nominatives, utiliser un commit explicite, pousser seulement après tests verts. Ne jamais réécrire l’historique ni déplacer un tag publié.
 
-Version et déploiement : ne jamais diminuer la version ; créer une version Apps Script immuable ; mettre à jour uniquement les deux Web Apps vertes existantes ; conserver leurs URL, `DOMAIN` et `USER_DEPLOYING`. Relire et comparer le distant après `clasp push`. Ne jamais réactiver le workflow bleu sans une nouvelle demande explicite.
+Version et déploiement : ne jamais diminuer la version ; créer une version Apps Script immuable ; mettre à jour uniquement les deux Web Apps vertes existantes ; conserver leurs URL, `DOMAIN` et `USER_DEPLOYING`. Relire et comparer le distant après `clasp push`. Ne jamais introduire de canal intermédiaire ou de troisième Web App.
 
 L'autorisation permanente de déploiement concerne uniquement la publication du code testé sur les deux Web Apps vertes existantes. Elle n'autorise aucune action métier réelle.
 

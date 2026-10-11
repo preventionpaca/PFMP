@@ -17,8 +17,10 @@
   et `P.dif.`. Son accueil est représenté une seule fois par contrat, avec les
   dates réelles de début et de fin ; une rupture antérieure borne la fin
   historique du contrat.
-- Les tests ciblés DEV538 passent `45/45` et la suite complète `830/830`. Le candidat reste non publié tant
-  que la recette bleue exigée par le workflow n'est pas disponible.
+- Les tests ciblés DEV538 passent `45/45` et la suite complète `830/830`.
+  La publication suit directement le workflow Git vers les deux Web Apps
+  vertes existantes, avec version immuable, contrôle des routes et retour
+  automatique sur les versions précédentes en cas d'échec.
 
 ## Mise à jour du 11 octobre 2026 — candidat DEV545
 

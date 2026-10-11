@@ -27,11 +27,9 @@ function test(name, fn) {
   }
 }
 
-test('le bleu est un projet séparé et les deux URL vertes restent connues', () => {
-  assert.notEqual(config.channels.development.projectId, config.projectId);
-  assert.equal(config.channels.development.projectId, '1WcYtmndRV7-Y9j3H_nH5MIJLMfkAOepagHS_RRGIHyou2YvgtlhlPAeo');
-  assert.equal(config.channels.development.deploymentId, 'AKfycbxZ24Op4PNUx6_SfDhA_3vOYTv4vUVRHTVrtjg1bYQ');
-  assert.equal(config.channels.development.endpoint, 'dev');
+test('la configuration de livraison ne conserve que les deux Web Apps vertes', () => {
+  assert.equal(config.channels.development, undefined);
+  assert.deepEqual(Object.keys(config.channels).sort(), ['stableAdmin', 'stablePublic']);
   assert.equal(config.channels.stableAdmin.projectId, config.projectId);
   assert.equal(config.channels.stablePublic.projectId, config.projectId);
   assert.equal(config.channels.stableAdmin.deploymentId, 'AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg');
@@ -66,33 +64,27 @@ test('release-stable publie directement le commit exact sur le vert', () => {
   assert.doesNotMatch(release, /development_project_id|--channel development/);
 });
 
-test('le script de publication ne propose plus aucune commande bleue', () => {
+test('le script de publication ne propose aucun canal intermédiaire', () => {
   const commandSwitch = script.slice(script.indexOf('case "$command" in'));
   assert.doesNotMatch(commandSwitch, /prepare\)|approve-development\)|check-development\)|promote\)/);
   assert.doesNotMatch(script.slice(0, script.indexOf('tree_hash()')), /development_project_id|development_id/);
   assert.match(commandSwitch, /release-stable\) release_stable/);
 });
 
-test('le paquet publie un point d entrée commun avec repère bleu ou vert', () => {
+test('le paquet publie un point d entrée vert sans badge permanent', () => {
   assert.match(builder, /function EUC_RELEASE_doGetCore_\(e\)/);
   assert.match(builder, /function doGet\(e\).*EUC_RELEASE_doGet_\(e\)/s);
   assert.match(builder, /Routeur doGet inattendu/);
-  assert.match(channel, /MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE/);
   assert.doesNotMatch(channel, /ENVIRONNEMENT VERT — VERSION EN LIGNE/);
-  assert.match(channel, /data-pfmp-release-channel/);
+  assert.match(channel, /data-pfmp-busy-script/);
 });
 
-test('la configuration bleue reste en recette et n’autorise que l’import Pronote de test', () => {
-  assert.match(channel, /EUC_RELEASE_RECIPE_HOST_ = 'https:\/\/camin\.getgrist\.com'/);
-  assert.match(channel, /EUC_RELEASE_RECIPE_DOC_ID_ = 'kB8bvDag8x7D'/);
-  assert.doesNotMatch(channel, /3pnVrygfNn7c/);
-  assert.match(channel, /EUC_PFMP_SUBMISSION_MODE: 'DRY_RUN'/);
-  assert.match(channel, /EUC_PFMP_EMAIL_MODE: 'DISABLED'/);
-  assert.match(channel, /EUC_PFMP_PRONOTE_IMPORT_MODE: 'RECIPE_DATA'/);
-  assert.match(channel, /EUC_PFMP_ADMIN_MUTATION_MODE: 'DRY_RUN'/);
-  assert.doesNotMatch(channel, /EUC_ENT_GRIST_API_KEY\s*:/);
-  assert.match(channel, /function EUC_RELEASE_ensureBlueSafety_/);
-  assert.match(channel, /EUC_RELEASE_ensureBlueSafety_\(\);\s*return EUC_RELEASE_decorateOutput_/s);
+test('le vérificateur ne connaît que le canal stable vert', () => {
+  assert.match(verifier, /: 'stable'/);
+  assert.match(verifier, /channel !== 'stable'/);
+  assert.match(verifier, /Seul le canal stable vert est autorisé/);
+  assert.doesNotMatch(verifier, /channels\.development|channel === 'development'/);
+  assert.match(verifier, /route\.scope === 'public'/);
 });
 
 test('la copie propre reste lisible par le navigateur de test', () => {
@@ -130,9 +122,9 @@ test('le vérificateur rejoue une seule fois les démarrages à froid', () => {
   assert.doesNotMatch(verifier, /while\s*\(/);
 });
 
-test('le contrat permanent retire le bleu du workflow courant', () => {
+test('le contrat permanent impose Git vers le vert sans intermédiaire', () => {
   assert.match(agents, /Toute évolution applicative commence sur une branche Git/);
-  assert.match(agents, /Le canal bleu est retiré du workflow courant/);
+  assert.match(agents, /Aucun canal applicatif intermédiaire n'existe/);
   assert.match(agents, /scripts\/pfmp-release\.sh release-stable/);
   assert.match(agents, /25 routes vertes/);
   assert.match(qualityContract, /Publication directe sur le vert/);
@@ -157,8 +149,8 @@ test('le contrat permanent protège accueil, navigation et boutons asynchrones',
     assert.match(contents, /double clic/i);
     assert.match(contents, /succès, erreur/);
   }
-  assert.match(agents, /bleu.*sans une demande explicite/i);
-  assert.match(qualityContract, /bleu.*sans demande explicite/i);
+  assert.match(agents, /Ne jamais introduire de canal intermédiaire/i);
+  assert.match(qualityContract, /aucun canal applicatif intermédiaire/i);
 });
 
 if (!process.exitCode) {
