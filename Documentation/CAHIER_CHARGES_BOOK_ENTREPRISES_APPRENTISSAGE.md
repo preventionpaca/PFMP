@@ -27,10 +27,12 @@ Elle n'affiche jamais :
 - un courriel ou téléphone personnel ;
 - un commentaire interne, une rupture ou un motif administratif.
 
-Elle peut afficher l'identité publique de l'entreprise, son adresse, sa
-commune, son activité, sa photo de devanture, les diplômes ou métiers déjà
-accueillis et des nombres agrégés d'accueils. Un avertissement précisera qu'un
-accueil historique ne constitue ni une offre de stage ni une place disponible.
+Elle peut afficher l'identité publique de l'entreprise, son adresse, les noms
+des responsables et tuteurs connus et des nombres agrégés d'accueils, ventilés
+entre scolaires et apprentis. Elle ne reçoit ni SIRET, ni classe, ni diplôme,
+ni période, ni téléphone/courriel, ni historique nominatif. Un avertissement
+précisera qu'un accueil historique ne constitue ni une offre de stage ni une
+place disponible.
 
 ### 2.2 Consultation personnels
 
@@ -42,6 +44,11 @@ URL publique ne suffit pas.
 Elle affiche l'historique utile aux visites : année scolaire, élève, classe,
 diplôme, période ou dates, professeur visiteur et coordonnées opérationnelles
 autorisées de l'entreprise.
+
+Dans les vues personnels et administration, un apprenti est repéré par un `A`
+rouge. Sa ligne porte les dates réelles de son contrat d'apprentissage, et non
+les périodes PFMP de sa classe. Une rupture antérieure à la fin prévue borne la
+période historique affichée.
 
 ### 2.3 Administration
 

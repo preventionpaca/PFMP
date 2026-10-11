@@ -1,5 +1,20 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Candidat DEV546 en validation
+
+- Contrôler sur la recette bleue les trois books avec, pour une même entreprise,
+  au moins un scolaire et un apprenti : total réconcilié, `A` rouge et période
+  de contrat unique pour l'apprenti.
+- Inspecter la réponse réseau du book élèves/familles et confirmer l'absence de
+  toute donnée nominative d'élève ou de professeur, de SIRET, de classe, de
+  diplôme, de période et de coordonnées personnelles.
+- Contrôler la nouvelle route publique
+  `book-entreprises-eleves-pfmp`, ses états vide, chargement, succès, erreur et
+  dépassement de délai, puis l'ajouter au lien Atrium seulement après promotion
+  autorisée du candidat exact.
+- Aucune écriture Grist n'est nécessaire pour ce lot ; les contrats et accueils
+  existants restent inchangés.
+
 ## Candidat DEV545 en validation
 
 - Vérifier sur la recette bleue les deux cartes apprentis, le bilan public et

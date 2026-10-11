@@ -1,5 +1,16 @@
 # Décisions métier permanentes
 
+- Le book destiné aux élèves et familles est un troisième contrat d'affichage
+  public, distinct des vues personnels et administration. Il porte
+  obligatoirement sur les trois dernières années et ne transmet jamais SIRET,
+  élève, professeur, classe, diplôme, période, téléphone, courriel ni historique
+  nominatif. Il peut afficher l'entreprise, son adresse, les nombres agrégés
+  scolaire/apprenti et les seuls noms des responsables et tuteurs connus.
+- Dans les vues nominatives autorisées du book, un apprenti est repéré par un
+  `A` rouge. Son historique utilise la période réelle de son contrat
+  d'apprentissage, éventuellement bornée par une rupture, et jamais les
+  périodes PFMP artificiellement associées à sa classe.
+
 - La modalité d'apprentissage est réglée par classe et par année scolaire :
   `MIXITE` ou `CLASSE_ENTIERE`. Elle n'est jamais déduite automatiquement du
   nombre d'apprentis et une classe reste en mixité par défaut tant qu'aucun

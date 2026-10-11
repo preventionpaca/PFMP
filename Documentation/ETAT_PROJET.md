@@ -1,5 +1,25 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV546
+
+- Un troisième book public, distinct des vues administration et personnels,
+  est ajouté pour les élèves et leurs familles. Il est borné aux trois
+  dernières années et ne livre au navigateur que l'entreprise, son adresse,
+  les décomptes agrégés et les noms des responsables/tuteurs connus.
+- La réponse publique exclut explicitement SIRET, identités d'élèves,
+  professeurs visiteurs, classes, diplômes, périodes, coordonnées de contact
+  et historique nominatif. La fiche publique ne peut donc pas reconstruire un
+  parcours individuel.
+- Les books administrateur et personnels distinguent désormais les accueils
+  scolaires et apprentis. La pastille de total détaille les deux populations,
+  et un `A` rouge repère chaque apprenti dans les listes autorisées.
+- Un apprenti n'est plus répété artificiellement dans `PFMP n°1`, `PFMP n°2`
+  et `P.dif.`. Son accueil est représenté une seule fois par contrat, avec les
+  dates réelles de début et de fin ; une rupture antérieure borne la fin
+  historique du contrat.
+- Les tests ciblés DEV538 passent `45/45` et la suite complète `830/830`. Le candidat reste non publié tant
+  que la recette bleue exigée par le workflow n'est pas disponible.
+
 ## Mise à jour du 11 octobre 2026 — candidat DEV545
 
 - Le bilan apprentissage utilise désormais une définition unique dans le

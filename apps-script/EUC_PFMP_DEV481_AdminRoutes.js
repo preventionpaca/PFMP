@@ -48,6 +48,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV538_afficherBookAdmin(e);
     case 'book-entreprises-public-pfmp':
       return EUC_DEV538_afficherBookStaff(e);
+    case 'book-entreprises-eleves-pfmp':
+      return EUC_DEV546_afficherBookEleves(e);
     case 'cartographie-apprentis-pfmp':
       return EUC_DEV545_afficherCarteApprentisAdmin(e);
     case 'cartographie-apprentis-public-pfmp':
