@@ -1,5 +1,24 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Candidat DEV551 — périmètres cartographiques et démarrage public
+
+- Une carte ouverte depuis une fiche doit contenir exactement un marqueur :
+  l'entreprise sélectionnée. La carte globale du book reste distincte et
+  continue d'appliquer la combinaison complète des filtres visibles.
+- Une carte ouverte depuis le suivi d'une classe doit utiliser exclusivement la
+  classe, la période et l'année présentes dans l'URL. Le catalogue public ne
+  doit jamais appeler le catalogue protégé par l'administration.
+- Les vues publiques ne doivent proposer aucun fil d'Ariane vers une route
+  administrative. Une identité Google masquée doit produire la vue publique
+  anonymisée, jamais une page blanche ou une erreur d'authentification.
+- Les photos élèves/familles sont limitées aux fichiers dont le droit de
+  diffusion est confirmé. Le contrôle en ligne devra vérifier un cas avec photo
+  autorisée et un cas sans photo, sans téléversement ni écriture Grist.
+- La réduction des appels Apps Script porte uniquement sur les lectures de
+  propriétés du cache public. Après publication, mesurer séparément le premier
+  chargement à froid et un rechargement à chaud ; ne pas annoncer une vitesse
+  garantie avant cette mesure réelle.
+
 ## DEV550 publié (@942) — books paginés, cartes filtrées et rattachements fiables
 
 - Les books administration, personnels et élèves/familles affichent dix

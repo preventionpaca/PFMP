@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV551
+
+- Depuis une fiche entreprise, le bouton de localisation ne recharge plus la
+  carte globale : il efface la couche courante et affiche uniquement
+  l'entreprise ouverte. L'action est locale au navigateur et ne provoque aucun
+  nouvel appel serveur.
+- Les cartes générales du book conservent tous les filtres actifs. La carte
+  ouverte depuis une classe PFMP utilise le catalogue public de cette classe et
+  de sa période, sans traverser le catalogue réservé à l'administration.
+- Les fils d'Ariane des vues personnels, élèves/familles et apprentissage public
+  n'exposent plus de palier administratif aux visiteurs non administrateurs.
+  Si Google masque l'identité d'un personnel sur la Web App publique, le book
+  revient à la projection publique anonymisée au lieu d'afficher une erreur.
+- La fiche élèves/familles peut afficher la photo de devanture uniquement si le
+  droit de diffusion a été confirmé. Aucun identifiant Drive ni champ nominatif
+  n'est transmis. Les fiches personnels et administration conservent les
+  coordonnées professionnelles déjà disponibles.
+- Le démarrage à froid du book public regroupe désormais les lectures de
+  propriétés Apps Script : la révision et le cache persistant sont lus par lots
+  au lieu d'enchaîner des appels unitaires. La carte des apprentis recalcule
+  aussi sa taille après rendu pour éviter les tuiles incomplètes.
+- Les tests ciblés DEV538/DEV551 passent `60/60`, les tests géocodage et
+  performance `38/38`, et la suite complète passe `845/845`. La publication
+  immuable et le contrôle navigateur restent à exécuter. Tant que ces preuves
+  ne sont pas obtenues, la référence en ligne reste `@942` et le candidat ne
+  doit pas être présenté comme livré.
+
 ## Mise à jour du 11 octobre 2026 — DEV550 publié sur le site en ligne (@942)
 
 - Les trois books sont paginés : dix entreprises au démarrage, choix de

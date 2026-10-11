@@ -53,7 +53,23 @@ function EUC_DEV463_dateMs_(value){
 }
 function EUC_DEV441_catalog_(year,requireAdmin){
   if(requireAdmin)EUC_DEV441_admin_();
-  year=EUC_DEV368_year(year);var out=[],catalog=EUC_DEV368_catalog(year);
+  year=EUC_DEV368_year(year);var out=[],catalog={classes:[]};
+  /* La vue publique ne doit jamais traverser EUC_DEV368_catalog(), dont le
+   * contrat est explicitement administratif. Elle relit les mêmes snapshots
+   * de famille déjà publiés, sans ouvrir un contexte administrateur ni une
+   * lecture nominative supplémentaire. */
+  if(requireAdmin)catalog=EUC_DEV368_catalog(year);
+  else{
+    ['BACPRO','BTS','CAP'].forEach(function(family){
+      var data=null;
+      try{if(typeof EUC_DEV456_familyCacheGet_==='function')data=EUC_DEV456_familyCacheGet_(year,family);}catch(eCache){}
+      try{if(!data&&typeof EUC_DEV456_familyPersistentGet_==='function')data=EUC_DEV456_familyPersistentGet_(year,family);}catch(ePersistent){}
+      try{if(!data&&typeof EUC_DEV456_familyData_==='function')data=EUC_DEV456_familyData_(year,family);}catch(eFamily){}
+      (data&&data.classes||[]).forEach(function(c){
+        catalog.classes.push({famille:family,classeId:EUC_DEV441_n_(c.classeId||c.id),classe:EUC_DEV441_t_(c.classe||c.nom),periodes:c.periodes||[]});
+      });
+    });
+  }
   (catalog&&catalog.classes||[]).forEach(function(c){
     out.push({famille:EUC_DEV441_t_(c.famille),classeId:EUC_DEV441_n_(c.classeId||c.id),classe:EUC_DEV441_t_(c.classe||c.nom),periodes:(c.periodes||[]).map(function(p){return{id:EUC_DEV441_n_(p.id||p.periodeId),libelle:EUC_DEV441_t_(p.libelle||p.nom),debut:EUC_DEV441_t_(p.debutFr||p.debut),fin:EUC_DEV441_t_(p.finFr||p.fin)};})});
   });
@@ -280,7 +296,11 @@ function EUC_DEV513_geoAccessDetails_(q){
   if(cid)allowed[String(cid)]=true;
   else if(fam){
     Object.keys(classInfo).forEach(function(id){if(classInfo[id].famille===fam)allowed[id]=true;});
-    if(!Object.keys(allowed).length)return [];
+    /* Un démarrage à froid ou une ancienne année peut ne pas encore disposer
+     * du snapshot public de famille. Les conventions actives restent alors le
+     * repli autorisé : ne pas les supprimer uniquement parce que le catalogue
+     * agrégé est momentanément absent. Quand le champ famille existe sur la
+     * ligne, il est tout de même contrôlé ci-dessous. */
   }
   /* DEV514 — même règle que le suivi canonique : les anciennes références
    * Grist ne doivent pas être éliminées par un filtre serveur sur les Ref.
@@ -292,8 +312,8 @@ function EUC_DEV513_geoAccessDetails_(q){
     else if(typeof EUC_CONVENTION_lireAccesFraisV108_==='function')rows=EUC_CONVENTION_lireAccesFraisV108_()||[];
   }catch(eRows){rows=[];}
   rows.forEach(function(r){
-    var a=r.fields||r,ac=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe_convention):a.Classe_convention),ap=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Periode):a.Periode),status=EUC_DEV441_t_(a.Statut_administratif||a.Statut).toUpperCase();
-    if(EUC_DEV441_t_(a.Annee_scolaire)!==y||!ac||!ap||(Object.keys(allowed).length&&!allowed[String(ac)])||(pid&&ap!==pid)||a.Revoked===true||a.Supprimee_admin===true||status.indexOf('INTERROMP')>=0||status.indexOf('ANNULEE')>=0)return;
+    var a=r.fields||r,ac=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Classe_convention):a.Classe_convention),ap=EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Periode):a.Periode),status=EUC_DEV441_t_(a.Statut_administratif||a.Statut).toUpperCase(),rowFamily=EUC_DEV441_t_(a.Famille||a.Famille_formation||a.Classe_famille).toUpperCase();
+    if(EUC_DEV441_t_(a.Annee_scolaire)!==y||!ac||!ap||(Object.keys(allowed).length&&!allowed[String(ac)])||(fam&&rowFamily&&rowFamily!==fam)||(pid&&ap!==pid)||a.Revoked===true||a.Supprimee_admin===true||status.indexOf('INTERROMP')>=0||status.indexOf('ANNULEE')>=0)return;
     var info=classInfo[String(ac)]||{},officialPeriod=EUC_DEV441_t_(info.periodes&&info.periodes[String(ap)]),key=ac+'|'+ap,g=groups[key]||(groups[key]={annee:y,famille:fam||EUC_DEV441_t_(info.famille),classe:{id:ac,nom:EUC_DEV441_t_(a.Classe_convention_nom)||EUC_DEV441_t_(info.nom)},periode:{id:ap,libelle:officialPeriod||EUC_DEV441_t_(a.Periode_libelle)},lignes:[]});
     var address=[a.Entreprise_adresse,a.Entreprise_complement,a.Entreprise_code_postal,a.Entreprise_commune].map(EUC_DEV441_t_).filter(Boolean).join(', ');
     g.lignes.push({eleveId:EUC_DEV441_n_(typeof EUC_DEV340_ref_==='function'?EUC_DEV340_ref_(a.Eleve):a.Eleve),nom:EUC_DEV441_t_(a.Jeune_nom||a.Nom_eleve),prenom:EUC_DEV441_t_(a.Jeune_prenom||a.Prenom_eleve),professeurVisiteur:EUC_DEV441_t_(a.Professeur_visiteur||a.Professeur_visite_snapshot),entreprise:EUC_DEV441_t_(a.Entreprise_raison_sociale||a.Entreprise_enseigne),adresseEntreprise:address,siretEntreprise:EUC_DEV441_t_(a.Entreprise_siret),contactEntreprise:[EUC_DEV441_t_(a.Responsable_prenom),EUC_DEV441_t_(a.Responsable_nom)].filter(Boolean).join(' '),telephoneEntreprise:EUC_DEV441_t_(a.Responsable_telephone||a.Entreprise_telephone),courrielEntreprise:EUC_DEV441_t_(a.Responsable_courriel||a.Entreprise_courriel),tuteurEntreprise:[EUC_DEV441_t_(a.Tuteur_prenom),EUC_DEV441_t_(a.Tuteur_nom)].filter(Boolean).join(' '),telephoneTuteur:EUC_DEV441_t_(a.Tuteur_telephone),courrielTuteur:EUC_DEV441_t_(a.Tuteur_courriel),sourceRecordId:EUC_DEV441_n_(r.id),dateSaisieEntreprise:EUC_DEV441_t_(a.Date_saisie_entreprise||a.Date_creation||a.Date_derniere_utilisation)});

@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.550';
+var EUC_DEV538_VERSION_='1.0.0-dev.551';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV545_CLASS_MODES_PROP_='EUC_DEV545_MODALITES_APPRENTISSAGE_V1';
@@ -314,15 +314,18 @@ function EUC_DEV549_digest_(value){
   var raw=EUC_DEV538_t_(value),hash=2166136261;for(var i=0;i<raw.length;i++){hash^=raw.charCodeAt(i);hash=Math.imul(hash,16777619);}return'PUBLIC-'+(hash>>>0).toString(16);
 }
 function EUC_DEV549_publicBookRevision_(years){
-  var parts=['PUBLIC-BOOK-2',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'];
-  if(typeof EUC_DEV457_revision_==='function')tables.forEach(function(table){try{parts.push(table+':'+EUC_DEV457_revision_(table));}catch(e){parts.push(table+':?');}});
-  try{parts.push('ALIASES:'+JSON.stringify(EUC_DEV545_companyAliases_()));}catch(eAliases){}
+  var parts=['PUBLIC-BOOK-2',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'],props={},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_';
+  /* getProperties() remplace les treize lectures distantes getProperty()
+   * effectuées autrefois à chaque démarrage à froid du book public. */
+  try{props=PropertiesService.getScriptProperties().getProperties()||{};}catch(eProps){props={};}
+  var all=props[prefix+'ALL']||'0';tables.forEach(function(table){parts.push(table+':'+all+'_'+(props[prefix+table]||'0'));});
+  parts.push('ALIASES:'+(props[EUC_DEV545_COMPANY_ALIASES_PROP_]||''));
   return EUC_DEV549_digest_(parts.join('|')).slice(0,32);
 }
 function EUC_DEV549_publicBookCacheRead_(revision){
   var key=EUC_DEV549_PUBLIC_BOOK_CACHE_PROP_,raw='',count=0;
   try{var cache=CacheService.getScriptCache();count=Number(cache.get(key+'_N'))||0;if(count>0&&count<=20&&cache.get(key+'_REV')===revision){var cached=[];for(var c=0;c<count;c++){var chunk=cache.get(key+'_C'+c);if(chunk==null){cached=[];break;}cached.push(chunk);}if(cached.length===count)raw=cached.join('');}}catch(eCache){}
-  if(!raw)try{var props=PropertiesService.getScriptProperties();if(props.getProperty(key+'_REV')!==revision)return null;count=Number(props.getProperty(key+'_COUNT'))||0;if(count<=0||count>80)return null;var chunks=[];for(var i=0;i<count;i++){var part=props.getProperty(key+'_'+i);if(part==null)return null;chunks.push(part);}raw=chunks.join('');}catch(eProps){return null;}
+  if(!raw)try{var props=PropertiesService.getScriptProperties().getProperties()||{};if(props[key+'_REV']!==revision)return null;count=Number(props[key+'_COUNT'])||0;if(count<=0||count>80)return null;var chunks=[];for(var i=0;i<count;i++){var part=props[key+'_'+i];if(part==null)return null;chunks.push(part);}raw=chunks.join('');}catch(eProps){return null;}
   try{var parsed=JSON.parse(raw);return Array.isArray(parsed)?parsed:null;}catch(eJson){return null;}
 }
 function EUC_DEV549_publicBookCacheStore_(revision,list){
@@ -397,6 +400,13 @@ function EUC_DEV540_companyPhoto(q){
   if(!EUC_DEV538_staffAllowed_())throw new Error('Accès réservé aux personnels authentifiés.');var rows=EUC_DEV540_photoRows_().filter(function(r){return EUC_DEV540_photoMatch_(r,q);}).sort(function(a,b){return EUC_DEV538_n_(b.id)-EUC_DEV538_n_(a.id);}),f=rows.length?EUC_DEV538_fields_(rows[0]):null;if(!f||!f.Drive_file_id)return{ok:true,photo:null};
   try{var file=DriveApp.getFileById(EUC_DEV538_t_(f.Drive_file_id)),blob=file.getBlob(),mime=EUC_DEV538_t_(blob.getContentType()||f.Mime_type);return{ok:true,photo:{name:EUC_DEV538_t_(f.Nom_fichier||file.getName()),mime:mime,data:'data:'+mime+';base64,'+Utilities.base64Encode(blob.getBytes()),updatedAt:EUC_DEV538_t_(f.Updated_at)}};}catch(e){return{ok:true,photo:null,avertissement:'La photo référencée dans Drive n’est plus accessible.'};}
 }
+/* Une photo publique n'est servie que si l'administrateur a confirmé son
+ * droit de diffusion. Aucun identifiant Drive ni champ nominatif n'est rendu. */
+function EUC_DEV551_publicCompanyPhoto(q){
+  var rows=EUC_DEV540_photoRows_().filter(function(r){var f=EUC_DEV538_fields_(r);return EUC_DEV538_bool_(f.Droit_diffusion)&&EUC_DEV540_photoMatch_(r,q);}).sort(function(a,b){return EUC_DEV538_n_(b.id)-EUC_DEV538_n_(a.id);}),f=rows.length?EUC_DEV538_fields_(rows[0]):null;
+  if(!f||!f.Drive_file_id)return{ok:true,photo:null};
+  try{var file=DriveApp.getFileById(EUC_DEV538_t_(f.Drive_file_id)),blob=file.getBlob(),mime=EUC_DEV538_t_(blob.getContentType()||f.Mime_type);return{ok:true,photo:{mime:mime,data:'data:'+mime+';base64,'+Utilities.base64Encode(blob.getBytes())}};}catch(e){return{ok:true,photo:null};}
+}
 function EUC_DEV540_ensurePhotoTable_(){
   var tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(t){return t.id===EUC_DEV540_PHOTO_TABLE_;}),defs=[['Cle_entreprise','Clé entreprise','Text'],['SIRET','SIRET','Text'],['Entreprise','Entreprise','Text'],['Adresse','Adresse','Text'],['Drive_file_id','Identifiant Drive','Text'],['Mime_type','Type MIME','Text'],['Nom_fichier','Nom du fichier','Text'],['Provenance','Provenance','Text'],['Droit_diffusion','Droit de diffusion confirmé','Bool'],['Actif','Actif','Bool'],['Updated_at','Date de modification','DateTime'],['Updated_by','Modifié par','Text']];
   if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:EUC_DEV540_PHOTO_TABLE_,columns:defs.map(function(d){return{id:d[0],fields:{label:d[1],type:d[2]}};})}]});return;}
@@ -414,7 +424,14 @@ function EUC_DEV540_saveCompanyPhoto(q){
 function EUC_DEV538_render_(file,title,boot){var t=HtmlService.createTemplateFromFile(file);t.bootJson=JSON.stringify(boot||EUC_DEV368_boot());return t.evaluate().setTitle(title).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}
 function EUC_DEV538_afficherQuotas(e){EUC_DEV538_admin_();return EUC_DEV538_render_('Apprentissage_Quotas_DEV538','Quotas et relances apprentissage');}
 function EUC_DEV538_afficherBookAdmin(e){EUC_DEV538_admin_();var b=EUC_DEV368_boot();b.mode='ADMIN';return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);}
-function EUC_DEV538_afficherBookStaff(e){if(!EUC_DEV538_staffAllowed_())throw new Error('Accès réservé aux personnels authentifiés.');var b=EUC_DEV368_boot();b.mode='STAFF';return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);}
+function EUC_DEV538_afficherBookStaff(e){
+  /* Sur la Web App publique, Apps Script peut masquer l'identité active même
+   * à un enseignant connecté. Au lieu d'une page blanche, on revient alors à
+   * la projection publique non nominative. L'historique personnel reste
+   * réservé à une session effectivement authentifiée. */
+  if(!EUC_DEV538_staffAllowed_())return EUC_DEV546_afficherBookEleves(e);
+  var b=EUC_DEV368_boot();b.mode='STAFF';return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);
+}
 function EUC_DEV546_afficherBookEleves(e){var b=EUC_DEV368_boot();b.mode='STUDENT';b.current='ALL';b.params={annee:'ALL',fenetre:3};return EUC_DEV538_render_('Book_Entreprises_Eleves_DEV546','Book des entreprises — élèves et familles',b);}
 function EUC_DEV538_afficherCarteParents(e){var b=EUC_DEV368_boot();b.current='ALL';b.mode='PARENTS';b.params={annee:'ALL',famille:EUC_DEV538_t_(e&&e.parameter&&e.parameter.famille),mode:'PARENTS',fenetre:3};return EUC_DEV538_render_('Cartographie_PFMP_DEV441','Cartographie des entreprises — familles',b);}
 function EUC_DEV545_apprenticeMapBoot_(mode,e){var b=EUC_DEV368_boot(),year=EUC_DEV538_t_(e&&e.parameter&&e.parameter.annee)||EUC_DEV538_t_(b.current)||EUC_DEV368_year('');b.mode=mode;b.current=year;b.classes=EUC_DEV541_apprentissageClasses_(year).filter(function(c){return EUC_DEV542_classActive_(EUC_DEV542_activeClassesConfig_(),year,c.id);});b.params={annee:year,classeId:EUC_DEV538_n_(e&&e.parameter&&e.parameter.classe)};return b;}

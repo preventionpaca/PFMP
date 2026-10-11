@@ -86,6 +86,7 @@ const fallbackCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Num
   EUC_DEV190E_INDEX_TABLE_:'IDX',EUC_DEV190I_TABLE_:'DETAIL',EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP',
   EUC_DEV368_year:v=>String(v||'2026-2027'),EUC_DEV368_admin:()=>({email:'admin@example.test'}),
   EUC_DEV368_catalog:()=>({classes:[{famille:'BACPRO',classeId:28,classe:'TMP3D',periodes:[{id:65,libelle:'PFMP n°1'}]}]}),
+  EUC_DEV456_familyData_:(year,family)=>family==='BACPRO'?{classes:[{classeId:28,classe:'TMP3D',periodes:[{id:65,libelle:'PFMP n°1'}]}]}:{classes:[]},
   EUC_DEV190G_fastRecords_:(table)=>table==='EUC_ACCES_FORMULAIRES_PFMP'?[{id:99,fields:{Annee_scolaire:'2026-2027',Classe_convention:28,Classe_convention_nom:'TMP3D',Periode:65,Periode_libelle:'PFMP Tbac 2026-09-28 → 2026-10-16',Entreprise_raison_sociale:'GARAGE TEST',Entreprise_adresse:'2 AVENUE DU TEST',Entreprise_code_postal:'06000',Entreprise_commune:'NICE',Entreprise_siret:'12345678901234',Statut_administratif:'INFORMATIONS_ENREGISTREES'}}]:[],
   EUC_IMPORT_lireRecords_:()=>[],
   Utilities:{DigestAlgorithm:{SHA_256:'sha256'},base64EncodeWebSafe:v=>'digest-value',computeDigest:()=>[1],sleep:()=>{},getUuid:()=> 'uuid',formatDate:()=>'',parseDate:()=>new Date()},
@@ -103,6 +104,7 @@ const mergedCtx={console,encodeURIComponent,isFinite,Date,Math,JSON,String,Numbe
   EUC_DEV190E_INDEX_TABLE_:'IDX',EUC_DEV190I_TABLE_:'DETAIL',EUC_CONVENTION_ACCES_TABLE_:'ACCES',
   EUC_DEV368_year:v=>String(v||'2026-2027'),EUC_DEV368_admin:()=>({email:'admin@example.test'}),
   EUC_DEV368_catalog:()=>({classes:[{famille:'BACPRO',classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]}),
+  EUC_DEV456_familyData_:(year,family)=>family==='BACPRO'?{classes:[{classeId:24,classe:'TCAR',periodes:[{id:62,libelle:'PFMP n°1'}]}]}:{classes:[]},
   EUC_DEV190G_fastRecords_:(table,filter)=>{
     if(table==='IDX')return [{id:1,fields:{Annee_scolaire:'2026-2027',Famille:'__DEV427_DETAIL__BACPRO_24_62',Payload_JSON:JSON.stringify({famille:'BACPRO',classe:{id:24,nom:'TCAR'},periode:{id:62,libelle:'PFMP n°1'},lignes:[{entreprise:'SNAPSHOT SARL',adresseEntreprise:'1 RUE DU SNAPSHOT 06000 NICE',siretEntreprise:'11111111111111'}]}),Updated_at:'2026-10-09T08:00:00Z',Actif:true}}];
     if(table==='ACCES'){
