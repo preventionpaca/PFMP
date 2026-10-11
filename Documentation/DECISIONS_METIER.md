@@ -49,7 +49,10 @@
 - Dans les fiches entreprise, deux contacts partageant le même téléphone
   normalisé ou le même courriel normalisé sont regroupés. Le libellé retenu est
   le nom le plus complet disponible ; téléphone et courriel ne sont pas
-  répétés en raison d'une simple variation de format ou de casse.
+  répétés en raison d'une simple variation de format ou de casse. Les années
+  scolaires associées à ce contact sont fusionnées et affichées avant son nom,
+  de la plus récente à la plus ancienne. Les contacts sont eux-mêmes classés
+  d'abord par leur date de saisie la plus récente.
 
 - Le book entreprises possède trois contrats distincts : parents anonymisé,
   personnels autorisés et administration. Les noms d'élèves et de professeurs

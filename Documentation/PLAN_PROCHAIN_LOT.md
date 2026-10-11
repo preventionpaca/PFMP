@@ -1,5 +1,22 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV554 publié (@946) — page familles épurée et contacts datés
+
+- Le titre « Book des entreprises — élèves et familles » reste seul dans le
+  bandeau. Les deux textes explicatifs demandés et le message de succès sur les
+  trois dernières années ont été retirés sans modifier le périmètre de données,
+  qui reste techniquement borné aux trois dernières années.
+- Chaque responsable et tuteur affiche ses années scolaires avant son nom. Un
+  contact reconnu par son téléphone ou son courriel reste unique ; toutes ses
+  années sont conservées et les contacts les plus récemment saisis apparaissent
+  en premier.
+- Le cache public a été révisionné et les projections familles/carte conservent
+  les années sans ajouter d'identité d'élève, de professeur, de classe ou de
+  période. Aucun appel Grist supplémentaire n'est créé par l'affichage.
+- La référence publiée est la version Apps Script immuable `946`. En cas de
+  régression fonctionnelle, le retour immédiat est `945` ; les données Grist ne
+  sont pas concernées par ce retour de code.
+
 ## DEV553 publié (@945) — communes fiables et réduction des lectures de classe
 
 - La facette ville est désormais canonique et ne contient plus de doublons de

@@ -1,5 +1,29 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV554 publié sur le site en ligne (@946)
+
+- La page « Book des entreprises — élèves et familles » conserve son titre et
+  ses filtres, mais n'affiche plus le sous-titre sur les trois dernières
+  années, le bandeau « Consultation publique » ni le message de succès
+  « Données actualisées sur les trois dernières années ».
+- Les responsables et tuteurs portent maintenant devant leur nom la ou les
+  années scolaires auxquelles leurs coordonnées ont été utilisées. Un même
+  contact reste regroupé par téléphone ou courriel normalisé : ses années sont
+  fusionnées et triées de la plus récente à la plus ancienne, sans répétition
+  de la personne. Entre deux contacts de la même année, la date de saisie la
+  plus récente détermine l'ordre.
+- Le même rendu daté est appliqué aux fiches familles, personnels et
+  administration ainsi qu'aux contacts visibles dans la carte publique. Le
+  cache non nominatif du book public change de révision afin de ne jamais
+  resservir une ancienne projection sans années.
+- Le commit applicatif `69887f21ae32f5ed44da4bdccc7ff876a5d8a8c9` a été
+  publié sur les deux Web Apps vertes existantes en version immuable `946`.
+  La suite complète passe `851/851` et le contrôle automatisé valide `28/28`
+  routes. Le contrôle navigateur de la page publiée confirme la disparition
+  des trois textes et l'affichage `2026-2027 — …` devant les contacts d'une
+  fiche réelle, sans écriture Grist. La version immuable `945` reste le point
+  de retour immédiat.
+
 ## Mise à jour du 12 octobre 2026 — DEV553 publié sur le site en ligne (@945)
 
 - Le filtre « Ville » du book n'utilise plus le dernier fragment libre de
