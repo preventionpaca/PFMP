@@ -1592,35 +1592,14 @@ function statusPill(x){
   }
 
   function load(){
-    var p=params();
-
-    if(
-      !p.annee ||
-      !p.classe ||
-      !p.periode
-    ){
-      return;
-    }
-
-    google.script.run
-      .withSuccessHandler(function(r){
-        decorate(r||{});
-
-        setTimeout(function(){
-          decorate(r||{});
-        },250);
-
-        setTimeout(function(){
-          decorate(r||{});
-        },850);
-      })
-      .withFailureHandler(function(e){
-        console.error(
-          '[DEV285C] mode fin terminale',
-          e&&e.message||e
-        );
-      })
-      .EUC_DEV190I_readOne(p);
+    /* DEV552 : le détail complet est déjà injecté par le serveur dans cette
+     * page. Le relire après DOMContentLoaded ajoutait un aller-retour Grist
+     * sans fournir une seule donnée nouvelle. */
+    if(typeof detail==='undefined'||!detail)return;
+    var embedded={detail:detail};
+    decorate(embedded);
+    setTimeout(function(){decorate(embedded);},250);
+    setTimeout(function(){decorate(embedded);},850);
   }
 
   if(document.readyState==='loading'){
@@ -1749,7 +1728,16 @@ function statusPill(x){
 <script id="EUC_DEV333_DETAIL_NAV_JS">
 (function(){'use strict';
 function qs(k){try{return new URLSearchParams(location.search).get(k)||'';}catch(e){return'';}}
-function start(){var p={annee:qs('annee'),famille:qs('famille')||'BACPRO',classe:Number(qs('classe'))||0,periode:Number(qs('periode'))||0};if(!p.annee||!p.classe||!p.periode)return;google.script.run.withSuccessHandler(function(r){if(!r||!r.ok||!(r.items||[]).length)return;var nav=document.createElement('div');nav.className='euc333-nav';nav.innerHTML='<strong>'+String(r.niveau||'')+' :</strong>'+(r.items||[]).map(function(x){var u=new URL(location.href);u.searchParams.set('page','suivi-pfmp-classe');u.searchParams.set('annee',r.annee);u.searchParams.set('famille',r.famille);u.searchParams.set('classe',x.classeId);u.searchParams.set('periode',x.periodeId);return '<a class="'+(x.current?'current':'')+'" href="'+u.toString()+'">'+String(x.classe||'')+'</a>';}).join('');var ref=document.getElementById('periodTabs')||document.getElementById('classLabel');if(ref&&ref.parentElement)ref.parentElement.insertAdjacentElement('afterend',nav);else{var main=document.querySelector('main')||document.body;main.insertBefore(nav,main.firstChild);}}).withFailureHandler(function(e){console.error('[DEV333] nav',e&&e.message||e);}).EUC_DEV333_nav(p);}
+function start(){
+  /* DEV552 : jumpClassesJson est produit pendant le même rendu que le détail.
+   * Un second appel EUC_DEV333_nav au chargement doublait inutilement la
+   * lecture de navigation. */
+  var p={annee:qs('annee'),famille:qs('famille')||'BACPRO',classe:Number(qs('classe'))||0,periode:Number(qs('periode'))||0},items=<?!= jumpClassesJson ?>;
+  if(!p.annee||!p.classe||!p.periode||!items||!items.length)return;
+  var nav=document.createElement('div');nav.className='euc333-nav';
+  nav.innerHTML='<strong>'+String(detail&&detail.classe&&detail.classe.niveau||'Classes')+' :</strong>'+items.map(function(x){var u=new URL(location.href);u.searchParams.set('page',C&&C.publicMode?'suivi-pfmp-classe-public':'suivi-pfmp-classe');u.searchParams.set('annee',p.annee);u.searchParams.set('famille',x.famille||p.famille);u.searchParams.set('classe',x.id);u.searchParams.set('periode',x.periode);return '<a class="'+(x.current?'current':'')+'" href="'+u.toString()+'">'+String(x.nom||x.classe||'')+'</a>';}).join('');
+  var ref=document.getElementById('periodTabs')||document.getElementById('classLabel');if(ref&&ref.parentElement)ref.parentElement.insertAdjacentElement('afterend',nav);else{var main=document.querySelector('main')||document.body;main.insertBefore(nav,main.firstChild);}
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 </script>

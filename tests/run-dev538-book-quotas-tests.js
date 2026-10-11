@@ -23,7 +23,7 @@ function context(){
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.551/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.552/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
@@ -54,6 +54,25 @@ test('la carte utilise le service nominatif paresseux et une histoire défilante
 test('la cartographie apprentis est dédiée et strictement en lecture seule',()=>{assert.match(apprenticeMapHtml,/Cartographie des apprentis/);assert.match(apprenticeMapHtml,/EUC_DEV545_apprenticeMapData/);assert.match(apprenticeMapHtml,/Lecture seule/);assert.match(apprenticeMapHtml,/Professeur visiteur/);assert.doesNotMatch(apprenticeMapHtml,/save|enregistrer|supprimer/i);assert.match(apprenticesHtml,/cartographie-apprentis-pfmp/);assert.match(apprenticesHtml,/cartographie-apprentis-public-pfmp/)});
 test('le book propose un rattachement manuel sans fusion automatique',()=>{assert.match(bookHtml,/Rattacher cette appellation/);assert.match(bookHtml,/EUC_DEV545_linkCompanyAlias/);assert.match(bookHtml,/Dissocier/);assert.match(server,/EUC_DEV545_COMPANY_ALIASES_PROP_/);assert.match(server,/function EUC_DEV545_linkCompanyAlias/);assert.match(server,/function EUC_DEV545_unlinkCompanyAlias/)});
 test('la donnée cartographique conserve le SIRET pour la jointure',()=>assert.match(geo,/key:x\.key,siret:x\.siret\|\|''/));
+
+test('les communes sont extraites après le code postal sans confondre un quartier ou une corniche',()=>{
+  const c=context();
+  assert.equal(c.EUC_DEV547_city_('RN 2210 QUARTIER LES VIGNASSES 06510 GATTIERES'),'GATTIERES');
+  assert.equal(c.EUC_DEV547_city_('MOYENNE CORNICHE DES PUGETS'),'');
+  assert.equal(c.EUC_DEV547_city_('QUARTIER LES VIGNASSES'),'');
+  assert.equal(c.EUC_DEV547_city_('15 RUE DE BELGIQUE, 06000 Nice'),'NICE');
+  assert.equal(c.EUC_DEV547_city_('1 AVENUE ALBERT II, MONACO'),'MONACO');
+  assert.equal(c.EUC_DEV547_city_('30 ALLEE DES PECHEURS, 06700 St-Laurent-du-Var'),'SAINT LAURENT DU VAR');
+  assert.equal(c.EUC_DEV547_city_('1 AVENUE TEST, 98000 MONACO, MONACO'),'MONACO');
+});
+
+test('le filtre ville fusionne casse accents et tirets puis compare uniquement la commune',()=>{
+  const c=context(),facets=c.EUC_DEV540_facets_([{entreprise:'A',ville:'Monaco',historique:[]},{entreprise:'B',ville:'MONACO',historique:[]},{entreprise:'C',ville:'Cagnes-sur-Mer',historique:[]},{entreprise:'D',ville:'CAGNES SUR MER',historique:[]}]);
+  assert.deepEqual(Array.from(facets.ville),['CAGNES SUR MER','MONACO']);
+  c.EUC_DEV549_publicBookIndex_=()=>[{entreprise:'GARAGE GATTIERES',adresse:'RN 2210 QUARTIER LES VIGNASSES 06510 GATTIERES',ville:'GATTIERES',familles:[],diplomes:[],derniereSaisie:''}];
+  assert.equal(c.EUC_DEV549_publicBookFiltered_({ville:'Gattières'}).length,1);
+  assert.equal(c.EUC_DEV549_publicBookFiltered_({ville:'Quartier les Vignasses'}).length,0);
+});
 
 test('le book réunit une entreprise reçue avec puis sans SIRET',()=>{
   const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);c.EUC_DEV443_normalizeAddress_=v=>String(v||'').replace(/\s*,\s*/g,', ').trim();c.EUC_DEV441_geoClassify_=()=>({pays:'FRANCE'});c.EUC_DEV537_studentKey_=x=>x.eleveId?'E'+x.eleveId:'';c.EUC_DEV538_diplomas_=()=>({24:'BAC PRO Test'});c.EUC_DEV538_yearsForScope_=()=>['2026-2027'];
