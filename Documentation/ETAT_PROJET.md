@@ -1,5 +1,36 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV553 publié sur le site en ligne (@945)
+
+- Le filtre « Ville » du book n'utilise plus le dernier fragment libre de
+  l'adresse. La commune est extraite après le dernier code postal exploitable,
+  puis comparée avec une clé indépendante de la casse, des accents, des espaces
+  et des tirets. `Monaco`/`MONACO` et
+  `CAGNES SUR MER`/`CAGNES-SUR-MER` ne forment plus deux choix distincts ; les
+  libellés de voie ou de quartier tels que `QUARTIER LES VIGNASSES` et
+  `MOYENNE CORNICHE ...` ne peuvent plus devenir des villes.
+- Le contrôle navigateur de la version publiée montre une seule entrée
+  `MONACO`, une seule entrée `CAGNES SUR MER`, `GATTIERES`, et aucune entrée
+  contenant `QUARTIER`, `VIGNASSES` ou `CORNICHE`.
+- L'ouverture d'une fiche de classe réutilise désormais le détail et la
+  navigation déjà embarqués dans la page : les deux appels Apps Script
+  post-rendu qui relisaient les mêmes informations ont été supprimés. La page
+  famille lance en plus un seul préchauffage groupé pour toutes ses périodes,
+  avec au plus une lecture des détails et une lecture des affectations. Ce
+  préchauffage n'écrit aucune donnée métier dans Grist.
+- Cette réduction est réelle mais la lenteur à froid n'est pas déclarée
+  résolue. En contrôle réel, une période jusque-là non ouverte dépasse encore
+  `15 s`, tandis qu'une réponse HTTP chaude du détail se situe autour de
+  `4–5 s`. Le book familles et sa carte restent rapides. Le coût résiduel est
+  donc propre à la préparation initiale du détail de classe et à son rendu
+  Apps Script, pas au volume général du book.
+- Les commits applicatifs `c56aec7b22e1e9853cd339ed4b2403482da581b3`
+  et `6c8b52e680372b9acdc807621ef8e15a13726a5c`, complétés par le test de
+  version `e3afc71c0d55c7280b9450f229f6146246353013`, ont été publiés sur les
+  deux Web Apps vertes existantes en version immuable `945`. La suite complète
+  passe `850/850` et le contrôle automatisé valide `28/28` routes. La version
+  immuable `944` reste le point de retour immédiat.
+
 ## Mise à jour du 11 octobre 2026 — DEV551 publié sur le site en ligne (@943)
 
 - Depuis une fiche entreprise, le bouton de localisation ne recharge plus la

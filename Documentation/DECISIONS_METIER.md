@@ -1,5 +1,17 @@
 # Décisions métier permanentes
 
+- Une facette « Ville » est construite uniquement depuis une commune
+  identifiable après un code postal. Sa clé est normalisée sans distinction de
+  casse, d'accent, d'espace ou de tiret. Une voie, une corniche, une route, un
+  quartier ou un lieu-dit ne devient jamais une commune du filtre ; une adresse
+  dont la commune n'est pas déterminable reste sans facette plutôt que d'être
+  classée arbitrairement.
+- Le rendu initial d'une classe réutilise les données déjà embarquées et ne
+  relance pas un service pour relire le même détail ou reconstruire la même
+  navigation. Un préchauffage familial éventuel est groupé en une seule
+  exécution, lit chaque source au plus une fois et ne modifie aucune donnée
+  métier.
+
 - Le book destiné aux élèves et familles est un troisième contrat d'affichage
   public, distinct des vues personnels et administration. Il porte
   obligatoirement sur les trois dernières années et ne transmet jamais SIRET,

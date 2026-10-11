@@ -1,5 +1,25 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV553 publié (@945) — communes fiables et réduction des lectures de classe
+
+- La facette ville est désormais canonique et ne contient plus de doublons de
+  casse/ponctuation ni de fragments d'adresse. Ce comportement est couvert par
+  des tests ciblés et vérifié sur la Web App publique.
+- Deux lectures post-rendu redondantes ont été supprimées de la fiche de
+  classe. Le préchauffage familial est groupé et borné à une lecture des
+  détails et une lecture des affectations ; toute réintroduction d'une
+  exécution par vignette est interdite.
+- Le prochain lot performance doit instrumenter séparément, dans le chemin
+  réel, la lecture du détail persistant, le contrôle de fraîcheur, la
+  réconciliation des affectations, la navigation interclasse et le rendu du
+  grand modèle HTML. Une période froide dépasse encore `15 s` malgré le cache,
+  alors que le même service chaud répond autour de `4–5 s`. Aucune optimisation
+  supplémentaire ne sera déclarée terminée sans mesure navigateur froide et
+  chaude sur une période non ouverte auparavant.
+- La référence publiée est la version Apps Script immuable `945`. En cas de
+  régression fonctionnelle, le retour immédiat est `944` ; les données Grist ne
+  sont pas concernées par ce retour de code.
+
 ## DEV551 publié (@943) — périmètres cartographiques et démarrage public
 
 - Une carte ouverte depuis une fiche doit contenir exactement un marqueur :
@@ -75,13 +95,13 @@
 
 ## Référence publiée et règle de retour arrière
 
-La version Apps Script immuable `943` et le commit
-`66b015d1987b0c95bddc3a9eda7dd13497f4ad8f` sont la référence fonctionnelle.
+La version Apps Script immuable `945` et le commit
+`e3afc71c0d55c7280b9450f229f6146246353013` sont la référence fonctionnelle.
 Les performances, les coordonnées entreprise, les affectations, les statuts et
 la navigation existante ne doivent pas être modifiés par le nouveau lot. Toute
 régression lors d'une publication impose le retour immédiat à la version
-immuable précédente `942`, puis à `941` si le défaut concerne aussi le cache
-public introduit en `941`.
+immuable précédente `944`, puis à `943` si le défaut concerne aussi le
+préchauffage groupé introduit en `945`.
 
 Le cahier des charges détaillé du book, des trois niveaux d'accès et du pilotage
 de l'apprentissage est dans
