@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 11 octobre 2026 — candidat DEV546
+## Mise à jour du 11 octobre 2026 — DEV546 publié sur le site en ligne (@938)
 
 - Un troisième book public, distinct des vues administration et personnels,
   est ajouté pour les élèves et leurs familles. Il est borné aux trois
@@ -18,9 +18,16 @@
   dates réelles de début et de fin ; une rupture antérieure borne la fin
   historique du contrat.
 - Les tests ciblés DEV538 passent `45/45` et la suite complète `830/830`.
-  La publication suit directement le workflow Git vers les deux Web Apps
-  vertes existantes, avec version immuable, contrôle des routes et retour
-  automatique sur les versions précédentes en cas d'échec.
+  Le commit applicatif et de livraison `b0c2b5f` a été publié directement sur
+  les deux Web Apps vertes existantes en version Apps Script immuable `938`,
+  sans création ni modification d'une troisième Web App. Les `28/28` routes
+  configurées répondent correctement.
+- Le contrôle navigateur après publication confirme que la page « Quotas et
+  relances apprentissage » affiche la colonne `Modalité` et les choix `Mixité`
+  / `Classe entière` pour chaque classe active. Les vues du book chargent les
+  données : l'administration et les personnels voient les détails autorisés,
+  tandis que le book élèves/familles affiche `132` entreprises et les seuls
+  décomptes agrégés, sans SIRET, identité d'élève ni professeur visiteur.
 
 ## Mise à jour du 11 octobre 2026 — candidat DEV545
 
