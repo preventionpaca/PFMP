@@ -23,7 +23,7 @@ function context(){
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.547/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.548/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
