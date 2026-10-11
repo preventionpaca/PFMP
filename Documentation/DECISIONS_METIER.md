@@ -1,5 +1,22 @@
 # Décisions métier permanentes
 
+- La modalité d'apprentissage est réglée par classe et par année scolaire :
+  `MIXITE` ou `CLASSE_ENTIERE`. Elle n'est jamais déduite automatiquement du
+  nombre d'apprentis et une classe reste en mixité par défaut tant qu'aucun
+  réglage explicite n'existe.
+- Un contrat complet non rompu est compté parmi les apprentis actuels, même si
+  sa date de début est à venir. Un futur apprenti est un dossier engagé sans
+  contrat complet. Les dossiers remis et les contrats valides disposent de
+  compteurs distincts.
+- La cartographie apprentis est strictement en lecture seule. Le mode public
+  ne reçoit jamais le nom d'un jeune ni d'un professeur. Le mode administratif
+  peut afficher le jeune, l'année scolaire, la classe et tous les professeurs
+  visiteurs associés.
+- Deux appellations d'entreprise ne sont jamais fusionnées automatiquement
+  lorsqu'une ambiguïté demeure. L'administration peut rattacher explicitement
+  une appellation à un établissement canonique ; ce rattachement est
+  réversible et ne supprime ni ne réécrit les accueils historiques.
+
 - Le book entreprises possède trois contrats distincts : parents anonymisé,
   personnels autorisés et administration. Les noms d'élèves et de professeurs
   ne sont jamais livrés au navigateur du mode parents, même sous forme masquée.

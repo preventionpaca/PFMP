@@ -1,5 +1,17 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Candidat DEV545 en validation
+
+- Vérifier sur la recette bleue les deux cartes apprentis, le bilan public et
+  administratif, ainsi que l'enregistrement des modalités par classe.
+- Contrôler le rattachement et la dissociation d'appellations avec des données
+  de recette uniquement ; aucune fusion physique n'est prévue.
+- Après autorisation explicite, promouvoir le candidat bleu exact vers les
+  deux Web Apps vertes existantes, puis contrôler toute la matrice de routes.
+- Une amélioration ultérieure pourra ajouter une période d'historique aux
+  cartes apprentis ; le lot DEV545 porte volontairement sur les apprentis
+  actuels et la confidentialité des deux modes.
+
 ## Référence publiée et règle de retour arrière
 
 La version Apps Script immuable `927`, commit `8b582c6` et tag

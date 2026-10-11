@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — candidat DEV545
+
+- Le bilan apprentissage utilise désormais une définition unique dans le
+  tableau principal, le bilan par diplôme/classe et la page des quotas. Un
+  contrat complet reste compté comme apprenti actuel ; les futurs apprentis
+  sont les dossiers engagés sans contrat complet.
+- Les bilans affichent aussi les dossiers remis, contrats valides et la
+  ventilation apprentis en classe entière / en mixité. La modalité est un
+  réglage explicite par classe, conservé séparément des quotas et de
+  l'activation de la classe.
+- Une cartographie dédiée aux apprentis est ajoutée en lecture seule. La vue
+  publique n'expose que les entreprises, leurs positions et les effectifs ; la
+  vue administrative ajoute le jeune, l'année, la classe et tous les
+  professeurs visiteurs connus.
+- Le book administratif permet de rattacher manuellement deux appellations à
+  un même établissement, et de dissocier ce rattachement, sans fusion physique
+  ni suppression d'historique.
+- Les tests ciblés passent `38/38` et la suite complète `823/823`. Le candidat
+  n'est pas promu sur le site en ligne tant que la recette bleue et
+  l'autorisation de promotion ne sont pas acquises.
+
 ## Mise à jour du 11 octobre 2026 — candidat DEV544
 
 - Les six indicateurs globaux du pilotage apprentissage affichent désormais au
