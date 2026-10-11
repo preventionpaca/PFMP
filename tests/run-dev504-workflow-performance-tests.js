@@ -58,7 +58,9 @@ test('le suivi de famille sert d’abord le snapshot persistant local',()=>{
 test('la route famille rend une coque avant le chargement métier',()=>{
   const route=family.slice(family.indexOf('function EUC_DEV339_afficherFamille'),family.indexOf('function EUC_DEV504_chargerFamille'));
   assert.doesNotMatch(route,/EUC_DEV339_familyData_\(/);
-  assert.match(familyHtml,/Chargement de la synthèse métier/);
+  assert.match(familyHtml,/Chargement de la synthèse du niveau/);
+  assert.match(familyHtml,/function loadingText\(\)/);
+  assert.match(familyHtml,/famLabel\(P\.famille\)/);
   assert.match(familyHtml,/\.EUC_DEV504_chargerFamille\(P\)/);
   assert.match(familyHtml,/Le chargement a dépassé 15 secondes/);
   assert.match(familyHtml,/if\(!settled\)fail\('Le chargement a dépassé 15 secondes[\s\S]*\},15000\)/);
@@ -139,9 +141,10 @@ test('la coque publique reste entièrement sur les routes publiques',()=>{
   assert.match(familyHtml,/if\(P\.publicMode\)\{a\.remove\(\)/);
 });
 
-test('le bouton public Voir les classes sort du cadre Apps Script',()=>{
-  assert.match(publicSummaryHtml,/window\.top\.location\.href=url\(b\.dataset\.f\)/);
-  assert.doesNotMatch(publicSummaryHtml,/(?<!top\.)location\.href=url\(b\.dataset\.f\)/);
+test('le bouton public Voir les classes délègue à l’enveloppe du sous-domaine',()=>{
+  assert.match(publicSummaryHtml,/EUC_DEV556_publicNavigate/);
+  assert.match(publicSummaryHtml,/EUC_PFMP_WRAPPER_NAVIGATE/);
+  assert.match(publicSummaryHtml,/navigate\(url\(b\.dataset\.f\),b,'Chargement…'\)/);
 });
 
 test('la famille canonique affiche un état vide explicite',()=>{

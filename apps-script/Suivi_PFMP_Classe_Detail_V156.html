@@ -2159,7 +2159,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(typeof window.EUC_DEV419_beginNavigation==='function'){
       window.EUC_DEV419_beginNavigation(back,'Retour aux classes…');
     }
-    try{window.top.location.href=url;}catch(e){location.href=url;}
+    if(typeof C!=='undefined'&&C&&C.publicMode&&typeof window.EUC_DEV556_publicNavigate==='function')window.EUC_DEV556_publicNavigate(url);
+    else try{window.top.location.href=url;}catch(e){location.href=url;}
   },true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
   setTimeout(apply,50); setTimeout(apply,250); setTimeout(apply,1000);
@@ -2261,7 +2262,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function feedback(el,url){
     if(el)el.classList.add('euc183-loading');
-    window.top.location.href=url;
+    if(typeof C!=='undefined'&&C&&C.publicMode&&typeof window.EUC_DEV556_publicNavigate==='function')window.EUC_DEV556_publicNavigate(url);
+    else window.top.location.href=url;
   }
 
   function killGlobalSpinner(){
@@ -2345,4 +2347,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     setTimeout(apply,0);
   }
 })();
+</script>
+<script id="EUC_DEV556_PFMP_DETAIL_NAV">
+(function(){'use strict';if(typeof C==='undefined'||!C||!C.publicMode)return;var ready=false,pending='',timer=0,allowed={'suivi-conventions-public':1,'suivi-conventions-public-famille':1,'suivi-pfmp-classe-public':1,'book-entreprises-public-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url});else window.location.href=url}function navigate(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_PFMP_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)}window.EUC_DEV556_publicNavigate=navigate;window.EUC_DEV418_publicNavigate=navigate;addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();a.classList.add('euc183-loading');a.setAttribute('aria-busy','true');navigate(url)},true);send({type:'EUC_PFMP_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_PFMP_WRAPPER_QUERY'})},120)})();
 </script>

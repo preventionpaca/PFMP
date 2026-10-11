@@ -101,7 +101,7 @@ h1{margin:0 0 4px;color:#0d4539;font-size:28px}
   <strong id="familyCrumb"></strong>
 </div>
 
-<div id="loadStatus" class="load-status" role="status"><span class="load-spin"></span><span>Chargement de la synthèse métier…</span></div>
+<div id="loadStatus" class="load-status" role="status"><span class="load-spin"></span><span>Chargement de la synthèse du niveau…</span></div>
 <div id="levelNav" class="level-nav"></div>
 <div id="sections"></div>
 </main>
@@ -123,6 +123,10 @@ const INITIAL_DATA=<?!= dataJson ?>;
 
   function famLabel(f){
     return f==='BACPRO' ? 'BAC PRO' : f;
+  }
+
+  function loadingText(){
+    return 'Chargement de la synthèse du niveau '+famLabel(P.famille)+'…';
   }
 
   function levelOf(name,fam){
@@ -159,7 +163,7 @@ const INITIAL_DATA=<?!= dataJson ?>;
     settled=false;
     loadStatus.hidden=false;
     loadStatus.className='load-status';
-    loadStatus.innerHTML='<span class="load-spin"></span><span>Chargement de la synthèse métier…</span>';
+    loadStatus.innerHTML='<span class="load-spin"></span><span>'+esc(loadingText())+'</span>';
     clearTimeout(watchdog);
     watchdog=setTimeout(function(){
       if(!settled)fail('Le chargement a dépassé 15 secondes. La synthèse n’a pas été recalculée dans votre navigateur : vous pouvez réessayer.',15000);
@@ -287,13 +291,15 @@ const INITIAL_DATA=<?!= dataJson ?>;
 
   document.querySelectorAll('.period').forEach(function(p){
     p.onclick=function(){
-      window.top.location.href=
+      var destination=
         BASE_URL+'?page='+(P.publicMode?'suivi-pfmp-classe-public':'suivi-pfmp-classe')+
         '&annee='+encodeURIComponent(P.annee)+
         '&famille='+encodeURIComponent(P.famille)+
         '&classe='+encodeURIComponent(p.dataset.class)+
         '&periode='+encodeURIComponent(p.dataset.period)+
         '&origin=suivi-conventions';
+      if(P.publicMode&&typeof window.EUC_DEV556_publicNavigate==='function')window.EUC_DEV556_publicNavigate(destination);
+      else window.top.location.href=destination;
     };
   });
   window.EUC_FAMILY_DATA=DATA;
@@ -310,6 +316,9 @@ const INITIAL_DATA=<?!= dataJson ?>;
 
   if(INITIAL_DATA&&INITIAL_DATA.ready&&(INITIAL_DATA.classes||[]).length)render(INITIAL_DATA);else load();
 })();
+</script>
+<script id="EUC_DEV556_PFMP_FAMILY_NAV">
+(function(){'use strict';if(!P.publicMode)return;var ready=false,pending='',timer=0,allowed={'suivi-conventions-public':1,'suivi-conventions-public-famille':1,'suivi-pfmp-classe-public':1,'book-entreprises-public-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url});else window.location.href=url}window.EUC_DEV556_publicNavigate=function(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_PFMP_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)};addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();a.classList.add('nav-loading');a.setAttribute('aria-busy','true');window.EUC_DEV556_publicNavigate(url)},true);send({type:'EUC_PFMP_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_PFMP_WRAPPER_QUERY'})},120)})();
 </script>
 <!-- EUC_DEV276_FAMILY_UI -->
 <style id="EUC_DEV276_FAMILY_UI_STYLE">
@@ -680,7 +689,9 @@ const INITIAL_DATA=<?!= dataJson ?>;
     }).filter(Boolean);
   }
   function navigate(){
-    if(!queued)return;var href=queued;queued='';clearTimeout(fallbackTimer);window.top.location.href=href;
+    if(!queued)return;var href=queued;queued='';clearTimeout(fallbackTimer);
+    if(P.publicMode&&typeof window.EUC_DEV556_publicNavigate==='function')window.EUC_DEV556_publicNavigate(href);
+    else window.top.location.href=href;
   }
   function finish(){done=true;navigate();}
   function warmFamily(){

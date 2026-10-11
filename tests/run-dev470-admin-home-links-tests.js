@@ -88,7 +88,8 @@ test('les ordres de mission ouvrent directement l’accueil canonique dans la fe
 
 test('la consultation publique des apprentis conserve sa route publique', () => {
   const source = read('Apprentissage_PFMP_V190X.html');
-  assert.match(source, /ro\?PUBLIC\+'\?page=suivi-conventions-public':'https:\/\/alternance\.loucodi\.fr\/'/);
+  assert.match(source, /ro\?'https:\/\/pfmp\.loucodi\.fr\/':'https:\/\/alternance\.loucodi\.fr\/'/);
+  assert.match(source, /EUC_APPRENTIS_WRAPPER_NAVIGATE/);
 });
 
 test('les anciens wrappers de mesure restent appelables sans écriture', () => {

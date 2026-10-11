@@ -1,5 +1,22 @@
 # Décisions métier permanentes
 
+- La source d'import des groupes d'alternance et de formation continue se
+  nomme `YPAREO`. Un futur lot réutilisera le masque apprenti existant :
+  contrôle SIRET, entreprise, dates de contrat et qualification explicite de
+  la situation du jeune. L'import ne créera pas un second formulaire métier.
+- Une table de correspondance dédiée à YPAREO reliera l'acronyme ou le groupe
+  source au nom officiel de la formation pour l'alternance et la formation
+  continue. En l'absence d'une correspondance certaine, la classe reste
+  choisie par l'administrateur ; aucune déduction approximative n'est admise.
+- Le libellé YPAREO `SFP APP SANS ENTREPRISE` décrit une situation à qualifier :
+  futur apprenti sans entreprise ou rupture de contrat. Il ne suffit jamais à
+  classer automatiquement le jeune parmi les apprentis actuels.
+- Le repère rouge `A` désigne l'apprentissage. Un repère `G` distinct désigne
+  l'appartenance au GTA ou à la formation continue ; les deux repères peuvent
+  être affichés simultanément. Ces règles sont documentées ici pour le futur
+  lot YPAREO et n'entraînent aucune écriture métier dans le lot d'interface
+  DEV556.
+
 - Une bulle cartographique d'entreprise peut ouvrir un itinéraire externe vers
   ses coordonnées validées. PFMP transmet uniquement la destination à Google
   Maps dans un nouvel onglet : la position de départ est choisie ou déterminée

@@ -15,6 +15,8 @@ const geo=read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js');
 const routes=read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js');
 const admin=read('apps-script/Admin_PFMP.html');
 const publicHome=read('apps-script/Suivi_Conventions_Public_Summary_V348.html');
+const familyHtml=read('apps-script/Suivi_Conventions_Admin_FamilleV190L.html');
+const detailHtml=read('apps-script/Suivi_PFMP_Classe_Detail_V156.html');
 let n=0;function test(name,fn){try{fn();n++;console.log('✓',name)}catch(e){console.error('✗',name);throw e}}
 
 function context(){
@@ -23,8 +25,11 @@ function context(){
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.555/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.556/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
+test('le book public affiche un indicateur immédiat et conserve le sous-domaine PFMP',()=>{assert.match(publicHome,/Ouverture du book…/);assert.match(publicHome,/aria-busy/);assert.match(publicHome,/EUC_DEV556_PFMP_WRAPPER_NAV/);assert.match(publicHome,/EUC_PFMP_WRAPPER_NAVIGATE/);assert.match(publicHome,/book-entreprises-public-pfmp/)});
+test('les pages PFMP publiques partagent le même contrat de navigation enveloppée',()=>{for(const html of [familyHtml,detailHtml,bookHtml]){assert.match(html,/EUC_DEV556_PFMP_/);assert.match(html,/EUC_PFMP_WRAPPER_QUERY/);assert.match(html,/EUC_PFMP_WRAPPER_NAVIGATE/)}assert.match(familyHtml,/Chargement de la synthèse du niveau/);assert.match(familyHtml,/famLabel\(P\.famille\)/)});
+test('les pages apprentis publiques conservent apprentis.loucodi.fr',()=>{for(const html of [apprenticesHtml,apprenticeMapHtml]){assert.match(html,/EUC_DEV556_APPRENTIS_/);assert.match(html,/EUC_APPRENTIS_WRAPPER_QUERY/);assert.match(html,/EUC_APPRENTIS_WRAPPER_NAVIGATE/)}assert.match(apprenticesHtml,/https:\/\/pfmp\.loucodi\.fr\//)});
 test('la page quota couvre effectif pourcentage calcul et états métier',()=>{for(const s of ['Effectif','Quota %','Nombre défini','Apprentis','Futurs','Distribués','Retournés','Transmis CFA','Relances J+14'])assert.ok(quotaHtml.includes(s),s)});
 test('la page quota permet d’inclure ou exclure chaque classe',()=>{assert.match(quotaHtml,/Prise en compte/);assert.match(quotaHtml,/class-active/);assert.match(quotaHtml,/Active/);assert.match(quotaHtml,/Exclue/);assert.match(quotaHtml,/classes actives uniquement/);assert.match(quotaHtml,/active:tr\.querySelector\('\.class-active'\)\.checked/)});
 test('la page quota règle explicitement mixité ou classe entière',()=>{assert.match(quotaHtml,/Modalité/);assert.match(quotaHtml,/class-mode/);assert.match(quotaHtml,/Mixité/);assert.match(quotaHtml,/Classe entière/);assert.match(quotaHtml,/mode:tr\.querySelector\('\.class-mode'\)\.value/)});
