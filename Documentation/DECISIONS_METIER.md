@@ -3,9 +3,10 @@
 - Le book destiné aux élèves et familles est un troisième contrat d'affichage
   public, distinct des vues personnels et administration. Il porte
   obligatoirement sur les trois dernières années et ne transmet jamais SIRET,
-  élève, professeur, classe, diplôme, période, téléphone, courriel ni historique
-  nominatif. Il peut afficher l'entreprise, son adresse, les nombres agrégés
-  scolaire/apprenti et les seuls noms des responsables et tuteurs connus.
+  élève, professeur, classe, période ni historique nominatif. Il peut afficher
+  l'entreprise, son adresse, les nombres agrégés scolaire/apprenti, les diplômes
+  disponibles comme facette de recherche et les coordonnées professionnelles
+  des responsables et tuteurs connus (nom, téléphone et courriel).
 - Dans les vues nominatives autorisées du book, un apprenti est repéré par un
   `A` rouge. Son historique utilise la période réelle de son contrat
   d'apprentissage, éventuellement bornée par une rupture, et jamais les
@@ -27,6 +28,16 @@
   lorsqu'une ambiguïté demeure. L'administration peut rattacher explicitement
   une appellation à un établissement canonique ; ce rattachement est
   réversible et ne supprime ni ne réécrit les accueils historiques.
+- Un rattachement d'appellation est appliqué à la lecture dans le book et sa
+  cartographie. Les snapshots et conventions d'origine ne sont pas réécrits.
+  Deux représentations techniques du même accueil sont dédoublonnées avec
+  l'identifiant durable de l'élève, l'année, la classe et la période ; la ligne
+  conservée porte le nom de l'élève, la période officielle et le professeur
+  visiteur issus des sources canoniques.
+- Dans les fiches entreprise, deux contacts partageant le même téléphone
+  normalisé ou le même courriel normalisé sont regroupés. Le libellé retenu est
+  le nom le plus complet disponible ; téléphone et courriel ne sont pas
+  répétés en raison d'une simple variation de format ou de casse.
 
 - Le book entreprises possède trois contrats distincts : parents anonymisé,
   personnels autorisés et administration. Les noms d'élèves et de professeurs

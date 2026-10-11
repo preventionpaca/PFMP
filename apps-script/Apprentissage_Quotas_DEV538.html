@@ -9,7 +9,7 @@
     :root{--green:#087f70;--green2:#069b82;--bg:#f3f8f7;--line:#c7e1da;--ink:#172b27;--mut:#667085;--warn:#a15c00;--danger:#b42318}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--ink);font-size:16px}
     .hero{background:linear-gradient(135deg,#075f55,#0d8b78);color:#fff;padding:24px}.wrap{max-width:1500px;margin:auto;padding:16px}
-    h1{margin:0 0 6px}.hero p{margin:0}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+    h1{margin:0 0 6px}.hero p{margin:0}.breadcrumb{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}.breadcrumb a{color:var(--green);font-weight:800;text-decoration:none}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
     .toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.toolbar label{min-width:180px}label{display:grid;gap:5px;font-size:14px;font-weight:800;color:var(--mut)}select,input{padding:10px;border:1px solid #aacfc5;border-radius:8px;background:#fff;color:var(--ink);font-size:15px}
     button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--green);color:#fff}button.secondary{background:#fff;color:var(--green);border:1px solid var(--green)}button:disabled{opacity:.62;cursor:wait}
     .spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}@keyframes spin{to{transform:rotate(360deg)}}
@@ -24,6 +24,7 @@
 <body>
 <header class="hero"><div class="wrap"><h1>Quotas et relances apprentissage</h1><p>Capacité par diplôme et classe, suivi des dossiers remis et relances à J+14.</p></div></header>
 <main class="wrap">
+  <nav class="breadcrumb" aria-label="Fil d’Ariane"><a id="home" target="_top">Accueil PFMP</a><span>›</span><a id="admin" target="_top">Administration PFMP</a><span>›</span><strong>Quotas et relances apprentissage</strong></nav>
   <section class="card toolbar">
     <label>Année scolaire<select id="year"></select></label>
     <button id="load">Actualiser</button>
@@ -53,6 +54,6 @@ function applyGroup(e){let card=e.target.closest('.group'),v=Number(card.querySe
 function load(){busy('load',true,'Actualisation…');$('message').className='note';$('message').textContent='Chargement des effectifs et des dossiers…';invoke('EUC_DEV538_apprentissageDashboard',$('year').value,d=>{busy('load',false);$('message').textContent='Données actualisées.';$('message').className='ok';render(d)})}
 function save(){let lignes=[...document.querySelectorAll('#quotas tbody tr')].map(tr=>({classeId:Number(tr.dataset.class),quotaPercent:Number(tr.querySelector('.quota').value),active:tr.querySelector('.class-active').checked,mode:tr.querySelector('.class-mode').value}));busy('save',true,'Enregistrement…');$('message').className='note';$('message').textContent='Enregistrement des quotas, du périmètre et des modalités…';invoke('EUC_DEV538_saveQuotas',{annee:$('year').value,lignes:lignes},()=>{busy('save',false);$('message').className='ok';$('message').textContent='Réglages enregistrés. Recalcul en cours…';load()})}
 function tab(id){['Quotas','Dossiers','Relances'].forEach(x=>{$('tab'+x).classList.toggle('active',x===id);$(x.toLowerCase()).classList.toggle('hidden',x!==id)})}
-let years=(BOOT.years||[]).filter(Boolean);$('year').innerHTML=years.map(y=>'<option>'+esc(y)+'</option>').join('');$('year').value=BOOT.current||years[0]||'';$('load').onclick=load;$('save').onclick=save;$('year').onchange=load;$('tabQuotas').onclick=()=>tab('Quotas');$('tabDossiers').onclick=()=>tab('Dossiers');$('tabRelances').onclick=()=>tab('Relances');load();
+let years=(BOOT.years||[]).filter(Boolean);$('home').href='https://alternance.loucodi.fr/';$('admin').href=BOOT.baseUrl+'?page=admin-pfmp';$('year').innerHTML=years.map(y=>'<option>'+esc(y)+'</option>').join('');$('year').value=BOOT.current||years[0]||'';$('load').onclick=load;$('save').onclick=save;$('year').onchange=load;$('tabQuotas').onclick=()=>tab('Quotas');$('tabDossiers').onclick=()=>tab('Dossiers');$('tabRelances').onclick=()=>tab('Relances');load();
 </script>
 </body></html>

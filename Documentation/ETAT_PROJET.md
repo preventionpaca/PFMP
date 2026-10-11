@@ -1,5 +1,35 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 octobre 2026 — DEV547 candidat
+
+- Les trois books sont paginés : dix entreprises au démarrage, choix de
+  `10/30/40/50/100/200/Tous`, navigation page précédente/suivante et total
+  indépendant de la page. Le tri par dernière saisie est le défaut ; le tri par
+  nombre d'élèves accueillis reste disponible.
+- Les filtres diplôme, ville et entreprise sont disponibles dans la vue
+  élèves/familles. Les vues administration et personnels conservent en plus
+  les filtres nominatifs autorisés. Chaque book possède une carte intégrée qui
+  reprend le périmètre filtré.
+- La carte élèves/familles ne reçoit ni SIRET, ni identité d'élève, ni
+  professeur, ni historique nominatif. Les cartes administration/personnels
+  affichent l'historique autorisé dans une infobulle défilable.
+- Les responsables et tuteurs ayant le même téléphone ou le même courriel sont
+  regroupés sous le libellé le plus complet. Leurs coordonnées professionnelles
+  sont visibles dans les fiches, y compris dans la vue élèves/familles selon la
+  décision métier explicite du 11 octobre 2026.
+- Le rattachement manuel d'une appellation est maintenant appliqué à tout
+  l'agrégat book/carte. Les lignes snapshot et accès QR du même élève, de la
+  même classe et de la même période sont dédoublonnées par identifiant durable.
+  Une ligne technique vide ne masque donc plus le nom, la PFMP officielle ou le
+  professeur visiteur. Aucune convention ni aucun snapshot Grist n'est réécrit.
+- La page « Quotas et relances apprentissage » possède un fil d'Ariane vers
+  l'administration et l'accueil. Un plan de reprise après sinistre est décrit
+  dans `Documentation/PLAN_REPRISE_APRES_SINISTRE.md` sans créer de miroir ni de
+  nouvelle Web App dans ce lot.
+- Les tests ciblés DEV538/DEV547 passent `51/51` et la suite complète passe
+  `836/836`. Le commit, la version Apps Script immuable et les contrôles en
+  ligne seront consignés après publication.
+
 ## Mise à jour du 11 octobre 2026 — DEV546 publié sur le site en ligne (@938)
 
 - Un troisième book public, distinct des vues administration et personnels,

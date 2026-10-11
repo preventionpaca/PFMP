@@ -1,5 +1,23 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Candidat DEV547 — books paginés, cartes filtrées et rattachements fiables
+
+- Les books administration, personnels et élèves/familles affichent dix
+  entreprises au démarrage, proposent la pagination et les tailles
+  `10/30/40/50/100/200/Tous`. Le tri par dernière saisie est proposé par
+  défaut ; le classement historique par nombre d'élèves reste disponible.
+- La liste et la carte intégrée utilisent exactement les mêmes filtres. Les
+  vues nominatives montrent l'historique complet autorisé ; la carte familles
+  ne reçoit jamais d'identité d'élève, de professeur ni de SIRET.
+- Les responsables et tuteurs sont regroupés par téléphone ou courriel
+  normalisé. Le mode familles peut afficher leurs coordonnées professionnelles
+  conformément à la décision métier du 11 octobre 2026.
+- Les appellations explicitement rattachées utilisent la fiche canonique à la
+  lecture. Une ligne d'accès QR incomplète ne crée plus un second accueil vide
+  lorsqu'un snapshot représente déjà le même élève et la même PFMP.
+- La page de réglage des quotas possède un fil d'Ariane vers l'administration
+  et l'accueil. Aucune donnée métier Grist n'est modifiée par ce lot.
+
 ## Candidat DEV546 en validation
 
 - Contrôler après publication sur le vert les trois books avec, pour une même entreprise,
