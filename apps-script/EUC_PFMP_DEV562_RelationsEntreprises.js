@@ -107,7 +107,11 @@ function EUC_DEV562_saveRelationship(q){var ctx=EUC_DEV538_admin_();q=q||{};var 
 /* Vue d'administration transversale. Elle réutilise exactement l'agrégation
  * du book, donc aucune donnée source n'est réécrite pour dresser la liste. */
 function EUC_DEV563_contactDirectory(){
-  EUC_DEV538_admin_();var companies=EUC_DEV538_history_({annee:'ALL',fenetre:0}),out=[];
-  companies.forEach(function(company){[['RESPONSABLE',company.responsables||[]],['TUTEUR',company.tuteurs||[]]].forEach(function(group){group[1].forEach(function(c){out.push({identity:company.identity,siret:company.siret||'',entreprise:company.entreprise||'',adresse:company.adresse||'',role:group[0],contactKey:c.contactKey||'',nom:c.nom||'',nomSource:c.sourceNom||c.nom||'',annees:c.annees||[],corrige:c.nomCorrige===true});});});});
+  EUC_DEV538_admin_();var companies=EUC_DEV538_history_({annee:'ALL',fenetre:0}),profiles=EUC_DEV562_profileRows_(),profileByKey={},profileBySiret={},out=[];
+  profiles.forEach(function(row){var f=EUC_DEV538_fields_(row),key=EUC_DEV538_t_(f.Cle_entreprise),siret=EUC_DEV538_t_(f.SIRET).replace(/\D/g,'');if(f.Actif===false)return;if(key&&(!profileByKey[key]||EUC_DEV538_n_(row.id)>EUC_DEV538_n_(profileByKey[key].id)))profileByKey[key]=row;if(siret&&(!profileBySiret[siret]||EUC_DEV538_n_(row.id)>EUC_DEV538_n_(profileBySiret[siret].id)))profileBySiret[siret]=row;});
+  companies.forEach(function(company){var siret=EUC_DEV538_t_(company.siret).replace(/\D/g,''),profile=profileByKey[EUC_DEV562_companyKey_(company)]||profileBySiret[siret],site=profile?EUC_DEV538_t_(EUC_DEV538_fields_(profile).Site_internet):'',count=0;
+    [['RESPONSABLE',company.responsables||[]],['TUTEUR',company.tuteurs||[]]].forEach(function(group){group[1].forEach(function(c){count++;out.push({identity:company.identity,siret:company.siret||'',entreprise:company.entreprise||'',adresse:company.adresse||'',site:site,role:group[0],contactKey:c.contactKey||'',nom:c.nom||'',nomSource:c.sourceNom||c.nom||'',telephones:c.telephones||[],courriels:c.courriels||[],annees:c.annees||[],corrige:c.nomCorrige===true});});});
+    if(!count)out.push({identity:company.identity,siret:company.siret||'',entreprise:company.entreprise||'',adresse:company.adresse||'',site:site,role:'',contactKey:'',nom:'',nomSource:'',telephones:[],courriels:[],annees:[],corrige:false});
+  });
   out.sort(function(a,b){return a.entreprise.localeCompare(b.entreprise,'fr')||a.role.localeCompare(b.role,'fr')||a.nom.localeCompare(b.nom,'fr');});return{ok:true,contacts:out};
 }

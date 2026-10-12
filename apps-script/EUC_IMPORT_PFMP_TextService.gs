@@ -6,7 +6,7 @@ function EUC_IMPORT_exigerAdminTexte_(){
 }
 function EUC_IMPORT_lireRecordsBruts_(table){try{return (EUC_ENT_grist('get','/tables/'+encodeURIComponent(table)+'/records').records||[]);}catch(e){return [];}}
 function EUC_IMPORT_lireRecords_(table){return EUC_IMPORT_lireRecordsBruts_(table).map(function(r){return Object.assign({id:r.id},r.fields||{});});}
-function EUC_IMPORT_chargerClassesCamin_(){return EUC_IMPORT_lireRecordsBruts_('Classes').map(function(r){var f=r.fields||{};return {id:r.id,nom:String(f.Nom||f.Libelle||'').trim(),libelle:String(f.Libelle||f.Nom||'').trim(),formation:String(f.Formation||'').trim(),niveau:String(f.Niveau||'').trim(),etab:String(f.Etab||'').trim(),actif:f.Actif!==false};}).filter(function(r){return r.id&&r.nom;});}
+function EUC_IMPORT_chargerClassesCamin_(){return EUC_IMPORT_lireRecordsBruts_('Classes').map(function(r){var f=r.fields||{},row={id:r.id,nom:String(f.Nom||f.Libelle||'').trim(),libelle:String(f.Libelle||f.Nom||'').trim(),formation:String(f.Formation||'').trim(),niveau:String(f.Niveau||'').trim(),etab:String(f.Etab||'').trim(),actif:f.Actif!==false};return typeof EUC_DEV564_normalizeClass_==='function'?EUC_DEV564_normalizeClass_(row):row;}).filter(function(r){return r.id&&r.nom;});}
 function EUC_IMPORT_normaliserSourcePronote_(v){
   var s=String(v||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_').replace(/[^A-Z0-9_-]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
   if(!s||s==='AUTO'||s==='AUTOMATIQUE')return 'AUTO';

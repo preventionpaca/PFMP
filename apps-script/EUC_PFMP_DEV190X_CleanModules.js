@@ -24,18 +24,16 @@ function EUC_DEV190X_years_(){
 }
 
 function EUC_DEV190X_classes_(annee,terminalOnly){
+  var rows=[];
   if(typeof EUC_DEV190R_getPageStructure==='function'){
     var r=EUC_DEV190R_getPageStructure(annee,!!terminalOnly);
-    return r.classes||[];
-  }
-
-  if(typeof EUC_DEV190Q_getStructure==='function'){
+    rows=r.classes||[];
+  }else if(typeof EUC_DEV190Q_getStructure==='function'){
     var s=EUC_DEV190Q_getStructure(annee);
     var p=(s||{}).payload||{};
-    return terminalOnly ? (p.terminales||[]) : (p.classes||[]);
+    rows=terminalOnly ? (p.terminales||[]) : (p.classes||[]);
   }
-
-  return [];
+  return typeof EUC_DEV564_normalizeClass_==='function'?rows.map(EUC_DEV564_normalizeClass_):rows;
 }
 
 function EUC_DEV446_isGristQuotaError_(err){
