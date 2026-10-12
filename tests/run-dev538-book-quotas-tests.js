@@ -25,7 +25,7 @@ function context(){
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.556/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.557/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('le book public affiche un indicateur immédiat et conserve le sous-domaine PFMP',()=>{assert.match(publicHome,/Ouverture du book…/);assert.match(publicHome,/aria-busy/);assert.match(publicHome,/EUC_DEV556_PFMP_WRAPPER_NAV/);assert.match(publicHome,/EUC_PFMP_WRAPPER_NAVIGATE/);assert.match(publicHome,/book-entreprises-public-pfmp/)});
 test('les pages PFMP publiques partagent le même contrat de navigation enveloppée',()=>{for(const html of [familyHtml,detailHtml,bookHtml]){assert.match(html,/EUC_DEV556_PFMP_/);assert.match(html,/EUC_PFMP_WRAPPER_QUERY/);assert.match(html,/EUC_PFMP_WRAPPER_NAVIGATE/)}assert.match(familyHtml,/Chargement de la synthèse du niveau/);assert.match(familyHtml,/famLabel\(P\.famille\)/)});
@@ -114,6 +114,20 @@ test('le service élèves et familles projette uniquement les champs autorisés'
 test('les contacts sont regroupés par coordonnées puis triés du plus récent au plus ancien',()=>{
   const c=context(),out=c.EUC_DEV547_contacts_([{annee:'2024-2025',dateSaisie:'2024-11-01',responsable:'Ancien Contact',telephoneResponsable:'04 00 00 00 00'},{annee:'2026-2027',dateSaisie:'2026-01-15',responsable:'Contact Même Année',telephoneResponsable:'04 11 11 11 11'},{annee:'2025-2026',dateSaisie:'2025-10-01',responsable:'A. LECA',telephoneResponsable:'+33 6 12 34 56 78',courrielResponsable:'contact@example.test'},{annee:'2026-2027',dateSaisie:'2026-09-12',responsable:'LECA Anthony',telephoneResponsable:'06 12 34 56 78',courrielResponsable:'CONTACT@example.test'},{annee:'2024-2025',dateSaisie:'2024-09-01',responsable:'LECA',telephoneResponsable:'',courrielResponsable:'contact@example.test'}],'responsable');
   assert.equal(out.length,3);assert.equal(out[0].nom,'LECA Anthony');assert.equal(out[0].annee,'2026-2027');assert.deepEqual(Array.from(out[0].annees),['2026-2027','2025-2026','2024-2025']);assert.equal(out[0].telephones.length,1);assert.equal(out[0].courriels.length,1);assert.equal(out[1].nom,'Contact Même Année');assert.equal(out[1].annee,'2026-2027');assert.equal(out[2].nom,'Ancien Contact');assert.equal(out[2].annee,'2024-2025');
+});
+
+test('un nom et un prénom inversés regroupent le contact sans perdre ses coordonnées',()=>{
+  const c=context(),out=c.EUC_DEV547_contacts_([{annee:'2026-2027',dateSaisie:'2026-09-01',responsable:'JULIEN Steve',telephoneResponsable:'06 59 50 06 06',courrielResponsable:'compta@example.test'},{annee:'2026-2027',dateSaisie:'2026-09-02',responsable:'Steve Julien',telephoneResponsable:'04 93 18 98 00',courrielResponsable:'info@example.test'}],'responsable');
+  assert.equal(out.length,1);assert.equal(out[0].nom,'JULIEN Steve');assert.deepEqual(Array.from(out[0].telephones).sort(),['04 93 18 98 00','06 59 50 06 06']);assert.deepEqual(Array.from(out[0].courriels),['compta@example.test','info@example.test']);
+});
+
+test('un nom seul ou une simple ressemblance ne fusionne jamais deux contacts sans coordonnée commune',()=>{
+  const c=context(),out=c.EUC_DEV547_contacts_([{responsable:'JULIEN',telephoneResponsable:'0101010101'},{responsable:'JULIEN Steve',telephoneResponsable:'0202020202'},{responsable:'JULIAN Steve',telephoneResponsable:'0303030303'}],'responsable');assert.equal(out.length,3);
+});
+
+test('le book ne conserve qu’un contrat cohérent par apprenti, entreprise et année',()=>{
+  const c=context();c.EUC_DEV443_geoIdentity_=(entreprise,adresse,siret)=>siret?'SIRET|'+siret:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);const base={annee:'2026-2027',eleveId:7,entreprise:'GARAGE TEST',adresse:'1 RUE TEST 06000 NICE',siret:'12345678901234',debut:'2025-09-01'};
+  const out=c.EUC_DEV557_canonicalContracts_([Object.assign({},base,{recordId:10,fin:'2025-06-30',periode:'Contrat incohérent'}),Object.assign({},base,{recordId:11,fin:'2027-06-30',periode:'Contrat cohérent'})]);assert.equal(out.length,1);assert.equal(out[0].recordId,11);assert.equal(out[0].periode,'Contrat cohérent');
 });
 
 test('la pagination limite à dix entreprises par défaut et conserve le total',()=>{

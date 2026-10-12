@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.556';
+var EUC_DEV538_VERSION_='1.0.0-dev.557';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV545_CLASS_MODES_PROP_='EUC_DEV545_MODALITES_APPRENTISSAGE_V1';
@@ -61,16 +61,25 @@ function EUC_DEV547_nameScore_(value){
   var initials=tokens.filter(function(x){return x.length===1;}).length,base=tokens.length>=2&&!initials?400:tokens.length>=2?300:200;
   return base+Math.min(99,original.length);
 }
+/* Un nom complet saisi dans l'ordre NOM Prénom ou Prénom NOM représente le
+ * même contact au sein d'une entreprise. On exige au moins deux mots pleins :
+ * aucune fusion automatique n'est tentée sur un nom seul, une initiale ou une
+ * simple ressemblance orthographique. */
+function EUC_DEV557_contactNameTokenKey_(value){
+  var tokens=EUC_DEV538_norm_(EUC_DEV540_contactName_(value)).split(' ').filter(Boolean).filter(function(x){return['M','MR','MME','MLLE','MONSIEUR','MADAME'].indexOf(x)<0;});
+  if(tokens.length<2||tokens.some(function(x){return x.length<2;}))return'';
+  return tokens.sort().join('|');
+}
 function EUC_DEV547_contacts_(history,kind){
   var groups=[];
   (history||[]).forEach(function(h){
-    var responsible=kind==='responsable',name=EUC_DEV540_contactName_(h&&h[responsible?'responsable':'tuteur']),phone=EUC_DEV538_t_(h&&h[responsible?'telephoneResponsable':'telephoneTuteur']),email=EUC_DEV538_t_(h&&h[responsible?'courrielResponsable':'courrielTuteur']),year=EUC_DEV538_t_(h&&h.annee),latestAt=EUC_DEV538_t_(h&&h.dateSaisie)||year+'-01-01',phoneKey=EUC_DEV547_phoneKey_(phone),emailKey=EUC_DEV547_emailKey_(email),nameKey=EUC_DEV538_norm_(name);
+    var responsible=kind==='responsable',name=EUC_DEV540_contactName_(h&&h[responsible?'responsable':'tuteur']),phone=EUC_DEV538_t_(h&&h[responsible?'telephoneResponsable':'telephoneTuteur']),email=EUC_DEV538_t_(h&&h[responsible?'courrielResponsable':'courrielTuteur']),year=EUC_DEV538_t_(h&&h.annee),latestAt=EUC_DEV538_t_(h&&h.dateSaisie)||year+'-01-01',phoneKey=EUC_DEV547_phoneKey_(phone),emailKey=EUC_DEV547_emailKey_(email),nameKey=EUC_DEV538_norm_(name),nameTokenKey=EUC_DEV557_contactNameTokenKey_(name);
     if(!name&&!phone&&!email)return;
-    var matches=[];groups.forEach(function(g,index){if(phoneKey&&g.phoneKeys[phoneKey]||emailKey&&g.emailKeys[emailKey]||!phoneKey&&!emailKey&&nameKey&&g.nameKeys[nameKey])matches.push(index);});
-    var target=matches.length?groups[matches[0]]:{names:{},phones:{},emails:{},years:{},latestAt:'',phoneKeys:{},emailKeys:{},nameKeys:{}};
+    var matches=[];groups.forEach(function(g,index){if(phoneKey&&g.phoneKeys[phoneKey]||emailKey&&g.emailKeys[emailKey]||nameTokenKey&&g.nameTokenKeys[nameTokenKey]||!phoneKey&&!emailKey&&nameKey&&g.nameKeys[nameKey])matches.push(index);});
+    var target=matches.length?groups[matches[0]]:{names:{},phones:{},emails:{},years:{},latestAt:'',phoneKeys:{},emailKeys:{},nameKeys:{},nameTokenKeys:{}};
     if(!matches.length)groups.push(target);
-    for(var m=matches.length-1;m>0;m--){var extra=groups[matches[m]];Object.keys(extra.names).forEach(function(k){target.names[k]=extra.names[k];});Object.keys(extra.phones).forEach(function(k){target.phones[k]=extra.phones[k];});Object.keys(extra.emails).forEach(function(k){target.emails[k]=extra.emails[k];});Object.keys(extra.years).forEach(function(k){target.years[k]=true;});if(extra.latestAt>target.latestAt)target.latestAt=extra.latestAt;Object.keys(extra.phoneKeys).forEach(function(k){target.phoneKeys[k]=true;});Object.keys(extra.emailKeys).forEach(function(k){target.emailKeys[k]=true;});Object.keys(extra.nameKeys).forEach(function(k){target.nameKeys[k]=true;});groups.splice(matches[m],1);}
-    if(name){target.names[name]=EUC_DEV547_nameScore_(name);if(nameKey)target.nameKeys[nameKey]=true;}
+    for(var m=matches.length-1;m>0;m--){var extra=groups[matches[m]];Object.keys(extra.names).forEach(function(k){target.names[k]=extra.names[k];});Object.keys(extra.phones).forEach(function(k){target.phones[k]=extra.phones[k];});Object.keys(extra.emails).forEach(function(k){target.emails[k]=extra.emails[k];});Object.keys(extra.years).forEach(function(k){target.years[k]=true;});if(extra.latestAt>target.latestAt)target.latestAt=extra.latestAt;Object.keys(extra.phoneKeys).forEach(function(k){target.phoneKeys[k]=true;});Object.keys(extra.emailKeys).forEach(function(k){target.emailKeys[k]=true;});Object.keys(extra.nameKeys).forEach(function(k){target.nameKeys[k]=true;});Object.keys(extra.nameTokenKeys||{}).forEach(function(k){target.nameTokenKeys[k]=true;});groups.splice(matches[m],1);}
+    if(name){target.names[name]=EUC_DEV547_nameScore_(name);if(nameKey)target.nameKeys[nameKey]=true;if(nameTokenKey)target.nameTokenKeys[nameTokenKey]=true;}
     if(phone){target.phones[phoneKey||phone]=target.phones[phoneKey||phone]||phone;if(phoneKey)target.phoneKeys[phoneKey]=true;}
     if(email){target.emails[emailKey||email]=target.emails[emailKey||email]||email;if(emailKey)target.emailKeys[emailKey]=true;}
     if(year)target.years[year]=true;
@@ -124,12 +133,26 @@ function EUC_DEV546_contractInfo_(row,fallbackYear){
   if(!studentId||!year||!start||!end||!entreprise||!adresse)return null;
   return{recordId:EUC_DEV538_n_(row&&row.id),dateSaisie:EUC_DEV538_t_(EUC_DEV538_pick_(f,['Date_modification','Updated_at','Date_creation','Date_saisie_entreprise','Date_derniere_utilisation'])),eleveId:studentId,annee:year,debut:EUC_DEV538_iso_(start),fin:EUC_DEV538_iso_(end),periode:'Contrat du '+EUC_DEV546_dateFr_(start)+' au '+EUC_DEV546_dateFr_(end),entreprise:entreprise,adresse:adresse,siret:EUC_DEV538_t_(f.SIRET).replace(/\D/g,''),responsable:EUC_DEV540_contactName_(EUC_DEV538_pick_(f,['Responsable_nom','Responsable','Nom_responsable_entreprise'])),telephoneResponsable:EUC_DEV538_t_(EUC_DEV538_pick_(f,['Entreprise_telephone','Telephone_entreprise','Responsable_telephone'])),courrielResponsable:EUC_DEV538_t_(EUC_DEV538_pick_(f,['Entreprise_courriel','Courriel_entreprise','Responsable_courriel'])),tuteur:EUC_DEV540_contactName_(EUC_DEV538_pick_(f,['Tuteur_nom','Tuteur'])),telephoneTuteur:EUC_DEV538_t_(EUC_DEV538_pick_(f,['Tuteur_telephone','Telephone_tuteur'])),courrielTuteur:EUC_DEV538_t_(EUC_DEV538_pick_(f,['Tuteur_courriel','Courriel_tuteur']))};
 }
+function EUC_DEV557_contractPreference_(a,b){
+  var ad=EUC_DEV538_date_(a&&a.debut),af=EUC_DEV538_date_(a&&a.fin),bd=EUC_DEV538_date_(b&&b.debut),bf=EUC_DEV538_date_(b&&b.fin),aValid=!!ad&&!!af&&af.getTime()>=ad.getTime(),bValid=!!bd&&!!bf&&bf.getTime()>=bd.getTime();
+  if(aValid!==bValid)return aValid?1:-1;
+  var aDuration=aValid?af.getTime()-ad.getTime():-1,bDuration=bValid?bf.getTime()-bd.getTime():-1;if(aDuration!==bDuration)return aDuration>bDuration?1:-1;
+  var aDate=EUC_DEV538_t_(a&&a.dateSaisie),bDate=EUC_DEV538_t_(b&&b.dateSaisie);if(aDate!==bDate)return aDate>bDate?1:-1;
+  return EUC_DEV538_n_(a&&a.recordId)-EUC_DEV538_n_(b&&b.recordId);
+}
+function EUC_DEV557_canonicalContracts_(contracts){
+  var by={};(contracts||[]).forEach(function(c){
+    var companyKey=EUC_DEV538_t_(c&&c.siret).replace(/\D/g,'');if(companyKey.length!==14)companyKey=EUC_DEV538_companyIdentity_(c&&c.entreprise,c&&c.adresse,'');
+    var key=[EUC_DEV538_t_(c&&c.annee),EUC_DEV538_n_(c&&c.eleveId),companyKey].join('|'),current=by[key];if(!current||EUC_DEV557_contractPreference_(c,current)>0)by[key]=c;
+  });
+  return Object.keys(by).map(function(k){return by[k];}).filter(function(c){var start=EUC_DEV538_date_(c.debut),end=EUC_DEV538_date_(c.fin);return start&&end&&end.getTime()>=start.getTime();}).sort(function(a,b){return EUC_DEV557_contractPreference_(b,a);});
+}
 function EUC_DEV546_bookApprentices_(years,withVisitors){
   var wanted={};(years||[]).forEach(function(y){wanted[y]=true;});var yearsById=EUC_DEV538_schoolYearMap_(),students={},studentNameKeys={};
   EUC_DEV538_optionalRecords_('EUC_ELEVES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),id=EUC_DEV538_n_(r.id||f.id),year=EUC_DEV538_studentYear_(f,yearsById);if(!id||!wanted[year])return;var classeId=EUC_DEV538_ref_(f.Classe),classe=EUC_DEV538_t_(EUC_DEV538_pick_(f,['Code_classe_importe','Classe_nom','Classe_snapshot'])),name=[EUC_DEV538_t_(f.Nom),EUC_DEV538_t_(f.Prenom_usage||f.Prenom)].filter(Boolean).join(' '),famille=EUC_DEV538_t_(f.Famille).toUpperCase()||(/BTS/.test(classe.toUpperCase())?'BTS':/CAP/.test(classe.toUpperCase())?'CAP':'BACPRO');students[id]={id:id,annee:year,eleve:name,classeId:classeId,classe:classe,famille:famille};if(name)studentNameKeys[year+'|'+EUC_DEV538_norm_(name)]=id;});
   var visitors={};if(withVisitors)EUC_DEV538_optionalRecords_('EUC_AFFECTATIONS_SUIVI_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),year=EUC_DEV538_t_(f.Annee_scolaire),type=EUC_DEV538_norm_(f.Type_suivi),eid=EUC_DEV538_ref_(f.Eleve),name=EUC_DEV538_t_(f.Nom_professeur_snapshot);if(f.Actif===false||!wanted[year]||type.indexOf('VISITE')<0||!eid||!name)return;var key=year+'|'+eid;if(!visitors[key])visitors[key]={};visitors[key][name]=true;});
   var byStudentYear={},unique={};EUC_DEV538_optionalRecords_('EUC_APPRENTISSAGE_PFMP',{}).forEach(function(row){var raw=EUC_DEV538_fields_(row),studentId=EUC_DEV538_ref_(EUC_DEV538_pick_(raw,['Eleve','Élève','Eleve_id'])),meta=students[studentId]||{},info=EUC_DEV546_contractInfo_(row,meta.annee);if(!info||!wanted[info.annee])return;var key=[info.annee,info.eleveId,info.siret||EUC_DEV538_norm_(info.entreprise+' '+info.adresse),info.debut,info.fin].join('|'),previous=unique[key];if(previous&&previous.recordId>=info.recordId)return;info.meta=meta;info.eleve=meta.eleve||EUC_DEV538_t_(EUC_DEV538_pick_(raw,['Eleve_nom','Nom_eleve','Jeune_nom']));info.professeurVisiteur=Object.keys(visitors[info.annee+'|'+info.eleveId]||{}).sort(function(a,b){return a.localeCompare(b,'fr');}).join(' · ');unique[key]=info;});
-  var contracts=Object.keys(unique).map(function(k){return unique[k];});contracts.forEach(function(info){var key=info.annee+'|'+info.eleveId;if(!byStudentYear[key])byStudentYear[key]=[];byStudentYear[key].push(info);});return{contracts:contracts,byStudentYear:byStudentYear,students:students,studentNameKeys:studentNameKeys,visitors:visitors};
+  var contracts=EUC_DEV557_canonicalContracts_(Object.keys(unique).map(function(k){return unique[k];}));contracts.forEach(function(info){var key=info.annee+'|'+info.eleveId;if(!byStudentYear[key])byStudentYear[key]=[];byStudentYear[key].push(info);});return{contracts:contracts,byStudentYear:byStudentYear,students:students,studentNameKeys:studentNameKeys,visitors:visitors};
 }
 function EUC_DEV546_isApprenticeLine_(x,entreprise,adresse,siret,contracts){
   if(!contracts||!contracts.length)return false;if(x&&x.apprenti===true||/APPRENTI/.test(EUC_DEV538_norm_(x&&x.statutApprentissage||x&&x.statutJeune)))return true;var sir=EUC_DEV538_t_(siret).replace(/\D/g,''),addressIdentity=EUC_DEV538_companyIdentity_(entreprise,adresse,'');return contracts.some(function(c){return sir.length===14&&sir===c.siret||addressIdentity===EUC_DEV538_companyIdentity_(c.entreprise,c.adresse,'');});
@@ -341,7 +364,7 @@ function EUC_DEV549_digest_(value){
   var raw=EUC_DEV538_t_(value),hash=2166136261;for(var i=0;i<raw.length;i++){hash^=raw.charCodeAt(i);hash=Math.imul(hash,16777619);}return'PUBLIC-'+(hash>>>0).toString(16);
 }
 function EUC_DEV549_publicBookRevision_(years){
-  var parts=['PUBLIC-BOOK-4',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'],props={},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_';
+  var parts=['PUBLIC-BOOK-5',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'],props={},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_';
   /* getProperties() remplace les treize lectures distantes getProperty()
    * effectuées autrefois à chaque démarrage à froid du book public. */
   try{props=PropertiesService.getScriptProperties().getProperties()||{};}catch(eProps){props={};}
