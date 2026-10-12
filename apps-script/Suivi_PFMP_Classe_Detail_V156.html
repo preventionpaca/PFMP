@@ -33,11 +33,11 @@
     th:nth-child(6),td:nth-child(6),th:nth-child(7),td:nth-child(7){min-width:220px;width:15%}
     th:nth-child(8),td:nth-child(8){min-width:155px}th:nth-child(9),td:nth-child(9),th:nth-child(10),td:nth-child(10){min-width:125px}
     td{line-height:1.3;overflow-wrap:anywhere}.euc418-contact>div+div{margin-top:3px}.euc418-contact .name{font-weight:700}
-    .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
+    .student{font-weight:700}.empty{color:var(--muted);font-style:italic}.status-pill{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}
     .s-SANS_CONVENTION{background:#fff1f2;color:#b42318}.s-DEPOSEE,.s-SIGNEE{background:#fff7ed;color:#b45309}
     .s-ENREGISTREE,.s-AVEC_CONVENTION,.s-FINALISEE,.s-REMISE,.s-AUTORISEE,.s-APPRENTI{background:#0b8f72!important;color:#fff!important}.s-ANNULEE,.s-INTERROMPUE,.s-SUPPRIMEE{background:#fee4e2;color:#b42318}.s-A_COMPLETER_ENTREPRISE{background:#fff7ed;color:#b45309}
     tr.row-situation-admin{background:#fff0db!important}tr.row-situation-admin td{border-bottom-color:#f7c77e!important}
-    .status-date{display:block;margin-top:5px;font-size:12px;font-weight:800;line-height:1.25;opacity:1;white-space:nowrap}
+    .status-date{display:block;margin-top:5px;font-size:12px;font-weight:800;line-height:1.25;opacity:1;white-space:nowrap;text-align:center}
     .modal{position:fixed;inset:0;background:rgba(15,23,42,.52);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
     .modal.show{display:flex}.modal-card{background:#fff;width:min(720px,96vw);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
     .modal-card h3{margin-top:0}.modal-list{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;max-height:180px;overflow:auto;font-size:13px}
@@ -458,7 +458,7 @@ function statusPill(x){
   phoneAssignBtn.onclick=function(){assign('TELEPHONE',selectedProfPhone,phoneAssignBtn)};visitAssignBtn.onclick=function(){assign('VISITE',selectedProfVisit,visitAssignBtn)};
   sendTable.onclick=prepareMail;mailConfirm.onclick=sendMail;mailCancel.onclick=function(){mailModal.classList.remove('show');pendingMail=null};mailModal.onclick=function(e){if(e.target===mailModal){mailModal.classList.remove('show');pendingMail=null}};
   document.getElementById('exportPdf').onclick=function(){window.print()};
-  document.getElementById('mapPfmp').onclick=function(){var u=C.baseUrl+'?page=cartographie-pfmp&annee='+encodeURIComponent(detail.annee||'')+'&famille='+encodeURIComponent(new URLSearchParams(location.search).get('famille')||'')+'&classe='+encodeURIComponent(detail.classe&&detail.classe.id||'')+'&periode='+encodeURIComponent(detail.periode&&detail.periode.id||'');window.open(u,'_blank','noopener')};
+  document.getElementById('mapPfmp').onclick=function(){var b=this;if(b.disabled||b.getAttribute('aria-busy')==='true')return;var label=b.textContent;b.disabled=true;b.setAttribute('aria-busy','true');b.innerHTML='<span class="euc405-spin"></span>Ouverture de la carte…';var u=C.baseUrl+'?page=cartographie-pfmp&annee='+encodeURIComponent(detail.annee||'')+'&famille='+encodeURIComponent(new URLSearchParams(location.search).get('famille')||'')+'&classe='+encodeURIComponent(detail.classe&&detail.classe.id||'')+'&periode='+encodeURIComponent(detail.periode&&detail.periode.id||'')+'&origin=suivi-conventions'+(C.publicMode?'&public=1':'');setTimeout(function(){b.disabled=false;b.removeAttribute('aria-busy');b.textContent=label},12000);if(C.publicMode&&typeof window.EUC_DEV556_publicNavigate==='function')window.EUC_DEV556_publicNavigate(u);else try{window.top.location.href=u}catch(e){window.location.href=u}};
   yearSelect.onchange=function(){window.location.href=C.baseUrl+'?page=suivi-pfmp-classe&annee='+encodeURIComponent(yearSelect.value)+'&classe='+encodeURIComponent(detail.classe.id)};
   render();
   /* Les optimisations de navigation sont chargées dans un second script.
@@ -1413,6 +1413,7 @@ function statusPill(x){
   font-size:10px;
   line-height:1.25;
   font-weight:900;
+  text-align:center;
 }
 .dev285c-mode.lycee{color:#1e64c8}
 .dev285c-mode.ent{color:#08745f}
@@ -1501,6 +1502,13 @@ function statusPill(x){
     var d=r&&r.detail;
 
     if(!d){
+      return;
+    }
+
+    /* Le choix de fin de Terminale appartient exclusivement au parcours
+     * différencié. Il ne doit pas parasiter les PFMP ordinaires. */
+    var periodLabel=norm(d.periode&&d.periode.libelle||'');
+    if(periodLabel.indexOf('P.DIF')<0&&periodLabel.indexOf('PARCOURS DIFFERENCIE')<0){
       return;
     }
 
@@ -2349,5 +2357,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 <script id="EUC_DEV556_PFMP_DETAIL_NAV">
-(function(){'use strict';if(typeof C==='undefined'||!C||!C.publicMode)return;var ready=false,pending='',timer=0,allowed={'suivi-conventions-public':1,'suivi-conventions-public-famille':1,'suivi-pfmp-classe-public':1,'book-entreprises-public-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url});else window.location.href=url}function navigate(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_PFMP_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)}window.EUC_DEV556_publicNavigate=navigate;window.EUC_DEV418_publicNavigate=navigate;addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();a.classList.add('euc183-loading');a.setAttribute('aria-busy','true');navigate(url)},true);send({type:'EUC_PFMP_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_PFMP_WRAPPER_QUERY'})},120)})();
+(function(){'use strict';if(typeof C==='undefined'||!C||!C.publicMode)return;var ready=false,pending='',timer=0,allowed={'suivi-conventions-public':1,'suivi-conventions-public-famille':1,'suivi-pfmp-classe-public':1,'book-entreprises-public-pfmp':1,'cartographie-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url});else window.location.href=url}function navigate(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_PFMP_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)}window.EUC_DEV556_publicNavigate=navigate;window.EUC_DEV418_publicNavigate=navigate;addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();if(a.closest('#periodTabs')){a.classList.add('euc405-loading');if(!a.querySelector('.euc405-spin'))a.insertAdjacentHTML('afterbegin','<span class="euc405-spin"></span>')}else a.classList.add('euc183-loading');a.setAttribute('aria-busy','true');navigate(url)},true);send({type:'EUC_PFMP_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_PFMP_WRAPPER_QUERY'})},120)})();
 </script>
