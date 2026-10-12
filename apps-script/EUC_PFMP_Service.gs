@@ -96,11 +96,15 @@ function EUC_PFMP_validerDonnees_(d) {
   if(!EUC_PFMP_nettoyer_(d.nonce,200))e.push('Nonce absent.');
   if(e.length)throw new Error(e.join(' ')); return true;
 }
-function EUC_PFMP_nomComplet_(prenom,nom){return [EUC_PFMP_nettoyer_(prenom,150),EUC_PFMP_nettoyer_(nom,150)].filter(Boolean).join(' ');}
+function EUC_PFMP_nomPersonne_(value){
+  if(typeof EUC_DEV563_personName_==='function')return EUC_DEV563_personName_(EUC_PFMP_nettoyer_(value,150));
+  return EUC_PFMP_nettoyer_(value,150).toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,sep,letter){return sep+letter.toLocaleUpperCase('fr-FR');});
+}
+function EUC_PFMP_nomComplet_(prenom,nom){return [EUC_PFMP_nomPersonne_(prenom),EUC_PFMP_nomPersonne_(nom)].filter(Boolean).join(' ');}
 function EUC_PFMP_preparerContactsSimules_(d){
-  var responsable={prenom:EUC_PFMP_nettoyer_(d.responsablePrenom,150),nom:EUC_PFMP_nettoyer_(d.responsableNom,150),fonction:EUC_PFMP_nettoyer_(d.responsableFonction,250),telephone:EUC_PFMP_nettoyer_(d.responsableTelephone,30),courriel:EUC_PFMP_nettoyer_(d.responsableCourriel,250),roles:['Responsable']};
+  var responsable={prenom:EUC_PFMP_nomPersonne_(d.responsablePrenom),nom:EUC_PFMP_nomPersonne_(d.responsableNom),fonction:EUC_PFMP_nettoyer_(d.responsableFonction,250),telephone:EUC_PFMP_nettoyer_(d.responsableTelephone,30),courriel:EUC_PFMP_nettoyer_(d.responsableCourriel,250),roles:['Responsable']};
   if(d.tuteurEstResponsable){responsable.roles.push('Tuteur');return [responsable];}
-  return [responsable,{prenom:EUC_PFMP_nettoyer_(d.tuteurPrenom,150),nom:EUC_PFMP_nettoyer_(d.tuteurNom,150),fonction:EUC_PFMP_nettoyer_(d.tuteurFonction,250),telephone:EUC_PFMP_nettoyer_(d.tuteurTelephone,30),courriel:EUC_PFMP_nettoyer_(d.tuteurCourriel,250),roles:['Tuteur']}];
+  return [responsable,{prenom:EUC_PFMP_nomPersonne_(d.tuteurPrenom),nom:EUC_PFMP_nomPersonne_(d.tuteurNom),fonction:EUC_PFMP_nettoyer_(d.tuteurFonction,250),telephone:EUC_PFMP_nettoyer_(d.tuteurTelephone,30),courriel:EUC_PFMP_nettoyer_(d.tuteurCourriel,250),roles:['Tuteur']}];
 }
 function EUC_PFMP_validerReferentielSelection_(d) {
   var catalogue=EUC_PFMP_chargerReferentiel(), offre=catalogue.offres.filter(function(o){return o.id===Number(d.offreId);})[0];

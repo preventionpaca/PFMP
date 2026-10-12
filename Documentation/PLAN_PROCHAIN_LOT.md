@@ -1,5 +1,20 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV563 candidat — portée des actions et correction centralisée des contacts
+
+- Paramétrer par catégorie la visibilité professeurs et élèves/familles ;
+  l'administration conserve toujours la vue complète et l'absence de réglage
+  reste privée.
+- Croiser cette portée avec la restriction de chaque action et son statut sans
+  exposer un brouillon, un identifiant Drive ou un auteur aux pages publiques.
+- Permettre la correction des responsables et tuteurs dans une liste centrale
+  du book, sans réécriture des conventions historiques.
+- Normaliser les noms dans les prochains imports JotForm et lors des saisies
+  téléphone, côté client comme côté serveur, tout en conservant les surcharges
+  manuelles pour les graphies particulières.
+- La création de la table de catégories et toute correction de contact réelle
+  restent paresseuses : aucune donnée Grist n'est écrite par la recette.
+
 ## DEV562 publié (@956) — profil et mémoire de la relation entreprise
 
 - Les trois tables sont créées paresseusement à la première écriture

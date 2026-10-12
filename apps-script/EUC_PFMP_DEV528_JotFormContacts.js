@@ -30,6 +30,11 @@ function EUC_DEV528_norm_(v){
   try{s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');}catch(e){}
   return s.toUpperCase().replace(/[^A-Z0-9]+/g,'');
 }
+function EUC_DEV528_personName_(v){
+  if(typeof EUC_DEV563_personName_==='function')return EUC_DEV563_personName_(v);
+  var small={de:1,du:1,des:1,la:1,le:1,van:1,von:1};
+  return EUC_DEV528_t_(v).replace(/^([A-Za-zÀ-ÖØ-öø-ÿ])\.([A-Za-zÀ-ÖØ-öø-ÿ])/,'$1. $2').replace(/\s+/g,' ').split(' ').map(function(word,i){return word.split(/([-'])/).map(function(part,j){if(part==='-'||part==="'")return part;var low=part.toLocaleLowerCase('fr-FR');if(i+j&&small[low])return low;if(/^[A-Za-zÀ-ÖØ-öø-ÿ]\.?$/.test(part))return part.toUpperCase();return low.charAt(0).toLocaleUpperCase('fr-FR')+low.slice(1);}).join('');}).join(' ');
+}
 function EUC_DEV528_pick_(obj,names){
   obj=obj||{};var byNorm={},i,k,v;
   Object.keys(obj).forEach(function(key){byNorm[EUC_DEV528_norm_(key)]=key;});
@@ -53,7 +58,8 @@ function EUC_DEV528_contactFromBuffer_(row){
     siret:EUC_DEV528_digits_(row.SIRET_normalise||row.SIRET_brut||EUC_DEV528_pick_(raw,['N° SIRET (France)','N° SIRET','SIRET'])),
     debut:EUC_DEV530_date_(row.Date_debut_brut||row.Date_debut||EUC_DEV528_pick_(raw,['Date de début','Date debut'])),
     fin:EUC_DEV530_date_(row.Date_fin_brut||row.Date_fin||EUC_DEV528_pick_(raw,['Date de fin','Date fin'])),
-    nom:EUC_DEV528_pick_(row,['Nom_responsable','Responsable_nom','Nom_representant'])||EUC_DEV528_pick_(raw,['Nom du responsable',"Nom du responsable de l'entreprise",'Responsable entreprise','Nom responsable','Nom du représentant','Représentée par']),
+    nom:EUC_DEV528_personName_(EUC_DEV528_pick_(row,['Nom_responsable','Responsable_nom','Nom_representant'])||EUC_DEV528_pick_(raw,['Nom du responsable',"Nom du responsable de l'entreprise",'Responsable entreprise','Nom responsable','Nom du représentant','Représentée par'])),
+    tuteurNom:EUC_DEV528_personName_(EUC_DEV528_pick_(row,['Nom_tuteur','Tuteur_nom'])||EUC_DEV528_pick_(raw,['Nom du tuteur','Nom tuteur'])),
     telephone:EUC_DEV528_pick_(row,['Responsable_telephone','Telephone_entreprise','Telephone_responsable'])||EUC_DEV528_pick_(raw,['Téléphone entreprise','Telephone entreprise','Téléphone responsable','Telephone responsable','Téléphone du responsable']),
     courriel:EUC_DEV528_pick_(row,['Responsable_courriel','Email_entreprise','Email_responsable'])||EUC_DEV528_pick_(raw,["Adresse e-mail de l'entreprise","Adresse email de l'entreprise",'Email responsable','Courriel responsable','Adresse e-mail du responsable'])
   };
@@ -160,7 +166,8 @@ function EUC_DEV528_companyFields_(row,ctx,columns){
     Entreprise_courriel:c.courriel,
     Responsable_nom:c.nom,
     Responsable_telephone:c.telephone,
-    Responsable_courriel:c.courriel
+    Responsable_courriel:c.courriel,
+    Tuteur_nom:c.tuteurNom
   };
   return Object.assign(out,EUC_DEV307_filterFields_(extra,columns));
 }

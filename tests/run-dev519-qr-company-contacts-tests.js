@@ -138,6 +138,10 @@ test('le préremplissage QR recalcule le SIRET et identifie le champ invalide',(
   assert.match(qr,/le champ « '\+badLabel\+' » est incomplet ou incorrect/);
 });
 
+test('la saisie QR normalise les noms de personnes avant enregistrement',()=>{
+  for(const name of ['responsableNom','responsablePrenom','tuteurNom','tuteurPrenom'])assert.match(qr,new RegExp('name="'+name+'"[\\s\\S]{0,120}autocapitalize="words"'));assert.match(qr,/id="EUC_DEV563_PERSON_NAMES"/);assert.match(qr,/toLocaleLowerCase\('fr-FR'\)/);
+});
+
 test('la case tuteur identique retire réellement les obligations des champs masqués',()=>{
   const script=(qr.match(/<script id="EUC_REQUIRED_CONTACTS_FIX11">([\s\S]*?)<\/script>/)||[])[1];
   assert.ok(script,'script de validation des contacts introuvable');

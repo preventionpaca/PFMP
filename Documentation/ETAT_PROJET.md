@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV563 candidat
+
+- Le book administrateur centralise la portée des catégories d'actions dans
+  `EUC_RELATIONS_ENTREPRISES_CATEGORIES`. L'administration voit toujours tout ;
+  l'accès des professeurs et celui des élèves/familles sont réglables
+  séparément pour chaque catégorie. Une catégorie non paramétrée reste privée.
+- La restriction propre à une action complète ce réglage sans pouvoir
+  l'élargir : héritée de la catégorie, administration uniquement, professeurs
+  au maximum, ou familles au maximum. Les brouillons restent invisibles hors
+  administration.
+- Le book administrateur fournit une liste transversale, filtrable et
+  modifiable des responsables et tuteurs. Les corrections continuent d'être
+  stockées comme surcouches traçables ; aucune convention historique n'est
+  réécrite.
+- Les futurs imports JotForm et les formulaires de saisie normalisent la casse
+  des noms composés à la sortie du champ et côté serveur. Les exceptions
+  réelles restent corrigeables manuellement dans la liste centrale ; aucun
+  traitement massif destructif de l'historique n'est lancé.
+- Les deux nouvelles interfaces sont chargées uniquement à la demande et tous
+  leurs boutons asynchrones appliquent le verrou anti-double-clic, le spinner,
+  le délai maximal et la restauration d'état existants.
+
 ## Mise à jour du 12 octobre 2026 — DEV562 publié sur le site en ligne (@956)
 
 - Les noms des responsables et tuteurs sont présentés en casse lisible sans

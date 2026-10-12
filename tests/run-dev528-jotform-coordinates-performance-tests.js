@@ -72,6 +72,9 @@ test('les prochains imports écrivent les coordonnées canoniques',()=>{
   assert.equal(out.Responsable_courriel,'responsable@example.test');
   assert.match(importCode,/EUC_DEV528_companyFields_/);
 });
+test('les prochains imports normalisent la typographie des noms sans perdre les noms composés',()=>{
+  const ctx=context([]),columns={Responsable_nom:1,Tuteur_nom:1},messy=Object.assign({},raw,{'Nom du responsable':"JEAN-PIERRE D'AMICO",'Nom du tuteur':'marie-anne le gall'}),out=ctx.EUC_DEV528_companyFields_({SIRET_normalise:'73282932000074',Raw_JSON:JSON.stringify(messy)},{},columns);assert.equal(out.Responsable_nom,"Jean-Pierre D'Amico");assert.equal(out.Tuteur_nom,'Marie-Anne le Gall');
+});
 test('le chemin de consolidation applique le repli JotForm après les références entreprise',()=>{
   assert.match(consolidation,/EUC_DEV528_enrichJotformContacts_\(rows\)/);
 });

@@ -8,10 +8,19 @@
 - Le profil éditorial et l'historique de relation d'une entreprise sont indexés
   dans Grist. Les logos, photos et pièces restent dans Drive afin de ne pas
   consommer la capacité documentaire de Grist. Les liens sont limités à HTTP(S).
-- Une action de relation possède un statut `BROUILLON` ou `PUBLIE` et une
-  visibilité `PERSONNELS` ou `PUBLIC`. Le public ne voit que la combinaison
-  `PUBLIE` + `PUBLIC`. L'archivage futur devra être logique (`Actif=false`) et
-  ne supprimera jamais physiquement l'historique.
+- Une action de relation possède un statut `BROUILLON` ou `PUBLIE`. Sa portée
+  maximale est définie dans une table de catégories : administration toujours,
+  professeurs et élèves/familles réglables séparément. Une catégorie absente du
+  paramétrage est privée par défaut. La restriction de l'action (`HERITEE`,
+  `ADMIN`, `PERSONNELS` ou `PUBLIC`) ne peut que réduire cette portée, jamais
+  l'élargir. Hors administration, seuls les statuts `PUBLIE` sont transmis.
+  L'archivage futur devra être logique (`Actif=false`) et ne supprimera jamais
+  physiquement l'historique.
+- La casse des noms de responsables et tuteurs est normalisée lors des futurs
+  imports et saisies, avec gestion des espaces, traits d'union et apostrophes.
+  Cette normalisation typographique ne prouve jamais l'identité de deux
+  personnes. Les sources historiques ne sont pas modifiées en masse : toute
+  exception ou faute réelle passe par une correction administrateur traçable.
 - Les tables de relation utilisent une clé d'entreprise durable, le SIRET
   lorsqu'il est disponible et l'identité canonique en repli. Cette clé permettra
   de déplacer ultérieurement le journal vers un autre document Grist sans

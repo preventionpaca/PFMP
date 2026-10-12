@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.562';
+var EUC_DEV538_VERSION_='1.0.0-dev.563';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV545_CLASS_MODES_PROP_='EUC_DEV545_MODALITES_APPRENTISSAGE_V1';

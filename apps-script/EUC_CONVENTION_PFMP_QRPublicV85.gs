@@ -346,14 +346,18 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
   function txt(v,n){
     return String(v==null?'':v).trim().replace(/[<>]/g,'').slice(0,n||500);
   }
+  function person(v){
+    if(typeof EUC_DEV563_personName_==='function')return EUC_DEV563_personName_(v);
+    return txt(v,150).toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,sep,letter){return sep+letter.toLocaleUpperCase('fr-FR');});
+  }
 
   var pays=txt(d.entreprisePays,100)||'France';
   var identifiant=txt(d.entrepriseSiret,30);
   var raison=txt(d.entrepriseRaisonSociale,250);
   var adresse=txt(d.entrepriseAdresse,300);
   var commune=txt(d.entrepriseCommune,150);
-  var respNom=txt(d.responsableNom,150);
-  var respPrenom=txt(d.responsablePrenom,150);
+  var respNom=person(d.responsableNom);
+  var respPrenom=person(d.responsablePrenom);
   var respFonction=txt(d.responsableFonction,200);
   var respTelephone=txt(d.responsableTelephone,50);
   var respCourriel=txt(d.responsableCourriel,250);
@@ -400,8 +404,8 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     throw new Error('Nom, prénom, fonction, téléphone et e-mail du responsable de l’entreprise sont obligatoires.');
   }
 
-  var tNom=tuteurEst?respNom:txt(d.tuteurNom,150);
-  var tPrenom=tuteurEst?respPrenom:txt(d.tuteurPrenom,150);
+  var tNom=tuteurEst?respNom:person(d.tuteurNom);
+  var tPrenom=tuteurEst?respPrenom:person(d.tuteurPrenom);
   var tFonction=tuteurEst?respFonction:txt(d.tuteurFonction,200);
   var tTelephone=tuteurEst?respTelephone:txt(d.tuteurTelephone,50);
   var tCourriel=tuteurEst?respCourriel:txt(d.tuteurCourriel,250);

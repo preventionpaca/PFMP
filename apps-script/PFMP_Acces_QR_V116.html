@@ -399,12 +399,16 @@ Pays *
 <label>
 Nom *
 <input name="responsableNom"
+       autocomplete="family-name"
+       autocapitalize="words"
        required>
 </label>
 
 <label>
 Prénom
-<input name="responsablePrenom">
+<input name="responsablePrenom"
+       autocomplete="given-name"
+       autocapitalize="words">
 </label>
 
 <label>
@@ -444,12 +448,16 @@ Le tuteur est également le responsable dans l’entreprise
 
 <label>
 Nom *
-<input name="tuteurNom">
+<input name="tuteurNom"
+       autocomplete="family-name"
+       autocapitalize="words">
 </label>
 
 <label>
 Prénom
-<input name="tuteurPrenom">
+<input name="tuteurPrenom"
+       autocomplete="given-name"
+       autocapitalize="words">
 </label>
 
 <label>
@@ -1840,6 +1848,17 @@ init();
   }else{
     boot();
   }
+})();
+</script>
+<script id="EUC_DEV563_PERSON_NAMES">
+(function(){
+  'use strict';
+  function pretty(value){return String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,separator,letter){return separator+letter.toLocaleUpperCase('fr-FR');});}
+  function boot(){
+    ['responsableNom','responsablePrenom','tuteurNom','tuteurPrenom'].forEach(function(name){var el=document.querySelector('[name="'+name+'"]');if(el)el.addEventListener('blur',function(){el.value=pretty(el.value);});});
+    var save=document.getElementById('save');if(save)save.addEventListener('click',function(){['responsableNom','responsablePrenom','tuteurNom','tuteurPrenom'].forEach(function(name){var el=document.querySelector('[name="'+name+'"]');if(el)el.value=pretty(el.value);});},true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
 <style id="EUC_REQUIRED_CONTACTS_FIX11_STYLE">
