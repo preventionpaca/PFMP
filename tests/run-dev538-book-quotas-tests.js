@@ -157,6 +157,10 @@ test('une correction administrateur se superpose à la convention sans fusion fl
   const c=context(),contacts=c.EUC_DEV547_contacts_([{responsable:'duranti alex',telephoneResponsable:'04 00 00 00 01'},{responsable:'Durant Alex',telephoneResponsable:'06 00 00 00 02'}],'responsable');assert.equal(contacts.length,2);const target=contacts.filter(x=>x.nom==='duranti alex')[0],key=c.EUC_DEV562_contactKey_(target);c.EUC_DEV562_contactRows_=()=>[{id:1,fields:{Cle_entreprise:'SIRET|123',Role_contact:'RESPONSABLE',Cle_contact_source:key,Nom_source:target.nom,Nom_corrige:'Durant Alex',Actif:true}}];const out=c.EUC_DEV562_applyContactCorrections_({identity:'SIRET|123'},contacts,'RESPONSABLE');assert.equal(out.length,1);assert.equal(out[0].nom,'Durant Alex');assert.deepEqual(Array.from(out[0].telephones).sort(),['04 00 00 00 01','06 00 00 00 02']);assert.match(out[0].sourceNom,/duranti alex/);assert.match(out[0].sourceNom,/Durant Alex/);
 });
 
+test('les corrections de contacts ne relisent la révision Grist qu’une fois par exécution',()=>{
+  const c=context();let revisions=0,reads=0;c.EUC_DEV457_revision_=()=>{revisions++;return'r1'};c.EUC_DEV538_optionalRecords_=()=>{reads++;return[]};for(let i=0;i<300;i++)c.EUC_DEV562_contactRows_();assert.equal(revisions,1);assert.equal(reads,1);
+});
+
 test('le book admin expose la correction des contacts, le profil et le journal de relation',()=>{
   for(const token of ['contactEditor','EUC_DEV562_saveContactCorrection','EUC_DEV562_saveCompanySite','EUC_DEV562_saveCompanyLogo','EUC_DEV562_saveRelationship','Historique de la relation avec le lycée','Créer un dossier Drive'])assert.match(bookHtml,new RegExp(token));assert.match(relations,/EUC_ENTREPRISES_PROFILS/);assert.match(relations,/EUC_ENTREPRISES_CONTACTS_CORRECTIONS/);assert.match(relations,/EUC_RELATIONS_ENTREPRISES/);assert.match(relations,/BROUILLON/);assert.match(relations,/PUBLIE/);
 });

@@ -39,7 +39,15 @@ function EUC_DEV562_prettyName_(value){
 }
 function EUC_DEV562_hash_(value){var raw=EUC_DEV538_t_(value),h=2166136261;for(var i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0).toString(16);}
 function EUC_DEV562_contactKey_(contact){contact=contact||{};return EUC_DEV562_hash_([EUC_DEV538_norm_(contact.nom),(contact.telephones||[]).map(EUC_DEV547_phoneKey_).sort().join(','),(contact.courriels||[]).map(EUC_DEV547_emailKey_).sort().join(',')].join('|'));}
-function EUC_DEV562_contactRows_(){var revision=typeof EUC_DEV457_revision_==='function'?EUC_DEV457_revision_(EUC_DEV562_CONTACT_TABLE_):'LOCAL';if(EUC_DEV562_CONTACT_ROWS_MEMO_.rows&&EUC_DEV562_CONTACT_ROWS_MEMO_.revision===revision)return EUC_DEV562_CONTACT_ROWS_MEMO_.rows;var rows=EUC_DEV538_optionalRecords_(EUC_DEV562_CONTACT_TABLE_,{});EUC_DEV562_CONTACT_ROWS_MEMO_={revision:revision,rows:rows};return rows;}
+function EUC_DEV562_contactRows_(){
+  /* Les globales Apps Script sont recréées pour chaque exécution. Il ne faut
+   * donc surtout pas relire la révision dans la boucle des entreprises : avec
+   * deux rôles et plus de cent sociétés, cela provoquait plusieurs centaines
+   * d'accès PropertiesService et faisait dépasser le délai du book à froid. */
+  if(EUC_DEV562_CONTACT_ROWS_MEMO_.rows!==null)return EUC_DEV562_CONTACT_ROWS_MEMO_.rows;
+  var revision=typeof EUC_DEV457_revision_==='function'?EUC_DEV457_revision_(EUC_DEV562_CONTACT_TABLE_):'LOCAL',rows=EUC_DEV538_optionalRecords_(EUC_DEV562_CONTACT_TABLE_,{});
+  EUC_DEV562_CONTACT_ROWS_MEMO_={revision:revision,rows:rows};return rows;
+}
 function EUC_DEV562_applyContactCorrections_(company,contacts,role){
   var rows=EUC_DEV562_contactRows_().filter(function(r){var f=EUC_DEV538_fields_(r);return EUC_DEV562_matchCompany_(r,company)&&EUC_DEV538_t_(f.Role_contact).toUpperCase()===role;});
   var displayed=(contacts||[]).map(function(c){var key=EUC_DEV562_contactKey_(c),match=rows.filter(function(r){return EUC_DEV538_t_(EUC_DEV538_fields_(r).Cle_contact_source)===key;}).sort(function(a,b){return EUC_DEV538_n_(b.id)-EUC_DEV538_n_(a.id);})[0],source=EUC_DEV538_t_(c.nom),corrected=match?EUC_DEV538_t_(EUC_DEV538_fields_(match).Nom_corrige):'';c.sourceNom=source;c.contactKey=key;c.nom=EUC_DEV562_prettyName_(corrected||source);c.nomCorrige=!!corrected;return c;}),merged=[];
