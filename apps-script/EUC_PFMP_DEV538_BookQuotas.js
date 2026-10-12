@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.560';
+var EUC_DEV538_VERSION_='1.0.0-dev.561';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV545_CLASS_MODES_PROP_='EUC_DEV545_MODALITES_APPRENTISSAGE_V1';
@@ -429,6 +429,31 @@ function EUC_DEV547_bookMapData(q){
     return out;
   });
   return{ok:true,version:EUC_DEV538_VERSION_,nominatif:!parent,total:points.length,points:points};
+}
+/* Une entreprise issue uniquement de l'apprentissage n'a pas nécessairement
+ * encore de ligne dans la table de géocodage PFMP. La fiche publique peut
+ * alors résoudre ponctuellement son adresse normalisée, sans écriture Grist.
+ * Le résultat non nominatif est mis en cache pour ne pas ralentir les accès
+ * suivants et n'est accepté que pour une entreprise déjà visible du book. */
+function EUC_DEV560_publicCompanyPoint(q){
+  q=q||{};var entreprise=EUC_DEV538_t_(q.entreprise),adresse=EUC_DEV540_normalizeAddress_(q.adresse),companyKey=EUC_DEV538_norm_(entreprise),addressKey=EUC_DEV538_norm_(adresse),match=EUC_DEV549_publicBookIndex_().filter(function(c){return EUC_DEV538_norm_(c.entreprise)===companyKey&&EUC_DEV538_norm_(EUC_DEV540_normalizeAddress_(c.adresse))===addressKey;})[0];
+  if(!match)throw new Error('Entreprise absente du book public.');
+  if(match.latitude!==null&&match.longitude!==null&&isFinite(match.latitude)&&isFinite(match.longitude))return{ok:true,latitude:Number(match.latitude),longitude:Number(match.longitude),source:'ENREGISTRE'};
+  var cacheKey='DEV560_PUBLIC_POINT_'+EUC_DEV549_digest_(entreprise+'|'+adresse).slice(0,24),cache=null,cached='';try{cache=CacheService.getScriptCache();cached=cache.get(cacheKey)||'';}catch(eCache){}
+  if(cached)try{return JSON.parse(cached);}catch(eJson){}
+  var cls=EUC_DEV441_geoClassify_(adresse),lat=null,lon=null,source='';
+  if(cls.pays==='FRANCE'){
+    var base=typeof EUC_DEV441_GEO_URL_==='string'?EUC_DEV441_GEO_URL_:'https://data.geopf.fr/geocodage/search',url=base+'?q='+encodeURIComponent(adresse)+'&limit=5'+(cls.codePostal?'&postcode='+encodeURIComponent(cls.codePostal):''),json={};
+    try{var res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json'}});json=JSON.parse(res.getContentText()||'{}');}catch(eFetch){json={};}
+    var selected=EUC_DEV540_geoCandidate_(json.features||[],adresse,cls.codePostal),feature=selected&&selected.feature,coords=feature&&feature.geometry&&feature.geometry.coordinates;
+    if(coords&&coords.length>=2&&selected.specific){lat=Number(coords[1]);lon=Number(coords[0]);source='Géoplateforme / BAN';}
+  }else if(cls.pays==='MONACO'){
+    var monoBase=typeof EUC_DEV537_MONACO_GEO_URL_==='string'?EUC_DEV537_MONACO_GEO_URL_:'https://nominatim.openstreetmap.org/search',monoUrl=monoBase+'?format=jsonv2&addressdetails=1&limit=5&countrycodes=mc&q='+encodeURIComponent(EUC_DEV540_monacoQuery_(adresse)),rows=[];
+    try{var monoRes=UrlFetchApp.fetch(monoUrl,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json','Accept-Language':'fr','User-Agent':'Eucalyptus-PFMP/1.0 (https://alternance.loucodi.fr/)'}});rows=JSON.parse(monoRes.getContentText()||'[]');}catch(eMono){rows=[];}
+    var hit=Array.isArray(rows)&&rows[0],country=EUC_DEV538_t_(hit&&hit.address&&hit.address.country_code).toLowerCase();if(hit&&(country==='mc'||/\bMONACO\b/i.test(EUC_DEV538_t_(hit.display_name)))){lat=Number(hit.lat);lon=Number(hit.lon);source='OpenStreetMap / Nominatim';}
+  }
+  var out={ok:isFinite(lat)&&isFinite(lon)&&lat!==null&&lon!==null,latitude:isFinite(lat)&&lat!==null?lat:null,longitude:isFinite(lon)&&lon!==null?lon:null,source:source};
+  try{if(cache)cache.put(cacheKey,JSON.stringify(out),21600);}catch(ePut){}return out;
 }
 function EUC_DEV547_bookCompanyHistory(q){
   q=q||{};if(EUC_DEV538_t_(q.mode).toUpperCase()==='ADMIN')EUC_DEV538_admin_();else if(!EUC_DEV538_staffAllowed_())throw new Error('Accès réservé aux personnels authentifiés.');
