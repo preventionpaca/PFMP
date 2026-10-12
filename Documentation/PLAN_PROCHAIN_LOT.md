@@ -1,5 +1,23 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV557 publié (@949) — contacts et contrats canoniques du book
+
+- Deux écritures d'un même nom complet dans un ordre différent sont regroupées
+  sans perdre leurs coordonnées ni leurs années. Le rapprochement reste exact
+  et prudent : pas de fusion floue sur une initiale, un nom isolé ou une simple
+  ressemblance.
+- Pour un élève apprenti, une entreprise et une année scolaire, le book expose
+  un seul contrat cohérent. Les doublons et dates impossibles restent dans les
+  sources Grist pour audit, mais ne polluent plus la présentation.
+- `MELEC C` n'appartient pas au périmètre Pronote PFMP actuellement retenu. Le
+  prochain passage dans l'analyse d'import devra l'associer explicitement à la
+  bonne classe Grist, ou créer une cible métier dédiée si aucune classe
+  existante ne convient. Ce choix ne doit pas être automatisé à partir du seul
+  libellé Pronote.
+- La référence publiée est la version Apps Script immuable `949`. En cas de
+  régression fonctionnelle, le retour immédiat est `948` ; aucune donnée Grist
+  n'a été modifiée par ce lot.
+
 ## DEV556 publié (@948) — navigation interne des sous-domaines publics
 
 - Les parcours publics PFMP et Apprentis échangent désormais leurs changements

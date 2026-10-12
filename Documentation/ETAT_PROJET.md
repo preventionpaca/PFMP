@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV557 publié sur le site en ligne (@949)
+
+- Les contacts du book sont maintenant regroupés lorsque leurs noms complets
+  contiennent exactement les mêmes mots, indépendamment de leur ordre :
+  `JULIEN Steve` et `Steve Julien` produisent une seule personne. Tous les
+  téléphones, courriels et années distincts sont conservés. Aucun rapprochement
+  flou n'est réalisé sur un nom seul, une initiale ou une orthographe seulement
+  approchante afin d'éviter de fusionner des homonymes.
+- Le book ne présente plus plusieurs contrats d'apprentissage pour un même
+  élève, une même entreprise et une même année scolaire. Il conserve la plage
+  chronologiquement cohérente et la plus complète, sans supprimer ni modifier
+  les enregistrements source dans Grist. Dans le cas fourni, le doublon concerne
+  `MICOUD Raphaël`, pas `LEBOLD Nathan` ; l'une des deux sources portait une fin
+  de contrat antérieure à son début.
+- Le contrôle en lecture seule du périmètre Pronote 2026-2027 montre 38 classes
+  PFMP retenues, dont `1MELEC` et `TMELEC`, mais aucune classe `MELEC C`. Aucun
+  filtre du book ou de l'apprentissage ne l'écarte par son nom : elle n'est pas
+  actuellement reliée au périmètre de classes importé. Le choix de sa classe
+  Grist cible doit être fait dans l'analyse d'import Pronote avant toute écriture.
+- Le commit applicatif `1cfb2da2a90b00651b9247553481865eba9af13b` est publié
+  sur les deux Web Apps vertes existantes en version immuable `949`. La suite
+  complète passe `858/858` et le contrôle automatisé valide `28/28` routes.
+  Le contrôle navigateur réel confirme le regroupement de `JULIEN Steve` avec
+  ses deux téléphones et deux courriels, ainsi que l'unique contrat cohérent de
+  `MICOUD Raphaël`. La version `948` reste le point de retour immédiat.
+
 ## Mise à jour du 12 octobre 2026 — DEV556 publié sur le site en ligne (@948)
 
 - La navigation publique reste désormais dans `pfmp.loucodi.fr` pour le book,
