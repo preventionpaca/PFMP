@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 12 octobre 2026 — DEV563 candidat
+## Mise à jour du 12 octobre 2026 — DEV563 publié sur le site en ligne (@957)
 
 - Le book administrateur centralise la portée des catégories d'actions dans
   `EUC_RELATIONS_ENTREPRISES_CATEGORIES`. L'administration voit toujours tout ;
@@ -21,6 +21,14 @@
 - Les deux nouvelles interfaces sont chargées uniquement à la demande et tous
   leurs boutons asynchrones appliquent le verrou anti-double-clic, le spinner,
   le délai maximal et la restauration d'état existants.
+- Le commit exact `4d68ca09d021e6c838f874985fc5a48803dce33a` est publié
+  directement sur les deux Web Apps vertes existantes dans la version Apps
+  Script immuable `957`. La suite complète passe `877/877` et le contrôle de
+  publication valide `28/28` routes. Les URL des Web Apps n'ont pas changé et
+  aucune donnée Grist n'a été écrite pendant la publication.
+- L'ancien projet Apps Script « Eucalyptus PFMP — Développement BLEU » a été
+  supprimé le 12 octobre 2026. Le workflow courant reste Git vers les deux Web
+  Apps vertes existantes, sans canal Apps Script intermédiaire.
 
 ## Mise à jour du 12 octobre 2026 — DEV562 publié sur le site en ligne (@956)
 

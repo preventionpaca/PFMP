@@ -1,6 +1,6 @@
 # Prochains lots — book entreprises et apprentissage
 
-## DEV563 candidat — portée des actions et correction centralisée des contacts
+## DEV563 publié (@957) — portée des actions et correction centralisée des contacts
 
 - Paramétrer par catégorie la visibilité professeurs et élèves/familles ;
   l'administration conserve toujours la vue complète et l'absence de réglage
@@ -13,7 +13,12 @@
   téléphone, côté client comme côté serveur, tout en conservant les surcharges
   manuelles pour les graphies particulières.
 - La création de la table de catégories et toute correction de contact réelle
-  restent paresseuses : aucune donnée Grist n'est écrite par la recette.
+  restent paresseuses : aucune donnée Grist n'a été écrite par la publication.
+- La référence publiée est la version Apps Script immuable `957`, issue du
+  commit exact `4d68ca09d021e6c838f874985fc5a48803dce33a`. La suite
+  complète passe `877/877` et le contrôle automatisé valide `28/28` routes.
+  L'ancien projet Apps Script bleu a été supprimé ; le circuit de publication
+  est désormais exclusivement direct vers les deux Web Apps vertes existantes.
 
 ## DEV562 publié (@956) — profil et mémoire de la relation entreprise
 
