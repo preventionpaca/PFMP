@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV556 publié sur le site en ligne (@948)
+
+- La navigation publique reste désormais dans `pfmp.loucodi.fr` pour le book,
+  les synthèses BAC PRO/BTS/CAP, les fiches de classe et leurs retours. Le
+  bouton « Book des entreprises » affiche immédiatement un indicateur de
+  chargement et refuse le double clic.
+- La synthèse de niveau affiche pendant son chargement un libellé contextualisé
+  tel que « Chargement de la synthèse du niveau BAC PRO… ».
+- La navigation publique Apprentis reste dans `apprentis.loucodi.fr` entre le
+  bilan, la carte et le retour au bilan. L'accueil de cette vue publique pointe
+  vers `pfmp.loucodi.fr`.
+- Le commit applicatif `b295fa0a0b16f39aef03ade2203047e276791320` est publié
+  sur les deux Web Apps vertes existantes en version immuable `948`. Les
+  enveloppes GitHub Pages sont publiées par les commits `4d944fc86d158a6c5eeafc99f834df097cc69458`
+  pour PFMP et `a3c7b632fb11bf05daab8e846c2795ee1e56c41d` pour Apprentis.
+  La suite complète passe `855/855` et le contrôle automatisé valide `28/28`
+  routes.
+- Le contrôle navigateur réel confirme les parcours accueil → book → retour,
+  accueil → BAC PRO → classe/période, et bilan Apprentis → carte → retour,
+  sans quitter les sous-domaines et sans erreur console. La version immuable
+  `947` reste le point de retour immédiat du code Apps Script.
+- Le futur import YPAREO est seulement cadré dans ce lot : réutilisation du
+  masque apprenti, table de correspondance des formations, qualification
+  explicite des jeunes sans entreprise et repère `G` cumulable avec `A`.
+  Aucune donnée métier ni table Grist n'a été modifiée par DEV556.
+
 ## Mise à jour du 12 octobre 2026 — DEV555 publié sur le site en ligne (@947)
 
 - Toutes les bulles cartographiques d'entreprise proposent désormais

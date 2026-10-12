@@ -1,5 +1,24 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV556 publié (@948) — navigation interne des sous-domaines publics
+
+- Les parcours publics PFMP et Apprentis échangent désormais leurs changements
+  de route avec leurs enveloppes `pfmp.loucodi.fr` et
+  `apprentis.loucodi.fr`. Les longues URL Apps Script restent internes aux
+  iframes et ne remplacent plus le nom de domaine visible.
+- Le book public affiche un spinner immédiat et empêche le double clic. Le
+  chargement des familles annonce le niveau demandé : BAC PRO, BTS ou CAP.
+- Les enveloppes n'acceptent que les routes publiques explicitement listées et
+  les origines Google Apps Script attendues, y compris la forme rendue
+  `script.googleusercontent.com` utilisée par certains liens internes.
+- La référence publiée est la version Apps Script immuable `948`. En cas de
+  régression fonctionnelle, le retour immédiat est `947` ; les données Grist ne
+  sont pas concernées par ce retour de code.
+- Le prochain lot YPAREO devra réutiliser le masque apprenti existant, ajouter
+  une table de correspondance entre groupes/acronymes et formations, distinguer
+  futur apprenti sans entreprise et rupture, puis afficher un repère `G` pour
+  le GTA/formation continue, cumulable avec le repère rouge `A`.
+
 ## DEV555 publié (@947) — itinéraires depuis les bulles cartographiques
 
 - Chaque bulle d'entreprise des cartes familles, personnels, administration,
