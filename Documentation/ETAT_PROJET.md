@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 12 octobre 2026 — DEV562 candidat (profil et relation entreprise)
+## Mise à jour du 12 octobre 2026 — DEV562 publié sur le site en ligne (@956)
 
 - Les noms des responsables et tuteurs sont présentés en casse lisible sans
   modifier les valeurs historiques des conventions. Deux noms simplement
@@ -21,9 +21,22 @@
   Les brouillons, les actions réservées aux personnels, les identifiants Drive
   et les auteurs ne sont jamais transmis au navigateur public.
 - Les nouvelles tables sont créées paresseusement à la première écriture
-  administrateur. Aucun contenu métier réel n'a été écrit pendant les tests.
-  Les tests ciblés DEV538/DEV562 passent `84/84` et la suite complète
-  `872/872`.
+  administrateur. Aucun contenu métier réel n'a été écrit pendant les tests ou
+  le contrôle navigateur.
+- Le premier candidat `@955` a révélé au contrôle réel plusieurs centaines de
+  lectures de révision répétées dans l'agrégation des contacts. Il a été
+  remplacé par `@956`, qui ne lit les corrections et leur révision qu'une fois
+  par exécution. Le chargement froid du book termine désormais avant son délai
+  client, puis la fiche résout correctement ses états photo, profil et journal.
+- Le contrôle navigateur publié confirme les noms en casse lisible, les boutons
+  « Corriger le nom », le rappel de la saisie d'origine, le site, le logo et le
+  formulaire structuré d'action. Le formulaire de correction a été ouvert puis
+  fermé sans enregistrement.
+- Le commit final `42bac3ccc75a01ea9c4d8a2315f3300ef7f9e46c` est publié
+  sur les deux Web Apps existantes en version immuable `956`. Les tests ciblés
+  DEV538/DEV562 passent `85/85`, la suite complète `873/873` et le contrôle de
+  publication valide `28/28` routes. La version `954` reste le point de retour
+  fonctionnel antérieur au lot.
 
 ## Mise à jour du 12 octobre 2026 — DEV561 publié sur le site en ligne (@954)
 

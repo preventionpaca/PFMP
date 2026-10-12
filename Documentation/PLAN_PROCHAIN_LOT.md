@@ -1,10 +1,11 @@
 # Prochains lots — book entreprises et apprentissage
 
-## DEV562 candidat — profil et mémoire de la relation entreprise
+## DEV562 publié (@956) — profil et mémoire de la relation entreprise
 
-- Vérifier sur le canal bleu la création paresseuse des trois tables avec une
-  entreprise de recette, puis les états vide, chargement, succès et erreur du
-  site, du logo, de la correction de contact et de l'ajout d'action.
+- Les trois tables sont créées paresseusement à la première écriture
+  administrateur. Les états vide et chargement sont validés sur le site publié ;
+  les écritures site, logo, correction de contact et ajout d'action restent à
+  vérifier avec une entreprise de test explicitement désignée.
 - Contrôler qu'une action brouillon/personnels ne ressort jamais dans le book
   familles et qu'une action publiée/publique y apparaît sans identifiant Drive
   ni auteur.
@@ -14,6 +15,11 @@
   droits de diffusion explicites.
 - Aucune correction réelle de contact, aucun logo et aucune action réelle ne
   doivent être enregistrés pendant la recette sans cible de test validée.
+- La référence publiée est la version Apps Script immuable `956`. La suite
+  complète passe `873/873`, le contrôle automatisé valide `28/28` routes et le
+  contrôle navigateur confirme que le chargement du book ne dépasse plus son
+  délai client. En cas de régression, le retour fonctionnel antérieur au lot
+  est `954`.
 
 ## DEV561 publié (@954) — codes postaux et couverture cartographique du book
 
