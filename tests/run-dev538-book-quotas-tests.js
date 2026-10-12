@@ -25,7 +25,7 @@ function context(){
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.559/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.560/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('le book public affiche un indicateur immédiat et conserve le sous-domaine PFMP',()=>{assert.match(publicHome,/Ouverture du book…/);assert.match(publicHome,/aria-busy/);assert.match(publicHome,/EUC_DEV556_PFMP_WRAPPER_NAV/);assert.match(publicHome,/EUC_PFMP_WRAPPER_NAVIGATE/);assert.match(publicHome,/book-entreprises-public-pfmp/)});
 test('les pages PFMP publiques partagent le même contrat de navigation enveloppée',()=>{for(const html of [familyHtml,detailHtml,bookHtml]){assert.match(html,/EUC_DEV556_PFMP_/);assert.match(html,/EUC_PFMP_WRAPPER_QUERY/);assert.match(html,/EUC_PFMP_WRAPPER_NAVIGATE/)}assert.match(familyHtml,/Chargement de la synthèse du niveau/);assert.match(familyHtml,/famLabel\(P\.famille\)/)});
@@ -110,6 +110,18 @@ test('le book remplace les fausses périodes PFMP d’un apprenti par une seule 
   const details=['PFMP n°1','PFMP n°2','P.dif.'].map((libelle,i)=>({famille:'BACPRO',classe:{id:24,nom:'TMELEC'},periode:{id:60+i,libelle},lignes:[{entreprise:'ENTREPRISE APPRENTISSAGE TEST',adresseEntreprise:'1 RUE TEST, 06000 NICE',siretEntreprise:'12345678901234',eleveId:7,nom:'ELEVE',prenom:'TEST',apprenti:true}]}));
   c.EUC_DEV445_geoSnapshotDetails_=()=>details;c.EUC_DEV513_geoAccessDetails_=()=>[];c.EUC_DEV537_mergeAnnualCandidates_=()=>[];c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[{id:7,fields:{Nom:'ELEVE',Prenom:'TEST',Classe:24,Annee_scolaire_code:'2026-2027'}}]:[];c.EUC_DEV538_optionalRecords_=table=>table==='EUC_APPRENTISSAGE_PFMP'?[{id:70,fields:{Eleve:7,Annee_scolaire:'2026-2027',Date_debut:'2026-09-01',Date_fin:'2028-08-31',Entreprise:'ENTREPRISE APPRENTISSAGE TEST',SIRET:'12345678901234',Adresse_entreprise:'1 RUE TEST',Code_postal:'06000',Ville:'NICE',Tuteur_nom:'Tuteur Test'}}]:[];
   const out=c.EUC_DEV538_history_({annee:'2026-2027'});assert.equal(out.length,1);assert.equal(out[0].historique.length,1);assert.equal(out[0].historique[0].apprenti,true);assert.equal(out[0].historique[0].periode,'Contrat du 01/09/2026 au 31/08/2028');assert.equal(out[0].elevesAccueillis,1);assert.equal(out[0].apprentisAccueillis,1);assert.equal(out[0].scolairesAccueillis,0);
+});
+
+test('une entreprise accueillant seulement un apprenti reprend son point géocodé validé',()=>{
+  const c=context(),siret='31221230101219';
+  c.EUC_DEV443_normalizeAddress_=v=>String(v||'').replace(/,\s*6600,\s*ANTIBES$/i,' 06600 ANTIBES').replace(/\s*,\s*/g,' ').replace(/\s+/g,' ').trim();
+  c.EUC_DEV443_geoIdentity_=(entreprise,adresse,sir)=>sir?'SIRET|'+sir:'ADRESSE|'+c.EUC_DEV538_norm_(entreprise)+'|'+c.EUC_DEV538_norm_(adresse);
+  c.EUC_DEV441_geoClassify_=()=>({pays:'FRANCE'});c.EUC_DEV538_diplomas_=()=>({24:'BAC PRO Maintenance des Véhicules légers'});c.EUC_DEV538_yearsForScope_=()=>['2026-2027'];c.EUC_DEV538_schoolYearMap_=()=>({});c.EUC_DEV541_apprentissageClasses_=()=>[{id:24,classe:'TMVA1',famille:'BACPRO',niveau:'Terminale'}];
+  c.EUC_DEV445_geoSnapshotDetails_=()=>[];c.EUC_DEV513_geoAccessDetails_=()=>[];c.EUC_DEV537_mergeAnnualCandidates_=()=>[];
+  c.EUC_DEV441_geoRows_=()=>[{SIRET:siret,Entreprise:'RENAULT RETAIL GROUP ANTIBES',Adresse_source:"BRETELLE DE L'AUTOROUTE 1580 ROUTE DE GRASSE 06600 ANTIBES",Latitude:43.58,Longitude:7.11,Statut:'GEOCODE_AUTOMATIQUE'}];
+  c.EUC_DEV538_records_=table=>table==='EUC_ELEVES_PFMP'?[{id:7,fields:{Nom:'ELEVE',Prenom:'APPRENTI',Classe:24,Annee_scolaire_code:'2026-2027'}}]:[];
+  c.EUC_DEV538_optionalRecords_=table=>table==='EUC_APPRENTISSAGE_PFMP'?[{id:70,fields:{Eleve:7,Annee_scolaire:'2026-2027',Date_debut:'2026-09-01',Date_fin:'2027-08-31',Entreprise:'RENAULT RETAIL GROUP ANTIBES',SIRET:siret,Adresse_entreprise:"BRETELLE DE L'AUTOROUTE 1580 ROUTE DE GRASSE",Code_postal:6600,Ville:'ANTIBES'}}]:[];
+  const out=c.EUC_DEV538_history_({annee:'2026-2027'});assert.equal(out.length,1);assert.equal(out[0].adresse,"BRETELLE DE L'AUTOROUTE 1580 ROUTE DE GRASSE 06600 ANTIBES");assert.equal(out[0].latitude,43.58);assert.equal(out[0].longitude,7.11);assert.equal(out[0].apprentisAccueillis,1);
 });
 
 test('le service élèves et familles projette uniquement les champs autorisés',()=>{

@@ -5,7 +5,7 @@
  * propriétés Apps Script. Les données élèves, contrats et accueils restent
  * dans leurs tables métier existantes : aucune duplication n'est créée.
  */
-var EUC_DEV538_VERSION_='1.0.0-dev.559';
+var EUC_DEV538_VERSION_='1.0.0-dev.560';
 var EUC_DEV538_QUOTAS_PROP_='EUC_DEV538_QUOTAS_APPRENTISSAGE_V1';
 var EUC_DEV542_ACTIVE_CLASSES_PROP_='EUC_DEV542_CLASSES_APPRENTISSAGE_ACTIVES_V1';
 var EUC_DEV545_CLASS_MODES_PROP_='EUC_DEV545_MODALITES_APPRENTISSAGE_V1';
@@ -342,7 +342,22 @@ function EUC_DEV538_history_(q){
     });
   });
   (apprentices.contracts||[]).forEach(function(info){var meta=info.meta||{},classe=EUC_DEV538_t_(meta.classe),cid=EUC_DEV538_n_(meta.classeId),famille=EUC_DEV538_t_(meta.famille),niveau=EUC_DEV538_level_({classe:classe,famille:famille}),diplome=diplomas[cid]||EUC_DEV538_fallbackDiploma_({classe:classe,famille:famille}),eleve=EUC_DEV538_t_(info.eleve),prof=EUC_DEV538_t_(info.professeurVisiteur);if(EUC_DEV538_t_(q.famille)&&EUC_DEV538_norm_(famille)!==EUC_DEV538_norm_(q.famille)||EUC_DEV538_n_(q.classeId)&&cid!==EUC_DEV538_n_(q.classeId)||needleDiploma&&EUC_DEV538_norm_(diplome).indexOf(needleDiploma)<0||needleLevel&&EUC_DEV538_norm_(niveau).indexOf(needleLevel)<0||needleClass&&EUC_DEV538_norm_(classe).indexOf(needleClass)<0||needlePeriod&&EUC_DEV538_norm_(info.periode).indexOf(needlePeriod)<0||needleCompany&&EUC_DEV538_norm_(info.entreprise+' '+info.adresse).indexOf(needleCompany)<0||needleStudent&&EUC_DEV538_norm_(eleve).indexOf(needleStudent)<0||needleTeacher&&EUC_DEV538_norm_(prof).indexOf(needleTeacher)<0)return;var c=company(info.entreprise,info.adresse,info.siret),studentKey='E'+info.eleveId,key=['APP',info.annee,studentKey,info.debut,info.fin,c.identity].join('|');if(c._seen[key])return;c._seen[key]=true;c._students[studentKey]=true;c._apprenticeStudents[studentKey]=true;c.historique.push({annee:info.annee,famille:famille,eleve:eleve,classe:classe,niveau:niveau,diplome:diplome,periode:info.periode,professeurVisiteur:prof,apprenti:true,typeAccueil:'APPRENTI',responsable:info.responsable,telephoneResponsable:info.telephoneResponsable,courrielResponsable:info.courrielResponsable,tuteur:info.tuteur,telephoneTuteur:info.telephoneTuteur,courrielTuteur:info.courrielTuteur,dateSaisie:info.dateSaisie||info.annee+'-01-01',sourceRecordId:info.recordId});});
-  var geoBy={};EUC_DEV537_mergeAnnualCandidates_(years).forEach(function(x){var identity=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse,x.siret),addressKey=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse,''),current=geoBy[identity]||geoBy[addressKey];if(!current||(current.latitude==null||current.longitude==null)&&x.latitude!=null&&x.longitude!=null)current=x;geoBy[identity]=current;geoBy[addressKey]=current;});
+  /* Les contrats d'apprentissage peuvent être les seuls accueils connus pour
+   * une entreprise. Dans ce cas elle n'existe pas dans les candidats PFMP,
+   * mais son point validé existe bien dans la table de géocodage. On fusionne
+   * donc d'abord ces points enregistrés, puis les candidats annuels enrichis. */
+  var geoBy={};
+  function addGeo(x){
+    var identity=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse,x.siret),addressKey=EUC_DEV538_companyIdentity_(x.entreprise,x.adresse,''),current=geoBy[identity]||geoBy[addressKey];
+    if(!current||(current.latitude==null||current.longitude==null)&&x.latitude!=null&&x.longitude!=null)current=x;
+    geoBy[identity]=current;geoBy[addressKey]=current;
+  }
+  (typeof EUC_DEV441_geoRows_==='function'?EUC_DEV441_geoRows_():[]).forEach(function(row){
+    var f=EUC_DEV538_fields_(row),status=EUC_DEV538_t_(f.Statut).toUpperCase(),rawLat=EUC_DEV538_t_(f.Latitude),rawLon=EUC_DEV538_t_(f.Longitude),lat=Number(rawLat),lon=Number(rawLon),entreprise=EUC_DEV538_t_(f.Entreprise),adresse=EUC_DEV540_normalizeAddress_(f.Adresse_source),siret=EUC_DEV538_t_(f.SIRET).replace(/\D/g,'');
+    if(['GEOCODE_AUTOMATIQUE','VALIDE_MANUELLEMENT'].indexOf(status)<0||!rawLat||!rawLon||!isFinite(lat)||!isFinite(lon)||!entreprise||!adresse)return;
+    addGeo({entreprise:entreprise,adresse:adresse,siret:siret,latitude:lat,longitude:lon,statut:status});
+  });
+  EUC_DEV537_mergeAnnualCandidates_(years).forEach(addGeo);
   var unique=[];Object.keys(companies).forEach(function(k){if(unique.indexOf(companies[k])<0)unique.push(companies[k]);});var list=unique.map(function(c){
     var g=geoBy[c.identity]||geoBy[EUC_DEV538_companyIdentity_(c.entreprise,c.adresse,'')]||{},named=Object.keys(c._students).length,apprenticeCount=Object.keys(c._apprenticeStudents).length,latestAt='',latestRecordId=0;
     c.elevesAccueillis=named||EUC_DEV538_n_(g.elevesAccueillis);c.apprentisAccueillis=Math.min(c.elevesAccueillis,apprenticeCount);c.scolairesAccueillis=Math.max(0,c.elevesAccueillis-c.apprentisAccueillis);if(!c.siret&&g.siret)c.siret=EUC_DEV538_t_(g.siret);c.latitude=g.latitude==null?null:Number(g.latitude);c.longitude=g.longitude==null?null:Number(g.longitude);c.ville=EUC_DEV547_city_(c.adresse);c.aliases=Object.keys(aliasConfig).filter(function(source){return EUC_DEV545_aliasTarget_(source,aliasConfig).identity===c.identity;}).map(function(source){return{identity:source,entreprise:EUC_DEV538_t_(aliasConfig[source].sourceEntreprise)||source};});
@@ -364,7 +379,7 @@ function EUC_DEV549_digest_(value){
   var raw=EUC_DEV538_t_(value),hash=2166136261;for(var i=0;i<raw.length;i++){hash^=raw.charCodeAt(i);hash=Math.imul(hash,16777619);}return'PUBLIC-'+(hash>>>0).toString(16);
 }
 function EUC_DEV549_publicBookRevision_(years){
-  var parts=['PUBLIC-BOOK-6',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'],props={},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_';
+  var parts=['PUBLIC-BOOK-7',(years||[]).join(',')],tables=[typeof EUC_DEV190E_INDEX_TABLE_==='string'?EUC_DEV190E_INDEX_TABLE_:'EUC_SUIVI_PFMP_INDEX',typeof EUC_CONVENTION_ACCES_TABLE_==='string'?EUC_CONVENTION_ACCES_TABLE_:'EUC_ACCES_FORMULAIRES_PFMP','EUC_ELEVES_PFMP','EUC_APPRENTISSAGE_PFMP','EUC_CLASSES_DIPLOMES_PFMP',typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP'],props={},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_';
   /* getProperties() remplace les treize lectures distantes getProperty()
    * effectuées autrefois à chaque démarrage à froid du book public. */
   try{props=PropertiesService.getScriptProperties().getProperties()||{};}catch(eProps){props={};}
