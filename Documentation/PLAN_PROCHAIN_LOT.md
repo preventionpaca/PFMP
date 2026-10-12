@@ -1,5 +1,21 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV561 publié (@954) — codes postaux et couverture cartographique du book
+
+- Un code postal français numérique sur quatre chiffres retrouve son zéro
+  initial avant tout affichage ou appel de géocodage. Cette correction est une
+  normalisation de lecture et ne réécrit pas la donnée Grist d'origine.
+- Les bulles publiques rappellent tous les diplômes distincts accueillis par
+  l'entreprise, y compris lorsqu'un filtre de diplôme est actif.
+- Les entreprises sans point enregistré peuvent être localisées à la demande
+  par une recherche publique, précise, non nominative, mise en cache et sans
+  écriture Grist. Le bouton respecte le contrat asynchrone : désactivation,
+  spinner, libellé d'action, délai maximal et restauration dans tous les cas.
+- La référence publiée est la version Apps Script immuable `954`. Le contrôle
+  réel de Renault Antibes valide le parcours complet et la publication valide
+  `866/866` tests et `28/28` routes. En cas de régression, le retour immédiat
+  est `953`.
+
 ## DEV557 publié (@949) — contacts et contrats canoniques du book
 
 - Deux écritures d'un même nom complet dans un ordre différent sont regroupées

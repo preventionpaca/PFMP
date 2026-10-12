@@ -1,5 +1,21 @@
 # Décisions métier permanentes
 
+- Un code postal français lu depuis une cellule numérique est toujours
+  normalisé sur cinq chiffres. Lorsqu'il ne comporte que quatre chiffres, le
+  zéro initial est restauré avant affichage, comparaison d'adresse ou
+  géocodage ; la valeur source n'est pas réécrite pour cette seule correction.
+- La bulle publique d'une entreprise affiche l'ensemble distinct des diplômes
+  accueillis dans le périmètre historique autorisé. Le filtre de diplôme
+  sélectionne les entreprises de la carte, mais ne réduit pas ce rappel à la
+  seule valeur filtrée et plusieurs accueils du même diplôme produisent une
+  seule ligne.
+- Une entreprise déjà présente dans le book public mais dépourvue de point
+  enregistré peut être géocodée à la demande. Le service ne reçoit que son
+  adresse professionnelle publique, n'écrit jamais dans Grist, exige un
+  résultat suffisamment spécifique et met en cache le point non nominatif.
+  Une géolocalisation à la demande ne vaut pas validation administrative
+  durable du point.
+
 - La source d'import des groupes d'alternance et de formation continue se
   nomme `YPAREO`. Un futur lot réutilisera le masque apprenti existant :
   contrôle SIRET, entreprise, dates de contrat et qualification explicite de

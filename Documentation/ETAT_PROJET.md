@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV561 publié sur le site en ligne (@954)
+
+- Les codes postaux français enregistrés comme nombres sont normalisés sur cinq
+  chiffres avant affichage, identité d'adresse et géocodage. Le cas réel
+  `6600 ANTIBES` apparaît maintenant comme `06600 ANTIBES` dans le book.
+- Les bulles de la carte publique affichent la liste distincte de tous les
+  diplômes accueillis par l'entreprise. Un filtre de diplôme limite les
+  entreprises affichées, mais ne tronque pas ce rappel historique dans la
+  bulle et un même diplôme n'y est jamais répété.
+- Une entreprise du book sans point enregistré, notamment une entreprise
+  accueillant uniquement un apprenti, peut être localisée à la demande depuis
+  sa fiche. La recherche est strictement en lecture seule, limitée à l'adresse
+  publique déjà présente dans le book, exige un résultat français spécifique
+  et met le point non nominatif en cache pendant six heures. Elle ne crée ni ne
+  modifie aucune ligne de géocodage dans Grist.
+- Le contrôle réel de `RENAULT RETAIL GROUP ANTIBES` confirme l'adresse
+  `06600 ANTIBES`, le verrou anti-double-clic avec `Localisation…`, une carte
+  interne contenant exactement un marqueur, le diplôme
+  `BAC PRO Maintenance des Véhicules légers` et le bouton d'itinéraire. Aucun
+  avertissement ni erreur n'est présent dans la console du navigateur.
+- Le commit applicatif final
+  `1f18a4b648e660d25caaf24b2a0efe7438038e35` est publié sur les deux Web Apps
+  vertes existantes en version immuable `954`. La suite complète passe
+  `866/866` et le contrôle de publication valide `28/28` routes. Aucune donnée
+  Grist n'a été modifiée. La version immuable `953` reste le point de retour
+  immédiat.
+
 ## Mise à jour du 12 octobre 2026 — DEV558 publié sur le site en ligne (@951)
 
 - Le book des personnels propose un retour vers le suivi PFMP et la navigation
