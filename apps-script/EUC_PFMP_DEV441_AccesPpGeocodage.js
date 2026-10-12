@@ -183,7 +183,7 @@ function EUC_DEV443_normalizeAddress_(adresse){
   var s=EUC_DEV441_t_(adresse).replace(/[·•]/g,',').replace(/\s*,\s*/g,', ').replace(/\s+/g,' ').trim();
   /* Grist renvoie parfois un CP typé nombre : 06100 devient alors 6100.
      La correction reste strictement limitée au segment postal placé avant la commune. */
-  s=s.replace(/(^|[,;]\s+|\s)(\d{4})(?=\s+[A-Za-zÀ-ÖØ-öø-ÿ'’ -]+$)/,function(all,prefix,cp){return prefix+EUC_DEV443_postal_(cp)});
+  s=s.replace(/(^|[,;]\s+|\s)(\d{4})(?=(?:\s*[,;]\s*|\s+)[A-Za-zÀ-ÖØ-öø-ÿ'’ -]+$)/,function(all,prefix,cp){return prefix+EUC_DEV443_postal_(cp)});
   /* Les imports historiques ont parfois concaténé deux fois le couple
    * code postal / commune (« 06600 ANTIBES, 06600 ANTIBES »), ou l'ont
    * séparé en deux segments (« 06000, NICE »). Ces variantes désignent la
@@ -330,7 +330,7 @@ function EUC_DEV513_geoAccessDetails_(q){
  * aux révisions de l'index canonique et de la table géographique. Les filtres
  * famille / classe / période sont ensuite appliqués en mémoire.
  */
-var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV540-GEO-4';
+var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV559-GEO-5';
 var EUC_DEV517_GEO_INDEX_TTL_MS_=21600000;
 function EUC_DEV517_geoIndexKey_(year){return'DEV517_GEO_INDEX_'+EUC_DEV441_t_(year).replace(/[^0-9A-Za-z_-]/g,'_');}
 function EUC_DEV517_geoIndexRevision_(){
