@@ -5,6 +5,7 @@ const assert=require('assert');
 const root=path.join(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const server=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+const relations=read('apps-script/EUC_PFMP_DEV562_RelationsEntreprises.js');
 const quotaHtml=read('apps-script/Apprentissage_Quotas_DEV538.html');
 const apprenticesHtml=read('apps-script/Apprentissage_PFMP_V190X.html');
 const bookHtml=read('apps-script/Book_Entreprises_DEV538.html');
@@ -21,11 +22,11 @@ let n=0;function test(name,fn){try{fn();n++;console.log('✓',name)}catch(e){con
 
 function context(){
   const c={console,PropertiesService:{getScriptProperties:()=>({getProperty:()=>'',setProperty:()=>{},setProperties:()=>{}})},Utilities:{formatDate:(d,z,p)=>p==='dd/MM/yyyy'?new Date(d).toLocaleDateString('fr-FR',{timeZone:'UTC'}):new Date(d).toISOString().slice(0,10)},Session:{getScriptTimeZone:()=> 'Europe/Paris',getActiveUser:()=>({getEmail:()=> 'prof@lycee-les-eucalyptus.org'})},HtmlService:{createTemplateFromFile:()=>({evaluate:()=>({setTitle(){return this},setXFrameOptionsMode(){return this}})}),XFrameOptionsMode:{ALLOWALL:'ALLOWALL'}}};
-  vm.createContext(c);vm.runInContext(server,c);return c;
+  vm.createContext(c);vm.runInContext(server,c);vm.runInContext(relations,c);return c;
 }
 
 test('les pages apprentissage, les trois books et les cartographies ont des routes dédiées',()=>{assert.match(routes,/case 'quotas-apprentissage-pfmp'/);assert.match(routes,/case 'book-entreprises-pfmp'/);assert.match(routes,/case 'book-entreprises-public-pfmp'/);assert.match(routes,/case 'book-entreprises-eleves-pfmp'/);assert.match(routes,/case 'cartographie-entreprises-parents'/);assert.match(routes,/case 'cartographie-apprentis-pfmp'/);assert.match(routes,/case 'cartographie-apprentis-public-pfmp'/)});
-test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.561/)});
+test('le centre admin expose quotas et book',()=>{assert.match(admin,/Quotas et relances/);assert.match(admin,/Book des entreprises/);assert.match(admin,/v1\.0\.0-dev\.562/)});
 test('le suivi destiné aux personnels expose le book',()=>assert.match(publicHome,/page=book-entreprises-public-pfmp/));
 test('le book public affiche un indicateur immédiat et conserve le sous-domaine PFMP',()=>{assert.match(publicHome,/Ouverture du book…/);assert.match(publicHome,/aria-busy/);assert.match(publicHome,/EUC_DEV556_PFMP_WRAPPER_NAV/);assert.match(publicHome,/EUC_PFMP_WRAPPER_NAVIGATE/);assert.match(publicHome,/book-entreprises-public-pfmp/)});
 test('les pages PFMP publiques partagent le même contrat de navigation enveloppée',()=>{for(const html of [familyHtml,detailHtml,bookHtml]){assert.match(html,/EUC_DEV556_PFMP_/);assert.match(html,/EUC_PFMP_WRAPPER_QUERY/);assert.match(html,/EUC_PFMP_WRAPPER_NAVIGATE/)}assert.match(familyHtml,/Chargement de la synthèse du niveau/);assert.match(familyHtml,/famLabel\(P\.famille\)/)});
@@ -146,6 +147,30 @@ test('un nom et un prénom inversés regroupent le contact sans perdre ses coord
 
 test('un nom seul ou une simple ressemblance ne fusionne jamais deux contacts sans coordonnée commune',()=>{
   const c=context(),out=c.EUC_DEV547_contacts_([{responsable:'JULIEN',telephoneResponsable:'0101010101'},{responsable:'JULIEN Steve',telephoneResponsable:'0202020202'},{responsable:'JULIAN Steve',telephoneResponsable:'0303030303'}],'responsable');assert.equal(out.length,3);
+});
+
+test('les noms de contacts sont présentés proprement sans modifier la saisie source',()=>{
+  const c=context();assert.equal(c.EUC_DEV562_prettyName_('duranti alex'),'Duranti Alex');assert.equal(c.EUC_DEV562_prettyName_('JEAN-PIERRE de LA TOUR'),'Jean-Pierre de la Tour');assert.equal(c.EUC_DEV562_prettyName_('a. martin'),'A. Martin');assert.equal(c.EUC_DEV562_prettyName_('A.MARTIN'),'A. Martin');
+});
+
+test('une correction administrateur se superpose à la convention sans fusion floue',()=>{
+  const c=context(),contacts=c.EUC_DEV547_contacts_([{responsable:'duranti alex',telephoneResponsable:'04 00 00 00 01'},{responsable:'Durant Alex',telephoneResponsable:'06 00 00 00 02'}],'responsable');assert.equal(contacts.length,2);const target=contacts.filter(x=>x.nom==='duranti alex')[0],key=c.EUC_DEV562_contactKey_(target);c.EUC_DEV562_contactRows_=()=>[{id:1,fields:{Cle_entreprise:'SIRET|123',Role_contact:'RESPONSABLE',Cle_contact_source:key,Nom_source:target.nom,Nom_corrige:'Durant Alex',Actif:true}}];const out=c.EUC_DEV562_applyContactCorrections_({identity:'SIRET|123'},contacts,'RESPONSABLE');assert.equal(out.length,1);assert.equal(out[0].nom,'Durant Alex');assert.deepEqual(Array.from(out[0].telephones).sort(),['04 00 00 00 01','06 00 00 00 02']);assert.match(out[0].sourceNom,/duranti alex/);assert.match(out[0].sourceNom,/Durant Alex/);
+});
+
+test('le book admin expose la correction des contacts, le profil et le journal de relation',()=>{
+  for(const token of ['contactEditor','EUC_DEV562_saveContactCorrection','EUC_DEV562_saveCompanySite','EUC_DEV562_saveCompanyLogo','EUC_DEV562_saveRelationship','Historique de la relation avec le lycée','Créer un dossier Drive'])assert.match(bookHtml,new RegExp(token));assert.match(relations,/EUC_ENTREPRISES_PROFILS/);assert.match(relations,/EUC_ENTREPRISES_CONTACTS_CORRECTIONS/);assert.match(relations,/EUC_RELATIONS_ENTREPRISES/);assert.match(relations,/BROUILLON/);assert.match(relations,/PUBLIE/);
+});
+
+test('la réduction locale des images transmet bien la photo et le logo au serveur',()=>{
+  assert.match(bookHtml,/resizePhoto\(file,data=>\{busyButton\('photoSave',false\);call\('EUC_DEV540_saveCompanyPhoto'/);assert.match(bookHtml,/resizePhoto\(file,data=>\{busyButton\('logoSave',false\);call\('EUC_DEV562_saveCompanyLogo'/);
+});
+
+test('le book familles ne reçoit que le profil et les actions publiques publiées',()=>{
+  assert.match(studentBookHtml,/EUC_DEV562_publicCompanyProfile/);assert.match(studentBookHtml,/Actions menées avec le lycée/);assert.match(relations,/scope==='PUBLIC'\?visibility==='PUBLIC'/);assert.match(relations,/status!=='PUBLIE'/);assert.doesNotMatch(studentBookHtml,/Drive_folder_id|Created_by|Updated_by/);
+});
+
+test('la projection publique du journal écarte brouillons, visibilité interne et identifiants Drive',()=>{
+  const c=context(),base={Cle_entreprise:'SIRET|123',Actif:true,Date_action:1791763200,Categorie:'VISITE_ENTREPRISE',Titre:'Visite',Description:'Découverte',Drive_folder_id:'secret-drive'};c.EUC_DEV562_profileRow_=()=>null;c.EUC_DEV562_relationRows_=()=>[{id:1,fields:Object.assign({},base,{Statut:'PUBLIE',Visibilite:'PUBLIC',Lien_site_lycee:'https://lycee.example/action'})},{id:2,fields:Object.assign({},base,{Statut:'BROUILLON',Visibilite:'PUBLIC',Titre:'Brouillon'})},{id:3,fields:Object.assign({},base,{Statut:'PUBLIE',Visibilite:'PERSONNELS',Titre:'Interne'})}];const out=c.EUC_DEV562_profileData_({identity:'SIRET|123'},'PUBLIC');assert.equal(out.actions.length,1);assert.equal(out.actions[0].titre,'Visite');assert.equal(out.actions[0].driveUrl,undefined);assert.deepEqual(JSON.parse(JSON.stringify(out.actions[0].liens)),[{label:'Site du lycée',url:'https://lycee.example/action'}]);
 });
 
 test('le book ne conserve qu’un contrat cohérent par apprenti, entreprise et année',()=>{

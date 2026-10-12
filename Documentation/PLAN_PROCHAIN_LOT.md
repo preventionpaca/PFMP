@@ -1,5 +1,20 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV562 candidat — profil et mémoire de la relation entreprise
+
+- Vérifier sur le canal bleu la création paresseuse des trois tables avec une
+  entreprise de recette, puis les états vide, chargement, succès et erreur du
+  site, du logo, de la correction de contact et de l'ajout d'action.
+- Contrôler qu'une action brouillon/personnels ne ressort jamais dans le book
+  familles et qu'une action publiée/publique y apparaît sans identifiant Drive
+  ni auteur.
+- Le premier lot crée un dossier Drive optionnel et fournit son lien à
+  l'administration. Un téléversement multi-fichier directement depuis la fiche
+  pourra être ajouté ensuite si l'usage le justifie, avec limites de taille et
+  droits de diffusion explicites.
+- Aucune correction réelle de contact, aucun logo et aucune action réelle ne
+  doivent être enregistrés pendant la recette sans cible de test validée.
+
 ## DEV561 publié (@954) — codes postaux et couverture cartographique du book
 
 - Un code postal français numérique sur quatre chiffres retrouve son zéro

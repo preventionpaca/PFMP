@@ -1,5 +1,22 @@
 # Décisions métier permanentes
 
+- Une simple ressemblance orthographique entre deux responsables ou tuteurs
+  ne constitue jamais une preuve d'identité. La casse est normalisée uniquement
+  pour l'affichage. Une correction nominative exige une action administrateur
+  explicite et reste une surcouche traçable ; aucune convention historique
+  n'est réécrite.
+- Le profil éditorial et l'historique de relation d'une entreprise sont indexés
+  dans Grist. Les logos, photos et pièces restent dans Drive afin de ne pas
+  consommer la capacité documentaire de Grist. Les liens sont limités à HTTP(S).
+- Une action de relation possède un statut `BROUILLON` ou `PUBLIE` et une
+  visibilité `PERSONNELS` ou `PUBLIC`. Le public ne voit que la combinaison
+  `PUBLIE` + `PUBLIC`. L'archivage futur devra être logique (`Actif=false`) et
+  ne supprimera jamais physiquement l'historique.
+- Les tables de relation utilisent une clé d'entreprise durable, le SIRET
+  lorsqu'il est disponible et l'identité canonique en repli. Cette clé permettra
+  de déplacer ultérieurement le journal vers un autre document Grist sans
+  modifier les conventions ni les fichiers Drive.
+
 - Un code postal français lu depuis une cellule numérique est toujours
   normalisé sur cinq chiffres. Lorsqu'il ne comporte que quatre chiffres, le
   zéro initial est restauré avant affichage, comparaison d'adresse ou

@@ -1,5 +1,30 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV562 candidat (profil et relation entreprise)
+
+- Les noms des responsables et tuteurs sont présentés en casse lisible sans
+  modifier les valeurs historiques des conventions. Deux noms simplement
+  ressemblants ne sont jamais fusionnés automatiquement.
+- Une fiche administrateur permet de corriger explicitement le nom affiché
+  d'un contact. La correction est enregistrée dans
+  `EUC_ENTREPRISES_CONTACTS_CORRECTIONS` et se superpose aux sources ; le nom
+  d'origine est conservé pour audit.
+- Le profil entreprise reçoit un site internet et un logo. Le fichier du logo
+  est stocké dans Drive ; Grist conserve seulement les métadonnées et le droit
+  de diffusion dans `EUC_ENTREPRISES_PROFILS`.
+- Le journal `EUC_RELATIONS_ENTREPRISES` enregistre les actions du lycée avec
+  l'entreprise : catégorie, date, titre, description, lieu, classes ou
+  diplômes, liens publics, visibilité et statut. Un dossier Drive dédié peut
+  être créé pour les pièces de chaque action ; son identifiant seul est stocké
+  dans Grist.
+- La fiche familles ne reçoit que les actions `PUBLIE` de visibilité `PUBLIC`.
+  Les brouillons, les actions réservées aux personnels, les identifiants Drive
+  et les auteurs ne sont jamais transmis au navigateur public.
+- Les nouvelles tables sont créées paresseusement à la première écriture
+  administrateur. Aucun contenu métier réel n'a été écrit pendant les tests.
+  Les tests ciblés DEV538/DEV562 passent `84/84` et la suite complète
+  `872/872`.
+
 ## Mise à jour du 12 octobre 2026 — DEV561 publié sur le site en ligne (@954)
 
 - Les codes postaux français enregistrés comme nombres sont normalisés sur cinq
