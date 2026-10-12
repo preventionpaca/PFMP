@@ -1,5 +1,39 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 octobre 2026 — DEV558 publié sur le site en ligne (@951)
+
+- Le book des personnels propose un retour vers le suivi PFMP et la navigation
+  publique reste dans `pfmp.loucodi.fr`. La fiche de classe conserve également
+  le sous-domaine pour ouvrir sa cartographie puis revenir à la liste des
+  élèves.
+- Les changements de période et les ouvertures de carte affichent désormais
+  immédiatement un indicateur de chargement, désactivent la commande contre le
+  double clic et restaurent son état en succès, erreur ou dépassement de délai.
+  Les pastilles de statut sont centrées. La mention de fin de Terminale est
+  limitée au parcours différencié et ne parasite plus les PFMP ordinaires.
+- La cartographie d'une classe lance en parallèle le chargement de son catalogue
+  et de ses points, sans second chargement après réception du catalogue. Elle
+  conserve la classe et la période d'origine ; le contrôle réel de `TMVA1`,
+  `PFMP n°1` affiche les `22` entreprises attendues et son retour fonctionne.
+- Le bilan Apprentis est regroupé en accordéons `BAC PRO`, `BTS`, `CAP` et
+  autres familles disponibles. `BAC PRO` est ouvert par défaut. Lorsqu'une
+  classe est choisie, ses fiches apparaissent avant le bilan global et tous les
+  accordéons sont repliés ; le sélecteur montre un chargement explicite et est
+  temporairement désactivé.
+- La cartographie des apprentis charge maintenant réellement la feuille de
+  styles Leaflet dans le bac à sable Apps Script. Le contrôle visuel publié
+  confirme une carte complète, ses tuiles, ses contrôles et `7` marqueurs, sans
+  erreur console. Le premier candidat `@950`, dont les données étaient correctes
+  mais dont le rendu Leaflet restait déstructuré, a été immédiatement remplacé
+  par `@951` après ce contrôle navigateur.
+- Le commit applicatif final
+  `4f64f3b57faf645f94dfa6bd5968a26edfbb98ab` est publié sur les deux Web Apps
+  vertes existantes en version immuable `951`. L'enveloppe PFMP est publiée par
+  le commit `2909696`. La suite complète passe `863/863`, le contrôle automatisé
+  valide `28/28` routes et les contrôles navigateur ne relèvent aucune erreur
+  console. Aucune donnée Grist n'a été modifiée. La version fonctionnelle `949`
+  reste le point de retour sûr antérieur au lot.
+
 ## Mise à jour du 12 octobre 2026 — DEV557 publié sur le site en ligne (@949)
 
 - Les contacts du book sont maintenant regroupés lorsque leurs noms complets
