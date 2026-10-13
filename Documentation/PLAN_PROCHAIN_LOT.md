@@ -1,6 +1,6 @@
 # Prochains lots — book entreprises et apprentissage
 
-## DEV565/DEV566 prêt localement — attestations scolaires et import Yparéo
+## DEV565/DEV566 publié (@959) — attestations scolaires et import Yparéo
 
 - Valider sur une recette autorisée les états vide, chargement, succès et
   erreur de la page d'attestations, sans envoyer de courriel réel.
@@ -10,9 +10,16 @@
 - Prévisualiser un export Yparéo non nominatif ou de test pour confirmer les
   quatre correspondances `TPMMA`, `TPEEB`, `TSEC`, `CQPM ASC`. L'import demeure
   désactivé (`DRY_RUN`) jusqu'à une autorisation séparée d'écriture.
-- Résoudre le conflit de publication : les instructions de tâche imposent le
-  bleu puis le vert, mais les scripts versionnés ne savent plus préparer le
-  bleu. Aucun déploiement ne doit contourner cette divergence.
+- La version Apps Script immuable `959`, issue du commit exact
+  `4be3469cd12d6dd78ea6c7a668083ad99a861217`, est publiée sur les deux Web Apps
+  vertes existantes. La suite complète passe `896/896`, le contrôle HTTP
+  `30/30` routes et le contrôle navigateur confirme notamment les retours
+  canoniques des deux nouveaux écrans.
+- La table source ne contient aucune ligne distincte `1MELEC C` : deux lignes
+  `1MELEC G` sont actuellement visibles. `TPMMA` et `CQPM ASC` existent mais
+  sont exclus/inactifs, `TPEEB` est absent et seul `TSEC` alimente aujourd'hui
+  l'accordéon actif « Autres formations ». Corriger ces référentiels exige une
+  décision et une écriture métier séparées ; aucune classe n'a été fabriquée.
 
 ## DEV563 publié (@957) — portée des actions et correction centralisée des contacts
 

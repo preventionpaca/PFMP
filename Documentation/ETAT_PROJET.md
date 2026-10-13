@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Candidat local du 13 octobre 2026 — DEV565/DEV566 non publié
+## Mise à jour du 14 octobre 2026 — DEV565/DEV566 publié sur le site en ligne (@959)
 
 - Une page d'attestations de stage séparée de la génération des conventions
   propose les modèles de 3, 4, 5 ou 6 semaines, à l'unité ou pour une classe.
@@ -23,12 +23,26 @@
   rapproche d'abord l'INE puis l'identité complète, et distingue apprenti avec
   contrat de futur apprenti sans entreprise. Il est livré en `DRY_RUN` : aucune
   écriture Grist n'est possible sans activation technique explicite.
-- Les tests ciblés DEV565/DEV566 passent `13/13` et la suite complète
-  `894/894`. Le parcours réel, l'import et les courriels n'ont pas été exécutés.
-- Ce candidat n'est pas publié : les instructions de tâche exigent le workflow
-  bleu `prepare` puis `promote`, alors que le dépôt courant a supprimé ces
-  commandes et ne propose qu'une publication directe verte. Cette divergence
-  de sécurité doit être résolue avant tout déploiement.
+- Les deux nouveaux écrans possèdent un retour explicite vers
+  `https://alternance.loucodi.fr/`. Le contrôle navigateur a détecté puis fait
+  corriger une construction cliente qui produisait une URL `googleusercontent`
+  vide sur la page des attestations. Les retours des attestations et de
+  l'import Yparéo sont maintenant visibles, canoniques et couverts par test.
+- Les tests ciblés DEV565/DEV566 passent `15/15` et la suite complète
+  `896/896`. Le commit exact
+  `4be3469cd12d6dd78ea6c7a668083ad99a861217` est publié sur les deux Web Apps
+  vertes existantes dans la version Apps Script immuable `959`; le contrôle
+  automatisé valide `30/30` routes.
+- Le contrôle navigateur confirme les deux nouveaux écrans, les dernières
+  routes administratives et publiques, la carte Apprentis complète avec ses
+  tuiles Leaflet, ses contrôles et `16` marqueurs, ainsi que l'accordéon
+  « Autres formations » contenant actuellement `TSEC`. La source courante ne
+  contient toujours aucune ligne distincte `1MELEC C` : elle expose deux lignes
+  `1MELEC G`. `TPMMA` et `CQPM ASC` sont présents mais exclus/inactifs ;
+  `TPEEB` est absent de la table source. Aucune classe n'a été inventée ou
+  renommée.
+- Aucun import Yparéo, aucun courriel, aucune génération de PDF et aucune
+  écriture Grist n'ont été exécutés pendant cette publication et ces contrôles.
 
 ## Mise à jour du 12 octobre 2026 — DEV563 publié sur le site en ligne (@957)
 
