@@ -44,6 +44,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV464_afficherDossierApprentissage(e);
     case 'quotas-apprentissage-pfmp':
       return EUC_DEV538_afficherQuotas(e);
+    case 'import-ypareo-pfmp':
+      return EUC_DEV566_afficherImportYpareo(e);
     case 'book-entreprises-pfmp':
       return EUC_DEV538_afficherBookAdmin(e);
     case 'book-entreprises-public-pfmp':
@@ -67,6 +69,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV368_afficherSans(e);
     case 'ordres-mission-pfmp':
       return EUC_DEV368_afficherMissions(e);
+    case 'attestations-stage-pfmp':
+      return EUC_DEV565_afficherAttestations(e);
     case 'acces-pp-admin':
       return EUC_DEV441_afficherPpAdmin(e);
     case 'acces-pp-pfmp':

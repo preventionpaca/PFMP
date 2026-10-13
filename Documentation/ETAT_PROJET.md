@@ -1,5 +1,35 @@
 # État du projet Eucalyptus PFMP
 
+## Candidat local du 13 octobre 2026 — DEV565/DEV566 non publié
+
+- Une page d'attestations de stage séparée de la génération des conventions
+  propose les modèles de 3, 4, 5 ou 6 semaines, à l'unité ou pour une classe.
+  La composition reprend les rubriques des quatre modèles Word fournis :
+  identité, entreprise, professeur référent, émargement matin/après-midi,
+  signature hebdomadaire du tuteur et certification finale de l'entreprise.
+  Le serveur ne retient que les élèves scolaires ayant une convention et une
+  entreprise ; un apprenti reste exclu même si son identifiant est injecté
+  manuellement. Les courriels aux entreprises passent par une prévisualisation,
+  un modèle administrable, une confirmation, un contrôle de quota et une clé
+  d'idempotence. Aucun courriel réel n'a été envoyé.
+- `1MELEC C` et `TMELEC C` sont ajoutées aux listes générales et à la gestion
+  des apprentis seulement lorsqu'une vraie ligne active et distincte existe
+  dans la table Grist `Classes`. Les anciennes classes `G` ne sont jamais
+  renommées ni réutilisées et aucun identifiant n'est inventé.
+- `TPMMA`, `TPEEB`, `TSEC` et `CQPM ASC` sont regroupés sous la famille
+  `AUTRES_FORMATIONS`, affichée « Autres formations », au lieu de BAC PRO.
+- L'import Yparéo accepte CSV, XLS et XLSX, conserve les valeurs textuelles
+  comme `06000`, applique une table de correspondance exacte groupe → classe,
+  rapproche d'abord l'INE puis l'identité complète, et distingue apprenti avec
+  contrat de futur apprenti sans entreprise. Il est livré en `DRY_RUN` : aucune
+  écriture Grist n'est possible sans activation technique explicite.
+- Les tests ciblés DEV565/DEV566 passent `13/13` et la suite complète
+  `894/894`. Le parcours réel, l'import et les courriels n'ont pas été exécutés.
+- Ce candidat n'est pas publié : les instructions de tâche exigent le workflow
+  bleu `prepare` puis `promote`, alors que le dépôt courant a supprimé ces
+  commandes et ne propose qu'une publication directe verte. Cette divergence
+  de sécurité doit être résolue avant tout déploiement.
+
 ## Mise à jour du 12 octobre 2026 — DEV563 publié sur le site en ligne (@957)
 
 - Le book administrateur centralise la portée des catégories d'actions dans

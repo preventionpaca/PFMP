@@ -33,7 +33,9 @@ function EUC_DEV190X_classes_(annee,terminalOnly){
     var p=(s||{}).payload||{};
     rows=terminalOnly ? (p.terminales||[]) : (p.classes||[]);
   }
-  return typeof EUC_DEV564_normalizeClass_==='function'?rows.map(EUC_DEV564_normalizeClass_):rows;
+  if(typeof EUC_DEV564_normalizeClass_==='function')rows=rows.map(EUC_DEV564_normalizeClass_);
+  if(!terminalOnly&&typeof EUC_DEV565_mergeRequiredClasses_==='function')rows=EUC_DEV565_mergeRequiredClasses_(rows);
+  return rows;
 }
 
 function EUC_DEV446_isGristQuotaError_(err){

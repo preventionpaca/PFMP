@@ -1,5 +1,15 @@
 # Décisions métier permanentes
 
+- Les attestations d'émargement/allocation sont générées après la saisie QR ou
+  l'import JotForm, indépendamment de la convention initiale. Elles concernent
+  uniquement les scolaires d'une classe, jamais les apprentis. Le modèle 3, 4,
+  5 ou 6 semaines est choisi explicitement et un lot reste revalidé côté
+  serveur avant document ou courriel.
+- Les classes `TPMMA`, `TPEEB`, `TSEC` et `CQPM ASC` appartiennent à la famille
+  applicative `AUTRES_FORMATIONS`, pas à BAC PRO. Une classe `1MELEC C` ou
+  `TMELEC C` n'existe dans les sélecteurs que si la table `Classes` fournit sa
+  propre ligne active ; aucune classe `G` ne peut servir d'alias.
+
 - Une simple ressemblance orthographique entre deux responsables ou tuteurs
   ne constitue jamais une preuve d'identité. La casse est normalisée uniquement
   pour l'affichage. Une correction nominative exige une action administrateur
@@ -43,16 +53,19 @@
   durable du point.
 
 - La source d'import des groupes d'alternance et de formation continue se
-  nomme `YPAREO`. Un futur lot réutilisera le masque apprenti existant :
+  nomme `YPAREO`. L'import réutilise le masque apprenti existant :
   contrôle SIRET, entreprise, dates de contrat et qualification explicite de
   la situation du jeune. L'import ne créera pas un second formulaire métier.
-- Une table de correspondance dédiée à YPAREO reliera l'acronyme ou le groupe
+- Une table de correspondance dédiée à YPAREO relie l'acronyme ou le groupe
   source au nom officiel de la formation pour l'alternance et la formation
   continue. En l'absence d'une correspondance certaine, la classe reste
   choisie par l'administrateur ; aucune déduction approximative n'est admise.
-- Le libellé YPAREO `SFP APP SANS ENTREPRISE` décrit une situation à qualifier :
-  futur apprenti sans entreprise ou rupture de contrat. Il ne suffit jamais à
-  classer automatiquement le jeune parmi les apprentis actuels.
+- Le libellé YPAREO `SFP APP SANS ENTREPRISE` crée un futur apprenti sans
+  contrat valide et ne le classe jamais parmi les apprentis actuels. Une
+  rupture reste une situation distincte à confirmer dans le masque métier.
+- L'import YPAREO reste en `DRY_RUN` par défaut. Une prévisualisation complète,
+  des correspondances exactes, une confirmation explicite et une activation
+  technique `LIVE` sont cumulativement obligatoires avant toute écriture.
 - Le repère rouge `A` désigne l'apprentissage. Un repère `G` distinct désigne
   l'appartenance au GTA ou à la formation continue ; les deux repères peuvent
   être affichés simultanément. Ces règles sont documentées ici pour le futur

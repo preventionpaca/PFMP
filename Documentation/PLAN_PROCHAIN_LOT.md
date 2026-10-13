@@ -1,5 +1,19 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV565/DEV566 prêt localement — attestations scolaires et import Yparéo
+
+- Valider sur une recette autorisée les états vide, chargement, succès et
+  erreur de la page d'attestations, sans envoyer de courriel réel.
+- Vérifier qu'une ligne active `1MELEC C` existe réellement dans `Classes` avec
+  un identifiant propre ; tant qu'elle n'existe pas, ne jamais renommer
+  `1MELEC G` ni fabriquer une classe technique.
+- Prévisualiser un export Yparéo non nominatif ou de test pour confirmer les
+  quatre correspondances `TPMMA`, `TPEEB`, `TSEC`, `CQPM ASC`. L'import demeure
+  désactivé (`DRY_RUN`) jusqu'à une autorisation séparée d'écriture.
+- Résoudre le conflit de publication : les instructions de tâche imposent le
+  bleu puis le vert, mais les scripts versionnés ne savent plus préparer le
+  bleu. Aucun déploiement ne doit contourner cette divergence.
+
 ## DEV563 publié (@957) — portée des actions et correction centralisée des contacts
 
 - Paramétrer par catégorie la visibilité professeurs et élèves/familles ;
