@@ -11,7 +11,7 @@
 <header class="hero"><div class="wrap"><h1>Attestations de stage</h1><p>Émargement et allocation de PFMP — élèves scolaires uniquement.</p></div></header>
 <main>
   <section class="panel">
-    <a id="home" class="btn" target="_top">← Retour à l’administration PFMP</a>
+    <a id="home" class="btn" href="https://alternance.loucodi.fr/" target="_top">← Retour à l’administration PFMP</a>
     <p class="hint">Ce parcours intervient après la saisie QR ou l’import JotForm. Il est indépendant de la génération initiale des conventions et exclut toujours les apprentis côté serveur.</p>
     <div class="grid filters">
       <label>Année scolaire<select id="year"></select></label>
@@ -33,7 +33,6 @@
 <div id="templateModal" class="modal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="templateTitle"><h2 id="templateTitle">Courriel aux entreprises</h2><div class="grid"><label>Signature<input id="sender"></label><label>Copie BFE<input id="cc" type="email"></label><label class="full">Objet<input id="subject"></label><label class="full">Message<textarea id="body"></textarea></label></div><p id="variables" class="hint"></p><div class="actions"><button id="saveTemplate" class="primary"><span class="spin"></span><span>Enregistrer</span></button><button id="resetTemplate"><span class="spin"></span><span>Rétablir le modèle</span></button><button id="closeTemplate">Fermer</button></div><div id="templateStatus" class="status" role="status">—</div></section></div>
 <script>
 const BOOT=<?!= bootJson ?>;const $=s=>document.querySelector(s),state={catalog:null,lines:[],emailPreview:null,template:null};
-$('#home').href=(BOOT.baseUrl||'')+'?page=admin-pfmp';
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function busy(button,on,label){if(!button)return;button.disabled=!!on;button.classList.toggle('busy',!!on);const span=button.querySelector('span:last-child');if(span){if(on){span.dataset.old=span.textContent;span.textContent=label||'Chargement…'}else if(span.dataset.old){span.textContent=span.dataset.old;delete span.dataset.old}}}
 function status(text,kind,target){const el=target||$('#status');el.textContent=text;el.className='status '+(kind||'')}
