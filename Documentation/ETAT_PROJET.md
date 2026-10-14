@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 14 octobre 2026 — DEV567 publié sur le site en ligne (@960)
+
+- Le parcours QR ne dépend plus de la conservation aléatoire d'une réponse
+  officielle SIRET dans `CacheService` entre la recherche et le clic sur
+  « Enregistrer ». La réponse déjà contrôlée est accompagnée d'une preuve
+  serveur signée, liée au SIRET et bornée à une heure, puis revérifiée côté
+  serveur avant toute écriture.
+- Une preuve modifiée, réutilisée avec un autre SIRET ou expirée est refusée.
+  En l'absence de preuve et de cache, l'interface demande maintenant de
+  relancer la recherche SIRET au lieu d'affirmer à tort que l'entreprise est
+  absente de la base officielle.
+- La page QR publiée affiche `DEV.141`. Le contrôle navigateur non destructif
+  confirme son chargement avec un identifiant technique inexistant et ne
+  relève aucune erreur de console. Aucun enregistrement élève n'a été rejoué.
+- Les tests ciblés DEV527 passent `9/9` et la suite complète `900/900`. Le
+  commit exact `927ee7c014ddf4640b4a52310acb70234f807107` est publié sur les
+  deux Web Apps vertes existantes dans la version Apps Script immuable `960` ;
+  le contrôle automatisé valide `30/30` routes.
+
 ## Mise à jour du 14 octobre 2026 — DEV565/DEV566 publié sur le site en ligne (@959)
 
 - Une page d'attestations de stage séparée de la génération des conventions

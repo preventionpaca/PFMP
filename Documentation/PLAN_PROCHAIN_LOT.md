@@ -1,5 +1,19 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV567 publié (@960) — continuité de la validation SIRET du QR
+
+- La recherche officielle réussie fournit une preuve serveur signée d'une
+  heure. L'enregistrement vérifie sa signature, son échéance et le SIRET avant
+  d'utiliser les données officielles ; le cache ne sert plus que
+  d'accélérateur.
+- Une preuve absente ou expirée impose une nouvelle recherche SIRET sans perdre
+  les autres champs déjà saisis. Elle ne peut jamais autoriser un autre SIRET.
+- La référence publiée est la version Apps Script immuable `960`, issue du
+  commit exact `927ee7c014ddf4640b4a52310acb70234f807107`. Les tests passent
+  `900/900`, les routes `30/30` et le contrôle navigateur confirme `DEV.141`
+  sans erreur de console. Aucun enregistrement réel n'a été rejoué pendant la
+  validation.
+
 ## DEV565/DEV566 publié (@959) — attestations scolaires et import Yparéo
 
 - Valider sur une recette autorisée les états vide, chargement, succès et

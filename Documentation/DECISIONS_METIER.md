@@ -1,5 +1,12 @@
 # Décisions métier permanentes
 
+- Une entreprise française saisie par le parcours QR reste soumise à une
+  vérification officielle du SIRET. Le résultat positif peut être transporté
+  jusqu'à l'enregistrement par une preuve serveur signée, liée au SIRET et à
+  durée limitée ; un simple indicateur navigateur ou une donnée de formulaire
+  ne suffit jamais. La disparition d'un cache technique ne doit pas transformer
+  un SIRET précédemment vérifié en faux « SIRET non retrouvé ».
+
 - Les attestations d'émargement/allocation sont générées après la saisie QR ou
   l'import JotForm, indépendamment de la convention initiale. Elles concernent
   uniquement les scolaires d'une classe, jamais les apprentis. Le modèle 3, 4,
