@@ -1,5 +1,19 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV569 publié (@962) — confirmation réelle ou orientation G205
+
+- Sur la prochaine saisie légitime, vérifier qu'un SIRET introuvable ou un
+  échec de sauvegarde affiche seulement la consigne de dépôt au bureau G205,
+  sans erreur Apps Script ni détail technique.
+- Rejouer le QR du dossier qui semblait bloqué : s'il avait été écrit, l'écran
+  doit afficher le numéro existant et « Informations déjà enregistrées. Aucun
+  doublon n'a été créé. » ; sinon il doit orienter vers G205.
+- La référence publiée est la version Apps Script immuable `962`, issue du
+  commit exact `b54a636af4d788b7b634e089c50d39befc2d0ca2`. Les tests passent
+  `906/906`, les routes `30/30` et le contrôle navigateur en lecture seule
+  confirme `DEV.569` sans diagnostic `DEV.141` visible ni erreur de console.
+  Aucune écriture réelle n'a été déclenchée pendant la validation.
+
 ## DEV568 publié (@961) — attente visible et anti-doublon du QR
 
 - Vérifier sur la prochaine saisie légitime que le bouton « Rechercher » puis

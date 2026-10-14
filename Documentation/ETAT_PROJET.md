@@ -1,5 +1,29 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 14 octobre 2026 — DEV569 publié sur le site en ligne (@962)
+
+- Le diagnostic historique `DEV.141` n'est plus visible sur la page élève. La
+  page QR publiée porte désormais clairement `DEV.569`.
+- Après tout échec apparent d'enregistrement ou dépassement du délai, le client
+  relit l'état du dossier côté serveur. Si l'écriture avait finalement abouti,
+  l'écran affiche « Informations déjà enregistrées », restitue le numéro
+  existant et ne rejoue aucune écriture.
+- Si aucun enregistrement n'est confirmé, les échecs de validation SIRET et de
+  sauvegarde n'exposent plus les messages techniques à l'élève. La consigne
+  unique est : « L'enregistrement est impossible en ligne. Veuillez passer au
+  bureau G205 pour déposer votre convention. »
+- La reconnaissance d'un dossier déjà saisi précède désormais les restrictions
+  de période et l'exigence d'une nouvelle session de saisie. Un ancien QR déjà
+  finalisé peut donc confirmer le succès au lieu d'afficher un faux échec.
+- Les tests ciblés QR passent `15/15` et la suite complète `906/906`. Le commit
+  exact `b54a636af4d788b7b634e089c50d39befc2d0ca2` est publié sur les deux Web
+  Apps vertes existantes dans la version Apps Script immuable `962`; le
+  contrôle automatisé valide `30/30` routes.
+- Le contrôle navigateur en lecture seule confirme `DEV.569`, l'absence du
+  diagnostic visible `DEV.141` et l'absence d'erreur de console. Aucun dossier
+  élève ni SIRET réel n'a été utilisé : la relecture après une véritable
+  écriture reste à confirmer lors de la prochaine saisie légitime.
+
 ## Mise à jour du 14 octobre 2026 — DEV568 publié sur le site en ligne (@961)
 
 - Les boutons de vérification, de recherche SIRET/NIS et d'enregistrement de
