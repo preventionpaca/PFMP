@@ -374,8 +374,14 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
   var officielFrance=null;
   var officielMonaco=null;
   if(!estMonaco){
-    officielFrance=EUC_V161_verifierSiretFrance(siret);
-    if(!officielFrance||!officielFrance.found) throw new Error('SIRET non retrouvé dans la base officielle. Enregistrement impossible.');
+    officielFrance=EUC_V161_lirePreuveSiretFrance_(d.entrepriseVerification,siret);
+    if(!officielFrance)officielFrance=EUC_V161_verifierSiretFrance(siret);
+    if(!officielFrance||!officielFrance.found){
+      if(officielFrance&&officielFrance.navigateur){
+        throw new Error('La confirmation du SIRET a expiré. Relancez la recherche SIRET puis enregistrez à nouveau.');
+      }
+      throw new Error('SIRET non retrouvé dans la base officielle. Enregistrement impossible.');
+    }
     raison=String(officielFrance.entrepriseRaisonSociale||'').trim();
     adresse=String(officielFrance.entrepriseAdresse||'').trim();
     commune=String(officielFrance.entrepriseCommune||'').trim();

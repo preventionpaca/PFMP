@@ -230,7 +230,7 @@ button:disabled{
 <main>
 <section class="card">
 
-<div class="build">DEV.140</div>
+<div class="build">DEV.141</div>
 
 <p class="eyebrow">LYCÉE LES EUCALYPTUS · PFMP</p>
 
@@ -783,7 +783,7 @@ function afficherEntreprise(r){
 function init(){
 
   diag.textContent =
-    'DEV.140 — lecture du QR…';
+    'DEV.141 — lecture du QR…';
 
   google.script.url.getLocation(
     function(loc){
@@ -791,7 +791,7 @@ function init(){
       RID = normaliserRid(loc);
 
       diag.textContent =
-        'DEV.140 — rid=' +
+        'DEV.141 — rid=' +
         (RID || 'absent');
 
       if(!RID){
@@ -885,7 +885,7 @@ btn.onclick = function(){
           r.reference || '';
 
         diag.textContent =
-          r.diagnostic || 'DEV.140 OK';
+          r.diagnostic || 'DEV.141 OK';
 
         if(r.saisieAutorisee === false){
           $('#enterprise').hidden = true;
@@ -1206,6 +1206,9 @@ function(){
     d.tuteurEstResponsable =
       $('#same').checked;
 
+    d.entrepriseVerification =
+      document.documentElement.dataset.eucFranceVerification || '';
+
 
     msg(
       'Enregistrement des informations…',
@@ -1429,6 +1432,7 @@ init();
       lockIdentity(true,false);
       lockOne('entrepriseEnseigne',false);
       document.documentElement.dataset.eucFranceVerified='0';
+      document.documentElement.dataset.eucFranceVerification='';
       document.documentElement.dataset.eucMonacoManual='0';
       if(typeof controleSiret==='function') controleSiret();
       else search.disabled=ident.value.length!==14;
@@ -1444,6 +1448,7 @@ init();
       clearIdentity(true);
       lockIdentity(true,true);
       document.documentElement.dataset.eucFranceVerified='0';
+      document.documentElement.dataset.eucFranceVerification='';
       document.documentElement.dataset.eucMonacoManual='0';
       search.disabled=!nisNorm(ident.value);
     }
@@ -1460,6 +1465,7 @@ init();
       if(country.value==='France'){
         ident.value=siretNorm(ident.value);
         document.documentElement.dataset.eucFranceVerified='0';
+        document.documentElement.dataset.eucFranceVerification='';
         clearIdentity(false);
         lockIdentity(true,false);
         lockOne('entrepriseEnseigne',false);
@@ -1514,6 +1520,7 @@ init();
 
                     if(!x||!x.found){
                       document.documentElement.dataset.eucFranceVerified='0';
+                      document.documentElement.dataset.eucFranceVerification='';
                       clearIdentity(false);
                       lockIdentity(true,false);
                       lockOne('entrepriseEnseigne',false);
@@ -1524,6 +1531,7 @@ init();
                     fillIdentity(x,false);
                     V('entreprisePays','France');
                     document.documentElement.dataset.eucFranceVerified='1';
+                    document.documentElement.dataset.eucFranceVerification=x.preuveEnregistrement||'';
                     lockIdentity(true,false);
                     lockOne('entrepriseEnseigne',false);
                     status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
@@ -1532,6 +1540,7 @@ init();
                     clearTimeout(timer);
                     search.disabled=false;
                     document.documentElement.dataset.eucFranceVerified='0';
+                    document.documentElement.dataset.eucFranceVerification='';
                     status('Erreur SIRET : '+(e&&e.message||e),true);
                   })
                   .EUC_V161_traiterSiretFranceNavigateur(json,siret);
@@ -1540,6 +1549,7 @@ init();
                 clearTimeout(timer);
                 search.disabled=false;
                 document.documentElement.dataset.eucFranceVerified='0';
+                document.documentElement.dataset.eucFranceVerification='';
                 clearIdentity(false);
                 lockIdentity(true,false);
                 lockOne('entrepriseEnseigne',false);
@@ -1558,6 +1568,7 @@ init();
 
             if(!r||!r.found){
               document.documentElement.dataset.eucFranceVerified='0';
+              document.documentElement.dataset.eucFranceVerification='';
               clearIdentity(false);
               lockIdentity(true,false);
               lockOne('entrepriseEnseigne',false);
@@ -1568,6 +1579,7 @@ init();
             fillIdentity(r,false);
             V('entreprisePays','France');
             document.documentElement.dataset.eucFranceVerified='1';
+            document.documentElement.dataset.eucFranceVerification=r.preuveEnregistrement||'';
             lockIdentity(true,false);
             lockOne('entrepriseEnseigne',false);
             status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
@@ -1575,6 +1587,7 @@ init();
           .withFailureHandler(function(e){
             search.disabled=false;
             document.documentElement.dataset.eucFranceVerified='0';
+            document.documentElement.dataset.eucFranceVerification='';
             clearIdentity(false);
             lockIdentity(true,false);
             lockOne('entrepriseEnseigne',false);

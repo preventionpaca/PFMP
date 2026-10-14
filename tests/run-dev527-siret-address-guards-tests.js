@@ -2,18 +2,40 @@ const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
 const vm=require('vm');
+const crypto=require('crypto');
 
 const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,'apps-script',name),'utf8');
 const validation=read('EUC_ENT_Validation.gs');
 const api=read('EUC_ENT_ApiEntreprise.gs');
 const strict=read('EUC_SIRET_NIS_StrictV161.gs');
+const qr=read('EUC_CONVENTION_PFMP_QRPublicV85.gs');
+const qrHtml=read('PFMP_Acces_QR_V116.html');
 
 let n=0;
 function test(name,fn){try{fn();console.log('✓',name);n++;}catch(e){console.error('✗',name,e.stack||e.message);process.exitCode=1;}}
 function apiContext(local){
   const ctx={encodeURIComponent,EUC_ENT_controlerAccesUtilisateur_:()=>true,EUC_ENT_verifierDoublonGrist:()=>local,EUC_ENT_lireConfiguration:()=>({EUC_ENT_API_RECHERCHE_URL:'https://recherche-entreprises.api.gouv.fr/search'})};
   vm.createContext(ctx);vm.runInContext(validation,ctx);vm.runInContext(api,ctx);return ctx;
+}
+function webSafe(value){return Buffer.from(value).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function proofContext(){
+  const cache={},siret='49141406600036';
+  const ctx={
+    Date,JSON,String,Number,Object,Array,
+    CacheService:{getScriptCache:()=>({get:k=>cache[k]||null,put:(k,v)=>{cache[k]=v;}})},
+    Utilities:{
+      Charset:{UTF_8:'UTF-8'},
+      base64EncodeWebSafe:value=>webSafe(String(value)),
+      base64DecodeWebSafe:value=>Buffer.from(String(value).replace(/-/g,'+').replace(/_/g,'/'),'base64'),
+      newBlob:bytes=>({getDataAsString:()=>Buffer.from(bytes).toString('utf8')})
+    },
+    EUC_CONVENTION_resumeSignatureV134_:value=>webSafe(crypto.createHash('sha256').update('test-only|'+value).digest()),
+    EUC_ENT_traiterReponseApiNavigateur:()=>({source:'api',entreprise:{siret,raisonSociale:'NOUVELLE GENERATION ELECTRIQUE',numeroVoie:'43 B BOULEVARD PIERRE SEMARD',complementAdresse:'IMMEUBLE BEL CANTO',codePostal:'06300',commune:'NICE',pays:'France'}}),
+    EUC_ENT_rechercherSiret:()=>({source:'api_navigateur',siret,url:'https://example.invalid'})
+  };
+  vm.createContext(ctx);vm.runInContext(strict,ctx);
+  return {ctx,cache,siret};
 }
 
 test('une fiche Grist complète reste prioritaire',()=>{
@@ -40,6 +62,37 @@ test('la vérification officielle navigateur reste disponible pour l’enregistr
   let searches=0;ctx.EUC_ENT_rechercherSiret=()=>{searches++;return{source:'api_navigateur',siret,url:'https://example.invalid'};};vm.createContext(ctx);vm.runInContext(strict,ctx);
   const first=ctx.EUC_V161_traiterSiretFranceNavigateur({},siret),saved=ctx.EUC_V161_verifierSiretFrance(siret);
   assert.equal(first.entrepriseAdresse,'43 B BOULEVARD PIERRE SEMARD');assert.equal(saved.entrepriseAdresse,first.entrepriseAdresse);assert.equal(searches,0);
+});
+
+test('la réponse officielle produit une preuve signée utilisable sans cache',()=>{
+  const {ctx,cache,siret}=proofContext(),verified=ctx.EUC_V161_traiterSiretFranceNavigateur({},siret);
+  assert.match(verified.preuveEnregistrement,/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  Object.keys(cache).forEach(k=>delete cache[k]);
+  const saved=ctx.EUC_V161_lirePreuveSiretFrance_(verified.preuveEnregistrement,siret);
+  assert.equal(saved.entrepriseSiret,siret);
+  assert.equal(saved.entrepriseAdresse,'43 B BOULEVARD PIERRE SEMARD');
+});
+
+test('la preuve SIRET refuse un autre numéro et toute altération',()=>{
+  const {ctx,siret}=proofContext(),proof=ctx.EUC_V161_traiterSiretFranceNavigateur({},siret).preuveEnregistrement;
+  assert.equal(ctx.EUC_V161_lirePreuveSiretFrance_(proof,'73282932000074'),null);
+  assert.equal(ctx.EUC_V161_lirePreuveSiretFrance_(proof.slice(0,-1)+'x',siret),null);
+});
+
+test('la preuve expirée est refusée',()=>{
+  const {ctx,siret}=proofContext(),proof=ctx.EUC_V161_traiterSiretFranceNavigateur({},siret).preuveEnregistrement;
+  const payload=proof.split('.')[0],body=JSON.parse(Buffer.from(payload.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString('utf8'));
+  body.exp=Date.now()-1;
+  const expiredPayload=ctx.Utilities.base64EncodeWebSafe(JSON.stringify(body));
+  const expired=expiredPayload+'.'+ctx.EUC_CONVENTION_resumeSignatureV134_('SIRET_FRANCE_V567|'+expiredPayload);
+  assert.equal(ctx.EUC_V161_lirePreuveSiretFrance_(expired,siret),null);
+});
+
+test('l’enregistrement QR transmet et vérifie la preuve avant le repli cache',()=>{
+  assert.match(qrHtml,/d\.entrepriseVerification\s*=\s*document\.documentElement\.dataset\.eucFranceVerification/);
+  assert.match(qrHtml,/eucFranceVerification=x\.preuveEnregistrement/);
+  assert.match(qr,/EUC_V161_lirePreuveSiretFrance_\(d\.entrepriseVerification,siret\)/);
+  assert.match(qr,/confirmation du SIRET a expiré/);
 });
 
 test('une identité sans rue n’est jamais marquée vérifiée',()=>{
