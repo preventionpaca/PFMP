@@ -75,6 +75,24 @@ button:disabled{
   cursor:wait
 }
 
+button.euc-action-busy{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px
+}
+
+button.euc-action-busy:before{
+  content:"";
+  width:15px;
+  height:15px;
+  border:3px solid rgba(255,255,255,.45);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .75s linear infinite;
+  flex:0 0 auto
+}
+
 #verify button{
   grid-column:1/-1
 }
@@ -230,7 +248,7 @@ button:disabled{
 <main>
 <section class="card">
 
-<div class="build">DEV.141</div>
+<div class="build">DEV.568</div>
 
 <p class="eyebrow">LYCÉE LES EUCALYPTUS · PFMP</p>
 
@@ -539,6 +557,23 @@ function msg(text,error,busy){
 
 }
 
+function setActionBusyV568(button,on,label){
+  if(!button)return;
+  if(on){
+    if(!button.dataset.eucIdleLabel)button.dataset.eucIdleLabel=String(button.textContent||'').trim();
+    button.disabled=true;
+    button.setAttribute('aria-busy','true');
+    button.classList.add('euc-action-busy');
+    button.textContent=label||'Traitement…';
+    return;
+  }
+  button.classList.remove('euc-action-busy');
+  button.removeAttribute('aria-busy');
+  button.textContent=button.dataset.eucIdleLabel||String(button.textContent||'').trim();
+  button.disabled=false;
+}
+window.EUC_QR_buttonBusyV568=setActionBusyV568;
+
 
 function normaliserRid(loc){
 
@@ -684,6 +719,17 @@ function afficherEntreprise(r){
       true
     );
 
+    return;
+  }
+
+  if(r.dejaEnregistre===true||r.alreadySaved===true){
+    $('#enterprise').hidden=false;
+    form.hidden=true;
+    $('#registrationNumber').textContent=r.numeroEnregistrement||r.reference||'non disponible';
+    $('#success').hidden=false;
+    msg('✓ Ces informations ont déjà été enregistrées. Aucun doublon n’a été créé.',false);
+    status.className='status ok';
+    $('#success').scrollIntoView({behavior:'smooth',block:'center'});
     return;
   }
 
@@ -843,10 +889,7 @@ btn.onclick = function(){
     return;
   }
 
-  btn.disabled = true;
-
-  btn.textContent =
-    'Vérification…';
+  setActionBusyV568(btn,true,'Vérification…');
 
   msg(
     'Vérification de votre identité en cours…',
@@ -854,10 +897,18 @@ btn.onclick = function(){
     true
   );
 
+  var verifyTimer=setTimeout(function(){
+    setActionBusyV568(btn,false);
+    msg('La vérification dépasse 20 secondes. Vous pouvez réessayer.',true);
+  },20000);
+
   google.script.run
 
     .withSuccessHandler(
       function(r){
+
+        clearTimeout(verifyTimer);
+        setActionBusyV568(btn,false);
 
         $('#verifyArea').hidden = true;
 
@@ -889,8 +940,6 @@ btn.onclick = function(){
 
         if(r.saisieAutorisee === false){
           $('#enterprise').hidden = true;
-          btn.disabled = false;
-          btn.textContent = 'Vérifier et continuer';
           msg(r.messageQR || 'Ce QR ne permet plus la saisie. Présentez-vous au bureau PFMP.',true);
           status.className = 'status error';
           return;
@@ -904,10 +953,8 @@ btn.onclick = function(){
     .withFailureHandler(
       function(e){
 
-        btn.disabled = false;
-
-        btn.textContent =
-          'Vérifier et continuer';
+        clearTimeout(verifyTimer);
+        setActionBusyV568(btn,false);
 
         msg(
           e && e.message
@@ -957,7 +1004,7 @@ function(){
       field('entrepriseSiret').value
     );
 
-  b.disabled = true;
+  setActionBusyV568(b,true,'Recherche…');
 
   msg(
     'Recherche du SIRET '+
@@ -1043,7 +1090,7 @@ function(){
 
 function erreurRecherche(e){
 
-  $('#search').disabled = false;
+  setActionBusyV568($('#search'),false);
 
   msg(
     'Erreur de recherche SIRET : ' +
@@ -1058,7 +1105,7 @@ function erreurRecherche(e){
 
 function appliquerEntreprise(r){
 
-  $('#search').disabled = false;
+  setActionBusyV568($('#search'),false);
 
   if(r && r.introuvable){
 
@@ -1143,10 +1190,7 @@ function(){
 
   if(b.disabled)return;
 
-  b.disabled = true;
-
-  b.textContent =
-    'Enregistrement…';
+  setActionBusyV568(b,true,'Enregistrement…');
 
   msg(
     'Vérification des informations…',
@@ -1161,10 +1205,7 @@ function(){
       const bad =
         form.querySelector(':invalid');
 
-      b.disabled = false;
-
-      b.textContent =
-        'Enregistrer les informations';
+      setActionBusyV568(b,false);
 
       const labels = {
         entrepriseSiret:'SIRET', entrepriseRaisonSociale:'raison sociale',
@@ -1217,15 +1258,17 @@ function(){
     );
 
 
+    var saveTimer=setTimeout(function(){
+      setActionBusyV568(b,false);
+      msg('L’enregistrement dépasse 30 secondes. Ne multipliez pas les clics : rescanner ce QR indiquera immédiatement si les informations ont déjà été enregistrées.',true);
+    },30000);
+
     google.script.run
 
       .withSuccessHandler(
         function(r){
-
-          b.disabled = false;
-
-          b.textContent =
-            'Enregistrer les informations';
+          clearTimeout(saveTimer);
+          setActionBusyV568(b,false);
 
           if(!r || !r.ok){
 
@@ -1248,7 +1291,9 @@ function(){
           $('#success').hidden = false;
 
           msg(
-            '✓ Informations enregistrées.',
+            r.alreadySaved===true
+              ? '✓ Informations déjà enregistrées. Aucun doublon n’a été créé.'
+              : '✓ Informations enregistrées.',
             false
           );
 
@@ -1266,11 +1311,8 @@ function(){
 
       .withFailureHandler(
         function(e){
-
-          b.disabled = false;
-
-          b.textContent =
-            'Enregistrer les informations';
+          clearTimeout(saveTimer);
+          setActionBusyV568(b,false);
 
           msg(
             'Erreur d’enregistrement : '+
@@ -1352,6 +1394,14 @@ init();
   }
 
   function V(key,value){ var el=F(key); if(el) el.value=value==null?'':value; }
+
+  function buttonBusy(button,on,label){
+    if(typeof window.EUC_QR_buttonBusyV568==='function'){
+      window.EUC_QR_buttonBusyV568(button,on,label);
+      return;
+    }
+    if(button)button.disabled=!!on;
+  }
 
   function lockOne(key,on){
     var el=F(key);
@@ -1484,6 +1534,20 @@ init();
       ev.preventDefault();
       ev.stopImmediatePropagation();
 
+      var searchTimer=null;
+      function beginSearch(label){
+        buttonBusy(search,true,label);
+        searchTimer=setTimeout(function(){
+          buttonBusy(search,false);
+          status('La recherche dépasse 20 secondes. Vous pouvez réessayer sans créer de doublon.',true);
+        },20000);
+      }
+      function finishSearch(){
+        if(searchTimer)clearTimeout(searchTimer);
+        searchTimer=null;
+        buttonBusy(search,false);
+      }
+
       if(country.value==='France'){
         var siret=siretNorm(ident.value);
         ident.value=siret;
@@ -1491,7 +1555,7 @@ init();
           status('Le SIRET est obligatoire et doit comporter 14 chiffres.',true);
           return;
         }
-        search.disabled=true;
+        beginSearch('Recherche…');
         status('Recherche du SIRET dans la base officielle…',false);
 
         google.script.run
@@ -1516,7 +1580,7 @@ init();
                 google.script.run
                   .withSuccessHandler(function(x){
                     clearTimeout(timer);
-                    search.disabled=false;
+                    finishSearch();
 
                     if(!x||!x.found){
                       document.documentElement.dataset.eucFranceVerified='0';
@@ -1538,7 +1602,7 @@ init();
                   })
                   .withFailureHandler(function(e){
                     clearTimeout(timer);
-                    search.disabled=false;
+                    finishSearch();
                     document.documentElement.dataset.eucFranceVerified='0';
                     document.documentElement.dataset.eucFranceVerification='';
                     status('Erreur SIRET : '+(e&&e.message||e),true);
@@ -1547,7 +1611,7 @@ init();
               })
               .catch(function(e){
                 clearTimeout(timer);
-                search.disabled=false;
+                finishSearch();
                 document.documentElement.dataset.eucFranceVerified='0';
                 document.documentElement.dataset.eucFranceVerification='';
                 clearIdentity(false);
@@ -1564,7 +1628,7 @@ init();
               return;
             }
 
-            search.disabled=false;
+            finishSearch();
 
             if(!r||!r.found){
               document.documentElement.dataset.eucFranceVerified='0';
@@ -1585,7 +1649,7 @@ init();
             status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
           })
           .withFailureHandler(function(e){
-            search.disabled=false;
+            finishSearch();
             document.documentElement.dataset.eucFranceVerified='0';
             document.documentElement.dataset.eucFranceVerification='';
             clearIdentity(false);
@@ -1604,12 +1668,12 @@ init();
         return;
       }
 
-      search.disabled=true;
+      beginSearch('Recherche…');
       status('Recherche du NIS dans notre référentiel…',false);
 
       google.script.run
         .withSuccessHandler(function(r){
-          search.disabled=false;
+          finishSearch();
           if(r&&r.found){
             fillIdentity(r,true);
             V('entreprisePays','Monaco');
@@ -1629,7 +1693,7 @@ init();
           if(first) first.focus();
         })
         .withFailureHandler(function(e){
-          search.disabled=false;
+          finishSearch();
           document.documentElement.dataset.eucMonacoManual='0';
           lockIdentity(true,true);
           status('Erreur de recherche NIS : '+(e&&e.message||e),true);

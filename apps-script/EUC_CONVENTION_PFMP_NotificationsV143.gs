@@ -207,9 +207,8 @@ function INSTALLER_DEV143_BLOC_A(){
   };
 }
 
-function EUC_NOTIF_dossierV143_(accesId){
-  var rows=EUC_CONVENTION_lireAccesFraisV108_();
-  var a=rows.filter(function(r){return Number(r.id)===Number(accesId);})[0];
+function EUC_NOTIF_dossierV143_(accesId,acces){
+  var a=acces||EUC_CONVENTION_lireRecordDirectV161_(EUC_CONVENTION_ACCES_TABLE_,accesId);
   if(!a)throw new Error('Dossier QR '+accesId+' introuvable.');
 
   var eleveId=Number(EUC_PFMP_ref_(a.Eleve));
@@ -292,9 +291,9 @@ function EUC_NOTIF_renderV143_(template,vars){
   });
 }
 
-function EUC_NOTIF_preparerV143_(accesId){
-  var d=EUC_NOTIF_dossierV143_(accesId);
-  var p=EUC_NOTIF_paramsV143_();
+function EUC_NOTIF_preparerV143_(accesId,acces,params){
+  var d=EUC_NOTIF_dossierV143_(accesId,acces);
+  var p=params||EUC_NOTIF_paramsV143_();
   var vars=EUC_NOTIF_variablesV143_(d);
 
   var bfe=EUC_NOTIF_emailV143_(p.NOTIF_BFE_EMAIL);
@@ -328,9 +327,9 @@ function EUC_NOTIF_preparerV143_(accesId){
   };
 }
 
-function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero){
-  var rows=EUC_CONVENTION_lireAccesFraisV108_();
-  var a=rows.filter(function(r){return Number(r.id)===Number(accesId);})[0];
+function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
+  options=options||{};
+  var a=options.acces||EUC_CONVENTION_lireRecordDirectV161_(EUC_CONVENTION_ACCES_TABLE_,accesId);
   if(!a)throw new Error('Dossier QR introuvable après enregistrement.');
 
   var now=new Date().toISOString();
@@ -342,19 +341,35 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero){
     stable='PFMP-'+y+'-'+String(Number(a.id)).padStart(6,'0');
   }
 
-  EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
-    records:[{id:a.id,fields:{
-      Numero_enregistrement:stable,
-      Date_enregistrement:a.Date_enregistrement||now,
-      Statut_administratif:a.Statut_administratif||'INFORMATIONS_ENREGISTREES'
-    }}]
-  });
+  if(options.dejaPersiste!==true){
+    EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
+      records:[{id:a.id,fields:{
+        Numero_enregistrement:stable,
+        Date_enregistrement:a.Date_enregistrement||now,
+        Statut_administratif:a.Statut_administratif||'INFORMATIONS_ENREGISTREES'
+      }}]
+    });
+  }
 
   if(String(a.Etat_courriel_confirmation||'')==='ENVOYE'&&a.Date_courriel_confirmation){
     return {envoye:false,dejaEnvoye:true,numero:stable};
   }
 
-  var n=EUC_NOTIF_preparerV143_(a.id);
+  /* Le réglage par défaut est NON. Le tester avant les jointures élève,
+   * responsables et professeurs évite plusieurs lectures complètes inutiles
+   * sur le chemin critique du téléphone. */
+  var params=EUC_NOTIF_paramsV143_();
+  var auto=/^(OUI|YES|TRUE|1)$/i.test(String(params.NOTIF_AUTO_ENVOI||''));
+  if(!auto){
+    return {
+      envoye:false,
+      simulation:true,
+      numero:stable,
+      message:'Envoi automatique désactivé dans les paramètres.'
+    };
+  }
+
+  var n=EUC_NOTIF_preparerV143_(a.id,a,params);
 
   if(!n.auto){
     return {

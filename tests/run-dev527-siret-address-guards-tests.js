@@ -10,6 +10,7 @@ const validation=read('EUC_ENT_Validation.gs');
 const api=read('EUC_ENT_ApiEntreprise.gs');
 const strict=read('EUC_SIRET_NIS_StrictV161.gs');
 const qr=read('EUC_CONVENTION_PFMP_QRPublicV85.gs');
+const notifications=read('EUC_CONVENTION_PFMP_NotificationsV143.gs');
 const qrHtml=read('PFMP_Acces_QR_V116.html');
 
 let n=0;
@@ -93,6 +94,47 @@ test('l’enregistrement QR transmet et vérifie la preuve avant le repli cache'
   assert.match(qrHtml,/eucFranceVerification=x\.preuveEnregistrement/);
   assert.match(qr,/EUC_V161_lirePreuveSiretFrance_\(d\.entrepriseVerification,siret\)/);
   assert.match(qr,/confirmation du SIRET a expiré/);
+});
+
+test('une convention déjà enregistrée répond sans écriture ni effet annexe',()=>{
+  const ctx={console,Date,Math,JSON,String,Number,Object,Array,RegExp,encodeURIComponent};
+  vm.createContext(ctx);vm.runInContext(qr,ctx);
+  const row={id:1255,Annee_scolaire:'2026-2027',Reference_convention:'PFMP-TEST',Date_saisie_entreprise:'2026-10-14T12:00:00Z',Statut_administratif:'INFORMATIONS_ENREGISTREES',Numero_enregistrement:'PFMP-2026-001255'};
+  ctx.EUC_CONVENTION_lireRepriseV117_=()=>row;
+  ctx.EUC_CONVENTION_exigerQRValideV511_=()=>{throw new Error('la validation ne doit pas être rejouée');};
+  ctx.EUC_ENT_grist=()=>{throw new Error('aucune écriture attendue');};
+  const result=ctx.EUC_CONVENTION_enregistrerEntrepriseV117('resume',{});
+  assert.equal(result.ok,true);assert.equal(result.alreadySaved,true);
+  assert.equal(result.numeroEnregistrement,'PFMP-2026-001255');
+  assert.match(result.message,/déjà été enregistrées/);
+});
+
+test('la saisie QR sépare le recalcul lourd de la réponse utilisateur',()=>{
+  const start=qr.indexOf('function EUC_CONVENTION_enregistrerEntrepriseV117');
+  const body=qr.slice(start,qr.indexOf('/* Compatibilité anciens appels. */',start));
+  assert.match(body,/LockService\.getScriptLock\(\)/);
+  assert.match(body,/EUC_CONVENTION_lireRepriseV117_\(token\)/);
+  assert.match(body,/alreadySaved:false/);
+  assert.match(body,/snapshot:\{deferred:true,refreshToken:refresh\}/);
+  assert.doesNotMatch(body,/EUC_CONVENTION_finRafraichissementV511_\(refresh\)/);
+});
+
+test('les boutons QR affichent un spinner et récupèrent leur état même en dépassement de délai',()=>{
+  assert.match(qrHtml,/button\.euc-action-busy:before/);
+  assert.match(qrHtml,/setActionBusyV568\(b,true,'Recherche…'\)/);
+  assert.match(qrHtml,/beginSearch\('Recherche…'\)/);
+  assert.match(qrHtml,/setActionBusyV568\(b,true,'Enregistrement…'\)/);
+  assert.match(qrHtml,/L’enregistrement dépasse 30 secondes/);
+  assert.match(qrHtml,/La recherche dépasse 20 secondes/);
+  assert.match(qrHtml,/Aucun doublon n’a été créé/);
+});
+
+test('les notifications désactivées évitent les jointures lourdes',()=>{
+  const start=notifications.indexOf('function EUC_CONVENTION_apresEnregistrementV143_');
+  const body=notifications.slice(start,notifications.indexOf('function DIAGNOSTIC_DEV143_PFMP_000223',start));
+  assert.ok(body.indexOf('EUC_NOTIF_paramsV143_()')<body.indexOf('EUC_NOTIF_preparerV143_'));
+  assert.match(body,/if\(!auto\)[\s\S]*Envoi automatique désactivé/);
+  assert.match(notifications,/EUC_CONVENTION_lireRecordDirectV161_/);
 });
 
 test('une identité sans rue n’est jamais marquée vérifiée',()=>{
