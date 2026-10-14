@@ -1,5 +1,13 @@
 # Décisions métier permanentes
 
+- Dans le parcours QR élève, une réponse perdue ou un échec apparent après le
+  clic sur « Enregistrer » impose une relecture serveur avant d'afficher le
+  résultat. Si la donnée est déjà persistée, l'écran confirme « déjà
+  enregistré » avec le numéro existant et ne rejoue aucune écriture. Dans les
+  autres cas d'échec de validation SIRET ou d'enregistrement, l'élève ne reçoit
+  pas le détail technique : il est invité à passer au bureau G205 pour déposer
+  sa convention.
+
 - Une entreprise française saisie par le parcours QR reste soumise à une
   vérification officielle du SIRET. Le résultat positif peut être transporté
   jusqu'à l'enregistrement par une preuve serveur signée, liée au SIRET et à

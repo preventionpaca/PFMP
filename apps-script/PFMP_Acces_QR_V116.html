@@ -248,7 +248,7 @@ button.euc-action-busy:before{
 <main>
 <section class="card">
 
-<div class="build">DEV.568</div>
+<div class="build">DEV.569</div>
 
 <p class="eyebrow">LYCÉE LES EUCALYPTUS · PFMP</p>
 
@@ -295,7 +295,7 @@ Vérifier et continuer
    class="status"
    role="status"></p>
 
-<div id="diag" class="diag"></div>
+<div id="diag" class="diag" hidden aria-hidden="true"></div>
 
 
 <section id="verified"
@@ -544,6 +544,10 @@ const form = $('#enterpriseForm');
 
 let RID = '';
 let RESUME = '';
+let SAVE_STATUS_CHECKING_V569 = false;
+const MESSAGE_DEPOT_G205_V569 =
+  'L’enregistrement est impossible en ligne. Veuillez passer au bureau G205 pour déposer votre convention.';
+window.EUC_QR_MESSAGE_G205_V569 = MESSAGE_DEPOT_G205_V569;
 
 
 function msg(text,error,busy){
@@ -573,6 +577,45 @@ function setActionBusyV568(button,on,label){
   button.disabled=false;
 }
 window.EUC_QR_buttonBusyV568=setActionBusyV568;
+
+function afficherConfirmationEnregistrementV569(r,dejaEnregistre){
+  const numero=(r&&r.numeroEnregistrement)||(r&&r.reference)||'non disponible';
+  $('#registrationNumber').textContent=numero;
+  form.hidden=true;
+  $('#success').hidden=false;
+  msg(
+    dejaEnregistre
+      ? '✓ Informations déjà enregistrées. Aucun doublon n’a été créé.'
+      : '✓ Informations enregistrées.',
+    false
+  );
+  status.className='status ok';
+  $('#success').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function verifierEnregistrementApresEchecV569(){
+  if(SAVE_STATUS_CHECKING_V569)return;
+  if(!RESUME){msg(MESSAGE_DEPOT_G205_V569,true);return;}
+  SAVE_STATUS_CHECKING_V569=true;
+  const saveButton=$('#save');
+  setActionBusyV568(saveButton,true,'Vérification…');
+  google.script.run
+    .withSuccessHandler(function(r){
+      SAVE_STATUS_CHECKING_V569=false;
+      setActionBusyV568(saveButton,false);
+      if(r&&(r.alreadySaved===true||r.dejaEnregistre===true)){
+        afficherConfirmationEnregistrementV569(r,true);
+        return;
+      }
+      msg(MESSAGE_DEPOT_G205_V569,true);
+    })
+    .withFailureHandler(function(){
+      SAVE_STATUS_CHECKING_V569=false;
+      setActionBusyV568(saveButton,false);
+      msg(MESSAGE_DEPOT_G205_V569,true);
+    })
+    .EUC_CONVENTION_verifierEnregistrementV569(RESUME);
+}
 
 
 function normaliserRid(loc){
@@ -712,24 +755,19 @@ function afficherEntreprise(r){
   RESUME =
     String(r.resume || '').trim();
 
-  if(!RESUME){
-
-    msg(
-      'Session sécurisée absente après identification.',
-      true
-    );
-
+  if(r.dejaEnregistre===true||r.alreadySaved===true){
+    $('#enterprise').hidden=false;
+    afficherConfirmationEnregistrementV569(r,true);
     return;
   }
 
-  if(r.dejaEnregistre===true||r.alreadySaved===true){
-    $('#enterprise').hidden=false;
-    form.hidden=true;
-    $('#registrationNumber').textContent=r.numeroEnregistrement||r.reference||'non disponible';
-    $('#success').hidden=false;
-    msg('✓ Ces informations ont déjà été enregistrées. Aucun doublon n’a été créé.',false);
-    status.className='status ok';
-    $('#success').scrollIntoView({behavior:'smooth',block:'center'});
+  if(!RESUME){
+
+    msg(
+      MESSAGE_DEPOT_G205_V569,
+      true
+    );
+
     return;
   }
 
@@ -829,7 +867,7 @@ function afficherEntreprise(r){
 function init(){
 
   diag.textContent =
-    'DEV.141 — lecture du QR…';
+    'DEV.569 — lecture du QR…';
 
   google.script.url.getLocation(
     function(loc){
@@ -837,7 +875,7 @@ function init(){
       RID = normaliserRid(loc);
 
       diag.textContent =
-        'DEV.141 — rid=' +
+        'DEV.569 — rid=' +
         (RID || 'absent');
 
       if(!RID){
@@ -936,7 +974,12 @@ btn.onclick = function(){
           r.reference || '';
 
         diag.textContent =
-          r.diagnostic || 'DEV.141 OK';
+          r.diagnostic || 'DEV.569 OK';
+
+        if(r.dejaEnregistre===true||r.alreadySaved===true){
+          afficherEntreprise(r);
+          return;
+        }
 
         if(r.saisieAutorisee === false){
           $('#enterprise').hidden = true;
@@ -1092,13 +1135,7 @@ function erreurRecherche(e){
 
   setActionBusyV568($('#search'),false);
 
-  msg(
-    'Erreur de recherche SIRET : ' +
-    (e && e.message
-      ? e.message
-      : String(e)),
-    true
-  );
+  msg(MESSAGE_DEPOT_G205_V569,true);
 
 }
 
@@ -1119,21 +1156,14 @@ function appliquerEntreprise(r){
 
     controleSiret();
 
-    msg(
-      'SIRET '+siretConserve+
-      ' : aucune entreprise trouvée. Vérifiez le numéro saisi.',
-      true
-    );
+    msg(MESSAGE_DEPOT_G205_V569,true);
 
     return;
   }
 
   if(!r){
 
-    msg(
-      'Aucune donnée entreprise reçue.',
-      true
-    );
+    msg(MESSAGE_DEPOT_G205_V569,true);
 
     return;
   }
@@ -1260,7 +1290,7 @@ function(){
 
     var saveTimer=setTimeout(function(){
       setActionBusyV568(b,false);
-      msg('L’enregistrement dépasse 30 secondes. Ne multipliez pas les clics : rescanner ce QR indiquera immédiatement si les informations ont déjà été enregistrées.',true);
+      verifierEnregistrementApresEchecV569();
     },30000);
 
     google.script.run
@@ -1271,40 +1301,10 @@ function(){
           setActionBusyV568(b,false);
 
           if(!r || !r.ok){
-
-            msg(
-              'Réponse serveur inattendue.',
-              true
-            );
-
+            verifierEnregistrementApresEchecV569();
             return;
           }
-
-          const numero =
-            r.numeroEnregistrement ||
-            r.reference ||
-            'non disponible';
-
-          $('#registrationNumber')
-            .textContent = numero;
-
-          $('#success').hidden = false;
-
-          msg(
-            r.alreadySaved===true
-              ? '✓ Informations déjà enregistrées. Aucun doublon n’a été créé.'
-              : '✓ Informations enregistrées.',
-            false
-          );
-
-          status.className =
-            'status ok';
-
-          $('#success')
-            .scrollIntoView({
-              behavior:'smooth',
-              block:'center'
-            });
+          afficherConfirmationEnregistrementV569(r,r.alreadySaved===true||r.dejaEnregistre===true);
 
         }
       )
@@ -1314,13 +1314,7 @@ function(){
           clearTimeout(saveTimer);
           setActionBusyV568(b,false);
 
-          msg(
-            'Erreur d’enregistrement : '+
-            (e && e.message
-              ? e.message
-              : String(e)),
-            true
-          );
+          verifierEnregistrementApresEchecV569();
 
         }
       )
@@ -1339,11 +1333,7 @@ window.addEventListener(
   'error',
   function(e){
 
-    msg(
-      'Erreur technique : '+
-      (e.message || 'Javascript'),
-      true
-    );
+    msg(MESSAGE_DEPOT_G205_V569,true);
 
   }
 );
@@ -1448,6 +1438,11 @@ init();
     }
   }
 
+  function depotG205(){
+    return window.EUC_QR_MESSAGE_G205_V569||
+      'L’enregistrement est impossible en ligne. Veuillez passer au bureau G205 pour déposer votre convention.';
+  }
+
   function fillIdentity(r,includeTradeName){
     V('entrepriseRaisonSociale',r.entrepriseRaisonSociale||r.nom||'');
     if(includeTradeName) V('entrepriseEnseigne',r.entrepriseEnseigne||r.enseigne||'');
@@ -1539,7 +1534,7 @@ init();
         buttonBusy(search,true,label);
         searchTimer=setTimeout(function(){
           buttonBusy(search,false);
-          status('La recherche dépasse 20 secondes. Vous pouvez réessayer sans créer de doublon.',true);
+          status(depotG205(),true);
         },20000);
       }
       function finishSearch(){
@@ -1588,7 +1583,7 @@ init();
                       clearIdentity(false);
                       lockIdentity(true,false);
                       lockOne('entrepriseEnseigne',false);
-                      status(x&&x.incomplete?'Entreprise retrouvée, mais données officielles incomplètes ('+(x.champsManquants||[]).join(', ')+'). Contactez le bureau PFMP.':'SIRET non retrouvé : enregistrement impossible.',true);
+                      status(depotG205(),true);
                       return;
                     }
 
@@ -1605,7 +1600,7 @@ init();
                     finishSearch();
                     document.documentElement.dataset.eucFranceVerified='0';
                     document.documentElement.dataset.eucFranceVerification='';
-                    status('Erreur SIRET : '+(e&&e.message||e),true);
+                    status(depotG205(),true);
                   })
                   .EUC_V161_traiterSiretFranceNavigateur(json,siret);
               })
@@ -1617,12 +1612,7 @@ init();
                 clearIdentity(false);
                 lockIdentity(true,false);
                 lockOne('entrepriseEnseigne',false);
-                status(
-                  e&&e.name==='AbortError'
-                    ? 'API entreprises trop lente.'
-                    : 'Erreur de recherche SIRET : '+(e&&e.message||e),
-                  true
-                );
+                status(depotG205(),true);
               });
 
               return;
@@ -1636,7 +1626,7 @@ init();
               clearIdentity(false);
               lockIdentity(true,false);
               lockOne('entrepriseEnseigne',false);
-              status(r&&r.incomplete?'Entreprise retrouvée, mais données officielles incomplètes ('+(r.champsManquants||[]).join(', ')+'). Contactez le bureau PFMP.':'SIRET non retrouvé : enregistrement impossible.',true);
+              status(depotG205(),true);
               return;
             }
 
@@ -1655,7 +1645,7 @@ init();
             clearIdentity(false);
             lockIdentity(true,false);
             lockOne('entrepriseEnseigne',false);
-            status('Erreur de recherche SIRET : '+(e&&e.message||e),true);
+            status(depotG205(),true);
           })
           .EUC_V161_verifierSiretFrance(siret);
         return;

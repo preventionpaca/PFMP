@@ -1,4 +1,4 @@
-/** Eucalyptus PFMP — DEV.568 — saisie QR rapide, idempotente et sans attente du recalcul. */
+/** Eucalyptus PFMP — DEV.569 — confirmation post-échec et messages élèves sûrs. */
 function EUC_CONVENTION_lireAccesFraisV108_(){var raw=EUC_ENT_grist('get','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records');return (raw.records||[]).map(function(r){var o={id:r.id},f=r.fields||{};Object.keys(f).forEach(function(k){o[k]=f[k];});return o;});}
 function EUC_CONVENTION_lireRecordDirectV161_(table,id){
   id=Number(id||0);
@@ -170,6 +170,17 @@ function EUC_CONVENTION_reponseDejaEnregistreeV568_(a){
     reference:String(a&&a.Reference_convention||''),
     numeroEnregistrement:EUC_CONVENTION_numeroEnregistrementV568_(a),
     message:'Ces informations ont déjà été enregistrées. Aucun doublon n’a été créé.'
+  };
+}
+function EUC_CONVENTION_verifierEnregistrementV569(token){
+  var a=EUC_CONVENTION_lireRepriseV117_(token);
+  if(EUC_CONVENTION_estDejaEnregistreeV568_(a))return EUC_CONVENTION_reponseDejaEnregistreeV568_(a);
+  return {
+    ok:true,
+    alreadySaved:false,
+    dejaEnregistre:false,
+    reference:String(a&&a.Reference_convention||''),
+    message:'Aucun enregistrement confirmé.'
   };
 }
 function EUC_CONVENTION_verifierNaissanceV113_(resolved,jour,mois){

@@ -109,6 +109,19 @@ test('une convention déjà enregistrée répond sans écriture ni effet annexe'
   assert.match(result.message,/déjà été enregistrées/);
 });
 
+test('la vérification post-échec distingue un enregistrement réellement effectué',()=>{
+  const ctx={console,Date,Math,JSON,String,Number,Object,Array,RegExp,encodeURIComponent};
+  vm.createContext(ctx);vm.runInContext(qr,ctx);
+  const saved={id:1255,Annee_scolaire:'2026-2027',Reference_convention:'PFMP-TEST',Date_saisie_entreprise:'2026-10-14T12:00:00Z',Numero_enregistrement:'PFMP-2026-001255'};
+  ctx.EUC_CONVENTION_lireRepriseV117_=()=>saved;
+  const result=ctx.EUC_CONVENTION_verifierEnregistrementV569('resume');
+  assert.equal(result.ok,true);assert.equal(result.alreadySaved,true);
+  assert.equal(result.numeroEnregistrement,'PFMP-2026-001255');
+  delete saved.Date_saisie_entreprise;
+  const pending=ctx.EUC_CONVENTION_verifierEnregistrementV569('resume');
+  assert.equal(pending.ok,true);assert.equal(pending.alreadySaved,false);
+});
+
 test('la saisie QR sépare le recalcul lourd de la réponse utilisateur',()=>{
   const start=qr.indexOf('function EUC_CONVENTION_enregistrerEntrepriseV117');
   const body=qr.slice(start,qr.indexOf('/* Compatibilité anciens appels. */',start));
@@ -124,9 +137,23 @@ test('les boutons QR affichent un spinner et récupèrent leur état même en d�
   assert.match(qrHtml,/setActionBusyV568\(b,true,'Recherche…'\)/);
   assert.match(qrHtml,/beginSearch\('Recherche…'\)/);
   assert.match(qrHtml,/setActionBusyV568\(b,true,'Enregistrement…'\)/);
-  assert.match(qrHtml,/L’enregistrement dépasse 30 secondes/);
-  assert.match(qrHtml,/La recherche dépasse 20 secondes/);
+  assert.match(qrHtml,/verifierEnregistrementApresEchecV569\(\);\s*\},30000\)/);
+  assert.match(qrHtml,/searchTimer=setTimeout\(function\(\)\{[\s\S]*?status\(depotG205\(\),true\);[\s\S]*?\},20000\)/);
   assert.match(qrHtml,/Aucun doublon n’a été créé/);
+});
+
+test('la page élève masque le diagnostic ancien et remplace les erreurs techniques par G205',()=>{
+  assert.match(qrHtml,/<div class="build">DEV\.569<\/div>/);
+  assert.match(qrHtml,/id="diag"[^>]*hidden[^>]*aria-hidden="true"/);
+  assert.doesNotMatch(qrHtml,/DEV\.141/);
+  assert.match(qrHtml,/EUC_CONVENTION_verifierEnregistrementV569\(RESUME\)/);
+  assert.match(qrHtml,/L’enregistrement est impossible en ligne\. Veuillez passer au bureau G205 pour déposer votre convention\./);
+  const already=qrHtml.indexOf('if(r.dejaEnregistre===true||r.alreadySaved===true)');
+  const missingResume=qrHtml.indexOf('if(!RESUME)',already);
+  assert.ok(already>=0&&missingResume>already,'le succès déjà enregistré doit précéder le contrôle de session');
+  const identityAlready=qrHtml.indexOf('if(r.dejaEnregistre===true||r.alreadySaved===true)',qrHtml.indexOf("r.diagnostic || 'DEV.569 OK'"));
+  const forbidden=qrHtml.indexOf('if(r.saisieAutorisee === false)',identityAlready);
+  assert.ok(identityAlready>=0&&forbidden>identityAlready,'un QR déjà enregistré doit être reconnu avant les restrictions de période');
 });
 
 test('les notifications désactivées évitent les jointures lourdes',()=>{
