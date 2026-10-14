@@ -1,5 +1,23 @@
 # Prochains lots — book entreprises et apprentissage
 
+## DEV568 publié (@961) — attente visible et anti-doublon du QR
+
+- Vérifier sur la prochaine saisie légitime que le bouton « Rechercher » puis
+  le bouton d'enregistrement affichent bien leur spinner sur le téléphone et
+  que la réponse revient avant leurs délais respectifs de 20 et 30 secondes.
+- Si une ancienne saisie a finalement abouti alors que l'écran semblait
+  bloqué, rescanner le même QR : l'interface doit afficher le numéro déjà
+  attribué et préciser qu'aucun doublon n'a été créé, sans nouvelle écriture.
+- Le serveur protège également deux requêtes simultanées par verrou et
+  relecture. Le snapshot est reconstruit hors du temps de réponse utilisateur,
+  et les notifications désactivées n'entraînent plus les lectures relationnelles
+  lourdes.
+- La référence publiée est la version Apps Script immuable `961`, issue du
+  commit exact `b4754197b19db14dd100e06dfc42837e0f697b96`. Les tests passent
+  `904/904`, les routes `30/30` et le contrôle navigateur en lecture seule
+  confirme `DEV.568` sans erreur de console. Aucune écriture réelle ni aucun
+  courriel n'ont été déclenchés pendant la validation.
+
 ## DEV567 publié (@960) — continuité de la validation SIRET du QR
 
 - La recherche officielle réussie fournit une preuve serveur signée d'une

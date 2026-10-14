@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 14 octobre 2026 — DEV568 publié sur le site en ligne (@961)
+
+- Les boutons de vérification, de recherche SIRET/NIS et d'enregistrement de
+  la page QR affichent désormais immédiatement un spinner et un libellé
+  d'attente sur téléphone comme sur ordinateur. Ils sont verrouillés contre le
+  double clic, puis restaurés en succès, erreur ou dépassement du délai client
+  (20 secondes pour la recherche, 30 secondes pour l'enregistrement).
+- L'enregistrement est maintenant idempotent côté serveur. Un accès déjà
+  enregistré renvoie son numéro existant sans nouvelle écriture ni nouvel
+  effet annexe. Un verrou serveur, suivi d'une relecture juste avant
+  l'écriture, protège aussi contre deux requêtes simultanées.
+- La réponse au téléphone n'attend plus la reconstruction complète du snapshot
+  applicatif. La préparation des notifications lit directement le dossier et,
+  lorsque l'envoi automatique est désactivé, s'arrête avant les jointures
+  lourdes. La reconstruction différée reste couverte par la récupération
+  planifiée existante.
+- Les tests ciblés passent respectivement `13/13`, `10/10` et `14/14`, et la
+  suite complète `904/904`. Le commit exact
+  `b4754197b19db14dd100e06dfc42837e0f697b96` est publié sur les deux Web Apps
+  vertes existantes dans la version Apps Script immuable `961`; le contrôle
+  automatisé valide `30/30` routes.
+- Le contrôle navigateur en lecture seule confirme que la route QR verte
+  publiée charge `DEV.568` sans erreur de console. Aucun SIRET réel, aucun
+  enregistrement de convention et aucun courriel n'ont été rejoués pendant le
+  contrôle ; le parcours d'écriture réel reste donc à confirmer sur la
+  prochaine saisie légitime.
+
 ## Mise à jour du 14 octobre 2026 — DEV567 publié sur le site en ligne (@960)
 
 - Le parcours QR ne dépend plus de la conservation aléatoire d'une réponse
