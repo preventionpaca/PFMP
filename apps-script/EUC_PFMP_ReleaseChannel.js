@@ -195,6 +195,11 @@ function EUC_RELEASE_controlerProjetBleu() {
 /** Point d'entree appele par le wrapper ajoute au paquet de release. */
 function EUC_RELEASE_doGet_(e) {
   EUC_RELEASE_ensureBlueSafety_();
+  /* DEV573 : sonde de performance (durées seules, sans décoration). */
+  if (typeof EUC_SONDE_reponse_ === 'function' &&
+      String(e && e.parameter && e.parameter.page || '').toLowerCase() === 'sonde-performance') {
+    return EUC_SONDE_reponse_();
+  }
   /* DEV571 : clé des liens enseignants et jeton des appels de la page. */
   if (typeof EUC_ACCES_controlerRoute_ === 'function') {
     var refus = EUC_ACCES_controlerRoute_(e);

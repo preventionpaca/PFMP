@@ -448,4 +448,19 @@ function EUC_ACCES_viderJournal() {
 /* Installation au chargement : ce fichier est le dernier du projet. Les
  * fonctions de l'écran ci-dessus sont des entrées : elles vérifient
  * elles-mêmes l'administrateur. */
+var EUC_SONDE_T1_ = Date.now();
 EUC_ACCES_installer_(this);
+var EUC_SONDE_T2_ = Date.now();
+
+/* DEV573 — ?page=sonde-performance : durées seules, aucune donnée.
+ * chargementMs = exécution du code de tous les fichiers serveur ;
+ * verrouMs = installation du verrou ; avantPageMs = du chargement à la page. */
+function EUC_SONDE_reponse_() {
+  var t0 = typeof EUC_SONDE_T0_ === 'number' ? EUC_SONDE_T0_ : null;
+  return ContentService.createTextOutput(JSON.stringify({
+    version: EUC_ACCES_VERSION_,
+    chargementMs: t0 === null ? null : EUC_SONDE_T1_ - t0,
+    verrouMs: EUC_SONDE_T2_ - EUC_SONDE_T1_,
+    avantPageMs: Date.now() - EUC_SONDE_T2_
+  })).setMimeType(ContentService.MimeType.JSON);
+}

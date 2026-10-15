@@ -236,4 +236,13 @@ test('le paquet génère la liste des fonctions et garde le verrou en dernier fi
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('la sonde de performance ne renvoie que des durées et passe avant toute page', () => {
+  assert.match(release, /=== 'sonde-performance'\) \{\s*return EUC_SONDE_reponse_\(\);/);
+  const c = contexte().c;
+  c.ContentService = { createTextOutput: t => ({ t, setMimeType() { return this; } }), MimeType: { JSON: 'json' } };
+  const r = JSON.parse(c.EUC_SONDE_reponse_().t);
+  assert.deepEqual(Object.keys(r).sort(), ['avantPageMs', 'chargementMs', 'verrouMs', 'version']);
+  assert.ok(fs.readFileSync(path.join(root, 'apps-script/AAAA_EUC_SONDE_Debut.js'), 'utf8').includes('var EUC_SONDE_T0_ = Date.now();'));
+});
+
 console.log(`\n${n} tests DEV571 verrou d’accès réussis.`);
