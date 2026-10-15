@@ -142,6 +142,19 @@ test('le jeton signé ajouté aux appels est vérifié puis retiré des argument
   assert.equal(appel(faux, 'EUC_ENS_liste', ['q', { __eucAcces: jeton.replace(/.$/, '0') }]).ok, false);
 });
 
+test('une fonction publique appelée avec le jeton reconnaît l’enseignant (carte du book professeurs)', () => {
+  const { props } = cleGeneree();
+  const jeton = contexte({ props }).c.EUC_ACCES_creerJeton_();
+  const c = contexte({ props, cache: new Map(), cleTemp: '' }).c;
+  vm.runInContext('function EUC_PUBLIC_carte(q){ return EUC_DEV538_staffAllowed_() ? "detail" : "familles"; }', c);
+  c.EUC_ACCES_PUBLIQUES_.push('EUC_PUBLIC_carte'); c.EUC_ACCES_cacheEnsembles_ = null;
+  c.EUC_PUBLIC_carte = c.EUC_ACCES_envelopper_('EUC_PUBLIC_carte', c.EUC_PUBLIC_carte);
+  assert.equal(appel(c, 'EUC_PUBLIC_carte', [{}, { __eucAcces: jeton }]).v, 'detail');
+  const anonyme = contexte({ props, cache: new Map(), cleTemp: '' }).c;
+  vm.runInContext('function EUC_PUBLIC_carte(q){ return EUC_DEV538_staffAllowed_() ? "detail" : "familles"; }', anonyme);
+  assert.equal(anonyme.EUC_PUBLIC_carte({}), 'familles');
+});
+
 test('une nouvelle clé invalide aussitôt l’ancienne et ses jetons', () => {
   const premiere = cleGeneree();
   const ancienJeton = contexte({ props: premiere.props }).c.EUC_ACCES_creerJeton_();

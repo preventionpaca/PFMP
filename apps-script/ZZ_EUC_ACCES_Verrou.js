@@ -216,8 +216,10 @@ function EUC_ACCES_estJetonArg_(v) {
  * déclencheur). Retourne true pour laisser passer. */
 function EUC_ACCES_autoriserAppel_(nom, jeton) {
   var e = EUC_ACCES_ensembles_();
-  if (e.pub[nom]) return true;
+  /* Le jeton est lu avant tout : une fonction publique (carte, book) peut
+   * renvoyer plus de détails à un enseignant identifié par son lien. */
   if (jeton && EUC_ACCES_jetonValide_(jeton)) EUC_ACCES_etat_.enseignant = true;
+  if (e.pub[nom]) return true;
   if (e.ref[nom]) {
     if (EUC_ACCES_etat_.enseignant || EUC_ACCES_sessionOuverte_()) return true;
     if (EUC_ACCES_mode_() !== 'EXIGEE') {
