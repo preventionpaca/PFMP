@@ -195,6 +195,25 @@ test('les pages servies avec une session reçoivent le script du jeton', () => {
   assert.equal(anonyme.EUC_ACCES_decorer_(brut).getContent(), '<html><head></head></html>');
 });
 
+test('les liens vers pfmp.loucodi.fr et apprentis.loucodi.fr emportent le jeton de l’enseignant', () => {
+  const { props, cle } = cleGeneree();
+  const c = contexte({ props, cache: new Map() }).c;
+  c.EUC_ACCES_controlerRoute_({ parameter: { page: 'suivi-conventions-public', acces: cle } });
+  const html = c.EUC_ACCES_decorer_(c.HtmlService.createHtmlOutput('<html><head></head></html>')).getContent();
+  const script = html.match(/<script data-euc-acces="1">([\s\S]*?)<\/script>/)[1];
+  let clic = null;
+  const lien = href => ({ href, getAttribute() { return this.href; }, setAttribute(k, v) { this.href = v; } });
+  const page = { URL, location: { href: 'https://n-x-script.googleusercontent.com/userCodeAppPanel' },
+    document: { addEventListener: (t, fn) => { clic = fn; } }, window: {} };
+  vm.createContext(page); vm.runInContext(script, page);
+  const cliquer = a => { clic({ target: { closest: () => a } }); return new URL(a.href); };
+  assert.ok(cliquer(lien('https://pfmp.loucodi.fr/')).searchParams.get('jeton'));
+  assert.ok(cliquer(lien('https://apprentis.loucodi.fr/?page=apprentissage-public-pfmp')).searchParams.get('jeton'));
+  assert.ok(cliquer(lien('https://script.google.com/macros/s/X/exec?page=suivi-pfmp-classe-public')).searchParams.get('jeton'));
+  assert.equal(cliquer(lien('https://www.google.com/maps/dir/?api=1')).searchParams.get('jeton'), null);
+  assert.equal(cliquer(lien('https://book-entreprise.loucodi.fr/')).searchParams.get('jeton'), null);
+});
+
 test('le point d’entrée contrôle la route avant le rendu et décore ensuite la page', () => {
   assert.match(release, /EUC_ACCES_controlerRoute_\(e\)/);
   assert.match(release, /if \(refus\) return EUC_RELEASE_decorateOutput_\(refus\)/);

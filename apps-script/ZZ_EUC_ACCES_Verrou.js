@@ -336,8 +336,10 @@ function EUC_ACCES_scriptPage_() {
     'try{var g=window.google&&google.script;if(g&&g.run){var d=Object.getOwnPropertyDescriptor(g,"run");' +
       'if(d&&d.get&&d.configurable)Object.defineProperty(g,"run",{configurable:true,get:function(){return wrap(d.get.call(g))}});' +
       'else if(!d||d.writable)g.run=wrap(g.run)}}catch(e){}' +
-    'function lien(a){try{var h=a.getAttribute("href");if(!h||!/[?&]page=/.test(h)||/[?&]' + EUC_ACCES_PARAM_JETON_ + '=/.test(h))return;' +
-      'var u=new URL(h,location.href);if(!/script\\.google(usercontent)?\\.com$/.test(u.hostname)&&u.origin!==location.origin)return;' +
+    'function lien(a){try{var h=a.getAttribute("href");if(!h||/[?&]' + EUC_ACCES_PARAM_JETON_ + '=/.test(h))return;' +
+      'var u=new URL(h,location.href),sd=/^(pfmp|apprentis)\\.loucodi\\.fr$/.test(u.hostname);' +
+      'if(!sd&&!/[?&]page=/.test(h))return;' +
+      'if(!sd&&!/script\\.google(usercontent)?\\.com$/.test(u.hostname)&&u.origin!==location.origin)return;' +
       'u.searchParams.set("' + EUC_ACCES_PARAM_JETON_ + '",T);a.setAttribute("href",u.toString())}catch(e){}}' +
     'document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a)lien(a)},true);' +
     '})()<\/script>';
