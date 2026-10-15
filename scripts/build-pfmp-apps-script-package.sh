@@ -117,6 +117,13 @@ while IFS= read -r html_file; do
   done
 done < <(find "$target_dir/apps-script" -maxdepth 1 -type f -name '*.html' -print)
 
+# DEV574 : chaque appel au serveur paie environ 1 s par Mo de code. Les
+# commentaires et espaces sont retirés du code serveur, sans renommage.
+# PFMP_SANS_MINIFICATION=1 garde le code lisible (diagnostic local seulement).
+if [[ "${PFMP_SANS_MINIFICATION:-}" != "1" ]]; then
+  node "$script_dir/minify-apps-script.js" "$target_dir/apps-script" >&2
+fi
+
 duplicates="$({
   find "$target_dir/apps-script" -maxdepth 1 -type f \
     \( -name '*.js' -o -name '*.gs' -o -name '*.html' \) \
