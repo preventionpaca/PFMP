@@ -18,50 +18,89 @@ function contexte(cache) {
   };
   vm.createContext(c);
   vm.runInContext(server, c);
-  c.calculs = 0;
+  c.calculs = [];
   c.revision = 'R1';
   c.EUC_DEV538_yearsForScope_ = () => ['2026-2027'];
   c.EUC_DEV549_publicBookRevision_ = () => c.revision;
-  c.EUC_DEV538_history_ = q => { c.calculs++; return [{ entreprise: 'GARAGE ' + (q.classe || 'TOUS'), adresse: '1 rue', historique: [], elevesAccueillis: 1, derniereSaisie: '2026-10-01' }]; };
-  c.EUC_DEV547_bookResponse_ = (q, list) => ({ total: list.length, entreprises: list, facets: { classe: list.map(x => x.entreprise) } });
+  const h = (eleve, classe, niveau, apprenti, date) => ({ annee: '2026-2027', famille: 'BACPRO', eleve, classe, niveau, diplome: 'Bac pro ' + classe, periode: 'PFMP n°1', professeurVisiteur: 'M. PROF', apprenti: !!apprenti, dateSaisie: date });
+  c.EUC_DEV538_history_ = q => { c.calculs.push(JSON.stringify(q)); return [
+    { entreprise: 'GALBAUTO', adresse: '128 AVENUE DE LA LIBERTE 06220 VALLAURIS', ville: 'VALLAURIS', elevesAccueillis: 2, scolairesAccueillis: 2, apprentisAccueillis: 0, derniereSaisie: '2026-10-02', historique: [h('ALPHA Ana', 'TCAR', 'Terminale', false, '2026-10-02'), h('BETA Bob', '1MVA1', 'Première', false, '2026-09-01')] },
+    { entreprise: 'GARAGE NICE', adresse: '1 RUE 06000 NICE', ville: 'NICE', elevesAccueillis: 1, scolairesAccueillis: 0, apprentisAccueillis: 1, derniereSaisie: '2026-10-05', historique: [h('GAMMA Gil', 'TMVA1', 'Terminale', true, '2026-10-05')] }
+  ]; };
   c.EUC_DEV538_staffAllowed_ = () => true;
   return { c, cache };
 }
 
-test('une même recherche n’est calculée qu’une fois, pour tous les personnels', () => {
+test('la liste complète de l’année est calculée une fois et partagée par toutes les recherches', () => {
   const { cache } = contexte();
   const a = contexte(cache).c, b = contexte(cache).c;
-  a.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, classe: 'TMVA1', page: 1, pageSize: 10, mode: 'STAFF' });
-  assert.equal(a.calculs, 1);
-  const r = b.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, classe: 'TMVA1', page: 2, pageSize: 50, mode: 'STAFF' });
-  assert.equal(b.calculs, 0, 'la page et la taille ne changent pas la recherche mise en cache');
-  assert.equal(r.entreprises[0].entreprise, 'GARAGE TMVA1');
+  a.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, classe: 'TCAR', page: 1, pageSize: 10, mode: 'STAFF' });
+  assert.equal(a.calculs.length, 1);
+  assert.equal(JSON.parse(a.calculs[0]).classe, undefined, 'le calcul porte sur toute l’année, sans filtre');
+  b.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, ville: 'NICE', mode: 'STAFF' });
+  assert.equal(b.calculs.length, 0, 'une autre combinaison de filtres réutilise la même liste');
 });
 
-test('une autre recherche ou une modification des données recalcule', () => {
+test('une modification des données ou une autre année recalcule la liste', () => {
   const { c } = contexte();
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TMVA1' });
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TMVA2' });
-  assert.equal(c.calculs, 2);
+  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
   c.revision = 'R2';
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TMVA1' });
-  assert.equal(c.calculs, 3);
+  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
+  c.EUC_DEV538_staffBookData({ annee: 'ALL', fenetre: 3 });
+  assert.equal(c.calculs.length, 3);
 });
 
-test('les filtres d’une ouverture sans filtre sont livrés avec la page suivante', () => {
+test('le filtrage en mémoire garde les seuls accueils retenus et recompte les élèves', () => {
   const { c } = contexte();
-  assert.equal(c.EUC_DEV572_facettesBoot_('P', '2026-2027', 3), null);
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, tri: 'RECENT', page: 1, pageSize: 1 });
-  assert.deepEqual(JSON.parse(JSON.stringify(c.EUC_DEV572_facettesBoot_('P', '2026-2027', 3))), { classe: ['GARAGE TOUS'] });
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, classe: 'TMVA1' });
-  assert.deepEqual(JSON.parse(JSON.stringify(c.EUC_DEV572_facettesBoot_('P', '2026-2027', 3))), { classe: ['GARAGE TOUS'] }, 'une recherche filtrée ne remplace pas les listes complètes');
+  const r = c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
+  assert.equal(r.total, 1);
+  const g = r.entreprises[0];
+  assert.equal(g.entreprise, 'GALBAUTO');
+  assert.equal(g.historique.length, 1);
+  assert.equal(g.elevesAccueillis, 1);
+  assert.equal(g.scolairesAccueillis, 1);
+  assert.equal(c.EUC_DEV538_staffBookData({ annee: '2026-2027', ville: 'nice' }).entreprises[0].entreprise, 'GARAGE NICE');
+  assert.equal(c.EUC_DEV538_staffBookData({ annee: '2026-2027', eleve: 'gamma' }).entreprises[0].apprentisAccueillis, 1);
+  assert.equal(c.EUC_DEV538_staffBookData({ annee: '2026-2027', entreprise: 'vallauris' }).total, 1);
+  assert.equal(c.EUC_DEV538_staffBookData({ annee: '2026-2027', tri: 'RECENT' }).entreprises[0].entreprise, 'GARAGE NICE');
+});
+
+test('les listes des filtres restent complètes quelle que soit la recherche', () => {
+  const { c } = contexte();
+  const r = c.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3, classe: 'TCAR' });
+  assert.deepEqual([...r.facets.ville], ['VALLAURIS']);
+  assert.deepEqual([...r.facettesGlobales.ville].sort(), ['NICE', 'VALLAURIS']);
+  assert.deepEqual([...r.facettesGlobales.niveau].sort(), ['Première', 'Terminale']);
+  assert.deepEqual([...c.EUC_DEV572_facettesBoot_('P', '2026-2027', 3).classe].sort(), ['1MVA1', 'TCAR', 'TMVA1']);
+});
+
+test('la carte d’une classe et d’une période garde son calcul ciblé', () => {
+  const { c } = contexte();
+  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classeId: 30, periodeId: 63 });
+  assert.equal(JSON.parse(c.calculs[0]).classeId, 30);
+});
+
+test('la carte du book personnels réutilise la même liste en cache', () => {
+  const { c } = contexte();
+  c.EUC_DEV538_staffBookData({ annee: '2026-2027', fenetre: 3 });
+  c.EUC_DEV441_geoClassify_ = () => ({ pays: 'FR' });
+  try { c.EUC_DEV547_bookMapData({ annee: '2026-2027', fenetre: 3, classe: 'TCAR', mode: 'STAFF' }); } catch (e) {}
+  assert.equal(c.calculs.length, 1, 'la carte ne relance pas le calcul complet');
+});
+
+test('pages et filtres utilisent les listes globales', () => {
+  for (const html of [staff, eleves]) {
+    assert.match(html, /facets\(r\.facettesGlobales\|\|r\.facets\)/);
+    assert.match(html, /facets\(r&&\(r\.facettesGlobales\|\|r\.facets\)\)/);
+  }
+  assert.match(server, /facettesGlobales:globales/);
 });
 
 test('les trois books reçoivent les filtres mémorisés à l’ouverture', () => {
   assert.match(server, /b\.mode='ADMIN';b\.params=e&&e\.parameter\|\|\{\};b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
   assert.match(server, /b\.mode='STAFF';b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
   assert.match(server, /b\.facettes=typeof EUC_DEV572_facettesBoot_==='function'\?EUC_DEV572_facettesBoot_\('E','ALL',3\):null/);
-  assert.match(server, /EUC_DEV572_ecrire_\(EUC_DEV572_cleFacettes_\('E','ALL',3\),facets\)/);
+  assert.match(server, /EUC_DEV572_ecrire_\(EUC_DEV572_cleFacettes_\('E','ALL',3\),globales\)/);
 });
 
 test('à l’ouverture, aucun book ne charge la liste des entreprises', () => {
