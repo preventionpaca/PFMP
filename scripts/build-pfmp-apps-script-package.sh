@@ -122,6 +122,9 @@ done < <(find "$target_dir/apps-script" -maxdepth 1 -type f -name '*.html' -prin
 # PFMP_SANS_MINIFICATION=1 garde le code lisible (diagnostic local seulement).
 if [[ "${PFMP_SANS_MINIFICATION:-}" != "1" ]]; then
   node "$script_dir/minify-apps-script.js" "$target_dir/apps-script" >&2
+  # Puis retrait du code que rien ne peut appeler (nom cité nulle part) et
+  # des modèles HTML jamais cités ; voir scripts/strip-dead-code.js.
+  node --expose-internals "$script_dir/strip-dead-code.js" "$target_dir/apps-script" >&2
 fi
 
 duplicates="$({
