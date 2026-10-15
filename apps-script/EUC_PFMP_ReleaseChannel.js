@@ -195,5 +195,12 @@ function EUC_RELEASE_controlerProjetBleu() {
 /** Point d'entree appele par le wrapper ajoute au paquet de release. */
 function EUC_RELEASE_doGet_(e) {
   EUC_RELEASE_ensureBlueSafety_();
-  return EUC_RELEASE_decorateOutput_(EUC_RELEASE_doGetCore_(e));
+  /* DEV571 : clé des liens enseignants et jeton des appels de la page. */
+  if (typeof EUC_ACCES_controlerRoute_ === 'function') {
+    var refus = EUC_ACCES_controlerRoute_(e);
+    if (refus) return EUC_RELEASE_decorateOutput_(refus);
+  }
+  var output = EUC_RELEASE_doGetCore_(e);
+  if (typeof EUC_ACCES_decorer_ === 'function') output = EUC_ACCES_decorer_(output);
+  return EUC_RELEASE_decorateOutput_(output);
 }

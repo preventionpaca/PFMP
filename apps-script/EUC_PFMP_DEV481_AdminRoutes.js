@@ -33,6 +33,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_P7_destinataires(e);
     case 'parametres-envois-pfmp':
       return EUC_P7_parametresEnvois(e);
+    case 'liens-acces-pfmp':
+      return EUC_ACCES_afficherLiens(e);
 
     case 'apprentissage-pfmp':
       return EUC_DEV190X_afficherApprentis(e);

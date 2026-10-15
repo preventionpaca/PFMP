@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liens d’accès — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:18px 20px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}
+nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:980px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:16px 18px;margin:14px 0}
+h2{font-size:17px;margin:0 0 8px}
+.ligne{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.etat{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;background:var(--vert-clair);color:var(--vert)}
+.etat.alerte{background:var(--alerte-fond);color:var(--alerte)}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:9px 14px;background:var(--vert);color:#fff;cursor:pointer}
+button.secondaire{background:#fff;color:var(--vert);border:1px solid var(--vert)}
+button:disabled{opacity:.6;cursor:wait}
+.lien{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:8px 0}
+.lien label{grid-column:1/-1;font-weight:700;font-size:14px}
+.lien input{width:100%;padding:8px;border:1px solid var(--bord);border-radius:6px;font:13px monospace;background:#fbfdfc}
+.note{color:var(--gris);font-size:13px}
+.message{margin-top:8px;font-weight:700}
+.message.erreur{color:var(--alerte)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bord)}
+th{color:var(--gris)}
+@media (max-width:640px){.lien{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Liens d’accès</h1>
+  <p>Liens des enseignants à placer dans l’ENT Atrium, et contrôle de l’accès aux pages.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Paramétrage › Liens d’accès</nav>
+<main>
+  <section>
+    <h2>État</h2>
+    <div class="ligne" id="etat"><span class="note">Chargement…</span></div>
+    <p class="note" id="dateCle"></p>
+  </section>
+
+  <section>
+    <h2>Clé des liens enseignants</h2>
+    <p>Générer une nouvelle clé crée de nouveaux liens. <strong>Les anciens liens cessent aussitôt de fonctionner</strong> une fois la clé exigée : remplacez-les dans Atrium juste après.</p>
+    <div class="ligne"><button id="generer" type="button">Générer une nouvelle clé</button></div>
+    <div id="liens"></div>
+    <p class="note">Les liens ne sont affichés qu’une fois, à la génération : la clé n’est conservée que sous forme d’empreinte. Copiez-les avant de quitter la page.</p>
+  </section>
+
+  <section>
+    <h2>Exiger la clé</h2>
+    <p id="explicationMode" class="note"></p>
+    <div class="ligne">
+      <button id="exiger" type="button">Exiger la clé</button>
+      <button id="transition" type="button" class="secondaire">Revenir en transition</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Journal des six dernières heures</h2>
+    <p class="note">Appels de pages ou de fonctions sans clé, et refus. Avant d’exiger la clé, ouvrez les liens Atrium dans une fenêtre privée : la ligne « appel sans clé » ne doit plus augmenter.</p>
+    <div class="ligne"><button id="actualiser" type="button" class="secondaire">Actualiser</button><button id="vider" type="button" class="secondaire">Vider le journal</button></div>
+    <div id="journal"></div>
+  </section>
+  <p id="message" class="message" role="status" aria-live="polite"></p>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var TYPES={'appel-sans-cle':'Appel sans clé (autorisé en transition)','page-sans-cle':'Page enseignant ouverte sans clé','page-refusee':'Page refusée','refus-cle':'Fonction refusée (clé absente)','refus-fonction':'Fonction réservée refusée'};
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function message(t,erreur){var m=$('message');m.textContent=t||'';m.className='message'+(erreur?' erreur':'');}
+  function occupe(b,oui){if(b){b.disabled=oui;b.setAttribute('aria-busy',oui?'true':'false');}}
+  function appeler(fn,arg,bouton,ok){
+    occupe(bouton,true);message('');
+    var fini=false,minuterie=setTimeout(function(){if(!fini){fini=true;occupe(bouton,false);message('Le serveur n’a pas répondu sous 30 secondes. Réessayez.',true);}},30000);
+    var r=google.script.run.withSuccessHandler(function(res){if(fini)return;fini=true;clearTimeout(minuterie);occupe(bouton,false);ok(res);})
+      .withFailureHandler(function(err){if(fini)return;fini=true;clearTimeout(minuterie);occupe(bouton,false);message((err&&err.message)||String(err),true);});
+    if(arg===undefined)r[fn]();else r[fn](arg);
+  }
+  function afficher(e){
+    var exigee=e.mode==='EXIGEE';
+    $('etat').innerHTML='<span class="etat'+(e.cleConfiguree?'':' alerte')+'">'+(e.cleConfiguree?'Clé configurée':'Aucune clé')+'</span>'+
+      '<span class="etat'+(exigee?'':' alerte')+'">'+(exigee?'Clé exigée':'Transition : pages enseignants ouvertes sans clé')+'</span>';
+    $('dateCle').textContent=e.dateCle?('Clé générée le '+e.dateCle):'';
+    $('explicationMode').textContent=exigee
+      ?'La clé est exigée : sans lien Atrium, les pages enseignants et les fonctions qui renvoient des noms d’élèves sont refusées. Le book des familles, le QR et l’accès des professeurs principaux restent ouverts.'
+      :'Transition : tout fonctionne comme avant pour les enseignants, mais les fonctions qu’aucune page n’utilise sont déjà fermées. Exigez la clé une fois les liens Atrium remplacés et vérifiés.';
+    $('exiger').disabled=exigee||!e.cleConfiguree;$('transition').disabled=!exigee;
+    var j=e.journal||[];
+    $('journal').innerHTML=j.length?'<table><thead><tr><th>Type</th><th>Page ou fonction</th><th>Nombre</th><th>Dernier</th></tr></thead><tbody>'+
+      j.map(function(x){return '<tr><td>'+esc(TYPES[x.type]||x.type)+'</td><td>'+esc(x.nom)+'</td><td>'+esc(x.nombre)+'</td><td>'+esc(String(x.dernier||'').replace('T',' ').slice(0,19))+'</td></tr>';}).join('')+'</tbody></table>'
+      :'<p class="note">Aucun événement.</p>';
+  }
+  function liens(res){
+    $('liens').innerHTML=(res.liens||[]).map(function(l,i){
+      return '<div class="lien"><label for="l'+i+'">'+esc(l.libelle)+'</label><input id="l'+i+'" readonly value="'+esc(l.url)+'"><button type="button" class="secondaire" data-copier="l'+i+'">Copier</button></div>';
+    }).join('');
+    message('Nouvelle clé générée. Copiez les liens et remplacez-les dans Atrium.');
+    charger();
+  }
+  document.addEventListener('click',function(ev){
+    var b=ev.target.closest&&ev.target.closest('[data-copier]');if(!b)return;
+    var i=$(b.getAttribute('data-copier'));i.select();
+    try{navigator.clipboard.writeText(i.value).then(function(){message('Lien copié.');},function(){document.execCommand('copy');message('Lien copié.');});}catch(e){document.execCommand('copy');message('Lien copié.');}
+  });
+  function charger(b){appeler('EUC_ACCES_etatLiens',undefined,b,afficher);}
+  $('generer').addEventListener('click',function(){
+    if(!confirm('Générer une nouvelle clé ? Les liens actuels devront être remplacés dans Atrium.'))return;
+    appeler('EUC_ACCES_genererCle',undefined,$('generer'),liens);
+  });
+  $('exiger').addEventListener('click',function(){
+    if(!confirm('Exiger la clé ? Les enseignants qui utilisent un ancien lien seront refusés.'))return;
+    appeler('EUC_ACCES_changerMode','EXIGEE',$('exiger'),function(e){afficher(e);message('La clé est maintenant exigée.');});
+  });
+  $('transition').addEventListener('click',function(){
+    appeler('EUC_ACCES_changerMode','TRANSITION',$('transition'),function(e){afficher(e);message('Retour en transition : la clé n’est plus exigée.');});
+  });
+  $('actualiser').addEventListener('click',function(){charger($('actualiser'));});
+  $('vider').addEventListener('click',function(){appeler('EUC_ACCES_viderJournal',undefined,$('vider'),function(e){afficher(e);message('Journal vidé.');});});
+  charger();
+})();
+</script>
+</body>
+</html>

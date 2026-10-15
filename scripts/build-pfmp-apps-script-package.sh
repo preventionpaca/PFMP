@@ -85,6 +85,18 @@ source += '\n\nfunction doGet(e) {\n  return EUC_RELEASE_doGet_(e);\n}\n';
 fs.writeFileSync(file, source);
 NODE
 
+# DEV571 : liste des fonctions appelables par les pages, pour le verrou
+# d'accès. Le verrou doit être le dernier fichier serveur chargé (ordre
+# alphabétique de clasp push) pour envelopper toutes les fonctions.
+node "$script_dir/generate-acces-liste.js" "$target_dir/apps-script" >/dev/null
+node - "$target_dir/apps-script" <<'NODE'
+const fs = require('fs');
+const files = fs.readdirSync(process.argv[2]).filter(f => /\.(?:js|gs)$/.test(f)).sort((a, b) => a.localeCompare(b));
+if (files[files.length - 1] !== 'ZZ_EUC_ACCES_Verrou.js') {
+  throw new Error('Le verrou d’accès doit être le dernier fichier serveur : ' + files[files.length - 1]);
+}
+NODE
+
 # Apps Script utilise le nom sans extension comme identifiant de fichier :
 # un fichier serveur et un modèle HTML ne peuvent donc pas partager le même
 # radical. Le nom des fichiers serveur n'étant pas utilisé par le runtime, on
