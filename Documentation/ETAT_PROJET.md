@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 15 octobre 2026 — DEV571 correctif carte du book professeurs (@966)
+
+- Régression @965 signalée par Rudy : avec le lien Atrium, la carte du book
+  professeurs affichait « Accès réservé aux personnels authentifiés ». Le
+  verrou laissait passer les fonctions publiques (`EUC_DEV538_mapData`) sans
+  lire le jeton enseignant. Le jeton est désormais lu en premier (test
+  ajouté, `17/17`). Commit `e3c893e` publié en `966`, `30/30` routes.
+- Constat : la session par `Session.getTemporaryActiveUserKey()` ne suffit pas
+  pour un enseignant anonyme ; le jeton signé ajouté aux appels et le
+  paramètre `acces` transmis par les enveloppes sont les vrais supports.
+
 ## Mise à jour du 15 octobre 2026 — DEV571 verrou d'accès publié (@965)
 
 - Chaque appel `google.script.run` est contrôlé à l'entrée de l'exécution par
