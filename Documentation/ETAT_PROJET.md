@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 15 octobre 2026 — DEV570 publié sur le site en ligne (@964)
+
+- Le book des élèves et familles (`book-entreprise.loucodi.fr`) ne propose plus
+  le lien « ← Retour au suivi PFMP » ni son séparateur : ils sont masqués par
+  défaut et retirés du DOM côté familles.
+- Le lien n'est révélé que lorsque le serveur l'autorise explicitement
+  (`retourSuivi`), c'est-à-dire quand un personnel sans compte du domaine
+  arrive par la route `book-entreprises-public-pfmp` depuis le suivi et
+  retombe sur la vue familles. La vue personnels garde son fil
+  « Suivi des PFMP › Book des entreprises ».
+- Nouveau test DEV538 « le book des familles ne propose jamais de lien vers le
+  suivi enseignants » ; la suite complète passe `907/907`.
+- Le commit exact `fb34e1207b27cd246fd0f92304744659e8297e9e` est publié sur les
+  deux Web Apps vertes dans la version Apps Script immuable `964`; le contrôle
+  automatisé valide `30/30` routes. La tentative précédente (@963) avait été
+  annulée automatiquement après un contrôle HTTP sans réponse réseau
+  (`HTTP 0`) sur toutes les routes ; le contrôle relancé seul sur @962 était
+  à `30/30`, d'où la nouvelle publication.
+- Contrôle navigateur : lien absent sur `book-entreprise.loucodi.fr`, fil de
+  retour présent dans le book ouvert depuis `pfmp.loucodi.fr`.
+
 ## Mise à jour du 14 octobre 2026 — DEV569 publié sur le site en ligne (@962)
 
 - Le diagnostic historique `DEV.141` n'est plus visible sur la page élève. La
