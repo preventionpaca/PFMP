@@ -14,6 +14,12 @@ if [[ -z "$target_dir" ]]; then
   target_dir="$(mktemp -d /tmp/pfmp-apps-script-package.XXXXXX)"
 fi
 
+# Les commandes git et la copie de .clasp.json visent le dépôt du script,
+# quel que soit le dossier courant du terminal qui lance la publication.
+mkdir -p "$target_dir"
+target_dir="$(cd "$target_dir" && pwd)"
+cd "$script_dir/.."
+
 mkdir -p "$target_dir/apps-script"
 git cat-file -e "${complete_base_ref}^{commit}"
 git archive "$complete_base_ref" apps-script | tar -x -C "$target_dir"
