@@ -23,7 +23,7 @@ function sources() {
       R(101, { Annee_scolaire: 1, Classes_concernees: ['L', 10], Date_debut: '2027-03-01', Date_fin: '2027-03-26', Libelle: 'PFMP 2' }),
       R(102, { Annee_scolaire: 1, Classes_concernees: ['L', 10, 11], Date_debut: '2027-05-03', Date_fin: '2027-05-21', Type: 'P.dif' }),
       R(103, { Annee_scolaire: 2, Classes_concernees: ['L', 10], Date_debut: '2025-11-03', Date_fin: '2025-11-28', Libelle: 'ancienne' }),
-      R(104, { Annee_scolaire: 1, Classes_concernees: null, Date_debut: '2026-12-01', Date_fin: '2026-12-12', Libelle: 'orpheline' }),
+      R(104, { Annee_scolaire: 1, Classes_concernees: null, Date_debut: '2026-12-01', Date_fin: '2026-12-12', Libelle: 'PFMP orpheline' }),
       R(105, { Annee_scolaire: 1, Classes_concernees: ['L', 13], Date_debut: '2027-01-04', Date_fin: '2027-02-05', Libelle: 'Stage BTS' }),
       R(106, { Annee_scolaire: 1, Classes_concernees: ['L', 12], Date_debut: '2027-06-01', Date_fin: '2027-06-20', Actif: false })
     ],
@@ -119,6 +119,25 @@ test('R28 : P.dif = répartition des scolaires selon le dernier choix, apprentis
   assert.deepEqual(ids(r.lycee), [3], 'Parcours_differencie coché vaut parcours au lycée');
   assert.deepEqual(ids(r.aDefinir), [2, 4, 5]);
   assert.equal([...r.entreprise, ...r.lycee, ...r.aDefinir].includes(9), false);
+});
+
+test('entreprise validée par la fiche référencée ; saisie entreprise complète = enregistrée ; motifs', () => {
+  const src = sources();
+  src.entreprises = [R(700, { SIRET: '98765432109876' })];
+  src.dossiers.push(R(510, { Eleve: 20, Periode: 100, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise: 700 }));
+  const complet = { Statut_administratif: 'A_COMPLETER_ENTREPRISE', Entreprise_siret: '12345678901234', Entreprise_raison_sociale: 'GARAGE', Entreprise_adresse: '1 rue', Entreprise_code_postal: '06000', Entreprise_commune: 'NICE',
+    Responsable_nom: 'R', Responsable_prenom: 'R', Responsable_telephone: '0600000000', Responsable_courriel: 'r@x.fr', Tuteur_nom: 'T', Tuteur_prenom: 'T', Tuteur_telephone: '0600000000', Tuteur_courriel: 't@x.fr' };
+  src.dossiers.push(R(511, Object.assign({ Eleve: 3, Periode: 101 }, complet)));
+  src.dossiers.push(R(512, Object.assign({ Eleve: 2, Periode: 101 }, complet, { Tuteur_courriel: '' })));
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
+  const p1 = m.classes.find(x => x.nom === '1MVA1').periodes[0].resume;
+  assert.deepEqual([...p1.avec], [20], 'SIRET porté par la fiche entreprise');
+  const p2 = m.classes.find(x => x.nom === 'TMVA1').periodes.find(p => p.libelle === 'PFMP n°2').resume;
+  assert.equal(p2.avec.includes(3), true, 'saisie entreprise complète');
+  assert.equal(p2.sans.includes(2), true, 'saisie incomplète');
+  assert.equal(p2.motifs[2].statut, 'A_COMPLETER_ENTREPRISE');
+  assert.equal(p2.motifs[4].statut, 'AUCUN_DOSSIER');
+  assert.deepEqual([...p2.motifs[4].autresPeriodes], [100]);
 });
 
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {

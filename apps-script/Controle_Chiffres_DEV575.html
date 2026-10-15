@@ -65,7 +65,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   function cellActuel(a,pdif){if(!a)return '<span class="note">non affiché aujourd’hui</span>';return pdif?('entreprise '+a.entreprise+' · lycée '+a.lycee+' · à définir '+a.aDefinir+(a.apprentis?' · apprentis '+a.apprentis:''))
     :('<b>'+a.avec+'</b> avec · sans '+a.sans+(a.apprentis?' · apprentis '+a.apprentis:'')+' · total '+a.total);}
   function cellEcarts(l){return l.ecarts.map(function(e){return '<div class="diff"><b>'+esc(NOMS[e.categorie]||e.categorie)+'</b> : '+e.actuel+' → '+e.nouveau+
-    (e.enPlus.length?'<br>+ '+esc(e.enPlus.join(', ')):'')+(e.enMoins.length?'<br>− '+esc(e.enMoins.join(', ')):'')+'</div>';}).join('');}
+    (e.enPlus.length?'<br>+ '+esc(e.enPlus.join(', ')):'')+(e.enMoins.length?'<br>− '+esc(e.enMoins.join(', ')):'')+((e.motifs||[]).length?'<br><span class="note">Motifs : '+esc(e.motifs.join(' · '))+'</span>':'')+'</div>';}).join('');}
   function afficher(){
     var r=DONNEES;if(!r)return;var seuls=$('ecartsSeuls').checked;
     $('resume').hidden=false;
@@ -77,7 +77,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     var html='',fam='';
     r.lignes.filter(function(l){return !seuls||l.ecarts.length||l.sansComparaison;}).forEach(function(l){
       if(l.famille!==fam){if(fam)html+='</tbody></table></section>';fam=l.famille;html+='<h2 class="famille">'+esc({BACPRO:'BAC PRO',BTS:'BTS',CAP:'CAP',AUTRES:'Autres formations'}[fam]||fam)+'</h2><section><table><thead><tr><th>Classe</th><th>Période</th><th>Nouveau moteur</th><th>Affiché aujourd’hui</th><th>Écarts (élèves)</th></tr></thead><tbody>';}
-      html+='<tr class="'+(l.ecarts.length?'ecart':'')+'"><td><b>'+esc(l.classe)+'</b><br><span class="note">'+esc(l.niveau)+'</span></td><td>'+esc(l.periode)+'<br><span class="note">'+esc(l.debut)+' → '+esc(l.fin)+'</span></td><td>'+cellNouveau(l.nouveau)+'</td><td>'+cellActuel(l.actuel,l.nouveau.pdif)+'</td><td>'+cellEcarts(l)+'</td></tr>';
+      html+='<tr class="'+(l.ecarts.length?'ecart':'')+'"><td><b>'+esc(l.classe)+'</b><br><span class="note">'+esc(l.niveau)+'</span></td><td>'+esc(l.periode)+'<br><span class="note">'+esc(l.debut)+' → '+esc(l.fin)+'<br>calendrier : '+esc([l.periodeSource,l.periodeType,l.periodeGroupe].filter(Boolean).join(' · ')||'—')+' (n° '+l.periodeId+')</span></td><td>'+cellNouveau(l.nouveau)+'</td><td>'+cellActuel(l.actuel,l.nouveau.pdif)+'</td><td>'+cellEcarts(l)+'</td></tr>';
     });
     if(fam)html+='</tbody></table></section>';
     $('resultat').innerHTML=html||'<section><p>Aucun écart : les deux calculs donnent les mêmes élèves partout.</p></section>';

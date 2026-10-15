@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575b';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -20,7 +20,8 @@ var EUC_SUIVI2_TABLES_ = {
   dossiers: 'EUC_ACCES_FORMULAIRES_PFMP',
   apprentissage: 'EUC_APPRENTISSAGE_PFMP',
   pdif: 'EUC_PARCOURS_DIFFERENCIE_PFMP',
-  diplomes: 'EUC_CLASSES_DIPLOMES_PFMP'
+  diplomes: 'EUC_CLASSES_DIPLOMES_PFMP',
+  entreprises: 'EUC_ENTREPRISES'
 };
 var EUC_SUIVI2_MODE_LYCEE_ = 'PARCOURS_DIFF_LYCEE';
 var EUC_SUIVI2_MODE_ENTREPRISE_ = 'POURSUITE_PFMP2_ENTREPRISE';
@@ -103,10 +104,30 @@ function EUC_SUIVI2_statut_(a) {
   if (s === 'PFMP_AUTORISEE') return 'AUTORISEE';
   return 'ENREGISTREE';
 }
-/* R14 / Q14 : entreprise validée par son SIRET (14 chiffres) ou son NIS. */
-function EUC_SUIVI2_entrepriseValidee_(a) {
+/* R14 / Q14 : entreprise validée par son SIRET (14 chiffres) ou son NIS, recopié
+ * dans la convention ou porté par la fiche entreprise référencée. */
+function EUC_SUIVI2_identifiantEntreprise_(a, entreprises) {
   var siret = EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_siret_snapshot || a.SIRET).replace(/\D/g, '');
-  return siret.length === 14 || !!EUC_SUIVI2_t_(a.Entreprise_nis);
+  if (siret.length === 14) return 'SIRET';
+  if (EUC_SUIVI2_t_(a.Entreprise_nis)) return 'NIS';
+  var f = (entreprises || {})[EUC_SUIVI2_ref_(a.Entreprise)];
+  if (f) {
+    if (EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, '').length === 14) return 'SIRET_FICHE';
+    if (EUC_SUIVI2_t_(f.NIS || f.Nis || f.Entreprise_nis)) return 'NIS_FICHE';
+  }
+  return '';
+}
+function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_identifiantEntreprise_(a, entreprises); }
+/* Dossier « à compléter » dont l'entreprise a tout saisi (même règle que DEV533). */
+function EUC_SUIVI2_saisieEntrepriseComplete_(a, entreprises) {
+  if (!EUC_SUIVI2_entrepriseValidee_(a, entreprises)) return false;
+  return [a.Entreprise_raison_sociale, a.Entreprise_adresse, a.Entreprise_code_postal, a.Entreprise_commune,
+    a.Responsable_nom, a.Responsable_prenom, a.Responsable_telephone, a.Responsable_courriel,
+    a.Tuteur_nom, a.Tuteur_prenom, a.Tuteur_telephone, a.Tuteur_courriel].every(function(v) { return !!EUC_SUIVI2_t_(v); });
+}
+/* Ligne du calendrier qui ressemble à une PFMP ou un stage (périodes orphelines). */
+function EUC_SUIVI2_ressemblePfmp_(p) {
+  return /PFMP|STAGE|P[\.\s-]*DIF|PARCOURS|ENTREPRISE/.test(EUC_SUIVI2_norm_([p.Type, p.Libelle, p.Libelle_periode, p.Nom, p.Groupe].join(' ')));
 }
 /* R16 / R17 : apprenti = contrat commencé, non échu, sans rupture. */
 function EUC_SUIVI2_episode_(r) {
@@ -166,10 +187,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     if (an && an !== annee) return;
     var ids = EUC_SUIVI2_refs_(p.Classes_concernees);
     if (!ids.length) { var seul = EUC_SUIVI2_ref_(p.Classe); if (seul) ids = [seul]; }
-    if (!ids.length) { sansClasse.push(Number(p.id)); return; }
+    if (!ids.length) { if (EUC_SUIVI2_ressemblePfmp_(p)) sansClasse.push(Number(p.id)); return; }
     ids.forEach(function(cid) {
       if (!classes[cid]) return;
-      classes[cid].periodes.push({ id: Number(p.id), libelleSource: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Type || p.Nom), debut: debut, fin: fin, pdif: EUC_SUIVI2_estPdif_(p) });
+      classes[cid].periodes.push({ id: Number(p.id), libelleSource: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Nom), type: EUC_SUIVI2_t_(p.Type), groupe: EUC_SUIVI2_t_(p.Groupe), debut: debut, fin: fin, pdif: EUC_SUIVI2_estPdif_(p) });
     });
   });
   /* R6 : numérotation par rang des périodes ordinaires ; R26 : P.dif en Terminale BAC PRO seulement. */
@@ -213,6 +234,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     modes[eid] = { id: r.id, mode: mode };
   });
 
+  /* Fiches entreprises (identifiant SIRET / NIS). */
+  var entreprises = {};
+  (src.entreprises || []).map(EUC_SUIVI2_champs_).forEach(function(f) { entreprises[f.id] = f; });
+
   /* Dossiers de convention par élève et période. */
   var dossiers = {};
   (src.dossiers || []).map(EUC_SUIVI2_champs_).forEach(function(a) {
@@ -244,10 +269,17 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           if (code !== 'ANNULEE' && code !== 'INTERROMPUE' && code !== 'SUPPRIMEE' && liste[i].Revoked !== true) { actif = liste[i]; break; }
         }
         var d = actif || liste[0] || null, statut = EUC_SUIVI2_statut_(d);
-        var avec = !!(actif && statut === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(actif));
+        if (statut === 'A_COMPLETER_ENTREPRISE' && actif && EUC_SUIVI2_saisieEntrepriseComplete_(actif, entreprises)) statut = 'ENREGISTREE';
+        var avec = !!(actif && statut === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(actif, entreprises));
         if (avec) { r.avec.push(e.id); return; }
         r.sans.push(e.id);
         if (statut === 'ANNULEE' || statut === 'INTERROMPUE') r.annulees.push(e.id);
+        /* Motif, pour l'écran de contrôle et l'affichage « sans convention ». */
+        var autres = [];
+        Object.keys(dossiers).forEach(function(k2) { if (k2.indexOf(e.id + '|') === 0 && k2 !== e.id + '|' + p.id) autres.push(Number(k2.split('|')[1])); });
+        r.motifs = r.motifs || {};
+        r.motifs[e.id] = { dossiers: liste.length, statut: d ? EUC_SUIVI2_t_(d.Statut_administratif || d.Statut) || statut : 'AUCUN_DOSSIER',
+          identifiant: d ? EUC_SUIVI2_identifiantEntreprise_(d, entreprises) : '', ficheEntreprise: d ? EUC_SUIVI2_ref_(d.Entreprise) : 0, autresPeriodes: autres };
       });
       r.scolaires = r.effectif - r.apprentis.length;
       p.resume = r;

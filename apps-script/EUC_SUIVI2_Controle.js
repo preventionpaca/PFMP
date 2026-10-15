@@ -72,11 +72,17 @@ function EUC_SUIVI2_controle(annee) {
           var nouveaux = x[1].map(function(id) { return EUC_SUIVI2_norm_(noms[id]); }), anciens = EUC_SUIVI2_noms_(x[2]);
           var plus = EUC_SUIVI2_diff_(nouveaux, anciens), moins = EUC_SUIVI2_diff_(anciens, nouveaux);
           if (plus.length || moins.length || (!Array.isArray(x[2]) && EUC_SUIVI2_n_(x[2]) !== x[1].length)) {
-            ecarts.push({ categorie: x[0], nouveau: x[1].length, actuel: EUC_SUIVI2_n_(x[2]), enPlus: plus.slice(0, 30), enMoins: moins.slice(0, 30) });
+            var motifs = [];
+            if (x[0] === 'sans') x[1].forEach(function(id) {
+              var m = (r.motifs || {})[id]; if (!m || plus.indexOf(EUC_SUIVI2_norm_(noms[id])) < 0) return;
+              motifs.push(noms[id] + ' : ' + (m.dossiers ? m.dossiers + ' dossier(s), statut ' + m.statut + ', ' + (m.identifiant || 'aucun SIRET/NIS') + (m.ficheEntreprise ? ' (fiche entreprise n° ' + m.ficheEntreprise + ')' : '') : 'aucun dossier sur cette période') +
+                (m.autresPeriodes.length ? ' ; dossier(s) sur la période n° ' + m.autresPeriodes.join(', ') : ''));
+            });
+            ecarts.push({ categorie: x[0], nouveau: x[1].length, actuel: EUC_SUIVI2_n_(x[2]), enPlus: plus.slice(0, 30), enMoins: moins.slice(0, 30), motifs: motifs.slice(0, 30) });
           }
         });
       }
-      lignes.push({ famille: c.famille, niveau: c.niveau, classe: c.nom, classeId: c.id, periode: p.libelle, periodeSource: p.libelleSource,
+      lignes.push({ famille: c.famille, niveau: c.niveau, classe: c.nom, classeId: c.id, periode: p.libelle, periodeSource: p.libelleSource, periodeType: p.type, periodeGroupe: p.groupe,
         periodeId: p.id, debut: p.debut, fin: p.fin, nouveau: nouv, actuel: act, ecarts: ecarts, sansComparaison: !q });
     });
   });
