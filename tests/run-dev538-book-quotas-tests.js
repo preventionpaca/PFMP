@@ -349,4 +349,16 @@ test('la carte apprentis publique agrège sans identité et la carte admin déta
   c.EUC_DEV538_admin_=()=>true;const adm=c.EUC_DEV545_apprenticeMapData({annee:'2026-2027',mode:'ADMIN'}),json=JSON.stringify(adm);assert.equal(adm.nominatif,true);assert.equal(json.includes('SECRET Eleve'),true);assert.equal(json.includes('Mme VISITE'),true);
 });
 
+test('le book des familles ne propose jamais de lien vers le suivi enseignants',()=>{
+  assert.match(studentBookHtml,/<a id="home"[^>]*hidden>← Retour au suivi PFMP<\/a><span id="homeSep" hidden>/);
+  assert.match(studentBookHtml,/if\(B\.retourSuivi===true\)\{\$\('home'\)\.hidden=false;\$\('homeSep'\)\.hidden=false;\}else\{\$\('home'\)\.remove\(\);\$\('homeSep'\)\.remove\(\);\}/);
+  assert.match(server,/b\.retourSuivi=String\(e&&e\.parameter&&e\.parameter\.page\|\|''\)==='book-entreprises-public-pfmp'/);
+  const ctx={};vm.createContext(ctx);
+  vm.runInContext(server.match(/function EUC_DEV546_afficherBookEleves\(e\)\{[^\n]*\}/)[0],ctx);
+  let boot=null;ctx.EUC_DEV368_boot=()=>({});ctx.EUC_DEV538_render_=(f,t,b)=>{boot=b;return b;};
+  ctx.EUC_DEV546_afficherBookEleves({parameter:{page:'book-entreprises-eleves-pfmp'}});assert.equal(boot.retourSuivi,false);
+  ctx.EUC_DEV546_afficherBookEleves({parameter:{page:'book-entreprises-public-pfmp'}});assert.equal(boot.retourSuivi,true);
+  ctx.EUC_DEV546_afficherBookEleves({});assert.equal(boot.retourSuivi,false);
+});
+
 console.log(`DEV538: ${n} tests réussis`);
