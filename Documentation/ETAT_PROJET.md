@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 15 octobre 2026 — DEV571 verrou d'accès publié (@965)
+
+- Chaque appel `google.script.run` est contrôlé à l'entrée de l'exécution par
+  `ZZ_EUC_ACCES_Verrou.js`, chargé en dernier. Les 569 fonctions appelables
+  qu'aucune page n'utilise sont réservées aux administrateurs et au
+  propriétaire (déclencheurs). La liste des fonctions utilisées par les pages
+  (`ZZ_EUC_ACCES_Liste.js`, 410 fonctions dont 26 publiques) est régénérée à
+  chaque construction du paquet par `scripts/generate-acces-liste.js`.
+- Mode **TRANSITION** actif : les pages enseignants fonctionnent sans clé ;
+  leurs appels sans clé sont notés au journal (cache, 6 h).
+- Nouvel écran Paramétrage → **Liens d'accès** (`liens-acces-pfmp`, réservé à
+  ADMIN_PFMP et DDFPT) : génération de la clé (empreinte SHA-256 seule
+  stockée), liens Atrium, bascule **EXIGEE**, journal. En mode EXIGEE, les
+  pages enseignants et d'audit exigent la clé ; QR, formulaire, book des
+  familles et accès PP restent ouverts. Avec la clé, les enseignants sans
+  compte reçoivent la vue professeurs du book.
+- Enveloppes `pfmp.loucodi.fr` (`072c0f6`) et `apprentis.loucodi.fr`
+  (`3583d36`) : transmettent le paramètre `acces` à chaque page.
+- Le constructeur du paquet se place dans le dépôt (publication possible
+  depuis n'importe quel dossier, `cbca861`).
+- Suite complète `923/923` (lancée par Rudy), commit `cbca861` publié en
+  version immuable `965`, `30/30` routes. Contrôle navigateur anonyme : suivi
+  enseignants (décomptes) et book des familles inchangés.
+- Reste à faire par Rudy : générer la clé, remplacer les liens Atrium, tester
+  en fenêtre privée, puis « Exiger la clé ».
+
 ## Mise à jour du 15 octobre 2026 — DEV570 publié sur le site en ligne (@964)
 
 - Le book des élèves et familles (`book-entreprise.loucodi.fr`) ne propose plus
