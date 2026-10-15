@@ -237,7 +237,7 @@ test('le paquet génère la liste des fonctions et garde le verrou en dernier fi
 });
 
 test('la sonde de performance ne renvoie que des durées et passe avant toute page', () => {
-  assert.match(release, /=== 'sonde-performance'\) \{\s*return EUC_SONDE_reponse_\(\);/);
+  assert.match(release, /=== 'sonde-performance'\) \{\s*return EUC_SONDE_reponse_\(e\);/);
   const c = contexte().c;
   c.ContentService = { createTextOutput: t => ({ t, setMimeType() { return this; } }), MimeType: { JSON: 'json' } };
   const r = JSON.parse(c.EUC_SONDE_reponse_().t);

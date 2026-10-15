@@ -455,12 +455,41 @@ var EUC_SONDE_T2_ = Date.now();
 /* DEV573 — ?page=sonde-performance : durées seules, aucune donnée.
  * chargementMs = exécution du code de tous les fichiers serveur ;
  * verrouMs = installation du verrou ; avantPageMs = du chargement à la page. */
-function EUC_SONDE_reponse_() {
+function EUC_SONDE_reponse_(e) {
   var t0 = typeof EUC_SONDE_T0_ === 'number' ? EUC_SONDE_T0_ : null;
-  return ContentService.createTextOutput(JSON.stringify({
+  var r = {
     version: EUC_ACCES_VERSION_,
     chargementMs: t0 === null ? null : EUC_SONDE_T1_ - t0,
     verrouMs: EUC_SONDE_T2_ - EUC_SONDE_T1_,
     avantPageMs: Date.now() - EUC_SONDE_T2_
-  })).setMimeType(ContentService.MimeType.JSON);
+  };
+  if (e && e.parameter && e.parameter.grist === '1') r.grist = EUC_SONDE_grist_();
+  return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/* DEV575 — Coût de lecture des tables sources du suivi et témoin de
+ * modification du document (/states). Nombres seulement ; une mesure par
+ * minute au plus, les autres demandes reçoivent la dernière mesure. */
+var EUC_SONDE_TABLES_ = ['Planning_Periodes', 'Classes', 'Annees_Scolaires', 'EUC_ELEVES_PFMP', 'EUC_ACCES_FORMULAIRES_PFMP', 'EUC_APPRENTISSAGE_PFMP', 'EUC_PARCOURS_DIFFERENCIE_PFMP', 'EUC_CLASSES_DIPLOMES_PFMP', 'EUC_AFFECTATIONS_SUIVI_PFMP'];
+function EUC_SONDE_grist_() {
+  var cache = CacheService.getScriptCache(), dernier = cache.get('EUC_SONDE_GRIST');
+  if (dernier) { var d = JSON.parse(dernier); d.depuisCache = true; return d; }
+  var c = EUC_ENT_lireConfiguration(), base = String(c.EUC_ENT_GRIST_API_URL || '').replace(/\/$/, '') + '/api/docs/' + encodeURIComponent(c.EUC_ENT_GRIST_DOC_ID);
+  var entetes = { Authorization: 'Bearer ' + c.EUC_ENT_GRIST_API_KEY, Accept: 'application/json' };
+  function lire(chemin) {
+    var t = Date.now(), rep = UrlFetchApp.fetch(base + chemin, { headers: entetes, muteHttpExceptions: true });
+    var code = rep.getResponseCode(), texte = rep.getContentText();
+    return { ms: Date.now() - t, code: code, octets: texte.length, json: code === 200 ? JSON.parse(texte) : null };
+  }
+  var out = { mesureLe: new Date().toISOString(), tables: {} }, total = 0;
+  var st = lire('/states');
+  out.etats = { ms: st.ms, code: st.code, nombre: st.json && st.json.states ? st.json.states.length : null, dernier: st.json && st.json.states && st.json.states[0] ? st.json.states[0].n : null };
+  EUC_SONDE_TABLES_.forEach(function(t) {
+    var r = lire('/tables/' + t + '/records');
+    out.tables[t] = { ms: r.ms, code: r.code, lignes: r.json && r.json.records ? r.json.records.length : null, ko: Math.round(r.octets / 1024) };
+    total += r.ms;
+  });
+  out.totalTablesMs = total;
+  cache.put('EUC_SONDE_GRIST', JSON.stringify(out), 60);
+  return out;
 }
