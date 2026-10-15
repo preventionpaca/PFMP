@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vérifier les chiffres — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed;--ok:#166534}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1200px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+.ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,select{font:700 14px Arial,sans-serif;border-radius:7px;padding:8px 12px}
+button{border:0;background:var(--vert);color:#fff;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+select{border:1px solid var(--bord);background:#fff;font-weight:400}
+label{font-weight:700}
+.note{color:var(--gris);font-size:13px}
+.etat{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;background:var(--vert-clair);color:var(--vert)}
+.etat.alerte{background:var(--alerte-fond);color:var(--alerte)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bord);vertical-align:top}
+th{color:var(--gris);position:sticky;top:0;background:#fff}
+tr.ecart td{background:var(--alerte-fond)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.diff{font-size:12px;color:var(--alerte)}.diff b{color:var(--texte)}
+.famille{font-size:16px;margin:18px 0 6px}
+.message{font-weight:700}.message.erreur{color:var(--alerte)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Vérifier les chiffres du suivi</h1>
+  <p>Nouveau moteur (règles du cahier, données Grist du moment) comparé aux chiffres affichés aujourd’hui sur les cartes de classe.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Vérifier les chiffres</nav>
+<main>
+  <section>
+    <div class="ligne">
+      <label for="annee">Année</label><select id="annee"></select>
+      <label><input type="checkbox" id="ecartsSeuls" checked> Seulement les écarts</label>
+      <button id="lancer" type="button">Comparer</button>
+      <span id="message" class="message" role="status" aria-live="polite"></span>
+    </div>
+    <p class="note">La comparaison relit les tables Grist (nouveau moteur) puis les synthèses actuelles des trois familles : comptez 20 à 60 secondes. Les écarts attendus viennent des règles validées (fraction sur les scolaires, apprentis à partir de la Première, convention annulée ou sans entreprise validée comptée « sans convention », P.dif sans apprentis) ou de synthèses actuelles périmées.</p>
+  </section>
+  <section id="resume" hidden></section>
+  <div id="resultat"></div>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},DONNEES=null,ANNEE=<?!= JSON.stringify(annee || '') ?>;
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var now=new Date(),d=now.getMonth()>=7?now.getFullYear():now.getFullYear()-1;
+  [d+1,d,d-1].forEach(function(y){var o=document.createElement('option');o.value=y+'-'+(y+1);o.textContent=o.value;$('annee').appendChild(o);});
+  $('annee').value=ANNEE||(d+'-'+(d+1));
+  function message(t,err){$('message').textContent=t||'';$('message').className='message'+(err?' erreur':'');}
+  var NOMS={avec:'avec convention',sans:'sans convention',apprentis:'apprentis',entreprise:'P.dif entreprise',lycee:'P.dif lycée',aDefinir:'P.dif à définir'};
+  function cellNouveau(n){return n.pdif?('entreprise '+n.entreprise+' · lycée '+n.lycee+' · à définir '+n.aDefinir+(n.apprentis?' · (apprentis exclus : '+n.apprentis+')':''))
+    :('<b>'+n.avec+' / '+n.scolaires+'</b>'+(n.apprentis?' + '+n.apprentis+' apprenti(s)':'')+' · sans '+n.sans+(n.annulees?' (dont '+n.annulees+' annulée/interrompue)':'')+' · effectif '+n.effectif);}
+  function cellActuel(a,pdif){if(!a)return '<span class="note">non affiché aujourd’hui</span>';return pdif?('entreprise '+a.entreprise+' · lycée '+a.lycee+' · à définir '+a.aDefinir+(a.apprentis?' · apprentis '+a.apprentis:''))
+    :('<b>'+a.avec+'</b> avec · sans '+a.sans+(a.apprentis?' · apprentis '+a.apprentis:'')+' · total '+a.total);}
+  function cellEcarts(l){return l.ecarts.map(function(e){return '<div class="diff"><b>'+esc(NOMS[e.categorie]||e.categorie)+'</b> : '+e.actuel+' → '+e.nouveau+
+    (e.enPlus.length?'<br>+ '+esc(e.enPlus.join(', ')):'')+(e.enMoins.length?'<br>− '+esc(e.enMoins.join(', ')):'')+'</div>';}).join('');}
+  function afficher(){
+    var r=DONNEES;if(!r)return;var seuls=$('ecartsSeuls').checked;
+    $('resume').hidden=false;
+    $('resume').innerHTML='<div class="ligne"><span class="etat'+(r.resume.avecEcart?' alerte':'')+'">'+r.resume.avecEcart+' période(s) avec écart sur '+r.resume.periodes+'</span>'+
+      (r.resume.sansComparaison?'<span class="etat alerte">'+r.resume.sansComparaison+' période(s) absente(s) des cartes actuelles</span>':'')+
+      (r.periodesSansClasse.length?'<span class="etat alerte">'+r.periodesSansClasse.length+' période(s) du calendrier sans classe rattachée</span>':'')+'</div>'+
+      '<p class="note">Données Grist à l’action n° '+esc(String(r.temoin).split('-')[0])+' · nouveau moteur '+(r.depuisCache?'servi depuis le cache':'recalculé en '+Math.round(r.calculMs/100)/10+' s')+
+      ' · synthèses actuelles lues en '+Math.round(r.actuelsMs/100)/10+' s'+(r.erreursActuels.length?' · erreurs : '+esc(r.erreursActuels.join(' ; ')):'')+'</p>';
+    var html='',fam='';
+    r.lignes.filter(function(l){return !seuls||l.ecarts.length||l.sansComparaison;}).forEach(function(l){
+      if(l.famille!==fam){if(fam)html+='</tbody></table></section>';fam=l.famille;html+='<h2 class="famille">'+esc({BACPRO:'BAC PRO',BTS:'BTS',CAP:'CAP',AUTRES:'Autres formations'}[fam]||fam)+'</h2><section><table><thead><tr><th>Classe</th><th>Période</th><th>Nouveau moteur</th><th>Affiché aujourd’hui</th><th>Écarts (élèves)</th></tr></thead><tbody>';}
+      html+='<tr class="'+(l.ecarts.length?'ecart':'')+'"><td><b>'+esc(l.classe)+'</b><br><span class="note">'+esc(l.niveau)+'</span></td><td>'+esc(l.periode)+'<br><span class="note">'+esc(l.debut)+' → '+esc(l.fin)+'</span></td><td>'+cellNouveau(l.nouveau)+'</td><td>'+cellActuel(l.actuel,l.nouveau.pdif)+'</td><td>'+cellEcarts(l)+'</td></tr>';
+    });
+    if(fam)html+='</tbody></table></section>';
+    $('resultat').innerHTML=html||'<section><p>Aucun écart : les deux calculs donnent les mêmes élèves partout.</p></section>';
+  }
+  $('ecartsSeuls').onchange=afficher;
+  $('lancer').onclick=function(){
+    var b=$('lancer');b.disabled=true;b.setAttribute('aria-busy','true');message('Comparaison en cours…');
+    var fini=false,t=setTimeout(function(){if(fini)return;fini=true;b.disabled=false;b.removeAttribute('aria-busy');message('Pas de réponse sous 3 minutes. Réessayez.',true);},180000);
+    google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);b.disabled=false;b.removeAttribute('aria-busy');DONNEES=r;message('');afficher();})
+      .withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);b.disabled=false;b.removeAttribute('aria-busy');message((e&&e.message)||String(e),true);})
+      .EUC_SUIVI2_controle($('annee').value);
+  };
+})();
+</script>
+</body>
+</html>
