@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 octobre 2026 — DEV572 à DEV574 publiés (@975), clé exigée
+
+- **Clé des liens enseignants exigée** (mode EXIGEE activé par Rudy) : sans le
+  lien Atrium, suivi, apprentis et pages techniques affichent « Lien d'accès
+  requis » ; book et carte des familles, accès PP et QR restent ouverts
+  (contrôle sans clé du 16/10). Les liens internes (« Accueil PFMP », retour
+  au suivi, book) emportent le jeton (`f5f0cc9`).
+- **DEV572 books** : plus de chargement de la liste à l'ouverture ; filtres
+  livrés avec la page et toujours complets ; liste complète de l'année
+  calculée une fois par révision des données, partagée par tous, filtrée en
+  mémoire ; la carte réutilise la même liste.
+- **DEV573 sonde** `?page=sonde-performance` (durées seules).
+- **Diagnostic de lenteur (mesuré)** : chaque appel au serveur paie environ
+  1 s par Mo de code du projet avant toute exécution. Projet vide 0,65–1,3 s ;
+  notre code complet 3,1–6,6 s ; notre code ne s'exécute qu'en 0,1 s. Le
+  nombre de fichiers ne compte pas, seul le volume.
+- **DEV574 allègement** (à chaque construction du paquet) : minification
+  sans renommage, puis retrait des fonctions et modèles cités nulle part
+  (`scripts/strip-dead-code.js`). Code serveur 2,63 Mo → 1,70 Mo. Bac à sable :
+  70 routes et 410 fonctions des pages identiques. Production @975 : sonde
+  2,2–3,6 s (médiane ~3,2 s) contre 3,2–4,9 s (~4 s) avant.
+- Projets Apps Script de test « TEST PERF PFMP … - a supprimer » créés dans le
+  Drive de Rudy pour les mesures (sans accès Grist).
+- Défauts relevés, non traités : `Sans_Convention_PFMP_V368.html` appelle des
+  fonctions `EUC_DEV420_*` absentes du projet ; points de carte aberrants
+  (golfe de Guinée) à corriger dans le géocodage.
+
 ## Mise à jour du 15 octobre 2026 — DEV571 correctif carte du book professeurs (@966)
 
 - Régression @965 signalée par Rudy : avec le lien Atrium, la carte du book
