@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575i';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575j';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -356,8 +356,16 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     /* Validée = SIRET vérifié par le bureau (page de migration), décision
      * VALIDEE ou ligne déjà importée ; une ligne ignorée ne compte jamais. */
     var decision = EUC_SUIVI2_t_(j.Decision).toUpperCase(), siretStatut = EUC_SUIVI2_t_(j.SIRET_statut).toUpperCase();
-    var valide = decision !== 'IGNOREE' && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || importee);
-    var ligne = { id: Number(j.id), debut: debut, fin: fin, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
+    /* Monaco : NIS saisi par le bureau (outil « Monaco / NIS ») = identifiant validé. */
+    var nis = EUC_SUIVI2_t_(j.NIS_normalise || j.NIS);
+    var monacoNis = !!nis && (siretStatut === 'NIS_MONACO' || EUC_SUIVI2_t_(j.NIS_statut).toUpperCase().indexOf('VALIDE') === 0);
+    var valide = decision !== 'IGNOREE' && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || monacoNis || importee);
+    /* Date mal saisie (ex. 1926) : hors de l'année scolaire, on se fie au numéro de période. */
+    var an0 = Number(annee.slice(0, 4)), datesFausses = false;
+    [debut, fin].forEach(function(d) { if (d && (Number(d.slice(0, 4)) < an0 - 1 || Number(d.slice(0, 4)) > an0 + 2)) datesFausses = true; });
+    if (datesFausses) { debut = ''; fin = ''; }
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
+    if (monacoNis) ligne.siret = true;
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
@@ -432,7 +440,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           identifiant: d ? EUC_SUIVI2_identifiantEntreprise_(d, entreprises) : '', ficheEntreprise: d ? EUC_SUIVI2_ref_(d.Entreprise) : 0, autresPeriodes: autres,
           jotformNonValide: !!jotformSur(jotformNonValide[e.id], p),
           entrepriseSaisie: d ? EUC_SUIVI2_t_(d.Entreprise_raison_sociale || d.Entreprise_raison_sociale_snapshot) : '',
-          jotformToutes: (jotform[e.id] || []).concat(jotformNonValide[e.id] || []).map(function(l) { return (l.decision || 'sans décision') + ' ' + (l.debut || '?') + '→' + (l.fin || '?') + (l.siret ? ' SIRET ok' : ' SIRET absent'); }) };
+          jotformToutes: (jotform[e.id] || []).concat(jotformNonValide[e.id] || []).map(function(l) { return (l.decision || 'sans décision') + ' ' + (l.debut || '?') + '→' + (l.fin || '?') + (l.siret ? ' SIRET ok' : ' SIRET absent') + (l.datesFausses ? ' (dates hors année, rattachée par n° de période)' : ''); }) };
       });
       r.scolaires = r.effectif - r.apprentis.length;
       p.resume = r;

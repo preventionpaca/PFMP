@@ -237,12 +237,17 @@ test('garde-fou : saisies JotForm sans élève reconnu ou sans période', () => 
   src.jotform = [
     R(820, { Eleve_match_id: null, Decision: 'A_CONTROLER', Raw_JSON: JSON.stringify({ q1: { text: 'Nom', answer: 'INCONNU' } }) }),
     R(821, { Eleve_match_id: 2, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut_brut: 'Aug. 1, 2027', Date_fin_brut: 'Aug. 20, 2027' }),
-    R(822, { Eleve_match_id: null, Decision: 'IGNOREE' })
+    R(822, { Eleve_match_id: null, Decision: 'IGNOREE' }),
+    R(823, { Eleve_match_id: 2, Decision: 'A_CONTROLER', SIRET_statut: 'NIS_MONACO', NIS_normalise: '2026A00042', Date_debut_brut: 'Nov. 2, 2026', Date_fin_brut: 'Nov. 27, 2026' }),
+    R(824, { Eleve_match_id: 4, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut_brut: 'Nov. 2, 1926', Date_fin_brut: 'Nov. 27, 1926', Periode_numero: '1' })
   ];
   const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
   assert.deepEqual(m.gardeFou.jotformSansEleve.map(x => x.ligne), [820]);
   assert.equal(m.gardeFou.jotformSansEleve[0].nom.trim(), 'INCONNU');
   assert.deepEqual(m.gardeFou.jotformSansPeriode.map(x => x.ligne), [821]);
+  const p1 = m.classes.find(x => x.nom === 'TMVA1').periodes[0].resume;
+  assert.equal(p1.sources[2], 'JOTFORM', 'Monaco : NIS validé par le bureau');
+  assert.equal(p1.avec.includes(4), true, 'année mal saisie : rattachée par le numéro de période');
 });
 
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
