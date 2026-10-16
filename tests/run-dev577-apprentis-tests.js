@@ -98,6 +98,7 @@ test('historique des entreprises toujours prêt : servi depuis la dernière vers
   assert.match(carteApp, /HIST\.par\[\(HIST\.noms\|\|\{\}\)\[cleNom\(p\.entreprise,p\.adresse\)\]\]/);
   assert.match(read('apps-script/Suivi_Enseignants_DEV576.html'), /url=window\.eucAvecJeton\(url\)/); assert.match(page, /url=window\.eucAvecJeton\(url\)/);
   assert.match(verrou, /window\.eucAvecJeton=function/);
+  assert.match(page, /id=\"pdf\">Exporter PDF/); assert.match(page, /function exporterClasse/); assert.match(page, /jspdf-autotable@3\.8\.2/);
 });
 
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);

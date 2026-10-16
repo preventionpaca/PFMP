@@ -123,7 +123,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var cartes=(D.cartes[l.classeId]||[]).slice().sort(function(a,b){var o={APPRENTI:0,FUTUR:1,POTENTIEL:2,RUPTURE:3};return o[a.statut]-o[b.statut]||a.eleve.localeCompare(b.eleve,'fr');});
     var resume=COLS.map(function(c){return l.noms[c[0]].length+' '+c[1].toLowerCase();}).join(' · ');
     var html='<div class="barre noprint"><a class="classe" href="#">← Bilan des apprentis</a><label class="note" for="classe">Classe</label><select id="classe">'+lignes.slice().sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');}).map(function(x){return '<option value="'+x.classeId+'"'+(x.classeId===l.classeId?' selected':'')+'>'+esc(x.classe)+'</option>';}).join('')+'</select>'+
-      '<button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="carte">Carte des apprentis de la classe</button></div>'+
+      '<button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button><button class="btn" type="button" id="carte">Carte des apprentis de la classe</button></div>'+
       '<h2>'+esc(l.classe)+' <span class="note">'+esc(l.niveau)+' · '+(l.mode==='CLASSE_ENTIERE'?'classe entière':'mixité')+' · '+l.effectif+' élèves · quota '+l.quotaPourcent+' % ('+l.quota+' place(s))</span></h2><p class="note">'+esc(resume)+'</p>';
     html+=cartes.length?cartes.map(function(x){var f=x.fiche||{},d=x.dates||{},e=x.etapes||{};
       function etape(ok,lib,date){return '<li class="'+(ok?'ok':'non')+'"><span>'+lib+'</span><span>'+dfr(date)+'</span></li>';}
@@ -136,8 +136,19 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     app.innerHTML=html;
     document.getElementById('classe').onchange=function(){aller({c:this.value});};
     document.getElementById('imprimer').onclick=function(){window.print();};
+    document.getElementById('pdf').onclick=function(){exporterClasse(this,l,cartes);};
     window.scrollTo(0,0);
   }
+  /* DEV578 : PDF de la classe en vrai tableau (jsPDF + autoTable), comme le suivi des PFMP. */
+  function chargerPdf(ok,ko){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();var libs=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'],i=0;(function suivant(){if(i>=libs.length)return ok();var sc=document.createElement('script');sc.src=libs[i++];sc.onload=suivant;sc.onerror=ko;document.head.appendChild(sc);})();}
+  function exporterClasse(b,l,cartes){b.disabled=true;b.textContent='Préparation du PDF…';var fin=function(){b.disabled=false;b.textContent='Exporter PDF';};
+    chargerPdf(function(){try{var d=new Date(),edite='Édité le '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),co=function(o){return o?[o.nom,o.tel,o.mail].filter(Boolean).join('\n'):'';};
+      doc.setFontSize(14);doc.setTextColor(11,107,79);doc.text('Suivi des apprentis — '+l.classe+' — '+D.annee,10,12);doc.setFontSize(9);doc.setTextColor(60);doc.text(l.niveau+' · '+(l.mode==='CLASSE_ENTIERE'?'classe entière':'mixité')+' · '+l.effectif+' élèves · quota '+l.quotaPourcent+' % ('+l.quota+' place(s))',10,18);doc.text(edite,287,12,{align:'right'});
+      doc.autoTable({startY:22,head:[['Élève','Situation','Circuit du dossier','Entreprise','Responsable entreprise','Tuteur']],body:cartes.map(function(x){var f=x.fiche||{},dt=x.dates||{},e=x.etapes||{},et=function(ok,lib,v){return (ok?'[x] ':'[  ] ')+lib+(v?' '+dfr(v):'');};
+        return [x.eleve,LIB[x.statut]+(dt.debut?'\nContrat : '+dfr(dt.debut)+(dt.fin?' au '+dfr(dt.fin):''):'')+(dt.rupture?'\nRupture le '+dfr(dt.rupture):''),[et(e.distribue,'Distribué',dt.distribution),et(e.rapporte,'Rapporté signé',dt.remise),et(e.cfa,'Transmis CFA',dt.cfa),et(e.valide,'Contrat validé',dt.contrat)].join('\n'),f.entreprise?[f.entreprise,f.enseigne&&f.enseigne!==f.entreprise?f.enseigne:'',f.adresse,f.siret?'SIRET '+f.siret:''].filter(Boolean).join('\n'):'Pas encore d’entreprise',co(f.responsable),co(f.tuteur)];}),
+        theme:'grid',styles:{fontSize:7.5,cellPadding:1.4,valign:'top'},headStyles:{fillColor:[11,107,79]},columnStyles:{0:{cellWidth:34},1:{cellWidth:38},2:{cellWidth:46}},margin:{left:8,right:8,bottom:12},
+        didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(7.5);doc.setTextColor(110);doc.text(edite,8,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,289,h-5,{align:'right'});}});
+      var u=URL.createObjectURL(doc.output('blob')),a=document.createElement('a');a.href=u;a.download=('Apprentis '+l.classe+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);}catch(err){alert('PDF impossible : '+(err&&err.message||err));}fin();},function(){fin();alert('Le module PDF n’a pas pu être chargé.');});}
   function rendre(){var s=etat();cacher();if(s.c)classe(s);else accueil(s);
     app.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){aller({f:b.getAttribute('data-f')});};});
     var carte=document.getElementById('carte');if(carte)carte.onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';
