@@ -41,7 +41,12 @@ tr.apprenti td{background:var(--jaune)}
 .b-PDIF_ENTREPRISE{background:var(--ok-fond);color:var(--ok)}.b-PDIF_LYCEE{background:#e8f0fe;color:#1d4ed8}.b-PDIF_A_DEFINIR{background:var(--alerte-fond);color:var(--alerte)}
 .mixte{display:block;margin-top:4px;font-size:12px;color:var(--app)}
 .petit{display:block;margin-top:3px;font-size:12px;color:var(--gris)}.decale{display:block;margin-top:3px;font-size:12px;color:var(--alerte);font-weight:700}
-.total{font-size:12px;color:var(--gris);text-align:right;margin-top:2px}.total b{color:var(--texte)}
+.total{font-size:12px;color:var(--gris);text-align:right;margin-top:1px}.total b{color:var(--texte)}
+.per{cursor:pointer;border-radius:6px}.per:hover,.per:focus-visible{background:var(--clair);outline:none}.gros b{font-size:17px}
+.carte{cursor:pointer}.occupe{opacity:.6;pointer-events:none}.occupe::after{content:'Chargement…';display:block;font-size:12px;color:var(--vert);margin-top:4px}
+.bulle{position:absolute;z-index:20;background:#fff;border:1px solid var(--bord);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px 14px;font-size:13px;pointer-events:none}
+.bulle-titre{font-weight:700;margin-bottom:6px}.colonnes{display:flex;flex-wrap:wrap;gap:6px 18px}
+.groupe{min-width:150px;flex:1}.groupe ul{margin:4px 0 0;padding-left:16px}.groupe.large ul{columns:3 200px;column-gap:24px}
 details.niveau{background:#fff;border:1px solid var(--bord);border-radius:12px;margin:10px 0;padding:0 14px}
 details.niveau>summary{cursor:pointer;padding:12px 0;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;list-style:none}
 details.niveau>summary::before{content:'▸';color:var(--vert);font-weight:700}details.niveau[open]>summary::before{content:'▾'}
@@ -87,16 +92,24 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     if(location.hash!==nh){try{history.pushState(null,'',nh);}catch(e){location.hash=nh;return;}}rendre();}
   var familles=ORDRE.filter(function(f){return D.classes.some(function(c){return c.famille===f;});});
 
+  /* Répartition d'une période par statut : [libellé, noms]. */
+  function repartition(c,p){
+    var par={};c.eleves.forEach(function(e){var st=(p.lignes[e[0]]||['SANS'])[0];(par[st]=par[st]||[]).push(e[1]);});
+    var ordre=p.pdif?['PDIF_ENTREPRISE','APPRENTI','PDIF_LYCEE','PDIF_A_DEFINIR']:['AVEC','APPRENTI','SANS','ANNULEE','INTERROMPUE'];
+    return ordre.filter(function(k){return par[k];}).map(function(k){return [LIB[k]||k,par[k]];});
+  }
+  function colonnes(groupes){return groupes.map(function(g){return '<div class="groupe"><b>'+esc(g[0])+' ('+g[1].length+')</b><ul>'+g[1].map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ul></div>';}).join('')||'<p class="note">Aucun élève.</p>';}
   function resumePeriode(c,p){
-    var n=p.n;
-    if(p.pdif)return '<div class="per"><span>P.dif.</span><span class="note">entreprise <b>'+n.entreprise+'</b> · lycée <b>'+n.lycee+'</b> · à définir <b>'+n.aDefinir+'</b></span></div>';
-    var pct=n.scolaires?Math.round(100*n.avec/n.scolaires):0,app=c.apprentisAffiches&&n.apprentis;
-    return '<div class="per"><span>'+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+'</span></span><span><b>'+n.avec+' / '+n.scolaires+'</b>'+(app?' <span class="app">+ '+n.apprentis+' app.</span>':'')+'</span></div>'+
-      (app?'<div class="total">En entreprise, tous statuts : <b>'+(n.avec+n.apprentis)+' / '+n.effectif+'</b></div>':'')+
+    var n=p.n,ouvre=' data-c="'+c.id+'" data-p="'+p.id+'" role="button" tabindex="0"';
+    if(p.pdif)return '<div class="per"'+ouvre+'><span>P.dif.</span><span class="note">entreprise <b>'+n.entreprise+'</b> · lycée <b>'+n.lycee+'</b> · à définir <b>'+n.aDefinir+'</b></span></div>';
+    var tot=n.avec+n.apprentis,pct=n.effectif?Math.round(100*tot/n.effectif):0,app=c.apprentisAffiches&&n.apprentis;
+    /* Chiffre principal : élèves en entreprise (scolaires sous convention + apprentis) sur l'effectif Pronote. */
+    return '<div class="per"'+ouvre+'><span>'+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+'</span></span><span class="gros"><b>'+tot+' / '+n.effectif+'</b></span></div>'+
+      '<div class="total">'+n.avec+' / '+n.scolaires+' scolaires avec convention'+(app?' <span class="app">+ '+n.apprentis+' apprenti(s)</span>':'')+(n.annulees?' · '+n.annulees+' annulée(s)':'')+'</div>'+
       '<div class="jauge" aria-hidden="true"><i style="width:'+pct+'%"></i></div>';
   }
   function carte(c){
-    return '<button class="carte" type="button" data-c="'+c.id+'"><h3>'+esc(c.nom)+'</h3><div class="pp">'+esc(c.niveau)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</div>'+c.periodes.map(function(p){return resumePeriode(c,p);}).join('')+'</button>';
+    return '<div class="carte" data-c="'+c.id+'" role="link" tabindex="0"><h3>'+esc(c.nom)+'</h3><div class="pp">'+esc(c.niveau)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</div>'+c.periodes.map(function(p){return resumePeriode(c,p);}).join('')+'</div>';
   }
   function accueil(s){
     var f=s.f&&familles.indexOf(s.f)>=0?s.f:familles[0];
@@ -115,7 +128,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       Object.keys(niveaux).sort(function(a,b){return (NIV.indexOf(a)+99)%99-(NIV.indexOf(b)+99)%99||a.localeCompare(b);}).forEach(function(nv){
         var cl=niveaux[nv],k=f+'|'+nv,eff=0,ent=0,sco=0,avec=0;
         cl.forEach(function(c){var p=c.periodes.filter(function(x){return !x.pdif;})[0];if(p){eff+=p.n.effectif;ent+=p.n.avec+p.n.apprentis;sco+=p.n.scolaires;avec+=p.n.avec;}});
-        html+='<details class="niveau" data-k="'+esc(k)+'"'+(OUVERTS[k]?' open':'')+'><summary><span class="titre">'+esc(nv)+'</span><span class="note">'+cl.length+' classe(s) · PFMP n°1 : '+avec+' / '+sco+' scolaires avec convention</span></summary><div class="grille">'+cl.map(carte).join('')+'</div></details>';
+        html+='<details class="niveau" data-k="'+esc(k)+'"'+(OUVERTS[k]?' open':'')+'><summary><span class="titre">'+esc(nv)+'</span><span class="note">'+cl.length+' classe(s) · PFMP n°1 : <b>'+ent+' / '+eff+'</b> élèves en entreprise · '+avec+' / '+sco+' scolaires avec convention</span></summary><div class="grille">'+cl.map(carte).join('')+'</div></details>';
       });
     }
     app.innerHTML=html;
@@ -161,7 +174,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button>'+
       '<button class="btn" type="button" id="carte">Carte des lieux de stage</button></div>'+
       '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'</p>'+
-      '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" title="'+esc(x[2].join(', ')||'Aucun élève')+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
+      '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
       '<div class="tableau"><table><thead><tr><th>Élève</th><th>Convention / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Coordonnées entreprise</th><th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+
       (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
@@ -176,13 +189,25 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       app.querySelectorAll('.compteur').forEach(function(o){o.setAttribute('aria-expanded','false');});
       if(deja){box.hidden=true;return;}
       b.setAttribute('aria-expanded','true');box.hidden=false;
-      box.innerHTML='<b>'+esc(x[0])+'</b> : '+(x[2].length?esc(x[2].join(' · ')):'aucun élève');
+      box.innerHTML='<div class="groupe large"><b>'+esc(x[0])+' ('+x[2].length+')</b><ul>'+x[2].map(function(nm){return '<li>'+esc(nm)+'</li>';}).join('')+'</ul></div>';
     };});
     window.scrollTo(0,0);
   }
-  function rendre(){var s=etat();if(s.c)classe(s);else accueil(s);
+  var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
+  function montrer(el,html){bulle.innerHTML=html;bulle.hidden=false;var r=el.getBoundingClientRect(),w=Math.min(560,window.innerWidth-24);bulle.style.width=w+'px';
+    var x=Math.max(12,Math.min(r.left,window.innerWidth-w-12)),y=r.bottom+6;bulle.style.left=x+'px';bulle.style.top=(y+window.scrollY)+'px';}
+  function cacher(){bulle.hidden=true;}
+  function rendre(){var s=etat();cacher();if(s.c)classe(s);else accueil(s);
     app.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){aller({f:b.getAttribute('data-f')});};});
-    app.querySelectorAll('[data-c]').forEach(function(b){b.onclick=function(){aller({c:b.getAttribute('data-c')});};});
+    app.querySelectorAll('[data-c]').forEach(function(b){
+      function ouvrirClasse(ev){if(ev)ev.stopPropagation();b.classList.add('occupe');var c=b.getAttribute('data-c'),p=b.getAttribute('data-p')||'';setTimeout(function(){aller({c:c,p:p});},30);}
+      b.onclick=ouvrirClasse;b.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();ouvrirClasse(ev);}};
+      if(b.hasAttribute('data-p')){
+        b.onmouseenter=function(){var c=parId[b.getAttribute('data-c')],p=c&&c.periodes.filter(function(x){return String(x.id)===b.getAttribute('data-p');})[0];
+          if(p)montrer(b,'<div class="bulle-titre">'+esc(c.nom)+' — '+esc(p.libelle)+'</div><div class="colonnes">'+colonnes(repartition(c,p))+'</div><p class="note">Cliquer pour ouvrir la liste des élèves.</p>');};
+        b.onmouseleave=cacher;
+      }
+    });
   }
   /* Liens internes (#…) : jamais de navigation de la fenêtre principale (base target _top). */
   document.addEventListener('click',function(ev){

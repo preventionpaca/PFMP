@@ -77,6 +77,9 @@ test('la page reçoit les données échappées et son script est valide', () => 
   assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V)).replace('<?!= config ?>', '{"base":"https://x/exec","wrapper":false}')));
   assert.match(page, /closest\('a\[href\^="#"\]'\)/, 'les liens internes ne naviguent jamais la fenêtre principale');
   assert.match(page, /retour=enseignants/, 'carte filtrée avec retour vers la page enseignants');
+  const carteHtml = read('apps-script/Cartographie_PFMP_DEV441.html');
+  assert.match(carteHtml, /searchParams\.set\('cl',P\.classe/, 'retour de la carte : paramètres cl/pe');
+  assert.doesNotMatch(carteHtml + ens, /searchParams\.set\('c',|p\.c\)/, 'jamais le paramètre « c », réservé par Google');
   assert.match(ens, /replace\(\/<\/g, '\\\\u003c'\)/, 'aucun « </script> » possible dans les données');
   assert.match(page, /function esc\(/);
 });

@@ -8,6 +8,7 @@
  * Lecture seule ; route protégée par le verrou des liens enseignants.
  */
 var EUC_SUIVI2_PAGE_ENSEIGNANTS_ = 'suivi-pfmp-enseignants';
+/* Paramètres d'adresse : jamais « c » ni « sid », réservés par Google pour les Web Apps. */
 
 /* Vue compacte destinée au navigateur : ni motifs ni garde-fou (réservés à
  * l'administration), seulement ce que le tableau affiche. */
@@ -51,7 +52,7 @@ function EUC_SUIVI2_pageEnseignants_(e) {
   /* JSON inséré dans un <script> : « < » échappé pour ne jamais fermer la balise. */
   t.donnees = JSON.stringify(vue).replace(/</g, '\\u003c').replace(new RegExp('\\u2028', 'g'), '\\u2028').replace(new RegExp('\\u2029', 'g'), '\\u2029');
   var base = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
-  t.config = JSON.stringify({ base: base, wrapper: EUC_SUIVI2_t_(p.wrapper) === '1', depart: { c: Number(p.c) || 0, p: Number(p.p) || 0 } }).replace(/</g, '\\u003c');
+  t.config = JSON.stringify({ base: base, wrapper: EUC_SUIVI2_t_(p.wrapper) === '1', depart: { c: Number(p.cl) || 0, p: Number(p.pe) || 0 } }).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('Suivi des PFMP')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
