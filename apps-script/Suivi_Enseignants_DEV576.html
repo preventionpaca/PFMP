@@ -40,6 +40,9 @@ tr.apprenti td{background:var(--jaune)}
 .b-ANNULEE,.b-INTERROMPUE{background:#f1f1f1;color:#555}.b-APPRENTI{background:var(--app-fond);color:var(--app)}
 .b-PDIF_ENTREPRISE{background:var(--ok-fond);color:var(--ok)}.b-PDIF_LYCEE{background:#e8f0fe;color:#1d4ed8}.b-PDIF_A_DEFINIR{background:var(--alerte-fond);color:var(--alerte)}
 .mixte{display:block;margin-top:4px;font-size:12px;color:var(--app)}
+.petit{display:block;margin-top:3px;font-size:12px;color:var(--gris)}.decale{display:block;margin-top:3px;font-size:12px;color:var(--alerte);font-weight:700}
+.pastille{display:inline-block;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-right:5px;vertical-align:1px}
+select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
 .coord{font-size:13px}.coord b{display:block;font-size:14px}
 .vide{padding:24px;text-align:center;color:var(--gris)}
 .retour{font-weight:700;text-decoration:none}
@@ -106,12 +109,19 @@ var D=<?!= donnees ?>;
       ?[['Effectif',n.effectif],['En entreprise',n.entreprise],['Au lycée',n.lycee],['À définir',n.aDefinir]].concat(n.apprentis?[['dont apprentis',n.apprentis]]:[])
       :[['Effectif',n.effectif]].concat(c.apprentisAffiches?[['Apprentis',n.apprentis]]:[]).concat([['Avec convention',n.avec+' / '+n.scolaires],['Sans convention',n.sans],['Annulées / interrompues',n.annulees]]);
     var lignes=c.eleves.map(function(e){
-      var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0];
-      var badge='<span class="badge b-'+st+'">'+esc(LIB[st]||st)+'</span>'+(st==='APPRENTI'&&f&&f.contratDebut?'<span class="mixte">Contrat depuis le '+dfr(f.contratDebut)+'</span>':'')+
-        (l[4]?'<span class="mixte">Devient apprenti le '+dfr(l[4][0])+(l[4][1]?' (jusqu’au '+dfr(l[4][1])+')':'')+'</span>':'');
-      return '<tr class="'+(st==='APPRENTI'?'apprenti':'')+'"><td><b>'+esc(e[1])+'</b></td><td>'+badge+'</td><td>'+esc(f&&f.entreprise)+'</td><td>'+esc(f&&f.adresse)+'</td><td>'+coord(f&&f.contact)+'</td><td>'+coord(f&&f.tuteur)+'</td><td>'+esc(c.pp.join(', '))+'</td><td>'+esc(l[2])+'</td><td>'+esc(l[3])+'</td></tr>';
+      var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0],app=st==='APPRENTI'||!!l[4];
+      var badge='<span class="badge b-'+st+'">'+esc(LIB[st]||st)+'</span>'+(st==='APPRENTI'&&f&&f.contratDebut?'<span class="mixte">Contrat depuis le '+dfr(f.contratDebut)+'</span>':'');
+      if(st!=='APPRENTI'&&f&&!p.pdif){
+        if(f.debut&&f.debut>p.debut)badge+='<span class="decale">Début décalé : '+dfr(f.debut)+'</span>';
+        if(f.fin&&f.fin>p.fin)badge+='<span class="decale">Fin prolongée : '+dfr(f.fin)+'</span>';
+        if(f.enregistreLe)badge+='<span class="petit">Enregistrée le '+dfr(f.enregistreLe)+(f.numero?' · '+esc(f.numero):'')+'</span>';
+      }
+      if(l[4])badge+='<span class="badge b-APPRENTI" style="margin-top:4px">Apprenti</span><span class="mixte">Apprenti depuis le '+dfr(l[4][0])+(l[4][1]?' (jusqu’au '+dfr(l[4][1])+')':'')+'</span>';
+      return '<tr class="'+(app?'apprenti':'')+'"><td>'+(app?'<span class="pastille" title="Apprenti">A</span>':'')+'<b>'+esc(e[1])+'</b></td><td>'+badge+'</td><td>'+esc(f&&f.entreprise)+'</td><td>'+esc(f&&f.adresse)+'</td><td>'+coord(f&&f.contact)+'</td><td>'+coord(f&&f.tuteur)+'</td><td>'+esc(c.pp.join(', '))+'</td><td>'+esc(l[2])+'</td><td>'+esc(l[3])+'</td></tr>';
     }).join('');
-    app.innerHTML='<div class="barre noprint"><a class="retour" href="#f='+c.famille+'">← '+esc(FAM[c.famille])+'</a></div>'+
+    var memes=D.classes.filter(function(x){return x.famille===c.famille;});
+    app.innerHTML='<div class="barre noprint"><a class="retour" href="#f='+c.famille+'" data-f="'+c.famille+'">← '+esc(FAM[c.famille])+'</a>'+
+      '<label class="note" for="autre">Classe</label><select id="autre">'+memes.map(function(x){return '<option value="'+x.id+'"'+(x.id===c.id?' selected':'')+'>'+esc(x.nom)+'</option>';}).join('')+'</select></div>'+
       '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
       '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
       '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button>'+
@@ -120,6 +130,7 @@ var D=<?!= donnees ?>;
       '<div class="tableau"><table><thead><tr><th>Élève</th><th>Convention / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Coordonnées entreprise</th><th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+
       (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
     document.getElementById('imprimer').onclick=function(){window.print();};
+    document.getElementById('autre').onchange=function(){var x=parId[this.value],r=x&&x.periodes.filter(function(q){return q.libelle===p.libelle;})[0];aller({c:this.value,p:r?r.id:''});};
     app.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){aller({c:c.id,p:b.getAttribute('data-p')});};});
     window.scrollTo(0,0);
   }

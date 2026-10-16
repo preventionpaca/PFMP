@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576a';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576b';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -172,7 +172,9 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
     adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
-    numero: P(a.Numero_enregistrement, a.Reference_convention)
+    numero: P(a.Numero_enregistrement, a.Reference_convention),
+    debut: EUC_SUIVI2_date_(a.Date_debut), fin: EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin),
+    enregistreLe: EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_saisie_entreprise || a.Date_creation)
   };
 }
 /* R18 : dossier enregistré (ou « à compléter » entièrement saisi) avec entreprise validée. */
