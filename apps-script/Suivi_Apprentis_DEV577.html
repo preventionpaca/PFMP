@@ -129,7 +129,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       return '<div class="carte '+x.statut+'"><div><div class="tit">Élève</div><h3>'+esc(x.eleve)+'</h3><span class="badge b-'+x.statut+'">'+LIB[x.statut]+'</span>'+
         (d.debut?'<div class="note" style="margin-top:6px">Contrat : '+dfr(d.debut)+(d.fin?' → '+dfr(d.fin):'')+'</div>':'')+(d.rupture?'<div class="note" style="color:var(--rupt)">Rupture le '+dfr(d.rupture)+'</div>':'')+(f.nouveauContrat?'<div class="note">Nouveau contrat</div>':'')+'</div>'+
         '<div><div class="tit">Circuit du dossier</div><ul class="etapes">'+etape(e.distribue,'Dossier distribué',d.distribution)+etape(e.rapporte,'Dossier rapporté signé',d.remise)+etape(e.cfa,'Transmis au CFA',d.cfa)+etape(e.valide,'Contrat validé',d.contrat)+'</ul></div>'+
-        '<div><div class="tit">Entreprise</div>'+(f.entreprise?'<b>'+esc(f.entreprise)+'</b>'+(f.enseigne&&f.enseigne!==f.entreprise?'<div class="note">'+esc(f.enseigne)+'</div>':'')+'<div>'+esc(f.adresse)+'</div>'+(f.siret?'<div class="note">SIRET '+esc(f.siret)+'</div>':''):'<span class="note">Pas encore d’entreprise</span>')+'</div>'+
+        '<div><div class="tit">Entreprise</div>'+(f.entreprise?'<a class="ent" href="#" data-carte="1" data-ent="'+esc(f.entreprise)+'" data-adr="'+esc(f.adresse||'')+'" data-siret="'+esc(f.siret||'')+'" title="Voir l’entreprise sur la carte">📍 <b>'+esc(f.entreprise)+'</b></a>'+(f.enseigne&&f.enseigne!==f.entreprise?'<div class="note">'+esc(f.enseigne)+'</div>':'')+'<div>'+esc(f.adresse)+'</div>'+(f.siret?'<div class="note">SIRET '+esc(f.siret)+'</div>':''):'<span class="note">Pas encore d’entreprise</span>')+'</div>'+
         '<div><div class="tit">Responsable entreprise</div>'+coord(f.responsable)+'</div><div><div class="tit">Tuteur</div>'+coord(f.tuteur)+'</div></div>';}).join('')
       :'<p class="vide">Aucun apprenti, futur apprenti ni dossier en cours dans cette classe.</p>';
     app.innerHTML=html;
@@ -151,6 +151,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       td.onmouseenter=function(){montrer(td,'<b>'+esc(l.classe)+' — '+esc(lib)+' ('+l.noms[k].length+')</b>'+colonnesSimples(l.noms[k]));};td.onmouseleave=cacher;});
   }
   document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href^="#"]'):null;if(!a)return;ev.preventDefault();
+    if(a.getAttribute('data-carte')){var s0=etat();ouvrir(CFG.base+'?page=cartographie-apprentis-public-pfmp&retour=enseignants&annee='+encodeURIComponent(D.annee)+(s0.c?'&classe='+s0.c:'')+'&focus='+encodeURIComponent(a.getAttribute('data-ent'))+'&adr='+encodeURIComponent(a.getAttribute('data-adr'))+'&siret='+encodeURIComponent(a.getAttribute('data-siret')));return;}
     var h=new URLSearchParams(a.getAttribute('href').slice(1)),o={};h.forEach(function(v,k){o[k]=v;});aller(o);});
   window.addEventListener('hashchange',rendre);window.addEventListener('popstate',rendre);
   /* Données toujours à jour : alerte si Grist a changé depuis l'ouverture. */
