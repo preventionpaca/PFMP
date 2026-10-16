@@ -122,7 +122,7 @@ function EUC_ACCES_creerJeton_() {
 
 function EUC_ACCES_jetonValide_(jeton) {
   var c = EUC_ACCES_config_(), parts = String(jeton || '').split('.');
-  /* Lien de secours personnel : échéance.professeur.signature (12 h). */
+  /* Lien de secours personnel : échéance.professeur.signature (une semaine). */
   if (c.secret && parts.length === 3 && /^\d{10,16}$/.test(parts[0]) && /^\d{1,9}$/.test(parts[1])) {
     return Number(parts[0]) >= Date.now() && EUC_ACCES_egal_(parts[2], EUC_ACCES_hmac_('SEC|' + parts[0] + '|' + parts[1], c.secret));
   }
@@ -515,16 +515,17 @@ function EUC_SONDE_grist_() {
 
 /* ---------- DEV578 : lien de secours par courriel (Atrium en panne) ----------
  * Seules les adresses @ac-nice.fr ou @lycee-les-eucalyptus.org présentes dans la liste des professeurs
- * (import Pronote, actifs) reçoivent un lien personnel valable 12 heures,
+ * (import Pronote, actifs) reçoivent un lien personnel valable une semaine,
  * signé par le secret de la clé : générer une nouvelle clé les annule tous.
  * La réponse est la même que l'adresse soit autorisée ou non. */
+var EUC_ACCES_SECOURS_TTL_MS_ = 7 * 24 * 3600 * 1000; /* une semaine */
 var EUC_ACCES_DOMAINE_SECOURS_ = /@(?:ac-nice\.fr|lycee-les-eucalyptus\.org)$/i;
 
 function EUC_ACCES_formSecours_(page) {
   var p = String(page || '').replace(/[^a-z0-9-]/gi, '');
   return '<div style="margin-top:28px;padding:18px;border:1px solid #cfe5dc;border-radius:12px;background:#fff;max-width:560px">' +
     '<h2 style="font-size:17px;margin:0 0 6px">Atrium en panne ?</h2>' +
-    '<p style="margin:0 0 10px">Recevez un lien personnel par courriel, valable 12 heures. ' +
+    '<p style="margin:0 0 10px">Recevez un lien personnel et provisoire par courriel, valable une semaine. ' +
     '<b>Seules les adresses autorisées (professeurs du lycée) peuvent accéder au mode secours.</b></p>' +
     '<form id="sec" style="display:flex;gap:8px;flex-wrap:wrap"><input id="mel" type="email" required autocomplete="email" ' +
     'placeholder="prenom.nom@ac-nice.fr" style="flex:1;min-width:240px;padding:9px;border:1px solid #9cc;border-radius:8px;font:inherit">' +
@@ -562,7 +563,7 @@ function EUC_ACCES_compter_(cache, cle, max) {
 }
 
 function EUC_ACCES_demanderLienSecours(courriel, page) {
-  var reponse = 'Si cette adresse est autorisée, un lien personnel vient de lui être envoyé (valable 12 heures). Pensez à vérifier les indésirables.';
+  var reponse = 'Si cette adresse est autorisée, un lien personnel vient de lui être envoyé (valable une semaine). Pensez à vérifier les indésirables.';
   var mel = String(courriel || '').trim().toLowerCase().slice(0, 120);
   if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(mel)) return 'Adresse courriel invalide.';
   var c = EUC_ACCES_config_(), cache = CacheService.getScriptCache();
@@ -574,7 +575,7 @@ function EUC_ACCES_demanderLienSecours(courriel, page) {
   }
   var prof = EUC_ACCES_profAutorise_(mel);
   if (!prof || !prof.id) { EUC_ACCES_noter_('secours-refuse', mel); return reponse; }
-  var exp = String(Date.now() + EUC_ACCES_JETON_TTL_MS_), pid = String(prof.id);
+  var exp = String(Date.now() + EUC_ACCES_SECOURS_TTL_MS_), pid = String(prof.id);
   var jeton = exp + '.' + pid + '.' + EUC_ACCES_hmac_('SEC|' + exp + '|' + pid, c.secret);
   var pg = String(page || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
   var base = /apprenti/.test(pg) ? 'https://apprentis.loucodi.fr/' : 'https://pfmp.loucodi.fr/';
@@ -584,7 +585,7 @@ function EUC_ACCES_demanderLienSecours(courriel, page) {
     to: mel,
     subject: 'Lien de secours — suivis PFMP et apprentis',
     body: 'Bonjour' + (prof.nom ? ' ' + prof.nom : '') + ',\n\nVoici votre lien personnel d’accès aux suivis, à utiliser pendant l’indisponibilité d’Atrium :\n\n' + lien +
-      '\n\nCe lien est valable 12 heures et ne doit pas être transféré : chaque ouverture est enregistrée.\nSi vous n’avez rien demandé, ignorez ce message.\n\nLycée Les Eucalyptus — bureau des entreprises'
+      '\n\nCe lien est provisoire et valable une semaine, jusqu’au ' + Utilities.formatDate(new Date(Number(exp)), 'Europe/Paris', 'dd/MM/yyyy à HH:mm') + '. Il est personnel et ne doit pas être transféré : chaque ouverture est enregistrée.\nDès qu’Atrium fonctionne de nouveau, reprenez les icônes habituelles d’Atrium.\nSi vous n’avez rien demandé, ignorez ce message.\n\nLycée Les Eucalyptus — bureau des entreprises'
   });
   EUC_ACCES_noter_('secours-envoye', mel);
   return reponse;

@@ -25,7 +25,7 @@ function contexte(opts) {
       DigestAlgorithm: { SHA_256: 'SHA_256' }, Charset: { UTF_8: 'UTF_8' },
       computeDigest: (a, v) => bytes(crypto.createHash('sha256').update(String(v)).digest()),
       computeHmacSha256Signature: (v, k) => bytes(crypto.createHmac('sha256', String(k)).update(String(v)).digest()),
-      getUuid: () => crypto.randomUUID()
+      getUuid: () => crypto.randomUUID(), formatDate: d => d.toISOString()
     },
     PropertiesService: { getScriptProperties: () => ({
       getProperty: k => (k in props ? props[k] : null), getProperties: () => Object.assign({}, props),
@@ -245,7 +245,7 @@ test('la sonde de performance ne renvoie que des durées et passe avant toute pa
   assert.ok(fs.readFileSync(path.join(root, 'apps-script/AAAA_EUC_SONDE_Debut.js'), 'utf8').includes('var EUC_SONDE_T0_ = Date.now();'));
 });
 
-test('lien de secours : seuls les professeurs autorisés reçoivent un lien personnel de 12 h, valable puis annulé par une nouvelle clé', () => {
+test('lien de secours : seuls les professeurs autorisés reçoivent un lien personnel d’une semaine, valable puis annulé par une nouvelle clé', () => {
   const { c, props } = contexte();
   props[c.EUC_ACCES_P_SECRET_] = 'secret-1'; props[c.EUC_ACCES_P_MODE_] = 'EXIGEE';
   const envois = [];
@@ -269,6 +269,8 @@ test('lien de secours : seuls les professeurs autorisés reçoivent un lien pers
   const jeton = decodeURIComponent(lien.split('jeton=')[1]);
   assert.equal(jeton.split('.').length, 3); assert.equal(jeton.split('.')[1], '7');
   assert.equal(c.EUC_ACCES_jetonValide_(jeton), true);
+  const duree = Number(jeton.split('.')[0]) - Date.now(); assert.ok(duree > 6.9 * 86400000 && duree <= 7 * 86400000, 'une semaine');
+  assert.match(envois[0].body, /provisoire et valable une semaine, jusqu’au /);
   assert.equal(c.EUC_ACCES_jetonValide_(jeton.replace('.7.', '.9.')), false, 'professeur non modifiable');
   c.EUC_ACCES_etat_.ens = null; props[c.EUC_ACCES_P_SECRET_] = 'secret-2';
   assert.equal(c.EUC_ACCES_jetonValide_(jeton), false, 'nouvelle clé = liens de secours annulés');
