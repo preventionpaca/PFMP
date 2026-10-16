@@ -313,6 +313,9 @@ function EUC_ACCES_controlerRoute_(e) {
 
   var enseignant = !!EUC_ACCES_ROUTES_ENSEIGNANTS_[page];
   var technique = EUC_ACCES_ROUTES_TECHNIQUES_.test(page);
+  /* DEV578 — observation : origine du clic transmise par les coquilles
+   * pfmp.loucodi.fr / apprentis.loucodi.fr à la première ouverture d'un onglet. */
+  if (enseignant && p.orig != null) EUC_ACCES_noter_('origine', page + ' ← ' + (String(p.orig).replace(/[^a-z0-9.\-]/gi, '').slice(0, 60) || 'ouverture directe (sans origine)'));
   if (!enseignant && !technique) return null;
   if (EUC_ACCES_etat_.enseignant || EUC_ACCES_sessionOuverte_()) return null;
   if (EUC_ACCES_mode_() !== 'EXIGEE') {

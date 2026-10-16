@@ -55,4 +55,8 @@ test('cartes : points hors zone France–Monaco écartés et signalés ; carte d
   assert.match(src, /reglages/, 'quotas et modes (propriétés) dans la clé de cache');
 });
 
+test('observation de l’origine des ouvertures (Atrium) notée dans le journal des accès, sans blocage', () => {
+  assert.match(verrou, /if \(enseignant && p\.orig != null\) EUC_ACCES_noter_\('origine'/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
