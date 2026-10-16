@@ -205,7 +205,11 @@ function EUC_RELEASE_doGet_(e) {
     var refus = EUC_ACCES_controlerRoute_(e);
     if (refus) return EUC_RELEASE_decorateOutput_(refus);
   }
-  var output = EUC_RELEASE_doGetCore_(e);
+  /* DEV576 : page des enseignants sur le nouveau moteur, servie sans le routage historique. */
+  var output = (typeof EUC_SUIVI2_pageEnseignants_ === 'function' &&
+      String(e && e.parameter && e.parameter.page || '').toLowerCase() === 'suivi-pfmp-enseignants')
+    ? EUC_SUIVI2_pageEnseignants_(e)
+    : EUC_RELEASE_doGetCore_(e);
   if (typeof EUC_ACCES_decorer_ === 'function') output = EUC_ACCES_decorer_(output);
   return EUC_RELEASE_decorateOutput_(output);
 }

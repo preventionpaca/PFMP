@@ -49,7 +49,8 @@ var EUC_ACCES_ROUTES_ENSEIGNANTS_ = {
   'book-entreprises-public-pfmp': 1,
   'cartographie-pfmp': 1,
   'apprentissage-public-pfmp': 1,
-  'cartographie-apprentis-public-pfmp': 1
+  'cartographie-apprentis-public-pfmp': 1,
+  'suivi-pfmp-enseignants': 1
 };
 
 /* Pages techniques sans contrôle propre qui affichent des noms d'élèves. */

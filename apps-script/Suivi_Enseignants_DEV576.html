@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suivi des PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert2:#07856f;--clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#d5e6de;--fond:#f6faf8;--alerte:#9a3412;--alerte-fond:#fff1e8;--ok:#166534;--ok-fond:#e3f5ea;--app:#7c2d92;--app-fond:#f6e9fb;--jaune:#fffbe6}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Arial,Helvetica,sans-serif;color:var(--texte);background:var(--fond)}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline}
+header h1{margin:0;font-size:20px}header .info{opacity:.85;font-size:13px}
+main{max-width:1400px;margin:0 auto;padding:12px 16px 48px}
+a{color:var(--vert)}
+.barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.onglet,.btn{font:700 14px Arial,sans-serif;border:1px solid var(--bord);background:#fff;color:var(--texte);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none}
+.onglet[aria-pressed="true"]{background:var(--vert);border-color:var(--vert);color:#fff}
+.btn.plein{background:var(--vert);border-color:var(--vert);color:#fff}
+input[type=search]{font:15px Arial,sans-serif;padding:8px 12px;border:1px solid var(--bord);border-radius:8px;min-width:240px;flex:1;max-width:420px}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.carte{display:block;background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.carte:hover,.carte:focus-visible{border-color:var(--vert2);box-shadow:0 2px 10px rgba(11,107,79,.12);outline:none}
+.carte h3{margin:0 0 2px;font-size:17px}.carte .pp{color:var(--gris);font-size:13px;margin-bottom:8px}
+.per{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:5px 0;border-top:1px solid #eef4f1;font-size:14px}
+.per b{font-variant-numeric:tabular-nums}
+.jauge{height:6px;border-radius:3px;background:#eef2f0;overflow:hidden;margin-top:3px}.jauge i{display:block;height:100%;background:var(--vert2)}
+.note{color:var(--gris);font-size:13px}
+.app{color:var(--app);font-weight:700}
+h2{font-size:18px;margin:18px 0 8px}
+.compteurs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:10px 0}
+.compteur{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:8px 12px}.compteur span{font-size:12px;color:var(--gris)}.compteur b{display:block;font-size:22px}
+.tableau{background:#fff;border:1px solid var(--bord);border-radius:12px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #edf3f0;vertical-align:top}
+th{position:sticky;top:0;background:#f3f8f5;color:var(--gris);font-size:12px;z-index:1}
+tr.apprenti td{background:var(--jaune)}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.b-AVEC{background:var(--ok-fond);color:var(--ok)}.b-SANS{background:var(--alerte-fond);color:var(--alerte)}
+.b-ANNULEE,.b-INTERROMPUE{background:#f1f1f1;color:#555}.b-APPRENTI{background:var(--app-fond);color:var(--app)}
+.b-PDIF_ENTREPRISE{background:var(--ok-fond);color:var(--ok)}.b-PDIF_LYCEE{background:#e8f0fe;color:#1d4ed8}.b-PDIF_A_DEFINIR{background:var(--alerte-fond);color:var(--alerte)}
+.mixte{display:block;margin-top:4px;font-size:12px;color:var(--app)}
+.coord{font-size:13px}.coord b{display:block;font-size:14px}
+.vide{padding:24px;text-align:center;color:var(--gris)}
+.retour{font-weight:700;text-decoration:none}
+.erreur{background:var(--alerte-fond);color:var(--alerte);padding:12px 16px;border-radius:10px;font-weight:700}
+@media (max-width:700px){header h1{font-size:18px}th:nth-child(4),td:nth-child(4){display:none}}
+@media print{header,.barre,.noprint{display:none!important}body{background:#fff}.tableau{border:0}th{position:static}}
+</style>
+</head>
+<body>
+<header><h1>Suivi des PFMP</h1><span class="info" id="info"></span></header>
+<main id="app" aria-live="polite"></main>
+<script>
+var D=<?!= donnees ?>;
+(function(){
+  'use strict';
+  var app=document.getElementById('app');
+  var FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations'},ORDRE=['BACPRO','CAP','BTS','AUTRES'];
+  var LIB={AVEC:'Convention enregistrée',SANS:'Sans convention',ANNULEE:'Annulée',INTERROMPUE:'Interrompue',APPRENTI:'Apprenti',PDIF_ENTREPRISE:'En entreprise',PDIF_LYCEE:'Au lycée',PDIF_A_DEFINIR:'À définir'};
+  var parId={};D.classes.forEach(function(c){parId[c.id]=c;});
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x];});}
+  function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+  function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
+  document.getElementById('info').textContent='Année '+(D.annee||'')+(D.temoin?' · données Grist à jour (action n° '+D.temoin+')':'');
+  if(D.erreur){app.innerHTML='<p class="erreur">Les données n’ont pas pu être lues : '+esc(D.erreur)+'. Rechargez la page dans un instant.</p>';return;}
+
+  function etat(){var h=new URLSearchParams(location.hash.slice(1));return {f:h.get('f')||'',c:Number(h.get('c'))||0,p:Number(h.get('p'))||0,q:h.get('q')||''};}
+  function aller(o){var h=new URLSearchParams();Object.keys(o).forEach(function(k){if(o[k])h.set(k,o[k]);});var nh='#'+h.toString();
+    if(location.hash!==nh){try{history.pushState(null,'',nh);}catch(e){location.hash=nh;return;}}rendre();}
+  var familles=ORDRE.filter(function(f){return D.classes.some(function(c){return c.famille===f;});});
+
+  function resumePeriode(c,p){
+    var n=p.n;
+    if(p.pdif)return '<div class="per"><span>P.dif.</span><span class="note">entreprise <b>'+n.entreprise+'</b> · lycée <b>'+n.lycee+'</b> · à définir <b>'+n.aDefinir+'</b></span></div>';
+    var pct=n.scolaires?Math.round(100*n.avec/n.scolaires):0;
+    return '<div class="per"><span>'+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+'</span></span><span><b>'+n.avec+' / '+n.scolaires+'</b>'+(c.apprentisAffiches&&n.apprentis?' <span class="app">+ '+n.apprentis+' app.</span>':'')+'</span></div><div class="jauge" aria-hidden="true"><i style="width:'+pct+'%"></i></div>';
+  }
+  function carte(c){
+    return '<button class="carte" type="button" data-c="'+c.id+'"><h3>'+esc(c.nom)+'</h3><div class="pp">'+esc(c.niveau)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</div>'+c.periodes.map(function(p){return resumePeriode(c,p);}).join('')+'</button>';
+  }
+  function accueil(s){
+    var f=s.f&&familles.indexOf(s.f)>=0?s.f:familles[0];
+    var html='<div class="barre noprint" role="group" aria-label="Familles">'+familles.map(function(x){return '<button class="onglet" type="button" data-f="'+x+'" aria-pressed="'+(x===f)+'">'+FAM[x]+'</button>';}).join('')+
+      '<input type="search" id="q" placeholder="Rechercher une classe ou un élève" value="'+esc(s.q)+'" aria-label="Rechercher une classe ou un élève"></div>';
+    if(s.q){
+      var q=norm(s.q),res=[];
+      D.classes.forEach(function(c){
+        if(norm(c.nom).indexOf(q)>=0)res.push('<li><a href="#c='+c.id+'">'+esc(c.nom)+'</a> <span class="note">'+esc(FAM[c.famille])+'</span></li>');
+        c.eleves.forEach(function(e){if(norm(e[1]).indexOf(q)>=0)res.push('<li><a href="#c='+c.id+'">'+esc(e[1])+'</a> <span class="note">'+esc(c.nom)+'</span></li>');});
+      });
+      html+=res.length?'<ul>'+res.slice(0,60).join('')+'</ul>':'<p class="vide">Aucun résultat.</p>';
+    }else{
+      html+='<div class="grille">'+D.classes.filter(function(c){return c.famille===f;}).map(carte).join('')+'</div>';
+    }
+    app.innerHTML=html;
+    var q=document.getElementById('q');
+    q.oninput=function(){var v=q.value;clearTimeout(q._t);q._t=setTimeout(function(){aller({f:f,q:v});},250);};
+    if(s.q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}
+  }
+  function coord(o){if(!o||!(o.nom||o.tel||o.mail))return '';return '<div class="coord">'+(o.nom?'<b>'+esc(o.nom)+'</b>':'')+(o.tel?'<a href="tel:'+esc(o.tel.replace(/\s/g,''))+'">'+esc(o.tel)+'</a><br>':'')+(o.mail?'<a href="mailto:'+esc(o.mail)+'">'+esc(o.mail)+'</a>':'')+'</div>';}
+  function classe(s){
+    var c=parId[s.c];if(!c){aller({});return;}
+    var p=c.periodes.filter(function(x){return x.id===s.p;})[0]||c.periodes.filter(function(x){return !x.pdif;})[0]||c.periodes[0];
+    var n=p.n,cpt=p.pdif
+      ?[['Effectif',n.effectif],['En entreprise',n.entreprise],['Au lycée',n.lycee],['À définir',n.aDefinir]].concat(n.apprentis?[['dont apprentis',n.apprentis]]:[])
+      :[['Effectif',n.effectif]].concat(c.apprentisAffiches?[['Apprentis',n.apprentis]]:[]).concat([['Avec convention',n.avec+' / '+n.scolaires],['Sans convention',n.sans],['Annulées / interrompues',n.annulees]]);
+    var lignes=c.eleves.map(function(e){
+      var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0];
+      var badge='<span class="badge b-'+st+'">'+esc(LIB[st]||st)+'</span>'+(st==='APPRENTI'&&f&&f.contratDebut?'<span class="mixte">Contrat depuis le '+dfr(f.contratDebut)+'</span>':'')+
+        (l[4]?'<span class="mixte">Devient apprenti le '+dfr(l[4][0])+(l[4][1]?' (jusqu’au '+dfr(l[4][1])+')':'')+'</span>':'');
+      return '<tr class="'+(st==='APPRENTI'?'apprenti':'')+'"><td><b>'+esc(e[1])+'</b></td><td>'+badge+'</td><td>'+esc(f&&f.entreprise)+'</td><td>'+esc(f&&f.adresse)+'</td><td>'+coord(f&&f.contact)+'</td><td>'+coord(f&&f.tuteur)+'</td><td>'+esc(c.pp.join(', '))+'</td><td>'+esc(l[2])+'</td><td>'+esc(l[3])+'</td></tr>';
+    }).join('');
+    app.innerHTML='<div class="barre noprint"><a class="retour" href="#f='+c.famille+'">← '+esc(FAM[c.famille])+'</a></div>'+
+      '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
+      '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
+      '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button>'+
+      '<a class="btn" href="https://pfmp.loucodi.fr/?page=cartographie-pfmp" target="_top">Carte des lieux de stage</a></div>'+
+      '<div class="compteurs">'+cpt.map(function(x){return '<div class="compteur"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>';}).join('')+'</div>'+
+      '<div class="tableau"><table><thead><tr><th>Élève</th><th>Convention / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Coordonnées entreprise</th><th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+
+      (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
+    document.getElementById('imprimer').onclick=function(){window.print();};
+    app.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){aller({c:c.id,p:b.getAttribute('data-p')});};});
+    window.scrollTo(0,0);
+  }
+  function rendre(){var s=etat();if(s.c)classe(s);else accueil(s);
+    app.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){aller({f:b.getAttribute('data-f')});};});
+    app.querySelectorAll('[data-c]').forEach(function(b){b.onclick=function(){aller({c:b.getAttribute('data-c')});};});
+  }
+  window.addEventListener('hashchange',rendre);window.addEventListener('popstate',rendre);
+  rendre();
+})();
+</script>
+</body>
+</html>

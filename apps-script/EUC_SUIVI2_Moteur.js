@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575l';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576a';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -23,8 +23,13 @@ var EUC_SUIVI2_TABLES_ = {
   diplomes: 'EUC_CLASSES_DIPLOMES_PFMP',
   entreprises: 'EUC_ENTREPRISES',
   types: 'Types_Planning',
-  jotform: 'EUC_MIGRATION_JOTFORM_PFMP'
+  jotform: 'EUC_MIGRATION_JOTFORM_PFMP',
+  affectations: 'EUC_AFFECTATIONS_SUIVI_PFMP',
+  professeurs: 'EUC_PROFESSEURS_PFMP',
+  classesProfs: 'EUC_CLASSES_PROFESSEURS_PFMP'
 };
+/* Tables facultatives : leur absence ne bloque pas le calcul des chiffres. */
+var EUC_SUIVI2_FACULTATIVES_ = { pdif: 1, jotform: 1, types: 1, affectations: 1, professeurs: 1, classesProfs: 1 };
 var EUC_SUIVI2_MODE_LYCEE_ = 'PARCOURS_DIFF_LYCEE';
 var EUC_SUIVI2_MODE_ENTREPRISE_ = 'POURSUITE_PFMP2_ENTREPRISE';
 
@@ -155,6 +160,21 @@ function EUC_SUIVI2_monaco_(x) {
   return /MONACO/.test(t) || /^980\d\d$/.test(cp);
 }
 function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_identifiantEntreprise_(a, entreprises); }
+/* DEV576 — fiche d'un élève pour une période (tableau des enseignants). */
+function EUC_SUIVI2_premier_() { for (var i = 0; i < arguments.length; i++) { var v = EUC_SUIVI2_t_(arguments[i]); if (v) return v; } return ''; }
+function EUC_SUIVI2_ficheDossier_(a, entreprises) {
+  if (!a) return null;
+  var f = (entreprises || {})[EUC_SUIVI2_ref_(a.Entreprise)] || {}, P = EUC_SUIVI2_premier_;
+  var resp = P([P(a.Responsable_prenom), P(a.Responsable_nom, a.Responsable, a.Nom_responsable_entreprise)].filter(Boolean).join(' '));
+  var tut = [P(a.Tuteur_prenom), P(a.Tuteur_nom)].filter(Boolean).join(' ');
+  return {
+    entreprise: P(a.Entreprise_raison_sociale, a.Entreprise_enseigne, f.Raison_sociale, f.Nom),
+    adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
+    tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
+    numero: P(a.Numero_enregistrement, a.Reference_convention)
+  };
+}
 /* R18 : dossier enregistré (ou « à compléter » entièrement saisi) avec entreprise validée. */
 function EUC_SUIVI2_vautConvention_(a, entreprises) {
   var s = EUC_SUIVI2_statut_(a);
@@ -370,6 +390,9 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     if (datesFausses) { debut = ''; fin = ''; }
     var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, siretNum: siret, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
     if (monacoNis) ligne.siret = true;
+    ligne.fiche = { entreprise: EUC_SUIVI2_premier_(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
+      adresse: EUC_SUIVI2_premier_([EUC_SUIVI2_t_(j.Adresse_officielle), [EUC_SUIVI2_t_(j.CP_officiel), EUC_SUIVI2_t_(j.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', '), j.Adresse_entreprise),
+      contact: { nom: '', tel: '', mail: '' }, tuteur: { nom: EUC_SUIVI2_t_(j.Tuteur_nom), tel: EUC_SUIVI2_t_(j.Tuteur_telephone), mail: EUC_SUIVI2_t_(j.Tuteur_courriel) }, numero: '' };
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
@@ -409,15 +432,20 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     c.eleves.sort(function(a, b) { return a.libelle.localeCompare(b.libelle, 'fr'); });
     c.eleves.forEach(function(e) { e.apprentissage = EUC_SUIVI2_statutApprenti_(episodes[e.id], aujourdhui); });
     c.periodes.forEach(function(p) {
-      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {} };
+      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {} };
       c.eleves.forEach(function(e) {
         var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
+        if (apprenti) { r.statuts[e.id] = 'APPRENTI'; r.fiches[e.id] = { entreprise: ap.entreprise || '', adresse: '', contact: { nom: '', tel: '', mail: '' }, tuteur: { nom: '', tel: '', mail: '' }, numero: '', contratDebut: ap.debut || '' }; }
         if (ap.code === 'MIXTE') r.mixtes[e.id] = { debut: ap.debut, fin: ap.fin, entreprise: ap.entreprise || '' };
         if (p.pdif) {
           /* Un apprenti est d'office en entreprise pendant le P.dif. */
           if (apprenti) { r.entreprise.push(e.id); r.apprentis.push(e.id); return; }
           var m = (modes[e.id] || {}).mode;
           (m === EUC_SUIVI2_MODE_ENTREPRISE_ ? r.entreprise : m === EUC_SUIVI2_MODE_LYCEE_ ? r.lycee : r.aDefinir).push(e.id);
+          r.statuts[e.id] = m === EUC_SUIVI2_MODE_ENTREPRISE_ ? 'PDIF_ENTREPRISE' : m === EUC_SUIVI2_MODE_LYCEE_ ? 'PDIF_LYCEE' : 'PDIF_A_DEFINIR';
+          var dp = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
+          var fp = EUC_SUIVI2_ficheDossier_(dp.filter(function(x) { return EUC_SUIVI2_vautConvention_(x, entreprises); })[0] || dp[0], entreprises);
+          if (fp && fp.entreprise) r.fiches[e.id] = fp;
           return;
         }
         if (apprenti) { r.apprentis.push(e.id); return; }
@@ -430,6 +458,9 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         var d = actif || liste[0] || null, statut = EUC_SUIVI2_statut_(d);
         if (statut === 'A_COMPLETER_ENTREPRISE' && actif && EUC_SUIVI2_saisieEntrepriseComplete_(actif, entreprises)) statut = 'ENREGISTREE';
         var avec = !!(valant[0]);
+        var fiche = EUC_SUIVI2_ficheDossier_(valant[0] || actif || liste[0], entreprises);
+        if (fiche && (fiche.entreprise || valant[0])) r.fiches[e.id] = fiche;
+        r.statuts[e.id] = avec ? 'AVEC' : (statut === 'ANNULEE' || statut === 'INTERROMPUE' ? statut : 'SANS');
         r.sources = r.sources || {};
         if (avec) {
           r.avec.push(e.id); r.sources[e.id] = 'QR';
@@ -442,7 +473,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           return;
         }
         var jf = (!d || !(statut === 'ANNULEE' || statut === 'INTERROMPUE')) ? jotformSur(jotform[e.id], p) : null;
-        if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; return; }
+        if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; r.statuts[e.id] = 'AVEC'; if (!r.fiches[e.id] || !r.fiches[e.id].entreprise) r.fiches[e.id] = jf.fiche; return; }
         r.sans.push(e.id);
         if (statut === 'ANNULEE' || statut === 'INTERROMPUE') r.annulees.push(e.id);
         /* Motif, pour l'écran de contrôle et l'affichage « sans convention ». */
@@ -457,6 +488,32 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
       });
       r.scolaires = r.effectif - r.apprentis.length;
       p.resume = r;
+    });
+  });
+
+  /* DEV576 — professeurs principaux et suivi (téléphone / visite) par élève et période. */
+  var profs = {};
+  (src.professeurs || []).map(EUC_SUIVI2_champs_).forEach(function(x) { profs[x.id] = [x.Civilite, x.Prenom, x.Nom].map(EUC_SUIVI2_t_).filter(Boolean).join(' '); });
+  (src.classesProfs || []).map(EUC_SUIVI2_champs_).forEach(function(l) {
+    var c = classes[EUC_SUIVI2_ref_(l.Classe)], nom = profs[EUC_SUIVI2_ref_(l.Professeur)];
+    if (!c || !nom || l.Actif === false || EUC_SUIVI2_t_(l.Role) !== 'PROFESSEUR_PRINCIPAL') return;
+    c.pp = c.pp || []; if (c.pp.indexOf(nom) < 0) c.pp.push(nom);
+  });
+  var suivis = {};
+  (src.affectations || []).map(EUC_SUIVI2_champs_).forEach(function(a) {
+    if (a.Actif === false) return;
+    var an = EUC_SUIVI2_annee_(a.Annee_scolaire, annees); if (an && an !== annee) return;
+    var type = EUC_SUIVI2_norm_(a.Type_suivi), k = EUC_SUIVI2_ref_(a.Classe) + '|' + EUC_SUIVI2_ref_(a.Periode) + '|' + EUC_SUIVI2_ref_(a.Eleve);
+    var champ = type.indexOf('TELEPHONE') >= 0 ? 'tel' : type.indexOf('VISITE') >= 0 ? 'visite' : ''; if (!champ) return;
+    var nom = EUC_SUIVI2_t_(a.Nom_professeur_snapshot) || profs[EUC_SUIVI2_ref_(a.Professeur)] || '';
+    var x = suivis[k] = suivis[k] || {};
+    if (nom && (!x[champ + 'Id'] || Number(a.id) > x[champ + 'Id'])) { x[champ] = nom; x[champ + 'Id'] = Number(a.id); }
+  });
+  Object.keys(classes).forEach(function(k) {
+    var c = classes[k];
+    c.periodes.forEach(function(p) {
+      if (!p.resume) return; p.resume.suivis = {};
+      c.eleves.forEach(function(e) { var x = suivis[c.id + '|' + p.id + '|' + e.id]; if (x) p.resume.suivis[e.id] = { tel: x.tel || '', visite: x.visite || '' }; });
     });
   });
 
@@ -498,7 +555,7 @@ function EUC_SUIVI2_lireSources_() {
   var src = {};
   reps.forEach(function(rep, i) {
     var code = rep.getResponseCode();
-    if (code === 404 && (cles[i] === 'pdif' || cles[i] === 'jotform' || cles[i] === 'types')) { src[cles[i]] = []; return; }
+    if (code === 404 && EUC_SUIVI2_FACULTATIVES_[cles[i]]) { src[cles[i]] = []; return; }
     if (code !== 200) throw new Error('Lecture Grist impossible : ' + EUC_SUIVI2_TABLES_[cles[i]] + ' (' + code + ').');
     src[cles[i]] = JSON.parse(rep.getContentText()).records || [];
   });

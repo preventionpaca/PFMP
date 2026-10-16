@@ -139,7 +139,7 @@ test('le jeton signé ajouté aux appels est vérifié puis retiré des argument
   assert.equal(r.ok, true);
   assert.equal(r.v.opt, undefined, 'la fonction ne doit jamais recevoir le jeton');
   const faux = contexte({ props, cache: new Map(), cleTemp: '' }).c;
-  assert.equal(appel(faux, 'EUC_ENS_liste', ['q', { __eucAcces: jeton.replace(/.$/, '0') }]).ok, false);
+  assert.equal(appel(faux, 'EUC_ENS_liste', ['q', { __eucAcces: jeton.replace(/.$/, x => x === '0' ? '1' : '0') }]).ok, false);
 });
 
 test('une fonction publique appelée avec le jeton reconnaît l’enseignant (carte du book professeurs)', () => {
