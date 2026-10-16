@@ -44,7 +44,7 @@ tr.apprenti td{background:var(--jaune)}
 .total{font-size:12px;color:var(--gris);text-align:right;margin-top:1px}.total b{color:var(--texte)}
 .per{cursor:pointer;border-radius:6px}.per:hover,.per:focus-visible{background:var(--clair);outline:none}.gros b{font-size:17px}
 .carte{cursor:pointer}.occupe{opacity:.6;pointer-events:none}.occupe::after{content:'Chargement…';display:block;font-size:12px;color:var(--vert);margin-top:4px}
-.bulle{position:absolute;z-index:20;background:#fff;border:1px solid var(--bord);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px 14px;font-size:13px;pointer-events:none}
+.bulle{position:fixed;z-index:20;overflow:hidden;background:#fff;border:1px solid var(--bord);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px 14px;font-size:13px;pointer-events:none}
 .bulle-titre{font-weight:700;margin-bottom:6px}.colonnes{display:flex;flex-wrap:wrap;gap:6px 18px}
 .groupe{min-width:150px;flex:1}.groupe ul{margin:4px 0 0;padding-left:16px}.groupe.large ul{columns:3 200px;column-gap:24px}
 details.niveau{background:#fff;border:1px solid var(--bord);border-radius:12px;margin:10px 0;padding:0 14px}
@@ -54,6 +54,8 @@ details.niveau>summary .titre{font-weight:700;font-size:17px}details.niveau .gri
 button.compteur{font:inherit;color:inherit;text-align:left;cursor:pointer}button.compteur[aria-expanded="true"]{border-color:var(--vert2);background:var(--clair)}
 .noms{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:0 0 10px;font-size:14px}
 .imprime-seul{display:none}
+.pdf-zone{position:fixed;left:-10000px;top:0;width:1500px;background:#fff;padding:12px;font-size:13px}.pdf-zone .tableau{overflow:visible;border:0}.pdf-zone th{position:static}
+.pdf-zone .compteur{display:inline-block;min-width:150px;margin:0 8px 8px 0}.pdf-zone .compteurs{display:block}
 .pastille{display:inline-block;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-right:5px;vertical-align:1px}
 select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
 .coord{font-size:13px}.coord b{display:block;font-size:14px}
@@ -180,7 +182,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
     var titre=document.title;
     document.getElementById('imprimer').onclick=function(){window.print();};
-    document.getElementById('pdf').onclick=function(){document.title=('PFMP '+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'');window.print();setTimeout(function(){document.title=titre;},1000);};
+    document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
     document.getElementById('carte').onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';ouvrir(carteUrl);};
     document.getElementById('autre').onchange=function(){var x=parId[this.value],r=x&&x.periodes.filter(function(q){return q.libelle===p.libelle;})[0];aller({c:this.value,p:r?r.id:''});};
     app.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){aller({c:c.id,p:b.getAttribute('data-p')});};});
@@ -193,9 +195,33 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     };});
     window.scrollTo(0,0);
   }
+  /* Export PDF : vrai fichier, en couleurs, généré dans le navigateur (bibliothèque chargée à la demande). */
+  var PDFLIB='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  function chargerPdf(ok,ko){if(window.html2pdf)return ok();var sc=document.createElement('script');sc.src=PDFLIB;sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);}
+  function exporterPdf(btn,c,p){
+    var texte=btn.textContent;btn.disabled=true;btn.textContent='Préparation du PDF…';
+    function fin(){btn.disabled=false;btn.textContent=texte;}
+    chargerPdf(function(){
+      var zone=document.createElement('div');zone.className='pdf-zone';
+      zone.innerHTML='<h2>'+esc(c.nom)+' — '+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+' · '+esc(D.annee)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
+        app.querySelector('.compteurs').outerHTML+app.querySelector('.tableau').outerHTML+
+        '<p class="note">Édité le '+new Date().toLocaleDateString('fr-FR')+' — données Grist (action n° '+esc(D.temoin)+').</p>';
+      document.body.appendChild(zone);
+      var nom=('PFMP '+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';
+      window.html2pdf().set({margin:[6,6,8,6],filename:nom,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,windowWidth:1500},
+        jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:'tr'}}).from(zone).save()
+        .then(function(){zone.remove();fin();},function(){zone.remove();fin();alert('Le PDF n’a pas pu être créé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+    },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+  }
   var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
-  function montrer(el,html){bulle.innerHTML=html;bulle.hidden=false;var r=el.getBoundingClientRect(),w=Math.min(560,window.innerWidth-24);bulle.style.width=w+'px';
-    var x=Math.max(12,Math.min(r.left,window.innerWidth-w-12)),y=r.bottom+6;bulle.style.left=x+'px';bulle.style.top=(y+window.scrollY)+'px';}
+  /* Bulle en position fixe, toujours dans l'écran : elle ne doit jamais agrandir la page
+   * (sinon la barre de défilement apparaît, la souris « sort » et la bulle clignote). */
+  function montrer(el,html){bulle.innerHTML=html;bulle.hidden=false;var r=el.getBoundingClientRect(),w=Math.min(620,window.innerWidth-24);bulle.style.width=w+'px';
+    bulle.style.maxHeight=Math.max(160,window.innerHeight-24)+'px';
+    var h=bulle.offsetHeight,x=Math.max(12,Math.min(r.left,window.innerWidth-w-12)),y=r.bottom+6;
+    if(y+h>window.innerHeight-12)y=Math.max(12,r.top-h-6);
+    if(y+h>window.innerHeight-12)y=Math.max(12,window.innerHeight-h-12);
+    bulle.style.left=x+'px';bulle.style.top=y+'px';}
   function cacher(){bulle.hidden=true;}
   function rendre(){var s=etat();cacher();if(s.c)classe(s);else accueil(s);
     app.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){aller({f:b.getAttribute('data-f')});};});
