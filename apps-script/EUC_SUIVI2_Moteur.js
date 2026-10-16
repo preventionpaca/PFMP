@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575f';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575g';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -55,7 +55,17 @@ function EUC_SUIVI2_date_(v) {
   var s = String(v).trim(), m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
   m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if (m) return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+  /* JotForm : « Sept. 28, 2026 », « June 5, 2008 » ou « 28 sept. 2026 ». */
+  var mois = EUC_SUIVI2_mois_(s.replace(/[\d.,]/g, ' '));
+  m = s.match(/^[^\d]*(\d{1,2})\D+(\d{4})/);
+  if (mois && m) return m[2] + '-' + ('0' + mois).slice(-2) + '-' + ('0' + m[1]).slice(-2);
   return '';
+}
+function EUC_SUIVI2_mois_(texte) {
+  var t = String(texte || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().split(/\s+/)[0] || '';
+  var l = [['jan'], ['feb', 'fev'], ['mar'], ['apr', 'avr'], ['may', 'mai'], ['jun', 'juin'], ['jul', 'juil'], ['aug', 'aou'], ['sep'], ['oct'], ['nov'], ['dec']];
+  for (var i = 0; i < 12; i++) if (l[i].some(function(x) { return t.indexOf(x) === 0; })) return i + 1;
+  return 0;
 }
 function EUC_SUIVI2_bool_(v) { return v === true || /^(true|oui|1|x|vrai)$/i.test(EUC_SUIVI2_t_(v)); }
 function EUC_SUIVI2_champs_(r) { return (r && r.fields) ? Object.assign({ id: r.id }, r.fields) : (r || {}); }
@@ -287,11 +297,12 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
      * VALIDEE ou ligne déjà importée ; une ligne ignorée ne compte jamais. */
     var decision = EUC_SUIVI2_t_(j.Decision).toUpperCase(), siretStatut = EUC_SUIVI2_t_(j.SIRET_statut).toUpperCase();
     var valide = decision !== 'IGNOREE' && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || importee);
-    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
-    return (liste || []).filter(function(l) { return l.debut && l.fin && l.debut <= p.fin && l.fin >= p.debut; })[0] || null;
+    /* Chevauchement des dates ; à défaut de dates lisibles, le numéro de période saisi. */
+    return (liste || []).filter(function(l) { return l.debut && l.fin ? (l.debut <= p.fin && l.fin >= p.debut) : (!p.pdif && l.numero && l.numero === p.rang); })[0] || null;
   }
 
   /* Dossiers de convention par élève et période. */
