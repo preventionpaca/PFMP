@@ -65,6 +65,7 @@ test('carte des apprentis : détail nominatif pour les enseignants, liste sous l
   assert.match(book, /'EUC_DEV578_CARTE_'/);
   assert.match(carteApp, /BOOT\.mode==='ADMIN'\|\|NOMINATIF/); assert.match(carteApp, /id="listeCarte"/); assert.match(carteApp, /jspdf-autotable@3\.8\.2/);
   assert.match(carteApp, /non placés sur la carte/);
+  assert.match(book, /b\.webappUrl=EUC_RELEASE_serviceBase_\(\)/, 'retour sans page blanche googleusercontent');
 });
 
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
