@@ -1,13 +1,13 @@
 /** Eucalyptus PFMP - v1.0.0-dev.520 - centre admin multi-domaines. */
 function EUC_CENTRE_ADMIN_afficherApplication(e){
   var auth=String(e&&e.parameter&&e.parameter.auth||'').trim();
-  var ctx=null;
+  var ctx=null,erreurAuth='';
 
   if(auth && typeof EUC_DEV270B_startSession_==='function'){
     /* Compte Google non autorisé, jeton expiré… : proposer un autre compte
      * au lieu d'une page d'erreur Apps Script. */
     try{ctx=EUC_DEV270B_startSession_(auth);}
-    catch(eAuth){return EUC_CENTRE_ADMIN_pageConnexion_(String(eAuth&&eAuth.message||eAuth));}
+    catch(eAuth){ctx=null;erreurAuth=String(eAuth&&eAuth.message||eAuth);}
   }
 
   if(!ctx && typeof EUC_DEV270B_contextOrNull_==='function'){
@@ -24,8 +24,11 @@ function EUC_CENTRE_ADMIN_afficherApplication(e){
   /* Visiteur non identifié (navigateur sans session Google) : le contexte
    * existe mais n'est pas autorisé. Proposer la connexion Google plutôt
    * qu'une erreur brute. */
+  /* Le jeton de la passerelle peut être refusé (signature, expiration) alors que
+   * la session Google Workspace suffit : on ne montre la page de connexion
+   * qu'après avoir essayé toutes les voies. */
   if((!ctx || !ctx.autorise) && typeof EUC_DEV270B_GATEWAY_BASE_!=='undefined'){
-    return EUC_CENTRE_ADMIN_pageConnexion_('');
+    return EUC_CENTRE_ADMIN_pageConnexion_(erreurAuth);
   }
 
   if(

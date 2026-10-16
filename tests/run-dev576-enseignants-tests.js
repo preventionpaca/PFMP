@@ -105,6 +105,11 @@ test('un visiteur non identifié sur l’administration reçoit la connexion Goo
   const refus = k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: { auth: 'jeton' } });
   assert.match(refus, /pas autorisé/); assert.match(refus, /Utiliser un autre compte Google/);
   assert.doesNotMatch(refus, /x@gmail\.com/, 'l’adresse refusée n’est pas réaffichée');
+  k.EUC_DEV270B_startSession_ = () => { throw new Error('Signature PFMP invalide.'); };
+  k.EUC_PFMP_contexteAdmin_ = () => ({ autorise: true, role: 'ADMIN_PFMP' });
+  k.EUC_DEV368_boot = () => ({ baseUrl: 'https://x/exec' });
+  k.HtmlService.createTemplateFromFile = () => ({ evaluate: () => ({ setTitle: () => ({ addMetaTag: () => 'ADMIN' }) }) });
+  assert.equal(k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: { auth: 'jeton' } }), 'ADMIN', 'jeton refusé mais session Google Workspace valide : accès');
 });
 
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
