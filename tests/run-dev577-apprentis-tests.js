@@ -126,4 +126,22 @@ test('codes postaux : 4 chiffres détectés, colonne Nombre passée en Texte pui
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /EUC_DEV578_cpCorriger\('CORRIGER'\)/);
 });
 
+test('géocodage : les entreprises des apprentis entrent dans la liste (adresse corrigée, SIRET, classe)', () => {
+  const src = read('apps-script/EUC_DEV578_GeoApprentis.js');
+  const k = { console, JSON, String, Number, Object, Array,
+    EUC_DEV368_year: y => y || '2026-2027', EUC_DEV541_apprentissageClasses_: () => [{ id: 24, classe: 'TMVA2', famille: 'BACPRO' }],
+    EUC_DEV538_records_: () => [{ id: 1, fields: { Classe: 24 } }, { id: 2, fields: { Classe: 99 } }],
+    EUC_DEV538_fields_: r => r.fields || r, EUC_DEV538_n_: v => Number(v) || 0, EUC_DEV538_ref_: v => Number(v) || 0, EUC_DEV538_t_: v => v == null ? '' : String(v).trim(),
+    EUC_DEV538_pick_: (f, ks) => { for (const x of ks) if (f[x] != null && f[x] !== '') return f[x]; return ''; },
+    EUC_DEV540_normalizeAddress_: v => String(v).toUpperCase(),
+    EUC_DEV538_optionalRecords_: () => [], EUC_DEV538_latestByStudent_: () => ({ 1: { fields: { Nom_entreprise: 'ALER', Adresse_entreprise: '13 bd Raymond Poincaré', Code_postal: '06160', Ville: 'Antibes', SIRET: '993 649 789 00019' } },
+      2: { fields: { Nom_entreprise: 'HORS CLASSE', Adresse_entreprise: 'x', Code_postal: '06000' } } }) };
+  vm.createContext(k); vm.runInContext(src, k);
+  const d = k.EUC_DEV578_geoApprentisDetails_({ annee: '2026-2027' });
+  assert.equal(d.length, 1); assert.equal(d[0].classe.id, 24); assert.equal(d[0].periode.libelle, 'Apprentissage');
+  assert.deepEqual(JSON.parse(JSON.stringify(d[0].lignes)), [{ eleveId: 1, entreprise: 'ALER', adresseEntreprise: '13 BD RAYMOND POINCARÉ, 06160, ANTIBES', siretEntreprise: '99364978900019' }]);
+  const geo = read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js');
+  assert.match(geo, /concat\(typeof EUC_DEV578_geoApprentisDetails_==='function'/); assert.match(geo, /EUC_DEV457_revision_\('EUC_APPRENTISSAGE_PFMP'\)/); assert.match(geo, /DEV578-GEO-6/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);

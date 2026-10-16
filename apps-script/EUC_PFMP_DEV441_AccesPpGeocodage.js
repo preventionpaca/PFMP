@@ -330,7 +330,7 @@ function EUC_DEV513_geoAccessDetails_(q){
  * aux révisions de l'index canonique et de la table géographique. Les filtres
  * famille / classe / période sont ensuite appliqués en mémoire.
  */
-var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV559-GEO-5';
+var EUC_DEV517_GEO_INDEX_SCHEMA_='DEV578-GEO-6';
 var EUC_DEV517_GEO_INDEX_TTL_MS_=21600000;
 function EUC_DEV517_geoIndexKey_(year){return'DEV517_GEO_INDEX_'+EUC_DEV441_t_(year).replace(/[^0-9A-Za-z_-]/g,'_');}
 function EUC_DEV517_geoIndexRevision_(){
@@ -339,6 +339,8 @@ function EUC_DEV517_geoIndexRevision_(){
     if(typeof EUC_DEV457_revision_==='function'){
       parts.push(EUC_DEV457_revision_(EUC_DEV190E_INDEX_TABLE_));
       parts.push(EUC_DEV457_revision_(EUC_DEV441_GEO_TABLE_));
+      /* DEV578 : les dossiers d'apprentissage alimentent aussi le géocodage. */
+      try{parts.push(EUC_DEV457_revision_('EUC_APPRENTISSAGE_PFMP'));}catch(eApp){}
     }
   }catch(e){}
   return parts.join('|');
@@ -401,7 +403,7 @@ function EUC_DEV517_buildGeoCandidates_(q){
   /* Un snapshot peut exister tout en étant incomplet. Les conventions actives
    * sont donc toujours fusionnées avec lui ; la déduplication par identité
    * entreprise/adresse/SIRET ci-dessous empêche les doublons. */
-  var details=EUC_DEV445_geoSnapshotDetails_(q).concat(EUC_DEV513_geoAccessDetails_(q)),siretsByAddress={};
+  var details=EUC_DEV445_geoSnapshotDetails_(q).concat(EUC_DEV513_geoAccessDetails_(q)).concat(typeof EUC_DEV578_geoApprentisDetails_==='function'?(function(){try{return EUC_DEV578_geoApprentisDetails_(q);}catch(eApp){return [];}})():[]),siretsByAddress={};
   details.forEach(function(d){(d.lignes||[]).forEach(function(x){var entreprise=EUC_DEV441_t_(x.entreprise),adresse=EUC_DEV443_normalizeAddress_(x.adresseEntreprise),siret=EUC_DEV441_t_(x.siretEntreprise||x.siret).replace(/\D/g,''),addressIdentity=EUC_DEV443_geoIdentity_(entreprise,adresse,'');if(!entreprise||!adresse||siret.length!==14)return;if(!siretsByAddress[addressIdentity])siretsByAddress[addressIdentity]={};siretsByAddress[addressIdentity][siret]=true;});});
   details.forEach(function(d){
     var cn=EUC_DEV441_t_(d&&d.classe&&(d.classe.nom||d.classe.libelle)),pn=EUC_DEV441_t_(d&&d.periode&&(d.periode.libelle||d.periode.nom)),perimetre=[cn,pn].filter(Boolean).join(' · '),scope=EUC_DEV517_geoScope_(d),scopeKey=[scope.annee,scope.famille,scope.classeId,scope.periodeId].join('|');
