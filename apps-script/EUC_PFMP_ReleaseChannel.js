@@ -206,10 +206,12 @@ function EUC_RELEASE_doGet_(e) {
     if (refus) return EUC_RELEASE_decorateOutput_(refus);
   }
   /* DEV576 : page des enseignants sur le nouveau moteur, servie sans le routage historique. */
-  var output = (typeof EUC_SUIVI2_pageEnseignants_ === 'function' &&
-      String(e && e.parameter && e.parameter.page || '').toLowerCase() === 'suivi-pfmp-enseignants')
+  var page = String(e && e.parameter && e.parameter.page || '').toLowerCase();
+  var output = (typeof EUC_SUIVI2_pageEnseignants_ === 'function' && page === 'suivi-pfmp-enseignants')
     ? EUC_SUIVI2_pageEnseignants_(e)
-    : EUC_RELEASE_doGetCore_(e);
+    : (typeof EUC_DEV577_pageApprentis_ === 'function' && page === 'suivi-apprentis-enseignants')
+      ? EUC_DEV577_pageApprentis_(e)
+      : EUC_RELEASE_doGetCore_(e);
   if (typeof EUC_ACCES_decorer_ === 'function') output = EUC_ACCES_decorer_(output);
   return EUC_RELEASE_decorateOutput_(output);
 }

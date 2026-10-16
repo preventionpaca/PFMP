@@ -549,6 +549,15 @@ function EUC_DEV538_companyHistory(q){
 /* Cartographie apprentissage dédiée. La réponse publique ne contient jamais
  * de nom d'élève, d'identifiant ni de professeur. */
 function EUC_DEV545_apprenticeMapData(q){
+  /* DEV577 : carte des apprentis servie depuis le cache tant que Grist ne change pas (témoin), par périmètre et mode. */
+  q=q||{};var t577='';try{t577=typeof EUC_SUIVI2_temoin_==='function'?EUC_SUIVI2_temoin_():'';}catch(e577){}
+  var k577=t577?'EUC_DEV577_CARTE_'+EUC_DEV441_digest_(JSON.stringify({a:q.annee,c:q.classeId,m:q.mode})).slice(0,16)+'_'+String(t577).replace(/[^\w-]/g,''):'';
+  if(k577&&typeof EUC_DEV572_lire_==='function'){var m577=EUC_DEV572_lire_(k577);if(m577&&m577.points)return m577;}
+  var r577=EUC_DEV545_apprenticeMapDataCalcul_(q);
+  if(k577&&typeof EUC_DEV572_ecrire_==='function')EUC_DEV572_ecrire_(k577,r577);
+  return r577;
+}
+function EUC_DEV545_apprenticeMapDataCalcul_(q){
   q=q||{};var admin=EUC_DEV538_t_(q.mode).toUpperCase()==='ADMIN';if(admin)EUC_DEV538_admin_();
   var year=EUC_DEV538_t_(q.annee)||EUC_DEV368_year(''),classId=EUC_DEV538_n_(q.classeId),now=new Date(),classes=EUC_DEV541_apprentissageClasses_(year),classById={},classByName={},activeConfig=EUC_DEV542_activeClassesConfig_();
   classes.forEach(function(c){classById[c.id]=c;classByName[EUC_DEV538_norm_(c.classe)]=c;});
@@ -600,6 +609,6 @@ function EUC_DEV538_afficherBookStaff(e){
 /* AUDIT-PERF (4) : le lien vers le suivi enseignants n'est autorisé que sur la route personnels (book-entreprises-public-pfmp, repli sans identité). La route familles (book-entreprises-eleves-pfmp, book-entreprise.loucodi.fr) ne le montre jamais. */
 function EUC_DEV546_afficherBookEleves(e){var b=EUC_DEV368_boot();b.mode='STUDENT';b.retourSuivi=String(e&&e.parameter&&e.parameter.page||'')==='book-entreprises-public-pfmp';b.current='ALL';b.params={annee:'ALL',fenetre:3};b.facettes=typeof EUC_DEV572_facettesBoot_==='function'?EUC_DEV572_facettesBoot_('E','ALL',3):null;return EUC_DEV538_render_('Book_Entreprises_Eleves_DEV546','Book des entreprises — élèves et familles',b);}
 function EUC_DEV538_afficherCarteParents(e){var b=EUC_DEV368_boot();b.current='ALL';b.mode='PARENTS';b.params={annee:'ALL',famille:EUC_DEV538_t_(e&&e.parameter&&e.parameter.famille),mode:'PARENTS',fenetre:3};return EUC_DEV538_render_('Cartographie_PFMP_DEV441','Cartographie des entreprises — familles',b);}
-function EUC_DEV545_apprenticeMapBoot_(mode,e){var b=EUC_DEV368_boot(),year=EUC_DEV538_t_(e&&e.parameter&&e.parameter.annee)||EUC_DEV538_t_(b.current)||EUC_DEV368_year('');b.mode=mode;b.current=year;b.classes=EUC_DEV541_apprentissageClasses_(year).filter(function(c){return EUC_DEV542_classActive_(EUC_DEV542_activeClassesConfig_(),year,c.id);});b.params={annee:year,classeId:EUC_DEV538_n_(e&&e.parameter&&e.parameter.classe)};return b;}
+function EUC_DEV545_apprenticeMapBoot_(mode,e){var b=EUC_DEV368_boot(),year=EUC_DEV538_t_(e&&e.parameter&&e.parameter.annee)||EUC_DEV538_t_(b.current)||EUC_DEV368_year('');b.mode=mode;b.current=year;b.classes=EUC_DEV541_apprentissageClasses_(year).filter(function(c){return EUC_DEV542_classActive_(EUC_DEV542_activeClassesConfig_(),year,c.id);});b.params={annee:year,classeId:EUC_DEV538_n_(e&&e.parameter&&e.parameter.classe),retour:EUC_DEV538_t_(e&&e.parameter&&e.parameter.retour)};return b;}
 function EUC_DEV545_afficherCarteApprentisAdmin(e){EUC_DEV538_admin_();return EUC_DEV538_render_('Cartographie_Apprentis_DEV545','Cartographie des apprentis — administration',EUC_DEV545_apprenticeMapBoot_('ADMIN',e));}
 function EUC_DEV545_afficherCarteApprentisPublic(e){return EUC_DEV538_render_('Cartographie_Apprentis_DEV545','Cartographie des apprentis — lecture seule',EUC_DEV545_apprenticeMapBoot_('PUBLIC',e));}

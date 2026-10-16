@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suivi des apprentis</title>
+<style>
+:root{--vert:#0b6b4f;--vert2:#07856f;--clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#d5e6de;--fond:#f6faf8;--app:#1d4ed8;--app-fond:#e8f0fe;--futur:#c2410c;--futur-fond:#fff1e8;--pot:#6b7280;--pot-fond:#f1f2f4;--rupt:#b91c1c;--rupt-fond:#fdecec}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Arial,Helvetica,sans-serif;color:var(--texte);background:var(--fond)}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline}
+header h1{margin:0;font-size:20px}header .info{opacity:.85;font-size:13px}
+main{max-width:1400px;margin:0 auto;padding:12px 16px 48px}
+.barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.onglet,.btn{font:700 14px Arial,sans-serif;border:1px solid var(--bord);background:#fff;color:var(--texte);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none}
+.onglet[aria-pressed="true"]{background:var(--vert);border-color:var(--vert);color:#fff}
+select{font:14px Arial,sans-serif;padding:8px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
+.note{color:var(--gris);font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:8px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.kpi:hover,.kpi[aria-expanded="true"]{border-color:var(--vert2);background:var(--clair)}
+.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--gris)}.kpi small{display:block;font-size:11px;color:var(--gris)}
+.noms{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:0 0 10px}
+details.diplome{background:#fff;border:1px solid var(--bord);border-radius:12px;margin:8px 0;padding:0 12px}
+details.diplome>summary{cursor:pointer;padding:10px 0;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;list-style:none}
+details.diplome>summary::before{content:'▸';color:var(--vert);font-weight:700}details.diplome[open]>summary::before{content:'▾'}
+details.diplome>summary b{font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th,td{padding:6px 6px;border-bottom:1px solid #edf3f0;text-align:center;vertical-align:middle;overflow-wrap:anywhere}
+th{color:var(--gris);font-size:11.5px;background:#f3f8f5}
+th:first-child,td:first-child{text-align:left;width:19%}
+td.n{cursor:default;font-variant-numeric:tabular-nums}td.n.plein{cursor:pointer;font-weight:700}td.n.plein:hover{background:var(--clair)}
+.quota{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--clair);color:var(--vert);font-weight:700;font-size:12px;white-space:nowrap}
+a.classe{color:var(--vert);font-weight:700;text-decoration:none;cursor:pointer}
+.mode{font-size:11px;color:var(--gris)}
+.carte{background:#fff;border:1px solid var(--bord);border-left:6px solid var(--app);border-radius:12px;padding:12px 14px;margin:10px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 16px;overflow-wrap:anywhere}
+.carte.FUTUR{border-left-color:var(--futur)}.carte.POTENTIEL{border-left-color:var(--pot)}.carte.RUPTURE{border-left-color:var(--rupt)}
+.carte h3{margin:0 0 4px;font-size:16px}.carte .tit{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--gris);font-weight:700;margin-bottom:3px}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.b-APPRENTI{background:var(--app-fond);color:var(--app)}.b-FUTUR{background:var(--futur-fond);color:var(--futur)}.b-POTENTIEL{background:var(--pot-fond);color:var(--pot)}.b-RUPTURE{background:var(--rupt-fond);color:var(--rupt)}
+.etapes{list-style:none;margin:0;padding:0;font-size:13px}.etapes li{display:flex;justify-content:space-between;gap:8px;padding:1px 0}.etapes li.ok::before{content:'✓ ';color:var(--vert);font-weight:700}.etapes li.non{color:#9aa5a1}.etapes li.non::before{content:'○ '}.etapes li span:last-child{white-space:nowrap;overflow-wrap:normal}
+.coord{font-size:13px}.coord b{display:block}
+.bulle{position:fixed;z-index:20;overflow:hidden;background:#fff;border:1px solid var(--bord);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px 14px;font-size:13px;pointer-events:none}
+.colonnes{display:flex;flex-wrap:wrap;gap:6px 18px}.groupe{min-width:150px;flex:1}.groupe ul{margin:3px 0 0;padding-left:16px}
+.vide{padding:24px;text-align:center;color:var(--gris)}
+.maj{position:sticky;top:0;z-index:15;background:#fff7d6;border-bottom:1px solid #f0d77a;padding:8px 16px;text-align:center;font-weight:700;color:#5c4700}.maj .btn{margin-left:10px;padding:5px 12px}
+.erreur{background:#fff1e8;color:#9a3412;padding:12px 16px;border-radius:10px;font-weight:700}
+@media print{header,.barre,.noprint,.maj{display:none!important}body{background:#fff}details.diplome{border:0}}
+</style>
+</head>
+<body>
+<header><h1>Suivi des apprentis</h1><span class="info" id="info"></span></header>
+<div id="maj" class="maj noprint" role="status" hidden>Des données ont été modifiées dans Grist depuis l’ouverture de cette page. <button type="button" class="btn" id="actualiser">Actualiser</button></div>
+<main id="app" aria-live="polite"></main>
+<script>
+var D=<?!= donnees ?>,CFG=<?!= config ?>;
+(function(){
+  'use strict';
+  var app=document.getElementById('app');
+  var KPI=[['apprentis','Apprentis','contrat en cours'],['futurs','Futurs apprentis','dossier rapporté, contrat à venir'],['potentiels','Apprentis potentiels','dossier distribué, pas encore rapporté'],
+    ['distribues','Dossiers distribués','historique'],['rapportes','Dossiers rapportés','signés par une entreprise'],['transmisCfa','Transmis au CFA',''],['contratsValides','Contrats validés',''],['ruptures','Ruptures','']];
+  var COLS=[['apprentis','Appr.'],['futurs','Futurs'],['potentiels','Potent.'],['distribues','Distrib.'],['rapportes','Rapportés'],['transmisCfa','CFA'],['contratsValides','Contrats'],['ruptures','Rupt.']];
+  var LIB={APPRENTI:'Apprenti',FUTUR:'Futur apprenti',POTENTIEL:'Apprenti potentiel',RUPTURE:'Rupture'};
+  var FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations'};
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x];});}
+  function dfr(iso){return iso?String(iso).slice(8,10)+'/'+String(iso).slice(5,7)+'/'+String(iso).slice(0,4):'';}
+  document.getElementById('info').textContent='Année '+(D.annee||'')+(D.temoin?' · données Grist à jour (action n° '+D.temoin+')':'')+' · lecture seule';
+  if(D.erreur){app.innerHTML='<p class="erreur">Les données n’ont pas pu être lues : '+esc(D.erreur)+'. Rechargez la page dans un instant.</p>';return;}
+  var lignes=[],parClasse={};D.groupes.forEach(function(g){g.lignes.forEach(function(l){lignes.push(l);parClasse[l.classeId]=l;});});
+  var OUVERTS={};try{OUVERTS=JSON.parse(localStorage.getItem('apprOuverts')||'{}')||{};}catch(e){}
+
+  function etat(){var h=new URLSearchParams(location.hash.slice(1));return {c:Number(h.get('c'))||0,f:h.get('f')||''};}
+  function aller(o){var h=new URLSearchParams();Object.keys(o).forEach(function(k){if(o[k])h.set(k,o[k]);});var nh='#'+h.toString();
+    if(location.hash!==nh){try{history.pushState(null,'',nh);}catch(e){location.hash=nh;return;}}rendre();}
+  function ouvrir(url){
+    if(CFG.wrapper){var w=window;for(var i=0;i<6;i++){try{w=w.parent;w.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url},'*');}catch(e){break;}}return;}
+    try{window.top.location.href=url;}catch(e){window.open(url,'_top');}
+  }
+  /* Noms groupés par classe, en colonnes. */
+  function colonnesParClasse(items){var g={};items.forEach(function(x){(g[x.classe]=g[x.classe]||[]).push(x.nom);});
+    var k=Object.keys(g).sort(function(a,b){return a.localeCompare(b,'fr');});
+    return k.length?'<div class="colonnes">'+k.map(function(c){return '<div class="groupe"><b>'+esc(c)+' ('+g[c].length+')</b><ul>'+g[c].map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ul></div>';}).join('')+'</div>':'<p class="note">Aucun élève.</p>';}
+  function colonnesSimples(noms){return noms.length?'<ul style="columns:3 180px;margin:4px 0 0">'+noms.map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ul>':'<p class="note">Aucun élève.</p>';}
+
+  var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
+  function montrer(el,html){bulle.innerHTML=html;bulle.hidden=false;var r=el.getBoundingClientRect(),w=Math.min(620,window.innerWidth-24);bulle.style.width=w+'px';bulle.style.maxHeight=Math.max(160,window.innerHeight-24)+'px';
+    var h=bulle.offsetHeight,x=Math.max(12,Math.min(r.left,window.innerWidth-w-12)),y=r.bottom+6;if(y+h>window.innerHeight-12)y=Math.max(12,r.top-h-6);if(y+h>window.innerHeight-12)y=Math.max(12,window.innerHeight-h-12);
+    bulle.style.left=x+'px';bulle.style.top=y+'px';}
+  function cacher(){bulle.hidden=true;}
+
+  function kpis(){
+    var t=D.totaux;
+    return '<div class="kpis">'+KPI.map(function(k){var n=(t[k[0]]||[]).length,sous=k[0]==='apprentis'?'classe entière '+(t.classeEntiere||[]).length+' · mixité '+(t.mixite||[]).length:k[2];
+      return '<button type="button" class="kpi" data-k="'+k[0]+'" aria-expanded="false"><b>'+n+'</b><span>'+k[1]+'</span>'+(sous?'<small>'+esc(sous)+'</small>':'')+'</button>';}).join('')+
+      '<div class="kpi" style="cursor:default"><b>'+t.quota+'</b><span>Capacité fixée</span><small>sur '+t.effectif+' élèves</small></div></div><div id="noms" class="noms noprint" hidden></div>';
+  }
+  function ligneTableau(l){
+    return '<tr><td><a class="classe" href="#c='+l.classeId+'">'+esc(l.classe)+'</a><br><span class="mode">'+esc(l.niveau)+' · '+(l.mode==='CLASSE_ENTIERE'?'classe entière':'mixité')+'</span></td>'+
+      '<td><span class="quota" title="'+l.quotaPourcent+' % de '+l.effectif+' élèves">'+l.quotaPourcent+' % · '+l.quota+' pl.</span></td>'+
+      COLS.map(function(c){var n=l.noms[c[0]].length;return '<td class="n'+(n?' plein':'')+'" data-cl="'+l.classeId+'" data-k="'+c[0]+'">'+n+'</td>';}).join('')+'</tr>';
+  }
+  function accueil(s){
+    var familles=[];D.groupes.forEach(function(g){if(familles.indexOf(g.famille)<0)familles.push(g.famille);});
+    var f=s.f&&familles.indexOf(s.f)>=0?s.f:'';
+    var html=kpis()+'<div class="barre noprint"><button class="onglet" type="button" data-f="" aria-pressed="'+(!f)+'">Toutes</button>'+familles.map(function(x){return '<button class="onglet" type="button" data-f="'+esc(x)+'" aria-pressed="'+(x===f)+'">'+esc(FAM[x]||x)+'</button>';}).join('')+
+      '<label class="note" for="classe">Classe</label><select id="classe"><option value="">— Ouvrir une classe —</option>'+lignes.slice().sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');}).map(function(l){return '<option value="'+l.classeId+'">'+esc(l.classe)+'</option>';}).join('')+'</select>'+
+      '<button class="btn" type="button" id="carte">Carte des apprentis</button></div>';
+    D.groupes.filter(function(g){return !f||g.famille===f;}).forEach(function(g){
+      var tot={};COLS.forEach(function(c){tot[c[0]]=0;});var quota=0;g.lignes.forEach(function(l){quota+=l.quota;COLS.forEach(function(c){tot[c[0]]+=l.noms[c[0]].length;});});
+      var k=g.diplome,ouvert=OUVERTS[k]!=null?OUVERTS[k]:!!CFG.admin;
+      html+='<details class="diplome" data-k="'+esc(k)+'"'+(ouvert?' open':'')+'><summary><b>'+esc(g.diplome)+'</b><span class="note">'+g.lignes.length+' classe(s) · '+tot.apprentis+' apprenti(s) pour '+quota+' place(s) · '+tot.futurs+' futur(s) · '+tot.potentiels+' potentiel(s)</span></summary>'+
+        '<table><thead><tr><th>Classe</th><th>Quota</th>'+COLS.map(function(c){return '<th>'+c[1]+'</th>';}).join('')+'</tr></thead><tbody>'+g.lignes.map(ligneTableau).join('')+'</tbody></table></details>';
+    });
+    app.innerHTML=html;
+    app.querySelectorAll('details.diplome').forEach(function(d){d.addEventListener('toggle',function(){OUVERTS[d.getAttribute('data-k')]=d.open;try{localStorage.setItem('apprOuverts',JSON.stringify(OUVERTS));}catch(e){}});});
+    document.getElementById('classe').onchange=function(){if(this.value)aller({c:this.value});};
+  }
+  function coord(o){if(!o||!(o.nom||o.tel||o.mail))return '<span class="note">—</span>';return '<div class="coord">'+(o.nom?'<b>'+esc(o.nom)+'</b>':'')+(o.tel?'<a href="tel:'+esc(o.tel.replace(/\s/g,''))+'">'+esc(o.tel)+'</a><br>':'')+(o.mail?'<a href="mailto:'+esc(o.mail)+'">'+esc(o.mail)+'</a>':'')+'</div>';}
+  function classe(s){
+    var l=parClasse[s.c];if(!l){aller({});return;}
+    var cartes=(D.cartes[l.classeId]||[]).slice().sort(function(a,b){var o={APPRENTI:0,FUTUR:1,POTENTIEL:2,RUPTURE:3};return o[a.statut]-o[b.statut]||a.eleve.localeCompare(b.eleve,'fr');});
+    var resume=COLS.map(function(c){return l.noms[c[0]].length+' '+c[1].toLowerCase();}).join(' · ');
+    var html='<div class="barre noprint"><a class="classe" href="#">← Bilan des apprentis</a><label class="note" for="classe">Classe</label><select id="classe">'+lignes.slice().sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');}).map(function(x){return '<option value="'+x.classeId+'"'+(x.classeId===l.classeId?' selected':'')+'>'+esc(x.classe)+'</option>';}).join('')+'</select>'+
+      '<button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="carte">Carte des apprentis de la classe</button></div>'+
+      '<h2>'+esc(l.classe)+' <span class="note">'+esc(l.niveau)+' · '+(l.mode==='CLASSE_ENTIERE'?'classe entière':'mixité')+' · '+l.effectif+' élèves · quota '+l.quotaPourcent+' % ('+l.quota+' place(s))</span></h2><p class="note">'+esc(resume)+'</p>';
+    html+=cartes.length?cartes.map(function(x){var f=x.fiche||{},d=x.dates||{},e=x.etapes||{};
+      function etape(ok,lib,date){return '<li class="'+(ok?'ok':'non')+'"><span>'+lib+'</span><span>'+dfr(date)+'</span></li>';}
+      return '<div class="carte '+x.statut+'"><div><div class="tit">Élève</div><h3>'+esc(x.eleve)+'</h3><span class="badge b-'+x.statut+'">'+LIB[x.statut]+'</span>'+
+        (d.debut?'<div class="note" style="margin-top:6px">Contrat : '+dfr(d.debut)+(d.fin?' → '+dfr(d.fin):'')+'</div>':'')+(d.rupture?'<div class="note" style="color:var(--rupt)">Rupture le '+dfr(d.rupture)+'</div>':'')+(f.nouveauContrat?'<div class="note">Nouveau contrat</div>':'')+'</div>'+
+        '<div><div class="tit">Circuit du dossier</div><ul class="etapes">'+etape(e.distribue,'Dossier distribué',d.distribution)+etape(e.rapporte,'Dossier rapporté signé',d.remise)+etape(e.cfa,'Transmis au CFA',d.cfa)+etape(e.valide,'Contrat validé',d.contrat)+'</ul></div>'+
+        '<div><div class="tit">Entreprise</div>'+(f.entreprise?'<b>'+esc(f.entreprise)+'</b>'+(f.enseigne&&f.enseigne!==f.entreprise?'<div class="note">'+esc(f.enseigne)+'</div>':'')+'<div>'+esc(f.adresse)+'</div>'+(f.siret?'<div class="note">SIRET '+esc(f.siret)+'</div>':''):'<span class="note">Pas encore d’entreprise</span>')+'</div>'+
+        '<div><div class="tit">Responsable entreprise</div>'+coord(f.responsable)+'</div><div><div class="tit">Tuteur</div>'+coord(f.tuteur)+'</div></div>';}).join('')
+      :'<p class="vide">Aucun apprenti, futur apprenti ni dossier en cours dans cette classe.</p>';
+    app.innerHTML=html;
+    document.getElementById('classe').onchange=function(){aller({c:this.value});};
+    document.getElementById('imprimer').onclick=function(){window.print();};
+    window.scrollTo(0,0);
+  }
+  function rendre(){var s=etat();cacher();if(s.c)classe(s);else accueil(s);
+    app.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){aller({f:b.getAttribute('data-f')});};});
+    var carte=document.getElementById('carte');if(carte)carte.onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';
+      ouvrir(CFG.base+'?page=cartographie-apprentis-public-pfmp&retour=enseignants&annee='+encodeURIComponent(D.annee)+(s.c?'&classe='+s.c:''));};
+    app.querySelectorAll('.kpi[data-k]').forEach(function(b){
+      var k=b.getAttribute('data-k'),items=D.totaux[k]||[],titre=b.querySelector('span').textContent;
+      b.onmouseenter=function(){montrer(b,'<b>'+esc(titre)+' ('+items.length+')</b>'+colonnesParClasse(items));};b.onmouseleave=cacher;
+      b.onclick=function(){var box=document.getElementById('noms'),deja=b.getAttribute('aria-expanded')==='true';app.querySelectorAll('.kpi').forEach(function(o){o.setAttribute('aria-expanded','false');});cacher();
+        if(deja){box.hidden=true;return;}b.setAttribute('aria-expanded','true');box.hidden=false;box.innerHTML='<b>'+esc(titre)+' ('+items.length+')</b>'+colonnesParClasse(items);};
+    });
+    app.querySelectorAll('td.n.plein').forEach(function(td){var l=parClasse[td.getAttribute('data-cl')],k=td.getAttribute('data-k'),lib=COLS.filter(function(c){return c[0]===k;})[0][1];
+      td.onmouseenter=function(){montrer(td,'<b>'+esc(l.classe)+' — '+esc(lib)+' ('+l.noms[k].length+')</b>'+colonnesSimples(l.noms[k]));};td.onmouseleave=cacher;});
+  }
+  document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href^="#"]'):null;if(!a)return;ev.preventDefault();
+    var h=new URLSearchParams(a.getAttribute('href').slice(1)),o={};h.forEach(function(v,k){o[k]=v;});aller(o);});
+  window.addEventListener('hashchange',rendre);window.addEventListener('popstate',rendre);
+  /* Données toujours à jour : alerte si Grist a changé depuis l'ouverture. */
+  var dernier=0;function controler(){if(document.hidden||!window.google||!google.script||Date.now()-dernier<60000)return;dernier=Date.now();
+    google.script.run.withSuccessHandler(function(r){if(r&&r.temoin&&D.temoin&&String(r.temoin)!==String(D.temoin))document.getElementById('maj').hidden=false;}).EUC_DEV577_temoinActuel();}
+  document.addEventListener('visibilitychange',controler);setInterval(controler,180000);
+  document.getElementById('actualiser').onclick=function(){this.disabled=true;this.textContent='Actualisation…';ouvrir(CFG.base+'?page=suivi-apprentis-enseignants');};
+  rendre();
+})();
+</script>
+</body>
+</html>
