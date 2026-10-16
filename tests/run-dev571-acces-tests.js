@@ -245,4 +245,34 @@ test('la sonde de performance ne renvoie que des durées et passe avant toute pa
   assert.ok(fs.readFileSync(path.join(root, 'apps-script/AAAA_EUC_SONDE_Debut.js'), 'utf8').includes('var EUC_SONDE_T0_ = Date.now();'));
 });
 
+test('lien de secours : seuls les professeurs autorisés reçoivent un lien personnel de 12 h, valable puis annulé par une nouvelle clé', () => {
+  const { c, props } = contexte();
+  props[c.EUC_ACCES_P_SECRET_] = 'secret-1'; props[c.EUC_ACCES_P_MODE_] = 'EXIGEE';
+  const envois = [];
+  c.MailApp = { sendEmail: o => envois.push(o) };
+  c.EUC_DEV538_records_ = () => [{ id: 7, fields: { Nom: 'MARTIN', Prenom: 'Léa', Email: 'Lea.Martin@lycee-les-eucalyptus.org', Actif: true } },
+    { id: 8, fields: { Nom: 'ANCIEN', Email: 'ancien@lycee-les-eucalyptus.org', Actif: false } }];
+  const generique = c.EUC_ACCES_demanderLienSecours('inconnu@lycee-les-eucalyptus.org', 'suivi-pfmp-enseignants');
+  assert.equal(envois.length, 0);
+  assert.equal(c.EUC_ACCES_demanderLienSecours('ancien@lycee-les-eucalyptus.org', 'x'), generique, 'même réponse : la liste ne fuit pas');
+  assert.equal(c.EUC_ACCES_demanderLienSecours('lea.martin@gmail.com', 'x'), generique);
+  assert.equal(envois.length, 0);
+  assert.equal(c.EUC_ACCES_demanderLienSecours(' LEA.MARTIN@lycee-les-eucalyptus.org ', 'suivi-apprentis-enseignants'), generique);
+  assert.equal(envois.length, 1); assert.equal(envois[0].to, 'lea.martin@lycee-les-eucalyptus.org');
+  const lien = envois[0].body.match(/https:\/\/\S+/)[0];
+  assert.match(lien, /^https:\/\/apprentis\.loucodi\.fr\/\?page=suivi-apprentis-enseignants&jeton=/);
+  const jeton = decodeURIComponent(lien.split('jeton=')[1]);
+  assert.equal(jeton.split('.').length, 3); assert.equal(jeton.split('.')[1], '7');
+  assert.equal(c.EUC_ACCES_jetonValide_(jeton), true);
+  assert.equal(c.EUC_ACCES_jetonValide_(jeton.replace('.7.', '.9.')), false, 'professeur non modifiable');
+  c.EUC_ACCES_etat_.ens = null; props[c.EUC_ACCES_P_SECRET_] = 'secret-2';
+  assert.equal(c.EUC_ACCES_jetonValide_(jeton), false, 'nouvelle clé = liens de secours annulés');
+  c.EUC_ACCES_demanderLienSecours('lea.martin@lycee-les-eucalyptus.org', ''); c.EUC_ACCES_demanderLienSecours('lea.martin@lycee-les-eucalyptus.org', '');
+  assert.match(c.EUC_ACCES_demanderLienSecours('lea.martin@lycee-les-eucalyptus.org', ''), /Trop de demandes/);
+  assert.equal(envois.length, 3);
+  assert.equal(c.EUC_ACCES_ENTREES_.EUC_ACCES_demanderLienSecours, 1, 'appelable sans clé depuis la page de refus');
+  const refus = c.EUC_ACCES_pageRefus_('suivi-pfmp-enseignants').getContent();
+  assert.match(refus, /Seules les adresses autorisées/); assert.match(refus, /EUC_ACCES_demanderLienSecours\(/);
+});
+
 console.log(`\n${n} tests DEV571 verrou d’accès réussis.`);

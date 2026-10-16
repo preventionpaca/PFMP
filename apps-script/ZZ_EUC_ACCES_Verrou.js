@@ -38,7 +38,9 @@ var EUC_ACCES_ENTREES_ = {
   onFormSubmit: 1, onSelectionChange: 1,
   /* Écran « Liens d'accès » : chaque fonction vérifie l'administrateur. */
   EUC_ACCES_afficherLiens: 1, EUC_ACCES_etatLiens: 1, EUC_ACCES_genererCle: 1,
-  EUC_ACCES_changerMode: 1, EUC_ACCES_viderJournal: 1
+  EUC_ACCES_changerMode: 1, EUC_ACCES_viderJournal: 1,
+  /* Lien de secours par courriel : contrôle propre (liste des professeurs). */
+  EUC_ACCES_demanderLienSecours: 1
 };
 
 /* Routes des liens enseignants (pfmp.loucodi.fr, apprentis.loucodi.fr). */
@@ -120,6 +122,10 @@ function EUC_ACCES_creerJeton_() {
 
 function EUC_ACCES_jetonValide_(jeton) {
   var c = EUC_ACCES_config_(), parts = String(jeton || '').split('.');
+  /* Lien de secours personnel : échéance.professeur.signature (12 h). */
+  if (c.secret && parts.length === 3 && /^\d{10,16}$/.test(parts[0]) && /^\d{1,9}$/.test(parts[1])) {
+    return Number(parts[0]) >= Date.now() && EUC_ACCES_egal_(parts[2], EUC_ACCES_hmac_('SEC|' + parts[0] + '|' + parts[1], c.secret));
+  }
   if (!c.secret || parts.length !== 2 || !/^\d{10,16}$/.test(parts[0])) return false;
   if (Number(parts[0]) < Date.now()) return false;
   return EUC_ACCES_egal_(parts[1], EUC_ACCES_hmac_('ENS|' + parts[0], c.secret));
@@ -291,13 +297,14 @@ function EUC_ACCES_installer_(global) {
 
 /* ---------- Pages : contrôle de route et injection du jeton ---------- */
 
-function EUC_ACCES_pageRefus_() {
+function EUC_ACCES_pageRefus_(page) {
   return HtmlService.createHtmlOutput(
     '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>Lien d’accès requis</title></head><body data-euc-acces-requis="1" style="font:16px/1.5 Arial,sans-serif;margin:0;padding:32px;color:#163;background:#f7fbf9">' +
     '<h1 style="font-size:22px">Lien d’accès requis</h1>' +
     '<p>Cette page est réservée aux personnels du lycée. Ouvrez-la depuis le lien de l’ENT Atrium.</p>' +
     '<p>Si votre lien ne fonctionne plus, demandez le nouveau lien au bureau des entreprises.</p>' +
+    EUC_ACCES_formSecours_(page) +
     '</body></html>'
   ).setTitle('Lien d’accès requis').addMetaTag('viewport', 'width=device-width, initial-scale=1')
     /* DEV578 : affichable dans les coquilles pfmp/apprentis.loucodi.fr (sinon « script.google.com est bloqué »). */
@@ -311,7 +318,11 @@ function EUC_ACCES_controlerRoute_(e) {
   var page = String(p.page || '').toLowerCase();
   var cle = String(p[EUC_ACCES_PARAM_] || '');
   if (cle && EUC_ACCES_cleValide_(cle)) EUC_ACCES_ouvrirSession_();
-  else if (p[EUC_ACCES_PARAM_JETON_] && EUC_ACCES_jetonValide_(p[EUC_ACCES_PARAM_JETON_])) EUC_ACCES_ouvrirSession_();
+  else if (p[EUC_ACCES_PARAM_JETON_] && EUC_ACCES_jetonValide_(p[EUC_ACCES_PARAM_JETON_])) {
+    EUC_ACCES_ouvrirSession_();
+    var sp = String(p[EUC_ACCES_PARAM_JETON_]).split('.');
+    if (sp.length === 3 && p.orig != null) EUC_ACCES_noter_('secours-ouverture', EUC_ACCES_secoursQui_(sp[1]));
+  }
 
   var enseignant = !!EUC_ACCES_ROUTES_ENSEIGNANTS_[page];
   var technique = EUC_ACCES_ROUTES_TECHNIQUES_.test(page);
@@ -326,7 +337,7 @@ function EUC_ACCES_controlerRoute_(e) {
   }
   if (EUC_ACCES_estAdmin_()) return null;
   EUC_ACCES_noter_('page-refusee', page);
-  return EUC_ACCES_pageRefus_();
+  return EUC_ACCES_pageRefus_(page);
 }
 
 /* Script ajouté aux pages servies avec une session enseignant : il ajoute le
@@ -499,4 +510,82 @@ function EUC_SONDE_grist_() {
   out.totalTablesMs = total;
   cache.put('EUC_SONDE_GRIST', JSON.stringify(out), 60);
   return out;
+}
+
+
+/* ---------- DEV578 : lien de secours par courriel (Atrium en panne) ----------
+ * Seules les adresses @lycee-les-eucalyptus.org de la liste des professeurs
+ * (import Pronote, actifs) reçoivent un lien personnel valable 12 heures,
+ * signé par le secret de la clé : générer une nouvelle clé les annule tous.
+ * La réponse est la même que l'adresse soit autorisée ou non. */
+var EUC_ACCES_DOMAINE_SECOURS_ = /@lycee-les-eucalyptus\.org$/i;
+
+function EUC_ACCES_formSecours_(page) {
+  var p = String(page || '').replace(/[^a-z0-9-]/gi, '');
+  return '<div style="margin-top:28px;padding:18px;border:1px solid #cfe5dc;border-radius:12px;background:#fff;max-width:560px">' +
+    '<h2 style="font-size:17px;margin:0 0 6px">Atrium en panne ?</h2>' +
+    '<p style="margin:0 0 10px">Recevez un lien personnel par courriel, valable 12 heures. ' +
+    '<b>Seules les adresses autorisées (professeurs du lycée) peuvent accéder au mode secours.</b></p>' +
+    '<form id="sec" style="display:flex;gap:8px;flex-wrap:wrap"><input id="mel" type="email" required autocomplete="email" ' +
+    'placeholder="prenom.nom@lycee-les-eucalyptus.org" style="flex:1;min-width:240px;padding:9px;border:1px solid #9cc;border-radius:8px;font:inherit">' +
+    '<button id="btn" style="padding:9px 14px;border:0;border-radius:8px;background:#087f70;color:#fff;font:inherit;font-weight:700;cursor:pointer">Recevoir le lien</button></form>' +
+    '<p id="rep" style="margin:10px 0 0;color:#355"></p></div>' +
+    '<script>document.getElementById("sec").onsubmit=function(ev){ev.preventDefault();var b=document.getElementById("btn"),r=document.getElementById("rep");b.disabled=true;b.textContent="Envoi…";' +
+    'google.script.run.withSuccessHandler(function(m){r.textContent=m;b.textContent="Recevoir le lien";b.disabled=false;})' +
+    '.withFailureHandler(function(){r.textContent="Service momentanément indisponible. Réessayez dans quelques minutes.";b.textContent="Recevoir le lien";b.disabled=false;})' +
+    '.EUC_ACCES_demanderLienSecours(document.getElementById("mel").value,' + JSON.stringify(p) + ');};</script>';
+}
+
+function EUC_ACCES_secoursQui_(pid) {
+  var mel = '';
+  try { mel = CacheService.getScriptCache().get('EUC_ACCES_SEC_' + pid) || ''; } catch (e) {}
+  return mel || ('professeur n°' + pid);
+}
+
+function EUC_ACCES_profAutorise_(mel) {
+  if (!EUC_ACCES_DOMAINE_SECOURS_.test(mel)) return null;
+  var rows = [];
+  try { rows = EUC_DEV538_records_('EUC_PROFESSEURS_PFMP', {}) || []; } catch (e) { rows = []; }
+  for (var i = 0; i < rows.length; i++) {
+    var f = rows[i].fields || rows[i];
+    if (f.Actif === false) continue;
+    if (String(f.Email || '').trim().toLowerCase() === mel) return { id: Number(rows[i].id || f.id) || 0, nom: [f.Prenom, f.Nom].filter(Boolean).join(' ') };
+  }
+  return null;
+}
+
+function EUC_ACCES_compter_(cache, cle, max) {
+  var n = Number(cache.get(cle) || 0);
+  if (n >= max) return false;
+  cache.put(cle, String(n + 1), 3600);
+  return true;
+}
+
+function EUC_ACCES_demanderLienSecours(courriel, page) {
+  var reponse = 'Si cette adresse est autorisée, un lien personnel vient de lui être envoyé (valable 12 heures). Pensez à vérifier les indésirables.';
+  var mel = String(courriel || '').trim().toLowerCase().slice(0, 120);
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(mel)) return 'Adresse courriel invalide.';
+  var c = EUC_ACCES_config_(), cache = CacheService.getScriptCache();
+  if (!c.secret) return reponse;
+  if (!EUC_ACCES_compter_(cache, 'EUC_ACCES_SECN_' + EUC_ACCES_sha256_(mel).slice(0, 24), 3) ||
+      !EUC_ACCES_compter_(cache, 'EUC_ACCES_SECN_TOUS', 40)) {
+    EUC_ACCES_noter_('secours-limite', mel);
+    return 'Trop de demandes. Réessayez dans une heure.';
+  }
+  var prof = EUC_ACCES_profAutorise_(mel);
+  if (!prof || !prof.id) { EUC_ACCES_noter_('secours-refuse', mel); return reponse; }
+  var exp = String(Date.now() + EUC_ACCES_JETON_TTL_MS_), pid = String(prof.id);
+  var jeton = exp + '.' + pid + '.' + EUC_ACCES_hmac_('SEC|' + exp + '|' + pid, c.secret);
+  var pg = String(page || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  var base = /apprenti/.test(pg) ? 'https://apprentis.loucodi.fr/' : 'https://pfmp.loucodi.fr/';
+  var lien = base + '?' + (pg && EUC_ACCES_ROUTES_ENSEIGNANTS_[pg] ? 'page=' + pg + '&' : '') + EUC_ACCES_PARAM_JETON_ + '=' + encodeURIComponent(jeton);
+  try { cache.put('EUC_ACCES_SEC_' + pid, mel, EUC_ACCES_SESSION_TTL_); } catch (e) {}
+  MailApp.sendEmail({
+    to: mel,
+    subject: 'Lien de secours — suivis PFMP et apprentis',
+    body: 'Bonjour' + (prof.nom ? ' ' + prof.nom : '') + ',\n\nVoici votre lien personnel d’accès aux suivis, à utiliser pendant l’indisponibilité d’Atrium :\n\n' + lien +
+      '\n\nCe lien est valable 12 heures et ne doit pas être transféré : chaque ouverture est enregistrée.\nSi vous n’avez rien demandé, ignorez ce message.\n\nLycée Les Eucalyptus — bureau des entreprises'
+  });
+  EUC_ACCES_noter_('secours-envoye', mel);
+  return reponse;
 }

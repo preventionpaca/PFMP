@@ -76,7 +76,7 @@ th{color:var(--gris)}
 <script>
 (function(){
   var $=function(id){return document.getElementById(id);};
-  var TYPES={'appel-sans-cle':'Appel sans clé (autorisé en transition)','page-sans-cle':'Page enseignant ouverte sans clé','page-refusee':'Page refusée','refus-cle':'Fonction refusée (clé absente)','refus-fonction':'Fonction réservée refusée','origine':'Origine de l’ouverture (observation)'};
+  var TYPES={'appel-sans-cle':'Appel sans clé (autorisé en transition)','page-sans-cle':'Page enseignant ouverte sans clé','page-refusee':'Page refusée','refus-cle':'Fonction refusée (clé absente)','refus-fonction':'Fonction réservée refusée','origine':'Origine de l’ouverture (observation)','secours-envoye':'Lien de secours envoyé','secours-refuse':'Lien de secours refusé (adresse non autorisée)','secours-limite':'Lien de secours : trop de demandes','secours-ouverture':'Ouverture par lien de secours'};
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function message(t,erreur){var m=$('message');m.textContent=t||'';m.className='message'+(erreur?' erreur':'');}
   function occupe(b,oui){if(b){b.disabled=oui;b.setAttribute('aria-busy',oui?'true':'false');}}
