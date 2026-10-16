@@ -77,7 +77,9 @@ function EUC_SUIVI2_controle(annee) {
               var m = (r.motifs || {})[id]; if (!m || plus.indexOf(EUC_SUIVI2_norm_(noms[id])) < 0) return;
               motifs.push(noms[id] + ' : ' + (m.dossiers ? m.dossiers + ' dossier(s), statut ' + m.statut + ', ' + (m.identifiant || 'aucun SIRET/NIS') + (m.ficheEntreprise ? ' (fiche entreprise n° ' + m.ficheEntreprise + ')' : '') : 'aucun dossier sur cette période') +
                 (m.autresPeriodes.length ? ' ; dossier(s) sur la période n° ' + m.autresPeriodes.join(', ') : '') +
-                (m.jotformNonValide ? ' ; saisie JotForm en attente de validation SIRET' : ''));
+                (m.jotformNonValide ? ' ; saisie JotForm en attente de validation SIRET' : '') +
+                (m.entrepriseSaisie ? ' ; entreprise inscrite dans le dossier : ' + m.entrepriseSaisie : ' ; aucune entreprise dans le dossier') +
+                (m.jotformToutes && m.jotformToutes.length ? ' ; JotForm : ' + m.jotformToutes.join(', ') : ' ; aucune saisie JotForm rattachée à l’élève'));
             });
             ecarts.push({ categorie: x[0], nouveau: x[1].length, actuel: EUC_SUIVI2_n_(x[2]), enPlus: plus.slice(0, 30), enMoins: moins.slice(0, 30), motifs: motifs.slice(0, 30) });
           }

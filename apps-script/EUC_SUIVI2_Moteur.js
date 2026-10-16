@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575d';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575e';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -264,7 +264,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var siret = EUC_SUIVI2_t_(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, '');
     var importee = j.Importer === true || Number(j.Importer) === 1 || /^(OUI|YES|TRUE|VRAI)$/i.test(EUC_SUIVI2_t_(j.Importer));
     var valide = EUC_SUIVI2_t_(j.Decision).toUpperCase() === 'VALIDEE' || importee;
-    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14 };
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14, decision: EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '') };
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
@@ -317,7 +317,9 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         r.motifs = r.motifs || {};
         r.motifs[e.id] = { dossiers: liste.length, statut: d ? EUC_SUIVI2_t_(d.Statut_administratif || d.Statut) || statut : 'AUCUN_DOSSIER',
           identifiant: d ? EUC_SUIVI2_identifiantEntreprise_(d, entreprises) : '', ficheEntreprise: d ? EUC_SUIVI2_ref_(d.Entreprise) : 0, autresPeriodes: autres,
-          jotformNonValide: !!jotformSur(jotformNonValide[e.id], p) };
+          jotformNonValide: !!jotformSur(jotformNonValide[e.id], p),
+          entrepriseSaisie: d ? EUC_SUIVI2_t_(d.Entreprise_raison_sociale || d.Entreprise_raison_sociale_snapshot) : '',
+          jotformToutes: (jotform[e.id] || []).concat(jotformNonValide[e.id] || []).map(function(l) { return (l.decision || 'sans décision') + ' ' + (l.debut || '?') + '→' + (l.fin || '?') + (l.siret ? ' SIRET ok' : ' SIRET absent'); }) };
       });
       r.scolaires = r.effectif - r.apprentis.length;
       p.resume = r;
