@@ -77,7 +77,9 @@ test('la page reçoit les données échappées et son script est valide', () => 
   assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V)).replace('<?!= config ?>', '{"base":"https://x/exec","wrapper":false}')));
   assert.match(page, /closest\('a\[href\^="#"\]'\)/, 'les liens internes ne naviguent jamais la fenêtre principale');
   assert.match(page, /retour=enseignants/, 'carte filtrée avec retour vers la page enseignants');
-  assert.doesNotMatch(page, /\.pdf-zone\{position/, 'zone PDF statique (sinon page blanche)');
+  assert.match(page, /doc\.autoTable\(/, 'PDF construit comme un tableau (toutes les colonnes)');
+  assert.match(page, /Professeur visiteur'\]\]/, 'colonnes suivi téléphonique et visiteur dans le PDF');
+  assert.match(page, /Édité le '\+maintenant\(\)/, 'date d’édition sur le PDF et l’impression');
   assert.match(page, /&focus='\+encodeURIComponent/, 'clic sur l’entreprise : carte centrée sur elle');
   assert.match(read('apps-script/Cartographie_PFMP_DEV441.html'), /if\(P\.focus\|\|P\.adr\)/);
   const carteHtml = read('apps-script/Cartographie_PFMP_DEV441.html');

@@ -54,11 +54,7 @@ details.niveau>summary .titre{font-weight:700;font-size:17px}details.niveau .gri
 button.compteur{font:inherit;color:inherit;text-align:left;cursor:pointer}button.compteur[aria-expanded="true"]{border-color:var(--vert2);background:var(--clair)}
 .noms{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:0 0 10px;font-size:14px}
 .imprime-seul{display:none}
-/* La bibliothèque PDF recopie la zone : elle doit rester « statique », sinon la copie a une hauteur nulle (page blanche). */
-.pdf-enveloppe{position:fixed;left:-20000px;top:0}.pdf-zone{width:1500px;background:#fff;padding:12px;font-size:13px}
-.pdf-voile{position:fixed;inset:0;z-index:40;background:rgba(246,250,248,.97);display:flex;align-items:center;justify-content:center;font:700 16px Arial,sans-serif;color:var(--vert)}
-a.vers-carte{color:var(--texte);text-decoration:none;border-bottom:1px dotted var(--vert2)}a.vers-carte:hover{color:var(--vert)}.pdf-zone .tableau{overflow:visible;border:0}.pdf-zone th{position:static}
-.pdf-zone .compteur{display:inline-block;min-width:150px;margin:0 8px 8px 0}.pdf-zone .compteurs{display:block}
+a.vers-carte{color:var(--texte);text-decoration:none;border-bottom:1px dotted var(--vert2)}a.vers-carte:hover{color:var(--vert)}
 .pastille{display:inline-block;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-right:5px;vertical-align:1px}
 select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
 .coord{font-size:13px}.coord b{display:block;font-size:14px}
@@ -178,13 +174,13 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
       '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button>'+
       '<button class="btn" type="button" id="carte">Carte des lieux de stage</button></div>'+
-      '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'</p>'+
+      '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'<span class="edite"></span></p>'+
       '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
       '<div class="tableau"><table><thead><tr><th>Élève</th><th>Convention / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Coordonnées entreprise</th><th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+
       (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
     var titre=document.title;
-    document.getElementById('imprimer').onclick=function(){window.print();};
+    document.getElementById('imprimer').onclick=function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();window.print();};
     document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
     document.getElementById('carte').onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';ouvrir(carteUrl);};
     app.querySelectorAll('a.vers-carte').forEach(function(a){a.onclick=function(ev){ev.preventDefault();ev.stopPropagation();a.classList.add('occupe');
@@ -200,25 +196,46 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     };});
     window.scrollTo(0,0);
   }
-  /* Export PDF : vrai fichier, en couleurs, généré dans le navigateur (bibliothèque chargée à la demande). */
-  var PDFLIB='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-  function chargerPdf(ok,ko){if(window.html2pdf)return ok();var sc=document.createElement('script');sc.src=PDFLIB;sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc);}
+  /* Export PDF : vrai document tableau (jsPDF + AutoTable), construit à partir des données, pas d'une capture d'écran. */
+  var PDFLIBS=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
+  function chargerPdf(ok,ko){
+    var i=0;(function suivant(){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();if(i>=PDFLIBS.length)return ko();
+      var sc=document.createElement('script');sc.src=PDFLIBS[i++];sc.onload=suivant;sc.onerror=ko;document.head.appendChild(sc);})();
+  }
+  function maintenant(){var d=new Date();return d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+  function texteCoord(o){return o?[o.nom,o.tel,o.mail].filter(Boolean).join('\n'):'';}
   function exporterPdf(btn,c,p){
     var texte=btn.textContent;btn.disabled=true;btn.textContent='Préparation du PDF…';
     function fin(){btn.disabled=false;btn.textContent=texte;}
     chargerPdf(function(){
-      window.scrollTo(0,0);
-      var voile=document.createElement('div');voile.className='pdf-voile';voile.innerHTML='<span>Préparation du PDF…</span>';document.body.appendChild(voile);
-      var zone=document.createElement('div');zone.className='pdf-zone';
-      zone.innerHTML='<h2>'+esc(c.nom)+' — '+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+' · '+esc(D.annee)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
-        app.querySelector('.compteurs').outerHTML+app.querySelector('.tableau').outerHTML+
-        '<p class="note">Édité le '+new Date().toLocaleDateString('fr-FR')+' — données Grist (action n° '+esc(D.temoin)+').</p>';
-      var env=document.createElement('div');env.className='pdf-enveloppe';env.appendChild(zone);document.body.appendChild(env);
-      var nom=('PFMP '+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';
-      function nettoyer(){env.remove();voile.remove();}
-      window.html2pdf().set({margin:[6,6,8,6],filename:nom,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0,windowWidth:1500,backgroundColor:'#ffffff'},
-        jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:'tr'}}).from(zone).save()
-        .then(function(){nettoyer();fin();},function(){nettoyer();fin();alert('Le PDF n’a pas pu être créé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+      try{
+        var n=p.n,doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),edite='Édité le '+maintenant();
+        var titre=c.nom+' — '+p.libelle,sous='Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'');
+        var cpt=p.pdif?['Effectif : '+n.effectif,'En entreprise : '+n.entreprise,'Au lycée : '+n.lycee,'À définir : '+n.aDefinir]
+          :['Effectif : '+n.effectif].concat(c.apprentisAffiches?['Apprentis : '+n.apprentis,'En entreprise, tous statuts : '+(n.avec+n.apprentis)+' / '+n.effectif]:[]).concat(['Avec convention : '+n.avec+' / '+n.scolaires,'Sans convention : '+n.sans,'Annulées / interrompues : '+n.annulees]);
+        doc.setFontSize(15);doc.setTextColor(11,107,79);doc.text(titre,10,12);
+        doc.setFontSize(9);doc.setTextColor(60);doc.text(sous,10,18);doc.text(edite,287,12,{align:'right'});
+        doc.setFontSize(9.5);doc.setTextColor(22,48,42);doc.text(cpt.join('   ·   '),10,25);
+        var lignes=[],styles=[];
+        c.eleves.forEach(function(e){
+          var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0],app=st==='APPRENTI'||!!l[4];
+          var statut=LIB[st]||st;
+          if(st==='APPRENTI'&&f&&f.contratDebut)statut+='\nContrat depuis le '+dfr(f.contratDebut);
+          if(st!=='APPRENTI'&&f&&!p.pdif){if(f.debut&&f.debut>p.debut)statut+='\nDébut décalé : '+dfr(f.debut);if(f.fin&&f.fin>p.fin)statut+='\nFin prolongée : '+dfr(f.fin);if(f.enregistreLe)statut+='\nEnregistrée le '+dfr(f.enregistreLe)+(f.numero?'\n'+f.numero:'');}
+          if(l[4])statut+='\nApprenti depuis le '+dfr(l[4][0]);
+          lignes.push([(app?'(A) ':'')+e[1],statut,(f&&f.entreprise||'')+(f&&f.nomSaisi?'\n(saisi : '+f.nomSaisi+')':''),f&&f.adresse||'',texteCoord(f&&f.contact),texteCoord(f&&f.tuteur),c.pp.join('\n'),l[2]||'',l[3]||'']);
+          styles.push({app:app,st:st});
+        });
+        doc.autoTable({startY:29,head:[['Élève','Convention / statut','Entreprise','Adresse entreprise','Coordonnées entreprise','Coordonnées tuteur','Professeur principal','Suivi téléphonique','Professeur visiteur']],body:lignes,
+          theme:'grid',margin:{left:8,right:8,bottom:12},styles:{fontSize:7.2,cellPadding:1.4,overflow:'linebreak',valign:'top',lineColor:[213,230,222],lineWidth:0.15},
+          headStyles:{fillColor:[11,107,79],textColor:255,fontStyle:'bold'},
+          columnStyles:{0:{cellWidth:30,fontStyle:'bold'},1:{cellWidth:34},2:{cellWidth:32},3:{cellWidth:36},4:{cellWidth:38},5:{cellWidth:38},6:{cellWidth:24},7:{cellWidth:24},8:{cellWidth:25}},
+          didParseCell:function(d){if(d.section!=='body')return;var x=styles[d.row.index];if(x.app)d.cell.styles.fillColor=[255,251,230];
+            if(d.column.index===1){d.cell.styles.textColor=x.st==='AVEC'||x.st==='PDIF_ENTREPRISE'?[22,101,52]:x.st==='APPRENTI'?[124,45,146]:x.st==='SANS'||x.st==='PDIF_A_DEFINIR'?[154,52,18]:[60,60,60];}},
+          didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(7.5);doc.setTextColor(110);doc.text(titre+' · '+edite+' · données Grist (action n° '+D.temoin+')',8,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,289,h-5,{align:'right'});}});
+        doc.save(('PFMP '+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf');
+      }catch(e){alert('Le PDF n’a pas pu être créé : '+(e&&e.message||e)+'. Utilisez « Imprimer » puis « Enregistrer en PDF ».');}
+      fin();
     },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
   }
   var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
@@ -249,6 +266,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     ev.preventDefault();var h=new URLSearchParams(a.getAttribute('href').slice(1)),o={};h.forEach(function(v,k){o[k]=v;});aller(o);
   });
   window.addEventListener('hashchange',rendre);window.addEventListener('popstate',rendre);
+  /* Date d'édition sur toute impression (bouton ou Ctrl+P). */
+  window.addEventListener('beforeprint',function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();});
   /* Retour depuis la carte : classe et période passées dans l'adresse. */
   if(!location.hash&&CFG.depart&&CFG.depart.c){try{history.replaceState(null,'','#c='+CFG.depart.c+(CFG.depart.p?'&p='+CFG.depart.p:''));}catch(e){}}
   rendre();
