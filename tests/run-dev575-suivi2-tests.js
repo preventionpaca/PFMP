@@ -221,13 +221,15 @@ test('dossier posé sur une autre ligne du calendrier : rattaché par les dates,
     R(600, { Eleve: 2, Periode: 113, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise_siret: '12345678901234' }),
     R(601, { Eleve: 2, Periode: 100, Statut_administratif: 'CONVENTION_GENEREE' }),
     R(602, { Eleve: 3, Periode: 100, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise: 70 }),
-    R(603, { Eleve: 5, Periode: 999, Statut_administratif: 'CONVENTION_ENREGISTREE', Date_debut: '2027-07-01', Date_fin: '2027-07-20' })
+    R(603, { Eleve: 5, Periode: 999, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise_raison_sociale: 'X', Date_debut: '2027-07-01', Date_fin: '2027-07-20' }),
+    R(604, { Eleve: 5, Periode: 999, Statut: 'CONVENTION_GENEREE', Date_debut: '2027-07-01', Date_fin: '2027-07-20' })
   ]);
   const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ), p1 = m.classes.find(x => x.nom === 'TMVA1').periodes[0].resume;
   assert.equal(p1.avec.includes(2), true, 'dossier enregistré de l’ancienne ligne, malgré un brouillon plus récent');
   assert.equal(p1.avec.includes(3), true, 'entreprise de Monaco validée par sa fiche');
   assert.equal(m.gardeFou.dossiersRattaches.some(x => x.dossier === 600 && x.periodeId === 100), true);
   assert.equal(m.gardeFou.dossiersOrphelins.some(x => x.dossier === 603), true, 'aucune période ne chevauche : signalé');
+  assert.equal(m.gardeFou.dossiersOrphelins.some(x => x.dossier === 604), false, 'QR généré sans saisie : pas signalé');
 });
 
 test('garde-fou : saisies JotForm sans élève reconnu ou sans période', () => {

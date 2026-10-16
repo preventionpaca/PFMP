@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575h';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575i';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -383,8 +383,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
       var cal = calendrier[pid] || {}, d1 = EUC_SUIVI2_date_(a.Date_debut) || cal.debut, d2 = EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin) || cal.fin;
       var p2 = d1 && d2 ? EUC_SUIVI2_meilleurePeriode_(c.periodes, d1, d2) : null;
       var info = { eleveId: eid, eleve: eleves[eid].libelle, classe: c.nom, dossier: Number(a.id), periodeDossier: pid, periodeDossierLibelle: cal.libelle || '', debut: d1 || '', fin: d2 || '', statut: EUC_SUIVI2_t_(a.Statut_administratif || a.Statut) };
-      if (!p2) { gardeFou.dossiersOrphelins.push(info); return; }
-      cible = p2.id; info.periode = p2.libelle || ''; info.periodeId = p2.id; gardeFou.dossiersRattaches.push(info);
+      /* Un QR généré sans aucune saisie (brouillon) n'est pas une donnée à signaler. */
+      var saisi = !!(EUC_SUIVI2_t_(a.Entreprise_raison_sociale || a.Entreprise_enseigne) || EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_nis) || EUC_SUIVI2_ref_(a.Entreprise));
+      if (!p2) { if (saisi) gardeFou.dossiersOrphelins.push(info); return; }
+      cible = p2.id; info.periode = p2.libelle || ''; info.periodeId = p2.id; if (saisi) gardeFou.dossiersRattaches.push(info);
     }
     (dossiers[eid + '|' + cible] = dossiers[eid + '|' + cible] || []).push(a);
   });
