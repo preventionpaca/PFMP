@@ -75,13 +75,19 @@ test('la route est servie avant le routage historique et protégée par la clé 
 });
 
 test('un visiteur non identifié sur l’administration reçoit la connexion Google, pas une erreur', () => {
-  const k = { String, Error, JSON };
+  const html = [];
+  const k = { String, Error, JSON, encodeURIComponent, HtmlService: { createHtmlOutput: h => { html.push(h); return { setTitle: () => h }; } } };
   vm.createContext(k);
-  vm.runInContext(read('apps-script/EUC_CENTRE_ADMIN_PFMP_WebApp.gs'), k);
+  vm.runInContext(read('apps-script/EUC_CENTRE_ADMIN_PFMP_WebApp.gs') + '\nvar EUC_DEV270B_GATEWAY_BASE_ = "https://passerelle.test/exec";', k);
   k.EUC_DEV270B_contextOrNull_ = () => null;
   k.EUC_PFMP_contexteAdmin_ = () => ({ autorise: false, role: '' });
-  k.EUC_DEV270B_loginPage_ = () => 'PAGE_CONNEXION';
-  assert.equal(k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: {} }), 'PAGE_CONNEXION');
+  const page = k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: {} });
+  assert.match(page, /Se connecter avec Google/);
+  assert.match(page, /AccountChooser\?continue=https%3A%2F%2Fpasserelle\.test%2Fexec/, 'choix d’un autre compte');
+  k.EUC_DEV270B_startSession_ = () => { throw new Error('Compte Google authentifié mais non autorisé dans PFMP : x@gmail.com'); };
+  const refus = k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: { auth: 'jeton' } });
+  assert.match(refus, /pas autorisé/); assert.match(refus, /Utiliser un autre compte Google/);
+  assert.doesNotMatch(refus, /x@gmail\.com/, 'l’adresse refusée n’est pas réaffichée');
 });
 
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
