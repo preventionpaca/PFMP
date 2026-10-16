@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576b';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576c';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -164,17 +164,34 @@ function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_ide
 function EUC_SUIVI2_premier_() { for (var i = 0; i < arguments.length; i++) { var v = EUC_SUIVI2_t_(arguments[i]); if (v) return v; } return ''; }
 function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   if (!a) return null;
-  var f = (entreprises || {})[EUC_SUIVI2_ref_(a.Entreprise)] || {}, P = EUC_SUIVI2_premier_;
+  var P = EUC_SUIVI2_premier_, sr = EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, '');
+  var f = (entreprises || {})[EUC_SUIVI2_ref_(a.Entreprise)] || (sr.length === 14 && (entreprises || {})['S' + sr]) || {};
+  var officiel = EUC_SUIVI2_nomEntreprise_(f), saisi = P(a.Entreprise_raison_sociale, a.Entreprise_enseigne);
   var resp = P([P(a.Responsable_prenom), P(a.Responsable_nom, a.Responsable, a.Nom_responsable_entreprise)].filter(Boolean).join(' '));
   var tut = [P(a.Tuteur_prenom), P(a.Tuteur_nom)].filter(Boolean).join(' ');
   return {
-    entreprise: P(a.Entreprise_raison_sociale, a.Entreprise_enseigne, f.Raison_sociale, f.Nom),
+    entreprise: officiel || saisi, nomSaisi: officiel && saisi && EUC_SUIVI2_norm_(officiel) !== EUC_SUIVI2_norm_(saisi) ? saisi : '',
     adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
     numero: P(a.Numero_enregistrement, a.Reference_convention),
     debut: EUC_SUIVI2_date_(a.Date_debut), fin: EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin),
     enregistreLe: EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_saisie_entreprise || a.Date_creation)
+  };
+}
+function EUC_SUIVI2_nomEntreprise_(f) { return EUC_SUIVI2_premier_(f && f.Raison_sociale, f && f.Raison_sociale_officielle, f && f.Nom, f && f.Nom_entreprise, f && f.Entreprise); }
+/* Fiche d'un apprenti : fiche d'apprentissage (Yparéo / gestion des apprentis), complétée par la fiche entreprise du SIRET. */
+function EUC_SUIVI2_ficheApprenti_(ap, entreprises) {
+  var r = ap.brut || {}, P = EUC_SUIVI2_premier_, sr = P(r.SIRET, r.Entreprise_siret, r.SIRET_entreprise).replace(/\D/g, '');
+  var f = (sr.length === 14 && (entreprises || {})['S' + sr]) || (entreprises || {})[EUC_SUIVI2_ref_(r.Entreprise_ref || r.Fiche_entreprise)] || {};
+  var resp = [P(r.Responsable_prenom), P(r.Responsable_nom, r.Responsable)].filter(Boolean).join(' ');
+  var tut = [P(r.Tuteur_prenom), P(r.Tuteur_nom, r.Tuteur)].filter(Boolean).join(' ');
+  return {
+    entreprise: EUC_SUIVI2_nomEntreprise_(f) || P(r.Nom_entreprise, r.Nom_commercial, ap.entreprise),
+    adresse: [P(r.Adresse_entreprise, r.Adresse, f.Adresse), [P(r.Code_postal, r.CP, f.Code_postal), P(r.Ville, r.Commune, f.Ville, f.Commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    contact: { nom: resp || tut, tel: P(r.Responsable_telephone, r.Entreprise_telephone, f.Telephone, r.Tuteur_telephone), mail: P(r.Responsable_courriel, r.Entreprise_courriel, f.Courriel, r.Tuteur_courriel) },
+    tuteur: { nom: tut, tel: P(r.Tuteur_telephone), mail: P(r.Tuteur_courriel) },
+    numero: '', contratDebut: ap.debut || '', contratFin: ap.fin || ''
   };
 }
 /* R18 : dossier enregistré (ou « à compléter » entièrement saisi) avec entreprise validée. */
@@ -217,7 +234,8 @@ function EUC_SUIVI2_episode_(r) {
     id: Number(r.id) || 0, eleveId: EUC_SUIVI2_ref_(r.Eleve), annee: EUC_SUIVI2_t_(r.Annee_scolaire),
     contrat: contrat, debut: debut, fin: fin, rupture: rupture,
     cfa: EUC_SUIVI2_bool_(r.Dossier_transmis_CFA) || !!EUC_SUIVI2_date_(r.Date_transmission_CFA),
-    entreprise: EUC_SUIVI2_t_(r.Entreprise || r.Entreprise_raison_sociale || r.Nom_entreprise)
+    entreprise: EUC_SUIVI2_t_(r.Entreprise || r.Entreprise_raison_sociale || r.Nom_entreprise),
+    brut: r
   };
 }
 function EUC_SUIVI2_statutApprenti_(eps, aujourdhui) {
@@ -247,7 +265,7 @@ function EUC_SUIVI2_apprentiPeriode_(eps, p) {
     var fin = ep.fin && ep.fin >= debut ? ep.fin : '9999-12-31';
     if (ep.rupture) { var v = EUC_SUIVI2_veille_(ep.rupture); if (v < fin) fin = v; }
     if (fin < debut) return;
-    var x = { code: '', entreprise: ep.entreprise, debut: debut, fin: fin === '9999-12-31' ? '' : fin, id: ep.id };
+    var x = { code: '', entreprise: ep.entreprise, debut: debut, fin: fin === '9999-12-31' ? '' : fin, id: ep.id, brut: ep.brut };
     if (debut <= p.debut && fin >= p.fin) { if (!plein || ep.id > plein.id) plein = x; }
     else if (debut <= p.fin && fin >= p.debut) { if (!partiel || ep.id > partiel.id) partiel = x; }
   });
@@ -344,7 +362,12 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
 
   /* Fiches entreprises (identifiant SIRET / NIS). */
   var entreprises = {};
-  (src.entreprises || []).map(EUC_SUIVI2_champs_).forEach(function(f) { entreprises[f.id] = f; });
+  (src.entreprises || []).map(EUC_SUIVI2_champs_).forEach(function(f) {
+    entreprises[f.id] = f;
+    /* Index par SIRET : un même SIRET = une même entreprise, quel que soit le nom saisi. */
+    var sr = EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, '');
+    if (sr.length === 14 && !entreprises['S' + sr]) entreprises['S' + sr] = f;
+  });
 
   /* Transition JotForm → QR : une saisie JotForm compte quand le bureau l'a
    * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
@@ -437,7 +460,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
       var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {} };
       c.eleves.forEach(function(e) {
         var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
-        if (apprenti) { r.statuts[e.id] = 'APPRENTI'; r.fiches[e.id] = { entreprise: ap.entreprise || '', adresse: '', contact: { nom: '', tel: '', mail: '' }, tuteur: { nom: '', tel: '', mail: '' }, numero: '', contratDebut: ap.debut || '' }; }
+        if (apprenti) { r.statuts[e.id] = 'APPRENTI'; r.fiches[e.id] = EUC_SUIVI2_ficheApprenti_(ap, entreprises); }
         if (ap.code === 'MIXTE') r.mixtes[e.id] = { debut: ap.debut, fin: ap.fin, entreprise: ap.entreprise || '' };
         if (p.pdif) {
           /* Un apprenti est d'office en entreprise pendant le P.dif. */

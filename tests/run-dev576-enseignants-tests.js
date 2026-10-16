@@ -54,6 +54,18 @@ test('la vue enseignants porte classes, périodes, statuts, entreprises, PP et s
   assert.equal(pd.lignes[2][0], 'PDIF_LYCEE');
 });
 
+test('apprenti : coordonnées de la fiche d’apprentissage ; nom officiel de l’entreprise retrouvé par le SIRET', () => {
+  const src = sources();
+  src.apprentissage = [R(901, { Eleve: 3, Date_debut: '2026-09-01', Date_fin: '2028-08-31', Entreprise: 'garage x', SIRET: '11122233300044', Adresse_entreprise: '5 rue B', Code_postal: '06200', Ville: 'NICE', Tuteur_nom: 'ROSSI', Tuteur_telephone: '06 11', Responsable_nom: 'BLANC', Responsable_courriel: 'b@x.fr' })];
+  src.entreprises = [R(70, { SIRET: '11122233300044', Raison_sociale: 'GARAGE X OFFICIEL' }), R(71, { SIRET: '12345678901234', Raison_sociale: 'SAM SACOME' })];
+  const v = c.EUC_SUIVI2_vueEnseignants_(c.EUC_SUIVI2_calculer_(src, '2026-2027', '2026-10-16'));
+  const p1 = v.classes[0].periodes[0], fa = v.fiches[p1.lignes[3][1]], fd = v.fiches[p1.lignes[1][1]];
+  assert.equal(p1.lignes[3][0], 'APPRENTI');
+  assert.equal(fa.entreprise, 'GARAGE X OFFICIEL'); assert.equal(fa.adresse, '5 rue B, 06200 NICE');
+  assert.equal(fa.tuteur.nom, 'ROSSI'); assert.equal(fa.contact.nom, 'BLANC'); assert.equal(fa.contact.mail, 'b@x.fr');
+  assert.equal(fd.entreprise, 'SAM SACOME', 'même SIRET = même nom officiel'); assert.equal(fd.nomSaisi, 'GARAGE <B>');
+});
+
 test('la vue enseignants ne transmet ni motifs ni garde-fou', () => {
   const t = JSON.stringify(V);
   assert.doesNotMatch(t, /motifs|gardeFou|jotformToutes/);
@@ -62,7 +74,9 @@ test('la vue enseignants ne transmet ni motifs ni garde-fou', () => {
 test('la page reçoit les données échappées et son script est valide', () => {
   const m = page.match(/<script>([\s\S]*)<\/script>/);
   assert.ok(m && /<\?!= donnees \?>/.test(m[1]));
-  assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V))));
+  assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V)).replace('<?!= config ?>', '{"base":"https://x/exec","wrapper":false}')));
+  assert.match(page, /closest\('a\[href\^="#"\]'\)/, 'les liens internes ne naviguent jamais la fenêtre principale');
+  assert.match(page, /retour=enseignants/, 'carte filtrée avec retour vers la page enseignants');
   assert.match(ens, /replace\(\/<\/g, '\\\\u003c'\)/, 'aucun « </script> » possible dans les données');
   assert.match(page, /function esc\(/);
 });
