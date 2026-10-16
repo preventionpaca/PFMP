@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575k';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575l';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -142,6 +142,9 @@ function EUC_SUIVI2_identifiantEntreprise_(a, entreprises) {
     /* Monaco : la fiche entreprise référencée suffit (pas de SIRET français obligatoire). */
     if (EUC_SUIVI2_monaco_(f) || EUC_SUIVI2_monaco_(a)) return 'FICHE_MONACO';
   }
+  /* Monaco : pas de SIRET français ; une raison sociale saisie à Monaco suffit
+   * pour compter le stage, le NIS manquant est signalé dans le garde-fou. */
+  if (EUC_SUIVI2_monaco_(a) && EUC_SUIVI2_t_(a.Entreprise_raison_sociale || a.Entreprise_enseigne)) return 'MONACO_SANS_NIS';
   return '';
 }
 /* Entreprise située à Monaco (pays, commune ou code postal 980xx). */
@@ -325,7 +328,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
    * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
    * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
   var jotform = {}, jotformNonValide = {};
-  var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [], conflits: [] };
+  var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [], conflits: [], monacoSansNis: [] };
   /* Réponse brute JotForm : premier champ dont le libellé correspond. */
   function brut(j, libelles) {
     var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
@@ -430,6 +433,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         r.sources = r.sources || {};
         if (avec) {
           r.avec.push(e.id); r.sources[e.id] = 'QR';
+          if (EUC_SUIVI2_identifiantEntreprise_(valant[0], entreprises) === 'MONACO_SANS_NIS') gardeFou.monacoSansNis.push({ eleveId: e.id, eleve: e.libelle, classe: c.nom, periode: p.libelle, dossier: Number(valant[0].id), entreprise: EUC_SUIVI2_t_(valant[0].Entreprise_raison_sociale || valant[0].Entreprise_enseigne) });
           /* Garde-fou : le dossier du bureau prime ; une saisie JotForm qui le contredit est signalée. */
           var sDossier = EUC_SUIVI2_t_(valant[0].Entreprise_siret || valant[0].Entreprise_siret_snapshot).replace(/\D/g, '');
           (jotform[e.id] || []).forEach(function(l) {

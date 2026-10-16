@@ -258,6 +258,11 @@ test('PFMP autorisée par le bureau = convention ; JotForm contradictoire signal
   assert.equal(p1.avec.includes(5), true, 'dossier PFMP_AUTORISEE avec SIRET');
   assert.equal(p1.sources[5], 'QR');
   assert.deepEqual(m.gardeFou.conflits.map(x => [x.ligne, x.siretDossier]), [[830, '12345678901234']]);
+  const src2 = sources();
+  src2.dossiers.push(R(610, { Eleve: 2, Periode: 100, Statut_administratif: 'INFORMATIONS_ENREGISTREES', Entreprise_raison_sociale: 'SACOME CONTI', Entreprise_commune: 'MONACO' }));
+  const m2 = c.EUC_SUIVI2_calculer_(src2, '2026-2027', AUJ);
+  assert.equal(m2.classes.find(x => x.nom === 'TMVA1').periodes[0].resume.avec.includes(2), true, 'Monaco sans NIS : compté');
+  assert.deepEqual(m2.gardeFou.monacoSansNis.map(x => x.dossier), [610], 'et signalé');
 });
 
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
