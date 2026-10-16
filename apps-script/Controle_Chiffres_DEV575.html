@@ -60,7 +60,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   $('annee').value=ANNEE||(d+'-'+(d+1));
   function message(t,err){$('message').textContent=t||'';$('message').className='message'+(err?' erreur':'');}
   var NOMS={avec:'avec convention',sans:'sans convention',apprentis:'apprentis',entreprise:'P.dif entreprise',lycee:'P.dif lycée',aDefinir:'P.dif à définir'};
-  function cellNouveau(n){return n.pdif?('entreprise '+n.entreprise+' · lycée '+n.lycee+' · à définir '+n.aDefinir+(n.apprentis?' · (apprentis exclus : '+n.apprentis+')':''))
+  function cellNouveau(n){return n.pdif?('entreprise '+n.entreprise+' · lycée '+n.lycee+' · à définir '+n.aDefinir+(n.apprentis?' · dont '+n.apprentis+' apprenti(s) en entreprise':''))
     :('<b>'+n.avec+' / '+n.scolaires+'</b>'+(n.apprentis?' + '+n.apprentis+' apprenti(s)':'')+' · sans '+n.sans+(n.annulees?' (dont '+n.annulees+' annulée/interrompue)':'')+' · effectif '+n.effectif);}
   function cellActuel(a,pdif){if(!a)return '<span class="note">non affiché aujourd’hui</span>';return pdif?('entreprise '+a.entreprise+' · lycée '+a.lycee+' · à définir '+a.aDefinir+(a.apprentis?' · apprentis '+a.apprentis:''))
     :('<b>'+a.avec+'</b> avec · sans '+a.sans+(a.apprentis?' · apprentis '+a.apprentis:'')+' · total '+a.total);}

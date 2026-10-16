@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575b';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575c';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -21,7 +21,8 @@ var EUC_SUIVI2_TABLES_ = {
   apprentissage: 'EUC_APPRENTISSAGE_PFMP',
   pdif: 'EUC_PARCOURS_DIFFERENCIE_PFMP',
   diplomes: 'EUC_CLASSES_DIPLOMES_PFMP',
-  entreprises: 'EUC_ENTREPRISES'
+  entreprises: 'EUC_ENTREPRISES',
+  types: 'Types_Planning'
 };
 var EUC_SUIVI2_MODE_LYCEE_ = 'PARCOURS_DIFF_LYCEE';
 var EUC_SUIVI2_MODE_ENTREPRISE_ = 'POURSUITE_PFMP2_ENTREPRISE';
@@ -87,6 +88,14 @@ function EUC_SUIVI2_niveau_(nom, famille) {
 /* R23 : apprentis affichés seulement en Première/Terminale BAC PRO et en BTS. */
 function EUC_SUIVI2_apprentisAffiches_(famille, niveau) {
   return famille === 'BTS' || (famille === 'BACPRO' && (niveau === 'Terminale' || niveau === 'Première'));
+}
+/* Types du calendrier qui sont de vraies périodes en entreprise (table
+ * Types_Planning) : PFMP 2nde, 1ère, Tbac, 1 CAP, T CAP, P.dif. et BTS_STAGE.
+ * VFMP (validation), examens, mini-stage, mixité, conseils… sont ignorés. */
+function EUC_SUIVI2_typeFormation_(code) {
+  var t = EUC_SUIVI2_norm_(code);
+  if (!t) return true;
+  return /^PFMP\b/.test(t) || /^P[\.\s-]*DIF/.test(t) || /^BTS[_\s-]*STAGE/.test(t) || /^STAGE BTS/.test(t);
 }
 /* R7 : période P.dif reconnue par son texte. */
 function EUC_SUIVI2_estPdif_(p) {
@@ -178,9 +187,15 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
   });
 
   /* R1–R3 : périodes de l'année, rattachées par Classes_concernees. */
+  var types = {};
+  (src.types || []).map(EUC_SUIVI2_champs_).forEach(function(t) { types[String(t.id)] = EUC_SUIVI2_t_(t.Type || t.Libelle); });
   var sansClasse = [];
   (src.periodes || []).map(EUC_SUIVI2_champs_).forEach(function(p) {
     if (p.Actif === false) return;
+    /* Le type peut être une référence vers Types_Planning ou un texte. */
+    var typeCode = (typeof p.Type === 'number' || /^\d+$/.test(EUC_SUIVI2_t_(p.Type))) ? (types[String(EUC_SUIVI2_ref_(p.Type))] || '') : EUC_SUIVI2_t_(p.Type);
+    if (!EUC_SUIVI2_typeFormation_(typeCode)) return;
+    p.Type = typeCode;
     var debut = EUC_SUIVI2_date_(p.Date_debut), fin = EUC_SUIVI2_date_(p.Date_fin);
     if (!debut || !fin) return;
     var an = EUC_SUIVI2_annee_(p.Annee_scolaire, annees);
@@ -256,7 +271,8 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
       c.eleves.forEach(function(e) {
         var apprenti = e.apprentissage.code === 'APPRENTI';
         if (p.pdif) {
-          if (apprenti) return;
+          /* Un apprenti est d'office en entreprise pendant le P.dif. */
+          if (apprenti) { r.entreprise.push(e.id); r.apprentis.push(e.id); return; }
           var m = (modes[e.id] || {}).mode;
           (m === EUC_SUIVI2_MODE_ENTREPRISE_ ? r.entreprise : m === EUC_SUIVI2_MODE_LYCEE_ ? r.lycee : r.aDefinir).push(e.id);
           return;

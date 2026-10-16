@@ -113,12 +113,13 @@ test('R20 / R21 : avec + sans + apprentis = effectif ; fraction sur les scolaire
   assert.equal(r.scolaires, 5);
 });
 
-test('R28 : P.dif = répartition des scolaires selon le dernier choix, apprentis exclus', () => {
+test('R28 : P.dif = répartition selon le dernier choix ; un apprenti est d’office en entreprise', () => {
   const r = periode('TMVA1', 'P.dif.').resume;
-  assert.deepEqual(ids(r.entreprise), [1], 'le dernier choix l’emporte');
+  assert.deepEqual(ids(r.entreprise), [1, 9], 'le dernier choix l’emporte ; l’apprenti 9 est en entreprise malgré un choix « lycée »');
+  assert.deepEqual(ids(r.apprentis), [9]);
   assert.deepEqual(ids(r.lycee), [3], 'Parcours_differencie coché vaut parcours au lycée');
   assert.deepEqual(ids(r.aDefinir), [2, 4, 5]);
-  assert.equal([...r.entreprise, ...r.lycee, ...r.aDefinir].includes(9), false);
+  assert.equal([...r.lycee, ...r.aDefinir].includes(9), false);
 });
 
 test('entreprise validée par la fiche référencée ; saisie entreprise complète = enregistrée ; motifs', () => {
@@ -138,6 +139,22 @@ test('entreprise validée par la fiche référencée ; saisie entreprise complè
   assert.equal(p2.motifs[2].statut, 'A_COMPLETER_ENTREPRISE');
   assert.equal(p2.motifs[4].statut, 'AUCUN_DOSSIER');
   assert.deepEqual([...p2.motifs[4].autresPeriodes], [100]);
+});
+
+test('seuls les types de période en entreprise comptent (VFMP, examens… ignorés), référence ou texte', () => {
+  const src = sources();
+  src.types = [R(21, { Type: 'VFMP', Libelle: 'Validation PFMP' }), R(3, { Type: 'PFMP Tbac' }), R(13, { Type: 'MINI_STAGE' })];
+  src.periodes.push(R(120, { Annee_scolaire: 1, Classes_concernees: ['L', 10], Date_debut: '2026-09-23', Date_fin: '2026-09-25', Type: 21 }));
+  src.periodes.push(R(121, { Annee_scolaire: 1, Classes_concernees: ['L', 10], Date_debut: '2026-10-01', Date_fin: '2026-10-02', Type: 'MINI_STAGE' }));
+  src.periodes[0].fields.Type = 3;
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
+  const t = m.classes.find(x => x.nom === 'TMVA1');
+  assert.deepEqual(t.periodes.map(p => p.id), [100, 101, 102]);
+  assert.deepEqual(t.periodes.map(p => p.libelle), ['PFMP n°1', 'PFMP n°2', 'P.dif.']);
+  assert.equal(t.periodes[0].type, 'PFMP Tbac');
+  assert.equal(c.EUC_SUIVI2_typeFormation_('BTS_STAGE'), true);
+  assert.equal(c.EUC_SUIVI2_typeFormation_('P.dif.'), true);
+  assert.equal(c.EUC_SUIVI2_typeFormation_('EXAMENS'), false);
 });
 
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {

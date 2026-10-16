@@ -58,7 +58,7 @@ function EUC_SUIVI2_controle(annee) {
     c.periodes.forEach(function(p) {
       var r = p.resume, q = actuels.parPeriode[c.id + '|' + p.id] || null;
       var nouv = p.pdif
-        ? { pdif: true, effectif: r.effectif, apprentis: r.apprentis.length, entreprise: r.entreprise.length, lycee: r.lycee.length, aDefinir: r.aDefinir.length }
+        ? { pdif: true, effectif: r.effectif, apprentis: r.apprentis.length, entreprise: r.entreprise.length, lycee: r.lycee.length, aDefinir: r.aDefinir.length, apprentisEnEntreprise: true }
         : { pdif: false, effectif: r.effectif, scolaires: r.scolaires, avec: r.avec.length, sans: r.sans.length, apprentis: r.apprentis.length, annulees: r.annulees.length };
       var act = null, ecarts = [];
       if (q) {
