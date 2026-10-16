@@ -127,4 +127,11 @@ test('carte : points et fiches entreprise servis depuis le cache (témoin Grist)
   assert.match(book, /s:dev576Staff/, 'clé de cache distincte selon le droit d’accès');
 });
 
+test('passerelle : clé lue dans les propriétés du script (plus de clé dans le code) ; page : alerte d’actualisation', () => {
+  const auth = read('apps-script/EUC_PFMP_DEV270B_MultiDomainAuth.js');
+  assert.doesNotMatch(auth, /[0-9a-f]{40,}/, 'aucune clé en clair');
+  assert.match(auth, /getProperty\(EUC_DEV270B_SECRET_PROPERTY_\)/); assert.match(auth, /'EUC_DEV270B_HMAC_SECRET'/);
+  assert.match(page, /EUC_SUIVI2_temoinActuel\(\)/); assert.match(ens, /function EUC_SUIVI2_temoinActuel\(/);
+});
+
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);

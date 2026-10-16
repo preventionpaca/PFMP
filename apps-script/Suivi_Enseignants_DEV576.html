@@ -54,6 +54,7 @@ details.niveau>summary .titre{font-weight:700;font-size:17px}details.niveau .gri
 button.compteur{font:inherit;color:inherit;text-align:left;cursor:pointer}button.compteur[aria-expanded="true"]{border-color:var(--vert2);background:var(--clair)}
 .noms{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:0 0 10px;font-size:14px}
 .imprime-seul{display:none}
+.maj{position:sticky;top:0;z-index:15;background:#fff7d6;border-bottom:1px solid #f0d77a;padding:8px 16px;text-align:center;font-weight:700;color:#5c4700}.maj .btn{margin-left:10px;padding:5px 12px}
 a.vers-carte{color:var(--texte);text-decoration:none;border-bottom:1px dotted var(--vert2)}a.vers-carte:hover{color:var(--vert)}
 .pastille{display:inline-block;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-right:5px;vertical-align:1px}
 select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
@@ -68,6 +69,7 @@ select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);
 </head>
 <body>
 <header><h1>Suivi des PFMP</h1><span class="info" id="info"></span></header>
+<div id="maj" class="maj noprint" role="status" hidden>Des données ont été modifiées dans Grist depuis l’ouverture de cette page. <button type="button" class="btn plein" id="actualiser">Actualiser</button></div>
 <main id="app" aria-live="polite"></main>
 <script>
 var D=<?!= donnees ?>,CFG=<?!= config ?>;
@@ -266,6 +268,15 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     ev.preventDefault();var h=new URLSearchParams(a.getAttribute('href').slice(1)),o={};h.forEach(function(v,k){o[k]=v;});aller(o);
   });
   window.addEventListener('hashchange',rendre);window.addEventListener('popstate',rendre);
+  /* Données toujours à jour : la page compare régulièrement le numéro de la
+   * dernière modification Grist avec celui de son chargement. */
+  function actualiser(){var s=etat(),u=CFG.base+'?page=suivi-pfmp-enseignants'+(s.c?'&cl='+s.c+(s.p?'&pe='+s.p:''):'');
+    document.getElementById('actualiser').disabled=true;document.getElementById('actualiser').textContent='Actualisation…';ouvrir(u);}
+  document.getElementById('actualiser').onclick=actualiser;
+  var dernierControle=0;
+  function controler(){if(document.hidden||!window.google||!google.script||Date.now()-dernierControle<60000)return;dernierControle=Date.now();
+    google.script.run.withSuccessHandler(function(r){if(r&&r.temoin&&D.temoin&&String(r.temoin)!==String(D.temoin))document.getElementById('maj').hidden=false;}).EUC_SUIVI2_temoinActuel();}
+  document.addEventListener('visibilitychange',controler);setInterval(controler,180000);
   /* Date d'édition sur toute impression (bouton ou Ctrl+P). */
   window.addEventListener('beforeprint',function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();});
   /* Retour depuis la carte : classe et période passées dans l'adresse. */

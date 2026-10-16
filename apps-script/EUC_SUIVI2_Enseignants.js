@@ -57,3 +57,10 @@ function EUC_SUIVI2_pageEnseignants_(e) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+
+/* Numéro de la dernière modification Grist : la page ouverte le compare au sien
+ * pour proposer l'actualisation dès qu'une donnée a changé (aucune donnée
+ * nominative n'est renvoyée). */
+function EUC_SUIVI2_temoinActuel() {
+  return { temoin: String(EUC_SUIVI2_temoin_()).split('-')[0] };
+}
