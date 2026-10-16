@@ -106,7 +106,7 @@ test('codes postaux : 4 chiffres détectés, colonne Nombre passée en Texte pui
   const cols = { EUC_APPRENTISSAGE_PFMP: [{ id: 'Code_postal', fields: { type: 'Numeric', label: 'Code postal' } }, { id: 'Ville', fields: { type: 'Text' } }],
     EUC_GEO: [{ id: 'Code_postal', fields: { type: 'Text' } }, { id: 'CP_calc', fields: { type: 'Any', isFormula: true } }] };
   const recs = { EUC_APPRENTISSAGE_PFMP: [{ id: 1, fields: { Code_postal: 6160 } }, { id: 2, fields: { Code_postal: 98000 } }, { id: 3, fields: { Code_postal: null } }],
-    EUC_GEO: [{ id: 5, fields: { Code_postal: '6200', CP_calc: 6500 } }, { id: 6, fields: { Code_postal: '06000' } }] };
+    EUC_GEO: [{ id: 5, fields: { Code_postal: '6200', CP_calc: 6500 } }, { id: 6, fields: { Code_postal: '06000' } }, { id: 7, fields: { Code_postal: '0600' } }] };
   const k = { console, JSON, String, Number, Math, isFinite,
     EUC_SUIVI2_exigerAdmin_: () => ({ email: 'admin@x' }), LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     EUC_ENT_grist: (m, url, body) => { appels.push([m, url, body]); if (url === '/tables') return { tables: [{ id: 'EUC_APPRENTISSAGE_PFMP' }, { id: 'EUC_GEO' }] };
@@ -115,6 +115,7 @@ test('codes postaux : 4 chiffres détectés, colonne Nombre passée en Texte pui
   const a = k.EUC_DEV578_cpAnalyse();
   assert.deepEqual(a.map(c => [c.table, c.colonne, c.nombre]), [['EUC_APPRENTISSAGE_PFMP', 'Code_postal', 1], ['EUC_GEO', 'Code_postal', 1], ['EUC_GEO', 'CP_calc', 1]]);
   assert.equal(appels.filter(x => x[0] !== 'get').length, 0, 'analyse en lecture seule');
+  assert.equal(k.EUC_DEV578_cpCorrige_('0600'), null, 'saisie incomplète jamais complétée');
   assert.throws(() => k.EUC_DEV578_cpCorriger('oui'), /Confirmation/);
   const r = k.EUC_DEV578_cpCorriger('CORRIGER'), w = appels.filter(x => x[0] === 'patch');
   assert.deepEqual(w[0], ['patch', '/tables/EUC_APPRENTISSAGE_PFMP/columns', { columns: [{ id: 'Code_postal', fields: { type: 'Text' } }] }], 'type changé avant les valeurs');

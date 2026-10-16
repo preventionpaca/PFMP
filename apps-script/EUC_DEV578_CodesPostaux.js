@@ -16,7 +16,8 @@ var EUC_DEV578_CP_COLONNE_ = /(^|_)(code_?postal|cp)(_|$)|codepostal/i;
 function EUC_DEV578_cpCorrige_(v) {
   if (v === null || v === undefined || v === '') return null;
   var s = typeof v === 'number' ? (isFinite(v) && Math.floor(v) === v ? String(v) : '') : String(v).trim();
-  return /^\d{4}$/.test(s) ? '0' + s : null;
+  /* « 0600 » n'est pas un 0 perdu mais une saisie incomplète : jamais complété automatiquement. */
+  return /^[1-9]\d{3}$/.test(s) ? '0' + s : null;
 }
 
 function EUC_DEV578_cpColonnes_() {
