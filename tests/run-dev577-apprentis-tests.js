@@ -76,7 +76,7 @@ test('historique des entreprises toujours prêt : servi depuis la dernière vers
   const src578 = read('apps-script/EUC_DEV578_HistoriquesPrets.js'), cache = new Map(); let calculs = 0, temoin = 't1', triggers = [];
   const k = { console, JSON, Date, Math, Object, Array, String, Number, Infinity,
     EUC_SUIVI2_temoin_: () => temoin, EUC_DEV441_digest_: v => 'd-' + v,
-    EUC_DEV538_history_: q => { calculs++; assert.equal(q.annee, 'ALL'); return [{ identity: 'SIRET|1', historique: [{ annee: '2026-2027', eleve: 'X', apprenti: true }] }]; },
+    EUC_DEV538_history_: q => { calculs++; assert.equal(q.annee, 'ALL'); return [{ identity: 'SIRET|1', entreprise: 'Garage', adresse: '1 rue 06200 Nice', historique: [{ annee: '2026-2027', eleve: 'X', apprenti: true }] }]; },
     EUC_DEV572_lire_: key => cache.has(key) ? JSON.parse(cache.get(key)) : null, EUC_DEV572_ecrire_: (key, v) => cache.set(key, JSON.stringify(v)),
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
@@ -90,6 +90,12 @@ test('historique des entreprises toujours prêt : servi depuis la dernière vers
   k.EUC_DEV578_prechaufferHistoriques(); assert.equal(calculs, 2, 'Grist modifié : recalcul en arrière-plan');
   assert.match(read('apps-script/EUC_DEV576_CarteHistoriques.js'), /return EUC_DEV578_historiquesTous_\(\)/);
   assert.match(cartePfmp, /EUC_DEV576_historiquesCarte\(\{annee:'ALL'\}\)/); assert.match(cartePfmp, /function ficheHtml/);
+  assert.equal(a.noms['X|'] === undefined, true);
+  const cle = k.EUC_DEV578_cleNom_('Garage Marino', '2 BOULEVARD CARLONE, 06200 NICE'); assert.equal(cle, 'GARAGE MARINO|06200');
+  const cn = new Function(cartePfmp.match(/function cleNom\(e,a\)\{[^\n]*/)[0] + ';return cleNom')();
+  assert.equal(cn('Garage Marino', '2 BOULEVARD CARLONE, 06200 NICE'), cle, 'même clé navigateur / serveur');
+  assert.match(cartePfmp, /PREFETCH\.par\[\(PREFETCH\.noms\|\|\{\}\)\[cleNom\(x\.entreprise,x\.adresse\)\]\]/);
+  assert.match(carteApp, /HIST\.par\[\(HIST\.noms\|\|\{\}\)\[cleNom\(p\.entreprise,p\.adresse\)\]\]/);
   assert.match(read('apps-script/Suivi_Enseignants_DEV576.html'), /url=window\.eucAvecJeton\(url\)/); assert.match(page, /url=window\.eucAvecJeton\(url\)/);
   assert.match(verrou, /window\.eucAvecJeton=function/);
 });

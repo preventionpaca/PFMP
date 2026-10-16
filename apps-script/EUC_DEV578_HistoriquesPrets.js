@@ -11,7 +11,7 @@
  * version calculée, sans attendre ; elle indique son heure de calcul.
  * Lecture seule : aucune écriture Grist.
  */
-var EUC_DEV578_HIST_CLE_ = 'EUC_DEV578_HIST_TOUS';
+var EUC_DEV578_HIST_CLE_ = 'EUC_DEV578_HIST_TOUS_V2'; /* V2 : index par nom + code postal */
 var EUC_DEV578_HIST_HANDLER_ = 'EUC_DEV578_prechaufferHistoriques';
 var EUC_DEV578_HIST_AGE_MAX_MS_ = 4 * 3600 * 1000; /* recalcul avant l'expiration du cache (6 h) */
 
@@ -19,13 +19,23 @@ function EUC_DEV578_temoin_() {
   try { return typeof EUC_SUIVI2_temoin_ === 'function' ? String(EUC_SUIVI2_temoin_() || '') : ''; } catch (e) { return ''; }
 }
 
+/* Clé de secours reproductible côté navigateur : nom + code postal, sans accents ni ponctuation.
+ * Elle retrouve une entreprise que l'historique a regroupée sous une autre identité (SIRET, alias). */
+function EUC_DEV578_cleNom_(entreprise, adresse) {
+  var n = String(entreprise || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+  var cp = (String(adresse || '').match(/\b\d{5}\b/g) || []).pop() || '';
+  return n ? n + '|' + cp : '';
+}
+
 function EUC_DEV578_calculerHistoriques_(temoin) {
-  var par = {};
+  var par = {}, noms = {};
   (EUC_DEV538_history_({ annee: 'ALL' }) || []).forEach(function(c) {
     if (!c || !c.identity) return;
-    par[EUC_DEV441_digest_(c.identity).slice(0, 32)] = c.historique || [];
+    var k = EUC_DEV441_digest_(c.identity).slice(0, 32), n = EUC_DEV578_cleNom_(c.entreprise, c.adresse);
+    par[k] = c.historique || [];
+    if (n && !noms[n]) noms[n] = k;
   });
-  var res = { ok: true, par: par, temoin: temoin, calcule: new Date().toISOString() };
+  var res = { ok: true, par: par, noms: noms, temoin: temoin, calcule: new Date().toISOString() };
   EUC_DEV572_ecrire_(EUC_DEV578_HIST_CLE_, res);
   return res;
 }
