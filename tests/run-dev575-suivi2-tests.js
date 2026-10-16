@@ -175,6 +175,22 @@ test('transition JotForm : une saisie validée ou importée compte, une saisie n
   assert.equal(p2.motifs[4] && p2.motifs[4].jotformNonValide, true);
 });
 
+test('JotForm : SIRET vérifié vaut validation ; dates JJ-MM-AAAA ou réponse brute ; ligne ignorée exclue', () => {
+  const src = sources();
+  src.jotform = [
+    R(810, { Eleve_match_id: 2, Decision: 'A_CONTROLER', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Date_debut_brut: '02-11-2026', Date_fin_brut: '27-11-2026' }),
+    R(811, { Eleve_match_id: 5, Decision: 'A_CONTROLER', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Raw_JSON: JSON.stringify({ q5: { text: 'Date de début', answer: { day: '9', month: '11', year: '2026' } }, q6: { text: 'Date de fin', answer: '2026-11-27' } }) }),
+    R(812, { Eleve_match_id: 20, Decision: 'IGNOREE', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Date_debut_brut: '2026-11-02', Date_fin_brut: '2026-11-27' })
+  ];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
+  const p1 = m.classes.find(x => x.nom === 'TMVA1').periodes.find(p => p.libelle === 'PFMP n°1').resume;
+  assert.equal(p1.sources[2], 'JOTFORM', 'SIRET vérifié, dates JJ-MM-AAAA');
+  assert.equal(p1.sources[5], 'JOTFORM', 'dates lues dans la réponse brute');
+  const k = m.classes.find(x => x.nom === '1MVA1').periodes[0].resume;
+  assert.equal(k.sans.includes(20), true, 'ligne ignorée');
+  assert.equal(c.EUC_SUIVI2_date_('28.09.2026'), '2026-09-28');
+});
+
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
   const noms = { 1: 'ALPHA Ana', 2: 'BETA Bob' };
   assert.deepEqual([...c.EUC_SUIVI2_diff_(['A', 'B'], ['B', 'C'])], ['A']);

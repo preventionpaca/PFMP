@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575e';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575f';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -48,8 +48,13 @@ function EUC_SUIVI2_refs_(v) {
 function EUC_SUIVI2_date_(v) {
   if (v == null || v === '' || v === false) return '';
   if (typeof v === 'number') { var ms = v < 1e11 ? v * 1000 : v; var d = new Date(ms); return isNaN(d) ? '' : d.toISOString().slice(0, 10); }
-  var s = String(v).trim(), m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0];
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+  if (typeof v === 'object') {
+    var oy = Number(v.year || v.annee), om = Number(v.month || v.mois), od = Number(v.day || v.jour);
+    return oy && om && od ? oy + '-' + ('0' + om).slice(-2) + '-' + ('0' + od).slice(-2) : '';
+  }
+  var s = String(v).trim(), m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if (m) return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
   return '';
 }
 function EUC_SUIVI2_bool_(v) { return v === true || /^(true|oui|1|x|vrai)$/i.test(EUC_SUIVI2_t_(v)); }
@@ -258,13 +263,31 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
    * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
    * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
   var jotform = {}, jotformNonValide = {};
+  /* Réponse brute JotForm : premier champ dont le libellé correspond. */
+  function brut(j, libelles) {
+    var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
+    try { raw = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return ''; }
+    var cles = Object.keys(raw || {});
+    for (var i = 0; i < libelles.length; i++) {
+      var cible = EUC_SUIVI2_norm_(libelles[i]);
+      for (var k = 0; k < cles.length; k++) {
+        var v = raw[cles[k]], nom = EUC_SUIVI2_norm_(v && typeof v === 'object' && v.text ? v.text : cles[k]);
+        if (nom === cible || nom.indexOf(cible) === 0) return v && typeof v === 'object' && 'answer' in v ? v.answer : v;
+      }
+    }
+    return '';
+  }
   (src.jotform || []).map(EUC_SUIVI2_champs_).forEach(function(j) {
     var eid = EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id); if (!eid || !eleves[eid]) return;
-    var debut = EUC_SUIVI2_date_(j.Date_debut_brut || j.Date_debut), fin = EUC_SUIVI2_date_(j.Date_fin_brut || j.Date_fin);
+    var debut = EUC_SUIVI2_date_(j.Date_debut_brut || j.Date_debut) || EUC_SUIVI2_date_(brut(j, ['Date de début', 'Date debut']));
+    var fin = EUC_SUIVI2_date_(j.Date_fin_brut || j.Date_fin) || EUC_SUIVI2_date_(brut(j, ['Date de fin', 'Date fin']));
     var siret = EUC_SUIVI2_t_(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, '');
     var importee = j.Importer === true || Number(j.Importer) === 1 || /^(OUI|YES|TRUE|VRAI)$/i.test(EUC_SUIVI2_t_(j.Importer));
-    var valide = EUC_SUIVI2_t_(j.Decision).toUpperCase() === 'VALIDEE' || importee;
-    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14, decision: EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '') };
+    /* Validée = SIRET vérifié par le bureau (page de migration), décision
+     * VALIDEE ou ligne déjà importée ; une ligne ignorée ne compte jamais. */
+    var decision = EUC_SUIVI2_t_(j.Decision).toUpperCase(), siretStatut = EUC_SUIVI2_t_(j.SIRET_statut).toUpperCase();
+    var valide = decision !== 'IGNOREE' && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || importee);
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
