@@ -514,11 +514,11 @@ function EUC_SONDE_grist_() {
 
 
 /* ---------- DEV578 : lien de secours par courriel (Atrium en panne) ----------
- * Seules les adresses @lycee-les-eucalyptus.org de la liste des professeurs
+ * Seules les adresses @ac-nice.fr ou @lycee-les-eucalyptus.org présentes dans la liste des professeurs
  * (import Pronote, actifs) reçoivent un lien personnel valable 12 heures,
  * signé par le secret de la clé : générer une nouvelle clé les annule tous.
  * La réponse est la même que l'adresse soit autorisée ou non. */
-var EUC_ACCES_DOMAINE_SECOURS_ = /@lycee-les-eucalyptus\.org$/i;
+var EUC_ACCES_DOMAINE_SECOURS_ = /@(?:ac-nice\.fr|lycee-les-eucalyptus\.org)$/i;
 
 function EUC_ACCES_formSecours_(page) {
   var p = String(page || '').replace(/[^a-z0-9-]/gi, '');
@@ -527,7 +527,7 @@ function EUC_ACCES_formSecours_(page) {
     '<p style="margin:0 0 10px">Recevez un lien personnel par courriel, valable 12 heures. ' +
     '<b>Seules les adresses autorisées (professeurs du lycée) peuvent accéder au mode secours.</b></p>' +
     '<form id="sec" style="display:flex;gap:8px;flex-wrap:wrap"><input id="mel" type="email" required autocomplete="email" ' +
-    'placeholder="prenom.nom@lycee-les-eucalyptus.org" style="flex:1;min-width:240px;padding:9px;border:1px solid #9cc;border-radius:8px;font:inherit">' +
+    'placeholder="prenom.nom@ac-nice.fr" style="flex:1;min-width:240px;padding:9px;border:1px solid #9cc;border-radius:8px;font:inherit">' +
     '<button id="btn" style="padding:9px 14px;border:0;border-radius:8px;background:#087f70;color:#fff;font:inherit;font-weight:700;cursor:pointer">Recevoir le lien</button></form>' +
     '<p id="rep" style="margin:10px 0 0;color:#355"></p></div>' +
     '<script>document.getElementById("sec").onsubmit=function(ev){ev.preventDefault();var b=document.getElementById("btn"),r=document.getElementById("rep");b.disabled=true;b.textContent="Envoi…";' +
