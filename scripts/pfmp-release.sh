@@ -90,7 +90,8 @@ pull_remote() {
 deployment_version() {
   local deployments="$1"
   local id="$2"
-  awk -v wanted="$id" '$2==wanted {gsub(/^@/, "", $3); print $3}' <<<"$deployments"
+  # clasp écrit les numéros avec séparateur de milliers (@1,000) : on ne garde que les chiffres.
+  awk -v wanted="$id" '$2==wanted {gsub(/[@,]/, "", $3); print $3}' <<<"$deployments"
 }
 
 deploy_version() {
@@ -141,7 +142,7 @@ release_stable() {
 
   echo "[4/6] Création de la version Apps Script immuable"
   version_output="$(cd "$package_dir" && clasp version "Release directe PFMP $commit")"
-  version="$(sed -nE 's/^Created version ([0-9]+)$/\1/p' <<<"$version_output")"
+  version="$(sed -nE 's/^Created version ([0-9][0-9,]*)$/\1/p' <<<"$version_output" | tr -d ',')"
   [[ "$version" =~ ^[0-9]+$ ]] || {
     echo "Numéro de version immuable introuvable ; les déploiements restent inchangés." >&2
     exit 1
