@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575g';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575h';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -134,15 +134,42 @@ function EUC_SUIVI2_statut_(a) {
 function EUC_SUIVI2_identifiantEntreprise_(a, entreprises) {
   var siret = EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_siret_snapshot || a.SIRET).replace(/\D/g, '');
   if (siret.length === 14) return 'SIRET';
-  if (EUC_SUIVI2_t_(a.Entreprise_nis)) return 'NIS';
+  if (EUC_SUIVI2_t_(a.Entreprise_nis || a.Entreprise_nis_snapshot || a.NIS)) return 'NIS';
   var f = (entreprises || {})[EUC_SUIVI2_ref_(a.Entreprise)];
   if (f) {
     if (EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, '').length === 14) return 'SIRET_FICHE';
     if (EUC_SUIVI2_t_(f.NIS || f.Nis || f.Entreprise_nis)) return 'NIS_FICHE';
+    /* Monaco : la fiche entreprise référencée suffit (pas de SIRET français obligatoire). */
+    if (EUC_SUIVI2_monaco_(f) || EUC_SUIVI2_monaco_(a)) return 'FICHE_MONACO';
   }
   return '';
 }
+/* Entreprise située à Monaco (pays, commune ou code postal 980xx). */
+function EUC_SUIVI2_monaco_(x) {
+  if (!x) return false;
+  var t = EUC_SUIVI2_norm_([x.Entreprise_pays, x.Entreprise_commune, x.Pays, x.Commune, x.Ville].join(' '));
+  var cp = EUC_SUIVI2_t_(x.Entreprise_code_postal || x.Code_postal);
+  return /MONACO/.test(t) || /^980\d\d$/.test(cp);
+}
 function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_identifiantEntreprise_(a, entreprises); }
+/* R18 : dossier enregistré (ou « à compléter » entièrement saisi) avec entreprise validée. */
+function EUC_SUIVI2_vautConvention_(a, entreprises) {
+  var s = EUC_SUIVI2_statut_(a);
+  if (s === 'A_COMPLETER_ENTREPRISE') return EUC_SUIVI2_saisieEntrepriseComplete_(a, entreprises);
+  return s === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(a, entreprises);
+}
+/* Période ordinaire de la classe qui chevauche le plus les dates données. */
+function EUC_SUIVI2_meilleurePeriode_(periodes, d1, d2) {
+  var best = null, bestJours = 0;
+  (periodes || []).forEach(function(p) {
+    if (p.pdif) return;
+    var a = d1 > p.debut ? d1 : p.debut, b = d2 < p.fin ? d2 : p.fin;
+    if (a > b) return;
+    var j = (Date.parse(b) - Date.parse(a)) / 864e5 + 1;
+    if (j > bestJours) { best = p; bestJours = j; }
+  });
+  return best;
+}
 /* Dossier « à compléter » dont l'entreprise a tout saisi (même règle que DEV533). */
 function EUC_SUIVI2_saisieEntrepriseComplete_(a, entreprises) {
   if (!EUC_SUIVI2_entrepriseValidee_(a, entreprises)) return false;
@@ -177,6 +204,30 @@ function EUC_SUIVI2_statutApprenti_(eps, aujourdhui) {
   });
   if (apprenti) return { code: 'APPRENTI', entreprise: apprenti.entreprise, debut: apprenti.debut, fin: apprenti.fin };
   return { code: futur ? 'FUTUR_APPRENTI' : 'SCOLAIRE' };
+}
+/* R16 bis : statut d'apprenti PAR PÉRIODE, selon les dates du contrat.
+ * APPRENTI : le contrat couvre toute la période ; MIXTE : le contrat commence
+ * (ou se termine) pendant la période — l'élève est scolaire, sous convention,
+ * une partie du temps et apprenti l'autre partie ; sinon SCOLAIRE.
+ * Une rupture termine le contrat la veille ; une fin antérieure au début est
+ * traitée comme une fin ouverte (même règle que la gestion des apprentis). */
+function EUC_SUIVI2_veille_(iso) {
+  var d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10);
+}
+function EUC_SUIVI2_apprentiPeriode_(eps, p) {
+  var plein = null, partiel = null;
+  (eps || []).forEach(function(ep) {
+    var debut = ep.debut || ep.contrat; if (!debut) return;
+    var fin = ep.fin && ep.fin >= debut ? ep.fin : '9999-12-31';
+    if (ep.rupture) { var v = EUC_SUIVI2_veille_(ep.rupture); if (v < fin) fin = v; }
+    if (fin < debut) return;
+    var x = { code: '', entreprise: ep.entreprise, debut: debut, fin: fin === '9999-12-31' ? '' : fin, id: ep.id };
+    if (debut <= p.debut && fin >= p.fin) { if (!plein || ep.id > plein.id) plein = x; }
+    else if (debut <= p.fin && fin >= p.debut) { if (!partiel || ep.id > partiel.id) partiel = x; }
+  });
+  if (plein) { plein.code = 'APPRENTI'; return plein; }
+  if (partiel) { partiel.code = 'MIXTE'; return partiel; }
+  return { code: 'SCOLAIRE' };
 }
 
 /* ---------- Calcul pur ---------- */
@@ -273,6 +324,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
    * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
    * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
   var jotform = {}, jotformNonValide = {};
+  var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [] };
   /* Réponse brute JotForm : premier champ dont le libellé correspond. */
   function brut(j, libelles) {
     var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
@@ -288,7 +340,15 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     return '';
   }
   (src.jotform || []).map(EUC_SUIVI2_champs_).forEach(function(j) {
-    var eid = EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id); if (!eid || !eleves[eid]) return;
+    var eid = EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id);
+    if (!eid || !eleves[eid]) {
+      /* Garde-fou : saisie non ignorée dont l'élève n'est pas reconnu dans l'effectif de l'année. */
+      if (EUC_SUIVI2_t_(j.Decision).toUpperCase() !== 'IGNOREE' && [annee, ''].indexOf(EUC_SUIVI2_annee_(j.Annee_scolaire, annees)) >= 0) {
+        gardeFou.jotformSansEleve.push({ ligne: Number(j.id), eleveId: eid || 0, nom: EUC_SUIVI2_t_(j.Eleve_nom || j.Nom_eleve || j.Nom || brut(j, ['Nom'])) + ' ' + EUC_SUIVI2_t_(j.Eleve_prenom || j.Prenom_eleve || j.Prenom || brut(j, ['Prénom', 'Prenom'])),
+          classe: EUC_SUIVI2_t_(j.Classe_brut || j.Classe || brut(j, ['Classe'])), decision: EUC_SUIVI2_t_(j.Decision), siretStatut: EUC_SUIVI2_t_(j.SIRET_statut) });
+      }
+      return;
+    }
     var debut = EUC_SUIVI2_date_(j.Date_debut_brut || j.Date_debut) || EUC_SUIVI2_date_(brut(j, ['Date de début', 'Date debut']));
     var fin = EUC_SUIVI2_date_(j.Date_fin_brut || j.Date_fin) || EUC_SUIVI2_date_(brut(j, ['Date de fin', 'Date fin']));
     var siret = EUC_SUIVI2_t_(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, '');
@@ -305,12 +365,28 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     return (liste || []).filter(function(l) { return l.debut && l.fin ? (l.debut <= p.fin && l.fin >= p.debut) : (!p.pdif && l.numero && l.numero === p.rang); })[0] || null;
   }
 
-  /* Dossiers de convention par élève et période. */
+  /* Dossiers de convention par élève et période. Un dossier posé sur une
+   * ligne du calendrier qui n'est pas une période de la classe de l'élève
+   * (doublon, ancienne ligne, autre classe) est rattaché à la période de la
+   * classe qui chevauche ses dates ; sinon il est signalé dans le garde-fou. */
+  var calendrier = {};
+  (src.periodes || []).map(EUC_SUIVI2_champs_).forEach(function(p) {
+    calendrier[p.id] = { debut: EUC_SUIVI2_date_(p.Date_debut), fin: EUC_SUIVI2_date_(p.Date_fin), libelle: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Nom) };
+  });
   var dossiers = {};
   (src.dossiers || []).map(EUC_SUIVI2_champs_).forEach(function(a) {
     var eid = EUC_SUIVI2_ref_(a.Eleve), pid = EUC_SUIVI2_ref_(a.Periode);
-    if (!eid || !pid || !eleves[eid]) return;
-    (dossiers[eid + '|' + pid] = dossiers[eid + '|' + pid] || []).push(a);
+    if (!eid || !eleves[eid]) return;
+    var c = classes[eleves[eid].classeId], cible = pid;
+    if (!c.periodes.some(function(p) { return p.id === pid; })) {
+      if (EUC_SUIVI2_statut_(a) === 'SUPPRIMEE') return;
+      var cal = calendrier[pid] || {}, d1 = EUC_SUIVI2_date_(a.Date_debut) || cal.debut, d2 = EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin) || cal.fin;
+      var p2 = d1 && d2 ? EUC_SUIVI2_meilleurePeriode_(c.periodes, d1, d2) : null;
+      var info = { eleveId: eid, eleve: eleves[eid].libelle, classe: c.nom, dossier: Number(a.id), periodeDossier: pid, periodeDossierLibelle: cal.libelle || '', debut: d1 || '', fin: d2 || '', statut: EUC_SUIVI2_t_(a.Statut_administratif || a.Statut) };
+      if (!p2) { gardeFou.dossiersOrphelins.push(info); return; }
+      cible = p2.id; info.periode = p2.libelle || ''; info.periodeId = p2.id; gardeFou.dossiersRattaches.push(info);
+    }
+    (dossiers[eid + '|' + cible] = dossiers[eid + '|' + cible] || []).push(a);
   });
 
   /* R16–R20 : situation de chaque élève sur chaque période. */
@@ -319,9 +395,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     c.eleves.sort(function(a, b) { return a.libelle.localeCompare(b.libelle, 'fr'); });
     c.eleves.forEach(function(e) { e.apprentissage = EUC_SUIVI2_statutApprenti_(episodes[e.id], aujourdhui); });
     c.periodes.forEach(function(p) {
-      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [] };
+      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {} };
       c.eleves.forEach(function(e) {
-        var apprenti = e.apprentissage.code === 'APPRENTI';
+        var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
+        if (ap.code === 'MIXTE') r.mixtes[e.id] = { debut: ap.debut, fin: ap.fin, entreprise: ap.entreprise || '' };
         if (p.pdif) {
           /* Un apprenti est d'office en entreprise pendant le P.dif. */
           if (apprenti) { r.entreprise.push(e.id); r.apprentis.push(e.id); return; }
@@ -331,14 +408,14 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         }
         if (apprenti) { r.apprentis.push(e.id); return; }
         var liste = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
-        var actif = null;
-        for (var i = 0; i < liste.length; i++) {
-          var code = EUC_SUIVI2_statut_(liste[i]);
-          if (code !== 'ANNULEE' && code !== 'INTERROMPUE' && code !== 'SUPPRIMEE' && liste[i].Revoked !== true) { actif = liste[i]; break; }
-        }
+        /* Dossier retenu : un dossier actif qui vaut convention (le plus récent),
+         * sinon le dossier actif le plus récent, sinon le plus récent. */
+        var actifs = liste.filter(function(x) { var code = EUC_SUIVI2_statut_(x); return code !== 'ANNULEE' && code !== 'INTERROMPUE' && code !== 'SUPPRIMEE' && x.Revoked !== true; });
+        var valant = actifs.filter(function(x) { return EUC_SUIVI2_vautConvention_(x, entreprises); });
+        var actif = valant[0] || actifs[0] || null;
         var d = actif || liste[0] || null, statut = EUC_SUIVI2_statut_(d);
         if (statut === 'A_COMPLETER_ENTREPRISE' && actif && EUC_SUIVI2_saisieEntrepriseComplete_(actif, entreprises)) statut = 'ENREGISTREE';
-        var avec = !!(actif && statut === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(actif, entreprises));
+        var avec = !!(valant[0]);
         r.sources = r.sources || {};
         if (avec) { r.avec.push(e.id); r.sources[e.id] = 'QR'; return; }
         var jf = (!d || !(statut === 'ANNULEE' || statut === 'INTERROMPUE')) ? jotformSur(jotform[e.id], p) : null;
@@ -360,9 +437,18 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     });
   });
 
+  /* Garde-fou : saisie JotForm valide qui ne tombe sur aucune période de la classe. */
+  Object.keys(jotform).forEach(function(eid) {
+    var e = eleves[eid], c = classes[e.classeId];
+    jotform[eid].forEach(function(l) {
+      if (c.periodes.some(function(p) { return !p.pdif && jotformSur([l], p); })) return;
+      gardeFou.jotformSansPeriode.push({ ligne: l.id, eleveId: Number(eid), eleve: e.libelle, classe: c.nom, debut: l.debut || '', fin: l.fin || '', numero: l.numero || 0, decision: l.decision });
+    });
+  });
+
   var liste = Object.keys(classes).map(function(k) { return classes[k]; }).filter(function(c) { return c.periodes.length || c.eleves.length; });
   liste.sort(function(a, b) { return a.famille.localeCompare(b.famille) || a.nom.localeCompare(b.nom, 'fr'); });
-  return { version: EUC_SUIVI2_VERSION_, annee: annee, calculeLe: new Date().toISOString(), aujourdhui: aujourdhui, classes: liste, periodesSansClasse: sansClasse };
+  return { version: EUC_SUIVI2_VERSION_, annee: annee, calculeLe: new Date().toISOString(), aujourdhui: aujourdhui, classes: liste, periodesSansClasse: sansClasse, gardeFou: gardeFou };
 }
 
 /* ---------- Lecture Grist et cache ---------- */

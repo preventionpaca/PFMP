@@ -49,6 +49,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     <p class="note">La comparaison relit les tables Grist (nouveau moteur) puis les synthèses actuelles des trois familles : comptez 20 à 60 secondes. Les écarts attendus viennent des règles validées (fraction sur les scolaires, apprentis à partir de la Première, convention annulée ou sans entreprise validée comptée « sans convention », P.dif sans apprentis) ou de synthèses actuelles périmées.</p>
   </section>
   <section id="resume" hidden></section>
+  <section id="gardefou" hidden></section>
+  <section>
+    <div class="ligne"><label for="fiche">Fiche élève</label><input id="fiche" type="search" placeholder="Nom ou prénom" style="font:14px Arial;padding:7px 10px;border:1px solid var(--bord);border-radius:7px">
+      <button id="voirFiche" type="button">Voir les données Grist</button><span id="ficheMsg" class="message" role="status" aria-live="polite"></span></div>
+    <div id="ficheRes"></div>
+  </section>
   <div id="resultat"></div>
 </main>
 <script>
@@ -74,16 +80,31 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       (r.periodesSansClasse.length?'<span class="etat alerte">'+r.periodesSansClasse.length+' période(s) du calendrier sans classe rattachée</span>':'')+'</div>'+
       '<p class="note">Données Grist à l’action n° '+esc(String(r.temoin).split('-')[0])+' · nouveau moteur '+(r.depuisCache?'servi depuis le cache':'recalculé en '+Math.round(r.calculMs/100)/10+' s')+
       ' · synthèses actuelles lues en '+Math.round(r.actuelsMs/100)/10+' s'+(r.erreursActuels.length?' · erreurs : '+esc(r.erreursActuels.join(' ; ')):'')+'</p>';
-    if(r.structureJotform){$('resume').innerHTML+='<details><summary class="note">Structure des dates JotForm (formats seulement)</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(JSON.stringify(r.structureJotform,null,1))+'</pre></details>';}
+    var g=r.gardeFou||{},gf=[];
+    (g.dossiersOrphelins||[]).forEach(function(x){gf.push('<li><b>'+esc(x.eleve)+'</b> ('+esc(x.classe)+') : dossier n° '+x.dossier+' ('+esc(x.statut)+') posé sur la ligne n° '+x.periodeDossier+' du calendrier'+(x.periodeDossierLibelle?' « '+esc(x.periodeDossierLibelle)+' »':'')+', '+esc(x.debut||'?')+' → '+esc(x.fin||'?')+' : aucune période de la classe à ces dates.</li>');});
+    (g.jotformSansEleve||[]).forEach(function(x){gf.push('<li>Saisie JotForm n° '+x.ligne+' ('+esc(x.nom||'nom inconnu')+(x.classe?', '+esc(x.classe):'')+', '+esc(x.decision||'sans décision')+') : élève non reconnu dans l’effectif de l’année.</li>');});
+    (g.jotformSansPeriode||[]).forEach(function(x){gf.push('<li><b>'+esc(x.eleve)+'</b> ('+esc(x.classe)+') : saisie JotForm n° '+x.ligne+' validée, '+esc(x.debut||'?')+' → '+esc(x.fin||'?')+(x.numero?' (période n° '+x.numero+' déclarée)':'')+' : ne tombe sur aucune période de la classe.</li>');});
+    $('gardefou').hidden=false;
+    $('gardefou').innerHTML='<h2 class="famille" style="margin-top:0">Garde-fou : données arrivées dans Grist mais absentes des tableaux</h2>'+
+      (gf.length?'<ul>'+gf.join('')+'</ul>':'<p class="etat">Rien à signaler : chaque dossier et chaque saisie JotForm valide est rattaché à une période.</p>')+
+      ((g.dossiersRattaches||[]).length?'<details><summary class="note">'+g.dossiersRattaches.length+' dossier(s) posé(s) sur une autre ligne du calendrier, rattaché(s) par leurs dates</summary><ul>'+g.dossiersRattaches.map(function(x){return '<li>'+esc(x.eleve)+' ('+esc(x.classe)+') : dossier n° '+x.dossier+' ('+esc(x.statut)+'), ligne n° '+x.periodeDossier+' → '+esc(x.periode)+' (n° '+x.periodeId+')</li>';}).join('')+'</ul></details>':'');
     var html='',fam='';
-    r.lignes.filter(function(l){return !seuls||l.ecarts.length||l.sansComparaison;}).forEach(function(l){
+    r.lignes.filter(function(l){return !seuls||l.ecarts.length||l.sansComparaison||(l.mixtes||[]).length;}).forEach(function(l){
       if(l.famille!==fam){if(fam)html+='</tbody></table></section>';fam=l.famille;html+='<h2 class="famille">'+esc({BACPRO:'BAC PRO',BTS:'BTS',CAP:'CAP',AUTRES:'Autres formations'}[fam]||fam)+'</h2><section><table><thead><tr><th>Classe</th><th>Période</th><th>Nouveau moteur</th><th>Affiché aujourd’hui</th><th>Écarts (élèves)</th></tr></thead><tbody>';}
-      html+='<tr class="'+(l.ecarts.length?'ecart':'')+'"><td><b>'+esc(l.classe)+'</b><br><span class="note">'+esc(l.niveau)+'</span></td><td>'+esc(l.periode)+'<br><span class="note">'+esc(l.debut)+' → '+esc(l.fin)+'<br>calendrier : '+esc([l.periodeSource,l.periodeType,l.periodeGroupe].filter(Boolean).join(' · ')||'—')+' (n° '+l.periodeId+')</span></td><td>'+cellNouveau(l.nouveau)+'</td><td>'+cellActuel(l.actuel,l.nouveau.pdif)+'</td><td>'+cellEcarts(l)+'</td></tr>';
+      html+='<tr class="'+(l.ecarts.length?'ecart':'')+'"><td><b>'+esc(l.classe)+'</b><br><span class="note">'+esc(l.niveau)+'</span></td><td>'+esc(l.periode)+'<br><span class="note">'+esc(l.debut)+' → '+esc(l.fin)+'<br>calendrier : '+esc([l.periodeSource,l.periodeType,l.periodeGroupe].filter(Boolean).join(' · ')||'—')+' (n° '+l.periodeId+')</span></td><td>'+cellNouveau(l.nouveau)+'</td><td>'+cellActuel(l.actuel,l.nouveau.pdif)+'</td><td>'+cellEcarts(l)+((l.mixtes||[]).length?'<div class="diff"><b>Scolaire puis apprenti pendant la période</b> : '+esc(l.mixtes.join(' · '))+'</div>':'')+'</td></tr>';
     });
     if(fam)html+='</tbody></table></section>';
     $('resultat').innerHTML=html||'<section><p>Aucun écart : les deux calculs donnent les mêmes élèves partout.</p></section>';
   }
   $('ecartsSeuls').onchange=afficher;
+  $('voirFiche').onclick=function(){
+    var b=$('voirFiche'),q=$('fiche').value;b.disabled=true;$('ficheMsg').textContent='Lecture…';$('ficheMsg').className='message';
+    google.script.run.withSuccessHandler(function(l){b.disabled=false;$('ficheMsg').textContent=l.length?'':'Aucun élève trouvé.';
+      $('ficheRes').innerHTML=l.map(function(f){return '<details open><summary><b>'+esc(f.eleve)+'</b> — '+esc(f.classe)+' (n° '+f.id+')</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(JSON.stringify({dossiers:f.dossiers,calendrier:f.calendrier,jotform:f.jotform,apprentissage:f.apprentissage,actif:f.actif,presentDernierImport:f.presentDernierImport},null,1))+'</pre></details>';}).join('');})
+      .withFailureHandler(function(e){b.disabled=false;$('ficheMsg').textContent=(e&&e.message)||String(e);$('ficheMsg').className='message erreur';})
+      .EUC_SUIVI2_ficheEleve(q);
+  };
+  $('fiche').onkeydown=function(ev){if(ev.key==='Enter')$('voirFiche').click();};
   $('lancer').onclick=function(){
     var b=$('lancer');b.disabled=true;b.setAttribute('aria-busy','true');message('Comparaison en cours…');
     var fini=false,t=setTimeout(function(){if(fini)return;fini=true;b.disabled=false;b.removeAttribute('aria-busy');message('Pas de réponse sous 3 minutes. Réessayez.',true);},180000);

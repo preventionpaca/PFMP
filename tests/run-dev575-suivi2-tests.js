@@ -196,6 +196,53 @@ test('JotForm : SIRET vérifié vaut validation ; dates « Nov. 2, 2026 », JJ-M
   assert.equal(c.EUC_SUIVI2_date_('Mai 4, 2027'), '2027-05-04');
 });
 
+test('R16 bis : apprenti selon les dates du contrat, période par période ; contrat en cours de période = mixte', () => {
+  const src = sources();
+  src.apprentissage = [
+    R(950, { Eleve: 2, Annee_scolaire: '2026-2027', Date_debut: '2026-12-01', Date_fin: '2028-08-31' }),
+    R(951, { Eleve: 3, Annee_scolaire: '2026-2027', Date_debut: '2026-11-16', Date_fin: '' })
+  ];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ), t = m.classes.find(x => x.nom === 'TMVA1');
+  const p1 = t.periodes[0].resume, p2 = t.periodes[1].resume, pd = t.periodes[2].resume;
+  assert.equal(p1.apprentis.includes(2), false, 'contrat pas encore commencé pendant la PFMP n°1 : scolaire');
+  assert.equal(p2.apprentis.includes(2), true, 'contrat commencé avant la PFMP n°2 : apprenti');
+  assert.equal(pd.entreprise.includes(2), true, 'apprenti d’office en entreprise au P.dif');
+  assert.equal(p1.apprentis.includes(3), false);
+  assert.equal(p1.mixtes[3].debut, '2026-11-16', 'devient apprenti pendant la période : mixte, compté scolaire');
+  assert.equal(p1.sans.includes(3) || p1.avec.includes(3), true);
+  assert.equal(c.EUC_SUIVI2_apprentiPeriode_([{ id: 1, debut: '2026-09-01', fin: '2028-08-31', rupture: '2026-11-10' }], { debut: '2027-03-01', fin: '2027-03-26' }).code, 'SCOLAIRE', 'rupture avant la période');
+});
+
+test('dossier posé sur une autre ligne du calendrier : rattaché par les dates, valide préféré aux brouillons ; Monaco', () => {
+  const src = sources();
+  src.periodes.push(R(113, { Annee_scolaire: 1, Classes_concernees: null, Date_debut: '2026-11-02', Date_fin: '2026-11-27', Libelle: 'ancienne ligne' }));
+  src.entreprises = [R(70, { Raison_sociale: 'SACOME', Commune: 'MONACO', Code_postal: '98000' })];
+  src.dossiers = src.dossiers.concat([
+    R(600, { Eleve: 2, Periode: 113, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise_siret: '12345678901234' }),
+    R(601, { Eleve: 2, Periode: 100, Statut_administratif: 'CONVENTION_GENEREE' }),
+    R(602, { Eleve: 3, Periode: 100, Statut_administratif: 'CONVENTION_ENREGISTREE', Entreprise: 70 }),
+    R(603, { Eleve: 5, Periode: 999, Statut_administratif: 'CONVENTION_ENREGISTREE', Date_debut: '2027-07-01', Date_fin: '2027-07-20' })
+  ]);
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ), p1 = m.classes.find(x => x.nom === 'TMVA1').periodes[0].resume;
+  assert.equal(p1.avec.includes(2), true, 'dossier enregistré de l’ancienne ligne, malgré un brouillon plus récent');
+  assert.equal(p1.avec.includes(3), true, 'entreprise de Monaco validée par sa fiche');
+  assert.equal(m.gardeFou.dossiersRattaches.some(x => x.dossier === 600 && x.periodeId === 100), true);
+  assert.equal(m.gardeFou.dossiersOrphelins.some(x => x.dossier === 603), true, 'aucune période ne chevauche : signalé');
+});
+
+test('garde-fou : saisies JotForm sans élève reconnu ou sans période', () => {
+  const src = sources();
+  src.jotform = [
+    R(820, { Eleve_match_id: null, Decision: 'A_CONTROLER', Raw_JSON: JSON.stringify({ q1: { text: 'Nom', answer: 'INCONNU' } }) }),
+    R(821, { Eleve_match_id: 2, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut_brut: 'Aug. 1, 2027', Date_fin_brut: 'Aug. 20, 2027' }),
+    R(822, { Eleve_match_id: null, Decision: 'IGNOREE' })
+  ];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
+  assert.deepEqual(m.gardeFou.jotformSansEleve.map(x => x.ligne), [820]);
+  assert.equal(m.gardeFou.jotformSansEleve[0].nom.trim(), 'INCONNU');
+  assert.deepEqual(m.gardeFou.jotformSansPeriode.map(x => x.ligne), [821]);
+});
+
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
   const noms = { 1: 'ALPHA Ana', 2: 'BETA Bob' };
   assert.deepEqual([...c.EUC_SUIVI2_diff_(['A', 'B'], ['B', 'C'])], ['A']);
