@@ -74,4 +74,14 @@ test('la route est servie avant le routage historique et protégée par la clé 
   assert.match(ens, /function EUC_SUIVI2_pageEnseignants_\(/, 'non appelable par google.script.run');
 });
 
+test('un visiteur non identifié sur l’administration reçoit la connexion Google, pas une erreur', () => {
+  const k = { String, Error, JSON };
+  vm.createContext(k);
+  vm.runInContext(read('apps-script/EUC_CENTRE_ADMIN_PFMP_WebApp.gs'), k);
+  k.EUC_DEV270B_contextOrNull_ = () => null;
+  k.EUC_PFMP_contexteAdmin_ = () => ({ autorise: false, role: '' });
+  k.EUC_DEV270B_loginPage_ = () => 'PAGE_CONNEXION';
+  assert.equal(k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: {} }), 'PAGE_CONNEXION');
+});
+
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);

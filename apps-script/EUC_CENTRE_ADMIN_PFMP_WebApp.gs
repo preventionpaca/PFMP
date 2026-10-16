@@ -18,7 +18,10 @@ function EUC_CENTRE_ADMIN_afficherApplication(e){
     ctx=EUC_PFMP_contexteAdmin_();
   }
 
-  if(!ctx && typeof EUC_DEV270B_loginPage_==='function'){
+  /* Visiteur non identifié (navigateur sans session Google) : le contexte
+   * existe mais n'est pas autorisé. Proposer la connexion Google plutôt
+   * qu'une erreur brute. */
+  if((!ctx || !ctx.autorise) && typeof EUC_DEV270B_loginPage_==='function'){
     return EUC_DEV270B_loginPage_();
   }
 
