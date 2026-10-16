@@ -74,6 +74,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       (r.periodesSansClasse.length?'<span class="etat alerte">'+r.periodesSansClasse.length+' période(s) du calendrier sans classe rattachée</span>':'')+'</div>'+
       '<p class="note">Données Grist à l’action n° '+esc(String(r.temoin).split('-')[0])+' · nouveau moteur '+(r.depuisCache?'servi depuis le cache':'recalculé en '+Math.round(r.calculMs/100)/10+' s')+
       ' · synthèses actuelles lues en '+Math.round(r.actuelsMs/100)/10+' s'+(r.erreursActuels.length?' · erreurs : '+esc(r.erreursActuels.join(' ; ')):'')+'</p>';
+    if(r.structureJotform){$('resume').innerHTML+='<details><summary class="note">Structure des dates JotForm (formats seulement)</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(JSON.stringify(r.structureJotform,null,1))+'</pre></details>';}
     var html='',fam='';
     r.lignes.filter(function(l){return !seuls||l.ecarts.length||l.sansComparaison;}).forEach(function(l){
       if(l.famille!==fam){if(fam)html+='</tbody></table></section>';fam=l.famille;html+='<h2 class="famille">'+esc({BACPRO:'BAC PRO',BTS:'BTS',CAP:'CAP',AUTRES:'Autres formations'}[fam]||fam)+'</h2><section><table><thead><tr><th>Classe</th><th>Période</th><th>Nouveau moteur</th><th>Affiché aujourd’hui</th><th>Écarts (élèves)</th></tr></thead><tbody>';}

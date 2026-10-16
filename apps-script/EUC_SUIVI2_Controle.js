@@ -93,6 +93,31 @@ function EUC_SUIVI2_controle(annee) {
     version: EUC_SUIVI2_VERSION_, annee: m.annee, temoin: m.temoin, calculeLe: m.calculeLe, depuisCache: !!m.depuisCache,
     calculMs: m.calculMs || 0, moteurMs: t1 - t0, actuelsMs: t2 - t1, erreursActuels: actuels.erreurs,
     periodesSansClasse: m.periodesSansClasse, lignes: lignes,
+    structureJotform: (function() { try { return EUC_SUIVI2_structureJotform_(); } catch (e) { return { erreur: String(e && e.message || e) }; } })(),
     resume: { periodes: lignes.length, avecEcart: lignes.filter(function(l) { return l.ecarts.length; }).length, sansComparaison: lignes.filter(function(l) { return l.sansComparaison; }).length }
   };
+}
+
+/* Diagnostic de structure JotForm : noms des colonnes et champs liés aux
+ * dates, avec le seul FORMAT de leur valeur (chiffres → 9, lettres → a). */
+function EUC_SUIVI2_formatSeul_(v) {
+  if (v == null) return '';
+  if (typeof v === 'object') return '{' + Object.keys(v).slice(0, 6).join(',') + '}';
+  return String(v).slice(0, 40).replace(/[0-9]/g, '9').replace(/[A-Za-zÀ-ÿ]/g, 'a');
+}
+function EUC_SUIVI2_structureJotform_() {
+  var g = EUC_SUIVI2_grist_(), rep = UrlFetchApp.fetch(g.base + '/tables/EUC_MIGRATION_JOTFORM_PFMP/records?limit=400', { headers: g.entetes, muteHttpExceptions: true });
+  if (rep.getResponseCode() !== 200) return { erreur: 'lecture ' + rep.getResponseCode() };
+  var lignes = (JSON.parse(rep.getContentText()).records || []).filter(function(r) { return EUC_SUIVI2_t_(r.fields.SIRET_statut).toUpperCase() === 'VERIFIE'; }).slice(0, 3);
+  return lignes.map(function(r) {
+    var f = r.fields, colonnes = {}, brut = {};
+    Object.keys(f).forEach(function(k) { if (/date|debut|fin|periode|soumi|created|envoi/i.test(k)) colonnes[k] = EUC_SUIVI2_formatSeul_(f[k]); });
+    var raw = f.Raw_JSON || f.Raw_json || f.Donnees_brutes;
+    try { raw = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { raw = null; }
+    Object.keys(raw || {}).forEach(function(k) {
+      var v = raw[k], libelle = v && typeof v === 'object' && v.text ? v.text : k;
+      if (/date|d[ée]but|fin|p[ée]riode/i.test(libelle + ' ' + k)) brut[k + (libelle !== k ? ' « ' + libelle + ' »' : '')] = EUC_SUIVI2_formatSeul_(v && typeof v === 'object' && 'answer' in v ? v.answer : v);
+    });
+    return { colonnes: colonnes, reponseBrute: brut, typeReponseBrute: raw ? (Array.isArray(raw) ? 'tableau' : 'objet') : 'absente' };
+  });
 }
