@@ -257,10 +257,11 @@ test('lien de secours : seuls les professeurs autorisés reçoivent un lien pers
   assert.equal(c.EUC_ACCES_demanderLienSecours('ancien@lycee-les-eucalyptus.org', 'x'), generique, 'même réponse : la liste ne fuit pas');
   assert.equal(c.EUC_ACCES_demanderLienSecours('lea.martin@gmail.com', 'x'), generique);
   c.EUC_DEV538_records_ = () => [{ id: 7, fields: { Nom: 'MARTIN', Prenom: 'Léa', Email: 'Lea.Martin@lycee-les-eucalyptus.org', Actif: true } },
-    { id: 8, fields: { Nom: 'ANCIEN', Email: 'ancien@lycee-les-eucalyptus.org', Actif: false } }, { id: 9, fields: { Nom: 'ACAD', Email: 'p.acad@ac-nice.fr', Actif: true } }];
+    { id: 8, fields: { Nom: 'ANCIEN', Email: 'ancien@lycee-les-eucalyptus.org', Actif: false } }, { id: 9, fields: { Civilite: 'M.', Prenom: 'Gérald', Nom: 'FLORIOT', Email: 'p.acad@ac-nice.fr', Actif: true } }];
   assert.equal(c.EUC_ACCES_demanderLienSecours('autre.prof@ac-nice.fr', 'x'), generique, 'ac-nice.fr hors liste : rien');
   assert.equal(envois.length, 0);
-  c.EUC_ACCES_demanderLienSecours('P.Acad@ac-nice.fr', 'x'); assert.equal(envois.length, 1); assert.equal(envois.pop().to, 'p.acad@ac-nice.fr');
+  c.EUC_ACCES_demanderLienSecours('P.Acad@ac-nice.fr', 'x'); assert.equal(envois.length, 1); assert.equal(envois[0].to, 'p.acad@ac-nice.fr'); assert.match(envois.pop().body, /^Bonjour Monsieur Gérald FLORIOT,/);
+  assert.equal(c.EUC_ACCES_civilite_('Mme'), 'Madame'); assert.equal(c.EUC_ACCES_civilite_(''), '');
   assert.equal(envois.length, 0);
   assert.equal(c.EUC_ACCES_demanderLienSecours(' LEA.MARTIN@lycee-les-eucalyptus.org ', 'suivi-apprentis-enseignants'), generique);
   assert.equal(envois.length, 1); assert.equal(envois[0].to, 'lea.martin@lycee-les-eucalyptus.org');

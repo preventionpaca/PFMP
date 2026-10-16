@@ -550,9 +550,17 @@ function EUC_ACCES_profAutorise_(mel) {
   for (var i = 0; i < rows.length; i++) {
     var f = rows[i].fields || rows[i];
     if (f.Actif === false) continue;
-    if (String(f.Email || '').trim().toLowerCase() === mel) return { id: Number(rows[i].id || f.id) || 0, nom: [f.Prenom, f.Nom].filter(Boolean).join(' ') };
+    if (String(f.Email || '').trim().toLowerCase() === mel) return { id: Number(rows[i].id || f.id) || 0, nom: [EUC_ACCES_civilite_(f.Civilite), f.Prenom, f.Nom].filter(Boolean).join(' ') };
   }
   return null;
+}
+
+/* Civilité Pronote (M., Mme, Monsieur…) écrite en toutes lettres pour la formule d'appel. */
+function EUC_ACCES_civilite_(v) {
+  var t = String(v || '').trim().toLowerCase().replace(/\./g, '');
+  if (/^(mme|madame|mlle|mademoiselle)$/.test(t)) return 'Madame';
+  if (/^(m|mr|monsieur)$/.test(t)) return 'Monsieur';
+  return '';
 }
 
 function EUC_ACCES_compter_(cache, cle, max) {
