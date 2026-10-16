@@ -526,6 +526,19 @@ function EUC_DEV538_mapBase_(items,q){
   var unique=[];Object.keys(by).forEach(function(k){if(unique.indexOf(by[k])<0)unique.push(by[k]);});var points=unique.map(function(p){var count=Object.keys(p._students).length;p.elevesAccueillis=Math.max(p.elevesAccueillis,count);var classes=Object.keys(p._classes);if(classes.length)p.classe=classes.join(' / ');delete p._students;delete p._classes;delete p.identity;return p;});return{ok:true,total:points.length,points:points};
 }
 function EUC_DEV538_mapData(q){
+  /* DEV576 : carte servie depuis le cache tant que rien ne change dans Grist (témoin), par périmètre et par droit d'accès. */
+  q=q||{};var dev576Temoin='',dev576Cle='';
+  try{dev576Temoin=typeof EUC_SUIVI2_temoin_==='function'?EUC_SUIVI2_temoin_():'';}catch(eT){dev576Temoin='';}
+  if(dev576Temoin&&typeof EUC_DEV572_lire_==='function'){
+    var dev576Staff=false;try{dev576Staff=EUC_DEV538_t_(q.mode).toUpperCase()!=='PARENTS'&&EUC_DEV538_staffAllowed_();}catch(eS){}
+    dev576Cle='EUC_DEV576_CARTE_'+EUC_DEV441_digest_(JSON.stringify({a:q.annee,f:q.famille,c:q.classeId,p:q.periodeId,m:q.mode,w:q.fenetre,s:dev576Staff})).slice(0,16)+'_'+String(dev576Temoin).replace(/[^\w-]/g,'');
+    var dev576Memo=EUC_DEV572_lire_(dev576Cle);if(dev576Memo&&dev576Memo.points)return dev576Memo;
+  }
+  var dev576Res=EUC_DEV538_mapDataCalcul_(q);
+  if(dev576Cle&&typeof EUC_DEV572_ecrire_==='function')EUC_DEV572_ecrire_(dev576Cle,dev576Res);
+  return dev576Res;
+}
+function EUC_DEV538_mapDataCalcul_(q){
   q=q||{};var parent=EUC_DEV538_t_(q.mode).toUpperCase()==='PARENTS',years=parent?EUC_DEV538_yearsForScope_({annee:'ALL',fenetre:3}):[],scope=parent?{annee:'ALL',famille:q.famille,classeId:q.classeId,periodeId:q.periodeId}:q,items=parent?EUC_DEV537_mergeAnnualCandidates_(years):EUC_DEV441_geoCandidates_(q),base=EUC_DEV538_mapBase_(items,scope),allowed=!parent&&EUC_DEV538_staffAllowed_();
   (base.points||[]).forEach(function(p){delete p.siret;p.nominatif=allowed;});base.nominatif=allowed;return base;
 }

@@ -117,4 +117,14 @@ test('un visiteur non identifié sur l’administration reçoit la connexion Goo
   assert.equal(k.EUC_CENTRE_ADMIN_afficherApplication({ parameter: { auth: 'jeton' } }), 'ADMIN', 'jeton refusé mais session Google Workspace valide : accès');
 });
 
+test('carte : points et fiches entreprise servis depuis le cache (témoin Grist), historiques chargés une fois en arrière-plan', () => {
+  const carte = read('apps-script/Cartographie_PFMP_DEV441.html'), hist = read('apps-script/EUC_DEV576_CarteHistoriques.js'), book = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(carte, /prefetchHistories\(\)/); assert.match(carte, /EUC_DEV576_historiquesCarte\(q\(\)\)/);
+  assert.match(carte, /PREFETCH\.par\[x\.key\]/, 'fiche servie par le préchargement');
+  assert.match(hist, /EUC_DEV538_staffAllowed_\(\)/, 'historiques nominatifs réservés aux personnels');
+  assert.match(hist, /EUC_DEV572_lire_\(cle\)/); assert.match(hist, /EUC_SUIVI2_temoin_/);
+  assert.match(book, /function EUC_DEV538_mapData\(q\)\{[\s\S]{0,400}EUC_SUIVI2_temoin_/, 'carte en cache par témoin');
+  assert.match(book, /s:dev576Staff/, 'clé de cache distincte selon le droit d’accès');
+});
+
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
