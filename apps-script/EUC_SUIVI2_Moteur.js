@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575j';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575k';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -156,7 +156,8 @@ function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_ide
 function EUC_SUIVI2_vautConvention_(a, entreprises) {
   var s = EUC_SUIVI2_statut_(a);
   if (s === 'A_COMPLETER_ENTREPRISE') return EUC_SUIVI2_saisieEntrepriseComplete_(a, entreprises);
-  return s === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(a, entreprises);
+  /* PFMP autorisée = dossier validé à la main par le bureau (Administration des conventions). */
+  return (s === 'ENREGISTREE' || s === 'AUTORISEE') && EUC_SUIVI2_entrepriseValidee_(a, entreprises);
 }
 /* Période ordinaire de la classe qui chevauche le plus les dates données. */
 function EUC_SUIVI2_meilleurePeriode_(periodes, d1, d2) {
@@ -324,7 +325,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
    * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
    * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
   var jotform = {}, jotformNonValide = {};
-  var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [] };
+  var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [], conflits: [] };
   /* Réponse brute JotForm : premier champ dont le libellé correspond. */
   function brut(j, libelles) {
     var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
@@ -364,7 +365,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var an0 = Number(annee.slice(0, 4)), datesFausses = false;
     [debut, fin].forEach(function(d) { if (d && (Number(d.slice(0, 4)) < an0 - 1 || Number(d.slice(0, 4)) > an0 + 2)) datesFausses = true; });
     if (datesFausses) { debut = ''; fin = ''; }
-    var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, siretNum: siret, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
     if (monacoNis) ligne.siret = true;
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
@@ -427,7 +428,15 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         if (statut === 'A_COMPLETER_ENTREPRISE' && actif && EUC_SUIVI2_saisieEntrepriseComplete_(actif, entreprises)) statut = 'ENREGISTREE';
         var avec = !!(valant[0]);
         r.sources = r.sources || {};
-        if (avec) { r.avec.push(e.id); r.sources[e.id] = 'QR'; return; }
+        if (avec) {
+          r.avec.push(e.id); r.sources[e.id] = 'QR';
+          /* Garde-fou : le dossier du bureau prime ; une saisie JotForm qui le contredit est signalée. */
+          var sDossier = EUC_SUIVI2_t_(valant[0].Entreprise_siret || valant[0].Entreprise_siret_snapshot).replace(/\D/g, '');
+          (jotform[e.id] || []).forEach(function(l) {
+            if (sDossier && l.siretNum && l.siretNum !== sDossier && jotformSur([l], p)) gardeFou.conflits.push({ eleveId: e.id, eleve: e.libelle, classe: c.nom, periode: p.libelle, ligne: l.id, siretJotform: l.siretNum, siretDossier: sDossier, entrepriseDossier: EUC_SUIVI2_t_(valant[0].Entreprise_raison_sociale || valant[0].Entreprise_enseigne) });
+          });
+          return;
+        }
         var jf = (!d || !(statut === 'ANNULEE' || statut === 'INTERROMPUE')) ? jotformSur(jotform[e.id], p) : null;
         if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; return; }
         r.sans.push(e.id);

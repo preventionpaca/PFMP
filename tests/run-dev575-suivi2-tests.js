@@ -100,8 +100,8 @@ test('R16 / R17 : apprenti = contrat commencé, non échu, sans rupture ; dossie
 
 test('R18 / R19 : avec convention = enregistrée et entreprise validée (SIRET ou NIS)', () => {
   const r = periode('TMVA1', 'PFMP n°1').resume;
-  assert.deepEqual(ids(r.avec), [1, 4], 'SIRET valide, et NIS après une interruption');
-  assert.deepEqual(ids(r.sans), [2, 3, 5], 'sans SIRET, annulée, PFMP autorisée sans saisie');
+  assert.deepEqual(ids(r.avec), [1, 4, 5], 'SIRET valide, NIS après une interruption, PFMP autorisée (dernière étape du circuit)');
+  assert.deepEqual(ids(r.sans), [2, 3], 'sans SIRET, annulée');
   assert.deepEqual(ids(r.annulees), [3]);
   assert.deepEqual(ids(r.apprentis), [9]);
 });
@@ -161,7 +161,7 @@ test('transition JotForm : une saisie validée ou importée compte, une saisie n
   const src = sources();
   src.jotform = [
     R(800, { Eleve_match_id: 2, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut: '2026-11-02', Date_fin: '2026-11-27' }),
-    R(801, { Eleve_match_id: 5, Decision: 'A_CONTROLER', Importer: true, SIRET_normalise: '12345678901234', Date_debut_brut: '2026-11-09', Date_fin_brut: '2026-11-27' }),
+    R(801, { Eleve_match_id: 20, Decision: 'A_CONTROLER', Importer: true, SIRET_normalise: '12345678901234', Date_debut_brut: '2026-11-09', Date_fin_brut: '2026-11-27' }),
     R(802, { Eleve_match_id: 4, Decision: 'A_CONTROLER', SIRET_normalise: '1234', Date_debut: '2027-03-01', Date_fin: '2027-03-26' }),
     R(803, { Eleve_match_id: 3, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut: '2026-11-02', Date_fin: '2026-11-27' })
   ];
@@ -169,7 +169,7 @@ test('transition JotForm : une saisie validée ou importée compte, une saisie n
   const t = m.classes.find(x => x.nom === 'TMVA1');
   const p1 = t.periodes.find(p => p.libelle === 'PFMP n°1').resume, p2 = t.periodes.find(p => p.libelle === 'PFMP n°2').resume;
   assert.equal(p1.sources[2], 'JOTFORM', 'saisie JotForm validée, même sans SIRET dans le dossier');
-  assert.equal(p1.sources[5], 'JOTFORM', 'ligne déjà importée');
+  assert.equal(m.classes.find(x => x.nom === '1MVA1').periodes[0].resume.sources[20], 'JOTFORM', 'ligne déjà importée');
   assert.equal(p1.sources[1], 'QR');
   assert.equal(p1.sans.includes(3), true, 'une convention annulée ne redevient pas active par JotForm');
   assert.equal(p2.motifs[4] && p2.motifs[4].jotformNonValide, true);
@@ -179,15 +179,16 @@ test('JotForm : SIRET vérifié vaut validation ; dates « Nov. 2, 2026 », JJ-M
   const src = sources();
   src.jotform = [
     R(810, { Eleve_match_id: 2, Decision: 'A_CONTROLER', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Date_debut_brut: 'Nov. 2, 2026', Date_fin_brut: 'Nov. 27, 2026' }),
-    R(811, { Eleve_match_id: 5, Decision: 'A_CONTROLER', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Raw_JSON: JSON.stringify({ q5: { text: 'Date de début', answer: { day: '9', month: '11', year: '2026' } }, q6: { text: 'Date de fin', answer: '2026-11-27' } }) }),
-    R(812, { Eleve_match_id: 20, Decision: 'IGNOREE', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Date_debut_brut: '2026-11-02', Date_fin_brut: '2026-11-27' })
+    R(811, { Eleve_match_id: 20, Decision: 'A_CONTROLER', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Raw_JSON: JSON.stringify({ q5: { text: 'Date de début', answer: { day: '9', month: '11', year: '2026' } }, q6: { text: 'Date de fin', answer: '2026-11-27' } }) }),
+    R(812, { Eleve_match_id: 21, Decision: 'IGNOREE', SIRET_statut: 'VERIFIE', SIRET_normalise: '93510938900012', Date_debut_brut: '2026-11-02', Date_fin_brut: '2026-11-27' })
   ];
+  src.eleves.push(R(21, { Nom: 'MU', Prenom: 'Max', Classe: 11, Annee_scolaire: 1 }));
   const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
   const p1 = m.classes.find(x => x.nom === 'TMVA1').periodes.find(p => p.libelle === 'PFMP n°1').resume;
   assert.equal(p1.sources[2], 'JOTFORM', 'SIRET vérifié, dates au format JotForm');
-  assert.equal(p1.sources[5], 'JOTFORM', 'dates lues dans la réponse brute');
+  assert.equal(m.classes.find(x => x.nom === '1MVA1').periodes[0].resume.sources[20], 'JOTFORM', 'dates lues dans la réponse brute');
   const k = m.classes.find(x => x.nom === '1MVA1').periodes[0].resume;
-  assert.equal(k.sans.includes(20), true, 'ligne ignorée');
+  assert.equal(k.sans.includes(21), true, 'ligne ignorée');
   assert.equal(c.EUC_SUIVI2_date_('28.09.2026'), '2026-09-28');
   assert.equal(c.EUC_SUIVI2_date_('02-11-2026'), '2026-11-02');
   assert.equal(c.EUC_SUIVI2_date_('Sept. 28, 2026'), '2026-09-28');
@@ -248,6 +249,15 @@ test('garde-fou : saisies JotForm sans élève reconnu ou sans période', () => 
   const p1 = m.classes.find(x => x.nom === 'TMVA1').periodes[0].resume;
   assert.equal(p1.sources[2], 'JOTFORM', 'Monaco : NIS validé par le bureau');
   assert.equal(p1.avec.includes(4), true, 'année mal saisie : rattachée par le numéro de période');
+});
+
+test('PFMP autorisée par le bureau = convention ; JotForm contradictoire signalé, le dossier prime', () => {
+  const src = sources();
+  src.jotform = [R(830, { Eleve_match_id: 5, Decision: 'VALIDEE', SIRET_normalise: '99999999900011', Date_debut_brut: 'Nov. 2, 2026', Date_fin_brut: 'Nov. 27, 2026' })];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ), p1 = m.classes.find(x => x.nom === 'TMVA1').periodes[0].resume;
+  assert.equal(p1.avec.includes(5), true, 'dossier PFMP_AUTORISEE avec SIRET');
+  assert.equal(p1.sources[5], 'QR');
+  assert.deepEqual(m.gardeFou.conflits.map(x => [x.ligne, x.siretDossier]), [[830, '12345678901234']]);
 });
 
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
