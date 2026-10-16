@@ -135,16 +135,19 @@ function EUC_CONVENTION_etatQRV511_(a,aujourdhui){
   var fin=EUC_IMPORT_dateExistanteISO_(a.Date_declaree_fin||a.Date_fin);
   var today=String(aujourdhui||Utilities.formatDate(new Date(),Session.getScriptTimeZone()||'Europe/Paris','yyyy-MM-dd'));
   if(a.Revoked===true||a.Supprimee_admin===true||statut.indexOf('INTERROMP')>=0||statut.indexOf('ANNULEE')>=0){
-    return {saisieAutorisee:false,etat:'REVOQUE',debut:debut,fin:fin,message:'Cette convention n’est plus utilisable. Présentez-vous au bureau PFMP.'};
+    return {saisieAutorisee:false,etat:'REVOQUE',debut:debut,fin:fin,message:'Cette convention n’est plus utilisable. Passez au bureau G205 pour retirer une nouvelle convention de stage.'};
   }
   if(!debut||!fin){
-    return {saisieAutorisee:false,etat:'DATES_INVALIDES',debut:debut,fin:fin,message:'Les dates de cette convention sont incomplètes. Présentez-vous au bureau PFMP.'};
+    return {saisieAutorisee:false,etat:'DATES_INVALIDES',debut:debut,fin:fin,message:'Les dates de cette convention sont incomplètes. Passez au bureau G205 pour retirer une nouvelle convention de stage.'};
   }
-  if(today<debut)return {saisieAutorisee:true,etat:'OUVERT',debut:debut,fin:fin,message:''};
+  /* Règle de Rudy (16/10/2026) : la saisie reste possible jusqu'au premier
+   * jour de stage inclus ; à partir du lendemain, l'élève qui n'a pas démarré
+   * aux dates prévues doit retirer une nouvelle convention au bureau G205. */
+  if(today<=debut)return {saisieAutorisee:true,etat:'OUVERT',debut:debut,fin:fin,message:''};
   if(today<=fin){
-    return {saisieAutorisee:false,etat:'PERIODE_COMMENCEE',debut:debut,fin:fin,message:'La PFMP a déjà commencé. Ce QR ne permet plus une saisie normale : présentez-vous au bureau PFMP pour recevoir une nouvelle convention adaptée.'};
+    return {saisieAutorisee:false,etat:'PERIODE_COMMENCEE',debut:debut,fin:fin,message:'Le stage devait commencer le '+debut.split('-').reverse().join('/')+'. Ce QR n’est plus valable : passez au bureau G205 pour retirer une nouvelle convention de stage.'};
   }
-  return {saisieAutorisee:false,etat:'EXPIRE_DEFINITIF',debut:debut,fin:fin,message:'Ce QR est définitivement expiré depuis la fin de la PFMP. Présentez-vous au bureau PFMP.'};
+  return {saisieAutorisee:false,etat:'EXPIRE_DEFINITIF',debut:debut,fin:fin,message:'Ce QR est expiré depuis la fin de la PFMP. Passez au bureau G205 pour retirer une nouvelle convention de stage.'};
 }
 function EUC_CONVENTION_exigerQRValideV511_(a){
   var etat=EUC_CONVENTION_etatQRV511_(a);

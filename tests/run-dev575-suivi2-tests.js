@@ -157,6 +157,24 @@ test('seuls les types de période en entreprise comptent (VFMP, examens… ignor
   assert.equal(c.EUC_SUIVI2_typeFormation_('EXAMENS'), false);
 });
 
+test('transition JotForm : une saisie validée ou importée compte, une saisie non validée est signalée', () => {
+  const src = sources();
+  src.jotform = [
+    R(800, { Eleve_match_id: 2, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut: '2026-11-02', Date_fin: '2026-11-27' }),
+    R(801, { Eleve_match_id: 5, Decision: 'A_CONTROLER', Importer: true, SIRET_normalise: '12345678901234', Date_debut_brut: '2026-11-09', Date_fin_brut: '2026-11-27' }),
+    R(802, { Eleve_match_id: 4, Decision: 'A_CONTROLER', SIRET_normalise: '1234', Date_debut: '2027-03-01', Date_fin: '2027-03-26' }),
+    R(803, { Eleve_match_id: 3, Decision: 'VALIDEE', SIRET_normalise: '12345678901234', Date_debut: '2026-11-02', Date_fin: '2026-11-27' })
+  ];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', AUJ);
+  const t = m.classes.find(x => x.nom === 'TMVA1');
+  const p1 = t.periodes.find(p => p.libelle === 'PFMP n°1').resume, p2 = t.periodes.find(p => p.libelle === 'PFMP n°2').resume;
+  assert.equal(p1.sources[2], 'JOTFORM', 'saisie JotForm validée, même sans SIRET dans le dossier');
+  assert.equal(p1.sources[5], 'JOTFORM', 'ligne déjà importée');
+  assert.equal(p1.sources[1], 'QR');
+  assert.equal(p1.sans.includes(3), true, 'une convention annulée ne redevient pas active par JotForm');
+  assert.equal(p2.motifs[4] && p2.motifs[4].jotformNonValide, true);
+});
+
 test('le contrôle compare élève par élève avec les cartes actuelles', () => {
   const noms = { 1: 'ALPHA Ana', 2: 'BETA Bob' };
   assert.deepEqual([...c.EUC_SUIVI2_diff_(['A', 'B'], ['B', 'C'])], ['A']);

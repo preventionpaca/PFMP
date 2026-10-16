@@ -38,7 +38,10 @@ test('le QR est ouvert avant le départ, bloqué pendant la PFMP et expiré apr�
   const c=baseContext();c.EUC_IMPORT_dateExistanteISO_=v=>String(v||'').slice(0,10);vm.runInContext(qr,c);
   const a={Date_debut:'2026-10-10',Date_fin:'2026-10-20'};
   assert.equal(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-09').etat,'OUVERT');
-  assert.equal(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-10').etat,'PERIODE_COMMENCEE');
+  assert.equal(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-10').etat,'OUVERT','le premier jour de stage reste ouvert');
+  assert.equal(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-11').etat,'PERIODE_COMMENCEE');
+  assert.match(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-11').message,/bureau G205 pour retirer une nouvelle convention de stage/);
+  assert.match(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-11').message,/10\/10\/2026/);
   assert.equal(c.EUC_CONVENTION_etatQRV511_(a,'2026-10-21').etat,'EXPIRE_DEFINITIF');
   assert.equal(c.EUC_CONVENTION_etatQRV511_({...a,Statut_administratif:'INTERROMPUE'},'2026-10-09').etat,'REVOQUE');
 });

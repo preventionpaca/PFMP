@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575c';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.575d';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -22,7 +22,8 @@ var EUC_SUIVI2_TABLES_ = {
   pdif: 'EUC_PARCOURS_DIFFERENCIE_PFMP',
   diplomes: 'EUC_CLASSES_DIPLOMES_PFMP',
   entreprises: 'EUC_ENTREPRISES',
-  types: 'Types_Planning'
+  types: 'Types_Planning',
+  jotform: 'EUC_MIGRATION_JOTFORM_PFMP'
 };
 var EUC_SUIVI2_MODE_LYCEE_ = 'PARCOURS_DIFF_LYCEE';
 var EUC_SUIVI2_MODE_ENTREPRISE_ = 'POURSUITE_PFMP2_ENTREPRISE';
@@ -253,6 +254,23 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
   var entreprises = {};
   (src.entreprises || []).map(EUC_SUIVI2_champs_).forEach(function(f) { entreprises[f.id] = f; });
 
+  /* Transition JotForm → QR : une saisie JotForm compte quand le bureau l'a
+   * validée (Decision = VALIDEE) ou importée, avec un SIRET de 14 chiffres.
+   * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
+  var jotform = {}, jotformNonValide = {};
+  (src.jotform || []).map(EUC_SUIVI2_champs_).forEach(function(j) {
+    var eid = EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id); if (!eid || !eleves[eid]) return;
+    var debut = EUC_SUIVI2_date_(j.Date_debut_brut || j.Date_debut), fin = EUC_SUIVI2_date_(j.Date_fin_brut || j.Date_fin);
+    var siret = EUC_SUIVI2_t_(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, '');
+    var importee = j.Importer === true || Number(j.Importer) === 1 || /^(OUI|YES|TRUE|VRAI)$/i.test(EUC_SUIVI2_t_(j.Importer));
+    var valide = EUC_SUIVI2_t_(j.Decision).toUpperCase() === 'VALIDEE' || importee;
+    var ligne = { id: Number(j.id), debut: debut, fin: fin, siret: siret.length === 14 };
+    ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
+  });
+  function jotformSur(liste, p) {
+    return (liste || []).filter(function(l) { return l.debut && l.fin && l.debut <= p.fin && l.fin >= p.debut; })[0] || null;
+  }
+
   /* Dossiers de convention par élève et période. */
   var dossiers = {};
   (src.dossiers || []).map(EUC_SUIVI2_champs_).forEach(function(a) {
@@ -287,7 +305,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         var d = actif || liste[0] || null, statut = EUC_SUIVI2_statut_(d);
         if (statut === 'A_COMPLETER_ENTREPRISE' && actif && EUC_SUIVI2_saisieEntrepriseComplete_(actif, entreprises)) statut = 'ENREGISTREE';
         var avec = !!(actif && statut === 'ENREGISTREE' && EUC_SUIVI2_entrepriseValidee_(actif, entreprises));
-        if (avec) { r.avec.push(e.id); return; }
+        r.sources = r.sources || {};
+        if (avec) { r.avec.push(e.id); r.sources[e.id] = 'QR'; return; }
+        var jf = (!d || !(statut === 'ANNULEE' || statut === 'INTERROMPUE')) ? jotformSur(jotform[e.id], p) : null;
+        if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; return; }
         r.sans.push(e.id);
         if (statut === 'ANNULEE' || statut === 'INTERROMPUE') r.annulees.push(e.id);
         /* Motif, pour l'écran de contrôle et l'affichage « sans convention ». */
@@ -295,7 +316,8 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
         Object.keys(dossiers).forEach(function(k2) { if (k2.indexOf(e.id + '|') === 0 && k2 !== e.id + '|' + p.id) autres.push(Number(k2.split('|')[1])); });
         r.motifs = r.motifs || {};
         r.motifs[e.id] = { dossiers: liste.length, statut: d ? EUC_SUIVI2_t_(d.Statut_administratif || d.Statut) || statut : 'AUCUN_DOSSIER',
-          identifiant: d ? EUC_SUIVI2_identifiantEntreprise_(d, entreprises) : '', ficheEntreprise: d ? EUC_SUIVI2_ref_(d.Entreprise) : 0, autresPeriodes: autres };
+          identifiant: d ? EUC_SUIVI2_identifiantEntreprise_(d, entreprises) : '', ficheEntreprise: d ? EUC_SUIVI2_ref_(d.Entreprise) : 0, autresPeriodes: autres,
+          jotformNonValide: !!jotformSur(jotformNonValide[e.id], p) };
       });
       r.scolaires = r.effectif - r.apprentis.length;
       p.resume = r;
@@ -331,7 +353,7 @@ function EUC_SUIVI2_lireSources_() {
   var src = {};
   reps.forEach(function(rep, i) {
     var code = rep.getResponseCode();
-    if (code === 404 && cles[i] === 'pdif') { src.pdif = []; return; }
+    if (code === 404 && (cles[i] === 'pdif' || cles[i] === 'jotform' || cles[i] === 'types')) { src[cles[i]] = []; return; }
     if (code !== 200) throw new Error('Lecture Grist impossible : ' + EUC_SUIVI2_TABLES_[cles[i]] + ' (' + code + ').');
     src[cles[i]] = JSON.parse(rep.getContentText()).records || [];
   });
