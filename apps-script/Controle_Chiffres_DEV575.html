@@ -48,6 +48,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     </div>
     <p class="note">La comparaison relit les tables Grist (nouveau moteur) puis les synthèses actuelles des trois familles : comptez 20 à 60 secondes. Les écarts attendus viennent des règles validées (fraction sur les scolaires, apprentis à partir de la Première, convention annulée ou sans entreprise validée comptée « sans convention », P.dif sans apprentis) ou de synthèses actuelles périmées.</p>
   </section>
+  <section id="cpSection">
+    <h2 style="margin-top:0">Codes postaux sans 0 initial</h2>
+    <p class="note">Une colonne « Code postal » de type Nombre dans Grist transforme 06160 en 6160 : adresses fausses, géocodage impossible, entreprises mal rapprochées. L’analyse ne modifie rien ; la correction passe ces colonnes en Texte puis remet le 0.</p>
+    <p><button type="button" id="cpAnalyser">Analyser</button> <button type="button" id="cpCorriger" disabled>Corriger dans Grist</button></p>
+    <div id="cpResultat"></div>
+  </section>
   <section id="resume" hidden></section>
   <section id="gardefou" hidden></section>
   <section>
@@ -114,6 +120,14 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       .withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);b.disabled=false;b.removeAttribute('aria-busy');message((e&&e.message)||String(e),true);})
       .EUC_SUIVI2_controle($('annee').value);
   };
+})();
+
+/* DEV578 : codes postaux privés de leur 0 initial. */
+(function(){var e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});},R=document.getElementById('cpResultat'),A=document.getElementById('cpAnalyser'),C=document.getElementById('cpCorriger');
+  function tableau(l){var a=l.filter(function(c){return c.nombre||c.type!=='Text'||c.erreur;});if(!a.length)return '<p>Aucun code postal à corriger : toutes les colonnes sont en Texte et complètes.</p>';
+    return '<table><thead><tr><th>Tableau</th><th>Colonne</th><th>Type</th><th>À corriger</th><th>Exemples</th></tr></thead><tbody>'+a.map(function(c){return '<tr><td>'+e(c.table)+'</td><td>'+e(c.colonne)+'</td><td>'+e(c.type)+(c.formule?' (formule, non modifiée)':'')+(c.type!=='Text'&&!c.formule?' → Texte':'')+'</td><td>'+(c.erreur?e(c.erreur):c.nombre)+'</td><td>'+e((c.exemples||[]).join(', '))+'</td></tr>';}).join('')+'</tbody></table>';}
+  A.onclick=function(){A.disabled=true;A.textContent='Analyse…';R.innerHTML='';google.script.run.withSuccessHandler(function(l){A.disabled=false;A.textContent='Analyser';R.innerHTML=tableau(l);C.disabled=!l.some(function(c){return !c.formule&&!c.erreur&&(c.nombre||c.type!=='Text');});}).withFailureHandler(function(err){A.disabled=false;A.textContent='Analyser';R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_cpAnalyse();};
+  C.onclick=function(){if(!confirm('Corriger les codes postaux dans Grist ? Les colonnes listées passent en Texte et les valeurs à 4 chiffres reçoivent leur 0.'))return;C.disabled=true;C.textContent='Correction…';google.script.run.withSuccessHandler(function(r){C.textContent='Corriger dans Grist';R.innerHTML='<p><b>Correction faite.</b></p><table><thead><tr><th>Tableau</th><th>Colonne</th><th>Type</th><th>Valeurs corrigées</th><th>Remarque</th></tr></thead><tbody>'+(r.rapport||[]).map(function(x){return '<tr><td>'+e(x.table)+'</td><td>'+e(x.colonne)+'</td><td>'+e(x.typeAvant)+(x.typeApres!==x.typeAvant?' → '+e(x.typeApres):'')+'</td><td>'+x.corriges+'</td><td>'+e(x.ignore)+'</td></tr>';}).join('')+'</tbody></table>';}).withFailureHandler(function(err){C.disabled=false;C.textContent='Corriger dans Grist';R.insertAdjacentHTML('afterbegin','<p>Erreur : '+e(err&&err.message||err)+'</p>');}).EUC_DEV578_cpCorriger('CORRIGER');};
 })();
 </script>
 </body>
