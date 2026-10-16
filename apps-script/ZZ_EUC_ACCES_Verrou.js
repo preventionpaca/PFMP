@@ -299,7 +299,9 @@ function EUC_ACCES_pageRefus_() {
     '<p>Cette page est réservée aux personnels du lycée. Ouvrez-la depuis le lien de l’ENT Atrium.</p>' +
     '<p>Si votre lien ne fonctionne plus, demandez le nouveau lien au bureau des entreprises.</p>' +
     '</body></html>'
-  ).setTitle('Lien d’accès requis').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  ).setTitle('Lien d’accès requis').addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    /* DEV578 : affichable dans les coquilles pfmp/apprentis.loucodi.fr (sinon « script.google.com est bloqué »). */
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /* Appelé par EUC_RELEASE_doGet_ avant le rendu. Retourne une page de refus,

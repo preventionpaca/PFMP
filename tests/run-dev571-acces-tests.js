@@ -33,7 +33,7 @@ function contexte(opts) {
     }) },
     CacheService: { getScriptCache: () => ({ get: k => (cache.has(k) ? cache.get(k) : null), put: (k, v) => cache.set(k, String(v)), remove: k => cache.delete(k) }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
-    HtmlService: { createHtmlOutput: html => ({ html, getContent() { return this.html; }, setContent(v) { this.html = v; }, setTitle() { return this; }, addMetaTag() { return this; } }) },
+    HtmlService: { createHtmlOutput: html => ({ html, getContent() { return this.html; }, setContent(v) { this.html = v; }, setTitle() { return this; }, addMetaTag() { return this; }, setXFrameOptionsMode(m) { this.xfo = m; return this; } }), XFrameOptionsMode: { ALLOWALL: 'ALLOWALL' } },
     EUC_PFMP_contexteAdmin_: () => (opts.email === 'admin@lycee.test' ? { autorise: true, role: 'ADMIN_PFMP', email: opts.email } : null),
     EUC_DEV270B_lookupUser_: email => (email === 'admin@lycee.test' ? { autorise: true } : null)
   };

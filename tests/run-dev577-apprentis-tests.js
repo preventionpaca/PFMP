@@ -57,6 +57,7 @@ test('cartes : points hors zone France–Monaco écartés et signalés ; carte d
 
 test('observation de l’origine des ouvertures (Atrium) notée dans le journal des accès, sans blocage', () => {
   assert.match(verrou, /if \(enseignant && p\.orig != null\) EUC_ACCES_noter_\('origine'/);
+  assert.match(verrou, /setXFrameOptionsMode\(HtmlService\.XFrameOptionsMode\.ALLOWALL\);\n\}/, 'page de refus affichable dans pfmp.loucodi.fr');
 });
 
 test('carte des apprentis : détail nominatif pour les enseignants, liste sous la carte, PDF, apprentis non placés signalés', () => {
