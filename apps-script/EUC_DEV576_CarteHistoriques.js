@@ -11,6 +11,8 @@
 function EUC_DEV576_historiquesCarte(q) {
   if (!EUC_DEV538_staffAllowed_()) throw new Error('Accès réservé aux personnels authentifiés.');
   q = q || {};
+  /* DEV578 : historique complet (toutes années) préparé en arrière-plan : réponse immédiate. */
+  if (String(q.annee || '').toUpperCase() === 'ALL' && !q.famille && !q.classeId && !q.periodeId && !q.fenetre) return EUC_DEV578_historiquesTous_();
   var scope = { annee: q.annee, fenetre: q.fenetre, famille: q.famille, classeId: q.classeId, periodeId: q.periodeId };
   var temoin = '';
   try { temoin = typeof EUC_SUIVI2_temoin_ === 'function' ? EUC_SUIVI2_temoin_() : ''; } catch (e) { temoin = ''; }

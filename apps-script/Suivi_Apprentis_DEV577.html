@@ -74,6 +74,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function aller(o){var h=new URLSearchParams();Object.keys(o).forEach(function(k){if(o[k])h.set(k,o[k]);});var nh='#'+h.toString();
     if(location.hash!==nh){try{history.pushState(null,'',nh);}catch(e){location.hash=nh;return;}}rendre();}
   function ouvrir(url){
+    if(typeof window.eucAvecJeton==='function')url=window.eucAvecJeton(url);
     if(CFG.wrapper){var w=window;for(var i=0;i<6;i++){try{w=w.parent;w.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url},'*');}catch(e){break;}}return;}
     try{window.top.location.href=url;}catch(e){window.open(url,'_top');}
   }

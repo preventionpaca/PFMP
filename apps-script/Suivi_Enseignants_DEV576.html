@@ -143,6 +143,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function coord(o){if(!o||!(o.nom||o.tel||o.mail))return '';return '<div class="coord">'+(o.nom?'<b>'+esc(o.nom)+'</b>':'')+(o.tel?'<a href="tel:'+esc(o.tel.replace(/\s/g,''))+'">'+esc(o.tel)+'</a><br>':'')+(o.mail?'<a href="mailto:'+esc(o.mail)+'">'+esc(o.mail)+'</a>':'')+'</div>';}
   /* Ouverture d'une autre page de l'application : dans le cadre pfmp.loucodi.fr, on passe par la coquille. */
   function ouvrir(url){
+    if(typeof window.eucAvecJeton==='function')url=window.eucAvecJeton(url);
     if(CFG.wrapper){var w=window;for(var i=0;i<6;i++){try{w=w.parent;w.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url},'*');}catch(e){break;}}return;}
     try{window.top.location.href=url;}catch(e){window.open(url,'_top');}
   }

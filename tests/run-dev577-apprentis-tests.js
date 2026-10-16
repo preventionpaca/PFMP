@@ -72,4 +72,26 @@ test('carte des apprentis : détail nominatif pour les enseignants, liste sous l
   assert.match(book, /b\.webappUrl=EUC_RELEASE_serviceBase_\(\)/, 'retour sans page blanche googleusercontent');
 });
 
+test('historique des entreprises toujours prêt : servi depuis la dernière version, recalculé en arrière-plan seulement si Grist change', () => {
+  const src578 = read('apps-script/EUC_DEV578_HistoriquesPrets.js'), cache = new Map(); let calculs = 0, temoin = 't1', triggers = [];
+  const k = { console, JSON, Date, Math, Object, Array, String, Number, Infinity,
+    EUC_SUIVI2_temoin_: () => temoin, EUC_DEV441_digest_: v => 'd-' + v,
+    EUC_DEV538_history_: q => { calculs++; assert.equal(q.annee, 'ALL'); return [{ identity: 'SIRET|1', historique: [{ annee: '2026-2027', eleve: 'X', apprenti: true }] }]; },
+    EUC_DEV572_lire_: key => cache.has(key) ? JSON.parse(cache.get(key)) : null, EUC_DEV572_ecrire_: (key, v) => cache.set(key, JSON.stringify(v)),
+    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
+    CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
+    ScriptApp: { getProjectTriggers: () => triggers, newTrigger: h => ({ timeBased: () => ({ everyMinutes: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }) }) }) } };
+  vm.createContext(k); vm.runInContext(src578, k);
+  const a = k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1); assert.ok(a.par['d-SIRET|1'.slice(0, 32)]);
+  assert.equal(triggers.length, 1, 'déclencheur installé');
+  k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1, 'deuxième ouverture instantanée');
+  k.EUC_DEV578_prechaufferHistoriques(); assert.equal(calculs, 1, 'Grist inchangé : pas de recalcul');
+  temoin = 't2'; const stale = k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1); assert.equal(stale.aJour, false, 'servi sans attendre');
+  k.EUC_DEV578_prechaufferHistoriques(); assert.equal(calculs, 2, 'Grist modifié : recalcul en arrière-plan');
+  assert.match(read('apps-script/EUC_DEV576_CarteHistoriques.js'), /return EUC_DEV578_historiquesTous_\(\)/);
+  assert.match(cartePfmp, /EUC_DEV576_historiquesCarte\(\{annee:'ALL'\}\)/); assert.match(cartePfmp, /function ficheHtml/);
+  assert.match(read('apps-script/Suivi_Enseignants_DEV576.html'), /url=window\.eucAvecJeton\(url\)/); assert.match(page, /url=window\.eucAvecJeton\(url\)/);
+  assert.match(verrou, /window\.eucAvecJeton=function/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);

@@ -347,6 +347,8 @@ function EUC_ACCES_scriptPage_() {
   var jeton = EUC_ACCES_creerJeton_();
   if (!jeton) return '';
   return '<script data-euc-acces="1">(function(){var T=' + JSON.stringify(jeton) + ';' +
+    /* DEV578 : les pages qui naviguent par script (window.top.location) ajoutent le jeton via window.eucAvecJeton. */
+    'window.eucAvecJeton=function(h){try{var u=new URL(h,location.href);if(!u.searchParams.get("' + EUC_ACCES_PARAM_JETON_ + '"))u.searchParams.set("' + EUC_ACCES_PARAM_JETON_ + '",T);return u.toString()}catch(e){return h}};' +
     'function wrap(r){if(!r||typeof Proxy!=="function")return r;return new Proxy(r,{get:function(t,p){var v=t[p];' +
       'if(typeof v!=="function")return v;' +
       'if(p==="withSuccessHandler"||p==="withFailureHandler"||p==="withUserObject")return function(){return wrap(v.apply(t,arguments))};' +
