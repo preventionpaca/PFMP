@@ -54,7 +54,10 @@ details.niveau>summary .titre{font-weight:700;font-size:17px}details.niveau .gri
 button.compteur{font:inherit;color:inherit;text-align:left;cursor:pointer}button.compteur[aria-expanded="true"]{border-color:var(--vert2);background:var(--clair)}
 .noms{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:0 0 10px;font-size:14px}
 .imprime-seul{display:none}
-.pdf-zone{position:fixed;left:-10000px;top:0;width:1500px;background:#fff;padding:12px;font-size:13px}.pdf-zone .tableau{overflow:visible;border:0}.pdf-zone th{position:static}
+/* La bibliothèque PDF recopie la zone : elle doit rester « statique », sinon la copie a une hauteur nulle (page blanche). */
+.pdf-enveloppe{position:fixed;left:-20000px;top:0}.pdf-zone{width:1500px;background:#fff;padding:12px;font-size:13px}
+.pdf-voile{position:fixed;inset:0;z-index:40;background:rgba(246,250,248,.97);display:flex;align-items:center;justify-content:center;font:700 16px Arial,sans-serif;color:var(--vert)}
+a.vers-carte{color:var(--texte);text-decoration:none;border-bottom:1px dotted var(--vert2)}a.vers-carte:hover{color:var(--vert)}.pdf-zone .tableau{overflow:visible;border:0}.pdf-zone th{position:static}
 .pdf-zone .compteur{display:inline-block;min-width:150px;margin:0 8px 8px 0}.pdf-zone .compteurs{display:block}
 .pastille{display:inline-block;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-right:5px;vertical-align:1px}
 select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
@@ -164,7 +167,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
         if(f.enregistreLe)badge+='<span class="petit">Enregistrée le '+dfr(f.enregistreLe)+(f.numero?' · '+esc(f.numero):'')+'</span>';
       }
       if(l[4])badge+='<span class="badge b-APPRENTI" style="margin-top:4px">Apprenti</span><span class="mixte">Apprenti depuis le '+dfr(l[4][0])+(l[4][1]?' (jusqu’au '+dfr(l[4][1])+')':'')+'</span>';
-      var ent=esc(f&&f.entreprise)+(f&&f.nomSaisi?'<span class="petit">Saisi : '+esc(f.nomSaisi)+'</span>':'');
+      var ent=(f&&f.entreprise?'<a href="#" class="vers-carte" data-ent="'+esc(f.entreprise)+'" data-adr="'+esc(f.adresse||'')+'" title="Voir l’entreprise sur la carte et l’itinéraire">'+esc(f.entreprise)+' <span aria-hidden="true">📍</span></a>':'')+(f&&f.nomSaisi?'<span class="petit">Saisi : '+esc(f.nomSaisi)+'</span>':'');
       return '<tr class="'+(app?'apprenti':'')+'"><td>'+(app?'<span class="pastille" title="Apprenti">A</span>':'')+'<b>'+esc(e[1])+'</b></td><td>'+badge+'</td><td>'+ent+'</td><td>'+esc(f&&f.adresse)+'</td><td>'+coord(f&&f.contact)+'</td><td>'+coord(f&&f.tuteur)+'</td><td>'+esc(c.pp.join(', '))+'</td><td>'+esc(l[2])+'</td><td>'+esc(l[3])+'</td></tr>';
     }).join('');
     var memes=D.classes.filter(function(x){return x.famille===c.famille;});
@@ -184,6 +187,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     document.getElementById('imprimer').onclick=function(){window.print();};
     document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
     document.getElementById('carte').onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';ouvrir(carteUrl);};
+    app.querySelectorAll('a.vers-carte').forEach(function(a){a.onclick=function(ev){ev.preventDefault();ev.stopPropagation();a.classList.add('occupe');
+      ouvrir(carteUrl+'&focus='+encodeURIComponent(a.getAttribute('data-ent'))+'&adr='+encodeURIComponent(a.getAttribute('data-adr')));};});
     document.getElementById('autre').onchange=function(){var x=parId[this.value],r=x&&x.periodes.filter(function(q){return q.libelle===p.libelle;})[0];aller({c:this.value,p:r?r.id:''});};
     app.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){aller({c:c.id,p:b.getAttribute('data-p')});};});
     app.querySelectorAll('.compteur').forEach(function(b){b.onclick=function(){
@@ -202,15 +207,18 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var texte=btn.textContent;btn.disabled=true;btn.textContent='Préparation du PDF…';
     function fin(){btn.disabled=false;btn.textContent=texte;}
     chargerPdf(function(){
+      window.scrollTo(0,0);
+      var voile=document.createElement('div');voile.className='pdf-voile';voile.innerHTML='<span>Préparation du PDF…</span>';document.body.appendChild(voile);
       var zone=document.createElement('div');zone.className='pdf-zone';
       zone.innerHTML='<h2>'+esc(c.nom)+' — '+esc(p.libelle)+' <span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+' · '+esc(D.annee)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
         app.querySelector('.compteurs').outerHTML+app.querySelector('.tableau').outerHTML+
         '<p class="note">Édité le '+new Date().toLocaleDateString('fr-FR')+' — données Grist (action n° '+esc(D.temoin)+').</p>';
-      document.body.appendChild(zone);
+      var env=document.createElement('div');env.className='pdf-enveloppe';env.appendChild(zone);document.body.appendChild(env);
       var nom=('PFMP '+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';
-      window.html2pdf().set({margin:[6,6,8,6],filename:nom,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,windowWidth:1500},
+      function nettoyer(){env.remove();voile.remove();}
+      window.html2pdf().set({margin:[6,6,8,6],filename:nom,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0,windowWidth:1500,backgroundColor:'#ffffff'},
         jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:'tr'}}).from(zone).save()
-        .then(function(){zone.remove();fin();},function(){zone.remove();fin();alert('Le PDF n’a pas pu être créé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+        .then(function(){nettoyer();fin();},function(){nettoyer();fin();alert('Le PDF n’a pas pu être créé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
     },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
   }
   var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
