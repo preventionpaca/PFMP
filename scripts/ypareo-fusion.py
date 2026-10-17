@@ -30,13 +30,27 @@ ENCODAGE = "cp1252"
 MOTIF = "exportGroupe*.csv"
 
 
+OBLIGATOIRES = ("NOM_APPRENANT", "PRENOM_APPRENANT", "NOM_GROUPE")
+REFUSES = {}  # fichier -> date de modification : refusé une fois, pas répété en boucle
+
+
+def propre(h):
+    return h.replace("\ufeff", "").replace("ï»¿", "").strip().strip('"').strip()
+
+
 def lire(chemin):
+    """(en-têtes, lignes en dictionnaires) — en-têtes nettoyés (BOM, guillemets)."""
     texte = chemin.read_bytes().decode(ENCODAGE, errors="replace")
     lignes = list(csv.reader(io.StringIO(texte), delimiter=";"))
     if not lignes:
         return [], []
-    entetes = [h.strip() for h in lignes[0]]
-    return entetes, [l for l in lignes[1:] if any(c.strip() for c in l)]
+    entetes = [propre(h) for h in lignes[0]]
+    return entetes, [dict(zip(entetes, l)) for l in lignes[1:] if any(c.strip() for c in l)]
+
+
+def valide(entetes):
+    """Un vrai export de groupe commence par NOM_APPRENANT et contient les colonnes clés."""
+    return bool(entetes) and entetes[0] == "NOM_APPRENANT" and all(h in entetes for h in OBLIGATOIRES)
 
 
 def ecrire(chemin, entetes, lignes):
@@ -44,55 +58,56 @@ def ecrire(chemin, entetes, lignes):
     with open(tmp, "w", encoding=ENCODAGE, errors="replace", newline="") as f:
         w = csv.writer(f, delimiter=";", lineterminator="\r\n")
         w.writerow(entetes)
-        w.writerows(lignes)
+        w.writerows([[l.get(h, "") for h in entetes] for l in lignes])
     os.replace(tmp, chemin)
 
 
 def fusionner(dossier, sortie):
-    fichiers = sorted(dossier.glob(MOTIF), key=lambda p: p.stat().st_mtime)
+    fichiers = [f for f in sorted(dossier.glob(MOTIF), key=lambda p: p.stat().st_mtime)
+                if REFUSES.get(f.name) != f.stat().st_mtime]
     if not fichiers:
         return False
     entetes, lignes = (lire(sortie) if sortie.exists() else ([], []))
+    if entetes and not valide(entetes):
+        print(f"  ! {sortie.name} avait des en-têtes invalides : il est reconstruit.")
+        entetes, lignes = [], []
     nouvelles, groupes_recus, acceptes = [], set(), []
     for f in fichiers:
         e, l = lire(f)
-        if not e:
-            acceptes.append(f)
-            continue
-        if entetes and e != entetes:
-            print(f"  ! {f.name} : colonnes différentes, ignoré (laissé dans le dossier)")
+        if not valide(e):
+            REFUSES[f.name] = f.stat().st_mtime
+            print(f"  ! {f.name} : ce n'est pas un export de groupe Yparéo, ignoré (laissé dans le dossier)")
             continue
         acceptes.append(f)
-        entetes = entetes or e
-        ig = entetes.index("NOM_GROUPE") if "NOM_GROUPE" in entetes else -1
-        for ligne in l:
-            if ig >= 0 and ig < len(ligne):
-                groupes_recus.add(ligne[ig].strip())
+        for h in e:
+            if h not in entetes:
+                entetes.append(h)
+        groupes_recus.update(x.get("NOM_GROUPE", "").strip() for x in l)
         nouvelles.extend(l)
-    ig = entetes.index("NOM_GROUPE") if "NOM_GROUPE" in entetes else -1
+    if not acceptes:
+        return False
     # Un groupe reçu remplace entièrement son ancienne version.
-    gardees = [l for l in lignes if ig < 0 or ig >= len(l) or l[ig].strip() not in groupes_recus]
+    gardees = [l for l in lignes if l.get("NOM_GROUPE", "").strip() not in groupes_recus]
     vus, total = set(), []
     for l in gardees + nouvelles:
-        cle = "\x1f".join(c.strip() for c in l)
+        cle = "\x1f".join(str(l.get(h, "")).strip() for h in entetes)
         if cle in vus:
             continue
         vus.add(cle)
         total.append(l)
     sortie.parent.mkdir(parents=True, exist_ok=True)
     ecrire(sortie, entetes, total)
-    fichiers = acceptes
-    for f in fichiers:
+    for f in acceptes:
         f.unlink()
-    nb_groupes = len({l[ig].strip() for l in total if 0 <= ig < len(l)}) if ig >= 0 else 0
-    print(f"{datetime.now():%H:%M:%S}  {len(fichiers)} export(s) fusionné(s) et effacé(s) — "
+    nb_groupes = len({l.get("NOM_GROUPE", "").strip() for l in total})
+    print(f"{datetime.now():%H:%M:%S}  {len(acceptes)} export(s) fusionné(s) et effacé(s) — "
           f"{sortie.name} : {len(total)} apprenant(s), {nb_groupes} groupe(s)")
     return True
 
 
 def stable(dossier, calme):
     """Vrai quand des exports sont là et qu'aucun n'a bougé depuis « calme » secondes."""
-    fichiers = list(dossier.glob(MOTIF)) + list(dossier.glob("*.crdownload"))
+    fichiers = [f for f in dossier.glob(MOTIF) if REFUSES.get(f.name) != f.stat().st_mtime] + list(dossier.glob("*.crdownload"))
     if not any(f.match(MOTIF) for f in fichiers):
         return False
     derniere = max(f.stat().st_mtime for f in fichiers)
