@@ -65,7 +65,7 @@ select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);
 @media (max-width:700px){header h1{font-size:18px}th:nth-child(4),td:nth-child(4){display:none}}
 @page{size:A4 landscape;margin:10mm}
 @media print{header,.barre,.noprint{display:none!important}body{background:#fff;font-size:11px}.tableau{border:0;overflow:visible}th{position:static}.imprime-seul{display:block;font-weight:700}tr.apprenti td{background:#fffbe6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:inherit;text-decoration:none}}
-</style>
+.pp-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}.pp-modal[hidden]{display:none}.pp-carte{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}.pp-carte h2{margin:0 0 4px}.pp-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:8px 0}.pp-carte input#ppCode{padding:7px;border:1px solid #9cc;border-radius:7px;min-width:260px}.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:ppspin .7s linear infinite}@keyframes ppspin{to{transform:rotate(360deg)}}@media print{.pp-modal{display:none!important}}</style>
 </head>
 <body>
 <header><h1>Suivi des PFMP</h1><span class="info" id="info"></span></header>
@@ -176,7 +176,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
       '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
       '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button>'+
-      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button></div>'+
+      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button><button class="btn" type="button" id="ppAcces">Accès professeur principal</button></div>'+
       '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'<span class="edite"></span></p>'+
       '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
@@ -185,6 +185,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var titre=document.title;
     document.getElementById('imprimer').onclick=function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();window.print();};
     document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
+    document.getElementById('ppAcces').onclick=function(){accesPP(c,p);};
     document.getElementById('carte').onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';ouvrir(carteUrl);};
     app.querySelectorAll('a.vers-carte').forEach(function(a){a.onclick=function(ev){ev.preventDefault();ev.stopPropagation();a.classList.add('occupe');
       ouvrir(carteUrl+'&focus='+encodeURIComponent(a.getAttribute('data-ent'))+'&adr='+encodeURIComponent(a.getAttribute('data-adr')));};});
@@ -201,6 +202,36 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   }
   /* Export PDF : vrai document tableau (jsPDF + AutoTable), construit à partir des données, pas d'une capture d'écran. */
   var PDFLIBS=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
+  /* DEV578 : accès professeur principal (code temporaire envoyé par l'administration) : affecter le
+   * professeur visiteur ou le suivi téléphonique aux élèves de la classe et de la période. Mêmes fonctions
+   * serveur que l'ancienne fiche de classe (EUC_DEV448_unlockPp / EUC_DEV448_affecterPp). */
+  function accesPP(c,p){
+    var m=document.getElementById('ppModal');
+    if(!m){document.body.insertAdjacentHTML('beforeend','<div id="ppModal" class="pp-modal" role="dialog" aria-modal="true" aria-labelledby="ppTitre"><div class="pp-carte"><h2 id="ppTitre">Accès professeur principal</h2><p id="ppPortee" class="note"></p>'+
+      '<div id="ppConnexion"><label>Code temporaire <input id="ppCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label> <button class="btn" type="button" id="ppOuvrir">Déverrouiller</button></div><p id="ppEtat" role="status"></p>'+
+      '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button></div><div class="tableau"><table id="ppTable"></table></div></div>'+
+      '<p style="text-align:right"><button class="btn" type="button" id="ppFermer">Fermer</button></p></div></div>');m=document.getElementById('ppModal');
+      m.onclick=function(e){if(e.target===m)m.hidden=true;};document.getElementById('ppFermer').onclick=function(){m.hidden=true;};}
+    var portee={annee:String(D.annee||''),classeId:Number(c.id),periodeId:Number(p.id)},code=document.getElementById('ppCode'),etatPP=document.getElementById('ppEtat'),espace=document.getElementById('ppEspace'),donnees=null,modifie=false;
+    document.getElementById('ppPortee').textContent=c.nom+' — '+p.libelle;espace.hidden=true;etatPP.textContent='';m.hidden=false;
+    try{code.value=sessionStorage.getItem('eucPpCode')||'';}catch(e){}
+    setTimeout(function(){code.focus();},0);
+    function afficher(d){donnees=d;try{sessionStorage.setItem('eucPpCode',code.value.trim());}catch(e){}espace.hidden=false;
+      document.getElementById('ppPortee').textContent=d.scope.classe+' — '+d.scope.periode+' · accès de '+d.scope.professeurPrincipal+' · valable jusqu’au '+d.scope.expiration;
+      document.getElementById('ppProf').innerHTML=(d.professeurs||[]).map(function(x){return '<option value="'+x.id+'">'+esc(x.nom)+(x.discipline?' — '+esc(x.discipline):'')+'</option>';}).join('');
+      document.getElementById('ppTable').innerHTML='<thead><tr><th><input id="ppTous" type="checkbox" aria-label="Tout cocher"></th><th>Élève</th><th>Statut</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+(d.lignes||[]).map(function(x){return '<tr><td><input class="ppEleve" type="checkbox" value="'+x.eleveId+'"></td><td><b>'+esc(x.eleve)+'</b></td><td>'+esc(x.statut)+'</td><td>'+esc(x.telephone||'—')+'</td><td>'+esc(x.visite||'—')+'</td></tr>';}).join('')+'</tbody>';
+      document.getElementById('ppTous').onchange=function(){var v=this.checked;document.querySelectorAll('.ppEleve').forEach(function(x){x.checked=v;});};}
+    function occupe(b,on,txt){b.disabled=on;if(!b.dataset.t)b.dataset.t=b.textContent;b.innerHTML=on?'<span class="spin" aria-hidden="true"></span>'+txt:b.dataset.t;}
+    document.getElementById('ppOuvrir').onclick=function(){var b=this;if(!code.value.trim()){etatPP.textContent='Saisissez le code reçu par courriel.';return;}occupe(b,true,'Vérification…');etatPP.textContent='';
+      google.script.run.withSuccessHandler(function(d){occupe(b,false);afficher(d);etatPP.textContent='Accès ouvert.';}).withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Accès refusé : '+(e&&e.message||e);}).EUC_DEV448_unlockPp(Object.assign({code:code.value.trim()},portee));};
+    code.onkeydown=function(e){if(e.key==='Enter')document.getElementById('ppOuvrir').click();};
+    document.getElementById('ppAffecter').onclick=function(){var b=this,ids=Array.prototype.map.call(document.querySelectorAll('.ppEleve:checked'),function(x){return Number(x.value);});
+      if(!ids.length){etatPP.textContent='Cochez au moins un élève.';return;}occupe(b,true,'Enregistrement…');
+      google.script.run.withSuccessHandler(function(r){occupe(b,false);var sel={};(r.eleveIds||[]).forEach(function(id){sel[Number(id)]=true;});(donnees.lignes||[]).forEach(function(x){if(!sel[Number(x.eleveId)])return;if(r.type==='TELEPHONE')x.telephone=r.professeur.nom;else x.visite=r.professeur.nom;});afficher(donnees);modifie=true;
+        etatPP.textContent=(r.warning||'Affectation enregistrée.')+' Le tableau de la classe se mettra à jour avec « Actualiser ».';})
+      .withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Erreur : '+(e&&e.message||e);})
+      .EUC_DEV448_affecterPp(Object.assign({code:code.value.trim(),type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids},portee));};
+  }
   function chargerPdf(ok,ko){
     var i=0;(function suivant(){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();if(i>=PDFLIBS.length)return ko();
       var sc=document.createElement('script');sc.src=PDFLIBS[i++];sc.onload=suivant;sc.onerror=ko;document.head.appendChild(sc);})();

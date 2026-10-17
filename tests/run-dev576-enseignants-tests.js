@@ -134,4 +134,12 @@ test('passerelle : clé lue dans les propriétés du script (plus de clé dans l
   assert.match(page, /EUC_SUIVI2_temoinActuel\(\)/); assert.match(ens, /function EUC_SUIVI2_temoinActuel\(/);
 });
 
+test('accès professeur principal rebranché sur la page des enseignants (code temporaire, visiteur / téléphone, spinner)', () => {
+  const pg = read('apps-script/Suivi_Enseignants_DEV576.html');
+  assert.match(pg, /id="ppAcces">Accès professeur principal/);
+  assert.match(pg, /EUC_DEV448_unlockPp\(Object\.assign\(\{code:code\.value\.trim\(\)\},portee\)\)/);
+  assert.match(pg, /EUC_DEV448_affecterPp\(/); assert.match(pg, /value="VISITE">Professeur visiteur/); assert.match(pg, /value="TELEPHONE">Suivi téléphonique/);
+  assert.match(pg, /class="spin"/);
+});
+
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
