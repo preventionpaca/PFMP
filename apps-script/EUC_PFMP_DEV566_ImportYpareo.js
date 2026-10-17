@@ -36,7 +36,12 @@ function EUC_DEV566_mappings_(){var raw='';try{raw=PropertiesService.getScriptPr
 function EUC_DEV566_mode_(){try{return PropertiesService.getScriptProperties().getProperty(EUC_DEV566_YPAREO_MODE_KEY_)==='LIVE'?'LIVE':'DRY_RUN';}catch(e){return'DRY_RUN';}}
 function EUC_DEV566_classes_(){
   var rows=[];try{rows=EUC_IMPORT_chargerClassesCamin_()||[];}catch(e){rows=[];}
-  return rows.map(function(row){return{id:EUC_DEV564_classId_(row),classe:EUC_DEV564_classLabel_(row),actif:row.actif!==false};}).filter(function(row){return row.id&&row.classe&&row.actif;}).sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});
+  /* DEV578 : un même nom peut exister deux fois (ex. 1MELEC G n° 6 et l'ancien doublon technique n° 37) :
+   * on garde la ligne la plus ancienne, sinon l'import rattachait les apprentis au doublon. */
+  var vus={};
+  return rows.map(function(row){return{id:EUC_DEV564_classId_(row),classe:EUC_DEV564_classLabel_(row),actif:row.actif!==false};}).filter(function(row){return row.id&&row.classe&&row.actif;})
+    .sort(function(a,b){return a.id-b.id;}).filter(function(row){var k=EUC_DEV566_key_(row.classe);if(vus[k])return false;vus[k]=true;return true;})
+    .sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});
 }
 function EUC_DEV566_importConfig(){EUC_DEV368_admin();return{ok:true,mode:EUC_DEV566_mode_(),mappings:EUC_DEV566_mappings_(),classes:EUC_DEV566_classes_(),niveau:'AUTRES_FORMATIONS',formats:['csv','xls','xlsx']};}
 function EUC_DEV566_saveMappings(q){EUC_DEV368_admin();var mappings=EUC_DEV566_validateMappings_(q&&q.mappings);var classes={},unknown=[];EUC_DEV566_classes_().forEach(function(row){classes[EUC_DEV566_key_(row.classe)]=true;});mappings.forEach(function(row){if(!classes[EUC_DEV566_key_(row.classe)])unknown.push(row.classe);});if(unknown.length)throw new Error('Classe(s) cible(s) introuvable(s) : '+unknown.join(', ')+'.');PropertiesService.getScriptProperties().setProperty(EUC_DEV566_YPAREO_MAPPINGS_KEY_,JSON.stringify(mappings));return EUC_DEV566_importConfig();}

@@ -235,4 +235,12 @@ test('listes des élèves par classe : effectifs du moteur, coordonnées de l’
   assert.match(src, /EUC_SUIVI2_exigerAdmin_\(\)/);
 });
 
+test('import Yparéo : une classe en double (1MELEC G n° 6 et doublon n° 37) est rattachée à la plus ancienne ligne', () => {
+  const src = read('apps-script/EUC_PFMP_DEV566_ImportYpareo.js'), fn = src.slice(src.indexOf('function EUC_DEV566_classes_'), src.indexOf('function EUC_DEV566_importConfig'));
+  const k = { String, EUC_IMPORT_chargerClassesCamin_: () => [{ id: 37, nom: '1MELEC G', actif: true }, { id: 6, nom: '1MELEC G', actif: true }, { id: 5, nom: '1MELEC', actif: true }],
+    EUC_DEV564_classId_: r => r.id, EUC_DEV564_classLabel_: r => r.nom, EUC_DEV566_key_: v => String(v).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim() };
+  vm.createContext(k); vm.runInContext(fn, k);
+  assert.deepEqual(JSON.parse(JSON.stringify(k.EUC_DEV566_classes_())).map(c => c.id), [5, 6]);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
