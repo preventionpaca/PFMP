@@ -68,7 +68,7 @@ select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);
 .pp-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}.pp-modal[hidden]{display:none}.pp-carte{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}.pp-carte h2{margin:0 0 4px}.pp-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:8px 0}.pp-carte input#ppCode{padding:7px;border:1px solid #9cc;border-radius:7px;min-width:260px}.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:ppspin .7s linear infinite}@keyframes ppspin{to{transform:rotate(360deg)}}@media print{.pp-modal{display:none!important}}</style>
 </head>
 <body>
-<header><h1>Suivi des PFMP</h1><span class="info" id="info"></span></header>
+<header><h1>Suivi des PFMP</h1><span class="info" id="info"></span><a id="versAdmin" class="noprint" hidden style="color:#fff;font-weight:700;margin-left:auto" target="_top">← Administration PFMP</a></header>
 <div id="maj" class="maj noprint" role="status" hidden>Des données ont été modifiées dans Grist depuis l’ouverture de cette page. <button type="button" class="btn plein" id="actualiser">Actualiser</button></div>
 <main id="app" aria-live="polite"></main>
 <script>
@@ -83,6 +83,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x];});}
   function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
   function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
+  if(CFG.admin){var va=document.getElementById('versAdmin');va.hidden=false;va.href=CFG.base+'?page=admin-pfmp';document.querySelector('header h1').textContent='Suivi des PFMP — administration';}
   document.getElementById('info').textContent='Année '+(D.annee||'')+(D.temoin?' · données Grist à jour (action n° '+D.temoin+')':'');
   if(D.erreur){app.innerHTML='<p class="erreur">Les données n’ont pas pu être lues : '+esc(D.erreur)+'. Rechargez la page dans un instant.</p>';return;}
 
@@ -176,7 +177,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
       '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
       '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button>'+
-      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button><button class="btn" type="button" id="ppAcces">Accès professeur principal</button></div>'+
+      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button><button class="btn" type="button" id="ppAcces">'+(CFG.admin?'Affecter les professeurs':'Accès professeur principal')+'</button>'+(CFG.admin?'<button class="btn" type="button" id="envoiTableau">Envoyer le tableau aux professeurs</button>':'')+'</div>'+
       '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'<span class="edite"></span></p>'+
       '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
@@ -186,6 +187,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     document.getElementById('imprimer').onclick=function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();window.print();};
     document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
     document.getElementById('ppAcces').onclick=function(){accesPP(c,p);};
+    if(CFG.admin)document.getElementById('envoiTableau').onclick=function(){envoiTableau(this,c,p);};
     document.getElementById('carte').onclick=function(){this.disabled=true;this.textContent='Ouverture de la carte…';ouvrir(carteUrl);};
     app.querySelectorAll('a.vers-carte').forEach(function(a){a.onclick=function(ev){ev.preventDefault();ev.stopPropagation();a.classList.add('occupe');
       ouvrir(carteUrl+'&focus='+encodeURIComponent(a.getAttribute('data-ent'))+'&adr='+encodeURIComponent(a.getAttribute('data-adr')));};});
@@ -209,14 +211,19 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var m=document.getElementById('ppModal');
     if(!m){document.body.insertAdjacentHTML('beforeend','<div id="ppModal" class="pp-modal" role="dialog" aria-modal="true" aria-labelledby="ppTitre"><div class="pp-carte"><h2 id="ppTitre">Accès professeur principal</h2><p id="ppPortee" class="note"></p>'+
       '<div id="ppConnexion"><label>Code temporaire <input id="ppCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label> <button class="btn" type="button" id="ppOuvrir">Déverrouiller</button></div><p id="ppEtat" role="status"></p>'+
-      '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button></div><div class="tableau"><table id="ppTable"></table></div></div>'+
+      '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button> <button class="btn" type="button" id="ppRetirer" hidden>Retirer ce type de suivi aux élèves cochés</button></div><div class="tableau"><table id="ppTable"></table></div></div>'+
       '<p style="text-align:right"><button class="btn" type="button" id="ppFermer">Fermer</button></p></div></div>');m=document.getElementById('ppModal');
       m.onclick=function(e){if(e.target===m)m.hidden=true;};document.getElementById('ppFermer').onclick=function(){m.hidden=true;};}
     var portee={annee:String(D.annee||''),classeId:Number(c.id),periodeId:Number(p.id)},code=document.getElementById('ppCode'),etatPP=document.getElementById('ppEtat'),espace=document.getElementById('ppEspace'),donnees=null,modifie=false;
     document.getElementById('ppPortee').textContent=c.nom+' — '+p.libelle;espace.hidden=true;etatPP.textContent='';m.hidden=false;
     try{code.value=sessionStorage.getItem('eucPpCode')||'';}catch(e){}
-    setTimeout(function(){code.focus();},0);
-    function afficher(d){donnees=d;try{sessionStorage.setItem('eucPpCode',code.value.trim());}catch(e){}espace.hidden=false;
+    document.getElementById('ppConnexion').hidden=!!CFG.admin;
+    if(CFG.admin){etatPP.innerHTML='<span class="spin"></span>Chargement des professeurs…';
+      google.script.run.withSuccessHandler(function(r){var lignes=c.eleves.map(function(e){var l=p.lignes[e[0]]||['SANS'];return{eleveId:e[0],eleve:e[1],statut:LIB[l[0]]||l[0],telephone:l[2]||'',visite:l[3]||''};});
+        afficher({scope:{classe:c.nom,periode:p.libelle,professeurPrincipal:'administration',expiration:'—'},professeurs:(r&&r.professeurs)||[],lignes:lignes});document.getElementById('ppPortee').textContent=c.nom+' — '+p.libelle+' · mode administration';etatPP.textContent='';})
+        .withFailureHandler(function(e){etatPP.textContent='Erreur : '+(e&&e.message||e);}).EUC_DEV435_professeursDisponibles();}
+    else setTimeout(function(){code.focus();},0);
+    function afficher(d){donnees=d;if(!CFG.admin){try{sessionStorage.setItem('eucPpCode',code.value.trim());}catch(e){}}espace.hidden=false;
       document.getElementById('ppPortee').textContent=d.scope.classe+' — '+d.scope.periode+' · accès de '+d.scope.professeurPrincipal+' · valable jusqu’au '+d.scope.expiration;
       document.getElementById('ppProf').innerHTML=(d.professeurs||[]).map(function(x){return '<option value="'+x.id+'">'+esc(x.nom)+(x.discipline?' — '+esc(x.discipline):'')+'</option>';}).join('');
       document.getElementById('ppTable').innerHTML='<thead><tr><th><input id="ppTous" type="checkbox" aria-label="Tout cocher"></th><th>Élève</th><th>Statut</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+(d.lignes||[]).map(function(x){return '<tr><td><input class="ppEleve" type="checkbox" value="'+x.eleveId+'"></td><td><b>'+esc(x.eleve)+'</b></td><td>'+esc(x.statut)+'</td><td>'+esc(x.telephone||'—')+'</td><td>'+esc(x.visite||'—')+'</td></tr>';}).join('')+'</tbody>';
@@ -230,8 +237,20 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       google.script.run.withSuccessHandler(function(r){occupe(b,false);var sel={};(r.eleveIds||[]).forEach(function(id){sel[Number(id)]=true;});(donnees.lignes||[]).forEach(function(x){if(!sel[Number(x.eleveId)])return;if(r.type==='TELEPHONE')x.telephone=r.professeur.nom;else x.visite=r.professeur.nom;});afficher(donnees);modifie=true;
         etatPP.textContent=(r.warning||'Affectation enregistrée.')+' Le tableau de la classe se mettra à jour avec « Actualiser ».';})
       .withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Erreur : '+(e&&e.message||e);})
-      .EUC_DEV448_affecterPp(Object.assign({code:code.value.trim(),type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids},portee));};
+      [CFG.admin?'EUC_DEV448_affecterAdmin':'EUC_DEV448_affecterPp'](CFG.admin?Object.assign({famille:c.famille,type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids,scopeIds:c.eleves.map(function(e){return Number(e[0]);})},portee):Object.assign({code:code.value.trim(),type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids},portee));};
+    var ret=document.getElementById('ppRetirer');ret.hidden=!CFG.admin;
+    ret.onclick=function(){var b=this,type=document.getElementById('ppType').value,ids=Array.prototype.map.call(document.querySelectorAll('.ppEleve:checked'),function(x){return Number(x.value);});
+      if(!ids.length){etatPP.textContent='Cochez au moins un élève.';return;}if(!confirm('Retirer le '+(type==='TELEPHONE'?'suivi téléphonique':'professeur visiteur')+' de '+ids.length+' élève(s) ?'))return;occupe(b,true,'Retrait…');
+      google.script.run.withSuccessHandler(function(r){occupe(b,false);var sel={};ids.forEach(function(id){sel[id]=true;});(donnees.lignes||[]).forEach(function(x){if(!sel[Number(x.eleveId)])return;if(type==='TELEPHONE')x.telephone='';else x.visite='';});afficher(donnees);etatPP.textContent=(r&&r.message)||'Affectation retirée.';})
+      .withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Erreur : '+(e&&e.message||e);}).EUC_SUIVI_DESAFFECTER_F24({annee:portee.annee,classeId:portee.classeId,periodeId:portee.periodeId,type:type,eleveIds:ids});};
   }
+  /* DEV578 (administration) : envoi du tableau aux professeurs de la classe, après aperçu des destinataires. */
+  function envoiTableau(b,c,p){var q={annee:String(D.annee||''),classeId:Number(c.id),periodeId:Number(p.id)},t0=b.textContent;b.disabled=true;b.innerHTML='<span class="spin"></span>Préparation…';
+    google.script.run.withSuccessHandler(function(r){b.disabled=false;b.textContent=t0;
+      if(!confirm('Envoyer le tableau '+r.classe+' — '+r.periode+' ?\n\nÀ : '+((r.to||[]).join(', ')||'aucun destinataire')+'\nCopie : '+((r.cc||[]).join(', ')||'aucune')+'\n\nObjet : '+(r.objet||'')))return;
+      b.disabled=true;b.innerHTML='<span class="spin"></span>Envoi…';
+      google.script.run.withSuccessHandler(function(){b.disabled=false;b.textContent='Tableau envoyé ✓';setTimeout(function(){b.textContent=t0;},4000);}).withFailureHandler(function(e){b.disabled=false;b.textContent=t0;alert('Envoi impossible : '+(e&&e.message||e));}).EUC_V157_envoyerTableau(q);})
+    .withFailureHandler(function(e){b.disabled=false;b.textContent=t0;alert('Préparation impossible : '+(e&&e.message||e));}).EUC_V157_preparerEnvoi(q);}
   function chargerPdf(ok,ko){
     var i=0;(function suivant(){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();if(i>=PDFLIBS.length)return ko();
       var sc=document.createElement('script');sc.src=PDFLIBS[i++];sc.onload=suivant;sc.onerror=ko;document.head.appendChild(sc);})();

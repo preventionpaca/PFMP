@@ -136,10 +136,18 @@ test('passerelle : clé lue dans les propriétés du script (plus de clé dans l
 
 test('accès professeur principal rebranché sur la page des enseignants (code temporaire, visiteur / téléphone, spinner)', () => {
   const pg = read('apps-script/Suivi_Enseignants_DEV576.html');
-  assert.match(pg, /id="ppAcces">Accès professeur principal/);
+  assert.ok(pg.includes("id=\"ppAcces\">'+(CFG.admin?'Affecter les professeurs':'Accès professeur principal')"));
   assert.match(pg, /EUC_DEV448_unlockPp\(Object\.assign\(\{code:code\.value\.trim\(\)\},portee\)\)/);
-  assert.match(pg, /EUC_DEV448_affecterPp\(/); assert.match(pg, /value="VISITE">Professeur visiteur/); assert.match(pg, /value="TELEPHONE">Suivi téléphonique/);
+  assert.ok(pg.includes("'EUC_DEV448_affecterPp'")); assert.match(pg, /value="VISITE">Professeur visiteur/); assert.match(pg, /value="TELEPHONE">Suivi téléphonique/);
   assert.match(pg, /class="spin"/);
+});
+
+test('administration : suivi rapide en mode admin (affectation directe, retrait, envoi du tableau), lien depuis l’accueil admin', () => {
+  const pg = read('apps-script/Suivi_Enseignants_DEV576.html'), adm = read('apps-script/Admin_PFMP.html');
+  assert.match(ens, /admin = !!\(typeof EUC_V156_contexteAdmin_ === 'function' && EUC_V156_contexteAdmin_\(\)\)/, 'mode admin vérifié côté serveur');
+  assert.match(pg, /'EUC_DEV448_affecterAdmin':'EUC_DEV448_affecterPp'/); assert.match(pg, /EUC_SUIVI_DESAFFECTER_F24\(/); assert.match(pg, /EUC_V157_preparerEnvoi\(q\)/); assert.match(pg, /EUC_V157_envoyerTableau\(q\)/);
+  assert.match(pg, /EUC_DEV435_professeursDisponibles\(\)/);
+  assert.match(adm, /page=suivi-pfmp-enseignants&amp;admin=1/); assert.match(adm, /Ancien suivi des PFMP/);
 });
 
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
