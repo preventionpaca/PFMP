@@ -197,4 +197,28 @@ test('diagnostic de classe : référentiel, traces par référence ou nom exact,
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV578_diagClasse\(/);
 });
 
+test('réparation de classe : aperçu sans écriture, puis classe créée sans identifiant du modèle, périodes de l’année, exclusion levée', () => {
+  const src = read('apps-script/EUC_DEV578_DiagClasse.js'), ecrits = [];
+  const tables = { Classes: [{ id: 12, fields: { Nom: '1MELEC', Niveau: 'Première', Formation: 'BAC PRO MELEC', Identifiant_Pronote: 'X9', Actif: true } }],
+    Annees_Scolaires: [{ id: 1, fields: { Code: '2026-2027' } }, { id: 2, fields: { Code: '2025-2026' } }],
+    Planning_Periodes: [{ id: 5, fields: { Libelle: 'PFMP 1', Annee_scolaire: 1, Classes_concernees: ['L', 12, 13] } }, { id: 6, fields: { Libelle: 'Ancienne', Annee_scolaire: 2, Classes_concernees: ['L', 12] } }],
+    EUC_CORRESPONDANCE_CLASSES_PRONOTE: [{ id: 30, fields: { Nom_classe_Pronote: '1MELEC2', Exclure_import: true, Annee_scolaire: '2026-2027' } }] };
+  const k = { String, Object, Array, Number, JSON, EUC_SUIVI2_exigerAdmin_: () => ({ email: 'a@x' }), EUC_DEV368_year: () => '2026-2027',
+    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
+    EUC_ENT_grist: (m, url, body) => { const t = decodeURIComponent(url.split('/')[2]);
+      if (m === 'get' && url.endsWith('/columns')) return { columns: [{ id: 'Nom', fields: {} }, { id: 'Niveau', fields: {} }, { id: 'Formation', fields: {} }, { id: 'Identifiant_Pronote', fields: {} }, { id: 'Actif', fields: {} }, { id: 'Effectif', fields: { isFormula: true } }] };
+      if (m === 'get') return { records: tables[t] || [] }; ecrits.push([m, t, body]); return m === 'post' ? { records: [{ id: 77 }] } : {}; } };
+  vm.createContext(k); vm.runInContext(src, k);
+  const ap = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', '');
+  assert.equal(ap.apercu, true); assert.equal(ecrits.length, 0, 'aperçu : aucune écriture');
+  assert.deepEqual(Array.from(ap.periodes), ['PFMP 1']);
+  const r = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER');
+  assert.equal(r.id, 77);
+  assert.deepEqual(ecrits[0][2].records[0].fields, { Niveau: 'Première', Formation: 'BAC PRO MELEC', Actif: true, Nom: '1MELEC2' }, 'pas d’identifiant Pronote du modèle');
+  assert.deepEqual(ecrits[1][2].records, [{ id: 5, fields: { Classes_concernees: ['L', 12, 13, 77] } }], 'seulement la période de l’année');
+  assert.deepEqual(ecrits[2][2].records, [{ id: 30, fields: { Exclure_import: false, Classe_Grist: 77, Classe_Grist_nom: '1MELEC2' } }]);
+  tables.Classes.push({ id: 77, fields: { Nom: '1MELEC2' } });
+  assert.throws(() => k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', ''), /existe déjà/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
