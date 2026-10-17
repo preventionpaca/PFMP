@@ -55,7 +55,18 @@ function EUC_DEV578_historiquesTous_() {
 }
 
 /* Déclencheur (toutes les 10 min) : recalcul seulement si Grist a changé. */
+/* Book des entreprises (12 s à froid) : les deux listes ouvertes par défaut (année en cours et toutes
+ * années, fenêtre de 3 ans) et l'index du book des familles restent prêts. Chaque appel ne recalcule
+ * que si son cache a expiré ou si les données ont changé ; sinon il se contente de le lire. */
+function EUC_DEV578_prechaufferBook_() {
+  var y = '';
+  try { y = EUC_DEV368_year(''); } catch (e) { y = ''; }
+  [{ annee: y, fenetre: 3 }, { annee: 'ALL', fenetre: 3 }].forEach(function(s) { if (!s.annee) return; try { EUC_DEV572_base_(s); } catch (e) {} });
+  try { if (typeof EUC_DEV549_publicBookIndex_ === 'function') EUC_DEV549_publicBookIndex_(); } catch (e2) {}
+}
+
 function EUC_DEV578_prechaufferHistoriques() {
+  EUC_DEV578_prechaufferBook_();
   var memo = EUC_DEV572_lire_(EUC_DEV578_HIST_CLE_), temoin = EUC_DEV578_temoin_();
   var age = memo && memo.calcule ? Date.now() - new Date(memo.calcule).getTime() : Infinity;
   if (memo && memo.par && temoin && memo.temoin === temoin && age < EUC_DEV578_HIST_AGE_MAX_MS_) return { ok: true, inchange: true };

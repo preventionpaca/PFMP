@@ -81,11 +81,13 @@ test('historique des entreprises toujours prêt : servi depuis la dernière vers
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
     ScriptApp: { getProjectTriggers: () => triggers, newTrigger: h => ({ timeBased: () => ({ everyMinutes: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }) }) }) } };
+  const bases = []; k.EUC_DEV368_year = () => '2026-2027'; k.EUC_DEV572_base_ = q => bases.push(JSON.stringify(q));
   vm.createContext(k); vm.runInContext(src578, k);
   const a = k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1); assert.ok(a.par['d-SIRET|1'.slice(0, 32)]);
   assert.equal(triggers.length, 1, 'déclencheur installé');
   k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1, 'deuxième ouverture instantanée');
   k.EUC_DEV578_prechaufferHistoriques(); assert.equal(calculs, 1, 'Grist inchangé : pas de recalcul');
+  assert.deepEqual(bases.slice(0, 2), ['{"annee":"2026-2027","fenetre":3}', '{"annee":"ALL","fenetre":3}'], 'book des entreprises tenu prêt');
   temoin = 't2'; const stale = k.EUC_DEV578_historiquesTous_(); assert.equal(calculs, 1); assert.equal(stale.aJour, false, 'servi sans attendre');
   k.EUC_DEV578_prechaufferHistoriques(); assert.equal(calculs, 2, 'Grist modifié : recalcul en arrière-plan');
   assert.match(read('apps-script/EUC_DEV576_CarteHistoriques.js'), /return EUC_DEV578_historiquesTous_\(\)/);
