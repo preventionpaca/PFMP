@@ -144,4 +144,16 @@ test('géocodage : les entreprises des apprentis entrent dans la liste (adresse 
   assert.match(geo, /concat\(typeof EUC_DEV578_geoApprentisDetails_==='function'/); assert.match(geo, /EUC_DEV457_revision_\('EUC_APPRENTISSAGE_PFMP'\)/); assert.match(geo, /DEV578-GEO-6/);
 });
 
+test('administration des conventions : liste des dossiers servie depuis le cache tant que Grist ne change pas', () => {
+  const src = read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs'), cache = new Map(); let calculs = 0, temoin = '7';
+  const fn = src.slice(src.indexOf('function EUC_DEV578_dossiersAdminEnCache_'), src.indexOf('function EUC_DEV578_listerDossiersAdmin'));
+  const k = { String, Array, JSON, EUC_SUIVI2_temoin_: () => temoin, EUC_DEV572_lire_: x => cache.has(x) ? JSON.parse(cache.get(x)) : null, EUC_DEV572_ecrire_: (x, v) => cache.set(x, JSON.stringify(v)),
+    EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148: a => { calculs++; return [{ id: 1, annee: a }]; } };
+  vm.createContext(k); vm.runInContext(fn, k);
+  k.EUC_DEV578_dossiersAdminEnCache_('2026-2027'); k.EUC_DEV578_dossiersAdminEnCache_('2026-2027'); assert.equal(calculs, 1, 'deuxième ouverture depuis le cache');
+  temoin = '8'; k.EUC_DEV578_dossiersAdminEnCache_('2026-2027'); assert.equal(calculs, 2, 'Grist modifié : recalcul');
+  assert.match(src, /tpl\.dossiersJson=JSON\.stringify\(EUC_DEV578_dossiersAdminEnCache_\(ctxAnnee\.active\)\)/);
+  assert.match(read('apps-script/Admin_Conventions_PFMP.html'), /\.EUC_DEV578_listerDossiersAdmin\(yearContext\.active\)/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);

@@ -695,6 +695,24 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
   return base;
 }
 
+/* DEV578 : la liste des dossiers (2 tableaux Grist entiers, ~11 s) est servie depuis le cache tant que
+ * Grist n'a pas changé (témoin de modification, comme le suivi des enseignants). Toute écriture dans
+ * Grist — y compris depuis cette page — change le témoin : la liste suivante est recalculée. */
+function EUC_DEV578_dossiersAdminEnCache_(annee){
+  var temoin='';
+  try{temoin=typeof EUC_SUIVI2_temoin_==='function'?String(EUC_SUIVI2_temoin_()||''):'';}catch(e){temoin='';}
+  var cle=temoin?'EUC_DEV578_ADMCONV_'+String(annee||'').replace(/[^\w-]/g,'')+'_'+temoin.replace(/[^\w-]/g,''):'';
+  if(cle&&typeof EUC_DEV572_lire_==='function'){var memo=EUC_DEV572_lire_(cle);if(Array.isArray(memo))return memo;}
+  var liste=EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(annee);
+  if(cle&&typeof EUC_DEV572_ecrire_==='function')EUC_DEV572_ecrire_(cle,liste);
+  return liste;
+}
+
+function EUC_DEV578_listerDossiersAdmin(annee){
+  EUC_ADMIN_WORKFLOW_ctxV144_();
+  return EUC_DEV578_dossiersAdminEnCache_(annee);
+}
+
 function EUC_ADMIN_CONVENTIONS_afficherV146(e){
   EUC_ADMIN_WORKFLOW_ctxV144_();
 
@@ -705,9 +723,7 @@ function EUC_ADMIN_CONVENTIONS_afficherV146(e){
     baseUrl:ScriptApp.getService().getUrl()
   });
   tpl.anneeContextJson=JSON.stringify(ctxAnnee);
-  tpl.dossiersJson=JSON.stringify(
-    EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(ctxAnnee.active)
-  );
+  tpl.dossiersJson=JSON.stringify(EUC_DEV578_dossiersAdminEnCache_(ctxAnnee.active));
 
   return tpl.evaluate()
     .setTitle('Administration des conventions PFMP')

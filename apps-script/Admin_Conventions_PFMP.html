@@ -692,7 +692,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
             schoolYearSelect.disabled=false;
             selectedHint.textContent='Erreur : '+(e&&e.message||e);
           })
-          .EUC_ADMIN_WORKFLOW_listerDossiersParAnneeV148(yearContext.active);
+          .EUC_DEV578_listerDossiersAdmin(yearContext.active);
       })
       .withFailureHandler(function(e){
         schoolYearSelect.disabled=false;
