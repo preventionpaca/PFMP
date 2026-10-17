@@ -45,6 +45,8 @@ function EUC_DEV566_classes_(){
   liste.forEach(function(r){var k=EUC_DEV566_key_(r.classe);if(compte[k]<2)return;r.classe=r.classe+(r.etab&&compteEtab[k+'|'+r.etab.toUpperCase()]<2?' ('+r.etab+')':' (n° '+r.id+')');});
   return liste.map(function(r){return{id:r.id,classe:r.classe,actif:true};}).sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});
 }
+/* Bascule DRY_RUN / LIVE depuis la page (administration seulement). */
+function EUC_DEV566_setMode(q){EUC_DEV368_admin();PropertiesService.getScriptProperties().setProperty(EUC_DEV566_YPAREO_MODE_KEY_,q&&q.live===true?'LIVE':'DRY_RUN');return EUC_DEV566_importConfig();}
 function EUC_DEV566_importConfig(){EUC_DEV368_admin();return{ok:true,mode:EUC_DEV566_mode_(),mappings:EUC_DEV566_mappings_(),classes:EUC_DEV566_classes_(),niveau:'AUTRES_FORMATIONS',formats:['csv','xls','xlsx']};}
 function EUC_DEV566_saveMappings(q){EUC_DEV368_admin();var mappings=EUC_DEV566_validateMappings_(q&&q.mappings);var classes={},unknown=[];EUC_DEV566_classes_().forEach(function(row){classes[EUC_DEV566_key_(row.classe)]=true;});mappings.forEach(function(row){if(!classes[EUC_DEV566_key_(row.classe)])unknown.push(row.classe);});if(unknown.length)throw new Error('Classe(s) cible(s) introuvable(s) : '+unknown.join(', ')+'.');PropertiesService.getScriptProperties().setProperty(EUC_DEV566_YPAREO_MAPPINGS_KEY_,JSON.stringify(mappings));return EUC_DEV566_importConfig();}
 
