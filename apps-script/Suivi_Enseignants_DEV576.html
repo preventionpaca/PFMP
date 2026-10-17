@@ -171,7 +171,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       return '<tr class="'+(app?'apprenti':'')+'"><td>'+(app?'<span class="pastille" title="Apprenti">A</span>':'')+'<b>'+esc(e[1])+'</b></td><td>'+badge+'</td><td>'+ent+'</td><td>'+esc(f&&f.adresse)+'</td><td>'+coord(f&&f.contact)+'</td><td>'+coord(f&&f.tuteur)+'</td><td>'+esc(c.pp.join(', '))+'</td><td>'+esc(l[2])+'</td><td>'+esc(l[3])+'</td></tr>';
     }).join('');
     var memes=D.classes.filter(function(x){return x.famille===c.famille;});
-    var carteUrl=CFG.base+'?page=cartographie-pfmp&annee='+encodeURIComponent(D.annee)+'&famille='+encodeURIComponent(c.famille)+'&classe='+c.id+'&periode='+p.id+'&retour=enseignants&public=1';
+    var carteUrl=CFG.base+'?page=cartographie-pfmp&annee='+encodeURIComponent(D.annee)+'&famille='+encodeURIComponent(c.famille)+'&classe='+c.id+'&periode='+p.id+'&retour=enseignants'+(CFG.admin?'&admin=1':'&public=1');
     app.innerHTML='<nav class="barre noprint" aria-label="Fil d’Ariane"><a class="retour" href="#f='+c.famille+'">← '+esc(FAM[c.famille])+'</a>'+
       '<label class="note" for="autre">Classe</label><select id="autre">'+memes.map(function(x){return '<option value="'+x.id+'"'+(x.id===c.id?' selected':'')+'>'+esc(x.nom)+'</option>';}).join('')+'</select></nav>'+
       '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+

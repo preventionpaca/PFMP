@@ -54,7 +54,10 @@ function EUC_SUIVI2_pageEnseignants_(e) {
   var base = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   /* DEV578 : mode administration (affectations directes, envoi du tableau) seulement pour un compte administrateur. */
   var admin = false;
-  if (EUC_SUIVI2_t_(p.admin) === '1') { try { admin = !!(typeof EUC_V156_contexteAdmin_ === 'function' && EUC_V156_contexteAdmin_()); } catch (eAdm) { admin = false; } }
+  /* Détecté automatiquement pour un compte Google administrateur (les liens Atrium des enseignants n'ont pas de compte Google : aucune vérification coûteuse). */
+  var courriel = '';
+  try { courriel = String(Session.getActiveUser().getEmail() || ''); } catch (eMail) { courriel = ''; }
+  if (courriel || EUC_SUIVI2_t_(p.admin) === '1') { try { admin = !!(typeof EUC_V156_contexteAdmin_ === 'function' && EUC_V156_contexteAdmin_()); } catch (eAdm) { admin = false; } }
   t.config = JSON.stringify({ base: base, wrapper: EUC_SUIVI2_t_(p.wrapper) === '1', admin: admin, depart: { c: Number(p.cl) || 0, p: Number(p.pe) || 0 } }).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('Suivi des PFMP')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')

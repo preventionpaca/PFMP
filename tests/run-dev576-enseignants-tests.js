@@ -150,4 +150,13 @@ test('administration : suivi rapide en mode admin (affectation directe, retrait,
   assert.match(adm, /page=suivi-pfmp-enseignants&amp;admin=1/); assert.match(adm, /Ancien suivi des PFMP/);
 });
 
+test('administration détectée automatiquement ; carte et retour gardent le mode admin ; courriel PP : période, téléphone puis visiteurs', () => {
+  const carte = read('apps-script/Cartographie_PFMP_DEV441.html'), pg = read('apps-script/Suivi_Enseignants_DEV576.html'), pp = read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js');
+  assert.match(ens, /if \(courriel \|\| EUC_SUIVI2_t_\(p\.admin\) === '1'\)/);
+  assert.ok(pg.includes("'&retour=enseignants'+(CFG.admin?'&admin=1':'&public=1')"));
+  assert.ok(carte.includes("if(P.admin==='1')u.searchParams.set('admin','1');$('backToClass')"));
+  assert.ok(carte.includes("ad.textContent='Administration PFMP'"));
+  assert.match(pp, /valable pour toute la durée de cette période de stage/); assert.match(pp, /premier temps, affectez les professeurs chargés du suivi téléphonique/); assert.match(pp, /second temps, affectez les professeurs visiteurs/);
+});
+
 console.log(`\n${n} tests DEV576 page des enseignants réussis.`);
