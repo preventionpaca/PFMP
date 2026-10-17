@@ -145,6 +145,16 @@ function EUC_DEV273I_deLAnnee_(rows,annee){
 }
 /* Même recherche que l’analyse (EUC_IMPORT_previsualiser_) : mêmes colonnes,
  * même ordre (n° national, identifiant, n° Pronote, puis nom + prénom). */
+/* Élèves de l’année importée, lus exactement comme l’analyse (EUC_IMPORT_PFMP_Paste) :
+ * Annee_scolaire est une référence vers Annees_Scolaires, comparée par son Code. */
+function EUC_DEV273I_elevesAnnee_(annee){
+  try{
+    if(typeof EUC_SUIVI_sqlLecture_==='function'&&typeof EUC_SUIVI_fields_==='function'){
+      return EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_('SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?',[annee]))||[];
+    }
+  }catch(e){}
+  return EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),annee);
+}
 function EUC_DEV273I_find_(r,rows){
   var t=EUC_DEV273I_txt_,out=[];
   function par(cle,champs){
@@ -375,7 +385,7 @@ function EUC_DEV273I_listerAmbiguities(payload){
   payload=payload||{};
 
   var parsed=EUC_DEV273I_parse_(payload);
-  var students=EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),parsed.annee);
+  var students=EUC_DEV273I_elevesAnnee_(parsed.annee);
   var out=[],introuvables={};
 
   (parsed.rows||[]).forEach(function(r){
@@ -440,7 +450,7 @@ function EUC_DEV273I_appliquerLot(payload){
   }
 
   var parsed=EUC_DEV273I_parse_(payload);
-  var students=EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),parsed.annee);
+  var students=EUC_DEV273I_elevesAnnee_(parsed.annee);
   var byLine={};
 
   (parsed.rows||[]).forEach(function(r){
