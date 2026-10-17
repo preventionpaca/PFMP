@@ -101,7 +101,7 @@ test('le book réunit une entreprise reçue avec puis sans SIRET',()=>{
 test('un contrat d’apprentissage historique expose ses vraies dates et ses contacts',()=>{
   const c=context();
   const info=c.EUC_DEV546_contractInfo_({fields:{Eleve:7,Annee_scolaire:'2026-2027',Date_contrat_officielle:'2026-09-01',Date_debut:'2026-09-07',Date_fin:'2028-08-31',Date_rupture_contrat:'2027-02-15',Nom_entreprise:'SOCIETE TEST',Nom_commercial:'ENSEIGNE TEST',SIRET:'123 456 789 01234',Adresse_entreprise:'1 RUE TEST',Code_postal:'06000',Ville:'NICE',Responsable_nom:'Mme Responsable',Tuteur_nom:'M. Tuteur',Tuteur_telephone:'0102030405'}},'2026-2027');
-  assert.equal(info.eleveId,7);assert.equal(info.entreprise,'ENSEIGNE TEST');assert.equal(info.siret,'12345678901234');assert.equal(info.periode,'Contrat du 07/09/2026 au 15/02/2027');assert.equal(info.responsable,'Mme Responsable');assert.equal(info.tuteur,'M. Tuteur');assert.equal(info.telephoneTuteur,'0102030405');
+  assert.equal(info.eleveId,7);assert.equal(info.entreprise,'SOCIETE TEST');assert.equal(info.siret,'12345678901234');assert.equal(info.periode,'Contrat du 07/09/2026 au 15/02/2027');assert.equal(info.responsable,'Mme Responsable');assert.equal(info.tuteur,'M. Tuteur');assert.equal(info.telephoneTuteur,'0102030405');
 });
 
 test('un identifiant Grist d’année sur le contrat ne remplace pas le libellé scolaire résolu',()=>{

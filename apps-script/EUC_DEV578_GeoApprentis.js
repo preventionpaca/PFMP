@@ -23,7 +23,7 @@ function EUC_DEV578_geoApprentisDetails_(q) {
     if (q.classeId && EUC_DEV538_n_(q.classeId) !== c.id) return;
     if (q.famille && EUC_DEV538_t_(q.famille).toUpperCase() !== c.famille) return;
     var f = EUC_DEV538_fields_(dernier[eid]), P = EUC_DEV538_pick_;
-    var entreprise = EUC_DEV538_t_(P(f, ['Nom_commercial', 'Nom_entreprise', 'Entreprise']));
+    var entreprise = EUC_DEV538_t_(P(f, ['Nom_entreprise', 'Raison_sociale', 'Entreprise', 'Nom_commercial']));
     /* Même construction que la carte des apprentis, pour que le point retrouve l'entreprise. */
     var adresse = EUC_DEV540_normalizeAddress_([EUC_DEV538_t_(P(f, ['Adresse_entreprise', 'Adresse'])), EUC_DEV538_t_(P(f, ['Code_postal', 'CodePostal', 'CP'])), EUC_DEV538_t_(f.Ville)].filter(Boolean).join(', '));
     if (!entreprise || !adresse) return;

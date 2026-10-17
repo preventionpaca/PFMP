@@ -63,7 +63,7 @@ test('observation de l’origine des ouvertures (Atrium) notée dans le journal 
 test('carte des apprentis : détail nominatif pour les enseignants, liste sous la carte, PDF, apprentis non placés signalés', () => {
   assert.match(book, /nominatif=EUC_DEV538_staffAllowed_\(\)/); assert.match(book, /if\(!nominatif\)delete p\.details/);
   assert.match(book, /absent\(student,'Entreprise pas encore géolocalisée/); assert.match(book, /absents:absents/);
-  assert.match(book, /'EUC_DEV578B_CARTE_'/);
+  assert.match(book, /'EUC_DEV578C_CARTE_'/);
   assert.match(carteApp, /BOOT\.mode==='ADMIN'\|\|NOMINATIF/); assert.match(carteApp, /id="listeCarte"/); assert.match(carteApp, /jspdf-autotable@3\.8\.2/);
   assert.match(carteApp, /non placés sur la carte/);
   assert.match(carteApp, /EUC_DEV576_historiquesCarte\(\{annee:'ALL'\}\)/, 'historique toutes années, apprentis et scolaires');

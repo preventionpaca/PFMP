@@ -9,7 +9,7 @@ function fixture(){
     EUC_PROFESSEURS_PFMP:[{id:7,fields:{Actif:true,Civilite:'M.',Prenom:'Alex',Nom:'MARTIN',Email:'alex@example.test',Discipline:'Test'}}],
     EUC_AFFECTATIONS_SUIVI_PFMP:[],
     EUC_SUIVI_PFMP_INDEX:[{id:91,fields:{Annee_scolaire:'2026-2027',Famille:'__DEV427_DETAIL__BACPRO_28_65',Actif:true,Updated_at:'2026-10-05T06:00:00.000Z',Payload_JSON:JSON.stringify(detail)}}],
-    EUC_ACCES_PP_PFMP:[{id:31,fields:{Actif:true,Annee_scolaire:'2026-2027',Famille:'BACPRO',Classe_id:28,Classe_nom:'TMP3D',Periode_id:65,Periode_libelle:'PFMP n°1',Professeur_id:4,Professeur_nom:'Mme PP',Expiration:'2026-10-16T23:59:59.000Z',Code_salt:'salt',Code_hash:'VALIDCODE1234567890'}}]
+    EUC_ACCES_PP_PFMP:[{id:31,fields:{Actif:true,Annee_scolaire:'2026-2027',Famille:'BACPRO',Classe_id:28,Classe_nom:'TMP3D',Periode_id:65,Periode_libelle:'PFMP n°1',Professeur_id:4,Professeur_nom:'Mme PP',Expiration:'2099-12-31T23:59:59.000Z',Code_salt:'salt',Code_hash:'VALIDCODE1234567890'}}]
   };
   const calls=[],cache={};let nextId=200;
   function value(v){return Array.isArray(v)?Number(v[1]||v[0])||v[1]||v[0]:v;}
