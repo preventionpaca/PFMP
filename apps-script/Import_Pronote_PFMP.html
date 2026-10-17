@@ -262,7 +262,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
       if(!item){
         var diag=INTROUVABLES[line];
         if(diag&&!td[5].querySelector('.dev273i-diag')){
-          td[5].insertAdjacentHTML('beforeend','<div class="dev273i-diag" style="margin-top:4px;color:#8a1c1c;font-size:12px">Arbitrage impossible : fiche Grist non retrouvée (n° national Pronote : '+(diag.nnPronote?'oui':'non')+', identifiant Pronote : '+(diag.identPronote?'oui':'non')+', fiches de l’année au même nom : '+diag.memeNom+').</div>');
+          td[5].insertAdjacentHTML('beforeend','<div class="dev273i-diag" style="margin-top:4px;color:#8a1c1c;font-size:12px">Arbitrage impossible : fiche Grist non retrouvée (n° national Pronote : '+(diag.nnPronote?'oui':'non')+', identifiant Pronote : '+(diag.identPronote?'oui':'non')+', fiches de l’année au même nom : '+diag.memeNom+' ; lecture : '+(diag.lecture||'?')+').</div>');
         }
         return;
       }

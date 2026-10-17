@@ -134,26 +134,36 @@ function EUC_DEV273I_rowsEleves_(){
   });
 }
 
-/* Comme l’analyse : seules les fiches de l’année importée (ou sans année) comptent.
- * Sans ce filtre, un élève présent aussi l’an passé n’était jamais proposé à l’arbitrage. */
+/* Année d’une fiche : Annee_scolaire est une référence (id) vers Annees_Scolaires. */
 function EUC_DEV273I_deLAnnee_(rows,annee){
   annee=String(annee||"");
+  var codes={};
+  try{
+    (EUC_IMPORT_lireRecords_('Annees_Scolaires')||[]).forEach(function(a){
+      codes[String(a.id)]=String(a.Code||a.Libelle||a.Nom||'').trim();
+    });
+  }catch(e){}
   return (rows||[]).filter(function(e){
-    var y=String(e.Annee_code||e.Annee_scolaire||"");
-    return !y||!annee||y===annee;
+    var ref=e.Annee_scolaire,y='';
+    if(typeof ref==='number'||/^\d+$/.test(String(ref||'')))y=codes[String(ref)]||'';
+    if(!y)y=String(e.Annee_code||ref||'').trim();
+    return !annee||y===annee||(!y&&!ref);
   });
 }
-/* Même recherche que l’analyse (EUC_IMPORT_previsualiser_) : mêmes colonnes,
- * même ordre (n° national, identifiant, n° Pronote, puis nom + prénom). */
-/* Élèves de l’année importée, lus exactement comme l’analyse (EUC_IMPORT_PFMP_Paste) :
- * Annee_scolaire est une référence vers Annees_Scolaires, comparée par son Code. */
+var EUC_DEV273I_LECTURE_={};
 function EUC_DEV273I_elevesAnnee_(annee){
+  EUC_DEV273I_LECTURE_={mode:'SQL'};
   try{
     if(typeof EUC_SUIVI_sqlLecture_==='function'&&typeof EUC_SUIVI_fields_==='function'){
-      return EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_('SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?',[annee]))||[];
+      var rows=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_('SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?',[annee]))||[];
+      if(rows.length){EUC_DEV273I_LECTURE_.n=rows.length;return rows;}
+      EUC_DEV273I_LECTURE_.erreur='SQL : aucune fiche';
     }
-  }catch(e){}
-  return EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),annee);
+  }catch(e){EUC_DEV273I_LECTURE_.erreur='SQL : '+String(e&&e.message||e).slice(0,160);}
+  EUC_DEV273I_LECTURE_.mode='TABLE';
+  var out=EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),annee);
+  EUC_DEV273I_LECTURE_.n=out.length;
+  return out;
 }
 function EUC_DEV273I_find_(r,rows){
   var t=EUC_DEV273I_txt_,out=[];
@@ -396,7 +406,7 @@ function EUC_DEV273I_listerAmbiguities(payload){
 
     if(!e){
       /* Diagnostic affiché sur la ligne si l’analyse la signale divergente. */
-      introuvables[String(r.ligne)]={nnPronote:!!r.numeroNational,identPronote:!!r.ident,memeNom:students.filter(function(x){return EUC_DEV273I_norm_(x.Nom)===EUC_DEV273I_norm_(r.nom);}).length};
+      introuvables[String(r.ligne)]={lecture:EUC_DEV273I_LECTURE_.mode+" "+(EUC_DEV273I_LECTURE_.n||0)+(EUC_DEV273I_LECTURE_.erreur?" — "+EUC_DEV273I_LECTURE_.erreur:""),nnPronote:!!r.numeroNational,identPronote:!!r.ident,memeNom:students.filter(function(x){return EUC_DEV273I_norm_(x.Nom)===EUC_DEV273I_norm_(r.nom);}).length};
       return;
     }
 
