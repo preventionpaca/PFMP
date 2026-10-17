@@ -63,7 +63,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
 
   /* DEV578 : choix mémorisés par ligne (réappliqués à chaque nouvel affichage)
    * et garde anti-boucle : l'affichage des listes ne relance plus le chargement. */
-  var CHOIX={},enDecoration=false,derniereSignature='';
+  var CHOIX={},INTROUVABLES={},enDecoration=false,derniereSignature='';
 
   function payload(){
     var paste=q('#paste');
@@ -260,6 +260,10 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
       var item=infos[line];
 
       if(!item){
+        var diag=INTROUVABLES[line];
+        if(diag&&!td[5].querySelector('.dev273i-diag')){
+          td[5].insertAdjacentHTML('beforeend','<div class="dev273i-diag" style="margin-top:4px;color:#8a1c1c;font-size:12px">Arbitrage impossible : fiche Grist non retrouvée (n° national Pronote : '+(diag.nnPronote?'oui':'non')+', identifiant Pronote : '+(diag.identPronote?'oui':'non')+', fiches de l’année au même nom : '+diag.memeNom+').</div>');
+        }
         return;
       }
 
@@ -334,6 +338,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
 
     google.script.run
       .withSuccessHandler(function(r){
+        INTROUVABLES=(r&&r.introuvables)||{};
         decorate(
           (r&&r.ambiguities)||[]
         );

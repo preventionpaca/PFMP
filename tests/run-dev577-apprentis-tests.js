@@ -250,7 +250,7 @@ test('import Yparéo : deux classes homonymes (1MELEC G du LP et du GRETA) sont 
 
 test('import Pronote : les choix d’arbitrage de date de naissance sont mémorisés et l’affichage ne se relance plus en boucle', () => {
   const h = read('apps-script/Import_Pronote_PFMP.html');
-  assert.match(h, /var CHOIX=\{\},enDecoration=false/);
+  assert.match(h, /var CHOIX=\{\},INTROUVABLES=\{\},enDecoration=false/);
   assert.match(h, /if\(enDecoration\)return;/, 'les changements faits par l’affichage lui-même sont ignorés');
   assert.match(h, /CHOIX\[sel\.dataset\.line\]='PRONOTE'/); assert.match(h, /CHOIX\[sel\.dataset\.line\]=sel\.value/);
   assert.match(h, /if\(existant\)\{/, 'une liste déjà affichée n’est pas remplacée');

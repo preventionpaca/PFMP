@@ -143,58 +143,27 @@ function EUC_DEV273I_deLAnnee_(rows,annee){
     return !y||!annee||y===annee;
   });
 }
+/* Même recherche que l’analyse (EUC_IMPORT_previsualiser_) : mêmes colonnes,
+ * même ordre (n° national, identifiant, n° Pronote, puis nom + prénom). */
 function EUC_DEV273I_find_(r,rows){
-  var out=[];
-
-  if(r.numeroNational){
-    out=(rows||[]).filter(function(e){
-      return EUC_DEV273I_txt_(
-        e.Numero_national
-      )===EUC_DEV273I_txt_(
-        r.numeroNational
-      );
+  var t=EUC_DEV273I_txt_,out=[];
+  function par(cle,champs){
+    if(!cle)return [];
+    return (rows||[]).filter(function(e){
+      return champs.some(function(c){return t(e[c])&&t(e[c])===t(cle);});
     });
   }
-
-  if(!out.length&&r.ident){
-    out=(rows||[]).filter(function(e){
-      return EUC_DEV273I_txt_(
-        e.Identifiant_Pronote||
-        e.Identifiant_import
-      )===EUC_DEV273I_txt_(
-        r.ident
-      );
-    });
-  }
-
-  if(!out.length&&r.numero){
-    out=(rows||[]).filter(function(e){
-      return EUC_DEV273I_txt_(
-        e.Numero_Pronote
-      )===EUC_DEV273I_txt_(
-        r.numero
-      );
-    });
-  }
-
+  out=par(r.numeroNational,['Numero_national','Numero_National','Identifiant_national']);
+  if(!out.length)out=par(r.ident,['Identifiant_Pronote','Identifiant_source','Identifiant_import']);
+  if(!out.length)out=par(r.numero,['Numero_Pronote']);
   if(!out.length){
     var n=EUC_DEV273I_norm_(r.nom);
     var p=EUC_DEV273I_norm_(r.prenom);
-
     out=(rows||[]).filter(function(e){
-      return EUC_DEV273I_norm_(
-        e.Nom
-      )===n &&
-      EUC_DEV273I_norm_(
-        e.Prenom_usage||
-        e.Prenom
-      )===p;
+      return EUC_DEV273I_norm_(e.Nom)===n&&EUC_DEV273I_norm_(e.Prenom_usage||e.Prenom)===p;
     });
   }
-
-  return out.length===1
-    ? out[0]
-    : null;
+  return out.length===1?out[0]:null;
 }
 
 function EUC_DEV273I_source_(payload,parsed){
@@ -407,7 +376,7 @@ function EUC_DEV273I_listerAmbiguities(payload){
 
   var parsed=EUC_DEV273I_parse_(payload);
   var students=EUC_DEV273I_deLAnnee_(EUC_DEV273I_rowsEleves_(),parsed.annee);
-  var out=[];
+  var out=[],introuvables={};
 
   (parsed.rows||[]).forEach(function(r){
     var e=EUC_DEV273I_find_(
@@ -416,6 +385,8 @@ function EUC_DEV273I_listerAmbiguities(payload){
     );
 
     if(!e){
+      /* Diagnostic affiché sur la ligne si l’analyse la signale divergente. */
+      introuvables[String(r.ligne)]={nnPronote:!!r.numeroNational,identPronote:!!r.ident,memeNom:students.filter(function(x){return EUC_DEV273I_norm_(x.Nom)===EUC_DEV273I_norm_(r.nom);}).length};
       return;
     }
 
@@ -450,7 +421,8 @@ function EUC_DEV273I_listerAmbiguities(payload){
 
   return {
     ok:true,
-    ambiguities:out
+    ambiguities:out,
+    introuvables:introuvables
   };
 }
 
