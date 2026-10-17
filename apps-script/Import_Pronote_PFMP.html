@@ -61,6 +61,10 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
     return document.querySelector(s);
   }
 
+  /* DEV578 : choix mémorisés par ligne (réappliqués à chaque nouvel affichage)
+   * et garde anti-boucle : l'affichage des listes ne relance plus le chargement. */
+  var CHOIX={},enDecoration=false,derniereSignature='';
+
   function payload(){
     var paste=q('#paste');
     var annee=q('#annee');
@@ -153,6 +157,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
         .querySelectorAll('.dev273i-choice')
         .forEach(function(sel){
           sel.value='GRIST';
+          CHOIX[sel.dataset.line]='GRIST';
         });
 
       refreshSummary();
@@ -163,6 +168,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
         .querySelectorAll('.dev273i-choice')
         .forEach(function(sel){
           sel.value='PRONOTE';
+          CHOIX[sel.dataset.line]='PRONOTE';
         });
 
       refreshSummary();
@@ -205,6 +211,11 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
   }
 
   function decorate(list){
+    enDecoration=true;
+    try{decorateInterne(list);}finally{setTimeout(function(){enDecoration=false;},0);}
+  }
+
+  function decorateInterne(list){
     infos={};
 
     (list||[]).forEach(function(x){
@@ -252,6 +263,13 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
         return;
       }
 
+      /* Déjà affiché : on ne remplace pas la liste (le choix en cours serait perdu). */
+      var existant=td[5].querySelector('.dev273i-choice');
+      if(existant){
+        if(CHOIX[line]&&existant.value!==CHOIX[line])existant.value=CHOIX[line];
+        return;
+      }
+
       td[5].innerHTML=
         '<strong>Dates de naissance divergentes</strong>'+
         '<div style="margin-top:5px">'+
@@ -272,8 +290,12 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
           '</select>'+
         '</div>';
 
-      tr.classList.add(
-        'dev273i-unresolved'
+      var sel0=td[5].querySelector('.dev273i-choice');
+      if(sel0&&CHOIX[line])sel0.value=CHOIX[line];
+
+      tr.classList.toggle(
+        'dev273i-unresolved',
+        !(sel0&&sel0.value)
       );
     });
 
@@ -283,6 +305,7 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
       )
       .forEach(function(sel){
         sel.onchange=function(){
+          CHOIX[sel.dataset.line]=sel.value;
           var tr=sel.closest('tr');
 
           if(tr){
@@ -411,9 +434,14 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
           }
         }
 
+        CHOIX={};
         setStatus(
           (r&&r.traites||0)+
-          ' arbitrage(s) appliqué(s). Nouvelle analyse…',
+          ' arbitrage(s) appliqué(s) — '+
+          (r&&r.prisPronote||0)+
+          ' date(s) de naissance mise(s) à jour dans Grist (choix Pronote), '+
+          ((r&&r.traites||0)-(r&&r.prisPronote||0))+
+          ' conservée(s) (choix Grist). Nouvelle analyse…',
           'status-ok'
         );
 
@@ -449,6 +477,11 @@ input.addEventListener('change',function(){const file=input.files&&input.files[0
 
     if(tbody){
       new MutationObserver(function(){
+        /* Ignorer les changements faits par l'affichage des listes lui-même. */
+        if(enDecoration)return;
+        var sig=String(tbody.querySelectorAll('tr').length)+'|'+(tbody.firstElementChild?tbody.firstElementChild.textContent.slice(0,60):'');
+        if(sig===derniereSignature&&tbody.querySelector('.dev273i-choice'))return;
+        derniereSignature=sig;
         setTimeout(load,80);
       }).observe(
         tbody,

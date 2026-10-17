@@ -248,4 +248,13 @@ test('import Yparéo : deux classes homonymes (1MELEC G du LP et du GRETA) sont 
   assert.deepEqual(JSON.parse(JSON.stringify(k.EUC_DEV566_classes_())).map(c => c.id + ':' + c.classe), ['5:1MELEC', '37:1MELEC G (GRETA)', '6:1MELEC G (LP)', '8:X (n° 8)', '9:X (n° 9)']);
 });
 
+test('import Pronote : les choix d’arbitrage de date de naissance sont mémorisés et l’affichage ne se relance plus en boucle', () => {
+  const h = read('apps-script/Import_Pronote_PFMP.html');
+  assert.match(h, /var CHOIX=\{\},enDecoration=false/);
+  assert.match(h, /if\(enDecoration\)return;/, 'les changements faits par l’affichage lui-même sont ignorés');
+  assert.match(h, /CHOIX\[sel\.dataset\.line\]='PRONOTE'/); assert.match(h, /CHOIX\[sel\.dataset\.line\]=sel\.value/);
+  assert.match(h, /if\(existant\)\{/, 'une liste déjà affichée n’est pas remplacée');
+  assert.match(h, /date\(s\) de naissance mise\(s\) à jour dans Grist/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
