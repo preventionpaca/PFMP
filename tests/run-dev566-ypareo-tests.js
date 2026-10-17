@@ -28,3 +28,7 @@ test('réimport Yparéo : jamais de contrat en double, fiche sans entreprise com
   assert.deepEqual(ch('FUTUR_APPRENTI','',[]),{nouveau:true});
   assert.match(source,/rowId:choix\.rowId\|\|0,nouveauContrat:!!choix\.nouveau/);assert.match(source,/fiches=EUC_DEV566_fichesParEleve_\(\)/);
   assert.match(fast,/if\(cible&&!ligneCible\)throw new Error\('Fiche d’apprentissage introuvable pour cet élève\.'\)/)});
+test('groupe absent de la table de correspondance (mixité) : ignoré sans bloquer l’import',()=>{const c=context();c.EUC_IMPORT_lireAnnee_=()=>({id:3});c.EUC_DEV566_existingStudents_=()=>({ine:{},identity:{}});c.EUC_DEV566_classes_=()=>[{id:9,classe:'TSEC'}];
+  const a=JSON.parse(JSON.stringify(c.EUC_DEV566_analyze_({annee:'2026-2027',mappings:[{source:'TSEC',classe:'TSEC'}],rows:[{NOM_GROUPE:'EUCALYPTUS-TSEC-1AN',NOM_APPRENANT:'A',PRENOM_APPRENANT:'B',SITUATION:'CFAI',SIRET:'12345678901234',DATE_DEB_CONTRAT:'01/09/2026',DATE_FIN_CONTRAT:'31/08/2027'},{NOM_GROUPE:'EUCALYPTUS-BAC PRO MVA-3A-MIXITE',NOM_APPRENANT:'C',PRENOM_APPRENANT:'D',SITUATION:'APPRENTI',SIRET:'12345678901234'}]})));
+  assert.equal(a.blocked,0);assert.equal(a.ignored,1);assert.equal(a.ready,1);assert.equal(a.lines[1].action,'IGNORER');
+  assert.match(source,/analysis\.lines\.forEach\(function\(line\)\{if\(line\.ignore\)return;/)});
