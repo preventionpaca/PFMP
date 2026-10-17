@@ -199,30 +199,33 @@ test('diagnostic de classe : référentiel, traces par référence ou nom exact,
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV578_diagClasse\(/);
 });
 
-test('réparation de classe : aperçu sans écriture, puis classe créée sans identifiant du modèle, périodes de l’année, exclusion levée', () => {
-  const src = read('apps-script/EUC_DEV578_DiagClasse.js'), ecrits = [];
-  const tables = { Classes: [{ id: 12, fields: { Nom: '1MELEC', Niveau: 'Première', Formation: 'BAC PRO MELEC', Identifiant_Pronote: 'X9', Actif: true } }],
+test('réparation de classe : aperçu sans écriture, champs descriptifs seulement, périodes de l’année, exclusion levée, reprise sans recréer', () => {
+  const src = read('apps-script/EUC_DEV578_DiagClasse.js'), ecrits = []; let refusePeriodes = false;
+  const tables = { Classes: [{ id: 12, fields: { Nom: '1MELEC', Etab: 'LP', Niveau_Pronote: '1', Effectif: 26, Principaux_Pronote: 'M. X', Commentaire: 'x', Identifiant_Pronote: 'X9', Actif: true } }],
     Annees_Scolaires: [{ id: 1, fields: { Code: '2026-2027' } }, { id: 2, fields: { Code: '2025-2026' } }],
     Planning_Periodes: [{ id: 5, fields: { Libelle: 'PFMP 1', Annee_scolaire: 1, Classes_concernees: ['L', 12, 13] } }, { id: 6, fields: { Libelle: 'Ancienne', Annee_scolaire: 2, Classes_concernees: ['L', 12] } }],
     EUC_CORRESPONDANCE_CLASSES_PRONOTE: [{ id: 30, fields: { Nom_classe_Pronote: '1MELEC2', Exclure_import: true, Annee_scolaire: '2026-2027' } }] };
-  const k = { String, Object, Array, Number, JSON, EUC_SUIVI2_exigerAdmin_: () => ({ email: 'a@x' }), EUC_DEV368_year: () => '2026-2027',
+  const cols = ['Nom', 'Etab', 'Niveau_Pronote', 'Effectif', 'Principaux_Pronote', 'Commentaire', 'Identifiant_Pronote', 'Actif'].map(id => ({ id, fields: {} })).concat([{ id: 'Classe_PFMP', fields: { isFormula: true } }]);
+  const k = { String, Object, Array, Number, JSON, Date, EUC_SUIVI2_exigerAdmin_: () => ({ email: 'a@x' }), EUC_DEV368_year: () => '2026-2027',
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     EUC_ENT_grist: (m, url, body) => { const t = decodeURIComponent(url.split('/')[2]);
-      if (m === 'get' && url.endsWith('/columns')) return { columns: [{ id: 'Nom', fields: {} }, { id: 'Niveau', fields: {} }, { id: 'Formation', fields: {} }, { id: 'Identifiant_Pronote', fields: {} }, { id: 'Actif', fields: {} }, { id: 'Effectif', fields: { isFormula: true } }] };
-      if (m === 'get') return { records: tables[t] || [] }; ecrits.push([m, t, body]); return m === 'post' ? { records: [{ id: 77 }] } : {}; } };
+      if (m === 'get' && url.endsWith('/columns')) return { columns: cols };
+      if (m === 'get') return { records: tables[t] || [] };
+      if (t === 'Planning_Periodes' && refusePeriodes) throw new Error('Grist indisponible ou requête refusée (400).');
+      ecrits.push([m, t, body]); if (m === 'post') { tables.Classes.push({ id: 77, fields: body.records[0].fields }); return { records: [{ id: 77 }] }; } return {}; } };
   vm.createContext(k); vm.runInContext(src, k);
   const ap = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', '');
-  assert.equal(ap.apercu, true); assert.equal(ecrits.length, 0, 'aperçu : aucune écriture');
-  assert.deepEqual(Array.from(ap.periodes), ['PFMP 1']);
-  const r = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER');
-  assert.equal(r.id, 77);
-  assert.deepEqual(ecrits[0][2].records[0].fields, { Niveau: 'Première', Formation: 'BAC PRO MELEC', Actif: true, Nom: '1MELEC2' }, 'pas d’identifiant Pronote du modèle');
-  assert.deepEqual(ecrits[1][2].records, [{ id: 5, fields: { Classes_concernees: ['L', 12, 13, 77] } }], 'seulement la période de l’année');
-  assert.deepEqual(ecrits[2][2].records, [{ id: 30, fields: { Exclure_import: false, Classe_Grist: 77, Classe_Grist_nom: '1MELEC2' } }]);
-  tables.Classes.push({ id: 77, fields: { Nom: '1MELEC2' } });
-  assert.throws(() => k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', ''), /existe déjà/);
+  assert.equal(ap.apercu, true); assert.equal(ecrits.length, 0, 'aperçu : aucune écriture'); assert.equal(ap.correspondances, 1);
+  refusePeriodes = true;
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER')));
+  assert.deepEqual(ecrits[0][2].records[0].fields, { Etab: 'LP', Niveau_Pronote: '1', Actif: true, Nom: '1MELEC2' }, 'ni effectif, ni PP, ni commentaire, ni identifiant du modèle');
+  assert.deepEqual(r.etapes.map(t => t.ok), [true, false, true], 'période refusée signalée, correspondance quand même débloquée');
+  refusePeriodes = false; ecrits.length = 0;
+  const reprise = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER');
+  assert.equal(reprise.deja, 77, 'classe déjà créée : pas de seconde création');
+  assert.deepEqual(ecrits.map(e => e[1]), ['Planning_Periodes', 'EUC_CORRESPONDANCE_CLASSES_PRONOTE']);
+  assert.deepEqual(ecrits[0][2].records, [{ id: 5, fields: { Classes_concernees: ['L', 12, 13, 77] } }], 'seulement la période de l’année');
 });
-
 test('listes des élèves par classe : effectifs du moteur, coordonnées de l’import, route admin, émargement et PDF', () => {
   const src = read('apps-script/EUC_DEV578_ListesEleves.js');
   const k = { String, Number, EUC_SUIVI2_modele_: () => ({ annee: '2026-2027', classes: [{ id: 3, nom: 'TMELEC', famille: 'BACPRO', niveau: 'Terminale', eleves: [{ id: 2, nom: 'ZOLA', prenom: 'Emile' }, { id: 1, nom: 'ARNOULD', prenom: 'Mathis' }] }, { id: 4, nom: 'VIDE', eleves: [] }] }),

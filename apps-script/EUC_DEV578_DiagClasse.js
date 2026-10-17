@@ -80,52 +80,68 @@ function EUC_DEV578_planReparation_(nom, modele, annee) {
   var lire = function(t) { return EUC_ENT_grist('get', '/tables/' + encodeURIComponent(t) + '/records').records || []; };
   var nomDe = function(f) { return ['Nom', 'Libelle', 'Code_import'].map(function(k) { return EUC_DEV578_cleClasse_(f[k]); }); };
   var classes = lire('Classes');
-  if (classes.some(function(r) { return nomDe(r.fields || {}).indexOf(cle) >= 0; })) throw new Error('La classe « ' + nom + ' » existe déjà dans le référentiel : rien à créer.');
   var mod = classes.filter(function(r) { var f = r.fields || {}; return f.Actif !== false && nomDe(f).indexOf(cleModele) >= 0; })[0];
   if (!mod) throw new Error('Classe modèle « ' + modele + ' » introuvable ou inactive.');
-  var colonnes = EUC_ENT_grist('get', '/tables/Classes/columns').columns || [], champs = {}, existe = {};
-  /* Champs descriptifs seulement : jamais d'identifiant, de code ni de clé du modèle (la nouvelle classe serait confondue avec lui). */
-  var identifiant = /(^|_)(id|ident|identifiant|uuid|cle|key|numero|code|hash|source)(_|$)/i;
-  colonnes.forEach(function(c) {
-    var f = c.fields || {}, v = (mod.fields || {})[c.id];
-    existe[c.id] = true;
-    if (f.isFormula || c.id === 'manualSort' || identifiant.test(c.id) || /^(Nom|Libelle)$/.test(c.id)) return;
-    if (v === undefined || v === null || v === '') return;
-    champs[c.id] = v;
-  });
-  ['Nom', 'Libelle', 'Code_import'].forEach(function(k) { if (existe[k]) champs[k] = nom; });
-  if (existe.Actif) champs.Actif = true;
-  if (!existe.Nom && !existe.Libelle) throw new Error('Le référentiel Classes n’a ni colonne Nom ni colonne Libelle.');
+  /* Classe déjà créée (réparation interrompue) : on ne la recrée pas, on termine seulement les rattachements. */
+  var deja = classes.filter(function(r) { return nomDe(r.fields || {}).indexOf(cle) >= 0; })[0];
+  var champs = null;
+  if (!deja) {
+    var colonnes = EUC_ENT_grist('get', '/tables/Classes/columns').columns || [], existe = {};
+    champs = {};
+    /* Seulement les champs descriptifs : jamais d'identifiant, de code, de clé, ni les données propres au modèle
+     * (effectif, professeurs principaux, CPE, commentaire, couleur…), qui viendront de l'import. */
+    var exclu = /(^|_)(id|ident|identifiant|uuid|cle|key|numero|code|hash|source|effectif|principaux|pp|cpe|commentaire|couleur|groupe)(_|$)/i;
+    colonnes.forEach(function(c) {
+      var f = c.fields || {}, v = (mod.fields || {})[c.id];
+      existe[c.id] = true;
+      if (f.isFormula || c.id === 'manualSort' || exclu.test(c.id) || /^(Nom|Libelle|Classe_PFMP)$/.test(c.id)) return;
+      if (v === undefined || v === null || v === '' || Array.isArray(v)) return;
+      champs[c.id] = v;
+    });
+    ['Nom', 'Libelle', 'Code_import'].forEach(function(k) { if (existe[k]) champs[k] = nom; });
+    if (existe.Actif) champs.Actif = true;
+    if (!existe.Nom && !existe.Libelle) throw new Error('Le référentiel Classes n’a ni colonne Nom ni colonne Libelle.');
+  }
   var annees = {};
   try { lire('Annees_Scolaires').forEach(function(a) { var f = a.fields || {}; annees[a.id] = String(f.Code || f.Libelle || ''); }); } catch (e) {}
   var periodes = lire('Planning_Periodes').filter(function(p) {
     var f = p.fields || {}, l = f.Classes_concernees;
     if (f.Actif === false || !Array.isArray(l) || l[0] !== 'L' || l.indexOf(mod.id) < 1) return false;
+    if (deja && l.indexOf(deja.id) > 0) return false;
     var an = typeof f.Annee_scolaire === 'number' ? annees[f.Annee_scolaire] : String(f.Annee_scolaire || '');
     return !an || an === annee;
-  }).map(function(p) { var f = p.fields || {}; return { id: p.id, libelle: String(f.Libelle_periode || f.Libelle || f.Nom || ('Période ' + p.id)), debut: String(f.Date_debut || ''), liste: f.Classes_concernees }; });
+  }).map(function(p) { var f = p.fields || {}; return { id: p.id, libelle: String(f.Libelle_periode || f.Libelle || f.Nom || f.Type || ('Période ' + p.id)), debut: f.Date_debut, liste: f.Classes_concernees }; });
   var corr = [];
   try {
-    corr = lire('EUC_CORRESPONDANCE_CLASSES_PRONOTE').filter(function(r) { var f = r.fields || {}; return EUC_DEV578_cleClasse_(f.Nom_classe_Pronote) === cle && (!f.Annee_scolaire || String(f.Annee_scolaire) === annee); })
-      .map(function(r) { return { id: r.id, exclure: (r.fields || {}).Exclure_import === true }; });
+    corr = lire('EUC_CORRESPONDANCE_CLASSES_PRONOTE').filter(function(r) { var f = r.fields || {}; return EUC_DEV578_cleClasse_(f.Nom_classe_Pronote).replace(/ /g, '') === cle.replace(/ /g, '') && (!f.Annee_scolaire || String(f.Annee_scolaire) === annee); })
+      .map(function(r) { return { id: r.id }; });
   } catch (e2) { corr = []; }
-  return { nom: nom, modele: { id: mod.id, nom: String((mod.fields || {}).Nom || modele) }, champs: champs, periodes: periodes, correspondances: corr, annee: annee };
+  return { nom: nom, modele: { id: mod.id, nom: String((mod.fields || {}).Nom || modele) }, deja: deja ? deja.id : 0, champs: champs, periodes: periodes, correspondances: corr, annee: annee };
+}
+
+function EUC_DEV578_dateCourte_(v) {
+  if (typeof v === 'number') { var d = new Date(v * 1000); return ('0' + d.getUTCDate()).slice(-2) + '/' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '/' + d.getUTCFullYear(); }
+  return String(v || '').slice(0, 10);
 }
 
 function EUC_DEV578_reparerClasse(nom, modele, annee, confirmation) {
   var ctx = EUC_SUIVI2_exigerAdmin_();
   annee = String(annee || '') || (typeof EUC_DEV368_year === 'function' ? EUC_DEV368_year('') : '');
   var plan = EUC_DEV578_planReparation_(nom, modele, annee);
-  var resume = { classe: plan.nom, modele: plan.modele.nom, champs: Object.keys(plan.champs), periodes: plan.periodes.map(function(p) { return p.libelle + (p.debut ? ' (' + String(p.debut).slice(0, 10) + ')' : ''); }), correspondances: plan.correspondances.length, annee: annee };
+  var resume = { classe: plan.nom, modele: plan.modele.nom, deja: plan.deja, champs: plan.champs ? Object.keys(plan.champs) : [], periodes: plan.periodes.map(function(p) { return p.libelle + (p.debut ? ' (' + EUC_DEV578_dateCourte_(p.debut) + ')' : ''); }), correspondances: plan.correspondances.length, annee: annee };
   if (confirmation !== 'REPARER') { resume.apercu = true; return resume; }
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) throw new Error('Une autre opération est en cours. Réessayez dans un instant.');
+  var etapes = [], id = plan.deja;
+  /* Chaque étape est indépendante : une étape refusée par Grist est signalée sans masquer les autres. */
+  var etape = function(libelle, fn) { try { fn(); etapes.push({ etape: libelle, ok: true }); } catch (e) { etapes.push({ etape: libelle, ok: false, erreur: String(e && e.message || e) }); } };
   try {
-    var cree = EUC_ENT_grist('post', '/tables/Classes/records', { records: [{ fields: plan.champs }] }), id = cree && cree.records && cree.records[0] && cree.records[0].id;
-    if (!id) throw new Error('Création de la classe refusée par Grist.');
-    if (plan.periodes.length) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: plan.periodes.map(function(p) { return { id: p.id, fields: { Classes_concernees: p.liste.concat([id]) } }; }) });
-    if (plan.correspondances.length) EUC_ENT_grist('patch', '/tables/EUC_CORRESPONDANCE_CLASSES_PRONOTE/records', { records: plan.correspondances.map(function(c) { return { id: c.id, fields: { Exclure_import: false, Classe_Grist: id, Classe_Grist_nom: plan.nom } }; }) });
-    resume.apercu = false; resume.id = id; resume.par = String(ctx.email || '');
+    if (!id) etape('Création de la classe', function() { var cree = EUC_ENT_grist('post', '/tables/Classes/records', { records: [{ fields: plan.champs }] }); id = cree && cree.records && cree.records[0] && cree.records[0].id; if (!id) throw new Error('aucun identifiant renvoyé'); });
+    if (id) {
+      plan.periodes.forEach(function(p) { etape('Période ' + p.libelle, function() { EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: [{ id: p.id, fields: { Classes_concernees: p.liste.concat([id]) } }] }); }); });
+      if (plan.correspondances.length) etape('Correspondance Pronote', function() { EUC_ENT_grist('patch', '/tables/EUC_CORRESPONDANCE_CLASSES_PRONOTE/records', { records: plan.correspondances.map(function(c) { return { id: c.id, fields: { Exclure_import: false, Classe_Grist: id, Classe_Grist_nom: plan.nom } }; }) }); });
+    }
+    resume.apercu = false; resume.id = id || 0; resume.etapes = etapes; resume.par = String(ctx.email || '');
     return resume;
   } finally { lock.releaseLock(); }
 }
