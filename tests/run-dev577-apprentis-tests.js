@@ -221,4 +221,18 @@ test('réparation de classe : aperçu sans écriture, puis classe créée sans i
   assert.throws(() => k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', ''), /existe déjà/);
 });
 
+test('listes des élèves par classe : effectifs du moteur, coordonnées de l’import, route admin, émargement et PDF', () => {
+  const src = read('apps-script/EUC_DEV578_ListesEleves.js');
+  const k = { String, Number, EUC_SUIVI2_modele_: () => ({ annee: '2026-2027', classes: [{ id: 3, nom: 'TMELEC', famille: 'BACPRO', niveau: 'Terminale', eleves: [{ id: 2, nom: 'ZOLA', prenom: 'Emile' }, { id: 1, nom: 'ARNOULD', prenom: 'Mathis' }] }, { id: 4, nom: 'VIDE', eleves: [] }] }),
+    EUC_DEV538_records_: () => [{ id: 1, fields: { Nom: 'ARNOULD', Prenom: 'Mathis', Telephone_eleve: '0600000000', Email_eleve: 'm@x.fr' } }], EUC_DEV538_fields_: r => r.fields };
+  vm.createContext(k); vm.runInContext(src, k);
+  const d = JSON.parse(JSON.stringify(k.EUC_DEV578_listesEleves_('2026-2027')));
+  assert.equal(d.classes.length, 1, 'classe sans élève écartée');
+  assert.deepEqual(d.classes[0].eleves, [['ARNOULD', 'Mathis', '0600000000', 'm@x.fr'], ['ZOLA', 'Emile', '', '']]);
+  assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'listes-eleves-pfmp':\s*return EUC_DEV578_afficherListesEleves\(e\);/);
+  assert.match(read('apps-script/Admin_PFMP.html'), /page=listes-eleves-pfmp/);
+  const h = read('apps-script/Listes_Eleves_DEV578.html'); assert.match(h, /id="colSign" checked/); assert.match(h, /jspdf-autotable@3\.8\.2/);
+  assert.match(src, /EUC_SUIVI2_exigerAdmin_\(\)/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
