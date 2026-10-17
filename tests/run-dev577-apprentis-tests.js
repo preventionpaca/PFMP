@@ -266,3 +266,8 @@ test('accueil admin : Entreprises, Apprentis, Scolaires avec leur paramétrage, 
   assert.ok(a.indexOf('page=snapshot-pfmp-admin') > a.indexOf('>Développement<'));
   assert.match(l, /EUC_PROFESSEURS_PFMP/); assert.match(l, /EUC_CLASSES_PROFESSEURS_PFMP/); assert.match(l, /f\.Fonctions/); assert.match(h, /data-vue="mineurs"/); assert.match(h, /EUC_DEV578_titresModifier/); assert.match(h, /class="a" title="Apprenti"/);
 });
+test('import Yparéo : plusieurs exports de groupes réunis, doublons exacts retirés, absents jamais sortis', () => {
+  const h = read('apps-script/Import_Ypareo_DEV566.html'), s = read('apps-script/EUC_PFMP_DEV566_ImportYpareo.js');
+  assert.match(h, /<input id="file" type="file" multiple/); assert.match(h, /async function lireFichiers\(files\)/); assert.match(h, /doublon\(s\) retiré\(s\)/);
+  assert.doesNotMatch(s, /Present_dernier_import:false/);
+});
