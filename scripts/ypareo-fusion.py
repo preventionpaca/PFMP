@@ -15,7 +15,8 @@ Usage :
   python3 scripts/ypareo-fusion.py            surveille en continu (Ctrl+C pour arrêter)
   python3 scripts/ypareo-fusion.py --une-fois fusionne ce qui est là, puis s'arrête
   python3 scripts/ypareo-fusion.py --vider    repart d'un fichier unique vide
-Options : --dossier CHEMIN (dossier surveillé), --calme SECONDES (défaut 6).
+Options : --dossier CHEMIN (dossier surveillé), --calme SECONDES (défaut 6),
+          --fichier NOM (fichier unique distinct, par exemple pour un autre organisme).
 """
 import argparse
 import csv
@@ -120,9 +121,11 @@ def main():
     p.add_argument("--calme", type=float, default=6)
     p.add_argument("--une-fois", action="store_true")
     p.add_argument("--vider", action="store_true")
+    p.add_argument("--fichier", default="YPAREO_APPRENTIS.csv",
+                   help="nom du fichier unique (ex. YPAREO_FORMATION_CONTINUE.csv pour un autre organisme)")
     a = p.parse_args()
     dossier = Path(a.dossier).expanduser()
-    sortie = dossier / "Ypareo" / "YPAREO_APPRENTIS.csv"
+    sortie = dossier / "Ypareo" / a.fichier
     if a.vider:
         if sortie.exists():
             sortie.unlink()
