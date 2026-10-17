@@ -5,37 +5,68 @@
 <base target="_top">
 <title>Listes et émargement</title>
 <style>
-:root{--vert:#0b6b4f;--bord:#cfe3dc;--fond:#f4f8f6;--gris:#5b6b66}
+:root{--vert:#0b6b4f;--bord:#cfe3dc;--fond:#f4f8f6;--gris:#5b6b66;--ambre:#b45309}
 *{box-sizing:border-box}body{margin:0;font:14px Arial,sans-serif;background:var(--fond);color:#163}
 header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 20px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
 header h1{margin:0;font-size:20px}header a{color:#fff;font-weight:700;margin-left:auto}
 main{max-width:1100px;margin:18px auto;padding:0 16px}
+.onglets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.onglet{font:700 14px Arial,sans-serif;padding:9px 16px;border:1px solid var(--bord);border-radius:999px;background:#fff;color:var(--vert);cursor:pointer}
+.onglet[aria-selected=true]{background:var(--vert);color:#fff;border-color:var(--vert)}
 .outils{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:14px 16px;display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center}
-select,input[type=text]{font:14px Arial,sans-serif;padding:7px 9px;border:1px solid var(--bord);border-radius:8px}
+select,input[type=text],input[list]{font:14px Arial,sans-serif;padding:7px 9px;border:1px solid var(--bord);border-radius:8px}
 label{display:inline-flex;gap:6px;align-items:center}
 .btn{font:700 14px Arial,sans-serif;padding:8px 14px;border-radius:8px;border:1px solid var(--vert);background:#fff;color:var(--vert);cursor:pointer}
-.btn.plein{background:var(--vert);color:#fff}
+.btn.plein{background:var(--vert);color:#fff}.btn.petit{padding:5px 9px;font-size:12px}
+.btn:disabled{opacity:.6;cursor:wait}
+.choix{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 16px;margin-top:10px}
+.choix h3{margin:0 0 8px;font-size:13px;color:var(--gris);text-transform:uppercase;letter-spacing:.06em}
+.puces{display:flex;flex-wrap:wrap;gap:6px 14px}
+.profs{columns:3 240px;margin-top:8px}.profs label{display:flex;break-inside:avoid;padding:2px 0}
+.profs small{color:var(--gris)}
 .feuille{background:#fff;border:1px solid var(--bord);border-radius:12px;margin-top:14px;padding:16px 18px}
 .feuille h2{margin:0;font-size:18px}.sous{color:var(--gris);margin:4px 0 12px}
 table{width:100%;border-collapse:collapse}th,td{border:1px solid #b9cfc7;padding:7px 8px;text-align:left;vertical-align:middle}
 th{background:#eef6f2;font-size:13px}td.num{width:40px;text-align:right;color:var(--gris)}td.sign{width:30%;height:34px}
+.a{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;background:#fef3c7;color:var(--ambre);font-weight:800;font-size:11px}
+.bientot{color:var(--ambre);font-weight:700}
 .vide{padding:24px;text-align:center;color:var(--gris)}
+.note{color:var(--gris);font-size:12px;margin:8px 0 0}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:t .7s linear infinite}@keyframes t{to{transform:rotate(360deg)}}
+[hidden]{display:none!important}
 @page{size:A4 portrait;margin:12mm}
-@media print{header,.outils{display:none!important}body{background:#fff}main{margin:0;max-width:none;padding:0}.feuille{border:0;padding:0}th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{header,.outils,.onglets,.choix{display:none!important}body{background:#fff}main{margin:0;max-width:none;padding:0}.feuille{border:0;padding:0}th,.a{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
 <header><h1>Listes et feuilles d’émargement</h1><span id="info"></span><a href="<?= adminBase ?>?page=admin-pfmp">← Administration PFMP</a></header>
 <main>
+  <div class="onglets" role="tablist">
+    <button class="onglet" type="button" role="tab" data-vue="classes">Élèves par classe</button>
+    <button class="onglet" type="button" role="tab" data-vue="profs">Professeurs</button>
+    <button class="onglet" type="button" role="tab" data-vue="mineurs">Élèves mineurs</button>
+  </div>
   <div class="outils">
-    <label>Liste <select id="classe"></select></label>
-    <label><input type="checkbox" id="colTel"> Téléphone</label>
-    <label><input type="checkbox" id="colMail"> Courriel</label>
-    <label><input type="checkbox" id="colSign" checked> Colonne d’émargement</label>
-    <label>Titre <input type="text" id="titre" placeholder="ex. Présentation des métiers — 12/11" size="34"></label>
+    <label data-pour="classes mineurs">Classe <select id="classe"></select></label>
+    <label data-pour="classes profs"><input type="checkbox" id="colTel"> Téléphone</label>
+    <label data-pour="classes profs"><input type="checkbox" id="colMail"> Courriel</label>
+    <label data-pour="profs"><input type="checkbox" id="colFonc" checked> Discipline et fonctions</label>
+    <label data-pour="classes profs"><input type="checkbox" id="colSign" checked> Colonne d’émargement</label>
+    <label>Intitulé <input id="titre" list="titres" placeholder="Choisir ou saisir — ex. Conseil pédagogique" size="34"></label>
+    <datalist id="titres"></datalist>
+    <button class="btn petit" type="button" id="memoTitre" title="Ajouter cet intitulé au dictionnaire">★ Mémoriser</button>
+    <button class="btn petit" type="button" id="oubliTitre" title="Retirer cet intitulé du dictionnaire">Retirer</button>
     <button class="btn" type="button" id="imprimer">Imprimer</button>
     <button class="btn plein" type="button" id="pdf">Exporter PDF</button>
+  </div>
+  <div class="choix" id="choixProfs" hidden>
+    <h3>Disciplines</h3>
+    <div class="puces" id="disciplines"></div>
+    <h3 style="margin-top:12px">Fonctions</h3>
+    <div class="puces" id="fonctions"></div>
+    <h3 style="margin-top:12px">Professeurs <button class="btn petit" type="button" id="tousProfs">Tout cocher</button> <button class="btn petit" type="button" id="aucunProf">Tout décocher</button></h3>
+    <div class="profs" id="listeProfs"></div>
+    <p class="note">Les fonctions viennent des professeurs principaux et de la colonne « Fonctions » de la table EUC_PROFESSEURS_PFMP (ex. « Coordonnateur BAC PRO MELEC »), si vous l’ajoutez dans Grist.</p>
   </div>
   <div class="feuille" id="feuille"></div>
 </main>
@@ -43,33 +74,101 @@ th{background:#eef6f2;font-size:13px}td.num{width:40px;text-align:right;color:va
 var D=<?!= donnees ?>;
 (function(){
   'use strict';
-  var $=function(id){return document.getElementById(id);},FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations',PROFS:'Professeurs — réunions'};
+  var $=function(id){return document.getElementById(id);},FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations'};
+  var VUE=D.vue||'classes',coches={};
   function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   if(D.erreur){$('feuille').innerHTML='<p class="vide">Chargement impossible : '+esc(D.erreur)+'</p>';return;}
   $('info').textContent='Année '+(D.annee||'');
+  var PROFS=D.professeurs||[],TITRES=D.titres||[];
+  function remplirTitres(){$('titres').innerHTML=TITRES.map(function(t){return '<option value="'+esc(t)+'">';}).join('');}
+  remplirTitres();
+
+  /* --- Classes --- */
   var groupes={};D.classes.forEach(function(c){(groupes[c.famille]=groupes[c.famille]||[]).push(c);});
-  $('classe').innerHTML=Object.keys(groupes).filter(function(f){return groupes[f].length;}).map(function(f){return '<optgroup label="'+esc(FAM[f]||f)+'">'+groupes[f].map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+' ('+c.eleves.length+')</option>';}).join('')+'</optgroup>';}).join('');
-  try{var m=JSON.parse(localStorage.getItem('eucListes')||'{}');if(m.c&&D.classes.some(function(c){return String(c.id)===String(m.c);}))$('classe').value=m.c;['colTel','colMail','colSign'].forEach(function(k){if(k in m)$(k).checked=!!m[k];});}catch(e){}
-  function choix(){return D.classes.filter(function(c){return String(c.id)===$('classe').value;})[0];}
-  function cols(){var l=['N°','Nom','Prénom'];if($('colTel').checked)l.push('Téléphone');if($('colMail').checked)l.push('Courriel');if($('colSign').checked)l.push('Émargement');return l;}
-  function lignes(c){return c.eleves.map(function(e,i){var l=[String(i+1),e[0],e[1]];if($('colTel').checked)l.push(e[2]);if($('colMail').checked)l.push(e[3]);if($('colSign').checked)l.push('');return l;});}
-  function sousTitre(c){return [c.niveau,FAM[c.famille]||c.famille,c.eleves.length+(c.famille==='PROFS'?' professeur(s)':' élève(s)'),D.annee].filter(Boolean).join(' · ');}
-  function rendre(){var c=choix();if(!c){$('feuille').innerHTML='<p class="vide">Aucune classe.</p>';return;}
-    try{localStorage.setItem('eucListes',JSON.stringify({c:c.id,colTel:$('colTel').checked,colMail:$('colMail').checked,colSign:$('colSign').checked}));}catch(e){}
-    var t=$('titre').value.trim(),en=cols();
-    $('feuille').innerHTML='<h2>'+esc(t?t+' — ':'')+esc(c.nom)+'</h2><p class="sous">'+esc(sousTitre(c))+'</p><table><thead><tr>'+en.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+
-      lignes(c).map(function(l){return '<tr>'+l.map(function(v,i){var h=en[i];return '<td'+(h==='N°'?' class="num"':h==='Émargement'?' class="sign"':'')+'>'+(h==='Nom'?'<b>'+esc(v)+'</b>':esc(v))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';}
-  ['classe','colTel','colMail','colSign'].forEach(function(k){$(k).onchange=rendre;});$('titre').oninput=rendre;
+  function optionsClasses(avecToutes){return (avecToutes?'<option value="TOUTES">Toutes les classes</option>':'')+Object.keys(groupes).map(function(f){return '<optgroup label="'+esc(FAM[f]||f)+'">'+groupes[f].map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+' ('+c.eleves.length+')</option>';}).join('')+'</optgroup>';}).join('');}
+  function classeChoisie(){return D.classes.filter(function(c){return String(c.id)===$('classe').value;})[0];}
+
+  /* --- Âge et majorité (dates AAAA-MM-JJ, sans fuseau) --- */
+  var AUJ=D.aujourdhui||new Date().toISOString().slice(0,10);
+  function age(n){var a=+AUJ.slice(0,4)-+n.slice(0,4);if(AUJ.slice(5)<n.slice(5))a--;return a;}
+  function majorite(n){return (+n.slice(0,4)+18)+n.slice(4);}
+  function delai(n){var j=Math.round((Date.parse(majorite(n))-Date.parse(AUJ))/864e5);if(j<=0)return '';var m=Math.floor(j/30.44),r=j-Math.round(m*30.44);return m>=1?m+' mois'+(r>0?' '+r+' j':''):j+' jour(s)';}
+  function fr(iso){var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:'';}
+  function mineurs(){var v=$('classe').value,l=[];D.classes.forEach(function(c){if(v!=='TOUTES'&&String(c.id)!==v)return;c.eleves.forEach(function(e){if(e[4]&&age(e[4])<18)l.push({c:c,e:e});});});
+    return l.sort(function(a,b){return a.c.nom.localeCompare(b.c.nom,'fr')||(a.e[0]+' '+a.e[1]).localeCompare(b.e[0]+' '+b.e[1],'fr');});}
+
+  /* --- Professeurs : cochés par discipline, par fonction, puis nominativement --- */
+  var DISC=[],FONC=[];PROFS.forEach(function(p){if(DISC.indexOf(p.discipline)<0)DISC.push(p.discipline);p.fonctions.forEach(function(f){var g=/^PP /.test(f)?'Professeurs principaux':f;if(FONC.indexOf(g)<0)FONC.push(g);});});
+  DISC.sort(function(a,b){return a.localeCompare(b,'fr');});FONC.sort(function(a,b){return a.localeCompare(b,'fr');});
+  function aFonction(p,g){return p.fonctions.some(function(f){return g==='Professeurs principaux'?/^PP /.test(f):f===g;});}
+  function puce(attr,val,lib){return '<label><input type="checkbox" '+attr+'="'+esc(val)+'"> '+esc(lib)+'</label>';}
+  $('disciplines').innerHTML=DISC.map(function(d){var n=PROFS.filter(function(p){return p.discipline===d;}).length;return puce('data-disc',d,d+' ('+n+')');}).join('')||'<span class="note">Aucun professeur.</span>';
+  $('fonctions').innerHTML=FONC.length?FONC.map(function(g){return puce('data-fonc',g,g);}).join(''):'<span class="note">Aucune fonction renseignée.</span>';
+  $('listeProfs').innerHTML=PROFS.map(function(p){return '<label><input type="checkbox" data-prof="'+p.id+'"> '+esc(p.nom+' '+p.prenom)+' <small>'+esc(p.discipline)+'</small></label>';}).join('');
+  function majCases(){document.querySelectorAll('[data-prof]').forEach(function(x){x.checked=!!coches[x.getAttribute('data-prof')];});rendre();}
+  function basculeGroupe(test,on){PROFS.forEach(function(p){if(test(p))coches[p.id]=on;});majCases();}
+  document.querySelectorAll('[data-disc]').forEach(function(x){x.onchange=function(){var d=x.getAttribute('data-disc');basculeGroupe(function(p){return p.discipline===d;},x.checked);};});
+  document.querySelectorAll('[data-fonc]').forEach(function(x){x.onchange=function(){var g=x.getAttribute('data-fonc');basculeGroupe(function(p){return aFonction(p,g);},x.checked);};});
+  document.querySelectorAll('[data-prof]').forEach(function(x){x.onchange=function(){coches[x.getAttribute('data-prof')]=x.checked;rendre();};});
+  $('tousProfs').onclick=function(){basculeGroupe(function(){return true;},true);};
+  $('aucunProf').onclick=function(){coches={};document.querySelectorAll('[data-disc],[data-fonc]').forEach(function(x){x.checked=false;});majCases();};
+  function profsCoches(){return PROFS.filter(function(p){return coches[p.id];});}
+
+  /* --- Tableau courant : { nom, titre, sous, entetes, lignes, apprentis[], proches[] } --- */
+  function coche(id){return $(id).checked;}
+  function tableau(){
+    var t=$('titre').value.trim(),pre=t?t+' — ':'';
+    if(VUE==='profs'){var l=profsCoches(),en=['N°','Nom','Prénom'];if(coche('colFonc'))en.push('Discipline / fonctions');if(coche('colTel'))en.push('Téléphone');if(coche('colMail'))en.push('Courriel');if(coche('colSign'))en.push('Émargement');
+      return {nom:'Professeurs',titre:pre+'Professeurs',sous:l.length+' professeur(s) · '+(D.annee||''),entetes:en,apprentis:[],
+        lignes:l.map(function(p,i){var r=[String(i+1),p.nom,p.prenom];if(coche('colFonc'))r.push([p.discipline].concat(p.fonctions).join(' · '));if(coche('colTel'))r.push(p.tel);if(coche('colMail'))r.push(p.mail);if(coche('colSign'))r.push('');return r;})};}
+    if(VUE==='mineurs'){var m=mineurs(),toutes=$('classe').value==='TOUTES',c=classeChoisie();
+      return {nom:'Élèves mineurs',titre:pre+'Élèves mineurs'+(toutes||!c?'':' — '+c.nom),sous:m.length+' élève(s) mineur(s) au '+fr(AUJ)+' · en orange : majeur(e) dans moins de 6 mois',
+        entetes:['N°','Classe','Nom','Prénom','Né(e) le','Âge','Majeur(e) le','Dans'],
+        lignes:m.map(function(x,i){var n=x.e[4];return [String(i+1),x.c.nom,x.e[0],x.e[1],fr(n),age(n)+' ans',fr(majorite(n)),delai(n)];}),
+        apprentis:m.map(function(x){return !!x.e[5];}),proches:m.map(function(x){return Date.parse(majorite(x.e[4]))-Date.parse(AUJ)<183*864e5;})};}
+    var c2=classeChoisie();if(!c2)return null;var en2=['N°','Nom','Prénom'];if(coche('colTel'))en2.push('Téléphone');if(coche('colMail'))en2.push('Courriel');if(coche('colSign'))en2.push('Émargement');
+    var nbA=c2.eleves.filter(function(e){return e[5];}).length;
+    return {nom:c2.nom,titre:pre+c2.nom,sous:[c2.niveau,FAM[c2.famille]||c2.famille,c2.eleves.length+' élève(s)'+(nbA?' dont '+nbA+' apprenti(s) (A)':''),D.annee].filter(Boolean).join(' · '),entetes:en2,
+      lignes:c2.eleves.map(function(e,i){var l=[String(i+1),e[0],e[1]];if(coche('colTel'))l.push(e[2]);if(coche('colMail'))l.push(e[3]);if(coche('colSign'))l.push('');return l;}),apprentis:c2.eleves.map(function(e){return !!e[5];})};
+  }
+  function memoriser(){try{localStorage.setItem('eucListes',JSON.stringify({vue:VUE,c:$('classe').value,colTel:coche('colTel'),colMail:coche('colMail'),colSign:coche('colSign'),colFonc:coche('colFonc')}));}catch(e){}}
+  function rendre(){
+    memoriser();
+    var T=tableau();if(!T){$('feuille').innerHTML='<p class="vide">Aucune classe.</p>';return;}
+    if(!T.lignes.length){$('feuille').innerHTML='<h2>'+esc(T.titre)+'</h2><p class="vide">'+(VUE==='profs'?'Cochez une discipline, une fonction ou des professeurs.':VUE==='mineurs'?'Aucun élève mineur.':'Aucun élève.')+'</p>';return;}
+    var iNom=T.entetes.indexOf('Nom');
+    $('feuille').innerHTML='<h2>'+esc(T.titre)+'</h2><p class="sous">'+esc(T.sous)+'</p><table><thead><tr>'+T.entetes.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+
+      T.lignes.map(function(l,k){return '<tr>'+l.map(function(v,i){var h=T.entetes[i],cl=h==='N°'?' class="num"':h==='Émargement'?' class="sign"':(h==='Dans'&&T.proches&&T.proches[k])?' class="bientot"':'';
+        return '<td'+cl+'>'+(i===iNom?'<b>'+esc(v)+'</b>'+(T.apprentis[k]?'<span class="a" title="Apprenti">A</span>':''):esc(v))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+  }
+  function changerVue(v,classeVoulue){VUE=v;document.querySelectorAll('.onglet').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-vue')===v));});
+    document.querySelectorAll('[data-pour]').forEach(function(x){x.hidden=x.getAttribute('data-pour').split(' ').indexOf(v)<0;});
+    $('choixProfs').hidden=v!=='profs';var voulu=classeVoulue||$('classe').value;$('classe').innerHTML=optionsClasses(v==='mineurs');
+    if(voulu&&[].some.call($('classe').options,function(o){return o.value===voulu;}))$('classe').value=voulu;else if(v==='mineurs')$('classe').value='TOUTES';rendre();}
+  document.querySelectorAll('.onglet').forEach(function(b){b.onclick=function(){changerVue(b.getAttribute('data-vue'));};});
+  ['classe','colTel','colMail','colSign','colFonc'].forEach(function(k){$(k).onchange=rendre;});$('titre').oninput=rendre;
+
+  /* --- Dictionnaire des intitulés (partagé, enregistré côté serveur) --- */
+  function titreServeur(retirer){var t=$('titre').value.trim();if(!t){alert('Saisissez d’abord un intitulé.');return;}var b=retirer?$('oubliTitre'):$('memoTitre'),lib=b.textContent;b.disabled=true;b.innerHTML='<span class="spin"></span>'+esc(lib);
+    google.script.run.withSuccessHandler(function(l){TITRES=l||[];remplirTitres();b.disabled=false;b.textContent=lib;}).withFailureHandler(function(e){b.disabled=false;b.textContent=lib;alert('Dictionnaire : '+(e&&e.message||e));}).EUC_DEV578_titresModifier(t,!!retirer);}
+  $('memoTitre').onclick=function(){titreServeur(false);};$('oubliTitre').onclick=function(){titreServeur(true);};
+
+  /* --- Impression et PDF --- */
   $('imprimer').onclick=function(){window.print();};
   function chargerPdf(ok,ko){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();var libs=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'],i=0;(function suivant(){if(i>=libs.length)return ok();var s=document.createElement('script');s.src=libs[i++];s.onload=suivant;s.onerror=ko;document.head.appendChild(s);})();}
-  $('pdf').onclick=function(){var b=this,c=choix();if(!c)return;b.disabled=true;b.innerHTML='<span class="spin"></span>Préparation…';var fin=function(){b.disabled=false;b.textContent='Exporter PDF';};
-    chargerPdf(function(){try{var t=$('titre').value.trim(),en=cols(),large=$('colTel').checked&&$('colMail').checked,doc=new window.jspdf.jsPDF({orientation:large?'landscape':'portrait',unit:'mm',format:'a4'}),W=doc.internal.pageSize.getWidth(),d=new Date(),edite='Édité le '+d.toLocaleDateString('fr-FR');
-      doc.setFontSize(14);doc.setTextColor(11,107,79);doc.text((t?t+' — ':'')+c.nom,10,13);doc.setFontSize(9);doc.setTextColor(70);doc.text(sousTitre(c),10,19);doc.text(edite,W-10,13,{align:'right'});
+  $('pdf').onclick=function(){var b=this,T=tableau();if(!T||!T.lignes.length)return;b.disabled=true;b.innerHTML='<span class="spin"></span>Préparation…';var fin=function(){b.disabled=false;b.textContent='Exporter PDF';};
+    chargerPdf(function(){try{var en=T.entetes,large=en.length>6,doc=new window.jspdf.jsPDF({orientation:large?'landscape':'portrait',unit:'mm',format:'a4'}),W=doc.internal.pageSize.getWidth(),edite='Édité le '+new Date().toLocaleDateString('fr-FR'),iNom=en.indexOf('Nom');
+      doc.setFontSize(14);doc.setTextColor(11,107,79);doc.text(T.titre,10,13);doc.setFontSize(9);doc.setTextColor(70);doc.text(T.sous,10,19);doc.text(edite,W-10,13,{align:'right'});
       var styles={0:{cellWidth:10,halign:'right'}},iS=en.indexOf('Émargement');if(iS>=0)styles[iS]={cellWidth:large?60:55};
-      doc.autoTable({startY:23,head:[en],body:lignes(c),theme:'grid',styles:{fontSize:9,cellPadding:2,minCellHeight:iS>=0?9:0,valign:'middle'},headStyles:{fillColor:[11,107,79]},columnStyles:styles,margin:{left:10,right:10,bottom:12},
-        didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(8);doc.setTextColor(110);doc.text(c.nom+' — '+edite,10,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,W-10,h-5,{align:'right'});}});
-      var u=URL.createObjectURL(doc.output('blob')),a=document.createElement('a');a.href=u;a.download=(((t?t+' ':'')+'Liste '+c.nom+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_'))+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);}catch(err){alert('PDF impossible : '+(err&&err.message||err));}fin();},function(){fin();alert('Le module PDF n’a pas pu être chargé.');});};
-  rendre();
+      var corps=T.lignes.map(function(l,k){return l.map(function(v,i){return i===iNom&&T.apprentis[k]?v+'  (A)':v;});});
+      doc.autoTable({startY:23,head:[en],body:corps,theme:'grid',styles:{fontSize:9,cellPadding:2,minCellHeight:iS>=0?9:0,valign:'middle'},headStyles:{fillColor:[11,107,79]},columnStyles:styles,margin:{left:10,right:10,bottom:12},
+        didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(8);doc.setTextColor(110);doc.text(T.nom+' — '+edite+(T.apprentis.some(Boolean)?' — (A) : apprenti':''),10,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,W-10,h-5,{align:'right'});}});
+      var u=URL.createObjectURL(doc.output('blob')),a=document.createElement('a');a.href=u;a.download=((T.titre+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_'))+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);}catch(err){alert('PDF impossible : '+(err&&err.message||err));}fin();},function(){fin();alert('Le module PDF n’a pas pu être chargé.');});};
+
+  /* --- Démarrage : la vue demandée par le lien (?vue=), sinon la dernière utilisée --- */
+  var m={};try{m=JSON.parse(localStorage.getItem('eucListes')||'{}')||{};}catch(e){}
+  ['colTel','colMail','colSign','colFonc'].forEach(function(k){if(k in m)$(k).checked=!!m[k];});
+  changerVue(D.vueImposee?VUE:(m.vue||VUE),m.c);
 })();
 </script>
 </body>

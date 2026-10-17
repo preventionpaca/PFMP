@@ -29,6 +29,7 @@
     .card.global{border-top:4px solid #475569}
     .card.public{border-top:4px solid #7c3aed}
     .card.public .link{background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6}
+    .card.transverse{border-top:4px solid #0891b2}
     .card.dev{border-top:4px solid #94a3b8;background:#fbfcfd}
     .card.dev .link{background:#fff;border-color:#e2e8f0;color:#475569;font-weight:700}
     .separateur{margin:26px 0 0;font-size:.78rem;font-weight:800;letter-spacing:.12em;color:#49627a}
@@ -72,7 +73,6 @@
         <h3>Paramétrage apprentis</h3>
         <div class="links">
           <a class="link" target="_top" href="<?= adminBase ?>?page=quotas-apprentissage-pfmp">Quotas et relances<small>Pourcentages, capacités par classe et relances à J+14</small></a>
-          <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer un fichier Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
         </div>
       </div>
     </section>
@@ -84,7 +84,6 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=conventions-pfmp">Générer les conventions</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=parcours-differencie-pfmp">Parcours différencié</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-pfmp-enseignants&amp;admin=1" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours…';">Suivi des PFMP par classe<small>Affectations des professeurs et envoi du tableau</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp">Listes et feuilles d’émargement<small>Élèves par classe ou professeurs : téléphone, courriel, signature — impression et PDF</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=admin-conventions-pfmp">Administration des conventions</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=attestations-stage-pfmp">Attestations de stage<small>Après saisie QR ou import JotForm — scolaires uniquement</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=sans-convention-pfmp">Élèves sans convention<small>Filtres classe / période — export PDF</small></a>
@@ -101,8 +100,17 @@
     </section>
   </section>
 
-  <p class="separateur">RÉGLAGES ET ACCÈS</p>
+  <p class="separateur">TRANSVERSAL</p>
   <section class="grid">
+    <section class="card transverse">
+      <h2>Listes et documents</h2>
+      <p>Feuilles d’émargement et listes rapides, tous parcours confondus.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp&amp;vue=classes">Élèves par classe<small>Scolaires, apprentis repérés « A », autres formations — téléphone, courriel, signature</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp&amp;vue=profs">Professeurs — réunions<small>Par discipline, par fonction (PP, coordonnateurs…), puis nominativement</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp&amp;vue=mineurs">Élèves mineurs<small>Âge, date de majorité et délai, par classe</small></a>
+      </div>
+    </section>
     <section class="card global">
       <h2>Paramétrage global</h2>
       <p>Imports et référentiels communs aux trois parcours.</p>
@@ -110,6 +118,7 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-pronote-pfmp">Importer les élèves Pronote<small>Correspondances et exclusions de classes</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=diplomes-classes-pfmp">Diplômes par classe</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer les apprentis Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Import JotForm PFMP</a>
       </div>
     </section>

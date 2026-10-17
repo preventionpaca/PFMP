@@ -228,12 +228,12 @@ test('réparation de classe : aperçu sans écriture, champs descriptifs seuleme
 });
 test('listes des élèves par classe : effectifs du moteur, coordonnées de l’import, route admin, émargement et PDF', () => {
   const src = read('apps-script/EUC_DEV578_ListesEleves.js');
-  const k = { String, Number, EUC_SUIVI2_modele_: () => ({ annee: '2026-2027', classes: [{ id: 3, nom: 'TMELEC', famille: 'BACPRO', niveau: 'Terminale', eleves: [{ id: 2, nom: 'ZOLA', prenom: 'Emile' }, { id: 1, nom: 'ARNOULD', prenom: 'Mathis' }] }, { id: 4, nom: 'VIDE', eleves: [] }] }),
+  const k = { String, Number, EUC_SUIVI2_modele_: () => ({ annee: '2026-2027', classes: [{ id: 3, nom: 'TMELEC', famille: 'BACPRO', niveau: 'Terminale', eleves: [{ id: 2, nom: 'ZOLA', prenom: 'Emile', apprentissage: { code: 'APPRENTI' } }, { id: 1, nom: 'ARNOULD', prenom: 'Mathis', apprentissage: { code: 'SCOLAIRE' } }] }, { id: 4, nom: 'VIDE', eleves: [] }] }),
     EUC_DEV538_records_: t => t === 'EUC_PROFESSEURS_PFMP' ? [{ id: 9, fields: { Nom: 'PROF', Prenom: 'Anne', Email: 'a@x.fr' } }] : [{ id: 1, fields: { Nom: 'ARNOULD', Prenom: 'Mathis', Telephone_eleve: '0600000000', Email_eleve: 'm@x.fr' } }], EUC_DEV538_fields_: r => r.fields };
   vm.createContext(k); vm.runInContext(src, k);
   const d = JSON.parse(JSON.stringify(k.EUC_DEV578_listesEleves_('2026-2027')));
-  assert.equal(d.classes.length, 2, 'classe sans élève écartée, professeurs ajoutés'); assert.equal(d.classes[1].famille, 'PROFS'); assert.deepEqual(d.classes[1].eleves, [['PROF', 'Anne', '', 'a@x.fr']]);
-  assert.deepEqual(d.classes[0].eleves, [['ARNOULD', 'Mathis', '0600000000', 'm@x.fr'], ['ZOLA', 'Emile', '', '']]);
+  assert.equal(d.classes.length, 1, 'classe sans élève écartée'); assert.equal(d.professeurs.length, 1); assert.equal(d.professeurs[0].mail, 'a@x.fr'); assert.equal(d.professeurs[0].discipline, 'Sans discipline');
+  assert.deepEqual(d.classes[0].eleves, [['ARNOULD', 'Mathis', '0600000000', 'm@x.fr', '', 0], ['ZOLA', 'Emile', '', '', '', 1]], 'apprenti repéré (A), date de naissance transmise');
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'listes-eleves-pfmp':\s*return EUC_DEV578_afficherListesEleves\(e\);/);
   assert.match(read('apps-script/Admin_PFMP.html'), /page=listes-eleves-pfmp/);
   const h = read('apps-script/Listes_Eleves_DEV578.html'); assert.match(h, /id="colSign" checked/); assert.match(h, /jspdf-autotable@3\.8\.2/);
@@ -260,8 +260,9 @@ test('import Pronote : les choix d’arbitrage de date de naissance sont mémori
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
 test('accueil admin : Entreprises, Apprentis, Scolaires avec leur paramétrage, puis global, liens publics et développement ; émargement des professeurs', () => {
   const a = read('apps-script/Admin_PFMP.html'), l = read('apps-script/EUC_DEV578_ListesEleves.js'), h = read('apps-script/Listes_Eleves_DEV578.html');
-  ['Entreprises', 'Apprentis', 'Scolaires', 'Paramétrage entreprises', 'Paramétrage apprentis', 'Paramétrage scolaires', 'Paramétrage global', 'Liens hors mode administrateur', 'Développement'].forEach(t => assert.ok(a.includes('>' + t + '<'), t));
-  assert.ok(a.indexOf('page=import-ypareo-pfmp') > a.indexOf('Paramétrage apprentis') && a.indexOf('page=import-ypareo-pfmp') < a.indexOf('>Scolaires<'));
+  ['Entreprises', 'Apprentis', 'Scolaires', 'Listes et documents', 'Paramétrage entreprises', 'Paramétrage apprentis', 'Paramétrage scolaires', 'Paramétrage global', 'Liens hors mode administrateur', 'Développement'].forEach(t => assert.ok(a.includes('>' + t + '<'), t));
+  assert.ok(a.indexOf('page=import-ypareo-pfmp') > a.indexOf('>Paramétrage global<'), 'Yparéo dans le paramétrage global');
+  ['vue=classes', 'vue=profs', 'vue=mineurs'].forEach(v => assert.ok(a.indexOf(v) > a.indexOf('>Listes et documents<'), v));
   assert.ok(a.indexOf('page=snapshot-pfmp-admin') > a.indexOf('>Développement<'));
-  assert.match(l, /EUC_PROFESSEURS_PFMP/); assert.match(l, /famille: 'PROFS'/); assert.match(h, /PROFS:'Professeurs — réunions'/);
+  assert.match(l, /EUC_PROFESSEURS_PFMP/); assert.match(l, /EUC_CLASSES_PROFESSEURS_PFMP/); assert.match(l, /f\.Fonctions/); assert.match(h, /data-vue="mineurs"/); assert.match(h, /EUC_DEV578_titresModifier/); assert.match(h, /class="a" title="Apprenti"/);
 });
