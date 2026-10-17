@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <base target="_top">
-<title>Listes des élèves</title>
+<title>Listes et émargement</title>
 <style>
 :root{--vert:#0b6b4f;--bord:#cfe3dc;--fond:#f4f8f6;--gris:#5b6b66}
 *{box-sizing:border-box}body{margin:0;font:14px Arial,sans-serif;background:var(--fond);color:#163}
@@ -26,10 +26,10 @@ th{background:#eef6f2;font-size:13px}td.num{width:40px;text-align:right;color:va
 </style>
 </head>
 <body>
-<header><h1>Listes des élèves</h1><span id="info"></span><a href="<?= adminBase ?>?page=admin-pfmp">← Administration PFMP</a></header>
+<header><h1>Listes et feuilles d’émargement</h1><span id="info"></span><a href="<?= adminBase ?>?page=admin-pfmp">← Administration PFMP</a></header>
 <main>
   <div class="outils">
-    <label>Classe <select id="classe"></select></label>
+    <label>Liste <select id="classe"></select></label>
     <label><input type="checkbox" id="colTel"> Téléphone</label>
     <label><input type="checkbox" id="colMail"> Courriel</label>
     <label><input type="checkbox" id="colSign" checked> Colonne d’émargement</label>
@@ -43,17 +43,17 @@ th{background:#eef6f2;font-size:13px}td.num{width:40px;text-align:right;color:va
 var D=<?!= donnees ?>;
 (function(){
   'use strict';
-  var $=function(id){return document.getElementById(id);},FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations'};
+  var $=function(id){return document.getElementById(id);},FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',AUTRES:'Autres formations',PROFS:'Professeurs — réunions'};
   function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   if(D.erreur){$('feuille').innerHTML='<p class="vide">Chargement impossible : '+esc(D.erreur)+'</p>';return;}
   $('info').textContent='Année '+(D.annee||'');
   var groupes={};D.classes.forEach(function(c){(groupes[c.famille]=groupes[c.famille]||[]).push(c);});
-  $('classe').innerHTML=Object.keys(groupes).map(function(f){return '<optgroup label="'+esc(FAM[f]||f)+'">'+groupes[f].map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+' ('+c.eleves.length+')</option>';}).join('')+'</optgroup>';}).join('');
+  $('classe').innerHTML=Object.keys(groupes).filter(function(f){return groupes[f].length;}).map(function(f){return '<optgroup label="'+esc(FAM[f]||f)+'">'+groupes[f].map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+' ('+c.eleves.length+')</option>';}).join('')+'</optgroup>';}).join('');
   try{var m=JSON.parse(localStorage.getItem('eucListes')||'{}');if(m.c&&D.classes.some(function(c){return String(c.id)===String(m.c);}))$('classe').value=m.c;['colTel','colMail','colSign'].forEach(function(k){if(k in m)$(k).checked=!!m[k];});}catch(e){}
   function choix(){return D.classes.filter(function(c){return String(c.id)===$('classe').value;})[0];}
   function cols(){var l=['N°','Nom','Prénom'];if($('colTel').checked)l.push('Téléphone');if($('colMail').checked)l.push('Courriel');if($('colSign').checked)l.push('Émargement');return l;}
   function lignes(c){return c.eleves.map(function(e,i){var l=[String(i+1),e[0],e[1]];if($('colTel').checked)l.push(e[2]);if($('colMail').checked)l.push(e[3]);if($('colSign').checked)l.push('');return l;});}
-  function sousTitre(c){return [c.niveau,FAM[c.famille]||c.famille,c.eleves.length+' élève(s)',D.annee].filter(Boolean).join(' · ');}
+  function sousTitre(c){return [c.niveau,FAM[c.famille]||c.famille,c.eleves.length+(c.famille==='PROFS'?' professeur(s)':' élève(s)'),D.annee].filter(Boolean).join(' · ');}
   function rendre(){var c=choix();if(!c){$('feuille').innerHTML='<p class="vide">Aucune classe.</p>';return;}
     try{localStorage.setItem('eucListes',JSON.stringify({c:c.id,colTel:$('colTel').checked,colMail:$('colMail').checked,colSign:$('colSign').checked}));}catch(e){}
     var t=$('titre').value.trim(),en=cols();

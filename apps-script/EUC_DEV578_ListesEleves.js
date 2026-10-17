@@ -28,7 +28,24 @@ function EUC_DEV578_listesEleves_(annee) {
         }).sort(function(a, b) { return (a[0] + ' ' + a[1]).localeCompare(b[0] + ' ' + b[1], 'fr'); })
       };
     }).filter(function(c) { return c.eleves.length; }).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); })
+      .concat(EUC_DEV578_listeProfesseurs_())
   };
+}
+
+/* Professeurs actifs : feuille d’émargement des réunions (même format que les classes). */
+function EUC_DEV578_listeProfesseurs_() {
+  var l = [];
+  try {
+    EUC_DEV538_records_('EUC_PROFESSEURS_PFMP', {}).forEach(function(r) {
+      var f = EUC_DEV538_fields_(r);
+      if (f.Actif === false) return;
+      var nom = String(f.Nom || '').trim(), prenom = String(f.Prenom || '').trim();
+      if (!nom && !prenom) return;
+      l.push([nom, prenom, String(f.Telephone || f.Telephone_portable || '').trim(), String(f.Email || '').trim()]);
+    });
+  } catch (e) { return []; }
+  l.sort(function(a, b) { return (a[0] + ' ' + a[1]).localeCompare(b[0] + ' ' + b[1], 'fr'); });
+  return l.length ? [{ id: 'PROFS', nom: 'Tous les professeurs', famille: 'PROFS', niveau: '', pp: [], eleves: l }] : [];
 }
 
 function EUC_DEV578_afficherListesEleves(e) {
@@ -38,7 +55,7 @@ function EUC_DEV578_afficherListesEleves(e) {
   try { d = EUC_DEV578_listesEleves_(String(p.annee || '')); } catch (err) { d = { erreur: String(err && err.message || err), classes: [] }; }
   t.donnees = JSON.stringify(d).replace(/</g, '\\u003c');
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
-  return t.evaluate().setTitle('Listes des élèves')
+  return t.evaluate().setTitle('Listes et émargement')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

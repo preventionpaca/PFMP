@@ -229,10 +229,10 @@ test('réparation de classe : aperçu sans écriture, champs descriptifs seuleme
 test('listes des élèves par classe : effectifs du moteur, coordonnées de l’import, route admin, émargement et PDF', () => {
   const src = read('apps-script/EUC_DEV578_ListesEleves.js');
   const k = { String, Number, EUC_SUIVI2_modele_: () => ({ annee: '2026-2027', classes: [{ id: 3, nom: 'TMELEC', famille: 'BACPRO', niveau: 'Terminale', eleves: [{ id: 2, nom: 'ZOLA', prenom: 'Emile' }, { id: 1, nom: 'ARNOULD', prenom: 'Mathis' }] }, { id: 4, nom: 'VIDE', eleves: [] }] }),
-    EUC_DEV538_records_: () => [{ id: 1, fields: { Nom: 'ARNOULD', Prenom: 'Mathis', Telephone_eleve: '0600000000', Email_eleve: 'm@x.fr' } }], EUC_DEV538_fields_: r => r.fields };
+    EUC_DEV538_records_: t => t === 'EUC_PROFESSEURS_PFMP' ? [{ id: 9, fields: { Nom: 'PROF', Prenom: 'Anne', Email: 'a@x.fr' } }] : [{ id: 1, fields: { Nom: 'ARNOULD', Prenom: 'Mathis', Telephone_eleve: '0600000000', Email_eleve: 'm@x.fr' } }], EUC_DEV538_fields_: r => r.fields };
   vm.createContext(k); vm.runInContext(src, k);
   const d = JSON.parse(JSON.stringify(k.EUC_DEV578_listesEleves_('2026-2027')));
-  assert.equal(d.classes.length, 1, 'classe sans élève écartée');
+  assert.equal(d.classes.length, 2, 'classe sans élève écartée, professeurs ajoutés'); assert.equal(d.classes[1].famille, 'PROFS'); assert.deepEqual(d.classes[1].eleves, [['PROF', 'Anne', '', 'a@x.fr']]);
   assert.deepEqual(d.classes[0].eleves, [['ARNOULD', 'Mathis', '0600000000', 'm@x.fr'], ['ZOLA', 'Emile', '', '']]);
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'listes-eleves-pfmp':\s*return EUC_DEV578_afficherListesEleves\(e\);/);
   assert.match(read('apps-script/Admin_PFMP.html'), /page=listes-eleves-pfmp/);
@@ -258,3 +258,10 @@ test('import Pronote : les choix d’arbitrage de date de naissance sont mémori
 });
 
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
+test('accueil admin : Entreprises, Apprentis, Scolaires avec leur paramétrage, puis global, liens publics et développement ; émargement des professeurs', () => {
+  const a = read('apps-script/Admin_PFMP.html'), l = read('apps-script/EUC_DEV578_ListesEleves.js'), h = read('apps-script/Listes_Eleves_DEV578.html');
+  ['Entreprises', 'Apprentis', 'Scolaires', 'Paramétrage entreprises', 'Paramétrage apprentis', 'Paramétrage scolaires', 'Paramétrage global', 'Liens hors mode administrateur', 'Développement'].forEach(t => assert.ok(a.includes('>' + t + '<'), t));
+  assert.ok(a.indexOf('page=import-ypareo-pfmp') > a.indexOf('Paramétrage apprentis') && a.indexOf('page=import-ypareo-pfmp') < a.indexOf('>Scolaires<'));
+  assert.ok(a.indexOf('page=snapshot-pfmp-admin') > a.indexOf('>Développement<'));
+  assert.match(l, /EUC_PROFESSEURS_PFMP/); assert.match(l, /famille: 'PROFS'/); assert.match(h, /PROFS:'Professeurs — réunions'/);
+});

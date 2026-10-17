@@ -8,29 +8,33 @@
   <style>
     *{box-sizing:border-box}
     body{margin:0;background:#f4f6f9;color:#182230;font-family:Arial,sans-serif}
-    main{max-width:1060px;margin:auto;padding:28px 24px 44px}
+    main{max-width:1240px;margin:auto;padding:28px 24px 44px}
     .eyebrow{margin:0 0 8px;font-size:.78rem;font-weight:800;letter-spacing:.12em;color:#49627a}
     h1{margin:0 0 20px;font-size:2rem}
-    .intro{background:#fff;border:1px solid #dce3ea;border-radius:12px;padding:18px}
-    .intro p{margin:10px 0 0;line-height:1.45}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
-    .card,.settings{background:#fff;border:1px solid #dce3ea;border-radius:12px}
-    .card{padding:20px}
-    .card h2{margin:0 0 6px;font-size:1.08rem}
-    .card>p{margin:0 0 12px;color:#4d5c6b;line-height:1.4}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px;align-items:start}
+    .card{background:#fff;border:1px solid #dce3ea;border-radius:12px;padding:18px}
+    .card h2{margin:0 0 4px;font-size:1.12rem}
+    .card>p{margin:0 0 12px;color:#4d5c6b;line-height:1.4;font-size:.9rem}
     .links{display:grid;gap:7px}
     .link{display:block;padding:9px 10px;border:1px solid #bfe2da;border-radius:8px;background:#eef9f6;color:#08745f;text-decoration:none;font-weight:800;line-height:1.15}
     .link:hover{background:#e2f5f0}
     .link small{display:block;margin-top:3px;color:#64748b;font-size:.72rem;font-weight:700}
-    .settings{margin-top:16px;overflow:hidden}
-    .settings summary{padding:16px 20px;cursor:pointer;list-style:none;font-weight:900}
-    .settings summary::-webkit-details-marker{display:none}
-    .settings summary::after{content:"▼";float:right;color:#08745f;font-size:.82rem}
-    .settings[open] summary::after{content:"▲"}
-    .settings-body{padding:0 20px 20px}
-    .settings-body p{margin:0 0 12px;color:#4d5c6b}
+    .param{margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1}
+    .param h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+    .param .link{background:#f8fafc;border-color:#dbe3ea;color:#334155}
+    .param .link:hover{background:#eef2f6}
+    .card.entreprises{border-top:4px solid #2563eb}
+    .card.apprentis{border-top:4px solid #d97706}
+    .card.scolaires{border-top:4px solid #08745f}
+    .card.global{border-top:4px solid #475569}
+    .card.public{border-top:4px solid #7c3aed}
+    .card.public .link{background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6}
+    .card.dev{border-top:4px solid #94a3b8;background:#fbfcfd}
+    .card.dev .link{background:#fff;border-color:#e2e8f0;color:#475569;font-weight:700}
+    .separateur{margin:26px 0 0;font-size:.78rem;font-weight:800;letter-spacing:.12em;color:#49627a}
     footer{margin-top:22px;color:#677482;font-size:.8rem}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}}
+    @media(max-width:980px){.grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:680px){.grid{grid-template-columns:1fr}main{padding:20px 16px 36px}}
   </style>
 </head>
 <body>
@@ -38,67 +42,101 @@
   <p class="eyebrow">LYCÉE LES EUCALYPTUS</p>
   <h1>Centre d’administration PFMP + Apprentis</h1>
 
-  <section class="intro">
-    <strong>Accès réservé à l’administration PFMP.</strong>
-    <p>Les liens « Mode consultation » utilisent le déploiement public en lecture seule.</p>
-  </section>
-
+  <!-- Trois parcours : chacun ses pages, puis son paramétrage. -->
   <section class="grid">
-    <section class="card">
-      <h2>Apprentis / parcours</h2>
-      <p>Gestion et consultation de l’apprentissage.</p>
+    <section class="card entreprises">
+      <h2>Entreprises</h2>
+      <p>Accueils, contacts et relation avec les entreprises.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp">Book des entreprises<small>Filtres combinés et historique des accueils</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=contacts">Répertoire entreprises et contacts<small>Corriger les noms, rechercher et exporter pour Excel ou PDF</small></a>
+      </div>
+      <div class="param">
+        <h3>Paramétrage entreprises</h3>
+        <div class="links">
+          <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=portees">Diffusion des actions entreprises<small>Visibilité administration, professeurs, élèves et familles</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=geocodage-pfmp-admin">Entreprises et cartographie<small>Géocodage France, validation manuelle Monaco / étranger</small></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card apprentis">
+      <h2>Apprentis</h2>
+      <p>Gestion et suivi de l’apprentissage.</p>
       <div class="links">
         <a class="link" target="_top" href="<?= adminBase ?>?page=apprentissage-pfmp">Gestion des apprentis</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=dossier-apprentissage-pfmp">Dossier de demande d’apprentissage<small>Préremplir et imprimer les 8 pages</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=quotas-apprentissage-pfmp">Quotas et relances<small>Pourcentages, capacités par classe et dossiers à relancer à J+14</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer un fichier Yparéo<small>CSV, XLS ou XLSX — correspondances et prévisualisation obligatoire</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=cartographie-apprentis-pfmp">Cartographie des apprentis<small>Implantation des entreprises et détail administratif en lecture seule</small></a>
-        <a class="link" target="_top" href="<?= publicBase ?>?page=apprentissage-public-pfmp">
-          Consultation apprentis
-          <small>Mode consultation</small>
-        </a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=cartographie-apprentis-pfmp">Cartographie des apprentis<small>Implantation des entreprises et détail administratif</small></a>
+      </div>
+      <div class="param">
+        <h3>Paramétrage apprentis</h3>
+        <div class="links">
+          <a class="link" target="_top" href="<?= adminBase ?>?page=quotas-apprentissage-pfmp">Quotas et relances<small>Pourcentages, capacités par classe et relances à J+14</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer un fichier Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
+        </div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Scolaire / conventions</h2>
-      <p>Génération, administration et suivi des PFMP.</p>
+    <section class="card scolaires">
+      <h2>Scolaires</h2>
+      <p>Conventions, suivi des PFMP et listes.</p>
       <div class="links">
         <a class="link" target="_top" href="<?= adminBase ?>?page=conventions-pfmp">Générer les conventions</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=parcours-differencie-pfmp">Parcours différencié</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-pfmp-enseignants&amp;admin=1" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours…';">Suivi des PFMP par classe<small>Rapide : affectations des professeurs et envoi du tableau</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp">Listes des élèves par classe<small>Émargement, téléphone et courriel — impression et PDF</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-conventions">Ancien suivi des PFMP<small>Fiches de classe complètes, en attendant la bascule</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-pfmp-enseignants&amp;admin=1" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours…';">Suivi des PFMP par classe<small>Affectations des professeurs et envoi du tableau</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=listes-eleves-pfmp">Listes et feuilles d’émargement<small>Élèves par classe ou professeurs : téléphone, courriel, signature — impression et PDF</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=admin-conventions-pfmp">Administration des conventions</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=attestations-stage-pfmp">Attestations de stage<small>Après saisie QR ou import JotForm — scolaires uniquement</small></a>
-        <a class="link" target="_top" href="<?= publicBase ?>?page=suivi-conventions-public">
-          Suivi des PFMP
-          <small>Mode consultation</small>
-        </a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=sans-convention-pfmp">Élèves sans convention<small>Filtres classe / période — export PDF</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=ordres-mission-pfmp">Ordres de mission — visites PFMP<small>Transport par élève — export PDF</small></a>
+      </div>
+      <div class="param">
+        <h3>Paramétrage scolaires</h3>
+        <div class="links">
+          <a class="link" target="_top" href="<?= adminBase ?>?page=acces-pp-admin">Accès professeurs principaux<small>Codes temporaires limités à une classe et une période</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=parametres-convention-pfmp">Paramètres de la convention</a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=destinataires-envois-pfmp">Destinataires &amp; envois</a>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <p class="separateur">RÉGLAGES ET ACCÈS</p>
+  <section class="grid">
+    <section class="card global">
+      <h2>Paramétrage global</h2>
+      <p>Imports et référentiels communs aux trois parcours.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=import-pronote-pfmp">Importer les élèves Pronote<small>Correspondances et exclusions de classes</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=diplomes-classes-pfmp">Diplômes par classe</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Import JotForm PFMP</a>
       </div>
     </section>
 
-  </section>
-
-  <!-- EUC_DEV368_ADMIN_TOOLS_BEGIN --><section class="card"><h2>Pilotage PFMP</h2><p>Contrôle des conventions et préparation des visites.</p><div class="links"><a class="link" target="_top" href="<?= adminBase ?>?page=sans-convention-pfmp">Élèves sans convention<small>Filtres classe / période - export PDF</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=ordres-mission-pfmp">Ordres de mission - visites PFMP<small>Transport par élève - export PDF</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=acces-pp-admin">Accès professeurs principaux<small>Codes temporaires limités à une classe et une période</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp">Book des entreprises<small>Filtres combinés et historique des accueils</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=contacts">Répertoire entreprises et contacts<small>Corriger les noms, rechercher et exporter pour Excel ou PDF</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=portees">Diffusion des actions entreprises<small>Régler la visibilité administration, professeurs, élèves et familles</small></a><a class="link" target="_top" href="<?= adminBase ?>?page=geocodage-pfmp-admin">Entreprises et cartographie<small>Géocodage France, validation manuelle Monaco / étranger</small></a></div></section><!-- EUC_DEV368_ADMIN_TOOLS_END --><details class="settings">
-    <summary>Paramétrage</summary>
-    <div class="settings-body">
-      <p>Référentiels, imports, synchronisations et outils techniques.</p>
+    <section class="card public">
+      <h2>Liens hors mode administrateur</h2>
+      <p>Ce que voient les professeurs (via Atrium) et le public.</p>
       <div class="links">
-        <a class="link" target="_top" href="<?= adminBase ?>?page=import-pronote-pfmp">Importer les élèves / exclusions de classes Pronote</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=diplomes-classes-pfmp">Diplômes par classe</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=parametres-convention-pfmp">Paramètres de la convention</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=destinataires-envois-pfmp">Destinataires &amp; envois</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Migration JotForm PFMP</a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-apprentis-enseignants" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours… (quelques secondes)';this.style.opacity='.7';">Nouveau suivi des apprentis (enseignants)<small>Page rapide en test, avant bascule d’apprentis.loucodi.fr</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-pfmp-enseignants" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement du suivi en cours… (quelques secondes)';this.style.opacity='.7';">Nouveau suivi des PFMP (enseignants)<small>Page rapide en test, avant bascule de pfmp.loucodi.fr</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=controle-chiffres-pfmp">Vérifier les chiffres du suivi<small>Nouveau moteur comparé aux cartes actuelles</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=liens-acces-pfmp">Liens d’accès<small>Liens enseignants pour Atrium, clé régénérable</small></a>
-        <a class="link" target="_top" id="euc-snapshot-setting" href="<?= adminBase ?>?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=liens-acces-pfmp">Liens d’accès Atrium<small>Liens enseignants, clé régénérable</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-pfmp-enseignants" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours…';">Suivi des PFMP — vue enseignants<small>Ce que voit un professeur</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-apprentis-enseignants" onclick="var m=this.querySelector('small');if(m)m.textContent='Chargement en cours…';">Suivi des apprentis — vue enseignants<small>Ce que voit un professeur</small></a>
+        <a class="link" target="_top" href="<?= publicBase ?>?page=suivi-conventions-public">Suivi des PFMP<small>Lien public, lecture seule</small></a>
+        <a class="link" target="_top" href="<?= publicBase ?>?page=apprentissage-public-pfmp">Consultation apprentis<small>Lien public, lecture seule</small></a>
+        <a class="link" target="_top" href="<?= publicBase ?>?page=book-entreprises-eleves-pfmp">Book des entreprises — élèves et familles<small>Lien public, sans données nominatives</small></a>
       </div>
-    </div>
-  </details>
+    </section>
+
+    <section class="card dev">
+      <h2>Développement</h2>
+      <p>Contrôles et maintenance technique.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=controle-chiffres-pfmp">Vérifier les chiffres du suivi<small>Moteur, codes postaux, diagnostic de classe, mesures</small></a>
+        <a class="link" target="_top" id="euc-snapshot-setting" href="<?= adminBase ?>?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-conventions">Ancien suivi des PFMP<small>Fiches de classe complètes, en attendant la bascule</small></a>
+      </div>
+    </section>
+  </section>
 
 <footer>Eucalyptus PFMP — v1.0.0-dev.566</footer>
 </main>
