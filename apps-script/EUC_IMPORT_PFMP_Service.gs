@@ -24,6 +24,18 @@ function EUC_IMPORT_analyserTexte_(text,options){
 }
 /* Date lue dans Grist : texte ou colonne Date (secondes depuis 1970). */
 function EUC_IMPORT_dateLueISO_(v){var z=typeof EUC_SUIVI2_date_==="function"?EUC_SUIVI2_date_(v):"";if(z)return z;return typeof EUC_IMPORT_dateExistanteISO_==="function"?EUC_IMPORT_dateExistanteISO_(v):EUC_SUIVI_dateISO_(v);}
+/* Le numéro Pronote est un simple compteur : deux élèves différents peuvent le partager
+ * (LP / LGT, années). Il ne suffit que si rien ne contredit : même nom, et ni numéro
+ * national ni identifiant Pronote différents. Sinon l’élève est traité comme nouveau. */
+function EUC_IMPORT_memeEleveParNumero_(cands,r){
+  var t=function(v){return String(v==null?"":v).trim();};
+  return (cands||[]).filter(function(e){
+    var nn=t(e.Numero_national||e.Numero_National||e.Identifiant_national),id=t(e.Identifiant_Pronote||e.Identifiant_source);
+    if(r.numeroNational&&nn&&nn!==t(r.numeroNational))return false;
+    if(r.ident&&id&&id!==t(r.ident))return false;
+    return EUC_SUIVI_normaliserIdentite_(e.Nom)===EUC_SUIVI_normaliserIdentite_(r.nom);
+  });
+}
 function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
   /* Décisions d’arbitrage lues une seule fois pour toute l’analyse. */
   var __d273map=null;
@@ -36,7 +48,7 @@ function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
     if(!r.classe){stats.sansClasse++;return;}
     if(!allowed[r.classe.toUpperCase()]){stats.horsPerimetre++;return;}
     stats.admissibles++;if(!r.numeroNational)stats.sansNumeroNational++;
-    var candidates=[];if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];if(!candidates.length&&r.numero)candidates=byStable['N|'+r.numero]||[];
+    var candidates=[];if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];if(!candidates.length&&r.numero)candidates=EUC_IMPORT_memeEleveParNumero_(byStable['N|'+r.numero]||[],r);
     var ik=[EUC_SUIVI_normaliserIdentite_(r.nom),EUC_SUIVI_normaliserIdentite_(r.prenom),r.naissance].join('|');if(!candidates.length)candidates=byIdentity[ik]||[];
     var duplicateKey=(r.numeroNational?'NN|'+r.numeroNational:r.ident?'I|'+r.ident:r.numero?'N|'+r.numero:ik);
     if(seen[duplicateKey]){stats.doublons++;stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Doublon dans le fichier'});return;}seen[duplicateKey]=true;
