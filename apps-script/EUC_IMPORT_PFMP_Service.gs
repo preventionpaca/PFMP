@@ -23,7 +23,7 @@ function EUC_IMPORT_analyserTexte_(text,options){
   return {annee:annee,separateur:sep==='\t'?'TABULATION':sep===';'?'POINT_VIRGULE':'VIRGULE',headers:headers,extraHeaders:extra,rows:rows,rejects:rejects,lineCount:lines.length,columnCount:headers.length};
 }
 /* Date lue dans Grist : texte ou colonne Date (secondes depuis 1970). */
-function EUC_IMPORT_dateLueISO_(v){return typeof EUC_IMPORT_dateExistanteISO_==="function"?EUC_IMPORT_dateExistanteISO_(v):EUC_SUIVI_dateISO_(v);}
+function EUC_IMPORT_dateLueISO_(v){var z=typeof EUC_SUIVI2_date_==="function"?EUC_SUIVI2_date_(v):"";if(z)return z;return typeof EUC_IMPORT_dateExistanteISO_==="function"?EUC_IMPORT_dateExistanteISO_(v):EUC_SUIVI_dateISO_(v);}
 function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
   /* Décisions d’arbitrage lues une seule fois pour toute l’analyse. */
   var __d273map=null;

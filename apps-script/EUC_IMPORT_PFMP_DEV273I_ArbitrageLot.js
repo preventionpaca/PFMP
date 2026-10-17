@@ -23,6 +23,13 @@ function EUC_DEV273I_norm_(v){
 
 function EUC_DEV273I_iso_(v){
   if(v===null||v===undefined||v==='')return '';
+  /* Lecteur du moteur : comprend aussi les dates JotForm (« June 5, 2008 »). */
+  try{
+    if(typeof EUC_SUIVI2_date_==='function'){
+      var z=EUC_SUIVI2_date_(v);
+      if(z)return z;
+    }
+  }catch(e0){}
 
   try{
     if(typeof EUC_IMPORT_dateExistanteISO_==='function'){
@@ -420,9 +427,11 @@ function EUC_DEV273I_listerAmbiguities(payload){
       r.naissance
     );
 
+    /* Date Grist illisible : proposée quand même (seul le choix Pronote pourra la corriger). */
+    var brut=e.Date_naissance==null?'':String(e.Date_naissance).trim();
     if(
-      !dg||
       !dp||
+      (!dg&&!brut)||
       dg===dp
     ){
       return;
@@ -433,7 +442,7 @@ function EUC_DEV273I_listerAmbiguities(payload){
       nom:r.nom||'',
       prenom:r.prenom||'',
       dateGrist:dg,
-      dateGristFr:EUC_DEV273I_fr_(dg),
+      dateGristFr:dg?EUC_DEV273I_fr_(dg):brut+' (illisible)',
       datePronote:dp,
       datePronoteFr:EUC_DEV273I_fr_(dp)
     });
@@ -523,7 +532,12 @@ function EUC_DEV273I_appliquerLot(payload){
       r.naissance
     );
 
-    if(!dg||!dp){
+    if(!dg&&dp&&decision==='GRIST'){
+      throw new Error(
+        'Date Grist illisible pour '+(r.nom||'')+' '+(r.prenom||'')+' : choisissez Pronote.'
+      );
+    }
+    if(!dp){
       throw new Error(
         'Date de naissance incomplète ligne '+
         line+
