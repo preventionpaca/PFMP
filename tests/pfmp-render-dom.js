@@ -19,6 +19,10 @@ html=html.replace('<head>','<head>'+stub).replace('</body>',probe+summaryProbe+'
  * et clone de publication. */
 const tmpDir=fs.mkdtempSync(path.join(os.homedir(),'pfmp-chromium-test.'));
 const file=path.join(tmpDir,'pfmp-render.html');fs.writeFileSync(file,html);
-let out;try{out=cp.execFileSync('chromium',['--headless','--no-sandbox','--disable-gpu','--disable-background-networking','--allow-file-access-from-files','--virtual-time-budget=1200','--dump-dom','file://'+file],{encoding:'utf8',stdio:['ignore','pipe','ignore']});}finally{fs.rmSync(tmpDir,{recursive:true,force:true});}
+/* DEV578 : Chromium en snap ne démarre pas depuis certains terminaux restreints (snap-confine) :
+ * on essaie ensuite les navigateurs du même moteur installés autrement (Brave, Chrome). */
+const PFMP_NAVIGATEURS=[process.env.PFMP_CHROMIUM,'chromium','brave-browser','google-chrome','chromium-browser'].filter(Boolean);
+function pfmpRendre(fichierArgs,options){let derniere;for(const nav of PFMP_NAVIGATEURS){try{return cp.execFileSync(nav,fichierArgs,options);}catch(e){derniere=e;}}throw derniere;}
+let out;try{out=pfmpRendre(['--headless','--no-sandbox','--disable-gpu','--disable-background-networking','--allow-file-access-from-files','--virtual-time-budget=1200','--dump-dom','file://'+file],{encoding:'utf8',stdio:['ignore','pipe','ignore']});}finally{fs.rmSync(tmpDir,{recursive:true,force:true});}
 const m=out.match(/data-render-result="([^"]+)"/);if(!m)throw new Error('Résultat DOM Chromium absent.');
 process.stdout.write(Buffer.from(m[1],'base64').toString('utf8'));
