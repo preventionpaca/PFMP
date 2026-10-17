@@ -48,6 +48,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     </div>
     <p class="note">La comparaison relit les tables Grist (nouveau moteur) puis les synthèses actuelles des trois familles : comptez 20 à 60 secondes. Les écarts attendus viennent des règles validées (fraction sur les scolaires, apprentis à partir de la Première, convention annulée ou sans entreprise validée comptée « sans convention », P.dif sans apprentis) ou de synthèses actuelles périmées.</p>
   </section>
+  <section id="mesSection">
+    <h2 style="margin-top:0">Mesurer les temps de l’administration</h2>
+    <p class="note">Chronomètre, une par une et avec votre session, les lectures de données des pages d’administration (lecture seule, environ 1 à 3 minutes). Les lignes « en cache » et « calcul complet » montrent le gain des caches. Copiez le tableau pour l’envoyer.</p>
+    <p><button type="button" id="mesLancer">Lancer les mesures</button></p>
+    <div id="mesResultat"></div>
+  </section>
   <section id="cpSection">
     <h2 style="margin-top:0">Codes postaux sans 0 initial</h2>
     <p class="note">Une colonne « Code postal » de type Nombre dans Grist transforme 06160 en 6160 : adresses fausses, géocodage impossible, entreprises mal rapprochées. L’analyse ne modifie rien ; la correction passe ces colonnes en Texte puis remet le 0.</p>
@@ -128,6 +134,17 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     return '<table><thead><tr><th>Tableau</th><th>Colonne</th><th>Type</th><th>À corriger</th><th>Exemples</th></tr></thead><tbody>'+a.map(function(c){return '<tr><td>'+e(c.table)+'</td><td>'+e(c.colonne)+'</td><td>'+e(c.type)+(c.formule?' (formule, non modifiée)':'')+(c.type!=='Text'&&!c.formule?' → Texte':'')+'</td><td>'+(c.erreur?e(c.erreur):c.nombre)+'</td><td>'+e((c.exemples||[]).join(', '))+'</td></tr>';}).join('')+'</tbody></table>';}
   A.onclick=function(){A.disabled=true;A.textContent='Analyse…';R.innerHTML='';google.script.run.withSuccessHandler(function(l){A.disabled=false;A.textContent='Analyser';R.innerHTML=tableau(l);C.disabled=!l.some(function(c){return !c.formule&&!c.erreur&&(c.nombre||c.type!=='Text');});}).withFailureHandler(function(err){A.disabled=false;A.textContent='Analyser';R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_cpAnalyse();};
   C.onclick=function(){if(!confirm('Corriger les codes postaux dans Grist ? Les colonnes listées passent en Texte et les valeurs à 4 chiffres reçoivent leur 0.'))return;C.disabled=true;C.textContent='Correction…';google.script.run.withSuccessHandler(function(r){C.textContent='Corriger dans Grist';R.innerHTML='<p><b>Correction faite.</b></p><table><thead><tr><th>Tableau</th><th>Colonne</th><th>Type</th><th>Valeurs corrigées</th><th>Remarque</th></tr></thead><tbody>'+(r.rapport||[]).map(function(x){return '<tr><td>'+e(x.table)+'</td><td>'+e(x.colonne)+'</td><td>'+e(x.typeAvant)+(x.typeApres!==x.typeAvant?' → '+e(x.typeApres):'')+'</td><td>'+x.corriges+'</td><td>'+e(x.ignore)+'</td></tr>';}).join('')+'</tbody></table>';}).withFailureHandler(function(err){C.disabled=false;C.textContent='Corriger dans Grist';R.insertAdjacentHTML('afterbegin','<p>Erreur : '+e(err&&err.message||err)+'</p>');}).EUC_DEV578_cpCorriger('CORRIGER');};
+})();
+
+/* DEV578 : mesure des temps de l'administration, une exécution serveur par mesure. */
+(function(){var B=document.getElementById('mesLancer'),R=document.getElementById('mesResultat'),e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  function annee(){var y=document.getElementById('annee');return y&&y.value||'';}
+  B.onclick=function(){B.disabled=true;R.innerHTML='<p>Préparation…</p>';var lignes=[],t0=Date.now();
+    google.script.run.withSuccessHandler(function(liste){var i=0;
+      function rendre(fin){R.innerHTML='<table><thead><tr><th>Lecture</th><th>Durée</th><th>Taille</th><th>État</th></tr></thead><tbody>'+lignes.map(function(x){var s=(x.ms/1000).toFixed(1);return '<tr><td>'+e(x.libelle)+'</td><td style="text-align:right;font-weight:700;color:'+(x.ms>8000?'#b42318':x.ms>3000?'#b54708':'#087f70')+'">'+s+' s</td><td style="text-align:right">'+(x.taille>0?Math.round(x.taille/1024)+' Ko':'—')+'</td><td>'+(x.ok?'OK':'Erreur : '+e(x.erreur))+'</td></tr>';}).join('')+'</tbody></table><p class="note">'+(fin?'Terminé en '+Math.round((Date.now()-t0)/1000)+' s — '+new Date().toLocaleString('fr-FR'):'Mesure '+(i+1)+' / '+liste.length+' en cours…')+'</p>';}
+      (function suivant(){if(i>=liste.length){rendre(true);B.disabled=false;return;}rendre(false);
+        google.script.run.withSuccessHandler(function(r){lignes.push(r);i++;suivant();}).withFailureHandler(function(err){lignes.push({libelle:liste[i].libelle,ms:0,taille:0,ok:false,erreur:err&&err.message||err});i++;suivant();}).EUC_DEV578_mesurer(liste[i].id,annee());})();
+    }).withFailureHandler(function(err){B.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_mesuresListe();};
 })();
 </script>
 </body>

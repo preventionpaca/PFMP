@@ -165,4 +165,16 @@ test('gestion des apprentis : tableau de bord en cache (témoin, réglages, jour
   });
 });
 
+test('mesure des temps de l’administration : réservée à l’administration, une mesure par appel, erreurs rapportées', () => {
+  const src = read('apps-script/EUC_DEV578_Mesures.js'); let admin = true;
+  const k = { String, JSON, Date, Error, EUC_SUIVI2_exigerAdmin_: () => { if (!admin) throw new Error('Accès réservé'); },
+    EUC_DEV368_year: () => '2026-2027', EUC_SUIVI2_temoin_: () => '42', EUC_SUIVI2_modele_: a => { throw new Error('panne ' + a); } };
+  vm.createContext(k); vm.runInContext(src, k);
+  assert.ok(k.EUC_DEV578_mesuresListe().length >= 15);
+  const t = k.EUC_DEV578_mesurer('temoin', ''); assert.equal(t.ok, true); assert.ok(t.ms >= 0);
+  const s = k.EUC_DEV578_mesurer('suivi', '2025-2026'); assert.equal(s.ok, false); assert.match(s.erreur, /panne 2025-2026/);
+  admin = false; assert.throws(() => k.EUC_DEV578_mesurer('temoin'), /réservé/);
+  assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV578_mesurer\(liste\[i\]\.id,annee\(\)\)/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
