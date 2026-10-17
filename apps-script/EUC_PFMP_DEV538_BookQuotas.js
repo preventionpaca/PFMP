@@ -279,13 +279,31 @@ function EUC_DEV545_classModesByName_(annee){
   EUC_DEV541_apprentissageClasses_(annee).forEach(function(c){out[EUC_DEV538_norm_(c.classe)]=EUC_DEV545_classMode_(config,annee,c.id);});
   return out;
 }
+/* DEV578 : la gestion des apprentis relance ce tableau de bord jusqu'à 5 fois (chargement, classe, année,
+ * liste, enregistrement), 6 à 7 s chacun, avec réécriture du snapshot. Le résultat est servi depuis le cache
+ * tant que Grist (témoin), les réglages (quotas, classes, modes) et la date du jour n'ont pas changé. */
+function EUC_DEV578_memoApprentis_(nom,annee,calcul){
+  var temoin='',reglages='';
+  try{temoin=typeof EUC_SUIVI2_temoin_==='function'?String(EUC_SUIVI2_temoin_()||''):'';}catch(e){temoin='';}
+  if(!temoin)return calcul();
+  try{reglages=EUC_DEV441_digest_(JSON.stringify([EUC_DEV538_quotaConfig_()[annee]||{},EUC_DEV542_activeClassesConfig_(),EUC_DEV545_classModesConfig_()])).slice(0,12);}catch(e2){}
+  var jour=Utilities.formatDate(new Date(),'Europe/Paris','yyyyMMdd'),cle='EUC_DEV578_'+nom+'_'+String(annee||'').replace(/\D/g,'')+'_'+temoin.replace(/[^\w-]/g,'')+'_'+reglages.replace(/[^\w-]/g,'')+'_'+jour;
+  var memo=EUC_DEV572_lire_(cle);if(memo)return memo;
+  var res=calcul();EUC_DEV572_ecrire_(cle,res);return res;
+}
 function EUC_DEV545_dashboardLive(annee){
+  return EUC_DEV578_memoApprentis_('APPLIVE',annee,function(){return EUC_DEV578_dashboardLiveCalcul_(annee);});
+}
+function EUC_DEV578_dashboardLiveCalcul_(annee){
   var base=EUC_DEV250_dashboardLive(annee)||{},modes=EUC_DEV545_classModesByName_(annee),entiere=0,mixite=0;
   base.global=base.global||{};base.classes=base.classes||{};
   Object.keys(base.classes).forEach(function(code){var n=EUC_DEV538_n_((base.classes[code]||{}).apprentisActifs);if((modes[EUC_DEV538_norm_(code)]||'MIXITE')==='CLASSE_ENTIERE')entiere+=n;else mixite+=n;});
   base.global.apprentisClasseEntiere=entiere;base.global.apprentisMixite=mixite;return base;
 }
 function EUC_DEV545_dashboardDetails(annee){
+  return EUC_DEV578_memoApprentis_('APPDET',annee,function(){return EUC_DEV578_dashboardDetailsCalcul_(annee);});
+}
+function EUC_DEV578_dashboardDetailsCalcul_(annee){
   var base=EUC_DEV251_dashboardDetails(annee)||{},lists=base.lists||{},modes=EUC_DEV545_classModesByName_(annee);lists.classeEntiere=[];lists.mixite=[];
   (lists.total||[]).forEach(function(item){if((modes[EUC_DEV538_norm_(item.classe)]||'MIXITE')==='CLASSE_ENTIERE')lists.classeEntiere.push(item);else lists.mixite.push(item);});
   base.lists=lists;return base;

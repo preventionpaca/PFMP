@@ -5321,5 +5321,26 @@ body.dev252-readonly .dev259-maint-hidden{
 (function(){'use strict';function readonly(){try{return new URLSearchParams(location.search).get('page')==='apprentissage-public-pfmp'||!!BOOT.readonly}catch(e){return false}}if(!readonly())return;var ready=false,pending='',timer=0,allowed={'apprentissage-public-pfmp':1,'cartographie-apprentis-public-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_APPRENTIS_WRAPPER_NAVIGATE',url:url});else window.location.href=url}function navigate(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_APPRENTIS_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)}window.EUC_DEV556_apprentisNavigate=navigate;addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_APPRENTIS_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();a.setAttribute('aria-busy','true');navigate(url)},true);send({type:'EUC_APPRENTIS_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_APPRENTIS_WRAPPER_QUERY'})},120)})();
 </script>
 
+
+<!-- DEV578 : indicateur global « Chargement… » tant qu'un appel serveur est en cours (tous les boutons de la page). -->
+<div id="eucOccupe" aria-live="polite" hidden style="position:fixed;top:10px;right:12px;z-index:100000;background:#064e3b;color:#fff;padding:8px 14px;border-radius:999px;font:700 13px Arial,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.25)"><span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:eucOccupeTourne .7s linear infinite"></span>Chargement…</div>
+<style>@keyframes eucOccupeTourne{to{transform:rotate(360deg)}}@media print{#eucOccupe{display:none!important}}</style>
+<script>
+(function(){
+  var g=window.google&&google.script,el=document.getElementById('eucOccupe'),n=0,t=0;if(!g||!el)return;
+  function maj(){clearTimeout(t);if(n>0)t=setTimeout(function(){el.hidden=n<=0;},250);else el.hidden=true;}
+  function chaine(base,s,f,u){return new Proxy({},{get:function(_,p){
+    if(p==='withSuccessHandler')return function(fn){return chaine(base,fn,f,u);};
+    if(p==='withFailureHandler')return function(fn){return chaine(base,s,fn,u);};
+    if(p==='withUserObject')return function(o){return chaine(base,s,f,o);};
+    return function(){n++;maj();var fini=false,stop=function(){if(!fini){fini=true;n--;maj();}};
+      var r=base.withSuccessHandler(function(a,b){stop();if(s)s(a,b);}).withFailureHandler(function(e,b){stop();if(f)f(e,b);else if(window.console)console.error(e);});
+      if(u!==undefined)r=r.withUserObject(u);return r[p].apply(r,arguments);};
+  }});}
+  try{var d=Object.getOwnPropertyDescriptor(g,'run');if(!d||!d.configurable)return;
+    var lire=d.get?function(){return d.get.call(g);}:(function(v){return function(){return v;};})(d.value);
+    Object.defineProperty(g,'run',{configurable:true,get:function(){return chaine(lire(),null,null,undefined);}});}catch(e){}
+})();
+</script>
 </body>
 </html>

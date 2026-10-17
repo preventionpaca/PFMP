@@ -156,4 +156,13 @@ test('administration des conventions : liste des dossiers servie depuis le cache
   assert.match(read('apps-script/Admin_Conventions_PFMP.html'), /\.EUC_DEV578_listerDossiersAdmin\(yearContext\.active\)/);
 });
 
+test('gestion des apprentis : tableau de bord en cache (témoin, réglages, jour) ; indicateur « Chargement… » sur les pages admin', () => {
+  assert.match(book, /function EUC_DEV545_dashboardLive\(annee\)\{\n  return EUC_DEV578_memoApprentis_\('APPLIVE'/);
+  assert.match(book, /function EUC_DEV545_dashboardDetails\(annee\)\{\n  return EUC_DEV578_memoApprentis_\('APPDET'/);
+  ['apps-script/Apprentissage_PFMP_V190X.html', 'apps-script/Admin_Conventions_PFMP.html'].forEach(f => {
+    const h = read(f); assert.match(h, /id="eucOccupe"/, f);
+    const code = h.match(/DEV578 : indicateur global[\s\S]*?<script>([\s\S]*?)<\/script>/)[1]; assert.doesNotThrow(() => new Function(code), f);
+  });
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
