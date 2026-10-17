@@ -36,3 +36,4 @@ test('page Yparéo : groupes du fichier proposés avec « Ignorer », bascule DR
   const props={},c=context();c.PropertiesService={getScriptProperties:()=>({getProperty:k=>props[k]||'',setProperty:(k,v)=>props[k]=v})};c.EUC_DEV566_classes_=()=>[];assert.equal(c.EUC_DEV566_setMode({live:true}).mode,'LIVE');assert.equal(c.EUC_DEV566_setMode({live:false}).mode,'DRY_RUN');
   assert.match(source,/function EUC_DEV566_setMode\(q\)\{EUC_DEV368_admin\(\);/)});
 test('CSV Yparéo lu sans devinette de type : les dates JJ/MM/AAAA ne deviennent pas « 9/1/26 »',()=>{const h=read('apps-script/Import_Ypareo_DEV566.html');assert.match(h,/XLSX\.read\(text,\{type:'string',raw:true\}\)/);assert.doesNotMatch(h,/XLSX\.read\(text,\{type:'string',raw:false\}\)/)});
+test('indicateur de chargement : fonctionne aussi sur un bouton sans élément interne (bascule DRY_RUN / LIVE)',()=>{const h=read('apps-script/Import_Ypareo_DEV566.html');assert.match(h,/const t=btn\.lastElementChild\|\|btn;/)});
