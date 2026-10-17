@@ -36,12 +36,14 @@ function EUC_DEV566_mappings_(){var raw='';try{raw=PropertiesService.getScriptPr
 function EUC_DEV566_mode_(){try{return PropertiesService.getScriptProperties().getProperty(EUC_DEV566_YPAREO_MODE_KEY_)==='LIVE'?'LIVE':'DRY_RUN';}catch(e){return'DRY_RUN';}}
 function EUC_DEV566_classes_(){
   var rows=[];try{rows=EUC_IMPORT_chargerClassesCamin_()||[];}catch(e){rows=[];}
-  /* DEV578 : un même nom peut exister deux fois (ex. 1MELEC G n° 6 et l'ancien doublon technique n° 37) :
-   * on garde la ligne la plus ancienne, sinon l'import rattachait les apprentis au doublon. */
-  var vus={};
-  return rows.map(function(row){return{id:EUC_DEV564_classId_(row),classe:EUC_DEV564_classLabel_(row),actif:row.actif!==false};}).filter(function(row){return row.id&&row.classe&&row.actif;})
-    .sort(function(a,b){return a.id-b.id;}).filter(function(row){var k=EUC_DEV566_key_(row.classe);if(vus[k])return false;vus[k]=true;return true;})
-    .sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});
+  /* DEV578 : un même nom peut exister deux fois (ex. « 1MELEC G » du LP et « 1MELEC G » du GRETA, formation
+   * continue). Plutôt que d'en choisir une d'office, les homonymes sont distingués par leur établissement :
+   * « 1MELEC G (GRETA) » / « 1MELEC G (LP) » — et par leur numéro si l'établissement ne suffit pas.
+   * Les classes au nom unique gardent leur libellé : les correspondances déjà enregistrées restent valables. */
+  var liste=rows.map(function(row){return{id:EUC_DEV564_classId_(row),classe:EUC_DEV564_classLabel_(row),etab:String(row.etab||'').trim(),actif:row.actif!==false};}).filter(function(row){return row.id&&row.classe&&row.actif;}),compte={},compteEtab={};
+  liste.forEach(function(r){var k=EUC_DEV566_key_(r.classe);compte[k]=(compte[k]||0)+1;var ke=k+'|'+r.etab.toUpperCase();compteEtab[ke]=(compteEtab[ke]||0)+1;});
+  liste.forEach(function(r){var k=EUC_DEV566_key_(r.classe);if(compte[k]<2)return;r.classe=r.classe+(r.etab&&compteEtab[k+'|'+r.etab.toUpperCase()]<2?' ('+r.etab+')':' (n° '+r.id+')');});
+  return liste.map(function(r){return{id:r.id,classe:r.classe,actif:true};}).sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});
 }
 function EUC_DEV566_importConfig(){EUC_DEV368_admin();return{ok:true,mode:EUC_DEV566_mode_(),mappings:EUC_DEV566_mappings_(),classes:EUC_DEV566_classes_(),niveau:'AUTRES_FORMATIONS',formats:['csv','xls','xlsx']};}
 function EUC_DEV566_saveMappings(q){EUC_DEV368_admin();var mappings=EUC_DEV566_validateMappings_(q&&q.mappings);var classes={},unknown=[];EUC_DEV566_classes_().forEach(function(row){classes[EUC_DEV566_key_(row.classe)]=true;});mappings.forEach(function(row){if(!classes[EUC_DEV566_key_(row.classe)])unknown.push(row.classe);});if(unknown.length)throw new Error('Classe(s) cible(s) introuvable(s) : '+unknown.join(', ')+'.');PropertiesService.getScriptProperties().setProperty(EUC_DEV566_YPAREO_MAPPINGS_KEY_,JSON.stringify(mappings));return EUC_DEV566_importConfig();}
