@@ -201,11 +201,11 @@ test('diagnostic de classe : référentiel, traces par référence ou nom exact,
 
 test('réparation de classe : aperçu sans écriture, champs descriptifs seulement, périodes de l’année, exclusion levée, reprise sans recréer', () => {
   const src = read('apps-script/EUC_DEV578_DiagClasse.js'), ecrits = []; let refusePeriodes = false;
-  const tables = { Classes: [{ id: 12, fields: { Nom: '1MELEC', Etab: 'LP', Niveau_Pronote: '1', Effectif: 26, Principaux_Pronote: 'M. X', Commentaire: 'x', Identifiant_Pronote: 'X9', Actif: true } }],
+  const tables = { Classes: [{ id: 12, fields: { Classe_PFMP: '1MELEC', Nom: '1MELEC', Libelle: '1MELEC', Etab: 'LP', Niveau_Pronote: '1', Effectif: 26, Principaux_Pronote: 'M. X', Commentaire: 'x', Identifiant_Pronote: 'X9', Actif: true } }],
     Annees_Scolaires: [{ id: 1, fields: { Code: '2026-2027' } }, { id: 2, fields: { Code: '2025-2026' } }],
     Planning_Periodes: [{ id: 5, fields: { Libelle: 'PFMP 1', Annee_scolaire: 1, Classes_concernees: ['L', 12, 13] } }, { id: 6, fields: { Libelle: 'Ancienne', Annee_scolaire: 2, Classes_concernees: ['L', 12] } }],
     EUC_CORRESPONDANCE_CLASSES_PRONOTE: [{ id: 30, fields: { Nom_classe_Pronote: '1MELEC2', Exclure_import: true, Annee_scolaire: '2026-2027' } }] };
-  const cols = ['Nom', 'Etab', 'Niveau_Pronote', 'Effectif', 'Principaux_Pronote', 'Commentaire', 'Identifiant_Pronote', 'Actif'].map(id => ({ id, fields: {} })).concat([{ id: 'Classe_PFMP', fields: { isFormula: true } }]);
+  const cols = ['Classe_PFMP', 'Nom', 'Etab', 'Niveau_Pronote', 'Effectif', 'Principaux_Pronote', 'Commentaire', 'Identifiant_Pronote', 'Actif'].map(id => ({ id, fields: {} })).concat([{ id: 'Libelle', fields: { isFormula: true } }]);
   const k = { String, Object, Array, Number, JSON, Date, EUC_SUIVI2_exigerAdmin_: () => ({ email: 'a@x' }), EUC_DEV368_year: () => '2026-2027',
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     EUC_ENT_grist: (m, url, body) => { const t = decodeURIComponent(url.split('/')[2]);
@@ -218,7 +218,7 @@ test('réparation de classe : aperçu sans écriture, champs descriptifs seuleme
   assert.equal(ap.apercu, true); assert.equal(ecrits.length, 0, 'aperçu : aucune écriture'); assert.equal(ap.correspondances, 1);
   refusePeriodes = true;
   const r = JSON.parse(JSON.stringify(k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER')));
-  assert.deepEqual(ecrits[0][2].records[0].fields, { Etab: 'LP', Niveau_Pronote: '1', Actif: true, Nom: '1MELEC2' }, 'ni effectif, ni PP, ni commentaire, ni identifiant du modèle');
+  assert.deepEqual(ecrits[0][2].records[0].fields, { Classe_PFMP: '1MELEC', Etab: 'LP', Niveau_Pronote: '1', Actif: true, Nom: '1MELEC2' }, 'groupe de calendrier recopié ; ni effectif, ni PP, ni commentaire, ni identifiant ; jamais la colonne calculée Libelle');
   assert.deepEqual(r.etapes.map(t => t.ok), [true, false, true], 'période refusée signalée, correspondance quand même débloquée');
   refusePeriodes = false; ecrits.length = 0;
   const reprise = k.EUC_DEV578_reparerClasse('1MELEC2', '1MELEC', '2026-2027', 'REPARER');

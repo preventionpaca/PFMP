@@ -86,21 +86,23 @@ function EUC_DEV578_planReparation_(nom, modele, annee) {
   var deja = classes.filter(function(r) { return nomDe(r.fields || {}).indexOf(cle) >= 0; })[0];
   var champs = null;
   if (!deja) {
-    var colonnes = EUC_ENT_grist('get', '/tables/Classes/columns').columns || [], existe = {};
+    var colonnes = EUC_ENT_grist('get', '/tables/Classes/columns').columns || [], existe = {}, formule = {};
     champs = {};
     /* Seulement les champs descriptifs : jamais d'identifiant, de code, de clé, ni les données propres au modèle
      * (effectif, professeurs principaux, CPE, commentaire, couleur…), qui viendront de l'import. */
     var exclu = /(^|_)(id|ident|identifiant|uuid|cle|key|numero|code|hash|source|effectif|principaux|pp|cpe|commentaire|couleur|groupe)(_|$)/i;
     colonnes.forEach(function(c) {
       var f = c.fields || {}, v = (mod.fields || {})[c.id];
-      existe[c.id] = true;
-      if (f.isFormula || c.id === 'manualSort' || exclu.test(c.id) || /^(Nom|Libelle|Classe_PFMP)$/.test(c.id)) return;
+      existe[c.id] = true; if (f.isFormula) formule[c.id] = true;
+      /* Classe_PFMP = groupe de calendrier (ex. 1MVA pour 1MVA1 et 1MVA2) : recopié du modèle. */
+      if (f.isFormula || c.id === 'manualSort' || (exclu.test(c.id) && c.id !== 'Classe_PFMP') || /^(Nom|Libelle)$/.test(c.id)) return;
       if (v === undefined || v === null || v === '' || Array.isArray(v)) return;
       champs[c.id] = v;
     });
-    ['Nom', 'Libelle', 'Code_import'].forEach(function(k) { if (existe[k]) champs[k] = nom; });
-    if (existe.Actif) champs.Actif = true;
-    if (!existe.Nom && !existe.Libelle) throw new Error('Le référentiel Classes n’a ni colonne Nom ni colonne Libelle.');
+    /* Jamais d'écriture dans une colonne calculée (Grist la refuse : erreur 400). */
+    ['Nom', 'Libelle', 'Code_import'].forEach(function(k) { if (existe[k] && !formule[k]) champs[k] = nom; });
+    if (existe.Actif && !formule.Actif) champs.Actif = true;
+    if (!champs.Nom && !champs.Libelle) throw new Error('Ni la colonne Nom ni la colonne Libelle du référentiel Classes ne sont modifiables.');
   }
   var annees = {};
   try { lire('Annees_Scolaires').forEach(function(a) { var f = a.fields || {}; annees[a.id] = String(f.Code || f.Libelle || ''); }); } catch (e) {}
