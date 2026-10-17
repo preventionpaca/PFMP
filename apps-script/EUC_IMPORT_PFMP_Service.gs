@@ -22,10 +22,14 @@ function EUC_IMPORT_analyserTexte_(text,options){
   lines.forEach(function(line,n){var c=EUC_IMPORT_lireCSV_(line,sep),nom=EUC_IMPORT_valeur_(c,ix.nom),prenom=EUC_IMPORT_valeur_(c,ix.prenomUsage)||EUC_IMPORT_valeur_(c,ix.prenom),classe=EUC_IMPORT_valeur_(c,ix.classe),birth=EUC_IMPORT_valeur_(c,ix.naissance),entry=EUC_IMPORT_valeur_(c,ix.dateEntree),exit=EUC_IMPORT_valeur_(c,ix.dateSortie),national=EUC_IMPORT_valeur_(c,ix.numeroNational);if(!nom||!prenom){rejects.push({ligne:n+2,motif:'Identité incomplète'});return;}rows.push({ligne:n+2,numeroNational:national,numero:EUC_IMPORT_valeur_(c,ix.numero),ident:EUC_IMPORT_valeur_(c,ix.ident),nom:nom,prenom:prenom,naissance:birth?EUC_SUIVI_dateISO_(birth):'',classe:classe,dateEntree:entry?EUC_SUIVI_dateISO_(entry):'',dateSortie:exit?EUC_SUIVI_dateISO_(exit):'',formation:EUC_IMPORT_valeur_(c,ix.formation),filiere:EUC_IMPORT_valeur_(c,ix.filiere),annee:annee});});
   return {annee:annee,separateur:sep==='\t'?'TABULATION':sep===';'?'POINT_VIRGULE':'VIRGULE',headers:headers,extraHeaders:extra,rows:rows,rejects:rejects,lineCount:lines.length,columnCount:headers.length};
 }
+/* Date lue dans Grist : texte ou colonne Date (secondes depuis 1970). */
+function EUC_IMPORT_dateLueISO_(v){return typeof EUC_IMPORT_dateExistanteISO_==="function"?EUC_IMPORT_dateExistanteISO_(v):EUC_SUIVI_dateISO_(v);}
 function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
+  /* Décisions d’arbitrage lues une seule fois pour toute l’analyse. */
+  var __d273map=null;
   var allowed={};(offers||[]).filter(function(o){return o.Actif!==false&&o.Afficher_formulaire_PFMP===true;}).forEach(function(o){allowed[String(o.Code_classe||'').toUpperCase()]=o;});
   var fingerprint=String(parsed.empreinte||''),already=(imports||[]).some(function(i){return i.Empreinte_SHA256===fingerprint&&i.Statut_import==='IMPORTE';}),byStable={},byIdentity={};
-  (existing||[]).forEach(function(e){var y=String(e.Annee_code||e.Annee_scolaire||'');if(y&&y!==parsed.annee)return;var national=String(e.Numero_national||e.Numero_National||e.Identifiant_national||'').trim();if(national)(byStable['NN|'+national]=(byStable['NN|'+national]||[]).concat(e));(e.Identifiant_Pronote||e.Identifiant_source)&&(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]=(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]||[]).concat(e));e.Numero_Pronote&&(byStable['N|'+e.Numero_Pronote]=(byStable['N|'+e.Numero_Pronote]||[]).concat(e));var k=[EUC_SUIVI_normaliserIdentite_(e.Nom),EUC_SUIVI_normaliserIdentite_(e.Prenom_usage||e.Prenom),EUC_SUIVI_dateISO_(e.Date_naissance)].join('|');byIdentity[k]=(byIdentity[k]||[]).concat(e);});
+  (existing||[]).forEach(function(e){var y=String(e.Annee_code||e.Annee_scolaire||'');if(y&&y!==parsed.annee)return;var national=String(e.Numero_national||e.Numero_National||e.Identifiant_national||'').trim();if(national)(byStable['NN|'+national]=(byStable['NN|'+national]||[]).concat(e));(e.Identifiant_Pronote||e.Identifiant_source)&&(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]=(byStable['I|'+String(e.Identifiant_Pronote||e.Identifiant_source)]||[]).concat(e));e.Numero_Pronote&&(byStable['N|'+e.Numero_Pronote]=(byStable['N|'+e.Numero_Pronote]||[]).concat(e));var k=[EUC_SUIVI_normaliserIdentite_(e.Nom),EUC_SUIVI_normaliserIdentite_(e.Prenom_usage||e.Prenom),EUC_IMPORT_dateLueISO_(e.Date_naissance)].join('|');byIdentity[k]=(byIdentity[k]||[]).concat(e);});
   var changes=[],stats={lignes:parsed.lineCount,admissibles:0,horsPerimetre:0,sansClasse:0,sansNumeroNational:0,nouveaux:0,inchanges:0,misesAJour:0,changementsClasse:0,changementsCoordonnees:0,nouveauxSortis:0,reactives:0,absentsNouvelExport:0,doublons:0,homonymes:0,ambiguites:0,rejets:parsed.rejects.length},seen={},matched={};
   parsed.rows.forEach(function(r){
     if(r._exclueImport)return;
@@ -39,8 +43,21 @@ function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
     if(candidates.length>1){stats.homonymes++;stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Plusieurs élèves correspondent'});return;}
     if(!candidates.length){stats.nouveaux++;if(r.dateSortie)stats.nouveauxSortis++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'CREATION',classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sansNumeroNational:!r.numeroNational});return;}
     var e=candidates[0];matched[e.id||e.Cle_inscription_annuelle||duplicateKey]=true;
-    if(r.naissance&&e.Date_naissance&&EUC_SUIVI_dateISO_(e.Date_naissance)!==r.naissance){stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Dates de naissance divergentes'});return;}
-    var oldClass=String(e.Code_classe_importe||e.Classe_code||''),oldEntry=EUC_SUIVI_dateISO_(e.Date_entree||''),oldExit=EUC_SUIVI_dateISO_(e.Date_sortie||''),diffClass=oldClass&&oldClass!==r.classe,diffEntry=!!r.dateEntree&&oldEntry!==r.dateEntree,diffExit=oldExit!==r.dateSortie,reactive=e.Statut_scolarite==='SORTI'&&!r.dateSortie;
+    if(r.naissance&&e.Date_naissance&&EUC_IMPORT_dateLueISO_(e.Date_naissance)!==r.naissance){
+      /* DEV273H_RESOLUTION_PREVIEW */
+      if(!__d273map)__d273map=EUC_DEV273H_map_();
+      var __d273a=__d273map[EUC_DEV273H_key_(parsed,r,{})],__d273h=__d273a&&__d273a.Decision?String(__d273a.Decision).toUpperCase():"";
+      if(__d273h==='GRIST'){
+        r.naissance=EUC_IMPORT_dateLueISO_(e.Date_naissance);
+      }else if(__d273h==='PRONOTE'){
+        /* divergence explicitement acceptée */
+      }else{
+        stats.ambiguites++;
+        changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Dates de naissance divergentes'});
+        return;
+      }
+    }
+    var oldClass=String(e.Code_classe_importe||e.Classe_code||''),oldEntry=EUC_IMPORT_dateLueISO_(e.Date_entree||''),oldExit=EUC_IMPORT_dateLueISO_(e.Date_sortie||''),diffClass=oldClass&&oldClass!==r.classe,diffEntry=!!r.dateEntree&&oldEntry!==r.dateEntree,diffExit=oldExit!==r.dateSortie,reactive=e.Statut_scolarite==='SORTI'&&!r.dateSortie;
     if(diffClass)stats.changementsClasse++;if(diffEntry||diffExit)stats.changementsCoordonnees++;if(reactive)stats.reactives++;
     if(diffClass||diffEntry||diffExit||reactive){stats.misesAJour++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:diffClass?'CHANGEMENT_CLASSE':reactive?'REACTIVATION':diffExit?'SORTIE_EXPLICITE':'MISE_A_JOUR',classeAvant:oldClass,classeApres:r.classe,dateEntree:r.dateEntree||'',dateSortie:r.dateSortie||'',sortie:!!r.dateSortie});}else stats.inchanges++;
   });
