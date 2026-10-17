@@ -48,6 +48,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     </div>
     <p class="note">La comparaison relit les tables Grist (nouveau moteur) puis les synthèses actuelles des trois familles : comptez 20 à 60 secondes. Les écarts attendus viennent des règles validées (fraction sur les scolaires, apprentis à partir de la Première, convention annulée ou sans entreprise validée comptée « sans convention », P.dif sans apprentis) ou de synthèses actuelles périmées.</p>
   </section>
+  <section id="diagSection">
+    <h2 style="margin-top:0">Classe introuvable dans l’application</h2>
+    <p class="note">Cherche toutes les traces d’une classe (référentiel, élèves, périodes, correspondances Pronote, professeurs, diplômes, apprentissage, nouveau suivi) pour trouver où elle se perd. Lecture seule.</p>
+    <p><input id="diagNom" value="1MELEC C" style="padding:7px;border:1px solid #9cc;border-radius:7px"> <button type="button" id="diagLancer">Diagnostiquer</button></p>
+    <div id="diagResultat"></div>
+  </section>
   <section id="mesSection">
     <h2 style="margin-top:0">Mesurer les temps de l’administration</h2>
     <p class="note">Chronomètre, une par une et avec votre session, les lectures de données des pages d’administration (lecture seule, environ 1 à 3 minutes). Les lignes « en cache » et « calcul complet » montrent le gain des caches. Copiez le tableau pour l’envoyer.</p>
@@ -145,6 +151,18 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       (function suivant(){if(i>=liste.length){rendre(true);B.disabled=false;return;}rendre(false);
         google.script.run.withSuccessHandler(function(r){lignes.push(r);i++;suivant();}).withFailureHandler(function(err){lignes.push({libelle:liste[i].libelle,ms:0,taille:0,ok:false,erreur:err&&err.message||err});i++;suivant();}).EUC_DEV578_mesurer(liste[i].id,annee());})();
     }).withFailureHandler(function(err){B.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_mesuresListe();};
+})();
+
+/* DEV578 : diagnostic d'une classe introuvable. */
+(function(){var B=document.getElementById('diagLancer'),R=document.getElementById('diagResultat'),e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  B.onclick=function(){B.disabled=true;B.textContent='Analyse…';R.innerHTML='';var y=document.getElementById('annee');
+    google.script.run.withSuccessHandler(function(r){B.disabled=false;B.textContent='Diagnostiquer';
+      var h='<h3>Référentiel « Classes »</h3>'+(r.referentiel.length?'<table><thead><tr><th>Id</th><th>Nom</th><th>Exact</th><th>Actif</th><th>Année</th><th>Famille</th></tr></thead><tbody>'+r.referentiel.map(function(c){return '<tr><td>'+c.id+'</td><td>'+e(c.nom)+'</td><td>'+(c.exact?'oui':'voisine')+'</td><td>'+(c.actif===false?'<b style="color:#b42318">NON</b>':'oui')+'</td><td>'+e(c.annee)+'</td><td>'+e(c.famille)+'</td></tr>';}).join('')+'</tbody></table>':'<p><b style="color:#b42318">Aucune ligne « '+e(r.classe)+' » dans le référentiel.</b></p>');
+      h+='<h3>Traces dans les tableaux</h3><table><thead><tr><th>Tableau</th><th>Lignes</th><th>Champs</th><th>Exemples</th></tr></thead><tbody>'+r.traces.map(function(t){return '<tr><td>'+e(t.table)+'</td><td>'+(t.erreur?e(t.erreur):t.lignes)+'</td><td>'+e(Object.keys(t.champs||{}).map(function(k){return k+' ('+t.champs[k]+')';}).join(', '))+'</td><td>'+e((t.exemples||[]).map(function(x){return '#'+x.id+' '+x.champs+(x.exclure!==undefined?' · exclure='+x.exclure:'')+(x.cible?' · cible='+x.cible:'')+(x.actif!==undefined?' · actif='+x.actif:'')+(x.anneeLigne?' · '+x.anneeLigne:'');}).join(' | '))+'</td></tr>';}).join('')+'</tbody></table>';
+      h+='<h3>Apprentissage</h3><p>'+e(typeof r.apprentissage==='string'?r.apprentissage:(r.apprentissage||[]).map(function(a){return 'classe '+a.id+' : '+(a.active?'incluse':'EXCLUE des quotas');}).join(' ; ')||'—')+'</p>';
+      h+='<h3>Nouveau suivi ('+e(r.annee)+')</h3><p>'+(typeof r.suivi==='string'?e(r.suivi):(r.suivi.presente?'Présente, '+r.suivi.eleves+' élève(s).':'<b style="color:#b42318">Absente du suivi.</b>'))+'</p>';
+      R.innerHTML=h;})
+    .withFailureHandler(function(err){B.disabled=false;B.textContent='Diagnostiquer';R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_diagClasse(document.getElementById('diagNom').value,y&&y.value||'');};
 })();
 </script>
 </body>

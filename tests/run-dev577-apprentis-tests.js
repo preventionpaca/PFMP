@@ -177,4 +177,24 @@ test('mesure des temps de l’administration : réservée à l’administration,
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV578_mesurer\(liste\[i\]\.id,annee\(\)\)/);
 });
 
+test('diagnostic de classe : référentiel, traces par référence ou nom exact, exclusion Pronote, présence dans le suivi', () => {
+  const src = read('apps-script/EUC_DEV578_DiagClasse.js');
+  const tables = { Classes: [{ id: 40, fields: { Nom: '1MELEC C', Actif: false } }, { id: 12, fields: { Nom: '1MELEC' } }],
+    EUC_ELEVES_PFMP: [{ id: 1, fields: { Classe: 40, Actif: true } }, { id: 2, fields: { Classe: 12, Code_classe_importe: '1MELEC C' } }],
+    EUC_CORRESPONDANCE_CLASSES_PRONOTE: [{ id: 9, fields: { Nom_classe_Pronote: '1MELEC C', Exclure_import: true, Annee_scolaire: '2026-2027' } }],
+    Planning_Periodes: [{ id: 5, fields: { Classes_concernees: ['L', 12, 40] } }] };
+  const k = { String, Object, Array, Number, EUC_SUIVI2_exigerAdmin_: () => {}, EUC_DEV368_year: () => '2026-2027',
+    EUC_ENT_grist: (m, url) => { const t = decodeURIComponent(url.split('/')[2]); if (!tables[t]) throw new Error('absent'); return { records: tables[t] }; },
+    EUC_DEV542_activeClassesConfig_: () => ({}), EUC_DEV542_classActive_: () => true, EUC_SUIVI2_modele_: () => ({ classes: [{ nom: '1MELEC', eleves: [1] }] }) };
+  vm.createContext(k); vm.runInContext(src, k);
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV578_diagClasse('1melec-c')));
+  assert.deepEqual(r.referentiel.map(c => [c.id, c.exact, c.actif]), [[40, true, false], [12, false, undefined]]);
+  const t = n => r.traces.find(x => x.table === n);
+  assert.equal(t('EUC_ELEVES_PFMP').lignes, 2, 'référence 40 et nom importé');
+  assert.equal(t('EUC_CORRESPONDANCE_CLASSES_PRONOTE').exemples[0].exclure, true);
+  assert.equal(t('Planning_Periodes').lignes, 1); assert.equal(t('EUC_APPRENTISSAGE_PFMP').erreur, 'tableau illisible ou absent');
+  assert.equal(r.suivi.presente, false);
+  assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV578_diagClasse\(/);
+});
+
 console.log(`\n${n} tests DEV577 suivi des apprentis réussis.`);
