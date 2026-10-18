@@ -48,7 +48,7 @@ function EUC_IMPORT_previsualiser_(parsed,existing,offers,imports){
     if(!r.classe){stats.sansClasse++;return;}
     if(!allowed[r.classe.toUpperCase()]){stats.horsPerimetre++;return;}
     stats.admissibles++;if(!r.numeroNational)stats.sansNumeroNational++;
-    var candidates=[];if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];if(!candidates.length&&r.numero)candidates=EUC_IMPORT_memeEleveParNumero_(byStable['N|'+r.numero]||[],r);
+    var candidates=[];if(r.numeroNational)candidates=byStable['NN|'+r.numeroNational]||[];if(!candidates.length&&r.numeroNational&&typeof EUC_IMPORT_TOUS_ELEVES_!=='undefined'&&EUC_IMPORT_TOUS_ELEVES_)candidates=EUC_IMPORT_TOUS_ELEVES_.filter(function(e){var y=String(e.Annee_code||'');return(!y||y===parsed.annee)&&String(e.Numero_national||e.Numero_National||e.Identifiant_national||'').trim()===String(r.numeroNational).trim();});if(!candidates.length&&r.ident)candidates=byStable['I|'+r.ident]||[];if(!candidates.length&&r.numero)candidates=EUC_IMPORT_memeEleveParNumero_(byStable['N|'+r.numero]||[],r);
     var ik=[EUC_SUIVI_normaliserIdentite_(r.nom),EUC_SUIVI_normaliserIdentite_(r.prenom),r.naissance].join('|');if(!candidates.length)candidates=byIdentity[ik]||[];
     var duplicateKey=(r.numeroNational?'NN|'+r.numeroNational:r.ident?'I|'+r.ident:r.numero?'N|'+r.numero:ik);
     if(seen[duplicateKey]){stats.doublons++;stats.ambiguites++;changes.push({ligne:r.ligne,nom:r.nom,prenom:r.prenom,type:'AMBIGUITE',motif:'Doublon dans le fichier'});return;}seen[duplicateKey]=true;

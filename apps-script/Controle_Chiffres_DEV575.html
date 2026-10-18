@@ -66,6 +66,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     <p><button type="button" id="cpAnalyser">Analyser</button> <button type="button" id="cpCorriger" disabled>Corriger dans Grist</button></p>
     <div id="cpResultat"></div>
   </section>
+  <section id="dblSection">
+    <h2 style="margin-top:0">Élèves en double</h2>
+    <p class="note">Deux fiches actives de l’année avec le même INE (ou, sans INE, mêmes nom, prénom et date de naissance). On garde la fiche qui porte des conventions, apprentissage ou affectations ; les autres sont désactivées, jamais supprimées. Un groupe où plusieurs fiches portent des liens est seulement signalé, à arbitrer dans Grist.</p>
+    <p><button type="button" id="dblAnalyser">Analyser</button> <button type="button" id="dblDesactiver" disabled>Désactiver les doublons sans lien</button></p>
+    <div id="dblResultat"></div>
+  </section>
   <section id="resume" hidden></section>
   <section id="gardefou" hidden></section>
   <section>
@@ -132,6 +138,21 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       .withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);b.disabled=false;b.removeAttribute('aria-busy');message((e&&e.message)||String(e),true);})
       .EUC_SUIVI2_controle($('annee').value);
   };
+})();
+
+/* DEV578 : élèves en double (imports Pronote sous deux sources). */
+(function(){var e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});},R=document.getElementById('dblResultat'),A=document.getElementById('dblAnalyser'),D=document.getElementById('dblDesactiver');
+  function an(){var y=document.getElementById('annee');return y&&y.value||'';}
+  function liens(x){var l=x.liens||{};return [l.conventions&&l.conventions+' conv.',l.apprentissage&&l.apprentissage+' appr.',l.affectations&&l.affectations+' affect.',l.parcours&&l.parcours+' parc.'].filter(Boolean).join(', ')||'aucun lien';}
+  function ligne(x,role){return '<tr><td>'+role+'</td><td>'+e(x.nom)+'</td><td>'+e(x.classe)+'</td><td>'+x.id+'</td><td>'+e(x.source)+'</td><td>'+e(x.entree)+'</td><td>'+e(liens(x))+'</td></tr>';}
+  function afficher(r){if(!r.groupes.length){R.innerHTML='<p>Aucun élève en double pour '+e(r.annee)+'.</p>';D.disabled=true;return;}
+    R.innerHTML='<p><b>'+r.groupes.length+'</b> élève(s) en double — <b>'+r.aDesactiver+'</b> fiche(s) à désactiver'+(r.aArbitrer?', <b>'+r.aArbitrer+'</b> groupe(s) à arbitrer (plusieurs fiches portent des liens)':'')+(r.desactives?' — <b>'+r.desactives+' désactivée(s)</b>':'')+'.</p>'+
+      '<table><thead><tr><th></th><th>Élève</th><th>Classe</th><th>Fiche</th><th>Source</th><th>Entrée</th><th>Liens</th></tr></thead><tbody>'+r.groupes.map(function(g){return ligne(g.garde,'garder')+g.autres.map(function(x){return ligne(x,g.arbitrer?'<b style="color:#b45309">à arbitrer</b>':'désactiver');}).join('');}).join('<tr><td colspan="7" style="background:#f4f8f6;height:4px;padding:0"></td></tr>')+'</tbody></table>';
+    D.disabled=!(r.apercu&&r.aDesactiver);}
+  function lancer(confirmer){var b=confirmer?D:A,t=b.textContent;b.disabled=true;b.textContent=confirmer?'Désactivation…':'Analyse…';
+    google.script.run.withSuccessHandler(function(r){b.textContent=t;A.disabled=false;afficher(r);}).withFailureHandler(function(err){b.textContent=t;b.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_doublonsEleves({annee:an(),confirmation:confirmer?'DESACTIVER':''});}
+  A.onclick=function(){lancer(false);};
+  D.onclick=function(){if(confirm('Désactiver les fiches en double qui ne portent aucun lien ? (Actif = faux, rien n’est supprimé.)'))lancer(true);};
 })();
 
 /* DEV578 : codes postaux privés de leur 0 initial. */

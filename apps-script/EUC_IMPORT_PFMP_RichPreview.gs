@@ -1,8 +1,10 @@
 /** Eucalyptus PFMP — v1.0.0-dev.77 — prévisualisation et import réel enrichis. */
+/* Élèves de l'année toutes sources confondues (recherche par INE de la prévisualisation). */
+var EUC_IMPORT_TOUS_ELEVES_=null;
 function EUC_IMPORT_chargerDonneesPreviewCompletV77_(annee,sourcePronote){
   var source=EUC_IMPORT_normaliserSourcePronote_(sourcePronote),existing=[],imports=[],responsables=[];
   try{existing=EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_("SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?",[annee]));existing=EUC_IMPORT_normaliserDatesExistantes_(existing);}catch(e){}
-  if(source&&source!=='AUTO')existing=existing.filter(function(x){var s=EUC_IMPORT_normaliserSourcePronote_(x.Source_Pronote||x.Source_import||'');return !s||s===source;});
+  EUC_IMPORT_TOUS_ELEVES_=existing.slice();if(source&&source!=='AUTO')existing=existing.filter(function(x){var s=EUC_IMPORT_normaliserSourcePronote_(x.Source_Pronote||x.Source_import||'');return !s||s===source;});
   try{imports=EUC_IMPORT_lireRecords_('EUC_IMPORTS_PRONOTE_PFMP').filter(function(i){var s=EUC_IMPORT_normaliserSourcePronote_(i.Source_Pronote||'');return !s||s===source;});}catch(e){}
   try{responsables=EUC_IMPORT_lireRecords_(EUC_IMPORT_RESP_TABLE_).filter(function(r){var s=EUC_IMPORT_normaliserSourcePronote_(r.Source_Pronote||'');return !s||s===source;});}catch(e){}
   return {existing:existing,imports:imports,responsables:responsables,classes:EUC_IMPORT_chargerClassesCamin_(),correspondances:EUC_IMPORT_chargerCorrespondances_(annee,source)};

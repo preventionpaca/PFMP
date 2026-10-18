@@ -31,9 +31,12 @@ function EUC_IMPORT_cleStableLigne_(r){
 function EUC_IMPORT_lireAnnee_(code){var rows=EUC_IMPORT_lireRecordsBruts_('Annees_Scolaires').filter(function(r){return String((r.fields||{}).Code||'')===String(code);});if(rows.length!==1)throw new Error('Année scolaire '+code+' introuvable ou ambiguë dans Grist.');return rows[0];}
 function EUC_IMPORT_indexExistantsReels_(rows,anneeId,source){
   var stable={},identite={};
-  (rows||[]).forEach(function(r){var f=r.fields||r;if(Number(f.Annee_scolaire)!==Number(anneeId))return;var src=EUC_IMPORT_normaliserSourcePronote_(f.Source_Pronote||f.Source_import||'');if(src&&src!==source)return;
-    function add(k){if(!k)return;(stable[k]=stable[k]||[]).push(r);}add(f.Numero_national?'NN|'+f.Numero_national:'');add(f.Identifiant_Pronote?'I|'+f.Identifiant_Pronote:'');add(f.Numero_Pronote?'N|'+f.Numero_Pronote:'');
-    var ik=[EUC_SUIVI_normaliserIdentite_(f.Nom),EUC_SUIVI_normaliserIdentite_(f.Prenom_usage||f.Prenom),EUC_SUIVI_dateISO_(f.Date_naissance)].join('|');(identite[ik]=identite[ik]||[]).push(r);
+  (rows||[]).forEach(function(r){var f=r.fields||r;if(Number(f.Annee_scolaire)!==Number(anneeId))return;var src=EUC_IMPORT_normaliserSourcePronote_(f.Source_Pronote||f.Source_import||'');
+    function add(k){if(!k)return;(stable[k]=stable[k]||[]).push(r);}
+    /* L'INE est unique : il retrouve l'élève même importé sous une autre source (LP / LGT / AUTO) — sinon doublon. */
+    add(f.Numero_national?'NN|'+f.Numero_national:'');if(src&&src!==source)return;
+    add(f.Identifiant_Pronote?'I|'+f.Identifiant_Pronote:'');add(f.Numero_Pronote?'N|'+f.Numero_Pronote:'');
+    var ik=[EUC_SUIVI_normaliserIdentite_(f.Nom),EUC_SUIVI_normaliserIdentite_(f.Prenom_usage||f.Prenom),(typeof EUC_IMPORT_dateLueISO_==='function'?EUC_IMPORT_dateLueISO_(f.Date_naissance):EUC_SUIVI_dateISO_(f.Date_naissance))].join('|');(identite[ik]=identite[ik]||[]).push(r);
   });return {stable:stable,identite:identite};
 }
 function EUC_IMPORT_importerReelTexte(payload){return EUC_IMPORT_importerReelCompletV77(payload);}
