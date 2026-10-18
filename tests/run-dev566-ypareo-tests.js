@@ -70,3 +70,11 @@ test('DEV586 : Book — tri alphabétique, diplômes et classes de toute l’ann
 test('DEV587 : Book — 3 dernières années par défaut (personnels comme familles), fenêtre de 2 à 10 ans',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
   assert.match(b,/b\.current=EUC_DEV538_t_\(b\.params\.annee\)\|\|'ALL'/);assert.match(b,/b\.mode='STAFF';b\.current='ALL'/);assert.match(b,/b\.current='ALL';b\.params=\{annee:'ALL',fenetre:3\}/);
   assert.match(h,/<option value="2">2 dernières années<\/option><option value="3" selected>/);assert.match(h,/\$\('year'\)\.onchange=syncWindow;syncWindow\(\);/);});
+test('DEV588 : Book — SIRET retrouvé par nom + code postal sinon signalé ; PDF téléchargé directement',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(b,/list=EUC_DEV588_completerSiret_\(EUC_DEV538_history_\(scope\)\)/);assert.match(b,/c\.siretManquant=true/);assert.match(h,/SIRET manquant/);
+  assert.match(h,/id="pdfDirect"/);assert.match(h,/q\.pageSize='ALL'/);assert.match(h,/doc\.save\('Book_entreprises_'/);
+  const c={};const vm2=require('vm');const ctx={String,Array,Object,EUC_DEV538_norm_:v=>String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim(),EUC_DEV538_t_:v=>String(v==null?'':v).trim(),EUC_DEV538_pick_:(f,n)=>{for(const k of n)if(f[k])return f[k];return'';},EUC_DEV538_fields_:r=>r.fields,
+    EUC_DEV538_optionalRecords_:()=>[{fields:{Raison_sociale:'JC FER SARL',Adresse:'RUE ZONE INDUSTRIE',Code_postal:'06730',Commune:'ST ANDRE',SIRET:'12345678901234'}}],EUC_DEV441_geoRows_:()=>[]};
+  vm2.createContext(ctx);const src=b.slice(b.indexOf('function EUC_DEV588_cle_'),b.indexOf('function EUC_DEV572_base_'));vm2.runInContext(src,ctx);
+  const l=ctx.EUC_DEV588_completerSiret_([{entreprise:'JC FER',adresse:'RUE ZONE INDUSTRIE LA VALLIERE, 06730 SAINT-ANDRE'},{entreprise:'ROSES DE MAI',adresse:'28 ROUTE DE VALBONNE, 06130 GRASSE'}]);
+  assert.equal(l[0].siret,'12345678901234');assert.equal(l[1].siretManquant,true);});

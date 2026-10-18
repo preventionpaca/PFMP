@@ -406,12 +406,24 @@ function EUC_DEV572_ecrire_(key,value){try{var raw=JSON.stringify(value),size=90
 function EUC_DEV572_requete_(q){q=q||{};var o={};['annee','fenetre','famille','domaine','diplome','niveau','classe','periode','ville','entreprise','eleve','professeur','tri','classeId','periodeId'].forEach(function(k){var v=q[k];if(v!==undefined&&v!==null&&String(v)!=='')o[k]=String(v);});return o;}
 function EUC_DEV572_sansFiltre_(q){return Object.keys(EUC_DEV572_requete_(q)).every(function(k){return['annee','fenetre','tri'].indexOf(k)>=0;});}
 function EUC_DEV572_cleFacettes_(groupe,annee,fenetre){return'EUC_DEV572_F4_'+groupe+'_'+String(annee||'ALL').replace(/[^\w-]/g,'')+'_'+String(Number(fenetre)||3);}
-function EUC_DEV572_cleListe_(q,extra){var rev=EUC_DEV549_publicBookRevision_(EUC_DEV538_yearsForScope_(q||{}));return'EUC_DEV572_H_'+EUC_DEV549_digest_(JSON.stringify({v:3,rev:rev,q:extra})).replace(/[^\w]/g,'');}
+function EUC_DEV572_cleListe_(q,extra){var rev=EUC_DEV549_publicBookRevision_(EUC_DEV538_yearsForScope_(q||{}));return'EUC_DEV572_H_'+EUC_DEV549_digest_(JSON.stringify({v:4,rev:rev,q:extra})).replace(/[^\w]/g,'');}
 /* Liste complète d'une année (ou fenêtre), calculée une fois par révision des
  * données et partagée par tous les personnels. */
+/* DEV588 : une entreprise du Book sans SIRET (ancienne saisie, fiche sans SIRET recopié) le retrouve
+ * dans la table des entreprises ou la table de géocodage, par nom + code postal, s'il est unique.
+ * Sinon elle reste signalée « SIRET manquant ». */
+function EUC_DEV588_cle_(nom,adresse){var n=EUC_DEV538_norm_(nom).replace(/\b(SARL|SAS|SASU|SA|EURL|ETS|ETABLISSEMENTS?|SOCIETE)\b/g,' ').replace(/\s+/g,' ').trim(),cp=(String(adresse||'').match(/\b\d{5}\b/g)||[]).pop()||'';return n&&cp?n+'|'+cp:'';}
+function EUC_DEV588_completerSiret_(list){
+  if(!Array.isArray(list)||!list.some(function(c){return !c.siret;}))return list;
+  var index={},ajouter=function(nom,adresse,siret){var k=EUC_DEV588_cle_(nom,adresse),sr=EUC_DEV538_t_(siret).replace(/\D/g,'');if(!k||sr.length!==14)return;if(index[k]&&index[k]!==sr)index[k]='AMBIGU';else index[k]=sr;};
+  try{EUC_DEV538_optionalRecords_('EUC_ENTREPRISES',{}).forEach(function(r){var f=EUC_DEV538_fields_(r),P=EUC_DEV538_pick_;ajouter(P(f,['Raison_sociale','Raison_sociale_officielle','Nom','Nom_entreprise','Enseigne','Nom_commercial']),[P(f,['Adresse']),P(f,['Code_postal','CP']),P(f,['Commune','Ville'])].join(' '),P(f,['SIRET','Siret']));});}catch(e){}
+  try{(typeof EUC_DEV441_geoRows_==='function'?EUC_DEV441_geoRows_():[]).forEach(function(r){var g=r&&r.fields?r.fields:(r||{});ajouter(g.Entreprise,g.Adresse_source,g.SIRET);});}catch(e2){}
+  list.forEach(function(c){if(c.siret)return;var sr=index[EUC_DEV588_cle_(c.entreprise,c.adresse)];if(sr&&sr!=='AMBIGU'){c.siret=sr;c.siretRetrouve=true;}else c.siretManquant=true;});
+  return list;
+}
 function EUC_DEV572_base_(q){
   var scope={annee:q&&q.annee,fenetre:q&&q.fenetre},key=EUC_DEV572_cleListe_(scope,EUC_DEV572_requete_(scope)),list=EUC_DEV572_lire_(key);
-  if(!Array.isArray(list)){list=EUC_DEV538_history_(scope);EUC_DEV572_ecrire_(key,list);}
+  if(!Array.isArray(list)){list=EUC_DEV588_completerSiret_(EUC_DEV538_history_(scope));EUC_DEV572_ecrire_(key,list);}
   return list;
 }
 /* Mêmes critères que EUC_DEV538_history_, appliqués en mémoire à la liste
@@ -436,7 +448,7 @@ function EUC_DEV572_historiqueCache_(q){
   /* La carte d'une classe et d'une période garde son calcul ciblé. */
   if(EUC_DEV538_n_(q.classeId)||EUC_DEV538_n_(q.periodeId)){
     var key=EUC_DEV572_cleListe_(q,EUC_DEV572_requete_(q)),list=EUC_DEV572_lire_(key);
-    if(!Array.isArray(list)){list=EUC_DEV538_history_(q);EUC_DEV572_ecrire_(key,list);}
+    if(!Array.isArray(list)){list=EUC_DEV588_completerSiret_(EUC_DEV538_history_(q));EUC_DEV572_ecrire_(key,list);}
     return list;
   }
   return EUC_DEV572_filtrer_(EUC_DEV572_base_(q),q);
