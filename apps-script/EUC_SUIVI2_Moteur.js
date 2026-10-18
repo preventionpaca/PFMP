@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.583';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.592';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -311,7 +311,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_t_(c.Etab).toUpperCase(), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
       apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
   });
 

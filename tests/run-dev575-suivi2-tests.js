@@ -373,3 +373,24 @@ test('DEV585 : domaines d’activité — proposition de départ, index Grist, f
   assert.match(book, /\(!dom\|\|EUC_DEV585_domainesDe_\(x\.diplome,idx\)\.indexOf\(dom\)>=0\)/); assert.match(book, /'famille','domaine','diplome'/);
   assert.match(page, /<select id="domain">/); assert.match(page, /domaine:\$\('domain'\)\.value/); assert.match(page, /EUC_DEV585_preparer/);
 });
+test('DEV592 : effectifs — LP / LGT pour les scolaires et la mixité, organismes pour les classes entières (co-gestion comptée une fois au total)', () => {
+  const k = { String, Number, Array, Object, JSON };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV592_Effectifs.js'), k);
+  const per = (statuts, fiches) => [{ id: 1, resume: { statuts, fiches } }];
+  const m = { annee: '2026-2027', classes: [
+    { id: 1, nom: 'TCAR', etab: 'LP', modeApprentissage: 'MIXITE', eleves: [{ id: 1, apprentissage: { code: 'APPRENTI' } }, { id: 2, apprentissage: { code: 'SCOLAIRE' } }, { id: 3 }],
+      periodes: per({ 1: 'APPRENTI', 2: 'AVEC', 3: 'SANS' }, { 1: { entreprise: 'GARAGE', siret: '1' }, 2: { entreprise: 'GARAGE', siret: '1' } }) },
+    { id: 2, nom: '1BTS MV', etab: 'LGT', modeApprentissage: 'MIXITE', eleves: [{ id: 4 }], periodes: [] },
+    { id: 3, nom: '2BTS ELEC Alt', etab: 'CFA', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', donneur: 'CFAI', eleves: [{ id: 5 }, { id: 6 }],
+      periodes: per({ 5: 'CONTRAT', 6: 'SANS_CONTRAT' }, { 5: { entreprise: 'ENEDIS' } }) },
+    { id: 4, nom: 'TPMMA', etab: 'GRETA', modeApprentissage: 'FORMATION_CONTINUE', gestionnaire: 'GRETA', donneur: 'GRETA', eleves: [{ id: 7 }], periodes: [] }] };
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV592_calcul_(m)));
+  assert.deepEqual(r.groupes.map(g => g.nom), ['LP', 'LGT', 'CFA RAN', 'CFAI', 'GRETA']);
+  const lp = r.groupes[0].classes[0];
+  assert.deepEqual([lp.effectif, lp.scolaires, lp.apprentis, lp.entreprises], [3, 2, 1, 1], 'même SIRET = une entreprise');
+  assert.deepEqual([r.groupes[2].totaux.apprentis, r.groupes[3].totaux.apprentis, r.groupes[2].totaux.entreprises], [2, 2, 1]);
+  assert.deepEqual([r.total.classes, r.total.effectif, r.total.apprentis], [4, 7, 4], 'classe co-gérée comptée une fois');
+  const admin = read('apps-script/Admin_PFMP.html');
+  assert.match(admin, /id="effectifs"/); assert.match(admin, /\.EUC_DEV592_effectifs\(''\)/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /etab: EUC_SUIVI2_t_\(c\.Etab\)\.toUpperCase\(\)/);
+});
