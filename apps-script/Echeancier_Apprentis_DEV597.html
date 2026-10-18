@@ -41,7 +41,10 @@ th,td{padding:7px 8px;border-bottom:1px solid #e3eee9;text-align:left;vertical-a
     <span style="flex:1"></span>
     <label>Affecter les cochés à <select id="profAff"><option value="">— retirer le référent —</option></select></label>
     <button type="button" id="affecter" class="plein" disabled>Affecter</button>
+    <button type="button" id="prevenir">Prévenir les référents</button>
   </div>
+  <div class="filtres note"><label>Fiche d’entretien (lien Drive ou PDF, jointe au courriel) <input id="fiche" size="50" placeholder="https://…"></label><button type="button" id="ficheOk">Enregistrer le lien</button></div>
+  <div id="apercu"></div>
   <table><thead><tr><th><input type="checkbox" id="tout" aria-label="Tout cocher"></th><th>Statut</th><th>Apprenti</th><th>Classe</th><th>Entreprise · tuteur</th><th>Début du contrat</th><th>À faire avant</th><th>Référent</th><th>Contact</th></tr></thead><tbody id="lignes"></tbody></table>
 </main>
 <script>
@@ -57,7 +60,7 @@ function charger(){$('etat').textContent='Chargement…';appel('EUC_DEV597_echea
   var cl={};r.lignes.forEach(function(l){cl[l.classe]=1;});var v=$('fClasse').value;$('fClasse').innerHTML='<option value="">Toutes</option>'+Object.keys(cl).sort().map(function(c){return '<option>'+esc(c)+'</option>';}).join('');$('fClasse').value=v;
   var refs={};r.lignes.forEach(function(l){if(l.referent)refs[l.referent.nom]=1;});var vr=$('fRef').value;$('fRef').innerHTML='<option value="">Tous</option><option value="-">Sans référent</option>'+Object.keys(refs).sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('');$('fRef').value=vr;
   $('profAff').innerHTML='<option value="">— retirer le référent —</option>'+r.professeurs.map(function(p){return '<option value="'+p.id+'">'+esc(p.nom)+'</option>';}).join('');
-  rendre();});}
+  $('fiche').value=r.fiche||'';rendre();});}
 function rendre(){
   var c=D.compteurs;$('tuiles').innerHTML=['RETARD','ALERTE','RAPPEL','A_FAIRE','A_VENIR','FAIT'].map(function(k){return '<button type="button" class="tuile" data-s="'+k+'" aria-pressed="'+(FILTRE===k)+'"><span class="chip '+k+'">'+LIB[k]+'</span><b>'+c[k]+'</b></button>';}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('.tuile'),function(b){b.onclick=function(){FILTRE=FILTRE===b.dataset.s?'':b.dataset.s;rendre();};});
@@ -66,14 +69,14 @@ function rendre(){
   $('lignes').innerHTML=l.length?l.map(function(x,i){var t=x.tuteur||{};return '<tr><td><input type="checkbox" class="coche" value="'+x.eleveId+'"></td><td><span class="chip '+x.statut+'">'+LIB[x.statut]+'</span>'+(x.statut!=='FAIT'&&x.jours>=0?'<span class="petit">J+'+x.jours+'</span>':'')+'</td>'+
     '<td><b>'+esc(x.nom)+'</b><span class="petit">'+(x.mode==='CLASSE_ENTIERE'?'Classe entière':x.mode==='FORMATION_CONTINUE'?'Formation continue':'Mixité')+(x.organismes?' · '+esc(x.organismes):'')+'</span></td><td>'+esc(x.classe)+'</td>'+
     '<td>'+esc(x.entreprise)+(t.nom?'<span class="petit">Tuteur : '+esc(t.nom)+(t.tel?' · <a href="tel:'+esc(t.tel.replace(/\s/g,''))+'">'+esc(t.tel)+'</a>':'')+(t.mail?' · <a href="mailto:'+esc(t.mail)+'">'+esc(t.mail)+'</a>':'')+'</span>':'')+'</td>'+
-    '<td>'+dfr(x.debut)+'</td><td>'+dfr(x.echeance)+'</td><td>'+(x.referent?esc(x.referent.nom):'<span class="petit">à désigner</span>')+'</td>'+
-    '<td>'+(x.contact?'<b>'+dfr(x.contact.date)+'</b> · '+(x.contact.mode==='VISITE'?'visite':'appel')+(x.contact.professeur?'<span class="petit">'+esc(x.contact.professeur)+'</span>':'')+(x.contact.compteRendu?'<span class="petit">'+esc(x.contact.compteRendu)+'</span>':''):'')+
+    '<td>'+dfr(x.debut)+'</td><td>'+dfr(x.echeance)+'</td><td>'+(x.referent?esc(x.referent.nom)+'<span class="petit">'+(x.referent.notifieLe?'prévenu le '+dfr(x.referent.notifieLe.slice(0,10)):'pas encore prévenu')+'</span>':'<span class="petit">à désigner</span>')+'</td>'+
+    '<td>'+(x.contact?'<b>'+dfr(x.contact.date)+'</b> · '+(x.contact.mode==='VISITE'?'visite':x.contact.mode==='VISIO'?'visio':'appel')+(x.contact.professeur?'<span class="petit">'+esc(x.contact.professeur)+'</span>':'')+(x.contact.compteRendu?'<span class="petit">'+esc(x.contact.compteRendu)+'</span>':''):'')+
       '<div><button type="button" class="saisir" data-i="'+i+'">'+(x.contact?'Ajouter un contact':'Enregistrer le contact')+'</button></div><div class="zone" id="z'+i+'"></div></td></tr>';}).join(''):'<tr><td colspan="9" class="note">Aucun contrat pour ces filtres.</td></tr>';
   Array.prototype.forEach.call(document.querySelectorAll('.saisir'),function(b){b.onclick=function(){formulaire(l[Number(b.dataset.i)],$('z'+b.dataset.i));};});
   Array.prototype.forEach.call(document.querySelectorAll('.coche'),function(c){c.onchange=majAff;});majAff();
 }
 function formulaire(x,z){if(z.innerHTML){z.innerHTML='';return;}
-  z.innerHTML='<div class="form"><label>Date <input type="date" class="fd" value="'+aujourdhui()+'"></label><label>Mode <select class="fm"><option value="APPEL">Appel téléphonique</option><option value="VISITE">Visite en entreprise</option></select></label>'+
+  z.innerHTML='<div class="form"><label>Date <input type="date" class="fd" value="'+aujourdhui()+'"></label><label>Mode <select class="fm"><option value="APPEL">Appel téléphonique</option><option value="VISIO">Visio</option><option value="VISITE">Visite en entreprise</option></select></label>'+
     '<label>Professeur <input class="fp" value="'+esc(x.referent?x.referent.nom:'')+'"></label><label>Compte rendu <textarea class="fc" rows="3"></textarea></label><button type="button" class="plein fo">Enregistrer</button></div>';
   z.querySelector('.fo').onclick=function(){var b=this;b.disabled=true;b.textContent='Enregistrement…';
     appel('EUC_DEV597_enregistrerContact',{contratId:x.contratId,eleveId:x.eleveId,annee:D.annee,date:z.querySelector('.fd').value,mode:z.querySelector('.fm').value,professeur:z.querySelector('.fp').value,compteRendu:z.querySelector('.fc').value},function(){charger();});};}
@@ -83,6 +86,17 @@ $('tout').onchange=function(){var v=this.checked;Array.prototype.forEach.call(do
 $('fClasse').onchange=rendre;$('fRef').onchange=rendre;
 $('affecter').onclick=function(){var ids=coches(),b=this;if(!ids.length)return;b.disabled=true;b.textContent='Affectation…';
   appel('EUC_DEV597_affecterReferent',{eleveIds:ids,profId:Number($('profAff').value)||0,annee:D.annee},function(){$('tout').checked=false;charger();});};
+/* DEV597 : courriel aux professeurs référents (cochés, sinon tous ceux pas encore prévenus). */
+function prevenir(confirmer){var b=$('prevenir');b.disabled=true;b.textContent=confirmer?'Envoi…':'Préparation…';
+  appel('EUC_DEV597_prevenirReferents',{annee:D.annee,eleveIds:coches(),confirmation:confirmer?'ENVOYER':''},function(r){b.disabled=false;b.textContent='Prévenir les référents';
+    if(!r.apercu){$('apercu').innerHTML='<p><b>'+r.envoyes+' courriel(s) envoyé(s).</b></p>';charger();return;}
+    if(!r.envois.length){$('apercu').innerHTML='<p class="note">Aucun référent à prévenir'+(coches().length?' parmi les apprentis cochés':' : tous ont déjà été prévenus (cochez des apprentis pour renvoyer)')+'.'+(r.sansMail.length?' Sans adresse : '+esc(r.sansMail.join(', ')):'')+'</p>';return;}
+    $('apercu').innerHTML='<div class="form"><b>'+r.envois.length+' courriel(s) à envoyer</b>'+(r.sansMail.length?'<span class="erreur">Professeur(s) sans adresse, non prévenu(s) : '+esc(r.sansMail.join(', '))+'</span>':'')+
+      r.envois.map(function(e){return '<details><summary>'+esc(e.professeur)+' &lt;'+esc(e.email)+'&gt; — '+e.apprentis.length+' apprenti(s)</summary><pre style="white-space:pre-wrap;font:13px Arial">'+esc('Objet : '+e.sujet+'\n\n'+e.corps)+'</pre></details>';}).join('')+
+      '<div><button type="button" class="plein" id="envoyer">Envoyer</button> <button type="button" id="annuler">Annuler</button></div></div>';
+    $('envoyer').onclick=function(){prevenir(true);};$('annuler').onclick=function(){$('apercu').innerHTML='';};});}
+$('prevenir').onclick=function(){prevenir(false);};
+$('ficheOk').onclick=function(){var b=this;b.disabled=true;appel('EUC_DEV597_reglerFiche',{url:$('fiche').value},function(){b.disabled=false;b.textContent='Lien enregistré ✓';setTimeout(function(){b.textContent='Enregistrer le lien';},1500);});};
 charger();
 })();
 </script>

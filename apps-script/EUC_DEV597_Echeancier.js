@@ -30,11 +30,13 @@ function EUC_DEV597_statut_(debut, aujourdhui, contact) {
 }
 
 function EUC_DEV597_tables_() {
-  var c = CacheService.getScriptCache(); if (c.get('EUC_DEV597_TABLES')) return;
+  var c = CacheService.getScriptCache(); if (c.get('EUC_DEV597_TABLES2')) return;
   var ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; }), col = EUC_DEV441_col_;
   if (ids.indexOf(EUC_DEV597_REFERENTS_) < 0) EUC_ENT_grist('post', '/tables', { tables: [{ id: EUC_DEV597_REFERENTS_, columns: [col('Eleve', 'Élève (id)', 'Int'), col('Annee_scolaire', 'Année scolaire'), col('Professeur', 'Professeur (id)', 'Int'), col('Professeur_nom', 'Professeur'), col('Actif', 'Actif', 'Bool'), col('Date_modification', 'Date modification')] }] });
   if (ids.indexOf(EUC_DEV597_CONTACTS_) < 0) EUC_ENT_grist('post', '/tables', { tables: [{ id: EUC_DEV597_CONTACTS_, columns: [col('Contrat', 'Contrat (id)', 'Int'), col('Eleve', 'Élève (id)', 'Int'), col('Annee_scolaire', 'Année scolaire'), col('Date_contact', 'Date du contact'), col('Mode', 'Mode'), col('Professeur_nom', 'Professeur'), col('Compte_rendu', 'Compte rendu'), col('Auteur', 'Saisi par'), col('Date_saisie', 'Date de saisie')] }] });
-  c.put('EUC_DEV597_TABLES', '1', 21600);
+  /* Colonne « Prévenu le » (courriel au référent), ajoutée aussi à une table existante. */
+  try { var rc = (EUC_ENT_grist('get', '/tables/' + EUC_DEV597_REFERENTS_ + '/columns').columns || []).map(function(x) { return x.id; }); if (rc.indexOf('Notifie_le') < 0) EUC_ENT_grist('post', '/tables/' + EUC_DEV597_REFERENTS_ + '/columns', { columns: [col('Notifie_le', 'Prévenu le')] }); } catch (e) {}
+  c.put('EUC_DEV597_TABLES2', '1', 21600);
 }
 function EUC_DEV597_lire_(table) { try { return (EUC_ENT_grist('get', '/tables/' + table + '/records').records || []); } catch (e) { return []; } }
 
@@ -42,7 +44,7 @@ function EUC_DEV597_lire_(table) { try { return (EUC_ENT_grist('get', '/tables/'
 function EUC_DEV597_calcul_(m, contrats, referents, contacts, aujourdhui) {
   var annee = m.annee, debutAnnee = annee.slice(0, 4) + '-09-01', eleves = {};
   (m.classes || []).forEach(function(c) { (c.eleves || []).forEach(function(e) { eleves[e.id] = { nom: e.libelle, classe: c.nom, mode: c.modeApprentissage || 'MIXITE', gestionnaire: c.gestionnaire || '', donneur: c.donneur || '' }; }); });
-  var ref = {}; referents.forEach(function(r) { var f = r.fields || r; if (f.Actif === false || EUC_DEV597_t_(f.Annee_scolaire) !== annee) return; var k = Number(f.Eleve); if (!ref[k] || Number(r.id) > ref[k].id) ref[k] = { id: Number(r.id), professeurId: Number(f.Professeur) || 0, nom: EUC_DEV597_t_(f.Professeur_nom) }; });
+  var ref = {}; referents.forEach(function(r) { var f = r.fields || r; if (f.Actif === false || EUC_DEV597_t_(f.Annee_scolaire) !== annee) return; var k = Number(f.Eleve); if (!ref[k] || Number(r.id) > ref[k].id) ref[k] = { id: Number(r.id), professeurId: Number(f.Professeur) || 0, nom: EUC_DEV597_t_(f.Professeur_nom), notifieLe: EUC_DEV597_t_(f.Notifie_le) }; });
   var cont = {}; contacts.forEach(function(r) { var f = r.fields || r, k = Number(f.Contrat); if (!cont[k] || EUC_DEV597_t_(f.Date_contact) > cont[k].date) cont[k] = { date: EUC_DEV597_t_(f.Date_contact), mode: EUC_DEV597_t_(f.Mode), professeur: EUC_DEV597_t_(f.Professeur_nom), compteRendu: EUC_DEV597_t_(f.Compte_rendu) }; });
   var lignes = [];
   contrats.forEach(function(r) {
@@ -77,6 +79,7 @@ function EUC_DEV597_echeancier(annee) {
   var r = EUC_DEV597_donnees_(annee);
   r.professeurs = EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').map(function(p) { var f = p.fields || p; return { id: Number(p.id), nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), actif: f.Actif !== false }; })
     .filter(function(p) { return p.nom && p.actif; }).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+  r.fiche = EUC_DEV597_fiche_();
   r.ok = true; return r;
 }
 
@@ -110,7 +113,7 @@ function EUC_DEV597_enregistrerContact(q) {
   var date = EUC_DEV597_t_(q.date), mode = EUC_DEV597_t_(q.mode).toUpperCase();
   if (!Number(q.contratId) || !Number(q.eleveId)) throw new Error('Contrat inconnu.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Date du contact invalide.');
-  if (['APPEL', 'VISITE'].indexOf(mode) < 0) throw new Error('Choisissez appel ou visite.');
+  if (['APPEL', 'VISITE', 'VISIO'].indexOf(mode) < 0) throw new Error('Choisissez appel, visio ou visite.');
   EUC_DEV597_tables_();
   EUC_ENT_grist('post', '/tables/' + EUC_DEV597_CONTACTS_ + '/records', { records: [{ fields: { Contrat: Number(q.contratId), Eleve: Number(q.eleveId), Annee_scolaire: EUC_DEV597_t_(q.annee), Date_contact: date, Mode: mode, Professeur_nom: EUC_DEV597_t_(q.professeur), Compte_rendu: EUC_DEV597_t_(q.compteRendu).slice(0, 4000), Auteur: EUC_DEV597_t_(ctx && ctx.email), Date_saisie: new Date().toISOString() } }] });
   return { ok: true };
@@ -122,4 +125,57 @@ function EUC_DEV597_afficher(e) {
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   t.annee = EUC_DEV597_t_(e && e.parameter && e.parameter.annee);
   return t.evaluate().setTitle('Échéancier des apprentis').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/* ---------- Courriel au professeur référent ---------- */
+var EUC_DEV597_FICHE_PROP_ = 'EUC_DEV597_FICHE_ENTRETIEN_URL';
+function EUC_DEV597_dfr_(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; }
+function EUC_DEV597_fiche_() { try { return PropertiesService.getScriptProperties().getProperty(EUC_DEV597_FICHE_PROP_) || ''; } catch (e) { return ''; } }
+function EUC_DEV597_reglerFiche(q) { EUC_SUIVI2_exigerAdmin_(); var u = EUC_DEV597_t_(q && q.url); if (u && !/^https:\/\//.test(u)) throw new Error('Le lien doit commencer par https://'); PropertiesService.getScriptProperties().setProperty(EUC_DEV597_FICHE_PROP_, u); return { ok: true, url: u }; }
+
+/* Message (texte) pour un professeur et ses apprentis (calcul pur). */
+function EUC_DEV597_message_(prof, lignes, fiche) {
+  var avant = lignes.map(function(l) { return l.echeance; }).sort()[0];
+  var t = ['Bonjour ' + prof.nom + ',', '',
+    'Vous êtes désigné(e) professeur référent ' + (lignes.length > 1 ? 'des apprentis suivants' : 'de l’apprenti suivant') + '. La réglementation impose un premier contact avec l’entreprise dans les 45 jours qui suivent le début du contrat.', ''];
+  lignes.forEach(function(l) {
+    var tu = l.tuteur || {};
+    t.push('• ' + l.nom + ' — ' + l.classe + (l.organismes ? ' (' + l.organismes + ')' : ''));
+    t.push('  Entreprise : ' + l.entreprise);
+    if (tu.nom || tu.tel || tu.mail) t.push('  Tuteur : ' + [tu.nom, tu.tel, tu.mail].filter(Boolean).join(' · '));
+    t.push('  Début du contrat : ' + EUC_DEV597_dfr_(l.debut) + ' — contact à prendre avant le ' + EUC_DEV597_dfr_(l.echeance)); t.push('');
+  });
+  t.push('Au cours de cet échange (téléphone, visio ou visite) :',
+    '1. Faire le point avec le tuteur sur ce qui a été vu au lycée et sur ce qui est attendu en entreprise.',
+    '2. Rappeler les attendus de l’année et du diplôme.',
+    '3. Prendre des nouvelles des premiers temps : intégration, assiduité, comportement, motivation.',
+    '4. Repérer toute difficulté pouvant conduire à une rupture et la signaler sans attendre.', '');
+  if (fiche) t.push('Fiche d’entretien à utiliser : ' + fiche, '');
+  t.push('Merci de répondre à ce courriel en indiquant la date, le mode de contact (téléphone, visio, visite) et un bref compte rendu : il sera enregistré dans le suivi de l’apprenti.', '', 'Bien cordialement,', 'Le bureau des entreprises — Lycée Les Eucalyptus');
+  return { sujet: '[Apprentis] Référent — premier contact entreprise avant le ' + EUC_DEV597_dfr_(avant), corps: t.join('\n') };
+}
+
+/* Aperçu, puis avec confirmation 'ENVOYER' : un courriel par professeur référent. */
+function EUC_DEV597_prevenirReferents(q) {
+  var ctx = EUC_SUIVI2_exigerAdmin_(); q = q || {};
+  var d = EUC_DEV597_donnees_(q.annee), choisis = (q.eleveIds || []).map(Number), fiche = EUC_DEV597_fiche_();
+  var profs = {}; EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').forEach(function(p) { var f = p.fields || {}; profs[Number(p.id)] = { nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), email: EUC_DEV597_t_(f.Email) }; });
+  var groupes = {}, sansMail = [];
+  d.lignes.forEach(function(l) {
+    if (!l.referent || l.statut === 'FAIT' || l.statut === 'ROMPU') return;
+    if (choisis.length ? choisis.indexOf(l.eleveId) < 0 : !!l.referent.notifieLe) return;
+    var p = profs[l.referent.professeurId]; if (!p || !p.email) { sansMail.push(l.referent.nom); return; }
+    var g = groupes[l.referent.professeurId] = groupes[l.referent.professeurId] || { prof: p, lignes: [] }; g.lignes.push(l);
+  });
+  var envois = Object.keys(groupes).map(function(k) { var g = groupes[k], msg = EUC_DEV597_message_(g.prof, g.lignes, fiche); return { professeurId: Number(k), professeur: g.prof.nom, email: g.prof.email, apprentis: g.lignes.map(function(l) { return l.nom; }), referentIds: g.lignes.map(function(l) { return l.referent.id; }), sujet: msg.sujet, corps: msg.corps }; });
+  var res = { ok: true, apercu: q.confirmation !== 'ENVOYER', envois: envois, sansMail: sansMail.filter(function(v, i, a) { return a.indexOf(v) === i; }), fiche: fiche };
+  if (res.apercu || !envois.length) return res;
+  if (MailApp.getRemainingDailyQuota() < envois.length) throw new Error('Quota de courriels du jour insuffisant.');
+  var maintenant = new Date().toISOString(), patches = [], envoyes = 0;
+  envois.forEach(function(e) {
+    MailApp.sendEmail({ to: e.email, replyTo: EUC_DEV597_t_(ctx && ctx.email) || undefined, name: 'Lycée Les Eucalyptus — Apprentis', subject: e.sujet, body: e.corps });
+    envoyes++; e.referentIds.forEach(function(id) { patches.push({ id: id, fields: { Notifie_le: maintenant } }); });
+  });
+  if (patches.length) EUC_ENT_grist('patch', '/tables/' + EUC_DEV597_REFERENTS_ + '/records', { records: patches });
+  res.envoyes = envoyes; return res;
 }

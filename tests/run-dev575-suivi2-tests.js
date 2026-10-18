@@ -455,3 +455,12 @@ test('DEV597 : échéancier des contacts d’entrée — seuils 30 / 45 / 60 jou
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'echeancier-apprentis-pfmp':\s*return EUC_DEV597_afficher\(e\);/);
   assert.match(read('apps-script/Admin_PFMP.html'), /page=echeancier-apprentis-pfmp/);
 });
+test('DEV597 : courriel au référent — un message par professeur, mission, échéance, fiche d’entretien', () => {
+  const k = { String, Number, Array, Object, JSON, Date, Math }; vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV597_Echeancier.js'), k);
+  const l = (nom, ech) => ({ nom, classe: '1CAPP', organismes: 'CFA RAN', entreprise: 'GARAGE', tuteur: { nom: 'T', tel: '06', mail: 't@x' }, debut: '2026-10-01', echeance: ech });
+  const m = k.EUC_DEV597_message_({ nom: 'M. P' }, [l('A B', '2026-11-20'), l('C D', '2026-11-15')], 'https://drive.example/fiche');
+  assert.match(m.sujet, /avant le 15\/11\/2026/); assert.match(m.corps, /des apprentis suivants/); assert.match(m.corps, /Fiche d’entretien à utiliser : https:\/\/drive\.example\/fiche/);
+  assert.match(m.corps, /rupture/); assert.match(m.corps, /attendus de l’année et du diplôme/);
+  const page = read('apps-script/Echeancier_Apprentis_DEV597.html');
+  for (const t of ["EUC_DEV597_prevenirReferents", "confirmation:confirmer?'ENVOYER':''", 'value="VISIO"', 'prévenu le ']) assert.ok(page.includes(t), t);
+});
