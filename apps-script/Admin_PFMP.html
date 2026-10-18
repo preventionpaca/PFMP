@@ -172,8 +172,8 @@
 var $=function(id){return document.getElementById(id);},D=null,CHOIX='';
 function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var MODE={CLASSE_ENTIERE:'Classe entière',FORMATION_CONTINUE:'Formation continue',MIXITE:'Mixité'};
-function bulles(c,ce){return '<div class="bulles">'+(ce?'':'<span class="bulle b-sco">'+c.scolaires+'<small>scol.</small></span>')+'<span class="bulle b-app">'+c.apprentis+'<small>'+(c.mode==='FORMATION_CONTINUE'?'stag.':'appr.')+'</small></span><span class="bulle b-ent">'+c.entreprises+'<small>entr.</small></span></div>';}
-function tuile(nom,t,cl){return '<button type="button" class="eff-tuile '+(cl||'')+'" data-g="'+esc(nom)+'" aria-pressed="'+(CHOIX===nom)+'"><span class="nom">'+esc(nom)+'</span><div class="gros">'+t.effectif+'</div><div class="det">'+t.classes+' classe(s) · '+t.scolaires+' scolaire(s) · '+t.apprentis+' apprenti(s)'+(t.entreprises!=null?' · '+t.entreprises+' entreprise(s)':'')+'</div></button>';}
+function bulles(c,ce){return '<div class="bulles">'+(ce?'':'<span class="bulle b-sco">'+c.scolaires+'<small>scol.</small></span>')+'<span class="bulle b-app">'+(c.mode==='FORMATION_CONTINUE'?c.stagiaires:c.apprentis)+'<small>'+(c.mode==='FORMATION_CONTINUE'?'stag.':'appr.')+'</small></span><span class="bulle b-ent">'+c.entreprises+'<small>entr.</small></span></div>';}
+function tuile(nom,t,cl){return '<button type="button" class="eff-tuile '+(cl||'')+'" data-g="'+esc(nom)+'" aria-pressed="'+(CHOIX===nom)+'"><span class="nom">'+esc(nom)+'</span><div class="gros">'+t.effectif+'</div><div class="det">'+t.classes+' classe(s) · '+t.scolaires+' scolaire(s) · '+t.apprentis+' apprenti(s)'+(t.stagiaires?' · '+t.stagiaires+' stagiaire(s) FC':'')+(t.entreprises!=null?' · '+t.entreprises+' entreprise(s)':'')+'</div></button>';}
 function rendre(){
   $('effTuiles').innerHTML=tuile('Total',D.total,'eff-total')+D.groupes.map(function(g){return tuile(g.nom,g.totaux);}).join('');
   var g=D.groupes.filter(function(x){return x.nom===CHOIX;})[0];

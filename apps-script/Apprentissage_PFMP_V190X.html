@@ -5358,6 +5358,25 @@ body.dev252-readonly .dev259-maint-hidden{
   function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function noms(l){return l&&l.length?'<ul>'+l.map(function(p){return '<li>'+esc(p.nom)+(p.entreprise?' <span class="ent">— '+esc(p.entreprise)+'</span>':'')+'</li>';}).join('')+'</ul>':'<span class="muet">aucun</span>';}
   function orga(c){return [c.gestionnaire,c.donneur&&c.donneur!==c.gestionnaire?'donneur d’ordre '+c.donneur:''].filter(Boolean).join(' · ')||'organisme à renseigner';}
+  /* DEV593 : gestionnaire et donneur d'ordre sur deux lignes (évite de lire « CFA RAN donneur d'ordre »). */
+  function orgaLignes(c){if(!c.gestionnaire&&!c.donneur)return 'organisme à renseigner';return (c.gestionnaire?'Gestionnaire : '+esc(c.gestionnaire):'')+(c.donneur&&c.donneur!==c.gestionnaire?'<br>Donneur d’ordre : '+esc(c.donneur):'');}
+  /* DEV593 : deux lignes Grist pour la même classe (ex. anciennes lignes 1MELEC G / TMELEC G) : une seule vignette. */
+  function fusionner(l){var par={},out=[];(l||[]).forEach(function(c){var k=String(c.classe||'').toUpperCase().replace(/\s+/g,' ').trim(),x=par[k];
+    if(!x){x=par[k]=JSON.parse(JSON.stringify(c));x.enContrat=x.enContrat||[];x.sansEntreprise=x.sansEntreprise||[];out.push(x);return;}
+    if((c.apprentis||0)+(c.effectif||0)>(x.apprentis||0)+(x.effectif||0))x.classeId=c.classeId;
+    x.apprentis=(x.apprentis||0)+(c.apprentis||0);x.effectif=(x.effectif||0)+(c.effectif||0);x.enContrat=x.enContrat.concat(c.enContrat||[]);x.sansEntreprise=x.sansEntreprise.concat(c.sansEntreprise||[]);});
+    return out;}
+  /* DEV593 : tableau de mixité replié par défaut, regroupé au choix par diplôme, organisme ou classe. */
+  var MX_GROUPE='diplome',MX_OUVERT=false;
+  function tableMixite(compact){var lignes=[];compact.forEach(function(g){g.lignes.forEach(function(l){var x=JSON.parse(JSON.stringify(l));x.diplome=g.diplome;lignes.push(x);});});
+    var groupes={},ordre=[];lignes.forEach(function(l){var k=MX_GROUPE==='organisme'?(l.organismes||'Non renseigné'):MX_GROUPE==='classe'?'':l.diplome;if(!groupes[k]){groupes[k]=[];ordre.push(k);}groupes[k].push(l);});
+    if(MX_GROUPE!=='diplome')ordre.sort(function(a,b){return a.localeCompare(b,'fr');});
+    var tot={effectif:0,quota:0,apprentis:0,futurs:0,rapportes:0};lignes.forEach(function(l){Object.keys(tot).forEach(function(k){tot[k]+=Number(l[k]||0);});});
+    var ligne=function(l){return '<tr><td><strong>'+esc(l.classe)+'</strong></td><td class="muet">'+esc(MX_GROUPE==='organisme'?l.diplome:l.organismes)+'</td><td class="n">'+l.effectif+'</td><td class="n">'+l.quota+'</td><td class="n">'+l.apprentis+'</td><td class="n">'+l.futurs+'</td><td class="n">'+l.rapportes+'</td><td class="n">'+l.potentiel+(l.quota?' <span class="muet">/ '+l.quota+'</span>':'')+'</td></tr>';};
+    return '<details class="mx"'+(MX_OUVERT?' open':'')+'><summary><h3 style="display:inline">Mixité — quotas et potentiel</h3> <span class="muet">'+lignes.length+' classe(s) · '+tot.apprentis+' apprenti(s) · '+tot.futurs+' futur(s) · quota '+tot.quota+' — cliquer pour ouvrir</span></summary>'+
+      '<label class="muet">Regrouper par <select class="mxGroupe"><option value="diplome"'+(MX_GROUPE==='diplome'?' selected':'')+'>diplôme</option><option value="organisme"'+(MX_GROUPE==='organisme'?' selected':'')+'>organisme</option><option value="classe"'+(MX_GROUPE==='classe'?' selected':'')+'>classe (A → Z)</option></select></label>'+
+      '<table class="compact"><thead><tr><th>Classe</th><th>'+(MX_GROUPE==='organisme'?'Diplôme':'Organismes')+'</th><th class="n">Effectif</th><th class="n">Quota</th><th class="n">Apprentis</th><th class="n">Futurs</th><th class="n">Rapportés</th><th class="n">Potentiel</th></tr></thead><tbody>'+
+      ordre.map(function(k){var l=groupes[k].slice();if(MX_GROUPE!=='diplome')l.sort(function(a,b){return String(a.classe).localeCompare(String(b.classe),'fr');});return (k?'<tr class="dip"><td colspan="8">'+esc(k)+'</td></tr>':'')+l.map(ligne).join('');}).join('')+'</tbody></table></details>';}
   function blocClasse(c){return '<h4>'+esc(c.classe)+' — '+esc(LIB[c.mode]||c.mode)+' · '+esc(orga(c))+' · '+(c.mode==='FORMATION_CONTINUE'?c.effectif+' stagiaire(s)':c.apprentis+' apprenti(s)')+'</h4>'+(c.mode==='FORMATION_CONTINUE'?'':noms(c.enContrat));}
   function tuile(v,l,cl,bulle){return '<div class="tuile'+(cl?' '+cl:'')+'" tabindex="0"><b>'+Number(v||0)+'</b><span>'+esc(l)+'</span>'+(bulle?'<div class="bulle">'+bulle+'</div>':'')+'</div>';}
   function double(o,l){o=o||{};return '<div class="tuile"><span>'+esc(l)+'</span><div class="double"><div><b>'+Number(o.mixite||0)+'</b><small>mixité</small></div><div><b>'+Number(o.classeEntiere||0)+'</b><small>classe entière</small></div></div></div>';}
@@ -5370,12 +5389,20 @@ body.dev252-readonly .dev259-maint-hidden{
     h+='<h3>Apprentis par organisme <span class="muet">(une classe co-gérée apparaît dans chacun de ses organismes)</span></h3><div class="ligne">'+orgs.map(function(o){var ce=o.classes.filter(function(c){return c.mode==='CLASSE_ENTIERE';}),mx=o.classes.filter(function(c){return c.mode==='MIXITE';}),fc=o.classes.filter(function(c){return c.mode==='FORMATION_CONTINUE';});
       var bulle=(ce.length?'<h4>Classes entières</h4>'+ce.map(blocClasse).join(''):'')+(mx.length?'<h4>Mixité</h4>'+mx.map(blocClasse).join(''):'')+(fc.length?'<h4>Formation continue</h4>'+fc.map(blocClasse).join(''):'');
       return '<div class="tuile" tabindex="0"><b>'+(o.classeEntiere+o.mixite)+'</b><span>'+esc(o.organisme)+'</span><small class="muet" style="display:block">'+o.classeEntiere+' classe entière · '+o.mixite+' mixité'+(o.formationContinue?' · '+o.formationContinue+' FC':'')+'</small><div class="bulle">'+bulle+'</div></div>';}).join('')+'</div>';
-    if(cls.length){h+='<h3>Classes entières et formation continue</h3><div class="vignettes">'+cls.map(function(c){var fc=c.mode==='FORMATION_CONTINUE';return '<div class="vignette'+(fc?' fc':'')+'" tabindex="0" data-classe="'+c.classeId+'"><strong>'+esc(c.classe)+'</strong><div class="muet">'+esc(orga(c))+'</div><div>'+(fc?c.effectif+' stagiaire(s) — formation continue':c.apprentis+' en contrat · '+c.sansEntreprise.length+' sans entreprise')+'</div>'+(fc?'':'<div class="bulle"><div class="cols"><div><h4>En contrat</h4>'+noms(c.enContrat)+'</div><div><h4>Sans entreprise à ce jour</h4>'+noms(c.sansEntreprise)+'</div></div></div>')+'</div>';}).join('')+'</div>';}
-    if((d.compact||[]).length){h+='<h3>Mixité — quotas et potentiel</h3><table class="compact"><thead><tr><th>Classe</th><th>Organismes</th><th class="n">Effectif</th><th class="n">Quota</th><th class="n">Apprentis</th><th class="n">Futurs</th><th class="n">Rapportés</th><th class="n">Potentiel</th></tr></thead><tbody>'+d.compact.map(function(g){return '<tr class="dip"><td colspan="8">'+esc(g.diplome)+'</td></tr>'+g.lignes.map(function(l){return '<tr><td><strong>'+esc(l.classe)+'</strong></td><td class="muet">'+esc(l.organismes)+'</td><td class="n">'+l.effectif+'</td><td class="n">'+l.quota+'</td><td class="n">'+l.apprentis+'</td><td class="n">'+l.futurs+'</td><td class="n">'+l.rapportes+'</td><td class="n">'+l.potentiel+(l.quota?' <span class="muet">/ '+l.quota+'</span>':'')+'</td></tr>';}).join('');}).join('')+'</tbody></table>';}
-    box.innerHTML=h;
+    cls=fusionner(cls);
+    if(cls.length){h+='<h3>Classes entières et formation continue</h3><div class="vignettes">'+cls.map(function(c){var fc=c.mode==='FORMATION_CONTINUE';return '<div class="vignette'+(fc?' fc':'')+'" tabindex="0" data-classe="'+c.classeId+'"><strong>'+esc(c.classe)+'</strong><div class="muet">'+orgaLignes(c)+'</div><div>'+(fc?c.effectif+' stagiaire(s) — formation continue':c.apprentis+' en contrat · '+c.sansEntreprise.length+' sans entreprise')+'</div>'+(fc?'':'<div class="bulle"><div class="cols"><div><h4>En contrat</h4>'+noms(c.enContrat)+'</div><div><h4>Sans entreprise à ce jour</h4>'+noms(c.sansEntreprise)+'</div></div></div>')+'</div>';}).join('')+'</div>';}
+    if((d.compact||[]).length)h+=tableMixite(d.compact);
+    box.innerHTML=h;DERNIER=d;
+    var mx=box.querySelector('details.mx');if(mx){mx.addEventListener('toggle',function(){MX_OUVERT=mx.open;});var sel=mx.querySelector('.mxGroupe');if(sel)sel.onchange=function(){MX_GROUPE=sel.value;MX_OUVERT=true;rendre(DERNIER);};}
     box.querySelectorAll('.vignette').forEach(function(v){v.onclick=function(){if(!classEl)return;classEl.value=v.dataset.classe;classEl.dispatchEvent(new Event('change',{bubbles:true}));classEl.scrollIntoView({behavior:'smooth',block:'center'});};});
   }
-  var n=0;
+  var n=0,DERNIER=null;
+  /* DEV593 : titre de la classe au-dessus des fiches empilées. */
+  function titreFiches(){var c=document.querySelector('.student-card');var t=document.getElementById('dev593Titre');if(!c){if(t)t.remove();return;}
+    var p=c.parentNode,o=classEl&&classEl.options[classEl.selectedIndex],txt='Classe '+(o?o.text:'')+' — '+p.querySelectorAll('.student-card').length+' fiche(s)';
+    if(!t){t=document.createElement('h2');t.id='dev593Titre';t.style.cssText='margin:18px 0 8px;font-size:20px;color:#064e3b;border-bottom:2px solid #cfe3dc;padding-bottom:6px';}
+    if(t.parentNode!==p||p.firstElementChild!==t)p.insertBefore(t,p.firstChild);if(t.textContent!==txt)t.textContent=txt;}
+  var attente=0;new MutationObserver(function(){clearTimeout(attente);attente=setTimeout(titreFiches,120);}).observe(document.body,{childList:true,subtree:true});
   function charger(){var k=++n;box.style.opacity=.6;
     google.script.run.withSuccessHandler(function(d){if(k===n){box.style.opacity=1;rendre(d||{});}}).withFailureHandler(function(e){if(k===n){box.style.opacity=1;box.innerHTML='<p class="muet">Compteurs indisponibles : '+esc(e&&e.message||e)+'</p>';}}).EUC_DEV579_bandeau(yearEl.value);}
   yearEl.addEventListener('change',charger);charger();

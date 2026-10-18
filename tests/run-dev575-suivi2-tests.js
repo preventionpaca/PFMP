@@ -389,7 +389,9 @@ test('DEV592 : effectifs — LP / LGT pour les scolaires et la mixité, organism
   const lp = r.groupes[0].classes[0];
   assert.deepEqual([lp.effectif, lp.scolaires, lp.apprentis, lp.entreprises], [3, 2, 1, 1], 'même SIRET = une entreprise');
   assert.deepEqual([r.groupes[2].totaux.apprentis, r.groupes[3].totaux.apprentis, r.groupes[2].totaux.entreprises], [2, 2, 1]);
-  assert.deepEqual([r.total.classes, r.total.effectif, r.total.apprentis], [4, 7, 4], 'classe co-gérée comptée une fois');
+  assert.deepEqual([r.total.classes, r.total.effectif, r.total.apprentis, r.total.stagiaires], [4, 7, 3, 1], 'classe co-gérée comptée une fois ; FC à part');
+  const m2 = { classes: [{ id: 9, nom: '1BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', eleves: [{ id: 1, apprentissage: { code: 'APPRENTI', entreprise: 'ENEDIS' } }, { id: 2, apprentissage: { code: 'APPRENTI', entreprise: 'Enedis' } }], periodes: [] }] };
+  assert.equal(k.EUC_DEV592_calcul_(m2).groupes[0].classes[0].entreprises, 1, 'entreprise du contrat, sans période au calendrier');
   const admin = read('apps-script/Admin_PFMP.html');
   assert.match(admin, /id="effectifs"/); assert.match(admin, /\.EUC_DEV592_effectifs\(''\)/);
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /etab: EUC_SUIVI2_t_\(c\.Etab\)\.toUpperCase\(\)/);
