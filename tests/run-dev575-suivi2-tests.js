@@ -353,3 +353,23 @@ test('DEV583 : carte tirée du modèle du suivi — contrats et conventions, pos
   assert.match(read('apps-script/EUC_DEV578_GeoApprentis.js'), /EUC_DEV579_classesCompletes_\(annee\)/, 'géocodage : entreprises des apprentis de toutes les classes');
   assert.match(read('apps-script/Cartographie_PFMP_DEV441.html'), /x\.source==='SUIVI2'/);
 });
+test('DEV585 : domaines d’activité — proposition de départ, index Grist, filtre du Book affiné par le diplôme', () => {
+  const k = { String, Number, Array, Object, JSON, CacheService: { getScriptCache: () => ({ get: () => null, put() {}, remove() {} }) },
+    EUC_DEV538_optionalRecords_: t => t === 'EUC_DOMAINES_PFMP' ? [{ id: 1, fields: { Nom: 'Automobile', Ordre: 1 } }, { id: 2, fields: { Nom: 'Numérique', Ordre: 4 } }, { id: 3, fields: { Nom: 'Fabrication mécanique', Ordre: 2 } }]
+      : [{ id: 9, fields: { Diplome: 'BAC PRO Microtechniques', Domaines: ['L', 2, 3] } }, { id: 10, fields: { Diplome: 'BAC PRO Carrossier Peintre Automobile', Domaines: ['L', 1] } }],
+    EUC_DEV538_fields_: r => r.fields };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV585_Domaines.js'), k);
+  const p = d => JSON.parse(JSON.stringify(k.EUC_DEV585_proposition_(d)));
+  assert.deepEqual(p('BAC PRO Microtechniques'), ['Numérique', 'Fabrication mécanique']);
+  assert.deepEqual(p('BAC PRO TRPM option Réalisation et Suivi de Production'), ['Fabrication mécanique']);
+  assert.deepEqual(p('BTS — CPRP'), ['Fabrication mécanique']); assert.deepEqual(p('BTS — CPI'), ['Conception industrielle']); assert.deepEqual(p('BAC PRO Modélisation et Prototypage 3D'), ['Conception industrielle']);
+  assert.deepEqual(p('Titre professionnel — TPMMA'), ['Automobile']); assert.deepEqual(p('Titre professionnel — TPEEB'), ['Électricité']);
+  assert.deepEqual(p("BAC PRO Métiers de l'Électricité et de ses Environnements Connectés"), ['Électrotechnique']); assert.deepEqual(p('CQPM — ASC'), ['Électrotechnique']);
+  assert.deepEqual(p('BAC PRO Maintenance des Véhicules'), ['Automobile']); assert.deepEqual(p('Bachelor — IP'), [], 'non classé : laissé à l’administration');
+  const idx = JSON.parse(JSON.stringify(k.EUC_DEV585_index_()));
+  assert.deepEqual(idx.domaines, ['Automobile', 'Fabrication mécanique', 'Numérique']);
+  assert.deepEqual(k.EUC_DEV585_domainesDe_('BAC PRO MICROTECHNIQUES', idx), ['Numérique', 'Fabrication mécanique']);
+  const book = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), page = read('apps-script/Book_Entreprises_DEV538.html');
+  assert.match(book, /\(!dom\|\|EUC_DEV585_domainesDe_\(x\.diplome,idx\)\.indexOf\(dom\)>=0\)/); assert.match(book, /'famille','domaine','diplome'/);
+  assert.match(page, /<select id="domain">/); assert.match(page, /domaine:\$\('domain'\)\.value/); assert.match(page, /EUC_DEV585_preparer/);
+});
