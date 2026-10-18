@@ -70,7 +70,7 @@ function EUC_DEV577_calcul_(annee) {
   var lignes = {}, cartes = {};
   classes.forEach(function(c) {
     var l = lignes[c.id] = { classeId: c.id, classe: c.classe, famille: c.famille, niveau: c.niveau, diplome: EUC_DEV564_diplomaForClass_(c, diplomes[c.id]),
-      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: EUC_DEV545_classMode_(modes, annee, c.id), effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
+      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: EUC_DEV545_classMode_(modes, annee, c.id, c.classe, c.etablissement), organismes: typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, c.classe, c.etablissement, 'MIXITE').organismes : [], effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
     EUC_DEV577_CATEGORIES_.forEach(function(k) { l.noms[k] = []; });
   });
   eleves.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).forEach(function(e) {
@@ -115,7 +115,7 @@ function EUC_DEV577_modele_(annee) {
   /* Les quotas, classes actives et modes sont dans les propriétés du script :
    * leur empreinte entre dans la clé, un changement de réglage recalcule. */
   var reglages = '';
-  try { reglages = EUC_DEV441_digest_(JSON.stringify([EUC_DEV538_quotaConfig_()[annee] || {}, EUC_DEV542_activeClassesConfig_(), EUC_DEV545_classModesConfig_()])).slice(0, 12); } catch (e2) {}
+  try { reglages = EUC_DEV441_digest_(JSON.stringify([EUC_DEV538_quotaConfig_()[annee] || {}, EUC_DEV542_activeClassesConfig_(), EUC_DEV545_classModesConfig_(), typeof EUC_DEV579_profilsConfig_ === 'function' ? EUC_DEV579_profilsConfig_() : {}])).slice(0, 12); } catch (e2) {}
   var jour = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Europe/Paris', 'yyyyMMdd');
   var cle = 'EUC_DEV577_' + annee.replace(/\D/g, '') + '_' + String(temoin).replace(/[^\w-]/g, '') + '_' + reglages.replace(/[^\w-]/g, '') + '_' + jour;
   var m = temoin && typeof EUC_DEV572_lire_ === 'function' ? EUC_DEV572_lire_(cle) : null;

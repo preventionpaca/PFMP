@@ -289,3 +289,24 @@ test('élèves en double : même INE ou identité, la fiche porteuse de liens es
   assert.match(read('apps-script/EUC_IMPORT_PFMP_RealService.gs'), /add\(f\.Numero_national\?'NN\|'\+f\.Numero_national:''\);if\(src&&src!==source\)return;/, 'import : INE reconnu toutes sources');
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /EUC_DEV578_doublonsEleves/);
 });
+test('profils de classe : table de vérité (classe entière / mixité, organismes), réglage enregistré prioritaire, bandeau par organisme', () => {
+  const src = read('apps-script/EUC_DEV579_Profils.js'), props = {};
+  const k = { String, Number, Array, Object, JSON, PropertiesService: { getScriptProperties: () => ({ getProperty: x => props[x] || '', setProperty: (x, v) => props[x] = v }) } };
+  vm.createContext(k); vm.runInContext(src, k);
+  const p = (c, e) => JSON.parse(JSON.stringify(k.EUC_DEV579_profil_({}, '2026-2027', 1, c, e || '', 'MIXITE')));
+  assert.deepEqual([p('TMELEC G').mode, p('TMELEC G').organismes], ['CLASSE_ENTIERE', ['GRETA']]);
+  assert.deepEqual([p('CQPM ASC').mode, p('TPEEB 19').mode, p('TPMMA').mode], ['CLASSE_ENTIERE', 'CLASSE_ENTIERE', 'CLASSE_ENTIERE']);
+  assert.deepEqual(p('1CAPP').organismes, ['CFA RAN']); assert.deepEqual(p('Bachelor IP').organismes, ['CFA RAN', 'CFAI']); assert.deepEqual(p('2BTS ELEC Alt').organismes, ['CFA RAN', 'CFAI']);
+  assert.deepEqual([p('1BTS CPI').mode, p('1BTS CPI').organismes], ['MIXITE', ['CFA RAN', 'CFAI']]); assert.deepEqual(p('2BTS MV').organismes, ['CFA RAN']);
+  assert.equal(p('1MELEC').source, 'ANCIEN', 'bac pro : ancien réglage (mixité en 1re et Terminale)');
+  const cfg = { '2026-2027': { 1: { mode: 'MIXITE', organismes: ['GRETA', 'X'] } } };
+  assert.deepEqual(JSON.parse(JSON.stringify(k.EUC_DEV579_profil_(cfg, '2026-2027', 1, 'TMELEC G', '', 'MIXITE'))), { mode: 'MIXITE', organismes: ['GRETA'], source: 'REGLAGE' });
+  k.EUC_V156_contexteAdmin_ = () => ({});
+  const L = (classe, mode, organismes, noms) => ({ classeId: 1, classe, mode, organismes, effectif: 10, quota: 2, active: true, noms: Object.assign({ apprentis: [], futurs: [], potentiels: [], rapportes: [], transmisCfa: [], contratsValides: [], ruptures: [] }, noms) });
+  k.EUC_DEV577_modele_ = () => ({ annee: '2026-2027', groupes: [{ diplome: 'BAC PRO MELEC', famille: 'BACPRO', lignes: [L('TMELEC G', 'CLASSE_ENTIERE', ['GRETA'], { apprentis: ['A', 'B'], futurs: ['C'] }), L('TMELEC', 'MIXITE', ['CFA RAN'], { apprentis: ['D'], rapportes: ['E'], futurs: ['E'] })] }] });
+  const b = JSON.parse(JSON.stringify(k.EUC_DEV579_bandeau('2026-2027')));
+  assert.deepEqual([b.totaux.apprentis, b.totaux.classeEntiere, b.totaux.mixite, b.totaux.rapportesMixite, b.totaux.rapportesCE], [3, 2, 1, 1, 0]);
+  assert.deepEqual(b.parOrganisme.map(o => [o.regroupement, o.classeEntiere, o.mixite]), [['GRETA', 2, 0], ['CFA RAN', 0, 1]]);
+  assert.deepEqual(b.classesEntieres[0].sansEntreprise, ['C']); assert.equal(b.compact[0].lignes[0].potentiel, 2);
+  assert.match(read('apps-script/Apprentissage_PFMP_V190X.html'), /EUC_DEV579_bandeau/); assert.match(read('apps-script/Apprentissage_Quotas_DEV538.html'), /class-org/);
+});
