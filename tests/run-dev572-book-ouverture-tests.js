@@ -41,13 +41,19 @@ test('la liste complète de l’année est calculée une fois et partagée par t
   assert.equal(b.calculs.length, 0, 'une autre combinaison de filtres réutilise la même liste');
 });
 
-test('une modification des données ou une autre année recalcule la liste', () => {
+test('DEV590 : après une modification, la dernière liste est servie tout de suite ; le préchauffage la recalcule ; une autre année se calcule', () => {
   const { c } = contexte();
+  c.EUC_DEV441_geoRows_ = () => [];
   c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
   c.revision = 'R2';
-  c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
+  const r = c.EUC_DEV538_staffBookData({ annee: '2026-2027', classe: 'TCAR' });
+  assert.equal(c.calculs.length, 1, 'pas d’attente : dernière liste servie');
+  assert.equal(r.total, 1);
+  c.EUC_DEV572_base_({ annee: '2026-2027' }, true);
+  assert.equal(c.calculs.length, 2, 'le préchauffage (force) recalcule');
   c.EUC_DEV538_staffBookData({ annee: 'ALL', fenetre: 3 });
   assert.equal(c.calculs.length, 3);
+  assert.match(read('apps-script/EUC_DEV578_HistoriquesPrets.js'), /EUC_DEV572_base_\(s, true\)/);
 });
 
 test('le filtrage en mémoire garde les seuls accueils retenus et recompte les élèves', () => {

@@ -61,7 +61,7 @@ function EUC_DEV578_historiquesTous_() {
 function EUC_DEV578_prechaufferBook_() {
   var y = '';
   try { y = EUC_DEV368_year(''); } catch (e) { y = ''; }
-  [{ annee: y, fenetre: 3 }, { annee: 'ALL', fenetre: 3 }].forEach(function(s) { if (!s.annee) return; try { EUC_DEV572_base_(s); } catch (e) {} });
+  [{ annee: y, fenetre: 3 }, { annee: 'ALL', fenetre: 3 }].forEach(function(s) { if (!s.annee) return; try { EUC_DEV572_base_(s, true); } catch (e) {} });
   try { if (typeof EUC_DEV549_publicBookIndex_ === 'function') EUC_DEV549_publicBookIndex_(); } catch (e2) {}
 }
 

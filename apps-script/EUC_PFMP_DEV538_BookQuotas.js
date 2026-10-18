@@ -421,9 +421,32 @@ function EUC_DEV588_completerSiret_(list){
   list.forEach(function(c){if(c.siret)return;var sr=index[EUC_DEV588_cle_(c.entreprise,c.adresse)];if(sr&&sr!=='AMBIGU'){c.siret=sr;c.siretRetrouve=true;}else c.siretManquant=true;});
   return list;
 }
-function EUC_DEV572_base_(q){
+/* DEV590 : positions GPS à jour (table de géocodage, relue seulement quand elle change),
+ * appliquées à une liste du Book éventuellement plus ancienne. */
+function EUC_DEV590_positions_(list){
+  try{
+    var props=PropertiesService.getScriptProperties().getProperties()||{},prefix=typeof EUC_DEV457_PROP_PREFIX_==='string'?EUC_DEV457_PROP_PREFIX_:'DEV457_TABLE_REV_',table=typeof EUC_DEV441_GEO_TABLE_==='string'?EUC_DEV441_GEO_TABLE_:'EUC_GEO_ENTREPRISES_PFMP';
+    var cle='EUC_DEV590_GEO_'+String(props[prefix+'ALL']||'0')+'_'+String(props[prefix+table]||'0'),cache=CacheService.getScriptCache(),ix=null;
+    try{ix=JSON.parse(cache.get(cle)||'null');}catch(e0){ix=null;}
+    if(!ix){ix={};(typeof EUC_DEV441_geoRows_==='function'?EUC_DEV441_geoRows_():[]).forEach(function(r){var g=r&&r.fields?r.fields:(r||{}),lat=Number(g.Latitude),lon=Number(g.Longitude);
+      if(['GEOCODE_AUTOMATIQUE','VALIDE_MANUELLEMENT'].indexOf(EUC_DEV538_t_(g.Statut))<0||g.Latitude==null||g.Latitude===''||!isFinite(lat)||!isFinite(lon))return;
+      var sr=EUC_DEV538_t_(g.SIRET).replace(/\D/g,'');if(sr.length===14)ix['S'+sr]=[lat,lon];if(g.Entreprise&&g.Adresse_source)ix['A'+EUC_DEV538_companyIdentity_(g.Entreprise,EUC_DEV540_normalizeAddress_(g.Adresse_source),'')]=[lat,lon];});
+      try{cache.put(cle,JSON.stringify(ix),21600);}catch(e1){}}
+    (list||[]).forEach(function(c){var p=(c.siret&&ix['S'+c.siret])||ix['A'+EUC_DEV538_companyIdentity_(c.entreprise,c.adresse,'')];if(p){c.latitude=p[0];c.longitude=p[1];}});
+  }catch(e){}
+  return list;
+}
+/* DEV590 : la dernière liste calculée est servie tout de suite, même si Grist a changé depuis
+ * (au plus 30 min) ; le préchauffage (toutes les 10 min, force=true) la recalcule en arrière-plan.
+ * Avant, chaque modification Grist (une validation de géocodage…) faisait attendre 15-20 s. */
+function EUC_DEV572_base_(q,force){
   var scope={annee:q&&q.annee,fenetre:q&&q.fenetre},key=EUC_DEV572_cleListe_(scope,EUC_DEV572_requete_(scope)),list=EUC_DEV572_lire_(key);
-  if(!Array.isArray(list)){list=EUC_DEV588_completerSiret_(EUC_DEV538_history_(scope));EUC_DEV572_ecrire_(key,list);}
+  if(Array.isArray(list))return list;
+  var cache=CacheService.getScriptCache(),dernier='EUC_DEV590_DERNIER_'+EUC_DEV549_digest_(JSON.stringify(EUC_DEV572_requete_(scope))).replace(/[^\w]/g,'').slice(0,24),ptr=null;
+  try{ptr=JSON.parse(cache.get(dernier)||'null');}catch(e){ptr=null;}
+  if(!force&&ptr&&ptr.key&&Date.now()-Number(ptr.at||0)<30*60000){var vieux=EUC_DEV572_lire_(ptr.key);if(Array.isArray(vieux))return EUC_DEV590_positions_(vieux);}
+  list=EUC_DEV588_completerSiret_(EUC_DEV538_history_(scope));EUC_DEV572_ecrire_(key,list);
+  try{cache.put(dernier,JSON.stringify({key:key,at:Date.now()}),21600);}catch(e2){}
   return list;
 }
 /* Mêmes critères que EUC_DEV538_history_, appliqués en mémoire à la liste
