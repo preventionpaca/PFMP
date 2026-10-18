@@ -458,8 +458,11 @@ function EUC_DEV586_alpha_(a,b){return EUC_DEV538_norm_(a&&a.entreprise).localeC
 /* DEV586 : les listes Diplôme et Classe proposent toutes les classes de l'année (TSEC, TPMMA, TPEEB…),
  * même sans accueil enregistré ; le résultat dit alors « aucune entreprise ». */
 function EUC_DEV586_completerFacettes_(f){
-  f=f||{};try{var dip=EUC_DEV538_diplomas_(),d=(f.diplome||[]).slice(),c=(f.classe||[]).slice(),vd={},vc={};d.forEach(function(x){vd[EUC_DEV538_norm_(x)]=true;});c.forEach(function(x){vc[EUC_DEV538_norm_(x)]=true;});
-    EUC_DEV579_classesCompletes_(EUC_DEV368_year('')).forEach(function(k){var lib=EUC_DEV564_diplomaForClass_({id:k.id,classe:k.classe,famille:k.famille},dip[k.id]);if(lib&&!vd[EUC_DEV538_norm_(lib)]){vd[EUC_DEV538_norm_(lib)]=true;d.push(lib);}if(k.classe&&!vc[EUC_DEV538_norm_(k.classe)]){vc[EUC_DEV538_norm_(k.classe)]=true;c.push(k.classe);}});
+  f=f||{};try{var d=(f.diplome||[]).slice(),c=(f.classe||[]).slice(),vd={},vc={};d.forEach(function(x){vd[EUC_DEV538_norm_(x)]=true;});c.forEach(function(x){vc[EUC_DEV538_norm_(x)]=true;});
+    /* Classes et diplômes de l'année : lus dans Grist au plus une fois toutes les 10 minutes. */
+    var cache=CacheService.getScriptCache(),cc=null;try{cc=JSON.parse(cache.get('EUC_DEV586_CLASSES')||'null');}catch(eC){cc=null;}
+    if(!cc){var dip=EUC_DEV538_diplomas_();cc=EUC_DEV579_classesCompletes_(EUC_DEV368_year('')).map(function(k){return[EUC_DEV564_diplomaForClass_({id:k.id,classe:k.classe,famille:k.famille},dip[k.id]),k.classe];});try{cache.put('EUC_DEV586_CLASSES',JSON.stringify(cc),600);}catch(eP){}}
+    cc.forEach(function(k){var lib=k[0],cl=k[1];if(lib&&!vd[EUC_DEV538_norm_(lib)]){vd[EUC_DEV538_norm_(lib)]=true;d.push(lib);}if(cl&&!vc[EUC_DEV538_norm_(cl)]){vc[EUC_DEV538_norm_(cl)]=true;c.push(cl);}});
     var tri=function(a,b){return String(a).localeCompare(String(b),'fr');};f.diplome=d.sort(tri);f.classe=c.sort(tri);}catch(e){}return f;
 }
 function EUC_DEV572_reponsePersonnels_(q){
