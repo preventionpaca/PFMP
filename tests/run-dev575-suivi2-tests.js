@@ -416,3 +416,29 @@ test('DEV595 : professeurs principaux datés par année — historique conservé
   const imp = read('apps-script/EUC_IMPORT_PFMP_ProfClasses.gs');
   assert.match(imp, /c\('Annee_scolaire','Année scolaire'\),c\('Retire_le','Retiré le','DateTime'\)/); assert.match(imp, /if\(an&&an<annee\)\{linkPatches\.push\(\{id:r\.id,fields:\{Actif:false/);
 });
+test('DEV596 : nettoyage de la table Classes — aperçu, colonne citée par une formule protégée, archive puis suppression', () => {
+  const appels = [];
+  const col = (id, type, formula) => ({ id, fields: { type: type || 'Text', formula: formula || '' } });
+  const schema = {
+    Classes: [col('Nom'), col('Etab'), col('Actif', 'Bool'), col('Classe_PFMP', 'Text', "import re\nreturn re.sub(r'[12]$', '', $Nom)"), col('PP_source'), col('Effectif', 'Int'), col('Libelle'), col('Perso')],
+    Planning_Periodes: [col('Classe', 'Ref:Classes'), col('Niveau'), col('Libelle_classe', 'Text', '$Classe.Libelle')],
+    Autre: [col('Effectif', 'Int', '$Effectif + 1')]
+  };
+  const k = { String, Number, Array, Object, JSON, Date, RegExp, encodeURIComponent,
+    EUC_SUIVI2_exigerAdmin_: () => ({}), EUC_DEV441_col_: (id, label, type) => ({ id, fields: { label, type: type || 'Text' } }),
+    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) }, CacheService: { getScriptCache: () => ({ remove() {} }) },
+    EUC_ENT_grist: (m, u, b) => { appels.push([m, u, b]); if (m === 'get' && u === '/tables') return { tables: Object.keys(schema).map(id => ({ id })) };
+      const mc = u.match(/^\/tables\/([^/]+)\/columns$/); if (m === 'get' && mc) return { columns: schema[decodeURIComponent(mc[1])] };
+      if (m === 'get' && u === '/tables/Classes/records') return { records: [{ id: 1, fields: { Nom: 'TCAR', PP_source: 'M. X', Effectif: 14, Libelle: 'TCAR' } }] }; return {}; } };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV596_NettoyageClasses.js'), k);
+  const ap = JSON.parse(JSON.stringify(k.EUC_DEV596_nettoyerClasses({})));
+  assert.deepEqual(ap.aSupprimer, ['PP_source', 'Effectif'], 'Libelle protégée : citée par une formule d’une table qui pointe vers Classes');
+  assert.deepEqual(ap.bloquees, [{ colonne: 'Libelle', formules: ['Planning_Periodes.Libelle_classe'] }]);
+  assert.deepEqual(ap.inconnues, ['Perso'], 'colonne inconnue jamais touchée');
+  assert.equal(appels.filter(a => a[0] !== 'get').length, 0, 'aperçu sans écriture');
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV596_nettoyerClasses({ confirmation: 'SUPPRIMER' })));
+  assert.deepEqual(r.supprimees, ['PP_source', 'Effectif']); assert.equal(r.archivees, 2);
+  const ecritures = appels.filter(a => a[0] !== 'get').map(a => a[0] + ' ' + a[1]);
+  assert.deepEqual(ecritures, ['post /tables', 'post /tables/EUC_ARCHIVE_COLONNES_CLASSES/records', 'delete /tables/Classes/columns/PP_source', 'delete /tables/Classes/columns/Effectif'], 'archive avant suppression');
+  assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV596_nettoyerClasses\(\{confirmation:ok\?'SUPPRIMER':''\}\)/);
+});

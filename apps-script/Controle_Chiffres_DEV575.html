@@ -72,6 +72,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     <p><button type="button" id="dblAnalyser">Analyser</button> <button type="button" id="dblDesactiver" disabled>Désactiver les doublons sans lien</button></p>
     <div id="dblResultat"></div>
   </section>
+  <section id="nettoyageClasses">
+    <h2 style="margin-top:0">Nettoyage de la table Classes</h2>
+    <p class="note">Supprime de la table Grist « Classes » les colonnes que l’application n’utilise pas (anciennes saisies, ancien module EDT, copies Pronote). Le contenu est d’abord recopié dans la table EUC_ARCHIVE_COLONNES_CLASSES. Une colonne utilisée par une formule Grist n’est jamais supprimée.</p>
+    <p><button type="button" id="ncAnalyser">Analyser</button> <button type="button" id="ncSupprimer" disabled>Supprimer les colonnes inutiles</button></p>
+    <div id="ncResultat"></div>
+  </section>
   <section id="resume" hidden></section>
   <section id="gardefou" hidden></section>
   <section>
@@ -193,6 +199,20 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
             .withFailureHandler(function(err){C.disabled=false;C.textContent='Confirmer la réparation';zone.insertAdjacentHTML('beforeend','<p>Erreur : '+e(err&&err.message||err)+'</p>');}).EUC_DEV578_reparerClasse(nom,mo,an,'REPARER');};})
         .withFailureHandler(function(err){P.disabled=false;zone.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_reparerClasse(nom,mo,an,'');};})
     .withFailureHandler(function(err){B.disabled=false;B.textContent='Diagnostiquer';R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_diagClasse(document.getElementById('diagNom').value,y&&y.value||'');};
+})();
+
+/* DEV596 : nettoyage des colonnes inutiles de la table Classes. */
+(function(){var e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});},R=document.getElementById('ncResultat'),A=document.getElementById('ncAnalyser'),S=document.getElementById('ncSupprimer');if(!A)return;
+  function liste(l){return l&&l.length?l.map(e).join(', '):'aucune';}
+  function afficher(r){R.innerHTML=(r.apercu?'':'<p><b>Fait :</b> '+(r.supprimees||[]).length+' colonne(s) supprimée(s), '+(r.archivees||0)+' valeur(s) archivée(s).'+((r.erreurs||[]).length?' Erreurs : '+liste(r.erreurs):'')+'</p>')+
+    '<p><b>À garder :</b> '+liste(r.garder)+'</p><p><b>'+(r.apercu?'À supprimer':'Restant à supprimer')+' :</b> '+liste(r.aSupprimer)+'</p>'+
+    (r.bloquees.length?'<p style="color:#b45309"><b>Non supprimées (utilisées par une formule Grist) :</b> '+r.bloquees.map(function(b){return e(b.colonne)+' ← '+liste(b.formules);}).join(' ; ')+'</p>':'')+
+    (r.inconnues.length?'<p class="note">Colonnes inconnues de l’application, laissées telles quelles : '+liste(r.inconnues)+'</p>':'');
+    S.disabled=!(r.apercu&&r.aSupprimer.length);}
+  function lancer(ok){var b=ok?S:A,t=b.textContent;b.disabled=true;b.textContent=ok?'Suppression…':'Analyse…';
+    google.script.run.withSuccessHandler(function(r){b.textContent=t;A.disabled=false;afficher(r);}).withFailureHandler(function(err){b.textContent=t;b.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV596_nettoyerClasses({confirmation:ok?'SUPPRIMER':''});}
+  A.onclick=function(){lancer(false);};
+  S.onclick=function(){if(confirm('Supprimer définitivement ces colonnes de la table Classes ? Leur contenu est d’abord archivé dans EUC_ARCHIVE_COLONNES_CLASSES.'))lancer(true);};
 })();
 </script>
 </body>
