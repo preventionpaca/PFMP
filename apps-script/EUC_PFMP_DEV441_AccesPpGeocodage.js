@@ -76,7 +76,7 @@ function EUC_DEV441_catalog_(year,requireAdmin){
   out.sort(function(a,b){return a.classe.localeCompare(b.classe,'fr');});return{annee:year,classes:out};
 }
 function EUC_DEV441_catalogAdmin(year){return EUC_DEV441_catalog_(year,true);}
-function EUC_DEV441_catalogPublic(year){return EUC_DEV441_catalog_(year,false);}
+function EUC_DEV441_catalogPublic(year){if(typeof EUC_DEV583_catalogue==='function'){try{var c583=EUC_DEV583_catalogue(year);if(c583)return c583;}catch(e583){}}return EUC_DEV441_catalog_(year,false);}
 function EUC_DEV441_target_(q,requireAdmin){
   q=q||{};var year=EUC_DEV368_year(q.annee),cid=EUC_DEV441_n_(q.classeId),pid=EUC_DEV441_n_(q.periodeId),found=null;
   EUC_DEV441_catalog_(year,requireAdmin).classes.some(function(c){if(c.classeId!==cid)return false;return(c.periodes||[]).some(function(p){if(p.id!==pid)return false;found={annee:year,famille:c.famille,classeId:cid,classe:c.classe,periode:p};return true;});});

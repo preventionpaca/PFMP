@@ -123,7 +123,7 @@ test('carte : points et fiches entreprise servis depuis le cache (témoin Grist)
   assert.match(carte, /PREFETCH\.par\[x\.key\]\|\|PREFETCH\.par\[/, 'fiche servie par le préchargement (clé puis nom + code postal)');
   assert.match(hist, /EUC_DEV538_staffAllowed_\(\)/, 'historiques nominatifs réservés aux personnels');
   assert.match(hist, /EUC_DEV572_lire_\(cle\)/); assert.match(hist, /EUC_SUIVI2_temoin_/);
-  assert.match(book, /function EUC_DEV538_mapData\(q\)\{[\s\S]{0,400}EUC_SUIVI2_temoin_/, 'carte en cache par témoin');
+  assert.match(book, /function EUC_DEV538_mapData\(q\)\{[\s\S]{0,600}EUC_SUIVI2_temoin_/, 'carte en cache par témoin');
   assert.match(book, /s:dev576Staff/, 'clé de cache distincte selon le droit d’accès');
 });
 

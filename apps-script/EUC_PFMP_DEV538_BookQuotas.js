@@ -547,7 +547,10 @@ function EUC_DEV538_mapBase_(items,q){
 }
 function EUC_DEV538_mapData(q){
   /* DEV576 : carte servie depuis le cache tant que rien ne change dans Grist (témoin), par périmètre et par droit d'accès. */
-  q=q||{};var dev576Temoin='',dev576Cle='';
+  q=q||{};
+  /* DEV583 : carte tirée du modèle du suivi (conventions + contrats, classes entières comprises). */
+  if(typeof EUC_DEV583_carte==='function'){var dev583=EUC_DEV583_carte(q);if(dev583)return dev583;}
+  var dev576Temoin='',dev576Cle='';
   try{dev576Temoin=typeof EUC_SUIVI2_temoin_==='function'?EUC_SUIVI2_temoin_():'';}catch(eT){dev576Temoin='';}
   if(dev576Temoin&&typeof EUC_DEV572_lire_==='function'){
     var dev576Staff=false;try{dev576Staff=EUC_DEV538_t_(q.mode).toUpperCase()!=='PARENTS'&&EUC_DEV538_staffAllowed_();}catch(eS){}

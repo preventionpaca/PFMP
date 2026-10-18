@@ -324,3 +324,28 @@ test('DEV580 : classe entière d’apprentis — appel et visites du calendrier 
   for (const t of ['Avec contrat', 'Sans contrat', 'Contrats annulés / interrompus', "'Contrat':'Convention'", 'Classes entières : apprentis et formation continue', 'c.familleBase||c.famille']) assert.ok(page.includes(t), t);
   assert.equal(!car || !car.periodes.some(p => p.suivi), true, 'une visite ne s’ajoute jamais à une classe scolaire');
 });
+test('DEV583 : carte tirée du modèle du suivi — contrats et conventions, position par SIRET ou adresse, sans position listée', () => {
+  const k = { console, JSON, Math, Date, Object, Array, String, Number, Error, isFinite,
+    Utilities: { base64EncodeWebSafe: b => Buffer.from(b).toString('base64'), computeDigest: (a, v) => Array.from(require('crypto').createHash('sha256').update(String(v)).digest()), DigestAlgorithm: { SHA_256: 1 } } };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js') + '\n' + read('apps-script/EUC_DEV583_CarteSuivi.js'), k);
+  const fiche = (ent, adr, siret) => ({ entreprise: ent, adresse: adr, siret: siret || '', contact: { nom: 'R', tel: '01', mail: '' }, tuteur: { nom: 'T', tel: '', mail: '' } });
+  const m = { annee: '2026-2027', classes: [
+    { id: 20, nom: '1CAPP', famille: 'CAP', eleves: [{ id: 1, libelle: 'A B' }, { id: 2, libelle: 'C D' }, { id: 3, libelle: 'E F' }],
+      periodes: [{ id: 200, libelle: 'Visite n°1', debut: '2026-12-16', resume: { statuts: { 1: 'CONTRAT', 2: 'CONTRAT', 3: 'SANS_CONTRAT' }, fiches: { 1: fiche('GARAGE', '1 rue A, 06000 NICE', '12345678901234'), 2: fiche('AUTRE', '2 rue B, 06100 NICE') }, suivis: { 1: { visite: 'M. X' } } } },
+                 { id: 201, libelle: 'Visite n°2', debut: '2027-05-12', resume: { statuts: { 1: 'CONTRAT' }, fiches: { 1: fiche('GARAGE', '1 rue A, 06000 NICE', '12345678901234') } } }] },
+    { id: 21, nom: 'TCAR', famille: 'BACPRO', eleves: [{ id: 4, libelle: 'G H' }], periodes: [{ id: 300, libelle: 'PFMP n°1', debut: '2026-11-16', resume: { statuts: { 4: 'AVEC' }, fiches: { 4: fiche('Garage', '1 rue A, 06000 Nice', '12345678901234') } } }] }] };
+  const ent = k.EUC_DEV583_entreprises_(m, { famille: '' }, true);
+  assert.equal(ent.length, 2, 'même SIRET = une seule entreprise, quelle que soit la casse');
+  const garage = ent.find(x => x.siret === '12345678901234');
+  assert.equal(Object.keys(garage.eleves).length, 2, 'un apprenti compte une fois sur toutes ses périodes, plus le scolaire');
+  assert.equal(garage.historique.find(h => h.eleve === 'A B').professeurVisiteur, 'M. X');
+  const ix = k.EUC_DEV583_indexGeo_([{ id: 1, fields: { SIRET: '12345678901234', Latitude: 43.7, Longitude: 7.26, Statut: 'GEOCODE_AUTOMATIQUE', Pays: 'FRANCE' } }, { id: 2, fields: { Entreprise: 'AUTRE', Adresse_source: '2 rue B, 06100 NICE', Latitude: 43.71, Longitude: 7.25, Statut: 'A_VALIDER_MANUELLEMENT' } }]);
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV583_points_(ent, ix, true)));
+  assert.equal(r.points.length, 1); assert.equal(r.points[0].elevesAccueillis, 2); assert.equal(r.points[0].classe, '1CAPP / TCAR'); assert.equal(r.points[0].historyLoaded, true);
+  assert.deepEqual(r.sansPosition.map(x => [x.entreprise, x.statut]), [['AUTRE', 'A_VALIDER_MANUELLEMENT']], 'un point à valider n’est jamais affiché');
+  assert.equal(k.EUC_DEV583_entreprises_(m, { classeId: 21 }, false)[0].historique.length, 0, 'sans droit : aucun nom');
+  assert.equal(k.EUC_DEV583_entreprises_(m, { famille: 'BACPRO' }, false).length, 1);
+  assert.equal(k.EUC_DEV583_carte({ annee: 'ALL' }), null, 'toutes années : ancien chemin'); assert.equal(k.EUC_DEV583_carte({ annee: '2026-2027', mode: 'PARENTS' }), null);
+  assert.match(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), /if\(dev583\)return dev583;/);
+  assert.match(read('apps-script/Cartographie_PFMP_DEV441.html'), /x\.source==='SUIVI2'/);
+});
