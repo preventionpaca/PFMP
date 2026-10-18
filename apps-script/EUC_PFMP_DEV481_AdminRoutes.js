@@ -37,6 +37,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_ACCES_afficherLiens(e);
     case 'controle-chiffres-pfmp':
       return EUC_SUIVI2_afficherControle(e);
+    case 'echeancier-apprentis-pfmp':
+      return EUC_DEV597_afficher(e);
     case 'listes-eleves-pfmp':
       return EUC_DEV578_afficherListesEleves(e);
 

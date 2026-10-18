@@ -59,7 +59,7 @@
   <h1>Centre d’administration PFMP + Apprentis</h1>
 
   <!-- DEV592 : effectifs par établissement et par organisme, chargés après l'affichage. -->
-  <section class="card effectifs" id="effectifs"><h2>Effectifs <span id="effAnnee"></span></h2><p id="effEtat"><span class="spin"></span> Chargement des effectifs…</p><div id="effTuiles" class="eff-tuiles"></div><div id="effClasses"></div></section>
+  <section class="card effectifs" id="effectifs"><h2>Effectifs <span id="effAnnee"></span></h2><p id="effEtat"><span class="spin"></span> Chargement des effectifs…</p><p id="effAlertes" hidden></p><div id="effTuiles" class="eff-tuiles"></div><div id="effClasses"></div></section>
 
   <!-- Trois parcours : chacun ses pages, puis son paramétrage. -->
   <section class="grid">
@@ -84,6 +84,7 @@
       <p>Gestion et suivi de l’apprentissage.</p>
       <div class="links">
         <a class="link" target="_top" href="<?= adminBase ?>?page=apprentissage-pfmp">Gestion des apprentis</a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=echeancier-apprentis-pfmp">Échéancier des apprentis<small>Contact d’entrée dans les 45 jours, référents désignés</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=dossier-apprentissage-pfmp">Dossier de demande d’apprentissage<small>Préremplir et imprimer les 8 pages</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=cartographie-apprentis-pfmp">Cartographie des apprentis<small>Implantation des entreprises et détail administratif</small></a>
       </div>
@@ -181,7 +182,7 @@ function rendre(){
   Array.prototype.forEach.call(document.querySelectorAll('.eff-tuile'),function(b){b.onclick=function(){var n=b.getAttribute('data-g');CHOIX=(CHOIX===n||n==='Total')?'':n;rendre();};});
 }
 if(!(window.google&&google.script&&google.script.run)){$('effEtat').textContent='Effectifs indisponibles dans cet aperçu.';return;}
-google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r.annee||'';$('effEtat').textContent='Cliquez sur un établissement ou un organisme pour voir ses classes. Une classe co-gérée (ex. CFA RAN + CFAI) figure dans les deux organismes, mais une seule fois dans le total.';rendre();})
+google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r.annee||'';var ec=r.echeancier;if(ec&&(ec.RETARD||ec.ALERTE||ec.RAPPEL||ec.sansReferent)){var al=$('effAlertes');al.hidden=false;al.innerHTML='<a target="_top" href="'+(document.querySelector('a[href*="echeancier-apprentis-pfmp"]')||{}).href+'" style="font-weight:800;color:#9a3412">Contacts d’entrée des apprentis : '+[ec.RETARD?ec.RETARD+' en retard':'',ec.ALERTE?ec.ALERTE+' en alerte (45 j)':'',ec.RAPPEL?ec.RAPPEL+' à relancer (30 j)':'',ec.sansReferent?ec.sansReferent+' sans référent':''].filter(Boolean).join(' · ')+' →</a>';}$('effEtat').textContent='Cliquez sur un établissement ou un organisme pour voir ses classes. Une classe co-gérée (ex. CFA RAN + CFAI) figure dans les deux organismes, mais une seule fois dans le total.';rendre();})
   .withFailureHandler(function(e){$('effEtat').textContent='Effectifs indisponibles : '+(e&&e.message||e);}).EUC_DEV592_effectifs('');
 })();
 </script>

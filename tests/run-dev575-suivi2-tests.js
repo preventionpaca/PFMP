@@ -442,3 +442,16 @@ test('DEV596 : nettoyage de la table Classes — aperçu, colonne citée par une
   assert.deepEqual(ecritures, ['post /tables', 'post /tables/EUC_ARCHIVE_COLONNES_CLASSES/records', 'delete /tables/Classes/columns/PP_source', 'delete /tables/Classes/columns/Effectif'], 'archive avant suppression');
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /\.EUC_DEV596_nettoyerClasses\(\{confirmation:ok\?'SUPPRIMER':''\}\)/);
 });
+test('DEV597 : échéancier des contacts d’entrée — seuils 30 / 45 / 60 jours, contrat sans entreprise exclu, référent de l’année, contact enregistré', () => {
+  const k = { String, Number, Array, Object, JSON, Date, Math }; vm.createContext(k); vm.runInContext(moteur + '\n' + read('apps-script/EUC_DEV597_Echeancier.js'), k);
+  const s = (d, c) => k.EUC_DEV597_statut_(d, '2026-11-30', c);
+  assert.deepEqual([s('2026-12-05'), s('2026-11-10'), s('2026-10-31'), s('2026-10-16'), s('2026-10-01'), s('2026-09-01', { date: '2026-09-20' })], ['A_VENIR', 'A_FAIRE', 'RAPPEL', 'ALERTE', 'RETARD', 'FAIT']);
+  const m = { annee: '2026-2027', classes: [{ nom: '1BTS MV', modeApprentissage: 'MIXITE', gestionnaire: 'CFA RAN', eleves: [{ id: 1, libelle: 'A B' }, { id: 2, libelle: 'C D' }, { id: 3, libelle: 'E F' }] }] };
+  const contrats = [{ id: 10, fields: { Eleve: 1, Date_debut: '2026-10-01', Nom_entreprise: 'GARAGE', Tuteur_nom: 'T' } }, { id: 11, fields: { Eleve: 2, Date_debut: '2026-11-20' } }, { id: 12, fields: { Eleve: 3, Date_debut: '2026-11-10', Nom_entreprise: 'X' } }, { id: 13, fields: { Eleve: 9, Date_debut: '2026-10-01', Nom_entreprise: 'Y' } }];
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV597_calcul_(m, contrats, [{ id: 1, fields: { Eleve: 1, Annee_scolaire: '2026-2027', Professeur: 5, Professeur_nom: 'M. P', Actif: true } }, { id: 2, fields: { Eleve: 3, Annee_scolaire: '2025-2026', Professeur: 6, Professeur_nom: 'Ancien' } }], [{ fields: { Contrat: 12, Date_contact: '2026-11-25', Mode: 'APPEL' } }], '2026-11-30')));
+  assert.deepEqual(r.lignes.map(l => [l.contratId, l.statut]), [[10, 'RETARD'], [12, 'FAIT']], 'futur apprenti sans entreprise et élève hors année exclus');
+  assert.equal(r.lignes[0].echeance, '2026-11-15'); assert.equal(r.lignes[0].referent.nom, 'M. P'); assert.equal(r.lignes[1].referent, null, 'référent d’une autre année ignoré');
+  assert.equal(r.compteurs.RETARD, 1); assert.equal(r.compteurs.sansReferent, 0);
+  assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'echeancier-apprentis-pfmp':\s*return EUC_DEV597_afficher\(e\);/);
+  assert.match(read('apps-script/Admin_PFMP.html'), /page=echeancier-apprentis-pfmp/);
+});

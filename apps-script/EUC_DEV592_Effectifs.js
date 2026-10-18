@@ -48,5 +48,8 @@ function EUC_DEV592_calcul_(m) {
 function EUC_DEV592_effectifs(annee) {
   EUC_SUIVI2_exigerAdmin_();
   var m = EUC_SUIVI2_modele_(String(annee || ''));
-  var r = EUC_DEV592_calcul_(m); r.ok = true; r.calculeLe = m.calculeLe; return r;
+  var r = EUC_DEV592_calcul_(m); r.ok = true; r.calculeLe = m.calculeLe;
+  /* DEV597 : alertes de l'échéancier des contacts d'entrée, affichées sur l'accueil. */
+  try { if (typeof EUC_DEV597_compteurs_ === 'function') r.echeancier = EUC_DEV597_compteurs_(annee); } catch (e) {}
+  return r;
 }
