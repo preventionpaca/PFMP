@@ -401,3 +401,18 @@ test('DEV594 : établissement abrégé (copier-coller Pronote) — LP, LGT, CFA,
   const e = v => k.EUC_SUIVI2_etab_(v);
   assert.deepEqual([e('LP LYCEE DES METIERS LES EUCALYPTUS'), e('LGT LYCEE LES EUCALYPTUS'), e('LP'), e('LGT'), e('CFA'), e('CFAI'), e('CFA RAN'), e('GRETA')], ['LP', 'LGT', 'LP', 'LGT', 'CFA', 'CFAI', 'CFA RAN', 'GRETA']);
 });
+test('DEV595 : professeurs principaux datés par année — historique conservé, retiré en cours d’année exclu, ancien lien sans année toujours lu', () => {
+  const k = { console, JSON, Math, Date, Object, Array, String, Number, Error }; vm.createContext(k); vm.runInContext(moteur, k);
+  const src = an => ({ annees: [R(1, { Code: '2025-2026' }), R(2, { Code: '2026-2027' })], classes: [R(20, { Nom: 'TCAR' }), R(21, { Nom: '1CAR' })], diplomes: [], types: [], dossiers: [], pdif: [], entreprises: [], jotform: [], affectations: [], apprentissage: [],
+    periodes: [R(300, { Annee_scolaire: an, Classes_concernees: ['L', 20, 21], Type: 'PFMP Tbac', Date_debut: an === 1 ? '2025-11-10' : '2026-11-10', Date_fin: an === 1 ? '2025-12-05' : '2026-12-04' })],
+    eleves: [R(1, { Annee_scolaire: an, Classe: 20, Nom: 'A', Prenom: 'B' }), R(2, { Annee_scolaire: an, Classe: 21, Nom: 'C', Prenom: 'D' })],
+    professeurs: [R(7, { Nom: 'ANCIEN', Prenom: 'Pp' }), R(8, { Nom: 'NOUVEAU', Prenom: 'Pp' }), R(9, { Nom: 'PARTI', Prenom: 'Pp' }), R(10, { Nom: 'LEGACY', Prenom: 'Pp' })],
+    classesProfs: [R(1, { Classe: 20, Professeur: 7, Role: 'PROFESSEUR_PRINCIPAL', Annee_scolaire: '2025-2026', Actif: false }), R(2, { Classe: 20, Professeur: 8, Role: 'PROFESSEUR_PRINCIPAL', Annee_scolaire: '2026-2027', Actif: true }),
+      R(3, { Classe: 20, Professeur: 9, Role: 'PROFESSEUR_PRINCIPAL', Annee_scolaire: '2026-2027', Actif: false, Retire_le: 1790000000 }), R(4, { Classe: 21, Professeur: 10, Role: 'PROFESSEUR_PRINCIPAL', Actif: true })] });
+  const pp = (an, code, nom) => JSON.parse(JSON.stringify(k.EUC_SUIVI2_calculer_(src(an), code, code === '2025-2026' ? '2025-10-01' : '2026-10-01'))).classes.find(c => c.nom === nom).pp;
+  assert.deepEqual(pp(1, '2025-2026', 'TCAR'), ['Pp ANCIEN'], 'année passée : le PP de cette année-là');
+  assert.deepEqual(pp(2, '2026-2027', 'TCAR'), ['Pp NOUVEAU'], 'année en cours : sans l’ancien ni celui retiré en cours d’année');
+  assert.deepEqual(pp(2, '2026-2027', '1CAR'), ['Pp LEGACY'], 'lien sans année (avant DEV595) : lu s’il est actif');
+  const imp = read('apps-script/EUC_IMPORT_PFMP_ProfClasses.gs');
+  assert.match(imp, /c\('Annee_scolaire','Année scolaire'\),c\('Retire_le','Retiré le','DateTime'\)/); assert.match(imp, /if\(an&&an<annee\)\{linkPatches\.push\(\{id:r\.id,fields:\{Actif:false/);
+});

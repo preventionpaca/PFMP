@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.594';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.595';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -573,7 +573,10 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
   (src.professeurs || []).map(EUC_SUIVI2_champs_).forEach(function(x) { profs[x.id] = [x.Civilite, x.Prenom, x.Nom].map(EUC_SUIVI2_t_).filter(Boolean).join(' '); });
   (src.classesProfs || []).map(EUC_SUIVI2_champs_).forEach(function(l) {
     var c = classes[EUC_SUIVI2_ref_(l.Classe)], nom = profs[EUC_SUIVI2_ref_(l.Professeur)];
-    if (!c || !nom || l.Actif === false || EUC_SUIVI2_t_(l.Role) !== 'PROFESSEUR_PRINCIPAL') return;
+    if (!c || !nom || EUC_SUIVI2_t_(l.Role) !== 'PROFESSEUR_PRINCIPAL') return;
+    /* DEV595 : PP de l'année consultée (historique) ; un lien sans année (avant DEV595) compte s'il est actif. */
+    var anPP = EUC_SUIVI2_annee_(l.Annee_scolaire, annees) || EUC_SUIVI2_t_(l.Annee_scolaire);
+    if (anPP ? (anPP !== annee || !!l.Retire_le) : l.Actif === false) return;
     c.pp = c.pp || []; if (c.pp.indexOf(nom) < 0) c.pp.push(nom);
   });
   var suivis = {};
