@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validation du bilan de visite</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:19px}header p{margin:4px 0 0;opacity:.92;font-size:14px}
+main{max-width:760px;margin:auto;padding:10px 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin:12px 0}
+h2{font-size:16px;margin:0 0 8px;color:var(--vert)}
+.note{color:var(--gris);font-size:14px}
+dl{margin:0;display:grid;grid-template-columns:minmax(120px,40%) 1fr;gap:4px 10px}dt{color:var(--gris);font-size:14px}dd{margin:0;font-weight:700}
+ul{margin:4px 0 0;padding-left:20px}
+label{display:block;margin:8px 0 2px;font-weight:700}
+input{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px}
+button{font:inherit;border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}
+button.plein{background:var(--vert);color:#fff;width:100%;padding:13px}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+canvas{width:100%;height:180px;border:2px dashed var(--bord);border-radius:10px;background:#fff;touch-action:none;display:block}
+.erreur{color:#991b1b;font-weight:700}.fini{background:#ecfdf5;border-color:#86efac}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:800;background:#e7f5ef}
+</style>
+</head>
+<body>
+<header><h1>Bilan de visite en entreprise</h1><p>Validation par le tuteur · Lycée Les Eucalyptus</p></header>
+<main>
+  <div id="etat" class="note" role="status">Chargement du bilan…</div>
+  <div id="contenu" hidden>
+    <section id="resume"></section>
+    <section id="detail"></section>
+    <section id="formulaire">
+      <h2>Votre validation</h2>
+      <p class="note">Vérifiez ou corrigez votre identité : si vous remplacez le tuteur habituel, indiquez vos propres nom et fonction.</p>
+      <label for="prenom">Prénom</label><input id="prenom" autocomplete="given-name">
+      <label for="nom">Nom</label><input id="nom" autocomplete="family-name">
+      <label for="fonction">Fonction dans l’entreprise</label><input id="fonction" autocomplete="organization-title">
+      <label for="telephone">Téléphone</label><input id="telephone" type="tel" autocomplete="tel" inputmode="tel">
+      <label for="email">Courriel</label><input id="email" type="email" autocomplete="email" inputmode="email">
+      <p class="note">Un téléphone ou un courriel au moins. Si vous donnez un courriel, vous recevrez un accusé de réception.</p>
+      <label>Signature</label>
+      <canvas id="sig" aria-label="Zone de signature : signez au doigt ou à la souris"></canvas>
+      <p><button type="button" id="effacer">Effacer la signature</button></p>
+      <button type="button" class="plein" id="valider">Je valide ce bilan</button>
+      <p id="msg" role="status"></p>
+    </section>
+  </div>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},S=<?= JSON.stringify(jeton) ?>,VIA=<?= JSON.stringify(via) ?>==='lien'?'LIEN':'',D=null,trace=false;
+var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
+    BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'};
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
+function afficher(r){
+  var b=r.bilan,c=b.contenu||{},m=r.modele;
+  $('resume').innerHTML='<h2>'+esc(r.apprenti)+'</h2><dl><dt>Classe</dt><dd>'+esc(r.classe)+'</dd><dt>Entreprise</dt><dd>'+esc(r.entreprise)+'</dd><dt>Entretien</dt><dd>'+dfr(b.date)+' · '+esc(MOD[b.modalite]||b.modalite)+'</dd><dt>Type</dt><dd>'+esc(TYP[b.type]||b.type)+'</dd><dt>Professeur</dt><dd>'+esc(b.professeur)+'</dd>'+(b.bilan?'<dt>Bilan</dt><dd><span class="chip">'+esc(BIL[b.bilan]||b.bilan)+'</span></dd>':'')+'</dl>';
+  var h='<h2>Contenu du bilan</h2>';
+  var cmp=m.comportement.filter(function(k){return (c.comportement||{})[k[0]];});
+  if(cmp.length)h+='<p class="note">Comportement et aptitudes</p><dl>'+cmp.map(function(k){return '<dt>'+esc(k[1])+'</dt><dd>'+esc(k[1+c.comportement[k[0]]])+'</dd>';}).join('')+'</dl>';
+  var act=m.activites.filter(function(a){var x=(c.activites||{})[a.id];return x&&(x.niveau||x.exemple);});
+  if(act.length)h+='<p class="note">Activités confiées</p><dl>'+act.map(function(a){var x=c.activites[a.id];return '<dt>'+esc(a.libelle)+'</dt><dd>'+esc(NIV[x.niveau]||'')+(x.exemple?' — <span style="font-weight:400">'+esc(x.exemple)+'</span>':'')+'</dd>';}).join('')+'</dl>';
+  [['observations','Observations'],['taches','Tâches les plus fréquentes'],['difficultes','Difficultés et accompagnement']].forEach(function(k){if(c[k[0]])h+='<p class="note">'+k[1]+'</p><p style="white-space:pre-wrap;margin:2px 0 8px">'+esc(c[k[0]])+'</p>';});
+  var obj=(c.objectifs||[]).filter(function(o){return o.objectif;});
+  if(obj.length)h+='<p class="note">Objectifs convenus</p><ul>'+obj.map(function(o){return '<li>'+esc(o.objectif)+(o.echeance?' — '+esc(o.echeance):'')+'</li>';}).join('')+'</ul>';
+  if(c.prochainPoint)h+='<p class="note">Prochain point de suivi : <b>'+dfr(c.prochainPoint)+'</b></p>';
+  $('detail').innerHTML=h;
+  if(b.statut==='VALIDE'){$('formulaire').className='fini';$('formulaire').innerHTML='<h2>Bilan déjà validé</h2><p>Validé par <b>'+esc(b.signataire)+'</b>. Merci.</p>';return;}
+  $('prenom').value=r.tuteur.prenom||'';$('nom').value=r.tuteur.nom||'';$('fonction').value=r.tuteur.fonction||'';
+}
+/* Signature au doigt ou à la souris. */
+var cv=$('sig'),cx=cv.getContext('2d'),dessin=false;
+function taille(){var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;cv.width=Math.round(r.width*k);cv.height=Math.round(r.height*k);cx.setTransform(k,0,0,k,0,0);cx.lineWidth=2.4;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#0b2545';trace=false;}
+function pos(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cv.addEventListener('pointerdown',function(e){dessin=true;cv.setPointerCapture(e.pointerId);var p=pos(e);cx.beginPath();cx.moveTo(p.x,p.y);e.preventDefault();});
+cv.addEventListener('pointermove',function(e){if(!dessin)return;var p=pos(e);cx.lineTo(p.x,p.y);cx.stroke();trace=true;e.preventDefault();});
+['pointerup','pointercancel','pointerleave'].forEach(function(t){cv.addEventListener(t,function(){dessin=false;});});
+$('effacer').onclick=function(){cx.clearRect(0,0,cv.width,cv.height);trace=false;};
+/* Image réduite (fond blanc) pour l'enregistrement. */
+function image(){var o=document.createElement('canvas');o.width=480;o.height=Math.round(480*cv.height/cv.width)||180;var k=o.getContext('2d');k.fillStyle='#fff';k.fillRect(0,0,o.width,o.height);k.drawImage(cv,0,0,o.width,o.height);return o.toDataURL('image/png');}
+$('valider').onclick=function(){var bt=this,msg=$('msg');msg.textContent='';
+  if(!$('prenom').value.trim()||!$('nom').value.trim()){msg.innerHTML='<span class="erreur">Indiquez votre prénom et votre nom.</span>';return;}
+  if(!$('telephone').value.trim()&&!$('email').value.trim()){msg.innerHTML='<span class="erreur">Indiquez un téléphone ou un courriel.</span>';return;}
+  if(!trace){msg.innerHTML='<span class="erreur">Signez dans le cadre avant de valider.</span>';return;}
+  bt.disabled=true;bt.innerHTML='<span class="spin"></span>Validation…';
+  appel('EUC_DEV598_valider',{s:S,via:VIA,empreinte:D.bilan.empreinte,prenom:$('prenom').value,nom:$('nom').value,fonction:$('fonction').value,telephone:$('telephone').value,email:$('email').value,signature:image()},function(r){
+    $('formulaire').className='fini';$('formulaire').innerHTML='<h2>Merci, le bilan est validé ✓</h2><p>'+(r.accuse?'Un accusé de réception a été envoyé à <b>'+esc(r.accuse)+'</b>.':'Votre validation est enregistrée.')+'</p><p class="note">Vous pouvez fermer cette page.</p>';window.scrollTo(0,document.body.scrollHeight);},
+    function(e){bt.disabled=false;bt.textContent='Je valide ce bilan';msg.innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+if(!S){$('etat').innerHTML='<span class="erreur">Lien incomplet. Scannez de nouveau le QR code ou demandez un nouveau lien au professeur.</span>';return;}
+appel('EUC_DEV598_lireValidation',{s:S},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;afficher(r);taille();},function(e){$('etat').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});
+window.addEventListener('resize',function(){if(!trace)taille();});
+})();
+</script>
+</body>
+</html>

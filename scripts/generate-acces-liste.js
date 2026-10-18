@@ -25,6 +25,9 @@ const PAGES_PUBLIQUES = [
   'Book_Entreprises_Eleves_DEV546',
   'Cartographie_PFMP_DEV441',
   'Acces_PP_DEV441',
+  /* DEV598 : liens signés du bilan de visite (professeur, tuteur) ; chaque fonction vérifie son jeton. */
+  'Bilan_Visite_DEV598',
+  'Validation_Bilan_DEV598',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

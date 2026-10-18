@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bilan de visite en entreprise</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--fond:#f7fbf9}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Arial,sans-serif;color:var(--texte);background:var(--fond)}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:20px}header p{margin:4px 0 0;opacity:.92;font-size:14px}
+main{max-width:980px;margin:auto;padding:12px 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin:12px 0}
+h2{font-size:16px;margin:0 0 8px;color:var(--vert)}
+.note{color:var(--gris);font-size:13px}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px}
+label{display:block}input,select,textarea,button{font:inherit}
+input[type=text],input[type=email],input[type=date],textarea,select{width:100%;padding:7px 8px;border:1px solid var(--bord);border-radius:8px;background:#fff}
+textarea{min-height:70px}
+.choix{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.choix label{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--bord);border-radius:999px;padding:5px 11px;cursor:pointer;background:#fff}
+.choix input{margin:0}.choix label:has(input:checked){background:#e7f5ef;border-color:var(--vert);font-weight:700}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:top}th{font-size:12px;color:var(--gris)}
+td.c{text-align:center}td.c label{display:block;cursor:pointer;font-size:12px;padding:4px;border-radius:6px}td.c label:has(input:checked){background:#e7f5ef;font-weight:700}
+.bloc{font-weight:700;background:#f4f8f6}
+button{border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
+.alerte{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px 10px}
+.valide{background:#ecfdf5;border:1px solid #86efac;border-radius:8px;padding:8px 10px}
+.barre{position:sticky;bottom:0;background:rgba(247,251,249,.96);border-top:1px solid var(--bord);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#qr{display:inline-block;background:#fff;padding:10px;border:1px solid var(--bord);border-radius:10px}
+.histo button{margin:2px 4px 2px 0}
+.sig{max-width:260px;border:1px solid var(--bord);border-radius:8px;background:#fff}
+@media (max-width:640px){.cmp thead{display:none}.cmp tr{display:block;border-bottom:1px solid #e3eee9;padding:6px 0}.cmp td{display:block;border:0;padding:2px 0}.cmp td.c{display:inline-block;width:32%}}
+@media print{header,.barre,.noprint,#zoneValidation .noprint{display:none!important}body{background:#fff;font-size:12px}section{border:0;padding:4px 0;margin:6px 0;break-inside:avoid}main{max-width:none;padding:0}input,textarea,select{border:0;padding:0}}
+</style>
+</head>
+<body>
+<header><h1>Bilan de visite en entreprise</h1><p id="sousTitre">Chargement…</p></header>
+<main>
+  <div id="etat" class="note" role="status">Chargement…</div>
+  <div id="contenu" hidden>
+    <section id="identite"></section>
+    <section class="noprint histo" id="historique"></section>
+    <section>
+      <h2>Entretien</h2>
+      <div class="grille">
+        <label>Date de l’entretien <input type="date" id="date"></label>
+        <label>Professeur <input type="text" id="professeur"></label>
+        <label>Début en entreprise <input type="date" id="debutEntreprise"></label>
+      </div>
+      <div class="note" style="margin-top:8px">Modalité</div>
+      <div class="choix" id="modalite"></div>
+      <div class="note">Type</div>
+      <div class="choix" id="type"></div>
+    </section>
+    <section>
+      <h2>Comportement général et aptitudes professionnelles</h2>
+      <p class="note">Une appréciation par ligne selon les observations du tuteur. Laisser vide si non observé (cliquer de nouveau pour retirer).</p>
+      <table class="cmp"><thead><tr><th>Critère</th><th>Appréciation 1</th><th>Appréciation 2</th><th>Appréciation 3</th></tr></thead><tbody id="comportement"></tbody></table>
+    </section>
+    <section id="secPeda">
+      <h2 id="titrePeda">Premier bilan pédagogique</h2>
+      <div id="reperes"></div>
+      <table class="cmp" id="tabActivites"><thead><tr><th>Activité du référentiel</th><th>Participation de l’apprenti</th><th>Exemple ou prochaine étape</th></tr></thead><tbody id="activites"></tbody></table>
+      <p class="note" id="aVerifier"></p>
+    </section>
+    <section>
+      <h2>Observations et progression</h2>
+      <label>Appréciations générales et observations libres <textarea id="observations"></textarea></label>
+      <label>Quelles tâches reviennent le plus souvent ? <textarea id="taches"></textarea></label>
+      <label>Quelles difficultés ? Quels moyens et quel accompagnement sont nécessaires ? <textarea id="difficultes"></textarea></label>
+      <div class="grille" style="margin-top:8px">
+        <label>Objectif 1 <input type="text" id="obj0"></label><label>Échéance et accompagnement <input type="text" id="ech0"></label>
+        <label>Objectif 2 <input type="text" id="obj1"></label><label>Échéance et accompagnement <input type="text" id="ech1"></label>
+        <label>Prochain point de suivi <input type="date" id="prochainPoint"></label>
+      </div>
+      <div class="note" style="margin-top:8px">Bilan</div>
+      <div class="choix" id="bilan"></div>
+    </section>
+    <section id="zoneValidation"></section>
+    <div class="barre noprint">
+      <button type="button" class="plein" id="enregistrer">Enregistrer et faire valider par le tuteur</button>
+      <button type="button" id="imprimer">Imprimer / PDF</button>
+      <span id="msg" role="status"></span>
+    </div>
+  </div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},T=<?= JSON.stringify(jeton) ?>,D=null,BILAN=null,LIEN='';
+var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
+    BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'},
+    VIG={SIGNATAIRE_DIFFERENT:'signataire différent du tuteur du contrat',ADRESSE_ACADEMIQUE:'adresse académique',CONTACT_PROFESSEUR:'contact d’un professeur du lycée',CONTACT_PLUSIEURS_ENTREPRISES:'même contact déjà utilisé pour une autre entreprise'};
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+function heure(iso){try{return new Date(iso).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'});}catch(e){return iso;}}
+function radios(id,lib,nom){$(id).innerHTML=Object.keys(lib).map(function(k){return '<label><input type="radio" name="'+nom+'" value="'+k+'"> '+esc(lib[k])+'</label>';}).join('');}
+function val(nom){var x=document.querySelector('input[name="'+nom+'"]:checked');return x?x.value:'';}
+function cocher(nom,v){Array.prototype.forEach.call(document.querySelectorAll('input[name="'+nom+'"]'),function(i){i.checked=i.value===String(v);});}
+/* Radio que l'on peut décocher (« non observé »). */
+function decochable(){Array.prototype.forEach.call(document.querySelectorAll('input[data-dec]'),function(i){i.addEventListener('click',function(){if(i.dataset.was==='1'){i.checked=false;i.dataset.was='';}else{Array.prototype.forEach.call(document.querySelectorAll('input[name="'+i.name+'"]'),function(o){o.dataset.was='';});i.dataset.was='1';}brouillon();});});}
+function occupe(b,txt){b.disabled=true;b.dataset.lib=b.dataset.lib||b.textContent;b.innerHTML='<span class="spin"></span>'+esc(txt);}
+function libre(b){b.disabled=false;b.textContent=b.dataset.lib||b.textContent;}
+function appel(fn,arg,ok,ko,delai){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},delai||60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
+var CLE='dev598:'+T;
+function brouillon(){if(!D)return;try{localStorage.setItem(CLE,JSON.stringify({bilanId:BILAN&&BILAN.id||0,q:lire()}));}catch(e){}}
+function oublier(){try{localStorage.removeItem(CLE);}catch(e){}}
+
+function construire(){
+  var m=D.modele;
+  $('sousTitre').textContent=D.apprenti+' — '+D.classe;
+  var tu=[D.tuteur.prenom,D.tuteur.nom].filter(Boolean).join(' ');
+  $('identite').innerHTML='<h2>Identification</h2><div class="grille"><div><span class="note">Apprenti</span><br><b>'+esc(D.apprenti)+'</b></div><div><span class="note">Classe / formation</span><br><b>'+esc(D.classe)+'</b></div>'+
+    '<div><span class="note">Entreprise</span><br><b>'+esc(D.entreprise||'—')+'</b>'+(D.adresse?'<br><span class="note">'+esc(D.adresse)+'</span>':'')+'</div><div><span class="note">Maître d’apprentissage (contrat)</span><br><b>'+esc(tu||'non renseigné')+'</b>'+(D.tuteur.fonction?'<br><span class="note">'+esc(D.tuteur.fonction)+'</span>':'')+'</div>'+
+    (D.debut?'<div><span class="note">Début du contrat</span><br><b>'+dfr(D.debut)+'</b></div>':'')+(D.referent?'<div><span class="note">Professeur référent</span><br><b>'+esc(D.referent)+'</b></div>':'')+'</div>';
+  radios('modalite',MOD,'modalite');radios('type',TYP,'type');radios('bilan',BIL,'bilan');
+  $('comportement').innerHTML=m.comportement.map(function(k){return '<tr><td><b>'+esc(k[1])+'</b></td>'+[1,2,3].map(function(n){return '<td class="c"><label><input type="radio" data-dec="1" name="cmp_'+k[0]+'" value="'+n+'"> '+esc(k[1+n])+'</label></td>';}).join('')+'</tr>';}).join('');
+  if(m.intitule)$('titrePeda').textContent='Premier bilan pédagogique — '+m.intitule;
+  $('reperes').innerHTML=m.reperes.length?'<div class="note">Repères à présenter à l’entreprise</div>'+m.reperes.map(function(r,i){return '<label style="margin:4px 0"><input type="checkbox" id="rep'+i+'"> '+esc(r)+'</label>';}).join(''):'';
+  var bloc='';$('activites').innerHTML=m.activites.map(function(a){var h='';if(a.bloc&&a.bloc!==bloc){bloc=a.bloc;h='<tr><td colspan="3" class="bloc">'+esc(a.bloc)+'</td></tr>';}
+    return h+'<tr><td>'+esc(a.libelle)+'</td><td><div class="choix">'+Object.keys(NIV).map(function(k){return '<label><input type="radio" data-dec="1" name="act_'+a.id+'" value="'+k+'"> '+NIV[k]+'</label>';}).join('')+'</div></td><td><input type="text" id="ex_'+a.id+'"></td></tr>';}).join('');
+  $('tabActivites').hidden=!m.activites.length;
+  $('aVerifier').textContent=m.aVerifier.length?'À vérifier : '+m.aVerifier.join(' '):'';
+  if(!m.reperes.length&&!m.activites.length)$('secPeda').innerHTML='<h2>Bilan pédagogique</h2><p class="note">Aucune activité de référentiel n’est encore définie pour cette classe : le bureau des entreprises peut les ajouter dans la table Grist « EUC_ACTIVITES_BILAN_VISITE » (motif de classe, bloc, activité).</p>';
+  decochable();
+  document.addEventListener('input',brouillon);document.addEventListener('change',brouillon);
+}
+function lire(){var m=D.modele,c={comportement:{},reperes:[],activites:{},objectifs:[]};
+  m.comportement.forEach(function(k){var v=val('cmp_'+k[0]);if(v)c.comportement[k[0]]=Number(v);});
+  m.reperes.forEach(function(r,i){c.reperes[i]=!!($('rep'+i)&&$('rep'+i).checked);});
+  m.activites.forEach(function(a){var n=val('act_'+a.id),e=$('ex_'+a.id).value;if(n||e)c.activites[a.id]={niveau:n,exemple:e};});
+  ['observations','taches','difficultes','prochainPoint','debutEntreprise'].forEach(function(k){c[k]=$(k).value;});
+  c.objectifs=[0,1].map(function(i){return{objectif:$('obj'+i).value,echeance:$('ech'+i).value};});
+  return {t:T,bilanId:BILAN&&BILAN.id||0,date:$('date').value,modalite:val('modalite'),type:val('type'),professeur:$('professeur').value,bilan:val('bilan'),contenu:c};}
+function remplir(b,q){
+  var c=(q?q.contenu:b&&b.contenu)||{},m=D.modele;
+  $('date').value=q?q.date:b?b.date:D.aujourdhui;$('professeur').value=q?q.professeur:b?b.professeur:(D.referent||'');
+  cocher('modalite',q?q.modalite:b?b.modalite:'');cocher('type',q?q.type:b?b.type:(D.bilans.length?'SUIVI':'POSITIONNEMENT'));cocher('bilan',q?q.bilan:b?b.bilan:'');
+  m.comportement.forEach(function(k){cocher('cmp_'+k[0],(c.comportement||{})[k[0]]||'');});
+  m.reperes.forEach(function(r,i){if($('rep'+i))$('rep'+i).checked=!!(c.reperes||[])[i];});
+  m.activites.forEach(function(a){var x=(c.activites||{})[a.id]||{};cocher('act_'+a.id,x.niveau||'');$('ex_'+a.id).value=x.exemple||'';});
+  ['observations','taches','difficultes','prochainPoint'].forEach(function(k){$(k).value=c[k]||'';});
+  $('debutEntreprise').value=c.debutEntreprise||D.debut||'';
+  [0,1].forEach(function(i){var o=(c.objectifs||[])[i]||{};$('obj'+i).value=o.objectif||'';$('ech'+i).value=o.echeance||'';});
+  Array.prototype.forEach.call(document.querySelectorAll('input[data-dec]'),function(i){i.dataset.was=i.checked?'1':'';});
+}
+function historique(){
+  $('historique').innerHTML='<h2>Bilans de ce contrat</h2>'+(D.bilans.length?D.bilans.map(function(b){return '<button type="button" data-id="'+b.id+'"'+(BILAN&&BILAN.id===b.id?' class="plein"':'')+'>'+dfr(b.date)+' · '+esc(TYP[b.type]||b.type)+' · '+(b.statut==='VALIDE'?'validé ✓':'à valider')+'</button>';}).join(''):'<span class="note">Aucun bilan enregistré.</span>')+
+    ' <button type="button" id="nouveau"'+(!BILAN?' class="plein"':'')+'>+ Nouveau bilan</button>';
+  Array.prototype.forEach.call($('historique').querySelectorAll('button[data-id]'),function(b){b.onclick=function(){choisir(D.bilans.filter(function(x){return x.id===Number(b.dataset.id);})[0]);};});
+  $('nouveau').onclick=function(){choisir(null);};
+}
+function choisir(b){BILAN=b||null;LIEN='';remplir(BILAN);historique();validation();oublier();window.scrollTo(0,0);}
+function validation(){var z=$('zoneValidation'),b=BILAN;
+  if(!b){z.innerHTML='<h2>Validation par le tuteur</h2><p class="note">Enregistrez le bilan : un QR code s’affichera pour que le tuteur le valide sur son téléphone.</p>';return;}
+  if(b.statut==='VALIDE'){z.innerHTML='<h2>Validation par le tuteur</h2><div class="valide"><b>Validé par '+esc(b.signataire)+(b.signataireFonction?' ('+esc(b.signataireFonction)+')':'')+'</b> le '+esc(heure(b.signeLe))+' — '+({QR_SUR_PLACE:'QR code sur place',QR_VISIO:'QR code en visio',LIEN:'lien envoyé'+(b.lienEnvoyeA?' à '+esc(b.lienEnvoyeA):'')}[b.valideVia]||esc(b.valideVia))+
+    (b.signature?'<div><img class="sig" alt="Signature du tuteur" src="'+esc(b.signature)+'"></div>':'')+'</div>'+
+    (b.vigilance.length?'<p class="alerte">Point de vigilance transmis au bureau des entreprises : '+esc(b.vigilance.map(function(k){return VIG[k]||k;}).join(' ; '))+'.</p>':'')+
+    '<p class="note noprint">Toute modification du bilan annulera cette validation : il faudra la refaire.</p>';return;}
+  z.innerHTML='<h2>Validation par le tuteur</h2>'+(b.annuleeLe?'<p class="alerte">La validation précédente a été annulée par une modification du '+esc(heure(b.annuleeLe))+'.</p>':'')+
+    '<div class="noprint"><p><b>Sur place ou en visio</b> : le tuteur scanne ce QR code avec son téléphone, relit le bilan, indique son identité et signe.</p><div id="qr"></div>'+
+    '<p><b>Par téléphone</b> : envoyez-lui le lien sur le courriel qu’il vous indique.</p><div class="grille"><label>Courriel du tuteur <input type="email" id="mailTuteur" value="'+esc(b.lienEnvoyeA||'')+'" placeholder="prenom.nom@entreprise.fr"></label><div style="align-self:end"><button type="button" id="envoyerLien">Envoyer le lien</button></div></div>'+
+    '<p><button type="button" id="verifier">Actualiser l’état de la validation</button> <span id="msgVal" role="status"></span></p></div><p class="note">En attente de la validation du tuteur.</p>';
+  var dessiner=function(){if(!LIEN)return;try{$('qr').innerHTML='';new QRCode($('qr'),{text:LIEN,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});}catch(e){$('qr').innerHTML='<a href="'+esc(LIEN)+'">Lien de validation</a>';}};
+  LIEN=b.lienTuteur||LIEN;if(LIEN)dessiner();else $('qr').innerHTML='<span class="note">Enregistrez le bilan pour obtenir le QR code.</span>';
+  $('envoyerLien').onclick=function(){var bt=this;occupe(bt,'Envoi…');appel('EUC_DEV598_envoyerLien',{t:T,bilanId:b.id,email:$('mailTuteur').value},function(r){libre(bt);b.lienEnvoyeA=r.email;$('msgVal').innerHTML='<span class="ok">Lien envoyé à '+esc(r.email)+'.</span>';},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+  $('verifier').onclick=function(){var bt=this;occupe(bt,'Actualisation…');recharger(b.id,function(){libre(bt);},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+}
+function recharger(id,ok,ko){appel('EUC_DEV598_ouvrir',{t:T},function(r){D.bilans=r.bilans;var b=r.bilans.filter(function(x){return x.id===id;})[0]||null;BILAN=b;remplir(b);historique();validation();if(ok)ok();},ko||function(e){$('msg').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});}
+$('enregistrer').onclick=function(){var bt=this,q=lire();$('msg').textContent='';
+  if(BILAN&&BILAN.statut==='VALIDE'&&!confirm('Ce bilan est déjà validé par le tuteur. Le modifier annulera sa validation : il faudra la refaire. Continuer ?'))return;
+  occupe(bt,'Enregistrement…');
+  appel('EUC_DEV598_enregistrer',q,function(r){libre(bt);oublier();LIEN=r.lienTuteur;
+    var i=-1;D.bilans.forEach(function(x,k){if(x.id===r.bilanId)i=k;});if(i>=0)D.bilans[i]=r.bilan;else D.bilans.unshift(r.bilan);BILAN=r.bilan;historique();validation();
+    $('msg').innerHTML='<span class="ok">'+(r.inchange?'Aucune modification.':r.annulee?'Enregistré — la validation du tuteur est à refaire.':'Enregistré.')+'</span>';
+    $('zoneValidation').scrollIntoView({behavior:'smooth'});},
+    function(e){libre(bt);$('msg').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+$('imprimer').onclick=function(){window.print();};
+if(!T){$('etat').innerHTML='<span class="erreur">Lien incomplet : ouvrez la fiche depuis le courriel de référent ou l’échéancier.</span>';$('sousTitre').textContent='';return;}
+appel('EUC_DEV598_ouvrir',{t:T},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;construire();
+  var br=null;try{br=JSON.parse(localStorage.getItem(CLE)||'null');}catch(e){}
+  var dernier=r.bilans[0]&&r.bilans[0].statut!=='VALIDE'?r.bilans[0]:null;
+  if(br&&br.q){BILAN=r.bilans.filter(function(x){return x.id===br.bilanId;})[0]||null;remplir(BILAN,br.q);$('msg').innerHTML='<span class="note">Brouillon non enregistré restauré.</span>';}
+  else{BILAN=dernier;remplir(BILAN);}
+  historique();validation();},
+  function(e){$('etat').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';$('sousTitre').textContent='';});
+})();
+</script>
+</body>
+</html>

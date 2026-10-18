@@ -28,6 +28,7 @@ th,td{padding:7px 8px;border-bottom:1px solid #e3eee9;text-align:left;vertical-a
 .petit{display:block;font-size:12px;color:var(--gris)}
 .form{background:#f4f8f6;border:1px solid var(--bord);border-radius:8px;padding:8px;margin-top:6px;display:grid;gap:6px}
 .erreur{color:#991b1b;font-weight:700}
+a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert);color:#fff;border-radius:8px;padding:6px 10px;font-weight:700;text-decoration:none}
 </style>
 </head>
 <body>
@@ -44,6 +45,7 @@ th,td{padding:7px 8px;border-bottom:1px solid #e3eee9;text-align:left;vertical-a
     <button type="button" id="prevenir">Prévenir les référents</button>
   </div>
   <div class="filtres note"><label>Fiche d’entretien (lien Drive ou PDF, jointe au courriel) <input id="fiche" size="50" placeholder="https://…"></label><button type="button" id="ficheOk">Enregistrer le lien</button></div>
+  <div class="filtres note"><label>Copie des validations des tuteurs à <input id="copie" type="email" size="34" placeholder="votre courriel"></label><button type="button" id="copieOk">Enregistrer</button><span>Chaque validation par un tuteur vous est envoyée en copie : vous voyez l’adresse qu’il a donnée.</span></div>
   <div id="apercu"></div>
   <table><thead><tr><th><input type="checkbox" id="tout" aria-label="Tout cocher"></th><th>Statut</th><th>Apprenti</th><th>Classe</th><th>Entreprise · tuteur</th><th>Début du contrat</th><th>À faire avant</th><th>Référent</th><th>Contact</th></tr></thead><tbody id="lignes"></tbody></table>
 </main>
@@ -60,7 +62,9 @@ function charger(){$('etat').textContent='Chargement…';appel('EUC_DEV597_echea
   var cl={};r.lignes.forEach(function(l){cl[l.classe]=1;});var v=$('fClasse').value;$('fClasse').innerHTML='<option value="">Toutes</option>'+Object.keys(cl).sort().map(function(c){return '<option>'+esc(c)+'</option>';}).join('');$('fClasse').value=v;
   var refs={};r.lignes.forEach(function(l){if(l.referent)refs[l.referent.nom]=1;});var vr=$('fRef').value;$('fRef').innerHTML='<option value="">Tous</option><option value="-">Sans référent</option>'+Object.keys(refs).sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('');$('fRef').value=vr;
   $('profAff').innerHTML='<option value="">— retirer le référent —</option>'+r.professeurs.map(function(p){return '<option value="'+p.id+'">'+esc(p.nom)+'</option>';}).join('');
-  $('fiche').value=r.fiche||'';rendre();});}
+  $('fiche').value=r.fiche||'';$('copie').value=r.copieValidations||'';
+  var c=r.compteurs;if(c.vigilance||c.bilansAlerte||c.aValider)$('etat').innerHTML+=' · Bilans de visite : '+(c.aValider?c.aValider+' à faire valider par le tuteur':'')+(c.bilansAlerte?' · <span class="erreur">'+c.bilansAlerte+' « alerte à traiter »</span>':'')+(c.vigilance?' · <span class="erreur">'+c.vigilance+' validation(s) à vérifier</span>':'');
+  rendre();});}
 function rendre(){
   var c=D.compteurs;$('tuiles').innerHTML=['RETARD','ALERTE','RAPPEL','A_FAIRE','A_VENIR','FAIT'].map(function(k){return '<button type="button" class="tuile" data-s="'+k+'" aria-pressed="'+(FILTRE===k)+'"><span class="chip '+k+'">'+LIB[k]+'</span><b>'+c[k]+'</b></button>';}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('.tuile'),function(b){b.onclick=function(){FILTRE=FILTRE===b.dataset.s?'':b.dataset.s;rendre();};});
@@ -71,10 +75,15 @@ function rendre(){
     '<td>'+esc(x.entreprise)+(t.nom?'<span class="petit">Tuteur : '+esc(t.nom)+(t.tel?' · <a href="tel:'+esc(t.tel.replace(/\s/g,''))+'">'+esc(t.tel)+'</a>':'')+(t.mail?' · <a href="mailto:'+esc(t.mail)+'">'+esc(t.mail)+'</a>':'')+'</span>':'')+'</td>'+
     '<td>'+dfr(x.debut)+'</td><td>'+dfr(x.echeance)+'</td><td>'+(x.referent?esc(x.referent.nom)+'<span class="petit">'+(x.referent.notifieLe?'prévenu le '+dfr(x.referent.notifieLe.slice(0,10)):'pas encore prévenu')+'</span>':'<span class="petit">à désigner</span>')+'</td>'+
     '<td>'+(x.contact?'<b>'+dfr(x.contact.date)+'</b> · '+(x.contact.mode==='VISITE'?'visite':x.contact.mode==='VISIO'?'visio':'appel')+(x.contact.professeur?'<span class="petit">'+esc(x.contact.professeur)+'</span>':'')+(x.contact.compteRendu?'<span class="petit">'+esc(x.contact.compteRendu)+'</span>':''):'')+
-      '<div><button type="button" class="saisir" data-i="'+i+'">'+(x.contact?'Ajouter un contact':'Enregistrer le contact')+'</button></div><div class="zone" id="z'+i+'"></div></td></tr>';}).join(''):'<tr><td colspan="9" class="note">Aucun contrat pour ces filtres.</td></tr>';
+      bilans(x)+'<div><a class="bouton" target="_blank" rel="noopener" href="'+esc(x.lienFiche||'')+'">Bilan de visite</a> <button type="button" class="saisir" data-i="'+i+'">'+(x.contact?'Ajouter un contact':'Enregistrer le contact')+'</button></div><div class="zone" id="z'+i+'"></div></td></tr>';}).join(''):'<tr><td colspan="9" class="note">Aucun contrat pour ces filtres.</td></tr>';
   Array.prototype.forEach.call(document.querySelectorAll('.saisir'),function(b){b.onclick=function(){formulaire(l[Number(b.dataset.i)],$('z'+b.dataset.i));};});
   Array.prototype.forEach.call(document.querySelectorAll('.coche'),function(c){c.onchange=majAff;});majAff();
 }
+/* DEV598 : dernier bilan de visite en ligne et sa validation par le tuteur. */
+var VIG={SIGNATAIRE_DIFFERENT:'signataire différent du tuteur du contrat',ADRESSE_ACADEMIQUE:'adresse académique',CONTACT_PROFESSEUR:'contact d’un professeur',CONTACT_PLUSIEURS_ENTREPRISES:'même contact pour une autre entreprise'};
+function bilans(x){var b=(x.bilans||[])[0];if(!b)return '';
+  return '<span class="petit">Bilan du '+dfr(b.date)+' : '+(b.statut==='VALIDE'?'<b style="color:#166534">validé par '+esc(b.signataire)+'</b>':'<b>en attente du tuteur</b>')+(b.bilan==='ALERTE'?' · <span class="erreur">alerte à traiter</span>':b.bilan==='A_RENFORCER'?' · à renforcer':'')+
+    (b.vigilance&&b.vigilance.length?' · <span class="erreur">à vérifier : '+esc(b.vigilance.map(function(k){return VIG[k]||k;}).join(', '))+'</span>':'')+(x.bilans.length>1?' ('+x.bilans.length+' bilans)':'')+'</span>';}
 function formulaire(x,z){if(z.innerHTML){z.innerHTML='';return;}
   z.innerHTML='<div class="form"><label>Date <input type="date" class="fd" value="'+aujourdhui()+'"></label><label>Mode <select class="fm"><option value="APPEL">Appel téléphonique</option><option value="VISIO">Visio</option><option value="VISITE">Visite en entreprise</option></select></label>'+
     '<label>Professeur <input class="fp" value="'+esc(x.referent?x.referent.nom:'')+'"></label><label>Compte rendu <textarea class="fc" rows="3"></textarea></label><button type="button" class="plein fo">Enregistrer</button></div>';
@@ -96,6 +105,7 @@ function prevenir(confirmer){var b=$('prevenir');b.disabled=true;b.textContent=c
       '<div><button type="button" class="plein" id="envoyer">Envoyer</button> <button type="button" id="annuler">Annuler</button></div></div>';
     $('envoyer').onclick=function(){prevenir(true);};$('annuler').onclick=function(){$('apercu').innerHTML='';};});}
 $('prevenir').onclick=function(){prevenir(false);};
+$('copieOk').onclick=function(){var b=this;b.disabled=true;b.textContent='Enregistrement…';appel('EUC_DEV598_reglerCopie',{email:$('copie').value},function(){b.disabled=false;b.textContent='Enregistré ✓';setTimeout(function(){b.textContent='Enregistrer';},1500);});};
 $('ficheOk').onclick=function(){var b=this;b.disabled=true;appel('EUC_DEV597_reglerFiche',{url:$('fiche').value},function(){b.disabled=false;b.textContent='Lien enregistré ✓';setTimeout(function(){b.textContent='Enregistrer le lien';},1500);});};
 charger();
 })();

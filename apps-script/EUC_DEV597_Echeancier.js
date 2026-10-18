@@ -70,7 +70,22 @@ function EUC_DEV597_calcul_(m, contrats, referents, contacts, aujourdhui) {
 function EUC_DEV597_donnees_(annee) {
   EUC_DEV597_tables_();
   var m = EUC_SUIVI2_modele_(EUC_DEV597_t_(annee));
-  return EUC_DEV597_calcul_(m, EUC_DEV597_lire_('EUC_APPRENTISSAGE_PFMP'), EUC_DEV597_lire_(EUC_DEV597_REFERENTS_), EUC_DEV597_lire_(EUC_DEV597_CONTACTS_), EUC_SUIVI2_aujourdhui_());
+  /* DEV598 : un bilan de visite en ligne vaut contact d'entrée. */
+  var bilans = typeof EUC_DEV598_BILANS_ !== 'undefined' ? EUC_DEV597_lire_(EUC_DEV598_BILANS_) : [];
+  var d = EUC_DEV597_calcul_(m, EUC_DEV597_lire_('EUC_APPRENTISSAGE_PFMP'), EUC_DEV597_lire_(EUC_DEV597_REFERENTS_), EUC_DEV597_lire_(EUC_DEV597_CONTACTS_).concat(bilans.length ? EUC_DEV598_commeContacts_(bilans) : []), EUC_SUIVI2_aujourdhui_());
+  if (typeof EUC_DEV598_lienProf_ === 'function') {
+    var parContrat = {}; bilans.forEach(function(r) { var k = Number((r.fields || {}).Contrat); (parContrat[k] = parContrat[k] || []).push(EUC_DEV598_resume_(r)); });
+    d.compteurs.bilansAlerte = 0; d.compteurs.vigilance = 0; d.compteurs.aValider = 0;
+    d.lignes.forEach(function(l) {
+      l.lienFiche = EUC_DEV598_lienProf_(l.contratId);
+      l.bilans = (parContrat[l.contratId] || []).sort(function(a, b) { return b.date.localeCompare(a.date) || b.id - a.id; });
+      var dernier = l.bilans[0]; if (!dernier) return;
+      if (dernier.bilan === 'ALERTE') d.compteurs.bilansAlerte++;
+      if (dernier.vigilance.length) d.compteurs.vigilance++;
+      if (dernier.statut !== 'VALIDE') d.compteurs.aValider++;
+    });
+  }
+  return d;
 }
 
 /* Page : échéances + professeurs pour l'affectation. */
@@ -80,6 +95,7 @@ function EUC_DEV597_echeancier(annee) {
   r.professeurs = EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').map(function(p) { var f = p.fields || p; return { id: Number(p.id), nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), actif: f.Actif !== false }; })
     .filter(function(p) { return p.nom && p.actif; }).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
   r.fiche = EUC_DEV597_fiche_();
+  r.copieValidations = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_() : '';
   r.ok = true; return r;
 }
 
@@ -143,7 +159,9 @@ function EUC_DEV597_message_(prof, lignes, fiche) {
     t.push('• ' + l.nom + ' — ' + l.classe + (l.organismes ? ' (' + l.organismes + ')' : ''));
     t.push('  Entreprise : ' + l.entreprise);
     if (tu.nom || tu.tel || tu.mail) t.push('  Tuteur : ' + [tu.nom, tu.tel, tu.mail].filter(Boolean).join(' · '));
-    t.push('  Début du contrat : ' + EUC_DEV597_dfr_(l.debut) + ' — contact à prendre avant le ' + EUC_DEV597_dfr_(l.echeance)); t.push('');
+    t.push('  Début du contrat : ' + EUC_DEV597_dfr_(l.debut) + ' — contact à prendre avant le ' + EUC_DEV597_dfr_(l.echeance));
+    if (l.lienFiche) t.push('  Bilan de visite en ligne (lien personnel, à garder) : ' + l.lienFiche);
+    t.push('');
   });
   t.push('Au cours de cet échange (téléphone, visio ou visite) :',
     '1. Faire le point avec le tuteur sur ce qui a été vu au lycée et sur ce qui est attendu en entreprise.',
@@ -151,7 +169,9 @@ function EUC_DEV597_message_(prof, lignes, fiche) {
     '3. Prendre des nouvelles des premiers temps : intégration, assiduité, comportement, motivation.',
     '4. Repérer toute difficulté pouvant conduire à une rupture et la signaler sans attendre.', '');
   if (fiche) t.push('Fiche d’entretien à utiliser : ' + fiche, '');
-  t.push('Merci de répondre à ce courriel en indiquant la date, le mode de contact (téléphone, visio, visite) et un bref compte rendu : il sera enregistré dans le suivi de l’apprenti.', '', 'Bien cordialement,', 'Le bureau des entreprises — Lycée Les Eucalyptus');
+  if (lignes.some(function(l) { return l.lienFiche; })) t.push('Le bilan de visite se remplit en ligne depuis le lien de chaque apprenti. À la fin de l’entretien, le tuteur le valide lui-même : sur place ou en visio, il scanne le QR code affiché ; par téléphone, il reçoit le lien sur le courriel qu’il vous indique.', '');
+  if (!lignes.some(function(l) { return l.lienFiche; })) t.push('Merci de répondre à ce courriel en indiquant la date, le mode de contact (téléphone, visio, visite) et un bref compte rendu : il sera enregistré dans le suivi de l’apprenti.', '');
+  t.push( 'Bien cordialement,', 'Le bureau des entreprises — Lycée Les Eucalyptus');
   return { sujet: '[Apprentis] Référent — premier contact entreprise avant le ' + EUC_DEV597_dfr_(avant), corps: t.join('\n') };
 }
 
