@@ -78,3 +78,6 @@ test('DEV588 : Book — SIRET retrouvé par nom + code postal sinon signalé ; P
   vm2.createContext(ctx);const src=b.slice(b.indexOf('function EUC_DEV588_cle_'),b.indexOf('function EUC_DEV572_base_'));vm2.runInContext(src,ctx);
   const l=ctx.EUC_DEV588_completerSiret_([{entreprise:'JC FER',adresse:'RUE ZONE INDUSTRIE LA VALLIERE, 06730 SAINT-ANDRE'},{entreprise:'ROSES DE MAI',adresse:'28 ROUTE DE VALBONNE, 06130 GRASSE'}]);
   assert.equal(l[0].siret,'12345678901234');assert.equal(l[1].siretManquant,true);});
+test('DEV589 : géocodage — coordonnées Google Maps collées réparties dans latitude et longitude',()=>{const h=read('apps-script/Geocodage_PFMP_DEV441.html');assert.match(h,/class="secondary coller-gps"/);
+  const src=h.slice(h.indexOf('function lire(t)'),h.indexOf('function remplir('));const lire=new Function(src+';return lire;')();
+  assert.deepEqual(lire('43.76552, 7.327624'),[43.76552,7.327624]);assert.deepEqual(lire(' 43.63942975973322,7.1234 '),[43.63942975973322,7.1234]);assert.deepEqual(lire('43,7655 ; 7,3276'),[43.7655,7.3276]);assert.equal(lire('Nice'),null);assert.equal(lire('143.5, 7.2'),null);});
