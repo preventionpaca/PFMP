@@ -203,7 +203,7 @@ function EUC_DEV538_diplomas_(){
   var out={};EUC_DEV538_optionalRecords_('EUC_CLASSES_DIPLOMES_PFMP',{}).forEach(function(r){var f=EUC_DEV538_fields_(r);if(f.Actif===false)return;var cid=EUC_DEV538_ref_(EUC_DEV538_pick_(f,['Classe','Classe_id'])),label=EUC_DEV538_t_(EUC_DEV538_pick_(f,['Intitule_diplome','Intitule','Diplome','Diplome_imprime','Libelle']));if(cid&&label)out[cid]=label;});return out;
 }
 function EUC_DEV538_fallbackDiploma_(c){
-  var name=EUC_DEV538_t_(c&&c.classe||c&&c.nom),fam=EUC_DEV538_t_(c&&c.famille).toUpperCase(),code=name.toUpperCase().replace(/^(?:T|1|2)/,'').replace(/[0-9]+$/,'');
+  var name=EUC_DEV538_t_(c&&c.classe||c&&c.nom),fam=EUC_DEV538_t_(c&&c.famille).toUpperCase(),code=name.toUpperCase().replace(/^(?:T|1|2)/,'').replace(/[0-9]+$/,'').trim().replace(/\s+[GC]$/,'');/* DEV585 : 1MELEC G (GRETA) = même diplôme que 1MELEC. */
   var labels={CAR:'BAC PRO Carrossier Peintre Automobile',CIEL:'BAC PRO Cybersécurité, Informatique et Électronique',MELEC:"BAC PRO Métiers de l'Électricité et de ses Environnements Connectés",MP3D:'BAC PRO Modélisation et Prototypage 3D',MP3:'BAC PRO Modélisation et Prototypage 3D',MT:'BAC PRO Microtechniques',MVA:'BAC PRO Maintenance des Véhicules',RMO:'BAC PRO TRPM option Réalisation et Maintenance des Outillages',RSP:'BAC PRO TRPM option Réalisation et Suivi de Production'};
   var special=typeof EUC_DEV564_training_==='function'?EUC_DEV564_training_(c,''):null;if(special&&special.diplome)return special.diplome;
   if(labels[code])return labels[code];if(fam==='BTS')return'BTS — '+name.replace(/^[12]/,'');if(fam==='CAP')return'CAP — '+name.replace(/^(?:T|1|2)/,'');return'BAC PRO — '+code;

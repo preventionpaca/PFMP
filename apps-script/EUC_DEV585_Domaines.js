@@ -56,7 +56,18 @@ function EUC_DEV585_domainesDe_(diplome, idx) { return ((idx || {}).index || {})
 function EUC_DEV585_diplomesBook_() {
   var f = typeof EUC_DEV572_facettesBoot_ === 'function' ? EUC_DEV572_facettesBoot_('P', 'ALL', 3) : null;
   if (!f || !f.diplome) f = EUC_DEV540_facets_(EUC_DEV572_base_({ annee: 'ALL', fenetre: 3 }));
-  return (f.diplome || []).filter(Boolean);
+  var l = (f.diplome || []).filter(Boolean), vus = {};
+  l.forEach(function(d) { vus[EUC_DEV585_norm_(d)] = true; });
+  /* Diplômes de toutes les classes de l'année (TSEC, TPMMA, TPEEB, CQPM…), même sans accueil dans le Book :
+   * même libellé que celui que le Book affichera. */
+  try {
+    var dip = EUC_DEV538_diplomas_();
+    EUC_DEV579_classesCompletes_(EUC_DEV368_year('')).forEach(function(c) {
+      var d = EUC_DEV564_diplomaForClass_({ id: c.id, classe: c.classe, famille: c.famille }, dip[c.id]), k = EUC_DEV585_norm_(d);
+      if (d && !vus[k]) { vus[k] = true; l.push(d); }
+    });
+  } catch (e) {}
+  return l;
 }
 
 /* Aperçu, puis avec confirmation 'ECRIRE' : tables créées et complétées (jamais de modification). */
