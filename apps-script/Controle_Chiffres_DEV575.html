@@ -68,7 +68,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   </section>
   <section id="dblSection">
     <h2 style="margin-top:0">Élèves en double</h2>
-    <p class="note">Deux fiches actives de l’année avec le même INE (ou, sans INE, mêmes nom, prénom et date de naissance). On garde la fiche qui porte des conventions, apprentissage ou affectations ; les autres sont désactivées, jamais supprimées. Un groupe où plusieurs fiches portent des liens est seulement signalé, à arbitrer dans Grist.</p>
+    <p class="note">Deux fiches actives de l’année avec le même INE, les mêmes nom, prénom et date de naissance, ou les mêmes nom et prénom dans la même classe. On garde la fiche qui porte des conventions, apprentissage ou affectations ; les autres sont désactivées, jamais supprimées. Un groupe où plusieurs fiches portent des liens est seulement signalé, à arbitrer dans Grist.</p>
     <p><button type="button" id="dblAnalyser">Analyser</button> <button type="button" id="dblDesactiver" disabled>Désactiver les doublons sans lien</button></p>
     <div id="dblResultat"></div>
   </section>
@@ -147,7 +147,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   function ligne(x,role){return '<tr><td>'+role+'</td><td>'+e(x.nom)+'</td><td>'+e(x.classe)+'</td><td>'+x.id+'</td><td>'+e(x.source)+'</td><td>'+e(x.entree)+'</td><td>'+e(liens(x))+'</td></tr>';}
   function afficher(r){if(!r.groupes.length){R.innerHTML='<p>Aucun élève en double pour '+e(r.annee)+'.</p>';D.disabled=true;return;}
     R.innerHTML='<p><b>'+r.groupes.length+'</b> élève(s) en double — <b>'+r.aDesactiver+'</b> fiche(s) à désactiver'+(r.aArbitrer?', <b>'+r.aArbitrer+'</b> groupe(s) à arbitrer (plusieurs fiches portent des liens)':'')+(r.desactives?' — <b>'+r.desactives+' désactivée(s)</b>':'')+'.</p>'+
-      '<table><thead><tr><th></th><th>Élève</th><th>Classe</th><th>Fiche</th><th>Source</th><th>Entrée</th><th>Liens</th></tr></thead><tbody>'+r.groupes.map(function(g){return ligne(g.garde,'garder')+g.autres.map(function(x){return ligne(x,g.arbitrer?'<b style="color:#b45309">à arbitrer</b>':'désactiver');}).join('');}).join('<tr><td colspan="7" style="background:#f4f8f6;height:4px;padding:0"></td></tr>')+'</tbody></table>';
+      '<table><thead><tr><th></th><th>Élève</th><th>Classe</th><th>Fiche</th><th>Source</th><th>Entrée</th><th>Liens</th></tr></thead><tbody>'+r.groupes.map(function(g){return ligne(g.garde,'garder')+g.autres.map(function(x){return ligne(x,g.arbitrer?'<b style="color:#b45309">à arbitrer'+(g.inesDifferents?' (INE différents : homonymes ?)':'')+'</b>':'désactiver');}).join('');}).join('<tr><td colspan="7" style="background:#f4f8f6;height:4px;padding:0"></td></tr>')+'</tbody></table>';
     D.disabled=!(r.apercu&&r.aDesactiver);}
   function lancer(confirmer){var b=confirmer?D:A,t=b.textContent;b.disabled=true;b.textContent=confirmer?'Désactivation…':'Analyse…';
     google.script.run.withSuccessHandler(function(r){b.textContent=t;A.disabled=false;afficher(r);}).withFailureHandler(function(err){b.textContent=t;b.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_doublonsEleves({annee:an(),confirmation:confirmer?'DESACTIVER':''});}

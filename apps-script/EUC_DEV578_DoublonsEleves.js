@@ -8,7 +8,8 @@
  * l'existant.
  *
  * Deux fiches actives de la même année sont un doublon si elles ont le même INE,
- * ou, sans INE, les mêmes nom, prénom et date de naissance. Dans chaque groupe,
+ * les mêmes nom, prénom et date de naissance, ou les mêmes nom et prénom dans la
+ * même classe (une fiche avec INE et l'autre sans sont ainsi réunies). Dans chaque groupe,
  * on garde la fiche qui porte le plus de liens (dossiers de convention,
  * apprentissage, affectations de professeurs, parcours différencié), puis la
  * plus ancienne. Les autres sont désactivées (Actif = faux), jamais supprimées,
@@ -31,15 +32,25 @@ function EUC_DEV578_doublonsCalcul_(annee) {
   var y = EUC_DEV368_year(annee || '');
   var eleves = EUC_SUIVI_fields_(EUC_SUIVI_sqlLecture_('SELECT e.*,a.Code AS Annee_code FROM EUC_ELEVES_PFMP e JOIN Annees_Scolaires a ON a.id=e.Annee_scolaire WHERE a.Code=?', [y])) || [];
   var norm = function(v) { return String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ''); };
-  var groupes = {};
-  eleves.forEach(function(e) {
-    if (e.Actif === false) return;
+  /* Une fiche peut avoir l'INE et pas l'autre (Pronote / copier-coller / Yparéo) : les clés INE,
+   * identité (nom + prénom + naissance) et classe + nom + prénom sont réunies (union). */
+  var parent = {}, cleFiche = {};
+  function racine(k) { while (parent[k] !== k) { parent[k] = parent[parent[k]]; k = parent[k]; } return k; }
+  function lier(a, b) { parent[a] = parent[a] || a; parent[b] = parent[b] || b; var ra = racine(a), rb = racine(b); if (ra !== rb) parent[rb] = ra; }
+  var actifs = eleves.filter(function(e) { return e.Actif !== false; });
+  actifs.forEach(function(e) {
     var ine = norm(e.Numero_national || e.Numero_National || e.Identifiant_national);
     var naissance = typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(e.Date_naissance) : '';
-    var cle = ine ? 'INE|' + ine : 'ID|' + norm(e.Nom) + '|' + norm(e.Prenom_usage || e.Prenom) + '|' + naissance;
-    if (!ine && !naissance) return; /* sans INE ni date, une homonymie n'est pas une preuve */
-    (groupes[cle] = groupes[cle] || []).push(e);
+    var np = norm(e.Nom) + '|' + norm(e.Prenom_usage || e.Prenom), classe = EUC_DEV578_refEleve_(e.Classe) || norm(e.Code_classe_importe);
+    var f = 'F|' + e.id, cles = [];
+    if (ine) cles.push('INE|' + ine);
+    if (naissance) cles.push('ID|' + np + '|' + naissance);
+    if (classe && np !== '|') cles.push('CL|' + classe + '|' + np);
+    parent[f] = parent[f] || f; cleFiche[e.id] = f;
+    cles.forEach(function(k) { lier(f, k); });
   });
+  var groupes = {};
+  actifs.forEach(function(e) { var r = racine(cleFiche[e.id]); (groupes[r] = groupes[r] || []).push(e); });
   var cles = Object.keys(groupes).filter(function(k) { return groupes[k].length > 1; });
   if (!cles.length) return { annee: y, groupes: [] };
   var ids = {}; cles.forEach(function(k) { groupes[k].forEach(function(e) { ids[Number(e.id)] = { conventions: 0, apprentissage: 0, affectations: 0, parcours: 0 }; }); });
@@ -55,8 +66,13 @@ function EUC_DEV578_doublonsCalcul_(annee) {
   return { annee: y, groupes: cles.map(function(k) {
     var l = groupes[k].map(function(e) { var li = ids[Number(e.id)]; return { id: Number(e.id), nom: String(e.Nom || '') + ' ' + String(e.Prenom_usage || e.Prenom || ''), classe: String(e.Code_classe_importe || ''), source: String(e.Source_Pronote || e.Source_import || ''), lot: String(e.Identifiant_lot_import || ''), entree: typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(e.Date_entree) : '', liens: li, poids: total(li) }; });
     l.sort(function(a, b) { return b.poids - a.poids || a.id - b.id; });
-    var aDesactiver = l.slice(1), arbitrer = aDesactiver.some(function(x) { return x.poids > 0; });
-    return { cle: k, garde: l[0], autres: aDesactiver, arbitrer: arbitrer };
+    /* Deux INE différents : homonymes probables, jamais désactivés automatiquement. */
+    var ines = {}; groupes[k].forEach(function(e) { var i = norm(e.Numero_national || e.Numero_National || e.Identifiant_national); if (i) ines[i] = true; });
+    var inesDifferents = Object.keys(ines).length > 1;
+    var aDesactiver = l.slice(1), arbitrer = inesDifferents || aDesactiver.some(function(x) { return x.poids > 0; });
+    var ineGroupe = Object.keys(ines)[0], e0 = groupes[k][0];
+    var cle = ineGroupe ? 'INE|' + ineGroupe : 'ID|' + norm(e0.Nom) + '|' + norm(e0.Prenom_usage || e0.Prenom);
+    return { cle: cle, garde: l[0], autres: aDesactiver, arbitrer: arbitrer, inesDifferents: inesDifferents };
   }) };
 }
 

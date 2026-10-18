@@ -44,3 +44,16 @@ test('doublons Yparéo : élève relu avec sa date Grist (secondes), doublons et
   c.EUC_IMPORT_lireRecordsBruts_=()=>eleves;c.EUC_DEV449_cols_=()=>[{id:'Eleve'}];c.EUC_DEV449_col_=(cols,n)=>'Eleve';c.EUC_DEV449_ref_=v=>v;c.EUC_DEV449_TABLE_='EUC_APPRENTISSAGE_PFMP';const ecrits=[];c.EUC_DEV190_api_=(m,u,b)=>m==='get'?{records:[{id:90,fields:{Eleve:11}},{id:91,fields:{Eleve:12}},{id:92,fields:{Eleve:10}}]}:ecrits.push(b);c.EUC_ENT_grist=(m,u,b)=>ecrits.push(b);c.LockService={getScriptLock:()=>({tryLock:()=>true,releaseLock(){}})};
   const ap=c.EUC_DEV566_nettoyerDoublons({annee:'2026-2027',classesRetirees:['1BTS CIEL']});assert.equal(ap.apercu,true);assert.equal(ap.eleves,2);assert.equal(ap.doublons,1);assert.equal(ap.classesRetirees,1);assert.equal(ap.apprentis,2);assert.equal(ecrits.length,0,'aperçu sans écriture');
   c.EUC_DEV566_nettoyerDoublons({annee:'2026-2027',classesRetirees:['1BTS CIEL'],confirmation:'DESACTIVER'});assert.deepEqual(JSON.parse(JSON.stringify(ecrits)),[{records:[{id:12,fields:{Actif:false}},{id:11,fields:{Actif:false}}]},{records:[{id:90,fields:{Actif:false}},{id:91,fields:{Actif:false}}]}],'élève 13 (Pronote) jamais touché');});
+
+test('mixité : « rattacher » relie l’apprenti sous contrat à sa fiche du lycée, sans créer d’élève ni changer de classe',()=>{const c=context();c.EUC_IMPORT_lireAnnee_=()=>({id:3});c.EUC_DEV566_classes_=()=>[{id:9,classe:'TSEC'}];
+  const fiche=(id,nom,prenom,classe)=>({id,fields:{Nom:nom,Prenom:prenom,Classe:classe,Code_classe_importe:'1BTS MV'}});
+  c.EUC_DEV566_existingStudents_=()=>({ine:{},identity:{},nomPrenom:{'BARATA|LUCAS':[fiche(5,'BARATA','Lucas',40)],'DOUBLE|X':[fiche(6,'DOUBLE','X',40),fiche(7,'DOUBLE','X',40)]}});
+  const row=(nom,prenom,siret)=>({NOM_GROUPE:'BTS MV VL-MIXITE',NOM_APPRENANT:nom,PRENOM_APPRENANT:prenom,SITUATION:'APPRENTI',SIRET:siret,DATE_DEB_CONTRAT:'01/09/2026',DATE_FIN_CONTRAT:'31/08/2028'});
+  const a=JSON.parse(JSON.stringify(c.EUC_DEV566_analyze_({annee:'2026-2027',mappings:[{source:'MIXITE',classe:'__RATTACHER__'}],rows:[row('BARATA','Lucas','12345678901234'),row('INCONNU','Y','12345678901234'),row('DOUBLE','X','12345678901234'),row('BARATA','Lucas','')]})));
+  assert.equal(a.blocked,0,'jamais bloquant');assert.deepEqual(a.lines.map(l=>l.action),['RATTACHER','IGNORER','IGNORER','IGNORER']);
+  assert.deepEqual([a.lines[0].eleveId,a.lines[0].classeId,a.lines[0].classe],[5,40,'1BTS MV']);
+  assert.match(a.lines[1].motif,/introuvable/);assert.match(a.lines[2].motif,/Élèves en double/);assert.match(a.lines[3].motif,/pas encore d’entreprise/);
+  assert.match(source,/if\(line\.rattacher\)\{if\(!eleveId\)return;rattaches\+\+;\}/,'ni création ni changement de classe');
+  assert.match(read('apps-script/Import_Ypareo_DEV566.html'),/value="__RATTACHER__"/);});
+test('TPEEB 19 / TPEEB 20 et Bachelor : formations à part, jamais « BAC PRO »',()=>{const c=context();for(const label of ['TPEEB 19','TPEEB 20'])assert.deepEqual(JSON.parse(JSON.stringify(c.EUC_DEV564_training_({classe:label,famille:'BACPRO'},''))),{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPEEB'});
+  assert.equal(c.EUC_DEV564_training_({classe:'Bachelor IP'},'').diplome,'Bachelor — IP');assert.equal(c.EUC_DEV564_training_({classe:'TMELEC',famille:'BACPRO'},'').famille,'BACPRO');});

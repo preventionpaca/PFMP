@@ -24,10 +24,12 @@ function EUC_DEV564_normalizeClass_(row){
 
 function EUC_DEV564_training_(row,currentDiploma){
   var label=EUC_DEV564_classLabel_(row),key=String(label||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]+/g,' ').trim();
-  if(key==='TSEC')return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TSEC'};
-  if(key==='TPEEB')return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPEEB'};
-  if(key==='PMMA'||key==='TPMMA')return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPMMA'};
-  if(key==='CQPM'||key==='CQPM ASC')return{famille:'AUTRES_FORMATIONS',diplome:'CQPM — ASC'};
+  /* Groupes numérotés (« TPEEB 19 », « TPEEB 20 ») : même formation que la classe de base. */
+  if(/^TSEC\b/.test(key))return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TSEC'};
+  if(/^TPEEB\b/.test(key))return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPEEB'};
+  if(/^T?PMMA\b/.test(key))return{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPMMA'};
+  if(/^CQPM\b/.test(key))return{famille:'AUTRES_FORMATIONS',diplome:'CQPM — ASC'};
+  if(/^BACHELOR\b/.test(key))return{famille:'AUTRES_FORMATIONS',diplome:'Bachelor — '+(key.replace(/^BACHELOR\s*/,'')||'IP')};
   return{famille:String(row&&row.famille||'').trim(),diplome:String(currentDiploma||'').trim()};
 }
 

@@ -298,12 +298,27 @@ test('DEV580 : classe entière d’apprentis — appel et visites du calendrier 
       R(202, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'Visite', Date_debut: '2027-05-12', Date_fin: '2027-05-21' }),
       R(203, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'EXAMENS', Date_debut: '2026-12-07', Date_fin: '2026-12-08' }),
       R(204, { Annee_scolaire: 1, Classes_concernees: ['L', 21], Type: 'VISITE', Date_debut: '2026-12-16', Date_fin: '2026-12-18' })],
-    eleves: [R(1, { Annee_scolaire: 1, Classe: 20, Nom: 'A', Prenom: 'B' })],
-    apprentissage: [R(9, { Eleve: 1, Annee_scolaire: 1, Date_contrat: '2026-09-01', Date_debut: '2026-09-01', Date_fin: '2028-06-30', Nom_entreprise: 'GARAGE' })],
+    eleves: [R(1, { Annee_scolaire: 1, Classe: 20, Nom: 'A', Prenom: 'B' }), R(2, { Annee_scolaire: 1, Classe: 20, Nom: 'C', Prenom: 'D' }), R(3, { Annee_scolaire: 1, Classe: 20, Nom: 'E', Prenom: 'F' })],
+    apprentissage: [R(9, { Eleve: 1, Annee_scolaire: 1, Date_contrat: '2026-09-01', Date_debut: '2026-09-01', Date_fin: '2028-06-30', Nom_entreprise: 'GARAGE' }),
+      R(10, { Eleve: 2, Annee_scolaire: 1, Date_debut: '2026-10-02' }),
+      R(11, { Eleve: 3, Annee_scolaire: 1, Date_contrat: '2026-09-01', Date_debut: '2026-09-01', Date_fin: '2028-06-30', Date_rupture_contrat: '2026-10-01', Nom_entreprise: 'X' })],
     dossiers: [], pdif: [], entreprises: [], types: [], jotform: [], affectations: [], professeurs: [], classesProfs: [] };
   const m = JSON.parse(JSON.stringify(k.EUC_SUIVI2_calculer_(src, '2026-2027', '2026-10-16')));
   const capp = m.classes.find(c => c.nom === '1CAPP'), car = m.classes.find(c => c.nom === '1CAR');
   assert.deepEqual(capp.periodes.map(p => p.libelle), ['Appel téléphonique', 'Visite n°1', 'Visite n°2'], 'examens ignorés, visites numérotées');
-  assert.equal(capp.apprentisAffiches, true); assert.equal(capp.periodes[1].resume.apprentis.length, 1, 'l’apprenti est en entreprise');
+  assert.equal(capp.apprentisAffiches, true); assert.equal(capp.periodes[1].resume.apprentis.length, 3, 'tous les élèves de la classe entière sont apprentis');
+  /* DEV581 : contrats, pas conventions — fiche Yparéo sans entreprise = sans contrat ; rupture = contrat rompu. */
+  const r = capp.periodes[1].resume;
+  assert.deepEqual([r.avec, r.sans, r.annulees, r.scolaires], [[1], [2, 3], [3], 3]);
+  assert.deepEqual([r.statuts[1], r.statuts[2], r.statuts[3]], ['CONTRAT', 'SANS_CONTRAT', 'RUPTURE']);
+  assert.equal(r.fiches[1].entreprise, 'GARAGE');
+  assert.equal(capp.famille, 'CAP', '1CAPP est un CAP, pas un BAC PRO');
+  k.EUC_SUIVI2_VERSION_ = 'x'; vm.runInContext(read('apps-script/EUC_SUIVI2_Enseignants.js'), k);
+  const v = JSON.parse(JSON.stringify(k.EUC_SUIVI2_vueEnseignants_(m))), vc = v.classes.find(c => c.nom === '1CAPP');
+  assert.deepEqual([vc.famille, vc.familleBase, vc.ce, vc.niveau], ['APPRENTIS', 'CAP', true, 'CFA RAN']);
+  const vide = JSON.parse(JSON.stringify(k.EUC_SUIVI2_vueEnseignants_({ classes: [Object.assign({}, capp, { eleves: [] })] })));
+  assert.equal(vide.classes.length, 0, 'classe entière sans apprenti (ex. TSEC terminé) : masquée');
+  const page = read('apps-script/Suivi_Enseignants_DEV576.html');
+  for (const t of ['Avec contrat', 'Sans contrat', 'Contrats annulés / interrompus', "'Contrat':'Convention'", 'Apprentis — classes entières', 'c.familleBase||c.famille']) assert.ok(page.includes(t), t);
   assert.equal(!car || !car.periodes.some(p => p.suivi), true, 'une visite ne s’ajoute jamais à une classe scolaire');
 });

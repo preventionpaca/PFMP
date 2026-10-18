@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.580';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.581';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -94,9 +94,9 @@ function EUC_SUIVI2_anneeCourante_(aujourdhui) {
 function EUC_SUIVI2_famille_(classe, diplome) {
   var nom = EUC_SUIVI2_norm_(classe.Nom || classe.Libelle || classe.Code_import);
   var texte = EUC_SUIVI2_norm_([classe.Nom, classe.Libelle, classe.Formation, classe.Niveau, classe.Filiere, classe.Filiere_Pronote, classe.Niveau_Pronote, diplome && diplome.famille, diplome && diplome.diplome].join(' '));
-  if (/^(TPMMA|TPEEB|TSEC|CQPM)/.test(nom) || /\b(TPMMA|TPEEB|TSEC|CQPM)\b/.test(texte)) return 'AUTRES';
+  if (/^(TPMMA|TPEEB|TSEC|CQPM|BACHELOR)/.test(nom) || /\b(TPMMA|TPEEB|TSEC|CQPM|BACHELOR)\b/.test(texte)) return 'AUTRES';
   if (/\bBTS\b/.test(texte) || /^[12]\s*(BTS|TS)/.test(nom)) return 'BTS';
-  if (/\bCAP\b/.test(texte)) return 'CAP';
+  if (/\bCAP\b/.test(texte) || /^[12T]\s*CAP/.test(nom)) return 'CAP';
   return 'BACPRO';
 }
 function EUC_SUIVI2_niveau_(nom, famille) {
@@ -311,7 +311,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', modeApprentissage: modeApp,
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
       apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
   });
 
@@ -487,6 +487,19 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
       var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {} };
       c.eleves.forEach(function(e) {
         var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
+        /* DEV581 — classe entière d'apprentis : on suit des contrats, pas des conventions.
+         * Contrat = fiche d'apprentissage couvrant la période AVEC une entreprise ; une fiche
+         * Yparéo sans entreprise (futur apprenti) compte « sans contrat » ; une rupture
+         * avant la fin de la période sans nouveau contrat compte « contrat rompu ». */
+        if (c.modeApprentissage === 'CLASSE_ENTIERE' && !p.pdif) {
+          if ((episodes[e.id] || []).length) r.apprentis.push(e.id);
+          var fa = ap.code === 'APPRENTI' || ap.code === 'MIXTE' ? EUC_SUIVI2_ficheApprenti_(ap, entreprises) : null;
+          if (fa && fa.entreprise) { r.avec.push(e.id); r.statuts[e.id] = 'CONTRAT'; r.fiches[e.id] = fa; return; }
+          var rompu = (episodes[e.id] || []).some(function(ep) { return ep.rupture && ep.rupture <= p.fin; });
+          r.sans.push(e.id); if (rompu) r.annulees.push(e.id);
+          r.statuts[e.id] = rompu ? 'RUPTURE' : 'SANS_CONTRAT';
+          return;
+        }
         if (apprenti) { r.statuts[e.id] = 'APPRENTI'; r.fiches[e.id] = EUC_SUIVI2_ficheApprenti_(ap, entreprises); }
         if (ap.code === 'MIXTE') r.mixtes[e.id] = { debut: ap.debut, fin: ap.fin, entreprise: ap.entreprise || '' };
         if (p.pdif) {
@@ -538,7 +551,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           entrepriseSaisie: d ? EUC_SUIVI2_t_(d.Entreprise_raison_sociale || d.Entreprise_raison_sociale_snapshot) : '',
           jotformToutes: (jotform[e.id] || []).concat(jotformNonValide[e.id] || []).map(function(l) { return (l.decision || 'sans décision') + ' ' + (l.debut || '?') + '→' + (l.fin || '?') + (l.siret ? ' SIRET ok' : ' SIRET absent') + (l.datesFausses ? ' (dates hors année, rattachée par n° de période)' : ''); }) };
       });
-      r.scolaires = r.effectif - r.apprentis.length;
+      r.scolaires = c.modeApprentissage === 'CLASSE_ENTIERE' ? r.effectif : r.effectif - r.apprentis.length;
       p.resume = r;
     });
   });

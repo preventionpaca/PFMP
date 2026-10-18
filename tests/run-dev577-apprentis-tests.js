@@ -271,21 +271,24 @@ test('import Yparéo : plusieurs exports de groupes réunis, doublons exacts ret
   assert.match(h, /<input id="file" type="file" multiple/); assert.match(h, /async function lireFichiers\(files\)/); assert.match(h, /doublon\(s\) retiré\(s\)/);
   assert.doesNotMatch(s, /Present_dernier_import:false/);
 });
-test('élèves en double : même INE ou identité, la fiche porteuse de liens est gardée, groupe ambigu seulement signalé', () => {
+test('élèves en double : même INE, identité ou nom dans la classe (fiche sans INE réunie), la fiche porteuse de liens est gardée, groupe ambigu seulement signalé', () => {
   const src = read('apps-script/EUC_DEV578_DoublonsEleves.js'), ecrits = [];
   const eleves = [
     { id: 1, Nom: 'BARATA', Prenom: 'Lucas', Numero_national: 'INE1', Source_Pronote: 'LP' }, { id: 2, Nom: 'BARATA', Prenom: 'Lucas', Numero_national: 'INE1', Source_Pronote: 'LGT' },
     { id: 3, Nom: 'GHARBI', Prenom: 'Rayen', Date_naissance: '2006-01-01' }, { id: 4, Nom: 'GHARBI', Prenom: 'Rayen', Date_naissance: '2006-01-01' },
-    { id: 5, Nom: 'X', Prenom: 'Y', Numero_national: 'INE5' }, { id: 6, Nom: 'X', Prenom: 'Y', Numero_national: 'INE5' }, { id: 7, Nom: 'SEUL', Prenom: 'Z', Numero_national: 'INE7' }];
+    { id: 5, Nom: 'X', Prenom: 'Y', Numero_national: 'INE5' }, { id: 6, Nom: 'X', Prenom: 'Y', Numero_national: 'INE5' }, { id: 7, Nom: 'SEUL', Prenom: 'Z', Numero_national: 'INE7' },
+    { id: 8, Nom: 'DUPONT', Prenom: 'Max', Numero_national: 'INE8', Classe: 12 }, { id: 9, Nom: 'DUPONT', Prenom: 'Max', Classe: 12 },
+    { id: 10, Nom: 'HOMO', Prenom: 'N', Numero_national: 'A', Classe: 12 }, { id: 11, Nom: 'HOMO', Prenom: 'N', Numero_national: 'B', Classe: 12 }];
   const liens = { EUC_ACCES_FORMULAIRES_PFMP: [{ fields: { Eleve: 2 } }, { fields: { Eleve: 5 } }, { fields: { Eleve: 6 } }], EUC_APPRENTISSAGE_PFMP: [], EUC_AFFECTATIONS_SUIVI_PFMP: [], EUC_PARCOURS_DIFFERENCIE_PFMP: [] };
   const k = { String, Number, Array, Object, isFinite, EUC_SUIVI2_exigerAdmin_: () => ({}), EUC_DEV368_year: v => v || '2026-2027', EUC_SUIVI_sqlLecture_: () => eleves, EUC_SUIVI_fields_: r => r,
     EUC_SUIVI2_date_: v => String(v || ''), EUC_DEV538_records_: t => liens[t], EUC_DEV538_fields_: r => r.fields, EUC_ENT_grist: (m, u, b) => ecrits.push(b), LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) } };
   vm.createContext(k); vm.runInContext(src, k);
   const ap = JSON.parse(JSON.stringify(k.EUC_DEV578_doublonsEleves({ annee: '2026-2027' })));
-  assert.equal(ap.groupes.length, 3); assert.equal(ap.aDesactiver, 2); assert.equal(ap.aArbitrer, 1); assert.equal(ecrits.length, 0, 'aperçu sans écriture');
+  assert.equal(ap.groupes.length, 5); assert.equal(ap.aDesactiver, 3); assert.equal(ap.aArbitrer, 2);
+  assert.equal(ap.groupes.find(g => g.cle === 'INE|A').inesDifferents, true, 'deux INE différents : homonymes, à arbitrer'); assert.equal(ecrits.length, 0, 'aperçu sans écriture');
   const barata = ap.groupes.find(g => g.cle === 'INE|INE1'); assert.equal(barata.garde.id, 2, 'la fiche qui porte la convention est gardée');
   k.EUC_DEV578_doublonsEleves({ annee: '2026-2027', confirmation: 'DESACTIVER' });
-  assert.deepEqual(JSON.parse(JSON.stringify(ecrits)), [{ records: [{ id: 1, fields: { Actif: false } }, { id: 4, fields: { Actif: false } }] }], 'jamais une fiche porteuse de lien');
+  assert.deepEqual(JSON.parse(JSON.stringify(ecrits)), [{ records: [{ id: 1, fields: { Actif: false } }, { id: 4, fields: { Actif: false } }, { id: 9, fields: { Actif: false } }] }], 'jamais une fiche porteuse de lien');
   assert.match(read('apps-script/EUC_IMPORT_PFMP_RealService.gs'), /add\(f\.Numero_national\?'NN\|'\+f\.Numero_national:''\);if\(src&&src!==source\)return;/, 'import : INE reconnu toutes sources');
   assert.match(read('apps-script/Controle_Chiffres_DEV575.html'), /EUC_DEV578_doublonsEleves/);
 });
