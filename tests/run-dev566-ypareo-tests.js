@@ -62,7 +62,7 @@ test('TPEEB 19 / TPEEB 20 et Bachelor : formations à part, jamais « BAC PRO »
 test('DEV585 : 1MELEC G / TMELEC G (GRETA) ont le même diplôme que le bac pro MELEC',()=>{const b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');assert.match(b,/\.trim\(\)\.replace\(\/\\s\+\[GC\]\$\/,''\)/);assert.match(read('apps-script/EUC_DEV585_Domaines.js'),/EUC_DEV579_classesCompletes_\(EUC_DEV368_year\(''\)\)/);});
 test('DEV586 : Book — domaine sous l’année, famille et niveau masqués, période « Apprentissage » unique, 30 résultats par défaut',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
   const ordre=['id="year"','id="window"','id="diploma"','id="classe"','id="period"','id="domain"','id="city"'].map(x=>h.indexOf(x));assert.deepEqual(ordre.slice().sort((a,b)=>a-b),ordre);
-  assert.match(h,/<label hidden>Famille/);assert.match(h,/<label hidden>Niveau/);assert.match(h,/<option selected>30<\/option>/);assert.match(h,/pageSize'\)\.value='30'/);
+  assert.match(h,/<label hidden style="display:none">Famille/);assert.match(h,/<label hidden style="display:none">Niveau/);assert.match(h,/<option selected>30<\/option>/);assert.match(h,/pageSize'\)\.value='30'/);
   assert.match(b,/per==='APPRENTISSAGE'\?x\.apprenti===true/);assert.match(b,/out\.periode\.push\('Apprentissage'\)/);});
 test('DEV586 : Book — tri alphabétique, diplômes et classes de toute l’année dans les filtres',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
   assert.match(h,/<option value="ALPHA">Ordre alphabétique<\/option>/);assert.equal((b.match(/if\(EUC_DEV538_t_\(q\.tri\)\.toUpperCase\(\)==='ALPHA'\)return EUC_DEV586_alpha_\(a,b\);/g)||[]).length,3);
