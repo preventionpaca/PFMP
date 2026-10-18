@@ -394,5 +394,10 @@ test('DEV592 : effectifs — LP / LGT pour les scolaires et la mixité, organism
   assert.equal(k.EUC_DEV592_calcul_(m2).groupes[0].classes[0].entreprises, 1, 'entreprise du contrat, sans période au calendrier');
   const admin = read('apps-script/Admin_PFMP.html');
   assert.match(admin, /id="effectifs"/); assert.match(admin, /\.EUC_DEV592_effectifs\(''\)/);
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /etab: EUC_SUIVI2_t_\(c\.Etab\)\.toUpperCase\(\)/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /etab: EUC_SUIVI2_etab_\(c\.Etab \|\| c\.Etablissement_Pronote\)/);
+});
+test('DEV594 : établissement abrégé (copier-coller Pronote) — LP, LGT, CFA, CFAI, CFA RAN, GRETA', () => {
+  const k = { String, Number, Array, Object, JSON, Date, Math }; vm.createContext(k); vm.runInContext(moteur, k);
+  const e = v => k.EUC_SUIVI2_etab_(v);
+  assert.deepEqual([e('LP LYCEE DES METIERS LES EUCALYPTUS'), e('LGT LYCEE LES EUCALYPTUS'), e('LP'), e('LGT'), e('CFA'), e('CFAI'), e('CFA RAN'), e('GRETA')], ['LP', 'LGT', 'LP', 'LGT', 'CFA', 'CFAI', 'CFA RAN', 'GRETA']);
 });

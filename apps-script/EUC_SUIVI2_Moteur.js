@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.592';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.594';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -105,6 +105,18 @@ function EUC_SUIVI2_niveau_(nom, famille) {
   if (famille === 'BTS') return /^2/.test(n) ? '2e année' : '1re année';
   if (famille === 'CAP') return (/^T/.test(n) || /^2/.test(n)) ? 'TCAP' : '1CAP';
   return 'Autres';
+}
+/* DEV594 : établissement abrégé, quelle que soit la saisie (copier-coller Pronote compris) :
+ * « LP LYCEE DES METIERS LES EUCALYPTUS » → LP, « LGT … » → LGT ; CFA, CFAI, CFA RAN, GRETA inchangés. */
+function EUC_SUIVI2_etab_(v) {
+  var n = ' ' + EUC_SUIVI2_norm_(v).replace(/[^A-Z0-9]+/g, ' ') + ' ';
+  if (/ GRETA /.test(n)) return 'GRETA';
+  if (/ CFAI /.test(n)) return 'CFAI';
+  if (/ CFA RAN /.test(n)) return 'CFA RAN';
+  if (/ CFA /.test(n)) return 'CFA';
+  if (/ (LGT|GENERAL|TECHNOLOGIQUE) /.test(n)) return 'LGT';
+  if (/ (LP|PROFESSIONNEL|METIERS) /.test(n)) return 'LP';
+  return n.trim();
 }
 /* R23 : apprentis affichés seulement en Première/Terminale BAC PRO et en BTS. */
 function EUC_SUIVI2_apprentisAffiches_(famille, niveau) {
@@ -311,7 +323,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_t_(c.Etab).toUpperCase(), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
       apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
   });
 
