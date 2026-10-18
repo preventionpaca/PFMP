@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.581';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.582';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -337,7 +337,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     ids.forEach(function(cid) {
       if (!classes[cid]) return;
       /* Appels et visites : seulement pour les classes entières d'apprentis. */
-      if (suivi && classes[cid].modeApprentissage !== 'CLASSE_ENTIERE') return;
+      if (suivi && classes[cid].modeApprentissage !== 'CLASSE_ENTIERE' && classes[cid].modeApprentissage !== 'FORMATION_CONTINUE') return;
       classes[cid].periodes.push({ suivi: suivi, id: Number(p.id), libelleSource: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Nom), type: EUC_SUIVI2_t_(p.Type), groupe: EUC_SUIVI2_t_(p.Groupe), debut: debut, fin: fin, pdif: EUC_SUIVI2_estPdif_(p) });
     });
   });
@@ -491,7 +491,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
          * Contrat = fiche d'apprentissage couvrant la période AVEC une entreprise ; une fiche
          * Yparéo sans entreprise (futur apprenti) compte « sans contrat » ; une rupture
          * avant la fin de la période sans nouveau contrat compte « contrat rompu ». */
-        if (c.modeApprentissage === 'CLASSE_ENTIERE' && !p.pdif) {
+        if ((c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE') && !p.pdif) {
           if ((episodes[e.id] || []).length) r.apprentis.push(e.id);
           var fa = ap.code === 'APPRENTI' || ap.code === 'MIXTE' ? EUC_SUIVI2_ficheApprenti_(ap, entreprises) : null;
           if (fa && fa.entreprise) { r.avec.push(e.id); r.statuts[e.id] = 'CONTRAT'; r.fiches[e.id] = fa; return; }
@@ -551,7 +551,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           entrepriseSaisie: d ? EUC_SUIVI2_t_(d.Entreprise_raison_sociale || d.Entreprise_raison_sociale_snapshot) : '',
           jotformToutes: (jotform[e.id] || []).concat(jotformNonValide[e.id] || []).map(function(l) { return (l.decision || 'sans décision') + ' ' + (l.debut || '?') + '→' + (l.fin || '?') + (l.siret ? ' SIRET ok' : ' SIRET absent') + (l.datesFausses ? ' (dates hors année, rattachée par n° de période)' : ''); }) };
       });
-      r.scolaires = c.modeApprentissage === 'CLASSE_ENTIERE' ? r.effectif : r.effectif - r.apprentis.length;
+      r.scolaires = (c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE') ? r.effectif : r.effectif - r.apprentis.length;
       p.resume = r;
     });
   });
@@ -591,7 +591,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     });
   });
 
-  var liste = Object.keys(classes).map(function(k) { return classes[k]; }).filter(function(c) { return c.periodes.length || c.eleves.length; });
+  var liste = Object.keys(classes).map(function(k) { return classes[k]; }).filter(function(c) { return c.periodes.length || c.eleves.length || c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE'; });
   liste.sort(function(a, b) { return a.famille.localeCompare(b.famille) || a.nom.localeCompare(b.nom, 'fr'); });
   return { version: EUC_SUIVI2_VERSION_, annee: annee, calculeLe: new Date().toISOString(), aujourdhui: aujourdhui, classes: liste, periodesSansClasse: sansClasse, gardeFou: gardeFou };
 }

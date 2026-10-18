@@ -76,8 +76,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
 (function(){
   'use strict';
   var app=document.getElementById('app');
-  var FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',APPRENTIS:'Apprentis — classes entières',AUTRES:'Autres formations'},ORDRE=['BACPRO','CAP','BTS','APPRENTIS','AUTRES'];
-  var NIV=['Seconde','Première','Terminale','1CAP','TCAP','1re année','2e année','Autres'];
+  var FAM={BACPRO:'BAC PRO',CAP:'CAP',BTS:'BTS',APPRENTIS:'Classes entières : apprentis et formation continue',AUTRES:'Autres formations'},ORDRE=['BACPRO','CAP','BTS','APPRENTIS','AUTRES'];
+  var NIV=['Seconde','Première','Terminale','1CAP','TCAP','1re année','2e année','CFA RAN','CFA RAN + CFAI','GRETA + CFAI','GRETA','Formation continue — GRETA','Autres'];
   var LIB={AVEC:'Convention enregistrée',SANS:'Sans convention',ANNULEE:'Annulée',INTERROMPUE:'Interrompue',APPRENTI:'Apprenti',PDIF_ENTREPRISE:'En entreprise',PDIF_LYCEE:'Au lycée',PDIF_A_DEFINIR:'À définir',CONTRAT:'Contrat',SANS_CONTRAT:'Sans contrat',RUPTURE:'Contrat rompu'};
   var parId={};D.classes.forEach(function(c){parId[c.id]=c;});
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x];});}
@@ -127,7 +127,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<div class="jauge" aria-hidden="true"><i style="width:'+pct+'%"></i></div>';
   }
   function carte(c){
-    return '<div class="carte" data-c="'+c.id+'" role="link" tabindex="0"><h3>'+esc(c.nom)+'</h3><div class="pp">'+esc(c.niveau)+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</div>'+c.periodes.map(function(p){return resumePeriode(c,p);}).join('')+'</div>';
+    return '<div class="carte" data-c="'+c.id+'" role="link" tabindex="0"><h3>'+esc(c.nom)+'</h3><div class="pp">'+esc(c.niveau)+(c.ce?' · '+c.effectif+(c.fc?' stagiaire(s)':' apprenti(s)'):'')+(c.pp.length?' · PP : '+esc(c.pp.join(', ')):'')+'</div>'+(c.periodes.length?c.periodes.map(function(p){return resumePeriode(c,p);}).join(''):'<p class="note">'+(c.effectif?'Aucune période (appel, visite) dans le calendrier.':'Aucun apprenti cette année.')+'</p>')+'</div>';
   }
   function accueil(s){
     var f=s.f&&familles.indexOf(s.f)>=0?s.f:familles[0];
@@ -146,7 +146,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       Object.keys(niveaux).sort(function(a,b){return (NIV.indexOf(a)+99)%99-(NIV.indexOf(b)+99)%99||a.localeCompare(b);}).forEach(function(nv){
         var cl=niveaux[nv],k=f+'|'+nv,eff=0,ent=0,sco=0,avec=0;
         cl.forEach(function(c){var p=c.periodes.filter(function(x){return !x.pdif;})[0];if(p){eff+=p.n.effectif;ent+=p.n.avec+(c.ce?0:p.n.apprentis);sco+=p.n.scolaires;avec+=p.n.avec;}});
-        var resume=f==='APPRENTIS'?'1re période : <b>'+ent+' / '+eff+'</b> apprentis avec contrat':'PFMP n°1 : <b>'+ent+' / '+eff+'</b> élèves en entreprise · '+avec+' / '+sco+' scolaires avec convention';
+        var effCe=cl.reduce(function(t,c){return t+(c.effectif||0);},0),resume=f==='APPRENTIS'?effCe+' inscrit(s)'+(eff?' · 1re période : <b>'+ent+' / '+eff+'</b> avec contrat':''):'PFMP n°1 : <b>'+ent+' / '+eff+'</b> élèves en entreprise · '+avec+' / '+sco+' scolaires avec convention';
         html+='<details class="niveau" data-k="'+esc(k)+'"'+(OUVERTS[k]?' open':'')+'><summary><span class="titre">'+esc(nv)+'</span><span class="note">'+cl.length+' classe(s) · '+resume+'</span></summary><div class="grille">'+cl.map(carte).join('')+'</div></details>';
       });
     }
@@ -165,6 +165,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   }
   function classe(s){
     var c=parId[s.c];if(!c){aller({});return;}
+    if(!c.periodes.length){app.innerHTML='<nav class="barre noprint"><a class="retour" href="#f='+c.famille+'">← '+esc(FAM[c.famille])+'</a></nav><h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+'</span></h2><p class="vide">'+(c.effectif?c.effectif+' inscrit(s), mais aucune période (appel téléphonique, visite) dans Planning_Periodes pour cette classe.':'Aucun apprenti cette année.')+'</p>';return;}
     var p=c.periodes.filter(function(x){return x.id===s.p;})[0]||c.periodes.filter(function(x){return !x.pdif;})[0]||c.periodes[0];
     var cpt=compteurs(c,p);
     var lignes=c.eleves.map(function(e){

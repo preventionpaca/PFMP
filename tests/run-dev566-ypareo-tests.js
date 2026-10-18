@@ -45,15 +45,17 @@ test('doublons Yparéo : élève relu avec sa date Grist (secondes), doublons et
   const ap=c.EUC_DEV566_nettoyerDoublons({annee:'2026-2027',classesRetirees:['1BTS CIEL']});assert.equal(ap.apercu,true);assert.equal(ap.eleves,2);assert.equal(ap.doublons,1);assert.equal(ap.classesRetirees,1);assert.equal(ap.apprentis,2);assert.equal(ecrits.length,0,'aperçu sans écriture');
   c.EUC_DEV566_nettoyerDoublons({annee:'2026-2027',classesRetirees:['1BTS CIEL'],confirmation:'DESACTIVER'});assert.deepEqual(JSON.parse(JSON.stringify(ecrits)),[{records:[{id:12,fields:{Actif:false}},{id:11,fields:{Actif:false}}]},{records:[{id:90,fields:{Actif:false}},{id:91,fields:{Actif:false}}]}],'élève 13 (Pronote) jamais touché');});
 
-test('mixité : « rattacher » relie l’apprenti sous contrat à sa fiche du lycée, sans créer d’élève ni changer de classe',()=>{const c=context();c.EUC_IMPORT_lireAnnee_=()=>({id:3});c.EUC_DEV566_classes_=()=>[{id:9,classe:'TSEC'}];
-  const fiche=(id,nom,prenom,classe)=>({id,fields:{Nom:nom,Prenom:prenom,Classe:classe,Code_classe_importe:'1BTS MV'}});
-  c.EUC_DEV566_existingStudents_=()=>({ine:{},identity:{},nomPrenom:{'BARATA|LUCAS':[fiche(5,'BARATA','Lucas',40)],'DOUBLE|X':[fiche(6,'DOUBLE','X',40),fiche(7,'DOUBLE','X',40)]}});
-  const row=(nom,prenom,siret)=>({NOM_GROUPE:'BTS MV VL-MIXITE',NOM_APPRENANT:nom,PRENOM_APPRENANT:prenom,SITUATION:'APPRENTI',SIRET:siret,DATE_DEB_CONTRAT:'01/09/2026',DATE_FIN_CONTRAT:'31/08/2028'});
-  const a=JSON.parse(JSON.stringify(c.EUC_DEV566_analyze_({annee:'2026-2027',mappings:[{source:'MIXITE',classe:'__RATTACHER__'}],rows:[row('BARATA','Lucas','12345678901234'),row('INCONNU','Y','12345678901234'),row('DOUBLE','X','12345678901234'),row('BARATA','Lucas','')]})));
-  assert.equal(a.blocked,0,'jamais bloquant');assert.deepEqual(a.lines.map(l=>l.action),['RATTACHER','IGNORER','IGNORER','IGNORER']);
-  assert.deepEqual([a.lines[0].eleveId,a.lines[0].classeId,a.lines[0].classe],[5,40,'1BTS MV']);
-  assert.match(a.lines[1].motif,/introuvable/);assert.match(a.lines[2].motif,/Élèves en double/);assert.match(a.lines[3].motif,/pas encore d’entreprise/);
+test('mixité : Yparéo met seulement à jour les dossiers déclarés (futur → apprenti), signale entreprise différente et rupture possible, ne crée rien',()=>{const c=context();c.EUC_IMPORT_lireAnnee_=()=>({id:3});c.EUC_DEV566_classes_=()=>[{id:9,classe:'TSEC'}];
+  const fiche=(id,nom,prenom)=>({id,fields:{Nom:nom,Prenom:prenom,Classe:40,Code_classe_importe:'1BTS MV'}});
+  c.EUC_DEV566_existingStudents_=()=>({ine:{},identity:{},nomPrenom:{'BARATA|LUCAS':[fiche(5,'BARATA','Lucas')],'DOUBLE|X':[fiche(6,'DOUBLE','X'),fiche(7,'DOUBLE','X')],'SANS|DOSSIER':[fiche(8,'SANS','Dossier')],'AUTRE|ENT':[fiche(9,'AUTRE','Ent')],'MEME|ENT':[fiche(10,'MEME','Ent')]}});
+  let lectures=0;c.EUC_DEV566_fichesParEleve_=()=>{lectures++;return{5:[{id:50,siret:'',rupture:''}],9:[{id:90,siret:'11111111111111',rupture:''}],10:[{id:100,siret:'12345678901234',rupture:'',fin:'2028-08-31'}]};};
+  const row=(nom,prenom,siret,fin)=>({NOM_GROUPE:'BTS MV VL-MIXITE',NOM_APPRENANT:nom,PRENOM_APPRENANT:prenom,SITUATION:'APPRENTI',SIRET:siret,DATE_DEB_CONTRAT:'01/09/2026',DATE_FIN_CONTRAT:fin||'31/08/2028'});
+  const a=JSON.parse(JSON.stringify(c.EUC_DEV566_analyze_({annee:'2026-2027',mappings:[{source:'MIXITE',classe:'__RATTACHER__'}],rows:[row('BARATA','Lucas','12345678901234'),row('INCONNU','Y','12345678901234'),row('DOUBLE','X','12345678901234'),row('SANS','Dossier','12345678901234'),row('BARATA','Lucas',''),row('AUTRE','Ent','12345678901234'),row('MEME','Ent','12345678901234','31/01/2027')]})));
+  assert.equal(lectures,1,'une seule lecture des dossiers');assert.equal(a.blocked,0,'jamais bloquant');assert.equal(a.alertes,2);
+  assert.deepEqual(a.lines.map(l=>l.action),['FUTUR_DEVIENT_APPRENTI','IGNORER','IGNORER','IGNORER','IGNORER','IGNORER','IGNORER']);
+  assert.deepEqual([a.lines[0].eleveId,a.lines[0].classeId],[5,40]);
+  for(const [i,re] of [[1,/introuvable/],[2,/Élèves en double/],[3,/aucun dossier déclaré/],[4,/pas encore de contrat/],[5,/changement d’entreprise/],[6,/rupture possible/]])assert.match(a.lines[i].motif,re);
   assert.match(source,/if\(line\.rattacher\)\{if\(!eleveId\)return;rattaches\+\+;\}/,'ni création ni changement de classe');
-  assert.match(read('apps-script/Import_Ypareo_DEV566.html'),/value="__RATTACHER__"/);});
+  assert.match(read('apps-script/Import_Ypareo_DEV566.html'),/value="__RATTACHER__">— Mixité : mettre à jour les dossiers déjà déclarés —/);});
 test('TPEEB 19 / TPEEB 20 et Bachelor : formations à part, jamais « BAC PRO »',()=>{const c=context();for(const label of ['TPEEB 19','TPEEB 20'])assert.deepEqual(JSON.parse(JSON.stringify(c.EUC_DEV564_training_({classe:label,famille:'BACPRO'},''))),{famille:'AUTRES_FORMATIONS',diplome:'Titre professionnel — TPEEB'});
   assert.equal(c.EUC_DEV564_training_({classe:'Bachelor IP'},'').diplome,'Bachelor — IP');assert.equal(c.EUC_DEV564_training_({classe:'TMELEC',famille:'BACPRO'},'').famille,'BACPRO');});

@@ -317,8 +317,10 @@ test('DEV580 : classe entière d’apprentis — appel et visites du calendrier 
   const v = JSON.parse(JSON.stringify(k.EUC_SUIVI2_vueEnseignants_(m))), vc = v.classes.find(c => c.nom === '1CAPP');
   assert.deepEqual([vc.famille, vc.familleBase, vc.ce, vc.niveau], ['APPRENTIS', 'CAP', true, 'CFA RAN']);
   const vide = JSON.parse(JSON.stringify(k.EUC_SUIVI2_vueEnseignants_({ classes: [Object.assign({}, capp, { eleves: [] })] })));
-  assert.equal(vide.classes.length, 0, 'classe entière sans apprenti (ex. TSEC terminé) : masquée');
+  assert.equal(vide.classes.length, 1, 'classe entière sans apprenti (ex. TSEC terminé) : affichée à 0');
+  const fc = JSON.parse(JSON.stringify(k.EUC_SUIVI2_vueEnseignants_({ classes: [Object.assign({}, capp, { nom: 'TPMMA', modeApprentissage: 'FORMATION_CONTINUE', gestionnaire: 'GRETA', periodes: [] })] }))).classes[0];
+  assert.deepEqual([fc.famille, fc.fc, fc.niveau], ['APPRENTIS', true, 'Formation continue — GRETA']);
   const page = read('apps-script/Suivi_Enseignants_DEV576.html');
-  for (const t of ['Avec contrat', 'Sans contrat', 'Contrats annulés / interrompus', "'Contrat':'Convention'", 'Apprentis — classes entières', 'c.familleBase||c.famille']) assert.ok(page.includes(t), t);
+  for (const t of ['Avec contrat', 'Sans contrat', 'Contrats annulés / interrompus', "'Contrat':'Convention'", 'Classes entières : apprentis et formation continue', 'c.familleBase||c.famille']) assert.ok(page.includes(t), t);
   assert.equal(!car || !car.periodes.some(p => p.suivi), true, 'une visite ne s’ajoute jamais à une classe scolaire');
 });

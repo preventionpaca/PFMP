@@ -21,12 +21,14 @@ function EUC_SUIVI2_vueEnseignants_(m) {
     return index[k];
   }
   /* DEV581 — les classes entières d'apprentis forment leur propre famille, rangée par
-   * organismes (gestionnaire / donneur d'ordre) ; sans apprenti cette année (ex. TSEC terminé),
-   * elles ne sont pas affichées. La famille d'origine sert à la carte et aux affectations. */
-  var classes = (m.classes || []).filter(function(c) { return c.periodes.length && (c.eleves.length || c.modeApprentissage !== 'CLASSE_ENTIERE'); }).map(function(c) {
-    var ce = c.modeApprentissage === 'CLASSE_ENTIERE', org = [c.gestionnaire, c.donneur && c.donneur !== c.gestionnaire ? c.donneur : ''].filter(Boolean).join(' + ');
+   * organismes (gestionnaire / donneur d'ordre), avec la formation continue ; elles sont toutes
+   * affichées, même sans période ni apprenti (ex. TSEC terminé : 0). La famille d'origine sert
+   * à la carte et aux affectations. */
+  var classes = (m.classes || []).filter(function(c) { return c.periodes.length || c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE'; }).map(function(c) {
+    var fc = c.modeApprentissage === 'FORMATION_CONTINUE', ce = fc || c.modeApprentissage === 'CLASSE_ENTIERE', org = [c.gestionnaire, c.donneur && c.donneur !== c.gestionnaire ? c.donneur : ''].filter(Boolean).join(' + ');
+    if (fc) org = 'Formation continue' + (c.gestionnaire ? ' — ' + c.gestionnaire : '');
     return {
-      id: c.id, nom: c.nom, famille: ce ? 'APPRENTIS' : c.famille, familleBase: c.famille, ce: ce, niveau: ce ? (org || 'Organisme à renseigner') : c.niveau, pp: c.pp || [], apprentisAffiches: !!c.apprentisAffiches,
+      id: c.id, nom: c.nom, famille: ce ? 'APPRENTIS' : c.famille, familleBase: c.famille, ce: ce, fc: fc, effectif: c.eleves.length, niveau: ce ? (org || 'Organisme à renseigner') : c.niveau, pp: c.pp || [], apprentisAffiches: !!c.apprentisAffiches,
       eleves: c.eleves.map(function(e) { return [e.id, e.libelle]; }),
       periodes: c.periodes.map(function(p) {
         var r = p.resume || {}, lignes = {};
