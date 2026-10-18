@@ -287,3 +287,23 @@ test('l’écran de contrôle est réservé à l’administration et branché da
 });
 
 console.log(`\n${n} tests DEV575 moteur du suivi réussis.`);
+test('DEV580 : classe entière d’apprentis — appel et visites du calendrier (rattachés par Formation + Niveau), apprentis en entreprise', () => {
+  const k = { console, JSON, Math, Date, Object, Array, String, Number, Error };
+  vm.createContext(k); vm.runInContext(moteur + '\n' + read('apps-script/EUC_DEV579_Profils.js'), k);
+  k.PropertiesService = { getScriptProperties: () => ({ getProperty: () => '' }) };
+  const src = { annees: [R(1, { Code: '2026-2027' })], classes: [R(20, { Nom: '1CAPP', Etab: 'CFA' }), R(21, { Nom: '1CAR' })], diplomes: [],
+    periodes: [
+      R(200, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'APPEL TEL', Date_debut: '2026-10-08', Date_fin: '2026-10-09' }),
+      R(201, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'VISITE', Date_debut: '2026-12-16', Date_fin: '2026-12-18' }),
+      R(202, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'Visite', Date_debut: '2027-05-12', Date_fin: '2027-05-21' }),
+      R(203, { Annee_scolaire: 1, Formation: 'CAP', Niveau: 'CP', Type: 'EXAMENS', Date_debut: '2026-12-07', Date_fin: '2026-12-08' }),
+      R(204, { Annee_scolaire: 1, Classes_concernees: ['L', 21], Type: 'VISITE', Date_debut: '2026-12-16', Date_fin: '2026-12-18' })],
+    eleves: [R(1, { Annee_scolaire: 1, Classe: 20, Nom: 'A', Prenom: 'B' })],
+    apprentissage: [R(9, { Eleve: 1, Annee_scolaire: 1, Date_contrat: '2026-09-01', Date_debut: '2026-09-01', Date_fin: '2028-06-30', Nom_entreprise: 'GARAGE' })],
+    dossiers: [], pdif: [], entreprises: [], types: [], jotform: [], affectations: [], professeurs: [], classesProfs: [] };
+  const m = JSON.parse(JSON.stringify(k.EUC_SUIVI2_calculer_(src, '2026-2027', '2026-10-16')));
+  const capp = m.classes.find(c => c.nom === '1CAPP'), car = m.classes.find(c => c.nom === '1CAR');
+  assert.deepEqual(capp.periodes.map(p => p.libelle), ['Appel téléphonique', 'Visite n°1', 'Visite n°2'], 'examens ignorés, visites numérotées');
+  assert.equal(capp.apprentisAffiches, true); assert.equal(capp.periodes[1].resume.apprentis.length, 1, 'l’apprenti est en entreprise');
+  assert.equal(!car || !car.periodes.some(p => p.suivi), true, 'une visite ne s’ajoute jamais à une classe scolaire');
+});

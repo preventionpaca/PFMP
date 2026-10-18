@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.576c';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.580';
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -113,6 +113,23 @@ function EUC_SUIVI2_apprentisAffiches_(famille, niveau) {
 /* Types du calendrier qui sont de vraies périodes en entreprise (table
  * Types_Planning) : PFMP 2nde, 1ère, Tbac, 1 CAP, T CAP, P.dif. et BTS_STAGE.
  * VFMP (validation), examens, mini-stage, mixité, conseils… sont ignorés. */
+/* DEV580 : périodes de suivi des classes entières d'apprentis (calendrier du CFA / GRETA) :
+ * « APPEL TEL » → appel téléphonique, « VISITE » → visite en entreprise. */
+function EUC_SUIVI2_typeSuivi_(code) {
+  var t = EUC_SUIVI2_norm_(code);
+  if (/^APPEL|TELEPHON|^TEL\b/.test(t)) return 'APPEL';
+  if (/^VISITE/.test(t)) return 'VISITE';
+  return '';
+}
+/* Calendrier d'apprentis sans « Classes concernées » : rattaché par Formation + Niveau. */
+function EUC_SUIVI2_classesCalendrier_(p, classes) {
+  var f = EUC_SUIVI2_norm_(p.Formation), n = EUC_SUIVI2_norm_(p.Niveau), cible = '';
+  if (f === 'CAP' && n === 'CP') cible = '1CAPP';
+  else if (f === 'BACHELOR' && n === 'IP') cible = 'BACHELOR IP';
+  else if (f === 'DUCRETET' && n === 'TSEC') cible = 'TSEC';
+  var cles = [cible, (f + ' ' + n).trim(), n].filter(Boolean);
+  return Object.keys(classes).filter(function(k) { var c = classes[k]; return c.modeApprentissage === 'CLASSE_ENTIERE' && cles.indexOf(EUC_SUIVI2_norm_(c.nom)) >= 0; }).map(Number);
+}
 function EUC_SUIVI2_typeFormation_(code) {
   var t = EUC_SUIVI2_norm_(code);
   if (!t) return true;
@@ -293,8 +310,9 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var nom = EUC_SUIVI2_t_(c.Nom || c.Libelle || c.Code_import) || ('Classe ' + c.id);
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '',
-      apprentisAffiches: EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
+    var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', modeApprentissage: modeApp,
+      apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
   });
 
   /* R1–R3 : périodes de l'année, rattachées par Classes_concernees. */
@@ -305,7 +323,8 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     if (p.Actif === false) return;
     /* Le type peut être une référence vers Types_Planning ou un texte. */
     var typeCode = (typeof p.Type === 'number' || /^\d+$/.test(EUC_SUIVI2_t_(p.Type))) ? (types[String(EUC_SUIVI2_ref_(p.Type))] || '') : EUC_SUIVI2_t_(p.Type);
-    if (!EUC_SUIVI2_typeFormation_(typeCode)) return;
+    var suivi = EUC_SUIVI2_typeSuivi_(typeCode);
+    if (!EUC_SUIVI2_typeFormation_(typeCode) && !suivi) return;
     p.Type = typeCode;
     var debut = EUC_SUIVI2_date_(p.Date_debut), fin = EUC_SUIVI2_date_(p.Date_fin);
     if (!debut || !fin) return;
@@ -313,10 +332,13 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     if (an && an !== annee) return;
     var ids = EUC_SUIVI2_refs_(p.Classes_concernees);
     if (!ids.length) { var seul = EUC_SUIVI2_ref_(p.Classe); if (seul) ids = [seul]; }
+    if (!ids.length && suivi) ids = EUC_SUIVI2_classesCalendrier_(p, classes);
     if (!ids.length) { if (EUC_SUIVI2_ressemblePfmp_(p)) sansClasse.push(Number(p.id)); return; }
     ids.forEach(function(cid) {
       if (!classes[cid]) return;
-      classes[cid].periodes.push({ id: Number(p.id), libelleSource: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Nom), type: EUC_SUIVI2_t_(p.Type), groupe: EUC_SUIVI2_t_(p.Groupe), debut: debut, fin: fin, pdif: EUC_SUIVI2_estPdif_(p) });
+      /* Appels et visites : seulement pour les classes entières d'apprentis. */
+      if (suivi && classes[cid].modeApprentissage !== 'CLASSE_ENTIERE') return;
+      classes[cid].periodes.push({ suivi: suivi, id: Number(p.id), libelleSource: EUC_SUIVI2_t_(p.Libelle_periode || p.Libelle || p.Nom), type: EUC_SUIVI2_t_(p.Type), groupe: EUC_SUIVI2_t_(p.Groupe), debut: debut, fin: fin, pdif: EUC_SUIVI2_estPdif_(p) });
     });
   });
   /* R6 : numérotation par rang des périodes ordinaires ; R26 : P.dif en Terminale BAC PRO seulement. */
@@ -324,7 +346,12 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var c = classes[k], rang = 0, mot = c.famille === 'BTS' ? 'Stage' : 'PFMP';
     c.periodes.sort(function(a, b) { return a.debut.localeCompare(b.debut) || a.id - b.id; });
     c.periodes = c.periodes.filter(function(p) { return !p.pdif || (c.famille === 'BACPRO' && c.niveau === 'Terminale'); });
-    c.periodes.forEach(function(p) { if (p.pdif) { p.libelle = 'P.dif.'; } else { rang++; p.rang = rang; p.libelle = mot + ' n°' + rang; } });
+    var visites = 0, appels = 0, nbAppels = c.periodes.filter(function(p) { return p.suivi === 'APPEL'; }).length;
+    c.periodes.forEach(function(p) {
+      if (p.suivi === 'APPEL') { appels++; p.libelle = 'Appel téléphonique' + (nbAppels > 1 ? ' n°' + appels : ''); }
+      else if (p.suivi === 'VISITE') { visites++; p.libelle = 'Visite n°' + visites; }
+      else if (p.pdif) { p.libelle = 'P.dif.'; } else { rang++; p.rang = rang; p.libelle = mot + ' n°' + rang; }
+    });
   });
 
   /* R13 : élèves inscrits cette année, actifs, non sortis. */
