@@ -76,7 +76,7 @@ function EUC_DEV583_points_(entreprises, ix, nominatif) {
   var points = [], sans = [], vus = {};
   entreprises.forEach(function(x) {
     var g = EUC_DEV583_position_(ix, x), n = Object.keys(x.eleves).length;
-    if (!EUC_DEV583_valide_(g)) { sans.push({ entreprise: x.entreprise, adresse: x.adresse, eleves: n, statut: g ? EUC_DEV583_t_(g.Statut) : 'A_GEOCODER' }); return; }
+    if (!EUC_DEV583_valide_(g)) { sans.push({ entreprise: x.entreprise, adresse: x.adresse, siret: x.siret, eleves: n, statut: g ? EUC_DEV583_t_(g.Statut) : 'A_GEOCODER' }); return; }
     var lat = Number(g.Latitude), lon = Number(g.Longitude), k = x.cle;
     var pt = vus[k] || (vus[k] = { key: EUC_DEV441_digest_(k).slice(0, 32), entreprise: x.entreprise, adresse: x.adresse, latitude: lat, longitude: lon, pays: EUC_DEV583_t_(g.Pays), classe: '', elevesAccueillis: 0, nominatif: nominatif, source: 'SUIVI2' });
     if (points.indexOf(pt) < 0) points.push(pt);
@@ -100,7 +100,8 @@ function EUC_DEV583_geocoder_(sans, ix) {
   lot.forEach(function(x, i) {
     var json = {}; try { json = JSON.parse(reps[i].getContentText() || '{}'); } catch (e) {}
     var sel = EUC_DEV540_geoCandidate_(json.features || [], x._clean, x._cp), feat = sel && sel.feature, co = feat && feat.geometry && feat.geometry.coordinates, pr = feat && feat.properties || {}, score = Number(pr.score) || 0;
-    var cleGeo = EUC_DEV441_geoKey_(x.entreprise, x.adresse, x.siret), item = { key: cleGeo, siret: x.siret || '', entreprise: x.entreprise, adresse: x.adresse }, existant = ix.lignes[cleGeo];
+    /* Même clé et même adresse source que la page « Géocodage des entreprises », qui retrouve ainsi la ligne. */
+    var cleGeo = EUC_DEV441_geoKey_(x.entreprise, x._clean, x.siret), item = { key: cleGeo, siret: x.siret || '', entreprise: x.entreprise, adresse: x._clean }, existant = ix.lignes[cleGeo];
     if (existant && existant.id) item._recordId = Number(existant.id);
     var fields = co && co.length >= 2
       ? { Adresse_normalisee: EUC_DEV583_t_(pr.label), Pays: 'FRANCE', Code_postal: EUC_DEV443_postal_(pr.postcode || x._cp), Commune: EUC_DEV583_t_(pr.city), Latitude: Number(co[1]), Longitude: Number(co[0]), Score: score, Precision: EUC_DEV583_t_(pr.type), Fournisseur: 'Géoplateforme / BAN', Statut: score < 0.45 || !sel.specific ? 'A_VALIDER_MANUELLEMENT' : 'GEOCODE_AUTOMATIQUE', Date_geocodage: new Date().toISOString(), Commentaire: score < 0.45 || !sel.specific ? 'Résultat automatique peu précis : contrôlez le point proposé.' : '' }

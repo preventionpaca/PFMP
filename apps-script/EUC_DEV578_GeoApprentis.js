@@ -11,10 +11,11 @@
 function EUC_DEV578_geoApprentisDetails_(q) {
   q = q || {};
   var annee = EUC_DEV368_year(q.annee), classes = {}, eleves = {}, groupes = {};
-  try { EUC_DEV541_apprentissageClasses_(annee).forEach(function(c) { classes[c.id] = c; }); } catch (e) { return []; }
+  /* DEV584 : toutes les classes (GRETA, Bachelor, classes entières), pas seulement la structure PFMP. */
+  try { (typeof EUC_DEV579_classesCompletes_ === 'function' ? EUC_DEV579_classesCompletes_(annee) : EUC_DEV541_apprentissageClasses_(annee)).forEach(function(c) { classes[c.id] = c; }); } catch (e) { return []; }
   EUC_DEV538_records_('EUC_ELEVES_PFMP', {}).forEach(function(r) {
     var f = EUC_DEV538_fields_(r), id = EUC_DEV538_n_(r.id || f.id), cid = EUC_DEV538_ref_(f.Classe);
-    if (id && classes[cid]) eleves[id] = cid;
+    if (id && classes[cid] && f.Actif !== false) eleves[id] = cid;
   });
   var dernier = EUC_DEV538_latestByStudent_(EUC_DEV538_optionalRecords_('EUC_APPRENTISSAGE_PFMP', {}), annee);
   Object.keys(dernier).forEach(function(eid) {

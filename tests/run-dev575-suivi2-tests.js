@@ -347,5 +347,9 @@ test('DEV583 : carte tirée du modèle du suivi — contrats et conventions, pos
   assert.equal(k.EUC_DEV583_entreprises_(m, { famille: 'BACPRO' }, false).length, 1);
   assert.equal(k.EUC_DEV583_carte({ annee: 'ALL' }), null, 'toutes années : ancien chemin'); assert.equal(k.EUC_DEV583_carte({ annee: '2026-2027', mode: 'PARENTS' }), null);
   assert.match(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), /if\(dev583\)return dev583;/);
+  const book = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(book, /if\(f\.Actif===false\)\{students\[id\]=\{inactif:true\};return;\}/, 'book : fiche élève désactivée ignorée');
+  assert.match(book, /if\(raw\.Actif===false\|\|meta\.inactif\)return;/, 'book : contrat désactivé ou d’un doublon ignoré');
+  assert.match(read('apps-script/EUC_DEV578_GeoApprentis.js'), /EUC_DEV579_classesCompletes_\(annee\)/, 'géocodage : entreprises des apprentis de toutes les classes');
   assert.match(read('apps-script/Cartographie_PFMP_DEV441.html'), /x\.source==='SUIVI2'/);
 });
