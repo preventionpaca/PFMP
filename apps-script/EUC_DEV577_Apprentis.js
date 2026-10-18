@@ -12,7 +12,7 @@
  *   commencé. Un apprenti n'est plus compté potentiel ni futur ; la date de
  *   distribution reste conservée dans sa fiche.
  */
-var EUC_DEV577_VERSION_ = '1.0.0-dev.577a';
+var EUC_DEV577_VERSION_ = '1.0.0-dev.577b';
 var EUC_DEV577_CATEGORIES_ = ['apprentis', 'futurs', 'potentiels', 'distribues', 'rapportes', 'transmisCfa', 'contratsValides', 'ruptures'];
 
 function EUC_DEV577_t_(v) { return String(v == null ? '' : v).trim(); }
@@ -54,7 +54,7 @@ function EUC_DEV577_fiche_(row) {
 }
 
 function EUC_DEV577_calcul_(annee) {
-  var now = new Date(), classes = EUC_DEV541_apprentissageClasses_(annee), classById = {}, classByName = {};
+  var now = new Date(), classes = typeof EUC_DEV579_classesCompletes_ === 'function' ? EUC_DEV579_classesCompletes_(annee) : EUC_DEV541_apprentissageClasses_(annee), classById = {}, classByName = {};
   classes.forEach(function(c) { classById[c.id] = c; classByName[EUC_DEV538_norm_(c.classe)] = c; });
   var yearsById = EUC_DEV538_schoolYearMap_(), eleves = [];
   EUC_DEV538_records_('EUC_ELEVES_PFMP', {}).forEach(function(r) {
@@ -69,8 +69,9 @@ function EUC_DEV577_calcul_(annee) {
   var diplomes = EUC_DEV538_diplomas_(), quotas = EUC_DEV538_quotaConfig_()[annee] || {}, actives = EUC_DEV542_activeClassesConfig_(), modes = EUC_DEV545_classModesConfig_();
   var lignes = {}, cartes = {};
   classes.forEach(function(c) {
+    var pr = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, c.classe, c.etablissement, EUC_DEV545_classMode_(modes, annee, c.id)) : null;
     var l = lignes[c.id] = { classeId: c.id, classe: c.classe, famille: c.famille, niveau: c.niveau, diplome: EUC_DEV564_diplomaForClass_(c, diplomes[c.id]),
-      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: EUC_DEV545_classMode_(modes, annee, c.id, c.classe, c.etablissement), organismes: typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, c.classe, c.etablissement, 'MIXITE').organismes : [], effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
+      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: pr ? pr.mode : EUC_DEV545_classMode_(modes, annee, c.id), organismes: pr ? pr.organismes : [], gestionnaire: pr ? pr.gestionnaire : '', donneur: pr ? pr.donneur : '', effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
     EUC_DEV577_CATEGORIES_.forEach(function(k) { l.noms[k] = []; });
   });
   eleves.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).forEach(function(e) {
@@ -99,7 +100,7 @@ function EUC_DEV577_calcul_(annee) {
     (groupes[l.diplome] = groupes[l.diplome] || { diplome: l.diplome, famille: l.famille, lignes: [] }).lignes.push(l);
     totaux.effectif += l.effectif; totaux.quota += l.quota;
     EUC_DEV577_CATEGORIES_.forEach(function(c) { l.noms[c].forEach(function(n) { totaux[c].push({ nom: n, classe: l.classe }); }); });
-    l.noms.apprentis.forEach(function(n) { totaux[l.mode === 'CLASSE_ENTIERE' ? 'classeEntiere' : 'mixite'].push({ nom: n, classe: l.classe }); });
+    if (l.mode !== 'FORMATION_CONTINUE') l.noms.apprentis.forEach(function(n) { totaux[l.mode === 'CLASSE_ENTIERE' ? 'classeEntiere' : 'mixite'].push({ nom: n, classe: l.classe }); });
   });
   var liste = Object.keys(groupes).map(function(k) {
     groupes[k].lignes.sort(function(a, b) { return String(a.niveau).localeCompare(String(b.niveau), 'fr') || a.classe.localeCompare(b.classe, 'fr'); });
@@ -115,7 +116,7 @@ function EUC_DEV577_modele_(annee) {
   /* Les quotas, classes actives et modes sont dans les propriétés du script :
    * leur empreinte entre dans la clé, un changement de réglage recalcule. */
   var reglages = '';
-  try { reglages = EUC_DEV441_digest_(JSON.stringify([EUC_DEV538_quotaConfig_()[annee] || {}, EUC_DEV542_activeClassesConfig_(), EUC_DEV545_classModesConfig_(), typeof EUC_DEV579_profilsConfig_ === 'function' ? EUC_DEV579_profilsConfig_() : {}])).slice(0, 12); } catch (e2) {}
+  try { reglages = EUC_DEV441_digest_(JSON.stringify([EUC_DEV538_quotaConfig_()[annee] || {}, EUC_DEV542_activeClassesConfig_(), EUC_DEV545_classModesConfig_(), typeof EUC_DEV579_profilsConfig_ === 'function' ? EUC_DEV579_profilsConfig_() : {}, 'DEV579b'])).slice(0, 12); } catch (e2) {}
   var jour = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Europe/Paris', 'yyyyMMdd');
   var cle = 'EUC_DEV577_' + annee.replace(/\D/g, '') + '_' + String(temoin).replace(/[^\w-]/g, '') + '_' + reglages.replace(/[^\w-]/g, '') + '_' + jour;
   var m = temoin && typeof EUC_DEV572_lire_ === 'function' ? EUC_DEV572_lire_(cle) : null;
