@@ -636,14 +636,14 @@ function EUC_DEV540_saveCompanyPhoto(q){
 
 function EUC_DEV538_render_(file,title,boot){var t=HtmlService.createTemplateFromFile(file);t.bootJson=JSON.stringify(boot||EUC_DEV368_boot());return t.evaluate().setTitle(title).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}
 function EUC_DEV538_afficherQuotas(e){EUC_DEV538_admin_();return EUC_DEV538_render_('Apprentissage_Quotas_DEV538','Quotas et relances apprentissage');}
-function EUC_DEV538_afficherBookAdmin(e){EUC_DEV538_admin_();var b=EUC_DEV368_boot();b.mode='ADMIN';b.params=e&&e.parameter||{};b.facettes=EUC_DEV572_facettesBoot_('P',b.params.annee||b.current||'ALL',3);return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);}
+function EUC_DEV538_afficherBookAdmin(e){EUC_DEV538_admin_();var b=EUC_DEV368_boot();b.mode='ADMIN';b.params=e&&e.parameter||{};/* DEV587 : par défaut, les 3 dernières années (base plus large). */b.current=EUC_DEV538_t_(b.params.annee)||'ALL';b.facettes=EUC_DEV572_facettesBoot_('P',b.current,3);return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);}
 function EUC_DEV538_afficherBookStaff(e){
   /* Sur la Web App publique, Apps Script peut masquer l'identité active même
    * à un enseignant connecté. Au lieu d'une page blanche, on revient alors à
    * la projection publique non nominative. L'historique personnel reste
    * réservé à une session effectivement authentifiée. */
   if(!EUC_DEV538_staffAllowed_())return EUC_DEV546_afficherBookEleves(e);
-  var b=EUC_DEV368_boot();b.mode='STAFF';b.facettes=EUC_DEV572_facettesBoot_('P',b.current||'ALL',3);return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);
+  var b=EUC_DEV368_boot();b.mode='STAFF';b.current='ALL';b.facettes=EUC_DEV572_facettesBoot_('P','ALL',3);return EUC_DEV538_render_('Book_Entreprises_DEV538','Book des entreprises',b);
 }
 /* AUDIT-PERF (4) : le lien vers le suivi enseignants n'est autorisé que sur la route personnels (book-entreprises-public-pfmp, repli sans identité). La route familles (book-entreprises-eleves-pfmp, book-entreprise.loucodi.fr) ne le montre jamais. */
 function EUC_DEV546_afficherBookEleves(e){var b=EUC_DEV368_boot();b.mode='STUDENT';b.retourSuivi=String(e&&e.parameter&&e.parameter.page||'')==='book-entreprises-public-pfmp';b.current='ALL';b.params={annee:'ALL',fenetre:3};b.facettes=typeof EUC_DEV572_facettesBoot_==='function'?EUC_DEV572_facettesBoot_('E','ALL',3):null;return EUC_DEV538_render_('Book_Entreprises_Eleves_DEV546','Book des entreprises — élèves et familles',b);}

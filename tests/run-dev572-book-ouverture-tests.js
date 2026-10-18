@@ -97,8 +97,8 @@ test('pages et filtres utilisent les listes globales', () => {
 });
 
 test('les trois books reçoivent les filtres mémorisés à l’ouverture', () => {
-  assert.match(server, /b\.mode='ADMIN';b\.params=e&&e\.parameter\|\|\{\};b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
-  assert.match(server, /b\.mode='STAFF';b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
+  assert.match(server, /b\.mode='ADMIN';b\.params=e&&e\.parameter\|\|\{\};[^;]*b\.current=[^;]*;b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
+  assert.match(server, /b\.mode='STAFF';b\.current='ALL';b\.facettes=EUC_DEV572_facettesBoot_\('P'/);
   assert.match(server, /b\.facettes=typeof EUC_DEV572_facettesBoot_==='function'\?EUC_DEV572_facettesBoot_\('E','ALL',3\):null/);
   assert.match(server, /EUC_DEV572_ecrire_\(EUC_DEV572_cleFacettes_\('E','ALL',3\),globales\)/);
 });

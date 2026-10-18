@@ -67,3 +67,6 @@ test('DEV586 : Book — domaine sous l’année, famille et niveau masqués, pé
 test('DEV586 : Book — tri alphabétique, diplômes et classes de toute l’année dans les filtres',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
   assert.match(h,/<option value="ALPHA">Ordre alphabétique<\/option>/);assert.equal((b.match(/if\(EUC_DEV538_t_\(q\.tri\)\.toUpperCase\(\)==='ALPHA'\)return EUC_DEV586_alpha_\(a,b\);/g)||[]).length,3);
   assert.match(b,/res\.facettesGlobales=EUC_DEV586_completerFacettes_\(EUC_DEV540_facets_\(base\)\)/);assert.match(b,/EUC_DEV572_F4_/);});
+test('DEV587 : Book — 3 dernières années par défaut (personnels comme familles), fenêtre de 2 à 10 ans',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(b,/b\.current=EUC_DEV538_t_\(b\.params\.annee\)\|\|'ALL'/);assert.match(b,/b\.mode='STAFF';b\.current='ALL'/);assert.match(b,/b\.current='ALL';b\.params=\{annee:'ALL',fenetre:3\}/);
+  assert.match(h,/<option value="2">2 dernières années<\/option><option value="3" selected>/);assert.match(h,/\$\('year'\)\.onchange=syncWindow;syncWindow\(\);/);});
