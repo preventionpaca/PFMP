@@ -64,3 +64,6 @@ test('DEV586 : Book — domaine sous l’année, famille et niveau masqués, pé
   const ordre=['id="year"','id="window"','id="diploma"','id="classe"','id="period"','id="domain"','id="city"'].map(x=>h.indexOf(x));assert.deepEqual(ordre.slice().sort((a,b)=>a-b),ordre);
   assert.match(h,/<label hidden>Famille/);assert.match(h,/<label hidden>Niveau/);assert.match(h,/<option selected>30<\/option>/);assert.match(h,/pageSize'\)\.value='30'/);
   assert.match(b,/per==='APPRENTISSAGE'\?x\.apprenti===true/);assert.match(b,/out\.periode\.push\('Apprentissage'\)/);});
+test('DEV586 : Book — tri alphabétique, diplômes et classes de toute l’année dans les filtres',()=>{const h=read('apps-script/Book_Entreprises_DEV538.html'),b=read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(h,/<option value="ALPHA">Ordre alphabétique<\/option>/);assert.equal((b.match(/if\(EUC_DEV538_t_\(q\.tri\)\.toUpperCase\(\)==='ALPHA'\)return EUC_DEV586_alpha_\(a,b\);/g)||[]).length,3);
+  assert.match(b,/res\.facettesGlobales=EUC_DEV586_completerFacettes_\(EUC_DEV540_facets_\(base\)\)/);assert.match(b,/EUC_DEV572_F4_/);});
