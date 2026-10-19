@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 19 octobre 2026 — DEV601 répertoire entreprises plein écran et mis en cache
+
+- Le répertoire transversal des entreprises et contacts occupe désormais toute
+  la fenêtre : barre d’outils fixe, tableau défilant sur toute la hauteur et
+  en-têtes de colonnes conservés à l’écran.
+- Son ouverture réutilise la liste agrégée et révisionnée du Book au lieu de
+  recalculer l’intégralité de l’historique Grist. Après le premier chargement,
+  fermer puis rouvrir le répertoire dans la même page ne déclenche plus aucun
+  appel serveur ; recherche et export restent traités localement.
+- Aucun accès à la production Grist, aucune écriture métier et aucun
+  déploiement n’ont été effectués pendant ce correctif.
+
 ## Mise à jour du 16 octobre 2026 — DEV572 à DEV574 publiés (@975), clé exigée
 
 - **Clé des liens enseignants exigée** (mode EXIGEE activé par Rudy) : sans le
