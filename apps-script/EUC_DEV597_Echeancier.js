@@ -60,11 +60,29 @@ function EUC_DEV597_calcul_(m, contrats, referents, contacts, aujourdhui) {
       entreprise: entreprise, tuteur: { nom: [EUC_DEV597_t_(f.Tuteur_prenom), EUC_DEV597_t_(f.Tuteur_nom || f.Tuteur)].filter(Boolean).join(' '), tel: EUC_DEV597_t_(f.Tuteur_telephone), mail: EUC_DEV597_t_(f.Tuteur_courriel) },
       debut: debut, jours: EUC_DEV597_jours_(debut, aujourdhui), echeance: EUC_DEV597_plus_(debut, EUC_DEV597_SEUILS_.alerte), statut: statut, contact: contact, referent: ref[eid] || null });
   });
-  var ordre = { RETARD: 0, ALERTE: 1, RAPPEL: 2, A_FAIRE: 3, A_VENIR: 4, ROMPU: 5, FAIT: 6 };
-  lignes.sort(function(a, b) { return ordre[a.statut] - ordre[b.statut] || a.debut.localeCompare(b.debut) || a.nom.localeCompare(b.nom, 'fr'); });
-  var compteurs = {}; Object.keys(ordre).forEach(function(k) { compteurs[k] = 0; }); lignes.forEach(function(l) { compteurs[l.statut]++; });
+  lignes.sort(function(a, b) { return EUC_DEV597_ORDRE_[a.statut] - EUC_DEV597_ORDRE_[b.statut] || a.debut.localeCompare(b.debut) || a.nom.localeCompare(b.nom, 'fr'); });
+  return { annee: annee, aujourdhui: aujourdhui, seuils: EUC_DEV597_SEUILS_, lignes: lignes, compteurs: EUC_DEV597_compter_(lignes) };
+}
+var EUC_DEV597_ORDRE_ = { RETARD: 0, ALERTE: 1, RAPPEL: 2, A_FAIRE: 3, A_VENIR: 4, ROMPU: 5, FAIT: 6 };
+function EUC_DEV597_compter_(lignes) {
+  var compteurs = {}; Object.keys(EUC_DEV597_ORDRE_).forEach(function(k) { compteurs[k] = 0; }); lignes.forEach(function(l) { compteurs[l.statut]++; });
   compteurs.sansReferent = lignes.filter(function(l) { return !l.referent && l.statut !== 'FAIT' && l.statut !== 'ROMPU'; }).length;
-  return { annee: annee, aujourdhui: aujourdhui, seuils: EUC_DEV597_SEUILS_, lignes: lignes, compteurs: compteurs };
+  return compteurs;
+}
+/* DEV600 : classes masquées de l'échéancier (apprentis ne relevant pas encore du dispositif : GRETA, BTS…). */
+var EUC_DEV597_MASQUEES_PROP_ = 'EUC_DEV597_CLASSES_MASQUEES';
+function EUC_DEV597_masquees_() { try { var v = JSON.parse(PropertiesService.getScriptProperties().getProperty(EUC_DEV597_MASQUEES_PROP_) || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } }
+/* Filtre pur : retire les lignes des classes masquées, recalcule les compteurs, liste les classes. */
+function EUC_DEV597_filtrer_(d, masquees) {
+  var cl = {}; d.lignes.forEach(function(l) { cl[l.classe] = (cl[l.classe] || 0) + 1; });
+  d.classes = Object.keys(cl).sort(function(a, b) { return a.localeCompare(b, 'fr'); }).map(function(c) { return { nom: c, apprentis: cl[c], masquee: masquees.indexOf(c) >= 0 }; });
+  d.lignes = d.lignes.filter(function(l) { return masquees.indexOf(l.classe) < 0; });
+  d.compteurs = EUC_DEV597_compter_(d.lignes); d.masquees = masquees;
+  return d;
+}
+function EUC_DEV597_reglerClasses(q) {
+  EUC_SUIVI2_exigerAdmin_(); var l = ((q && q.masquees) || []).map(function(v) { return EUC_DEV597_t_(v); }).filter(Boolean).slice(0, 300);
+  PropertiesService.getScriptProperties().setProperty(EUC_DEV597_MASQUEES_PROP_, JSON.stringify(l)); return { ok: true, masquees: l };
 }
 
 function EUC_DEV597_donnees_(annee) {
@@ -72,7 +90,7 @@ function EUC_DEV597_donnees_(annee) {
   var m = EUC_SUIVI2_modele_(EUC_DEV597_t_(annee));
   /* DEV598 : un bilan de visite en ligne vaut contact d'entrée. */
   var bilans = typeof EUC_DEV598_BILANS_ !== 'undefined' ? EUC_DEV597_lire_(EUC_DEV598_BILANS_) : [];
-  var d = EUC_DEV597_calcul_(m, EUC_DEV597_lire_('EUC_APPRENTISSAGE_PFMP'), EUC_DEV597_lire_(EUC_DEV597_REFERENTS_), EUC_DEV597_lire_(EUC_DEV597_CONTACTS_).concat(bilans.length ? EUC_DEV598_commeContacts_(bilans) : []), EUC_SUIVI2_aujourdhui_());
+  var d = EUC_DEV597_filtrer_(EUC_DEV597_calcul_(m, EUC_DEV597_lire_('EUC_APPRENTISSAGE_PFMP'), EUC_DEV597_lire_(EUC_DEV597_REFERENTS_), EUC_DEV597_lire_(EUC_DEV597_CONTACTS_).concat(bilans.length ? EUC_DEV598_commeContacts_(bilans) : []), EUC_SUIVI2_aujourdhui_()), EUC_DEV597_masquees_());
   if (typeof EUC_DEV598_lienProf_ === 'function') {
     var parContrat = {}; bilans.forEach(function(r) { var k = Number((r.fields || {}).Contrat); (parContrat[k] = parContrat[k] || []).push(EUC_DEV598_resume_(r)); });
     d.compteurs.bilansAlerte = 0; d.compteurs.vigilance = 0; d.compteurs.aValider = 0;
@@ -155,6 +173,7 @@ function EUC_DEV597_message_(prof, lignes, fiche) {
   var avant = lignes.map(function(l) { return l.echeance; }).sort()[0];
   var t = ['Bonjour ' + prof.nom + ',', '',
     'Vous êtes désigné(e) professeur référent ' + (lignes.length > 1 ? 'des apprentis suivants' : 'de l’apprenti suivant') + '. La réglementation impose un premier contact avec l’entreprise dans les 45 jours qui suivent le début du contrat.', ''];
+  if (prof.lienEspace) t.push('Votre espace professeur référent (tous vos apprentis de l’année, bilans de visite, livrets) — à garder dans vos favoris :', prof.lienEspace, '');
   lignes.forEach(function(l) {
     var tu = l.tuteur || {};
     t.push('• ' + l.nom + ' — ' + l.classe + (l.organismes ? ' (' + l.organismes + ')' : ''));
@@ -180,7 +199,7 @@ function EUC_DEV597_message_(prof, lignes, fiche) {
 function EUC_DEV597_prevenirReferents(q) {
   var ctx = EUC_SUIVI2_exigerAdmin_(); q = q || {};
   var d = EUC_DEV597_donnees_(q.annee), choisis = (q.eleveIds || []).map(Number), fiche = EUC_DEV597_fiche_();
-  var profs = {}; EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').forEach(function(p) { var f = p.fields || {}; profs[Number(p.id)] = { nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), email: EUC_DEV597_t_(f.Email) }; });
+  var profs = {}; EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').forEach(function(p) { var f = p.fields || {}; profs[Number(p.id)] = { nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), email: EUC_DEV597_t_(f.Email), lienEspace: typeof EUC_DEV600_lien_ === 'function' ? EUC_DEV600_lien_(p.id) : '' }; });
   var groupes = {}, sansMail = [];
   d.lignes.forEach(function(l) {
     if (!l.referent || l.statut === 'FAIT' || l.statut === 'ROMPU') return;

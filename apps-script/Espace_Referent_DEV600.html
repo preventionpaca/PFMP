@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Espace professeur référent — apprentis</title>
+<style>
+:root{--vert:#08745f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Arial,sans-serif;color:var(--texte);background:#f4f6f9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;font-size:14px}
+main{max-width:1100px;margin:auto;padding:14px 16px 40px}
+.note{color:var(--gris);font-size:13px}
+.tuiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.tuile{border:1px solid var(--bord);border-radius:10px;background:#fff;padding:6px 12px}
+.tuile b{font-size:20px;margin-right:6px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.carte{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 14px}
+.carte h2{font-size:16px;margin:0}.carte .ligne{margin:5px 0;font-size:14px}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:800;white-space:nowrap}
+.RETARD{background:#fee2e2;color:#991b1b}.ALERTE{background:#ffedd5;color:#9a3412}.RAPPEL{background:#fef9c3;color:#854d0e}
+.A_FAIRE{background:#e0f2fe;color:#075985}.A_VENIR{background:#f1f5f9;color:#475569}.FAIT{background:#dcfce7;color:#166534}.ROMPU{background:#f1f1f1;color:#555}
+a.bouton,button{display:inline-block;border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer;margin:4px 6px 0 0}
+a.bouton.plein,button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+input{font:inherit;padding:8px 10px;border:1px solid var(--bord);border-radius:8px;width:min(100%,340px)}
+.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
+.filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<header><h1>Espace professeur référent — apprentis</h1><p id="sousTitre">Lycée Les Eucalyptus</p></header>
+<main>
+  <div id="etat" class="note" role="status">Chargement…</div>
+  <div id="contenu" hidden>
+    <p class="note">Gardez ce lien dans vos favoris : il regroupe tous vos apprentis de l’année. Contact d’entrée avec l’entreprise dans les 45 jours suivant le début du contrat.</p>
+    <div class="tuiles" id="tuiles"></div>
+    <div class="filtres"><label>Rechercher <input id="recherche" type="search" placeholder="Apprenti, classe ou entreprise"></label></div>
+    <div class="cartes" id="cartes"></div>
+  </div>
+  <section id="perdu" hidden>
+    <h2>Recevoir mon lien</h2>
+    <p>Indiquez votre adresse professionnelle : si elle figure dans la liste des professeurs du lycée, le lien de votre espace vous y est envoyé.</p>
+    <p><input id="email" type="email" placeholder="prenom.nom@ac-nice.fr" autocomplete="email"> <button type="button" class="plein" id="demander">Recevoir mon lien</button></p>
+    <p id="msgPerdu" role="status"></p>
+  </section>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},M=<?= jeton ?>,D=null;
+var LIB={RETARD:'En retard',ALERTE:'Alerte (45 j)',RAPPEL:'Rappel (30 j)',A_FAIRE:'À faire',A_VENIR:'Contrat à venir',FAIT:'Contact fait',ROMPU:'Contrat rompu'};
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
+function rendre(){var q=$('recherche').value.trim().toLowerCase(),c=D.compteurs;
+  $('tuiles').innerHTML=['RETARD','ALERTE','RAPPEL','A_FAIRE','FAIT'].filter(function(k){return c[k];}).map(function(k){return '<span class="tuile"><b>'+c[k]+'</b><span class="chip '+k+'">'+LIB[k]+'</span></span>';}).join('')||'<span class="note">Aucun apprenti ne vous est encore attribué.</span>';
+  var l=D.lignes.filter(function(x){return !q||(x.nom+' '+x.classe+' '+x.entreprise).toLowerCase().indexOf(q)>=0;});
+  $('cartes').innerHTML=l.map(function(x){var t=x.tuteur||{},b=x.bilan,lv=x.livret;
+    return '<div class="carte"><h2>'+esc(x.nom)+'</h2><div class="note">'+esc(x.classe)+'</div>'+
+      '<div class="ligne"><span class="chip '+x.statut+'">'+LIB[x.statut]+'</span> '+(x.statut==='FAIT'&&x.contact?'le '+dfr(x.contact.date):x.statut!=='ROMPU'?'à faire avant le <b>'+dfr(x.echeance)+'</b>':'')+'</div>'+
+      '<div class="ligne"><b>'+esc(x.entreprise)+'</b>'+(t.nom?'<br>Tuteur : '+esc(t.nom):'')+(t.tel?' · <a href="tel:'+esc(t.tel.replace(/\s/g,''))+'">'+esc(t.tel)+'</a>':'')+(t.mail?' · <a href="mailto:'+esc(t.mail)+'">'+esc(t.mail)+'</a>':'')+'</div>'+
+      '<div class="ligne">Bilan de visite : '+(b?dfr(b.date)+' — '+(b.statut==='VALIDE'?'<span class="ok">validé par '+esc(b.signataire)+'</span>':'en attente du tuteur'):'aucun')+'</div>'+
+      '<div class="ligne">Livret : '+lv.validees+' fiche(s) validée(s)'+(lv.aValider?' · <b>'+lv.aValider+' en attente</b>':'')+(lv.brouillons?' · '+lv.brouillons+' brouillon(s)':'')+'</div>'+
+      (x.lienFiche?'<a class="bouton plein" target="_blank" rel="noopener" href="'+esc(x.lienFiche)+'">Bilan de visite</a>':'')+
+      lv.aValiderLycee.map(function(f){return '<a class="bouton" target="_blank" rel="noopener" href="'+esc(f.lien)+'">Valider la fiche lycée du '+dfr(f.du)+'</a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucun apprenti pour cette recherche.</p>';}
+$('recherche').oninput=function(){if(D)rendre();};
+$('demander').onclick=function(){var b=this;b.disabled=true;b.innerHTML='<span class="spin"></span>Envoi…';
+  appel('EUC_DEV600_demanderLien',{email:$('email').value},function(r){b.disabled=false;b.textContent='Recevoir mon lien';$('msgPerdu').innerHTML='<span class="ok">'+esc(r.message)+'</span>';},
+    function(e){b.disabled=false;b.textContent='Recevoir mon lien';$('msgPerdu').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
+if(!M){$('etat').hidden=true;$('perdu').hidden=false;return;}
+appel('EUC_DEV600_espace',{m:M},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;$('sousTitre').textContent=r.professeur+' · année '+r.annee;rendre();},
+  function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';$('perdu').hidden=false;});
+})();
+</script>
+</body>
+</html>

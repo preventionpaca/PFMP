@@ -31,6 +31,8 @@ const PAGES_PUBLIQUES = [
   /* DEV599 : livret de l'apprenti (lien signé de l'apprenti, lien de validation). */
   'Livret_Apprenti_DEV599',
   'Validation_Livret_DEV599',
+  /* DEV600 : espace du professeur référent (lien signé ; demande de lien sans révéler les adresses). */
+  'Espace_Referent_DEV600',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

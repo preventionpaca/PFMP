@@ -9,8 +9,8 @@
 :root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
-header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:16px 20px}
-header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}header a{color:#fff}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}header a{color:#08745f}
 main{max-width:1300px;margin:auto;padding:16px}
 .note{color:var(--gris);font-size:13px}
 .tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
@@ -28,15 +28,23 @@ th,td{padding:7px 8px;border-bottom:1px solid #e3eee9;text-align:left;vertical-a
 .petit{display:block;font-size:12px;color:var(--gris)}
 .form{background:#f4f8f6;border:1px solid var(--bord);border-radius:8px;padding:8px;margin-top:6px;display:grid;gap:6px}
 .erreur{color:#991b1b;font-weight:700}
+.ok{color:#166534;font-weight:700}
 .planche{display:none}
+.ariane{margin:0 0 10px;font-size:14px}.ariane a{color:var(--vert);font-weight:700;text-decoration:none}
+.reglage{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:8px 12px;margin:0 0 10px}.reglage summary{cursor:pointer;font-weight:700}
+.classes{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px 12px;margin:8px 0}
 @media print{body>header,main>*:not(.planche){display:none!important}.planche{display:grid!important;grid-template-columns:repeat(3,1fr);gap:14px}.planche div{border:1px dashed #999;padding:10px;text-align:center;break-inside:avoid;font:13px Arial}.planche img,.planche canvas{margin:6px auto}}
 a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert);color:#fff;border-radius:8px;padding:6px 10px;font-weight:700;text-decoration:none}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-<header><h1>Échéancier des apprentis — contact d’entrée</h1><p>Un contact (appel ou visite) avec l’entreprise dans les 45 jours suivant le début du contrat. Rappel à 30 jours, alerte à 45, retard à 60. · <a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a></p></header>
+<header><h1>Échéancier des apprentis — contact d’entrée</h1><p>Un contact (appel ou visite) avec l’entreprise dans les 45 jours suivant le début du contrat. Rappel à 30 jours, alerte à 45, retard à 60.</p></header>
 <main>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Apprentis</span> › <strong>Échéancier des apprentis</strong></nav>
+  <details class="reglage" id="reglage"><summary>Classes affichées <span id="nbMasquees" class="note"></span></summary>
+    <p class="note">Décochez les classes qui ne relèvent pas encore de ce suivi (GRETA, BTS…) : elles disparaissent de l’échéancier, des compteurs de l’accueil, des courriels aux référents et de l’espace des professeurs. Rien n’est supprimé.</p>
+    <div id="listeClasses" class="classes"></div><button type="button" class="plein" id="classesOk">Enregistrer</button> <span id="msgClasses" role="status"></span></details>
   <div id="etat" class="note">Chargement…</div>
   <div id="tuiles" class="tuiles"></div>
   <div class="filtres">
@@ -68,7 +76,7 @@ function charger(){$('etat').textContent='Chargement…';appel('EUC_DEV597_echea
   var cl={};r.lignes.forEach(function(l){cl[l.classe]=1;});var v=$('fClasse').value;$('fClasse').innerHTML='<option value="">Toutes</option>'+Object.keys(cl).sort().map(function(c){return '<option>'+esc(c)+'</option>';}).join('');$('fClasse').value=v;
   var refs={};r.lignes.forEach(function(l){if(l.referent)refs[l.referent.nom]=1;});var vr=$('fRef').value;$('fRef').innerHTML='<option value="">Tous</option><option value="-">Sans référent</option>'+Object.keys(refs).sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('');$('fRef').value=vr;
   $('profAff').innerHTML='<option value="">— retirer le référent —</option>'+r.professeurs.map(function(p){return '<option value="'+p.id+'">'+esc(p.nom)+'</option>';}).join('');
-  $('fiche').value=r.fiche||'';$('copie').value=r.copieValidations||'';
+  classes(r);$('fiche').value=r.fiche||'';$('copie').value=r.copieValidations||'';
   var c=r.compteurs;if(c.vigilance||c.bilansAlerte||c.aValider)$('etat').innerHTML+=' · Bilans de visite : '+(c.aValider?c.aValider+' à faire valider par le tuteur':'')+(c.bilansAlerte?' · <span class="erreur">'+c.bilansAlerte+' « alerte à traiter »</span>':'')+(c.vigilance?' · <span class="erreur">'+c.vigilance+' validation(s) à vérifier</span>':'');
   rendre();});}
 function rendre(){
@@ -95,6 +103,13 @@ function formulaire(x,z){if(z.innerHTML){z.innerHTML='';return;}
     '<label>Professeur <input class="fp" value="'+esc(x.referent?x.referent.nom:'')+'"></label><label>Compte rendu <textarea class="fc" rows="3"></textarea></label><button type="button" class="plein fo">Enregistrer</button></div>';
   z.querySelector('.fo').onclick=function(){var b=this;b.disabled=true;b.textContent='Enregistrement…';
     appel('EUC_DEV597_enregistrerContact',{contratId:x.contratId,eleveId:x.eleveId,annee:D.annee,date:z.querySelector('.fd').value,mode:z.querySelector('.fm').value,professeur:z.querySelector('.fp').value,compteRendu:z.querySelector('.fc').value},function(){charger();});};}
+/* DEV600 : réglage des classes affichées. */
+function classes(r){var l=r.classes||[];$('nbMasquees').textContent=(r.masquees||[]).length?'('+r.masquees.length+' masquée(s))':'';
+  $('listeClasses').innerHTML=l.length?l.map(function(c){return '<label><input type="checkbox" class="cl" value="'+esc(c.nom)+'"'+(c.masquee?'':' checked')+'> '+esc(c.nom)+' <span class="note">('+c.apprentis+')</span></label>';}).join(''):'<span class="note">Aucune classe avec un contrat.</span>';}
+$('classesOk').onclick=function(){var b=this,m=Array.prototype.filter.call(document.querySelectorAll('.cl'),function(c){return !c.checked;}).map(function(c){return c.value;});
+  b.disabled=true;b.textContent='Enregistrement…';
+  google.script.run.withSuccessHandler(function(){b.disabled=false;b.textContent='Enregistrer';$('msgClasses').innerHTML='<span class="ok">Enregistré.</span>';charger();})
+    .withFailureHandler(function(e){b.disabled=false;b.textContent='Enregistrer';$('msgClasses').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';}).EUC_DEV597_reglerClasses({masquees:m});};
 function coches(){return Array.prototype.map.call(document.querySelectorAll('.coche:checked'),function(c){return Number(c.value);});}
 function majAff(){$('affecter').disabled=!coches().length;$('affecter').textContent=coches().length?'Affecter ('+coches().length+')':'Affecter';}
 $('tout').onchange=function(){var v=this.checked;Array.prototype.forEach.call(document.querySelectorAll('.coche'),function(c){c.checked=v;});majAff();};
