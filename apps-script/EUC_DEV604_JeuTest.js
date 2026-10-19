@@ -10,22 +10,26 @@
 function EUC_DEV604_t_(v) { return v == null ? '' : String(v).trim().replace(/\s+/g, ' '); }
 function EUC_DEV604_n_(v) { return EUC_DEV604_t_(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
 function EUC_DEV604_colonnes_(table) {
-  var out = {}; (EUC_ENT_grist('get', '/tables/' + table + '/columns').columns || []).forEach(function(c) { out[c.id] = String((c.fields || {}).type || 'Text'); }); return out;
+  /* Les colonnes à formule (calculées par Grist) ne sont jamais écrites : Grist refuserait (400). */
+  var out = {}; (EUC_DEV604_etape_('lecture des colonnes de ' + table, function() { return EUC_ENT_grist('get', '/tables/' + table + '/columns').columns || []; })).forEach(function(c) {
+    var f = c.fields || {}; if (f.isFormula && EUC_DEV604_t_(f.formula)) return; out[c.id] = String(f.type || 'Text'); }); return out;
 }
+/* Exécute une étape et nomme l'étape en cas d'erreur. */
+function EUC_DEV604_etape_(nom, fn) { try { return fn(); } catch (e) { throw new Error('Échec à l’étape « ' + nom + ' » : ' + String(e && e.message || e).replace(/^Error:\s*/, '')); } }
 function EUC_DEV604_lignes_(table) { try { return EUC_ENT_grist('get', '/tables/' + table + '/records').records || []; } catch (e) { return []; } }
 /* Valeur au format de la colonne (calcul pur) : date en secondes, référence, liste de références, booléen. */
 function EUC_DEV604_valeur_(type, v) {
   if (v == null || v === '') return v;
   if (type === 'Date') return Math.round(Date.parse(String(v) + 'T00:00:00Z') / 1000);
   if (/^RefList:/.test(type)) return ['L'].concat((Array.isArray(v) ? v : [v]).map(Number));
-  if (/^Ref:/.test(type)) return Number(v);
+  if (/^Ref:/.test(type)) return isFinite(Number(v)) && Number(v) > 0 ? Number(v) : undefined;
   if (type === 'Bool') return v === true || v === 'true';
   if (/^(Int|Numeric)$/.test(type)) return Number(v);
   return Array.isArray(v) ? v.join(', ') : String(v);
 }
 /* Champs filtrés sur les colonnes existantes et convertis (calcul pur). */
 function EUC_DEV604_champs_(cols, souhait) {
-  var out = {}; Object.keys(souhait).forEach(function(k) { if (cols[k] && souhait[k] !== undefined) out[k] = EUC_DEV604_valeur_(cols[k], souhait[k]); }); return out;
+  var out = {}; Object.keys(souhait).forEach(function(k) { if (!cols[k] || souhait[k] === undefined) return; var v = EUC_DEV604_valeur_(cols[k], souhait[k]); if (v !== undefined && !(typeof v === 'number' && isNaN(v))) out[k] = v; }); return out;
 }
 /* Référence vers une ligne d'une autre table, retrouvée par son texte (année « 2026-2027 », type « PFMP »). */
 function EUC_DEV604_ref_(type, texte, champs) {
@@ -59,14 +63,14 @@ function EUC_DEV604_jeuTest(q) {
   var anneeRefE = EUC_DEV604_ref_(ce.Annee_scolaire, annee, ['Code', 'Libelle']);
   if (!classe) {
     var fc = EUC_DEV604_champs_(cc, { Nom: nomClasse, Actif: true, Etab: 'LP', Code_import: nomClasse, Classe_PFMP: nomClasse });
-    plan.classe.id = Number((EUC_ENT_grist('post', '/tables/Classes/records', { records: [{ fields: fc }] }).records || [{}])[0].id);
+    plan.classe.id = Number((EUC_DEV604_etape_('création de la classe', function() { return EUC_ENT_grist('post', '/tables/Classes/records', { records: [{ fields: fc }] }); }).records || [{}])[0].id);
   }
   var champsP = EUC_DEV604_champs_(cp, { Libelle_periode: libelle, Libelle: libelle, Nom: libelle, Type: typeRef, Date_debut: debut, Date_fin: fin, Annee_scolaire: anneeRefP, Classes_concernees: [plan.classe.id], Classe_PFMP: nomClasse, Actif: true, Commentaire: 'Période de test (DEV604)' });
-  if (periode) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: [{ id: periode.id, fields: { Date_debut: champsP.Date_debut, Date_fin: champsP.Date_fin } }] });
-  else plan.periode.id = Number((EUC_ENT_grist('post', '/tables/Planning_Periodes/records', { records: [{ fields: champsP }] }).records || [{}])[0].id);
+  if (periode) EUC_DEV604_etape_('mise à jour de la période', function() { EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: [{ id: periode.id, fields: EUC_DEV604_champs_(cp, { Date_debut: debut, Date_fin: fin }) }] }); });
+  else plan.periode.id = Number((EUC_DEV604_etape_('création de la période', function() { return EUC_ENT_grist('post', '/tables/Planning_Periodes/records', { records: [{ fields: champsP }] }); }).records || [{}])[0].id);
   var champsE = EUC_DEV604_champs_(ce, { Nom: nom, Prenom: prenom, Date_naissance: naissance, Email_eleve: email, Courriel: email, Classe: plan.classe.id, Annee_scolaire: anneeRefE, Actif: true, Present_dernier_import: true });
-  if (eleve) EUC_ENT_grist('patch', '/tables/EUC_ELEVES_PFMP/records', { records: [{ id: eleve.id, fields: champsE }] });
-  else plan.eleve.id = Number((EUC_ENT_grist('post', '/tables/EUC_ELEVES_PFMP/records', { records: [{ fields: champsE }] }).records || [{}])[0].id);
+  if (eleve) EUC_DEV604_etape_('mise à jour de l’élève', function() { EUC_ENT_grist('patch', '/tables/EUC_ELEVES_PFMP/records', { records: [{ id: eleve.id, fields: champsE }] }); });
+  else plan.eleve.id = Number((EUC_DEV604_etape_('création de l’élève', function() { return EUC_ENT_grist('post', '/tables/EUC_ELEVES_PFMP/records', { records: [{ fields: champsE }] }); }).records || [{}])[0].id);
   try { CacheService.getScriptCache().remove('EUC_DEV586_CLASSES'); } catch (e) {}
   plan.ok = true; plan.apercu = false; plan.auteur = ctx && ctx.email || '';
   return plan;

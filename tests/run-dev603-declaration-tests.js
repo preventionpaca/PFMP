@@ -176,9 +176,9 @@ test('DEV604 : classe de test « TEST … » — reconnue, écartée des effecti
 test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFMP de l’année, élève), formats Grist respectés, sans doublon', () => {
   const tables = { Annees_Scolaires: [{ id: 3, fields: { Code: '2026-2027' } }], Types_Planning: [{ id: 9, fields: { Type: 'PFMP' } }], Classes: [], Planning_Periodes: [], EUC_ELEVES_PFMP: [] };
   const types = { Classes: { Nom: 'Text', Actif: 'Bool', Etab: 'Choice', Code_import: 'Text' }, Planning_Periodes: { Libelle_periode: 'Text', Type: 'Ref:Types_Planning', Date_debut: 'Date', Date_fin: 'Date', Annee_scolaire: 'Ref:Annees_Scolaires', Classes_concernees: 'RefList:Classes', Actif: 'Bool' },
-    EUC_ELEVES_PFMP: { Nom: 'Text', Prenom: 'Text', Date_naissance: 'Date', Email_eleve: 'Text', Classe: 'Ref:Classes', Annee_scolaire: 'Text', Actif: 'Bool', Present_dernier_import: 'Bool' } };
+    EUC_ELEVES_PFMP: { Nom: 'Text', Prenom: 'Text', Date_naissance: 'Date', Email_eleve: 'Text', Courriel: 'Text*', Classe: 'Ref:Classes', Annee_scolaire: 'Text', Actif: 'Bool', Present_dernier_import: 'Bool' } };
   const k = { String, Number, Array, Object, JSON, Date, Math, Error, RegExp, CacheService: { getScriptCache: () => ({ remove() {} }) },
-    EUC_ENT_grist(m, p, body) { const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c) return { columns: Object.keys(types[c[1]] || {}).map(id => ({ id, fields: { type: types[c[1]][id] } })) };
+    EUC_ENT_grist(m, p, body) { const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c) return { columns: Object.keys(types[c[1]] || {}).map(id => { const ty = types[c[1]][id]; return { id, fields: /\*$/.test(ty) ? { type: 'Text', isFormula: true, formula: '$Email_eleve' } : { type: ty } }; }) };
       const r = /^\/tables\/([^/]+)\/records$/.exec(p), t = tables[r[1]]; if (m === 'get') return { records: t };
       if (m === 'post') return { records: body.records.map(x => { const id = t.length + 1; t.push({ id, fields: x.fields }); return { id }; }) };
       body.records.forEach(x => Object.assign(t.find(y => y.id === x.id).fields, x.fields)); return {}; } };
@@ -194,7 +194,7 @@ test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFM
   const p = tables.Planning_Periodes[0].fields;
   assert.deepStrictEqual(J(p.Classes_concernees), ['L', 1]); assert.strictEqual(p.Type, 9); assert.strictEqual(p.Annee_scolaire, 3); assert.strictEqual(p.Date_debut, Date.parse('2026-11-02T00:00:00Z') / 1000); assert.strictEqual(p.Libelle_periode, 'PFMP test');
   const e = tables.EUC_ELEVES_PFMP[0].fields;
-  assert.strictEqual(e.Nom, 'TEST'); assert.strictEqual(e.Email_eleve, 'admin@example.org'); assert.strictEqual(e.Classe, 1); assert.strictEqual(e.Annee_scolaire, '2026-2027'); assert.strictEqual(e.Present_dernier_import, true);
+  assert.strictEqual(e.Nom, 'TEST'); assert.strictEqual(e.Email_eleve, 'admin@example.org'); assert.strictEqual(e.Classe, 1); assert.strictEqual(e.Annee_scolaire, '2026-2027'); assert.strictEqual(e.Present_dernier_import, true); assert.strictEqual('Courriel' in e, false);
   const r2 = k.EUC_DEV604_jeuTest(Object.assign({}, q, { fin: '2026-12-04', confirmation: 'CREER' }));
   assert.strictEqual(r2.classe.existe, true); assert.strictEqual(r2.periode.existe, true); assert.strictEqual(r2.eleve.existe, true);
   assert.strictEqual(tables.Classes.length, 1); assert.strictEqual(tables.Planning_Periodes.length, 1); assert.strictEqual(tables.EUC_ELEVES_PFMP.length, 1);
