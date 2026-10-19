@@ -141,6 +141,17 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Soumissions reçues (formulaire de secours et JotForm)<small>Contrôler puis valider : la convention et son numéro sont créés</small></a>
         <a class="link" target="_blank" rel="noopener" href="<?= adminBase ?>?page=declaration-entreprise">Formulaire de secours « Déclarer mon entreprise »<small>Lien public à mettre dans Atrium</small></a>
         <button type="button" class="link" id="essaiForm" style="width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:800">Activer le mode essai (24 h)<small>Tester le formulaire sans élève réel : le dépôt « ESSAI » ne peut pas être validé</small></button><div id="essaiInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
+        <details id="jeuTest" style="margin-top:8px;border:1px solid #dce3ea;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;font-weight:800;color:#08745f">Classe et élève de test</summary>
+          <p style="font-size:.8rem;color:#4d5c6b;margin:6px 0">Classe « TEST … » écartée des effectifs, du suivi des professeurs, de la carte et des books. L’élève reçoit les vrais courriels : mettez votre adresse.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.85rem">
+            <label>Prénom<input id="jtPrenom" style="width:100%"></label><label>Nom<input id="jtNom" style="width:100%"></label>
+            <label>Courriel<input id="jtEmail" type="email" style="width:100%"></label><label>Né(e) le<input id="jtNaissance" type="date" style="width:100%"></label>
+            <label>Classe<input id="jtClasse" value="TEST PFMP" style="width:100%"></label><label>Période<input id="jtLibelle" value="PFMP test" style="width:100%"></label>
+            <label>Du<input id="jtDebut" type="date" style="width:100%"></label><label>Au<input id="jtFin" type="date" style="width:100%"></label>
+          </div>
+          <button type="button" class="link" id="jtApercu" style="margin-top:6px;cursor:pointer;font:inherit;font-weight:800">Aperçu</button>
+          <div id="jtInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
+        </details>
       </div>
     </section>
 
@@ -189,6 +200,18 @@ google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r
 })();
 </script>
 <script>
+/* DEV604 : création de la classe et de l'élève de test (aperçu puis confirmation). */
+(function(){var $=function(i){return document.getElementById(i);};if(!$('jtApercu'))return;
+  var d=new Date();d.setDate(d.getDate()+((8-d.getDay())%7||7));var iso=function(x){return x.toISOString().slice(0,10);};$('jtDebut').value=iso(d);var f=new Date(d);f.setDate(f.getDate()+25);$('jtFin').value=iso(f);
+  function q(conf){return {prenom:$('jtPrenom').value,nom:$('jtNom').value,email:$('jtEmail').value,naissance:$('jtNaissance').value,classe:$('jtClasse').value,libelle:$('jtLibelle').value,debut:$('jtDebut').value,fin:$('jtFin').value,confirmation:conf||''};}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function lancer(b,conf){if(!(window.google&&google.script&&google.script.run))return;var lib=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span>'+(conf?'Création…':'Vérification…');
+    google.script.run.withSuccessHandler(function(r){b.disabled=false;b.innerHTML=lib;var etat=function(x){return x.existe?'existe déjà (n° '+x.id+')':(r.apercu?'sera créée':'créée (n° '+x.id+')');};
+      $('jtInfo').innerHTML='Classe <b>'+esc(r.classe.nom)+'</b> : '+etat(r.classe)+'<br>Période <b>'+esc(r.periode.libelle)+'</b> du '+esc(r.periode.debut)+' au '+esc(r.periode.fin)+' ('+esc(r.annee)+') : '+etat(r.periode)+'<br>Élève <b>'+esc(r.eleve.prenom+' '+r.eleve.nom)+'</b> &lt;'+esc(r.eleve.email)+'&gt; : '+(r.eleve.existe?'existe déjà, fiche mise à jour':(r.apercu?'sera créé':'créé (n° '+r.eleve.id+')'))+
+        (r.apercu?'<br><button type="button" class="link" id="jtCreer" style="margin-top:6px;cursor:pointer;font:inherit;font-weight:800;background:#08745f;color:#fff">Créer dans Grist</button>':'<br><b>C’est prêt.</b> Générez sa convention ou utilisez le formulaire de secours avec cette identité.');
+      if($('jtCreer'))$('jtCreer').onclick=function(){lancer(this,'CREER');};})
+      .withFailureHandler(function(e){b.disabled=false;b.innerHTML=lib;$('jtInfo').innerHTML='<span style="color:#b42318;font-weight:700">'+esc(String(e&&e.message||e).replace(/^Error:\s*/,''))+'</span>';}).EUC_DEV604_jeuTest(q(conf));}
+  $('jtApercu').onclick=function(){lancer(this,'');};})();
 /* DEV603 : mode essai du formulaire de secours. */
 (function(){var b=document.getElementById('essaiForm');if(!b)return;b.onclick=function(){if(!(window.google&&google.script&&google.script.run))return;var lib=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span>Activation…';
   google.script.run.withSuccessHandler(function(r){b.disabled=false;b.innerHTML=lib;document.getElementById('essaiInfo').innerHTML='Mode essai actif 24 h. Dans le formulaire, choisissez n’importe quelle classe puis : Nom <b>'+r.nom+'</b> · Prénom <b>'+r.prenom+'</b> · Date de naissance <b>'+r.naissance+'</b>.';})
