@@ -7,7 +7,7 @@
  *   2. il choisit la période de stage de sa classe ;
  *   3. il vérifie le SIRET (même vérification que le QR code) et saisit responsable et tuteur
  *      (civilité, Prénom, NOM, fonction, téléphone, courriel ; mêmes contrôles que le QR code).
- * Le dépôt reçoit un numéro (D2026-0001) et rejoint la table d'attente de l'import JotForm
+ * Le dépôt reçoit directement son numéro d'enregistrement de convention (PFMP-2026-S0001, le même à l'écran, dans le courriel et sur la convention) et rejoint la table d'attente de l'import JotForm
  * (EUC_MIGRATION_JOTFORM_PFMP), élève et classe déjà rapprochés, SIRET vérifié. L'administration
  * valide sur la page « Soumissions reçues » (ex-Import JotForm) : la convention est alors créée,
  * reçoit son numéro (PFMP-2026-000123) et l'élève en est informé par courriel.
@@ -168,7 +168,7 @@ function EUC_DEV603_ligne_(numero, annee, eleve, classe, periode, ent, resp, tut
 }
 function EUC_DEV603_numero_(annee) {
   var p = PropertiesService.getScriptProperties(), k = 'EUC_DEV603_COMPTEUR_' + annee, n = Number(p.getProperty(k) || 0) + 1;
-  p.setProperty(k, String(n)); return 'D' + annee.slice(0, 4) + '-' + String(n).padStart(4, '0');
+  p.setProperty(k, String(n)); return 'PFMP-' + annee.slice(0, 4) + '-S' + String(n).padStart(4, '0');
 }
 function EUC_DEV603_deposer(q) {
   q = q || {};
@@ -221,12 +221,13 @@ function EUC_DEV603_apresValidation_(items) {
       var f = r.fields || {}; if (!/^SECOURS-/.test(EUC_DEV603_t_(f.Submission_ID))) return;
       var item = items.filter(function(x) { return Number(x.rowId) === Number(r.id); })[0]; if (!item || !item.accessId) return;
       var a = (EUC_ENT_grist('get', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ id: [item.accessId] }))).records || [])[0]; if (!a) return;
-      var af = Object.assign({ id: a.id }, a.fields || {}), numero = EUC_CONVENTION_numeroEnregistrementV568_(af);
-      if (!EUC_DEV603_t_(af.Numero_enregistrement)) try { EUC_ENT_grist('patch', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records', { records: [{ id: Number(a.id), fields: { Numero_enregistrement: numero } }] }); } catch (e) {}
+      /* Un seul numéro : celui du dépôt, déjà donné à l'élève et recopié sur sa convention. */
+      var af = Object.assign({ id: a.id }, a.fields || {}), depot = EUC_DEV603_t_(f.Submission_ID).replace(/^SECOURS-/, ''), numero = /^PFMP-/.test(depot) ? depot : EUC_CONVENTION_numeroEnregistrementV568_(af);
+      if (EUC_DEV603_t_(af.Numero_enregistrement) !== numero) try { EUC_ENT_grist('patch', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records', { records: [{ id: Number(a.id), fields: { Numero_enregistrement: numero } }] }); } catch (e) {}
       var mail = EUC_DEV603_t_(f.Email_eleve); if (!mail) return;
-      MailApp.sendEmail({ to: mail, name: 'Lycée Les Eucalyptus — PFMP', subject: 'Ta convention de stage est enregistrée — n° ' + numero,
-        body: ['Bonjour ' + EUC_DEV603_t_(f.Prenom_eleve) + ',', '', 'Le bureau des entreprises a validé ta déclaration ' + EUC_DEV603_t_(f.Submission_ID).replace(/^SECOURS-/, 'n° ') + '.',
-          'Entreprise : ' + EUC_DEV603_t_(f.Raison_sociale_officielle || f.Entreprise_saisie), 'Période : ' + EUC_DEV603_t_(f.Periode_numero), '', 'Numéro de ta convention : ' + numero, '', 'Lycée Les Eucalyptus — bureau des entreprises'].join('\n') });
+      MailApp.sendEmail({ to: mail, name: 'Lycée Les Eucalyptus — PFMP', subject: 'Ta convention de stage est validée — n° ' + numero,
+        body: ['Bonjour ' + EUC_DEV603_t_(f.Prenom_eleve) + ',', '', 'Le bureau des entreprises a validé ta déclaration.',
+          'Entreprise : ' + EUC_DEV603_t_(f.Raison_sociale_officielle || f.Entreprise_saisie), 'Période : ' + EUC_DEV603_t_(f.Periode_numero), '', 'Numéro d’enregistrement de ta convention (inchangé) : ' + numero, '', 'Lycée Les Eucalyptus — bureau des entreprises'].join('\n') });
       envoyes++;
     });
     return envoyes;
@@ -265,9 +266,9 @@ var EUC_DEV603_BUREAU_ = 'bureau G205 — bureau des formations et des entrepris
 function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme) {
   try {
     var copie = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_() : '';
-    if (email) MailApp.sendEmail({ to: email, replyTo: copie || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta déclaration d’entreprise de stage est reçue — ') + numero,
-      body: ['Bonjour ' + eleve.prenom + ',', '', probleme ? 'Ta demande ' + numero + ' est bien reçue : ton entreprise n’a pas pu être vérifiée automatiquement.' : 'Ta déclaration ' + numero + ' est bien reçue.',
-        'Entreprise : ' + entreprise, 'Période : ' + periode, '', probleme ? 'Passe au plus vite au ' + EUC_DEV603_BUREAU_ + ' avec les coordonnées de ton entreprise.' : 'Le bureau des entreprises va la vérifier. Tu recevras ensuite ton numéro de convention par courriel.',
+    if (email) MailApp.sendEmail({ to: email, replyTo: copie || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta convention de stage — numéro d’enregistrement ') + numero,
+      body: ['Bonjour ' + eleve.prenom + ',', '', probleme ? 'Ta demande ' + numero + ' est bien reçue : ton entreprise n’a pas pu être vérifiée automatiquement.' : 'Ta déclaration est bien reçue. Numéro d’enregistrement de ta convention : ' + numero + ' — recopie-le sur ta convention.',
+        'Entreprise : ' + entreprise, 'Période : ' + periode, '', probleme ? 'Passe au plus vite au ' + EUC_DEV603_BUREAU_ + ' avec les coordonnées de ton entreprise.' : 'Le bureau des entreprises va la vérifier ; tu seras prévenu(e) par courriel quand elle sera validée. Le numéro ne changera pas.',
         '', 'Lycée Les Eucalyptus — bureau des formations et des entreprises'].join('\n') });
     if (copie) MailApp.sendEmail({ to: copie, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? '[À traiter au bureau] ' : '[Dépôt] ') + numero + ' — ' + eleve.prenom + ' ' + eleve.nom + ' (' + classe + ')',
       body: [(probleme ? 'Demande d’aide (SIRET non vérifié / Monaco / étranger)' : 'Nouvelle déclaration par le formulaire de secours') + ' : ' + numero, 'Élève : ' + eleve.prenom + ' ' + eleve.nom + ' — ' + classe, 'Entreprise : ' + entreprise, 'Période : ' + periode, '', 'À contrôler puis valider dans « Soumissions reçues ».'].join('\n') });

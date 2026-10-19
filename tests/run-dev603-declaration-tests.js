@@ -90,18 +90,18 @@ test('DEV603 : dépôt — SIRET revérifié, noms mis en forme (Prénom, NOM), 
   const t = base(), k = contexte(t);
   const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
   const d = k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: false, tuteur: { civilite: 'Mme', prenom: 'anne-sophie', nom: "d'arcy", fonction: 'Cheffe d’atelier', telephone: '0611223344', courriel: 'as@martin.fr' } });
-  assert.strictEqual(d.numero, 'D2026-0001'); assert.strictEqual(d.entreprise, 'CARROSSERIE MARTIN');
+  assert.strictEqual(d.numero, 'PFMP-2026-S0001'); assert.strictEqual(d.entreprise, 'CARROSSERIE MARTIN');
   const f = t.EUC_MIGRATION_JOTFORM_PFMP[0].fields, raw = JSON.parse(f.Raw_JSON);
-  assert.strictEqual(f.Submission_ID, 'SECOURS-D2026-0001'); assert.strictEqual(f.Eleve_match_id, 7); assert.strictEqual(f.Classe_match_id, 10);
+  assert.strictEqual(f.Submission_ID, 'SECOURS-PFMP-2026-S0001'); assert.strictEqual(f.Eleve_match_id, 7); assert.strictEqual(f.Classe_match_id, 10);
   assert.strictEqual(f.SIRET_statut, 'VERIFIE'); assert.strictEqual(f.Decision, 'A_VALIDER'); assert.strictEqual(f.Date_debut_brut, '2026-11-02');
   assert.strictEqual(f.Nom_tuteur, "D'ARCY"); assert.strictEqual(raw['Prénom du tuteur'], 'Anne-Sophie'); assert.strictEqual(raw['Civilité du tuteur'], 'Mme');
   assert.strictEqual(raw['Nom du responsable'], 'MARTIN'); assert.strictEqual(raw['Prénom du responsable'], 'Paul'); assert.strictEqual(f.Email_eleve, 'lea@ex.org');
   /* Deuxième envoi pour la même période : le dépôt en attente est remplacé, même numéro. */
   const d2 = k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
-  assert.strictEqual(d2.numero, 'D2026-0001'); assert.strictEqual(d2.remplace, true); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 1); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Nom_tuteur, 'MARTIN');
+  assert.strictEqual(d2.numero, 'PFMP-2026-S0001'); assert.strictEqual(d2.remplace, true); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 1); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Nom_tuteur, 'MARTIN');
   /* Une fois validé, un nouvel envoi crée un nouveau dépôt. */
   t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'VALIDEE';
-  assert.strictEqual(k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true }).numero, 'D2026-0002');
+  assert.strictEqual(k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true }).numero, 'PFMP-2026-S0002');
 });
 
 test('DEV603 : refus — contrôle des noms, téléphone, période inconnue, SIRET faux ou introuvable, convention déjà enregistrée', () => {
@@ -122,11 +122,11 @@ test('DEV603 : refus — contrôle des noms, téléphone, période inconnue, SIR
 
 test('DEV603 : après validation — numéro de convention écrit et envoyé à l’élève, uniquement pour le formulaire de secours', () => {
   const t = base(), k = contexte(t);
-  t.EUC_MIGRATION_JOTFORM_PFMP.push({ id: 1, fields: { Submission_ID: 'SECOURS-D2026-0003', Email_eleve: 'lea@ex.org', Prenom_eleve: 'Léa', Periode_numero: 'PFMP 1', Raison_sociale_officielle: 'CARROSSERIE MARTIN' } }, { id: 2, fields: { Submission_ID: '6123', Email_eleve: 'x@ex.org' } });
+  t.EUC_MIGRATION_JOTFORM_PFMP.push({ id: 1, fields: { Submission_ID: 'SECOURS-PFMP-2026-S0003', Email_eleve: 'lea@ex.org', Prenom_eleve: 'Léa', Periode_numero: 'PFMP 1', Raison_sociale_officielle: 'CARROSSERIE MARTIN' } }, { id: 2, fields: { Submission_ID: '6123', Email_eleve: 'x@ex.org' } });
   t.EUC_ACCES_FORMULAIRES_PFMP.push({ id: 123, fields: { Annee_scolaire: '2026-2027' } }, { id: 124, fields: {} });
   assert.strictEqual(k.EUC_DEV603_apresValidation_([{ rowId: 1, accessId: 123 }, { rowId: 2, accessId: 124 }]), 1);
-  assert.strictEqual(t.EUC_ACCES_FORMULAIRES_PFMP[0].fields.Numero_enregistrement, 'PFMP-2026-000123');
-  assert.strictEqual(k.__mails.length, 1); assert.strictEqual(k.__mails[0].to, 'lea@ex.org'); assert.match(k.__mails[0].subject, /n° PFMP-2026-000123/); assert.match(k.__mails[0].body, /déclaration n° D2026-0003/);
+  assert.strictEqual(t.EUC_ACCES_FORMULAIRES_PFMP[0].fields.Numero_enregistrement, 'PFMP-2026-S0003');
+  assert.strictEqual(k.__mails.length, 1); assert.strictEqual(k.__mails[0].to, 'lea@ex.org'); assert.match(k.__mails[0].subject, /validée — n° PFMP-2026-S0003/); assert.match(k.__mails[0].body, /\(inchangé\) : PFMP-2026-S0003/);
 });
 
 test('DEV603 : branchements — route publique, verrou, validation JotForm, accueil admin, page (étapes, captcha, case piège, boutons protégés), NOM en capitales du QR', () => {
@@ -224,12 +224,12 @@ test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger
   assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Telephone_tuteur, '04 93 00 00 00');
   assert.strictEqual(d.courriel, 'l…@ex.org');
   assert.deepStrictEqual(k.__mails.map(m => m.to), ['lea@ex.org', 'bureau@example.org']);
-  assert.match(k.__mails[0].subject, /est reçue — D2026-0001/); assert.match(k.__mails[1].subject, /^\[Dépôt\] D2026-0001 — Léa DUPONT \(1MVA1\)/);
+  assert.match(k.__mails[0].subject, /numéro d’enregistrement PFMP-2026-S0001/); assert.match(k.__mails[0].body, /recopie-le sur ta convention/); assert.match(k.__mails[1].subject, /^\[Dépôt\] PFMP-2026-S0001 — Léa DUPONT \(1MVA1\)/);
   const a = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Garage Rives', ville: 'Monaco', pays: 'MC', telephone: '+377 93 15 00 00', courriel: 'contact@rives.mc', message: 'Pas de SIRET' });
-  assert.match(a.bureau, /G205/); assert.strictEqual(a.numero, 'D2026-0002');
+  assert.match(a.bureau, /G205/); assert.strictEqual(a.numero, 'PFMP-2026-S0002');
   const f = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields;
   assert.strictEqual(f.Decision, 'A_CONTROLER'); assert.strictEqual(f.SIRET_statut, 'A_CONTROLER'); assert.strictEqual(f.Niveau_controle, 'ROUGE'); assert.match(f.Alertes, /Monaco/); assert.match(f.Alertes, /G205/); assert.strictEqual(f.Pays_officiel, 'MC');
-  assert.match(k.__mails[2].body, /bureau G205/); assert.match(k.__mails[3].subject, /^\[À traiter au bureau\] D2026-0002/);
+  assert.match(k.__mails[2].body, /bureau G205/); assert.match(k.__mails[3].subject, /^\[À traiter au bureau\] PFMP-2026-S0002/);
   assert.throws(() => k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'X', ville: 'Y', pays: 'FR', telephone: '12' }), /numéro français/);
   assert.throws(() => k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: '', ville: '' }), /nom de l’entreprise/);
   const page = read('apps-script/Declaration_Entreprise_DEV603.html');
