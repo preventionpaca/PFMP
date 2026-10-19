@@ -95,7 +95,7 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 (function(){'use strict';
-var $=function(id){return document.getElementById(id);},T=<?= JSON.stringify(jeton) ?>,D=null,BILAN=null,LIEN='';
+var $=function(id){return document.getElementById(id);},T=<?= jeton ?>,D=null,BILAN=null,LIEN='';
 var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
     BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'},
     VIG={SIGNATAIRE_DIFFERENT:'signataire différent du tuteur du contrat',ADRESSE_ACADEMIQUE:'adresse académique',CONTACT_PROFESSEUR:'contact d’un professeur du lycée',CONTACT_PLUSIEURS_ENTREPRISES:'même contact déjà utilisé pour une autre entreprise'};

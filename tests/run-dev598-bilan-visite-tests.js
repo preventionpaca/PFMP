@@ -190,4 +190,9 @@ test('DEV598 : pages — routes, pages publiques du verrou, boutons protégés, 
   assert.match(pageProf, /cdnjs\.cloudflare\.com\/ajax\/libs\/qrcodejs\/1\.0\.0\/qrcode\.min\.js/);
 });
 
+test('DEV598 : valeurs injectées par contextual escaping (pas de JSON.stringify doublement guillemeté)', () => {
+  for (const [nom, page] of [['prof', pageProf], ['tuteur', pageTuteur], ['echeancier', pageEch]]) assert.doesNotMatch(page, /<\?= *JSON\.stringify/, nom);
+  assert.match(pageEch, /ANNEE=<\?= annee \?>/); assert.match(pageProf, /T=<\?= jeton \?>/);
+});
+
 console.log(`\n${n} tests DEV598 bilan de visite réussis.`);

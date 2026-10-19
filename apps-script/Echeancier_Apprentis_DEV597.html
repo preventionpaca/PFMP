@@ -51,7 +51,7 @@ a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert
 </main>
 <script>
 (function(){'use strict';
-var $=function(id){return document.getElementById(id);},D=null,FILTRE='',ANNEE=<?= JSON.stringify(annee) ?>;
+var $=function(id){return document.getElementById(id);},D=null,FILTRE='',ANNEE=<?= annee ?>;
 var LIB={RETARD:'En retard',ALERTE:'Alerte (45 j)',RAPPEL:'Rappel (30 j)',A_FAIRE:'À faire',A_VENIR:'Contrat à venir',FAIT:'Fait',ROMPU:'Contrat rompu'};
 function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}

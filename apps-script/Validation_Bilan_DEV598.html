@@ -54,7 +54,7 @@ canvas{width:100%;height:180px;border:2px dashed var(--bord);border-radius:10px;
 </main>
 <script>
 (function(){'use strict';
-var $=function(id){return document.getElementById(id);},S=<?= JSON.stringify(jeton) ?>,VIA=<?= JSON.stringify(via) ?>==='lien'?'LIEN':'',D=null,trace=false;
+var $=function(id){return document.getElementById(id);},S=<?= jeton ?>,VIA=<?= via ?>==='lien'?'LIEN':'',D=null,trace=false;
 var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
     BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'};
 function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
