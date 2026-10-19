@@ -57,6 +57,7 @@ canvas{width:100%;height:180px;border:2px dashed var(--bord);border-radius:10px;
 var $=function(id){return document.getElementById(id);},S=<?= JSON.stringify(jeton) ?>,VIA=<?= JSON.stringify(via) ?>==='lien'?'LIEN':'',D=null,trace=false;
 var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
     BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'};
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
 function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
 function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
@@ -94,9 +95,9 @@ $('valider').onclick=function(){var bt=this,msg=$('msg');msg.textContent='';
   bt.disabled=true;bt.innerHTML='<span class="spin"></span>Validation…';
   appel('EUC_DEV598_valider',{s:S,via:VIA,empreinte:D.bilan.empreinte,prenom:$('prenom').value,nom:$('nom').value,fonction:$('fonction').value,telephone:$('telephone').value,email:$('email').value,signature:image()},function(r){
     $('formulaire').className='fini';$('formulaire').innerHTML='<h2>Merci, le bilan est validé ✓</h2><p>'+(r.accuse?'Un accusé de réception a été envoyé à <b>'+esc(r.accuse)+'</b>.':'Votre validation est enregistrée.')+'</p><p class="note">Vous pouvez fermer cette page.</p>';window.scrollTo(0,document.body.scrollHeight);},
-    function(e){bt.disabled=false;bt.textContent='Je valide ce bilan';msg.innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+    function(e){bt.disabled=false;bt.textContent='Je valide ce bilan';msg.innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
 if(!S){$('etat').innerHTML='<span class="erreur">Lien incomplet. Scannez de nouveau le QR code ou demandez un nouveau lien au professeur.</span>';return;}
-appel('EUC_DEV598_lireValidation',{s:S},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;afficher(r);taille();},function(e){$('etat').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});
+appel('EUC_DEV598_lireValidation',{s:S},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;afficher(r);taille();},function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});
 window.addEventListener('resize',function(){if(!trace)taille();});
 })();
 </script>

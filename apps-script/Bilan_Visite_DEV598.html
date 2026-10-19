@@ -99,6 +99,7 @@ var $=function(id){return document.getElementById(id);},T=<?= JSON.stringify(jet
 var MOD={TELEPHONE:'Téléphone',SUR_PLACE:'Sur place',VISIO:'Visioconférence'},TYP={POSITIONNEMENT:'Positionnement',SUIVI:'Visite de suivi',CCF:'Certificative (CCF)'},
     BIL={SATISFAISANT:'Satisfaisant',A_RENFORCER:'À renforcer',ALERTE:'Alerte à traiter'},NIV={NON_ABORDE:'Non abordé',OBSERVE:'Observé',AVEC_AIDE:'Avec aide',AUTONOME:'Autonome'},
     VIG={SIGNATAIRE_DIFFERENT:'signataire différent du tuteur du contrat',ADRESSE_ACADEMIQUE:'adresse académique',CONTACT_PROFESSEUR:'contact d’un professeur du lycée',CONTACT_PLUSIEURS_ENTREPRISES:'même contact déjà utilisé pour une autre entreprise'};
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
 function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
 function heure(iso){try{return new Date(iso).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'});}catch(e){return iso;}}
@@ -172,10 +173,10 @@ function validation(){var z=$('zoneValidation'),b=BILAN;
     '<p><button type="button" id="verifier">Actualiser l’état de la validation</button> <span id="msgVal" role="status"></span></p></div><p class="note">En attente de la validation du tuteur.</p>';
   var dessiner=function(){if(!LIEN)return;try{$('qr').innerHTML='';new QRCode($('qr'),{text:LIEN,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});}catch(e){$('qr').innerHTML='<a href="'+esc(LIEN)+'">Lien de validation</a>';}};
   LIEN=b.lienTuteur||LIEN;if(LIEN)dessiner();else $('qr').innerHTML='<span class="note">Enregistrez le bilan pour obtenir le QR code.</span>';
-  $('envoyerLien').onclick=function(){var bt=this;occupe(bt,'Envoi…');appel('EUC_DEV598_envoyerLien',{t:T,bilanId:b.id,email:$('mailTuteur').value},function(r){libre(bt);b.lienEnvoyeA=r.email;$('msgVal').innerHTML='<span class="ok">Lien envoyé à '+esc(r.email)+'.</span>';},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
-  $('verifier').onclick=function(){var bt=this;occupe(bt,'Actualisation…');recharger(b.id,function(){libre(bt);},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+  $('envoyerLien').onclick=function(){var bt=this;occupe(bt,'Envoi…');appel('EUC_DEV598_envoyerLien',{t:T,bilanId:b.id,email:$('mailTuteur').value},function(r){libre(bt);b.lienEnvoyeA=r.email;$('msgVal').innerHTML='<span class="ok">Lien envoyé à '+esc(r.email)+'.</span>';},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
+  $('verifier').onclick=function(){var bt=this;occupe(bt,'Actualisation…');recharger(b.id,function(){libre(bt);},function(e){libre(bt);$('msgVal').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
 }
-function recharger(id,ok,ko){appel('EUC_DEV598_ouvrir',{t:T},function(r){D.bilans=r.bilans;var b=r.bilans.filter(function(x){return x.id===id;})[0]||null;BILAN=b;remplir(b);historique();validation();if(ok)ok();},ko||function(e){$('msg').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});}
+function recharger(id,ok,ko){appel('EUC_DEV598_ouvrir',{t:T},function(r){D.bilans=r.bilans;var b=r.bilans.filter(function(x){return x.id===id;})[0]||null;BILAN=b;remplir(b);historique();validation();if(ok)ok();},ko||function(e){$('msg').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});}
 $('enregistrer').onclick=function(){var bt=this,q=lire();$('msg').textContent='';
   if(BILAN&&BILAN.statut==='VALIDE'&&!confirm('Ce bilan est déjà validé par le tuteur. Le modifier annulera sa validation : il faudra la refaire. Continuer ?'))return;
   occupe(bt,'Enregistrement…');
@@ -183,7 +184,7 @@ $('enregistrer').onclick=function(){var bt=this,q=lire();$('msg').textContent=''
     var i=-1;D.bilans.forEach(function(x,k){if(x.id===r.bilanId)i=k;});if(i>=0)D.bilans[i]=r.bilan;else D.bilans.unshift(r.bilan);BILAN=r.bilan;historique();validation();
     $('msg').innerHTML='<span class="ok">'+(r.inchange?'Aucune modification.':r.annulee?'Enregistré — la validation du tuteur est à refaire.':'Enregistré.')+'</span>';
     $('zoneValidation').scrollIntoView({behavior:'smooth'});},
-    function(e){libre(bt);$('msg').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';});};
+    function(e){libre(bt);$('msg').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
 $('imprimer').onclick=function(){window.print();};
 if(!T){$('etat').innerHTML='<span class="erreur">Lien incomplet : ouvrez la fiche depuis le courriel de référent ou l’échéancier.</span>';$('sousTitre').textContent='';return;}
 appel('EUC_DEV598_ouvrir',{t:T},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;construire();
@@ -192,7 +193,7 @@ appel('EUC_DEV598_ouvrir',{t:T},function(r){D=r;$('etat').hidden=true;$('contenu
   if(br&&br.q){BILAN=r.bilans.filter(function(x){return x.id===br.bilanId;})[0]||null;remplir(BILAN,br.q);$('msg').innerHTML='<span class="note">Brouillon non enregistré restauré.</span>';}
   else{BILAN=dernier;remplir(BILAN);}
   historique();validation();},
-  function(e){$('etat').innerHTML='<span class="erreur">'+esc(e&&e.message||e)+'</span>';$('sousTitre').textContent='';});
+  function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';$('sousTitre').textContent='';});
 })();
 </script>
 </body>

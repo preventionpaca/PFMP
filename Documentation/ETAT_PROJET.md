@@ -2133,3 +2133,12 @@
 - Tests : `node tests/run-tests.js` ; dernier résultat avant cette intervention : 318 réussis.
 - Blocage connu : la recette visuelle authentifiée finale doit être réalisée avec une session institutionnelle.
 - Reprise exacte : contrôler la prochaine reconstruction planifiée du résumé compact, puis traiter la page Destinataires/envois et poursuivre les mesures de performance différentielles.
+
+## DEV598 — Bilan de visite en ligne validé par le tuteur (19/10/2026)
+
+- Pages : `?page=bilan-visite-apprenti&t=…` (professeur, lien signé par contrat, envoyé dans le courriel de référent et ouvert depuis l'échéancier) et `?page=validation-bilan-visite&s=…` (tuteur, lien signé par bilan, valable 7 jours, QR code ou courriel).
+- Le tuteur saisit lui-même son identité (proposée depuis le contrat, modifiable pour un remplaçant), un téléphone ou un courriel, et signe au doigt. Toute modification ultérieure du bilan annule la validation (empreinte du contenu).
+- Accusé au courriel du signataire avec copie visible à l'administration (`EUC_DEV598_COPIE_VALIDATIONS`, réglable dans l'échéancier) ; message détaillé à l'administration seule s'il n'y a pas de courriel ou en cas de vigilance (signataire différent du contrat, adresse académique, contact d'un professeur, même contact pour une autre entreprise).
+- Tables Grist créées à la première ouverture : `EUC_BILANS_VISITE_APPRENTIS`, `EUC_ACTIVITES_BILAN_VISITE` (repères et activités par motif de classe ; amorcée avec CAP Peintre automobile, motif `CAPP`).
+- Un bilan vaut contact d'entrée dans l'échéancier (sur place → visite, visio, téléphone → appel).
+- Vérifié sur le vert : routes, refus d'un lien falsifié sans connexion. Non exécuté réellement : création d'un bilan, validation par un tuteur, envoi de courriels (actions réelles laissées à l'administration).
