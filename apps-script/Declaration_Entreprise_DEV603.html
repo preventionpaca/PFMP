@@ -66,6 +66,21 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
     <div id="officiel"></div>
     <label for="enseigne">Nom commercial (si différent)</label><input id="enseigne">
     <button type="button" class="plein" id="b3" disabled>Continuer</button><p id="m3" role="status"></p>
+    <p><button type="button" id="aide">Mon SIRET ne fonctionne pas, ou mon entreprise est à Monaco / à l’étranger</button></p>
+  </section>
+
+  <section id="s3b" hidden>
+    <h2>Mon entreprise n’a pas pu être vérifiée</h2>
+    <p class="note">Donne ce que tu sais : le bureau des entreprises traitera ta demande avec toi.</p>
+    <label for="aEnt">Nom de l’entreprise</label><input id="aEnt">
+    <label for="aAdr">Adresse</label><input id="aAdr">
+    <div class="deux"><div><label for="aVille">Ville</label><input id="aVille"></div><div><label for="aPays">Pays</label><select id="aPays"><option value="FR">France</option><option value="MC">Monaco</option><option value="AUTRE">Autre pays</option></select></div></div>
+    <div id="aPaysAutre" hidden><label for="aPaysNom">Lequel ?</label><input id="aPaysNom"></div>
+    <label for="aSiret">SIRET ou numéro d’identification (si tu l’as)</label><input id="aSiret">
+    <label for="aContact">Nom de ton tuteur</label><input id="aContact">
+    <div class="deux"><div><label for="aTel">Téléphone de l’entreprise</label><input id="aTel" type="tel" inputmode="tel"></div><div><label for="aMail">Courriel de l’entreprise</label><input id="aMail" type="email"></div></div>
+    <label for="aMsg">Ton message</label><textarea id="aMsg" rows="3" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px"></textarea>
+    <button type="button" class="plein" id="aEnvoyer">Envoyer au bureau des entreprises</button> <button type="button" id="aRetour">Retour</button><p id="mA" role="status"></p>
   </section>
 
   <section id="s4" hidden>
@@ -90,12 +105,20 @@ function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)r
 function occupe(b,t){b.disabled=true;b.dataset.lib=b.dataset.lib||b.textContent;b.innerHTML='<span class="spin"></span>'+esc(t);}
 function libre(b){b.disabled=false;b.textContent=b.dataset.lib||b.textContent;}
 function erreur(id,e){$(id).innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';}
-function etape(n){[1,2,3,4,5].forEach(function(i){$('s'+i).hidden=i!==n;if($('e'+i))$('e'+i).className=i<=n?'on':'';});window.scrollTo(0,0);}
+function etape(n){$('s3b').hidden=n!=='3b';[1,2,3,4,5].forEach(function(i){$('s'+i).hidden=i!==n;if($('e'+i))$('e'+i).className=i<=n?'on':'';});window.scrollTo(0,0);}
 function prenom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,s,l){return s+l.toLocaleUpperCase('fr-FR');});}
 function nom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleUpperCase('fr-FR');}
 function personne(id){$(id).innerHTML='<div class="trois"><div><label>Civilité</label><select class="civ"><option value="">—</option><option>M.</option><option>Mme</option></select></div><div><label>Prénom</label><input class="pre" autocapitalize="words"></div><div><label>NOM</label><input class="nom" autocapitalize="characters"></div></div>'+
   '<label>Fonction</label><input class="fon" placeholder="Gérant, chef d’atelier…"><div class="deux"><div><label>Téléphone</label><input class="tel" type="tel" inputmode="tel" placeholder="06 12 34 56 78"></div><div><label>Courriel</label><input class="mel" type="email"></div></div>';
-  var z=$(id);z.querySelector('.pre').addEventListener('blur',function(){this.value=prenom(this.value);});z.querySelector('.nom').addEventListener('blur',function(){this.value=nom(this.value);});}
+  var z=$(id);surveiller(z.querySelector('.tel'),'FR');surveiller(z.querySelector('.mel'));z.querySelector('.tel').placeholder='06 12 34 56 78';z.querySelector('.pre').addEventListener('blur',function(){this.value=prenom(this.value);});z.querySelector('.nom').addEventListener('blur',function(){this.value=nom(this.value);});}
+/* Téléphone (France, Monaco, international) et courriel : mêmes règles que le serveur. */
+function tel(v,pays){var d=String(v||'').trim().replace(/[\s.\-()\/]/g,'').replace(/^00/,'+'),pr=function(x){return x.replace(/(\d{2})(?=\d)/g,'$1 ').trim();};
+  var fr=function(){var x=d.replace(/^\+33/,'0');return /^0[1-9]\d{8}$/.test(x)?pr(x):null;},mc=function(){var x=d.replace(/^\+377/,'');if(/^9\d{7}$/.test(x))return '+377 '+pr(x);if(/^6\d{8}$/.test(x))return '+377 6 '+pr(x.slice(1));return null;};
+  if(pays==='MC')return(/^\+33|^0/.test(d)?fr():mc())||mc()||fr();if(pays==='AUTRE')return /^\+\d{8,15}$/.test(d)?d:null;return fr();}
+var FAUTES={'gmial.com':'gmail.com','gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','gmail.fr':'gmail.com','gamil.com':'gmail.com','hotmial.com':'hotmail.com','hotmail.con':'hotmail.com','yahou.fr':'yahoo.fr','orange.com':'orange.fr','wanado.fr':'wanadoo.fr','outlook.con':'outlook.com','free.com':'free.fr','sfr.com':'sfr.fr','laposte.com':'laposte.net'};
+function mailErr(v){var m=String(v||'').trim().toLowerCase();if(!/^[a-z0-9._%+'-]+@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(m))return 'adresse courriel invalide (ex. prenom.nom@entreprise.fr)';var d=m.split('@')[1];return FAUTES[d]?'vouliez-vous écrire « '+FAUTES[d]+' » ?':'';}
+function surveiller(input,pays){var aide=document.createElement('span');aide.className='erreur';aide.style.fontSize='13px';input.parentNode.appendChild(aide);
+  input.addEventListener('blur',function(){if(!input.value.trim()){aide.textContent='';return;}if(input.type==='email'){var e=mailErr(input.value);aide.textContent=e;return;}var f=tel(input.value,typeof pays==='function'?pays():pays);if(f){input.value=f;aide.textContent='';}else aide.textContent=(typeof pays==='function'?pays():pays)==='AUTRE'?'Format international attendu : +39 0184 123456':'Numéro français à 10 chiffres attendu : 06 12 34 56 78';});}
 function lirePersonne(id){var z=$(id);return {civilite:z.querySelector('.civ').value,prenom:prenom(z.querySelector('.pre').value),nom:nom(z.querySelector('.nom').value),fonction:z.querySelector('.fon').value.trim(),telephone:z.querySelector('.tel').value.trim(),courriel:z.querySelector('.mel').value.trim()};}
 function nouveauCode(){appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg').src=r.captcha.image;$('captcha').value='';},function(e){erreur('m1',e);});}
 
@@ -122,12 +145,19 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
       appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});}).catch(function(){clearTimeout(minu);libre(b);erreur('m3','Le service de vérification ne répond pas. Réessaie dans un instant.');});
   },function(e){libre(b);erreur('m3',e);});};
 $('b3').onclick=function(){if(!SIRET)return;etape(4);};
+$('aide').onclick=function(){etape('3b');};$('aRetour').onclick=function(){etape(3);};
+$('aPays').onchange=function(){$('aPaysAutre').hidden=this.value!=='AUTRE';};
+surveiller($('aTel'),function(){return $('aPays').value;});surveiller($('aMail'));
+$('aEnvoyer').onclick=function(){var b=this;$('mA').textContent='';occupe(b,'Envoi…');
+  appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value},
+    function(r){libre(b);$('recu').innerHTML='<p>Numéro de demande : <b style="font-size:20px">'+esc(r.numero)+'</b></p><p class="erreur" style="font-size:18px">Passe au plus vite au '+esc(r.bureau)+'.</p><p class="note">Le bureau des entreprises a reçu ta demande.</p>';etape(5);},
+    function(e){libre(b);erreur('mA',e);});};
 /* Étape 4 */
 personne('resp');personne('tut');
 $('meme').onchange=function(){$('blocTuteur').hidden=this.checked;};
 $('b4').onclick=function(){var b=this;$('m4').textContent='';occupe(b,'Envoi…');
   appel('EUC_DEV603_deposer',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),siret:SIRET,reponseApi:REPONSE_API,enseigne:$('enseigne').value.trim(),responsable:lirePersonne('resp'),tuteurEstResponsable:$('meme').checked,tuteur:lirePersonne('tut')},
-    function(r){libre(b);$('recu').innerHTML=(r.essai?'<p class="erreur">Mode essai : ce dépôt apparaît dans « Soumissions reçues » mais ne peut pas être validé.</p>':'')+'<p>Numéro de dépôt : <b style="font-size:20px">'+esc(r.numero)+'</b>'+(r.remplace?' (ta déclaration précédente est remplacée)':'')+'</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration. Tu recevras ensuite ton <b>numéro de convention</b> par courriel. Note ton numéro de dépôt.</p>';etape(5);},
+    function(r){libre(b);$('recu').innerHTML=(r.essai?'<p class="erreur">Mode essai : ce dépôt apparaît dans « Soumissions reçues » mais ne peut pas être validé.</p>':'')+'<p>Numéro de dépôt : <b style="font-size:20px">'+esc(r.numero)+'</b>'+(r.remplace?' (ta déclaration précédente est remplacée)':'')+'</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration. Tu recevras ensuite ton <b>numéro de convention</b> par courriel. Note ton numéro de dépôt.</p>'+(r.courriel?'<p class="note">Un accusé de réception a été envoyé à '+esc(r.courriel)+'.</p>':'');etape(5);},
     function(e){libre(b);erreur('m4',e);});};
 
 appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg').src=r.captcha.image;

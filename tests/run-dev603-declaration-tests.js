@@ -203,4 +203,37 @@ test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFM
   assert.match(read('apps-script/Admin_PFMP.html'), /EUC_DEV604_jeuTest\(q\(conf\)\)/);
 });
 
+test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger ; mise en forme ; fautes de frappe ; accusé au dépôt ; demande d’aide (SIRET, Monaco, étranger) envoyée au bureau G205', () => {
+  const t = base(), k = contexte(t), T = (v, p) => J(k.EUC_DEV603_telephone_(v, p));
+  assert.deepStrictEqual(T('0610132014', 'FR'), { ok: true, format: '06 10 13 20 14' });
+  assert.deepStrictEqual(T('+33 4.93.00.00.00', 'FR'), { ok: true, format: '04 93 00 00 00' });
+  assert.strictEqual(T('0610132014141104', 'FR').ok, false); assert.match(T('0610132014141104', 'FR').erreur, /10 chiffres/);
+  assert.strictEqual(T('+377 93 15 00 00', 'FR').ok, false);
+  assert.deepStrictEqual(T('+377 93 15 00 00', 'MC'), { ok: true, format: '+377 93 15 00 00' });
+  assert.deepStrictEqual(T('00377 612345678', 'MC'), { ok: true, format: '+377 6 12 34 56 78' });
+  assert.deepStrictEqual(T('06 12 34 56 78', 'MC'), { ok: true, format: '06 12 34 56 78' });
+  assert.deepStrictEqual(T('+39 0184 123456', 'AUTRE'), { ok: true, format: '+390184123456' });
+  assert.strictEqual(T('0184 123456', 'AUTRE').ok, false);
+  assert.strictEqual(k.EUC_DEV603_courriel_('paul@martin.fr').ok, true);
+  assert.match(k.EUC_DEV603_courriel_('rudy@gmail.con').erreur, /gmail\.com/);
+  assert.match(k.EUC_DEV603_courriel_('rudy@gmail').erreur, /invalide/);
+  const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  assert.throws(() => k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: Object.assign({}, resp, { telephone: '0610132014141104' }), tuteurEstResponsable: true }), /Responsable de l’entreprise : numéro français/);
+  k.__props.EUC_DEV598_COPIE_VALIDATIONS = 'bureau@example.org';
+  const d = k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
+  assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Telephone_tuteur, '04 93 00 00 00');
+  assert.strictEqual(d.courriel, 'l…@ex.org');
+  assert.deepStrictEqual(k.__mails.map(m => m.to), ['lea@ex.org', 'bureau@example.org']);
+  assert.match(k.__mails[0].subject, /est reçue — D2026-0001/); assert.match(k.__mails[1].subject, /^\[Dépôt\] D2026-0001 — Léa DUPONT \(1MVA1\)/);
+  const a = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Garage Rives', ville: 'Monaco', pays: 'MC', telephone: '+377 93 15 00 00', courriel: 'contact@rives.mc', message: 'Pas de SIRET' });
+  assert.match(a.bureau, /G205/); assert.strictEqual(a.numero, 'D2026-0002');
+  const f = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields;
+  assert.strictEqual(f.Decision, 'A_CONTROLER'); assert.strictEqual(f.SIRET_statut, 'A_CONTROLER'); assert.strictEqual(f.Niveau_controle, 'ROUGE'); assert.match(f.Alertes, /Monaco/); assert.match(f.Alertes, /G205/); assert.strictEqual(f.Pays_officiel, 'MC');
+  assert.match(k.__mails[2].body, /bureau G205/); assert.match(k.__mails[3].subject, /^\[À traiter au bureau\] D2026-0002/);
+  assert.throws(() => k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'X', ville: 'Y', pays: 'FR', telephone: '12' }), /numéro français/);
+  assert.throws(() => k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: '', ville: '' }), /nom de l’entreprise/);
+  const page = read('apps-script/Declaration_Entreprise_DEV603.html');
+  for (const x of ['EUC_DEV603_signalerProbleme', 'Mon SIRET ne fonctionne pas', 'value="MC"', 'surveiller(', 'mailErr(']) assert.ok(page.includes(x), x);
+});
+
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);

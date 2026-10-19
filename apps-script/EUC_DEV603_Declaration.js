@@ -124,9 +124,31 @@ function EUC_DEV603_personne_(role, x, obligatoireContact) {
   if (!id.civilite) throw new Error(role + ' : choisissez la civilité.');
   var fonction = EUC_DEV603_t_(x.fonction).slice(0, 120), tel = EUC_DEV603_t_(x.telephone).slice(0, 30), mail = EUC_DEV603_t_(x.courriel).toLowerCase().slice(0, 150);
   if (!fonction) throw new Error(role + ' : indiquez la fonction.');
-  if (obligatoireContact && tel.replace(/\D/g, '').length < 10) throw new Error(role + ' : téléphone à 10 chiffres attendu.');
-  if (obligatoireContact && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(mail)) throw new Error(role + ' : adresse courriel invalide.');
-  return { civilite: id.civilite, prenom: EUC_DEV603_prenom_(id.prenom), nom: EUC_DEV603_nom_(id.nom), fonction: fonction, telephone: tel, courriel: mail };
+  var t = EUC_DEV603_telephone_(tel, x.pays || 'FR');
+  if (obligatoireContact && !t.ok) throw new Error(role + ' : ' + t.erreur);
+  var em = EUC_DEV603_courriel_(mail);
+  if (obligatoireContact && !em.ok) throw new Error(role + ' : ' + em.erreur);
+  return { civilite: id.civilite, prenom: EUC_DEV603_prenom_(id.prenom), nom: EUC_DEV603_nom_(id.nom), fonction: fonction, telephone: t.ok ? t.format : tel, courriel: mail };
+}
+/* Téléphone selon le pays de l'entreprise (calcul pur) : France, Monaco (ou France), étranger (international). */
+function EUC_DEV603_telephone_(v, pays) {
+  var brut = EUC_DEV603_t_(v), d = brut.replace(/[\s.\-()\/]/g, '').replace(/^00/, '+');
+  var paires = function(x) { return x.replace(/(\d{2})(?=\d)/g, '$1 ').trim(); };
+  var fr = function() { var x = d.replace(/^\+33/, '0'); if (/^0[1-9]\d{8}$/.test(x)) return { ok: true, format: paires(x) }; return null; };
+  var mc = function() { var x = d.replace(/^\+377/, ''); if (/^9\d{7}$/.test(x)) return { ok: true, format: '+377 ' + paires(x) }; if (/^6\d{8}$/.test(x)) return { ok: true, format: '+377 6 ' + paires(x.slice(1)) }; return null; };
+  if (!brut) return { ok: false, erreur: 'indiquez un numéro de téléphone.' };
+  pays = String(pays || 'FR').toUpperCase();
+  if (pays === 'MC') return (/^\+33|^0/.test(d) ? fr() : mc()) || mc() || fr() || { ok: false, erreur: 'numéro monégasque (+377 93 15 00 00, +377 6 12 34 56 78) ou français (06 12 34 56 78) attendu.' };
+  if (pays === 'AUTRE') return /^\+\d{8,15}$/.test(d) ? { ok: true, format: d } : { ok: false, erreur: 'numéro international attendu : + indicatif du pays puis le numéro (ex. +39 0184 123456).' };
+  return fr() || { ok: false, erreur: 'numéro français à 10 chiffres attendu (ex. 06 12 34 56 78 ou 04 93 00 00 00).' };
+}
+/* Courriel : format et fautes de frappe courantes (calcul pur). */
+function EUC_DEV603_courriel_(v) {
+  var m = EUC_DEV603_t_(v).toLowerCase();
+  if (!/^[a-z0-9._%+'-]+@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(m)) return { ok: false, erreur: 'adresse courriel invalide (ex. prenom.nom@entreprise.fr).' };
+  var dom = m.split('@')[1], fautes = { 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.fr': 'gmail.com', 'gamil.com': 'gmail.com', 'hotmial.com': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmal.fr': 'hotmail.fr', 'yahou.fr': 'yahoo.fr', 'yaho.fr': 'yahoo.fr', 'orange.com': 'orange.fr', 'wanado.fr': 'wanadoo.fr', 'outlok.fr': 'outlook.fr', 'outlook.con': 'outlook.com', 'free.com': 'free.fr', 'sfr.com': 'sfr.fr', 'laposte.com': 'laposte.net' };
+  if (fautes[dom]) return { ok: false, erreur: 'l’adresse se termine par « ' + dom + ' » : vouliez-vous écrire « ' + fautes[dom] + ' » ?' };
+  return { ok: true };
 }
 /* Ligne de la table d'attente, au format de l'import JotForm (calcul pur). */
 function EUC_DEV603_ligne_(numero, annee, eleve, classe, periode, ent, resp, tut, emailEleve) {
@@ -186,7 +208,8 @@ function EUC_DEV603_deposer(q) {
     if (enAttente) EUC_ENT_grist('patch', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ id: enAttente.id, fields: fields }] });
     else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  return { ok: true, numero: numero, remplace: !!enAttente, entreprise: ent.raisonSociale, periode: periode.libelle };
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, ent.raisonSociale, periode.libelle, false);
+  return { ok: true, numero: numero, remplace: !!enAttente, entreprise: ent.raisonSociale, periode: periode.libelle, courriel: emailEleve ? emailEleve.replace(/^(.).*(@.*)$/, '$1…$2') : '' };
 }
 
 /* ---------- Après validation par l'administration : numéro de convention à l'élève ---------- */
@@ -235,4 +258,54 @@ function EUC_DEV603_deposerEssai_(m, c, periode, ent, resp, tut) {
   Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
   EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   return { ok: true, essai: true, numero: numero, remplace: false, entreprise: ent.raisonSociale, periode: periode.libelle };
+}
+
+/* ---------- Accusé de dépôt (élève) et copie au bureau des entreprises ---------- */
+var EUC_DEV603_BUREAU_ = 'bureau G205 — bureau des formations et des entreprises';
+function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme) {
+  try {
+    var copie = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_() : '';
+    if (email) MailApp.sendEmail({ to: email, replyTo: copie || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta déclaration d’entreprise de stage est reçue — ') + numero,
+      body: ['Bonjour ' + eleve.prenom + ',', '', probleme ? 'Ta demande ' + numero + ' est bien reçue : ton entreprise n’a pas pu être vérifiée automatiquement.' : 'Ta déclaration ' + numero + ' est bien reçue.',
+        'Entreprise : ' + entreprise, 'Période : ' + periode, '', probleme ? 'Passe au plus vite au ' + EUC_DEV603_BUREAU_ + ' avec les coordonnées de ton entreprise.' : 'Le bureau des entreprises va la vérifier. Tu recevras ensuite ton numéro de convention par courriel.',
+        '', 'Lycée Les Eucalyptus — bureau des formations et des entreprises'].join('\n') });
+    if (copie) MailApp.sendEmail({ to: copie, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? '[À traiter au bureau] ' : '[Dépôt] ') + numero + ' — ' + eleve.prenom + ' ' + eleve.nom + ' (' + classe + ')',
+      body: [(probleme ? 'Demande d’aide (SIRET non vérifié / Monaco / étranger)' : 'Nouvelle déclaration par le formulaire de secours') + ' : ' + numero, 'Élève : ' + eleve.prenom + ' ' + eleve.nom + ' — ' + classe, 'Entreprise : ' + entreprise, 'Période : ' + periode, '', 'À contrôler puis valider dans « Soumissions reçues ».'].join('\n') });
+  } catch (e) { console.log('DEV603 accusé : ' + (e && e.message || e)); }
+}
+
+/* ---------- Porte de sortie : SIRET qui ne marche pas, entreprise à Monaco ou à l'étranger ---------- */
+function EUC_DEV603_signalerProbleme(q) {
+  q = q || {};
+  var j = EUC_DEV603_lireJeton_(q.jeton), m = EUC_SUIVI2_modele_(''), c = EUC_DEV603_classesModele_(m).filter(function(x) { return Number(x.id) === j.classeId; })[0];
+  if (!c) throw new Error('Classe introuvable.');
+  var periode = (c.periodes || []).filter(function(p) { return !p.suivi && Number(p.id) === Number(q.periodeId); })[0] || { libelle: '', debut: '', fin: '' };
+  var pays = ['FR', 'MC', 'AUTRE'].indexOf(EUC_DEV603_t_(q.pays).toUpperCase()) >= 0 ? EUC_DEV603_t_(q.pays).toUpperCase() : 'FR';
+  var entreprise = EUC_DEV603_t_(q.entreprise).slice(0, 200), ville = EUC_DEV603_t_(q.ville).slice(0, 120), message = EUC_DEV603_t_(q.message).slice(0, 1500);
+  if (!entreprise || !ville) throw new Error('Indique au moins le nom de l’entreprise et sa ville.');
+  var tel = EUC_DEV603_t_(q.telephone) ? EUC_DEV603_telephone_(q.telephone, pays) : { ok: true, format: '' };
+  if (!tel.ok) throw new Error('Téléphone de l’entreprise : ' + tel.erreur);
+  if (EUC_DEV603_t_(q.courriel) && !EUC_DEV603_courriel_(q.courriel).ok) throw new Error('Courriel de l’entreprise : ' + EUC_DEV603_courriel_(q.courriel).erreur);
+  var eleve = { id: j.eleveId, nom: 'ESSAI', prenom: 'Formulaire', naissance: '' }, emailEleve = '';
+  if (j.eleveId) {
+    var el = (EUC_ENT_grist('get', '/tables/EUC_ELEVES_PFMP/records?filter=' + encodeURIComponent(JSON.stringify({ id: [j.eleveId] }))).records || [])[0], ef = el ? el.fields || {} : {};
+    eleve = { id: j.eleveId, nom: EUC_DEV603_nom_(ef.Nom), prenom: EUC_DEV603_prenom_(ef.Prenom_usage || ef.Prenom), naissance: EUC_SUIVI2_date_(ef.Date_naissance) };
+    emailEleve = EUC_DEV603_t_(q.emailEleve).toLowerCase() || EUC_DEV603_t_(ef.Email_eleve || ef.Courriel || ef.Email).toLowerCase();
+  }
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Beaucoup d’envois en même temps : réessaie dans un instant.');
+  var numero;
+  try {
+    numero = j.eleveId ? EUC_DEV603_numero_(m.annee) : 'ESSAI-' + Utilities.formatDate(new Date(), 'Europe/Paris', 'yyyyMMdd-HHmmss');
+    var vide = { civilite: '', prenom: '', nom: EUC_DEV603_t_(q.contact).slice(0, 120), fonction: '', telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel).toLowerCase() };
+    var ligne = EUC_DEV603_ligne_(numero, m.annee, eleve, { id: Number(c.id), nom: c.nom }, periode, { siret: EUC_DEV603_t_(q.siret).replace(/\D/g, ''), raisonSociale: entreprise, enseigne: '', adresse: EUC_DEV603_t_(q.adresse).slice(0, 250), complement: '', codePostal: '', commune: ville, actif: true }, vide, vide, emailEleve);
+    ligne.Submission_ID = j.eleveId ? 'SECOURS-' + numero : numero; ligne.SIRET_statut = 'A_CONTROLER'; ligne.SIRET_source = 'Non vérifié (' + ({ FR: 'France', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ')';
+    ligne.Raison_sociale_officielle = ''; ligne.Adresse_officielle = ''; ligne.CP_officiel = ''; ligne.Ville_officielle = ''; ligne.Pays_officiel = pays === 'AUTRE' ? EUC_DEV603_t_(q.paysNom).slice(0, 60) : pays;
+    ligne.Niveau_controle = 'ROUGE'; ligne.Decision = j.eleveId ? 'A_CONTROLER' : 'ESSAI';
+    ligne.Alertes = 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
+    var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
+    Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
+    EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
+  } finally { lock.releaseLock(); }
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true);
+  return { ok: true, numero: numero, bureau: EUC_DEV603_BUREAU_ };
 }
