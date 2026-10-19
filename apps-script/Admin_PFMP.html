@@ -140,18 +140,6 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer les apprentis Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Soumissions reçues (formulaire de secours et JotForm)<small>Contrôler puis valider : la convention et son numéro sont créés</small></a>
         <a class="link" target="_blank" rel="noopener" href="<?= adminBase ?>?page=declaration-entreprise">Formulaire de secours « Déclarer mon entreprise »<small>Lien public à mettre dans Atrium</small></a>
-        <button type="button" class="link" id="essaiForm" style="width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:800">Activer le mode essai (24 h)<small>Tester le formulaire sans élève réel : le dépôt « ESSAI » ne peut pas être validé</small></button><div id="essaiInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
-        <details id="jeuTest" style="margin-top:8px;border:1px solid #dce3ea;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;font-weight:800;color:#08745f">Classe et élève de test</summary>
-          <p style="font-size:.8rem;color:#4d5c6b;margin:6px 0">Classe « TEST … » écartée des effectifs, du suivi des professeurs, de la carte et des books. L’élève reçoit les vrais courriels : mettez votre adresse.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.85rem">
-            <label>Prénom<input id="jtPrenom" style="width:100%"></label><label>Nom<input id="jtNom" style="width:100%"></label>
-            <label>Courriel<input id="jtEmail" type="email" style="width:100%"></label><label>Né(e) le<input id="jtNaissance" type="date" style="width:100%"></label>
-            <label>Classe<input id="jtClasse" value="TEST PFMP" style="width:100%"></label><label>Période<input id="jtLibelle" value="PFMP test" style="width:100%"></label>
-            <label>Du<input id="jtDebut" type="date" style="width:100%"></label><label>Au<input id="jtFin" type="date" style="width:100%"></label>
-          </div>
-          <button type="button" class="link" id="jtApercu" style="margin-top:6px;cursor:pointer;font:inherit;font-weight:800">Aperçu</button>
-          <div id="jtInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
-        </details>
       </div>
     </section>
 
@@ -172,6 +160,18 @@
       <h2>Développement</h2>
       <p>Contrôles et maintenance technique.</p>
       <div class="links">
+        <button type="button" class="link" id="essaiForm" style="width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:800">Activer le mode essai (24 h)<small>Tester le formulaire sans élève réel : le dépôt « ESSAI » ne peut pas être validé</small></button><div id="essaiInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
+        <details id="jeuTest" style="margin-top:8px;border:1px solid #dce3ea;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;font-weight:800;color:#08745f">Classe et élève de test</summary>
+          <p style="font-size:.8rem;color:#4d5c6b;margin:6px 0">Classe « TEST … » écartée des effectifs, du suivi des professeurs, de la carte et des books. L’élève reçoit les vrais courriels : mettez votre adresse.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.85rem">
+            <label>Prénom<input id="jtPrenom" style="width:100%"></label><label>Nom<input id="jtNom" style="width:100%"></label>
+            <label>Courriel<input id="jtEmail" type="email" style="width:100%"></label><label>Né(e) le<input id="jtNaissance" type="date" style="width:100%"></label>
+            <label>Classe<input id="jtClasse" value="TEST PFMP" style="width:100%"></label><label>Période<input id="jtLibelle" value="PFMP test" style="width:100%"></label>
+            <label>Du<input id="jtDebut" type="date" style="width:100%"></label><label>Au<input id="jtFin" type="date" style="width:100%"></label>
+          </div>
+          <button type="button" class="link" id="jtApercu" style="margin-top:6px;cursor:pointer;font:inherit;font-weight:800">Aperçu</button>
+          <div id="jtInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
+        </details>
         <a class="link" target="_top" href="<?= adminBase ?>?page=controle-chiffres-pfmp">Vérifier les chiffres du suivi<small>Moteur, codes postaux, diagnostic de classe, mesures</small></a>
         <a class="link" target="_top" id="euc-snapshot-setting" href="<?= adminBase ?>?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=suivi-conventions">Ancien suivi des PFMP<small>Fiches de classe complètes, en attendant la bascule</small></a>
