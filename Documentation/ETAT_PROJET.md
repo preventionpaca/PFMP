@@ -2142,3 +2142,12 @@
 - Tables Grist créées à la première ouverture : `EUC_BILANS_VISITE_APPRENTIS`, `EUC_ACTIVITES_BILAN_VISITE` (repères et activités par motif de classe ; amorcée avec CAP Peintre automobile, motif `CAPP`).
 - Un bilan vaut contact d'entrée dans l'échéancier (sur place → visite, visio, téléphone → appel).
 - Vérifié sur le vert : routes, refus d'un lien falsifié sans connexion. Non exécuté réellement : création d'un bilan, validation par un tuteur, envoi de courriels (actions réelles laissées à l'administration).
+
+## DEV599 — Livret numérique de l'apprenti (19/10/2026)
+
+- Pages : `?page=livret-apprenti&l=…` (lien personnel signé de l'apprenti, envoyé depuis l'échéancier ou imprimé en QR) et `?page=validation-livret&v=…` (lien signé par fiche, 14 jours).
+- Une fiche par séquence (au lycée / en entreprise, du … au …), activités par bloc (table `EUC_ACTIVITES_BILAN_VISITE`), remarques, jusqu'à 4 photos réduites (dossier Drive « Eucalyptus PFMP - Livret des apprentis (photos) »). Seul l'apprenti écrit.
+- Validation : séquence lycée → professeur référent (lien par courriel, commentaire facultatif) ; séquence entreprise → tuteur (QR sur le téléphone de l'apprenti ou lien par courriel ; identité, contact, signature ; vigilance identique au bilan de visite). Une fiche validée est figée.
+- Diffusion automatique en copie cachée : apprenti, tuteur du contrat et signataire, professeur référent, responsables légaux si mineur, destinataires de la table des envois cochés « Livret des apprentis » (périmètre établissement / filières / organisme). Table des envois : colonnes `LIVRET_APPRENTIS`, `Organisme`, ajout de destinataires libres (coordonnateurs).
+- Table Grist créée à la première ouverture : `EUC_LIVRET_APPRENTIS`.
+- Non exécuté réellement : création de fiche, validation, diffusion, envoi des liens (actions réelles laissées à l'administration).

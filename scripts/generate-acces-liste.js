@@ -28,6 +28,9 @@ const PAGES_PUBLIQUES = [
   /* DEV598 : liens signés du bilan de visite (professeur, tuteur) ; chaque fonction vérifie son jeton. */
   'Bilan_Visite_DEV598',
   'Validation_Bilan_DEV598',
+  /* DEV599 : livret de l'apprenti (lien signé de l'apprenti, lien de validation). */
+  'Livret_Apprenti_DEV599',
+  'Validation_Livret_DEV599',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

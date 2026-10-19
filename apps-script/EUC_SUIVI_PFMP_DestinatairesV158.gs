@@ -41,7 +41,10 @@ function EUC_V158_assurerTable_(){
     c('TABLEAUX_SUIVI','Tableaux de suivi PFMP','Bool'),
     c('Perimetre_etablissement','Périmètre établissement'),
     c('Filieres_JSON','Filières concernées'),
-    c('Ordre','Ordre','Int')
+    c('Ordre','Ordre','Int'),
+    /* DEV599 : comptes rendus du livret des apprentis, périmètre organisme (CFA, GRETA…). */
+    c('LIVRET_APPRENTIS','Livret des apprentis','Bool'),
+    c('Organisme','Organisme (CFA, GRETA…)')
   ];
 
   if(!exists){
@@ -228,6 +231,9 @@ function EUC_V158_lire(){
       email:EUC_V158_txt_(r.Email),
       actif:r.Actif!==false,
       tableauxSuivi:EUC_V158_bool_(r.TABLEAUX_SUIVI),
+      livret:EUC_V158_bool_(r.LIVRET_APPRENTIS),
+      organisme:EUC_V158_txt_(r.Organisme),
+      perso:/^PERSO_/.test(EUC_V158_txt_(r.Code)),
       etablissement:EUC_V158_txt_(r.Perimetre_etablissement).toUpperCase()||'TOUS',
       filieres:EUC_V159_parseFilieres_(r.Filieres_JSON),
       ordre:Number(r.Ordre)||999
@@ -237,8 +243,27 @@ function EUC_V158_lire(){
   return {
     lignes:lignes,
     classes:EUC_V159_catalogueClasses_(),
-    filieres:EUC_V159_filieresCatalogue_()
+    filieres:EUC_V159_filieresCatalogue_(),
+    organismes:EUC_V158_organismes_()
   };
+}
+
+/* DEV599 : organismes cités dans la table Classes (gestionnaire, donneur d'ordre). */
+function EUC_V158_organismes_(){
+  var vus={};
+  try{EUC_IMPORT_lireRecords_('Classes').forEach(function(r){[r.Organisme_gestionnaire,r.Organisme_donneur_ordre].forEach(function(o){o=EUC_V158_txt_(o);if(o)vus[o]=1;});});}catch(e){}
+  return Object.keys(vus).sort();
+}
+
+/* DEV599 : destinataire supplémentaire (coordonnateur de filière, contact d'un organisme…). */
+function EUC_V158_ajouter(q){
+  var ctx=EUC_V156_contexteAdmin_();
+  if(!ctx)throw new Error('Accès administrateur requis.');
+  var fonction=EUC_V158_txt_(q&&q.fonction).slice(0,120);
+  if(!fonction)throw new Error('Indiquez la fonction (ex. Coordonnateur électrotechnique).');
+  EUC_V158_assurerLignes_();
+  EUC_ENT_grist('post','/tables/'+EUC_V158_TABLE_+'/records',{records:[{fields:{Code:'PERSO_'+Date.now(),Fonction:fonction,Nom:'',Email:'',Actif:true,TABLEAUX_SUIVI:false,LIVRET_APPRENTIS:true,Perimetre_etablissement:'TOUS',Filieres_JSON:'[]',Ordre:900}}]});
+  return EUC_V158_lire();
 }
 
 function EUC_V158_sauver(payload){
@@ -259,12 +284,16 @@ function EUC_V158_sauver(payload){
     var etab=EUC_V158_txt_(x.etablissement).toUpperCase();
     if(['TOUS','LP','LGT'].indexOf(etab)<0)etab='TOUS';
 
+    var perso=/^PERSO_/.test(EUC_V158_txt_(byId[id].Code))&&EUC_V158_txt_(x.fonction);
     EUC_ENT_grist('patch','/tables/'+EUC_V158_TABLE_+'/records',{
       records:[{id:id,fields:{
+        Fonction:perso?EUC_V158_txt_(x.fonction).slice(0,120):EUC_V158_txt_(byId[id].Fonction),
         Nom:EUC_V158_txt_(x.nom),
         Email:EUC_V158_txt_(x.email),
         Actif:x.actif!==false,
         TABLEAUX_SUIVI:x.tableauxSuivi===true,
+        LIVRET_APPRENTIS:x.livret===true,
+        Organisme:EUC_V158_txt_(x.organisme),
         Perimetre_etablissement:etab,
         Filieres_JSON:JSON.stringify((x.filieres||[]).map(EUC_V158_txt_).filter(Boolean))
       }}]

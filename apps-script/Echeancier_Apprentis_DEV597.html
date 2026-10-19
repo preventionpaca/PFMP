@@ -28,8 +28,11 @@ th,td{padding:7px 8px;border-bottom:1px solid #e3eee9;text-align:left;vertical-a
 .petit{display:block;font-size:12px;color:var(--gris)}
 .form{background:#f4f8f6;border:1px solid var(--bord);border-radius:8px;padding:8px;margin-top:6px;display:grid;gap:6px}
 .erreur{color:#991b1b;font-weight:700}
+.planche{display:none}
+@media print{body>header,main>*:not(.planche){display:none!important}.planche{display:grid!important;grid-template-columns:repeat(3,1fr);gap:14px}.planche div{border:1px dashed #999;padding:10px;text-align:center;break-inside:avoid;font:13px Arial}.planche img,.planche canvas{margin:6px auto}}
 a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert);color:#fff;border-radius:8px;padding:6px 10px;font-weight:700;text-decoration:none}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <header><h1>Échéancier des apprentis — contact d’entrée</h1><p>Un contact (appel ou visite) avec l’entreprise dans les 45 jours suivant le début du contrat. Rappel à 30 jours, alerte à 45, retard à 60. · <a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a></p></header>
@@ -43,10 +46,13 @@ a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert
     <label>Affecter les cochés à <select id="profAff"><option value="">— retirer le référent —</option></select></label>
     <button type="button" id="affecter" class="plein" disabled>Affecter</button>
     <button type="button" id="prevenir">Prévenir les référents</button>
+    <button type="button" id="liensLivret">Envoyer le lien du livret</button>
+    <button type="button" id="qrLivret">Imprimer les QR des livrets</button>
   </div>
   <div class="filtres note"><label>Fiche d’entretien (lien Drive ou PDF, jointe au courriel) <input id="fiche" size="50" placeholder="https://…"></label><button type="button" id="ficheOk">Enregistrer le lien</button></div>
   <div class="filtres note"><label>Copie des validations des tuteurs à <input id="copie" type="email" size="34" placeholder="votre courriel"></label><button type="button" id="copieOk">Enregistrer</button><span>Chaque validation par un tuteur vous est envoyée en copie : vous voyez l’adresse qu’il a donnée.</span></div>
   <div id="apercu"></div>
+  <div id="planche" class="planche"></div>
   <table><thead><tr><th><input type="checkbox" id="tout" aria-label="Tout cocher"></th><th>Statut</th><th>Apprenti</th><th>Classe</th><th>Entreprise · tuteur</th><th>Début du contrat</th><th>À faire avant</th><th>Référent</th><th>Contact</th></tr></thead><tbody id="lignes"></tbody></table>
 </main>
 <script>
@@ -105,6 +111,22 @@ function prevenir(confirmer){var b=$('prevenir');b.disabled=true;b.textContent=c
       '<div><button type="button" class="plein" id="envoyer">Envoyer</button> <button type="button" id="annuler">Annuler</button></div></div>';
     $('envoyer').onclick=function(){prevenir(true);};$('annuler').onclick=function(){$('apercu').innerHTML='';};});}
 $('prevenir').onclick=function(){prevenir(false);};
+/* DEV599 : liens du livret de l'apprenti (cochés, sinon lignes affichées). */
+function cibles(){var c=coches();if(c.length)return c;return Array.prototype.map.call(document.querySelectorAll('.coche'),function(x){return Number(x.value);});}
+function liensLivret(confirmer){var b=$('liensLivret'),ids=coches();if(!ids.length){$('apercu').innerHTML='<p class="note">Cochez les apprentis à qui envoyer leur lien.</p>';return;}
+  b.disabled=true;b.textContent=confirmer?'Envoi…':'Préparation…';
+  appel('EUC_DEV599_envoyerLiens',{eleveIds:ids,confirmation:confirmer?'ENVOYER':''},function(r){b.disabled=false;b.textContent='Envoyer le lien du livret';
+    if(!r.apercu){$('apercu').innerHTML='<p><b>'+r.envoyes+' lien(s) envoyé(s).</b>'+(r.sansMail.length?' Sans adresse : '+esc(r.sansMail.join(', ')):'')+'</p>';return;}
+    $('apercu').innerHTML='<div class="form"><b>'+r.envois.length+' apprenti(s) recevront leur lien personnel</b>'+(r.envois.length?'<span class="petit">'+esc(r.envois.map(function(e){return e.nom+' <'+e.email+'>';}).join(' · '))+'</span>':'')+(r.sansMail.length?'<span class="erreur">Sans adresse (imprimez leur QR) : '+esc(r.sansMail.join(', '))+'</span>':'')+
+      (r.envois.length?'<div><button type="button" class="plein" id="envoyerLiens">Envoyer</button> <button type="button" id="annulerLiens">Annuler</button></div>':'')+'</div>';
+    if(r.envois.length){$('envoyerLiens').onclick=function(){liensLivret(true);};$('annulerLiens').onclick=function(){$('apercu').innerHTML='';};}});}
+$('liensLivret').onclick=function(){liensLivret(false);};
+$('qrLivret').onclick=function(){var ids=cibles(),l=D.lignes.filter(function(x){return ids.indexOf(x.eleveId)>=0&&x.lienLivret;}),vus={};
+  l=l.filter(function(x){if(vus[x.eleveId])return false;vus[x.eleveId]=1;return true;});
+  if(!l.length){$('apercu').innerHTML='<p class="note">Aucun apprenti à imprimer.</p>';return;}
+  $('planche').innerHTML=l.map(function(x,i){return '<div><b>'+esc(x.nom)+'</b><br>'+esc(x.classe)+'<div id="q'+i+'"></div>Mon livret d’apprentissage<br><small>Lien personnel : ne pas le partager</small></div>';}).join('');
+  l.forEach(function(x,i){try{new QRCode($('q'+i),{text:x.lienLivret,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});}catch(e){$('q'+i).textContent=x.lienLivret;}});
+  setTimeout(function(){window.print();},300);};
 $('copieOk').onclick=function(){var b=this;b.disabled=true;b.textContent='Enregistrement…';appel('EUC_DEV598_reglerCopie',{email:$('copie').value},function(){b.disabled=false;b.textContent='Enregistré ✓';setTimeout(function(){b.textContent='Enregistrer';},1500);});};
 $('ficheOk').onclick=function(){var b=this;b.disabled=true;appel('EUC_DEV597_reglerFiche',{url:$('fiche').value},function(){b.disabled=false;b.textContent='Lien enregistré ✓';setTimeout(function(){b.textContent='Enregistrer le lien';},1500);});};
 charger();

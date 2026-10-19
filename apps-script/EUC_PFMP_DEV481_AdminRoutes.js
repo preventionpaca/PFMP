@@ -43,6 +43,10 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV598_afficherFiche(e);
     case 'validation-bilan-visite':
       return EUC_DEV598_afficherValidation(e);
+    case 'livret-apprenti':
+      return EUC_DEV599_afficherLivret(e);
+    case 'validation-livret':
+      return EUC_DEV599_afficherValidation(e);
     case 'listes-eleves-pfmp':
       return EUC_DEV578_afficherListesEleves(e);
 

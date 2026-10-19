@@ -55,12 +55,16 @@
           <th>Email</th>
           <th>Actif</th>
           <th>Tableaux de suivi PFMP</th>
+          <th>Livret des apprentis</th>
+          <th>Organisme</th>
           <th>Établissement</th>
           <th>Filières concernées</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+    <p class="tiny">Livret des apprentis : la personne reçoit les comptes rendus validés des apprentis de son périmètre (établissement, filières, organisme). L’apprenti, son tuteur, son professeur référent et les parents des mineurs les reçoivent toujours.</p>
+    <p><input id="nouvelleFonction" type="text" placeholder="Fonction (ex. Coordonnateur électrotechnique)"> <button type="button" id="ajouter">+ Ajouter un destinataire</button></p>
 
     <details>
       <summary>Référentiel classes → établissement / filière</summary>
@@ -118,11 +122,13 @@ function filiereOptions(selected){
 function render(){
   tbody.innerHTML=(DATA.lignes||[]).map(function(x){
     return '<tr data-id="'+x.id+'">'+
-      '<td><b>'+esc(x.fonction)+'</b></td>'+
+      '<td>'+(x.perso?'<input class="fonction" type="text" value="'+esc(x.fonction)+'">':'<b>'+esc(x.fonction)+'</b>')+'</td>'+
       '<td><input class="nom" type="text" value="'+esc(x.nom||'')+'" placeholder="Nom"></td>'+
       '<td><input class="email" type="email" value="'+esc(x.email||'')+'" placeholder="adresse@domaine.fr"></td>'+
       '<td><input class="actif" type="checkbox" '+(x.actif?'checked':'')+'></td>'+
       '<td><input class="tableaux" type="checkbox" '+(x.tableauxSuivi?'checked':'')+'></td>'+
+      '<td><input class="livret" type="checkbox" '+(x.livret?'checked':'')+'></td>'+
+      '<td><select class="organisme"><option value="">Tous</option>'+(DATA.organismes||[]).concat(x.organisme&&(DATA.organismes||[]).indexOf(x.organisme)<0?[x.organisme]:[]).map(function(o){return '<option'+(o===x.organisme?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select></td>'+
       '<td><select class="etab">'+etabOptions(x.etablissement||'TOUS',false)+'</select></td>'+
       '<td><select class="filieres" multiple>'+filiereOptions(x.filieres)+'</select><div class="tiny">Vide = toutes</div></td>'+
     '</tr>';
@@ -156,6 +162,16 @@ function load(){
     .EUC_V158_lire();
 }
 
+document.getElementById('ajouter').onclick=function(){
+  const b=this,old=b.innerHTML,f=document.getElementById('nouvelleFonction').value.trim();
+  if(!f){show('Indiquez la fonction du destinataire à ajouter.','err');return;}
+  b.disabled=true;b.innerHTML='<span class="spinner"></span>Ajout…';
+  google.script.run
+    .withSuccessHandler(function(r){DATA=r;render();b.disabled=false;b.innerHTML=old;document.getElementById('nouvelleFonction').value='';show('Destinataire ajouté : complétez son nom et son courriel, puis enregistrez.','ok');})
+    .withFailureHandler(function(e){b.disabled=false;b.innerHTML=old;show('Erreur : '+(e&&e.message||e),'err');})
+    .EUC_V158_ajouter({fonction:f});
+};
+
 function selectedValues(select){
   return Array.from(select.selectedOptions).map(function(o){return o.value}).filter(Boolean);
 }
@@ -173,6 +189,9 @@ save.onclick=function(){
       email:tr.querySelector('.email').value.trim(),
       actif:tr.querySelector('.actif').checked,
       tableauxSuivi:tr.querySelector('.tableaux').checked,
+      livret:tr.querySelector('.livret').checked,
+      organisme:tr.querySelector('.organisme').value,
+      fonction:tr.querySelector('.fonction')?tr.querySelector('.fonction').value.trim():'',
       etablissement:tr.querySelector('.etab').value,
       filieres:selectedValues(tr.querySelector('.filieres'))
     };

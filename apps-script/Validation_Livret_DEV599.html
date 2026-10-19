@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validation du livret d’apprentissage</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(90deg,#064e3b,#0b6b4f);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:19px}header p{margin:4px 0 0;opacity:.92;font-size:14px}
+main{max-width:760px;margin:auto;padding:10px 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin:12px 0}
+h2{font-size:17px;margin:0 0 8px;color:var(--vert)}h3{font-size:15px;margin:12px 0 4px}
+.note{color:var(--gris);font-size:14px}
+.lu p{white-space:pre-wrap;margin:2px 0 8px}
+label{display:block;margin:8px 0 2px;font-weight:700}
+input,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px}
+textarea{min-height:70px}
+button{font:inherit;border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer}
+button.plein{background:var(--vert);color:#fff;width:100%;padding:13px}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+canvas{width:100%;height:180px;border:2px dashed var(--bord);border-radius:10px;background:#fff;touch-action:none;display:block}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:800;background:#e7f5ef}
+.photos{display:flex;flex-wrap:wrap;gap:8px}.photos img{width:140px;height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--bord)}
+.erreur{color:#991b1b;font-weight:700}.fini{background:#ecfdf5;border-color:#86efac}
+</style>
+</head>
+<body>
+<header><h1>Livret d’apprentissage</h1><p id="sousTitre">Validation · Lycée Les Eucalyptus</p></header>
+<main>
+  <div id="etat" class="note" role="status">Chargement de la fiche…</div>
+  <div id="contenu" hidden>
+    <section id="fiche"></section>
+    <section id="formulaire"></section>
+  </div>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},V=<?= jeton ?>,VIA=<?= via ?>==='lien'?'LIEN':'',D=null,trace=false,cv,cx;
+var NIV={NON_ABORDE:'pas encore',OBSERVE:'observé',AVEC_AIDE:'avec aide',AUTONOME:'seul(e)'};
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
+function afficher(r){var f=r.fiche,c=f.contenu||{},m=r.modele,bloc='';
+  $('sousTitre').textContent=r.apprenti+' — '+r.classe+(f.lieu==='ENTREPRISE'&&r.entreprise?' · '+r.entreprise:'');
+  $('fiche').innerHTML='<h2>'+(f.lieu==='LYCEE'?'Séquence au lycée':'Séquence en entreprise')+' du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><p class="note">Fiche rédigée par l’apprenti.</p><div class="lu">'+
+    m.activites.filter(function(a){return (c.activites||{})[a.id];}).map(function(a){var h='',x=c.activites[a.id];if(a.bloc&&a.bloc!==bloc){bloc=a.bloc;h='<h3>'+esc(a.bloc)+'</h3>';}return h+'<b>'+esc(a.libelle)+'</b>'+(x.niveau?' <span class="chip">'+NIV[x.niveau]+'</span>':'')+'<p>'+esc(x.texte)+'</p>';}).join('')+
+    (c.autres?'<h3>Autres activités et remarques</h3><p>'+esc(c.autres)+'</p>':'')+(c.ressenti?'<h3>Ce que l’apprenti en retient</h3><p>'+esc(c.ressenti)+'</p>':'')+'</div>'+
+    (f.photos.length?'<h3>Photos</h3><div class="photos" id="photos">'+f.photos.map(function(p){return '<img data-id="'+esc(p.id)+'" alt="'+esc(p.nom)+'">';}).join('')+'</div>':'');
+  Array.prototype.forEach.call(document.querySelectorAll('#photos img'),function(img){appel('EUC_DEV599_photo',{v:V,photoId:img.dataset.id},function(src){img.src=src;},function(){});});
+  var z=$('formulaire');
+  if(f.statut==='VALIDE'){z.className='fini';z.innerHTML='<h2>Fiche déjà validée</h2><p>Validée par <b>'+esc(f.valideur)+'</b>. Merci.</p>';return;}
+  var p=r.proposition||{};
+  if(r.role==='REFERENT'){z.innerHTML='<h2>Validation du professeur référent</h2><label for="nom">Votre nom</label><input id="nom" value="'+esc(p.nom||'')+'">'+
+    '<label for="commentaire">Commentaire (facultatif, envoyé avec le compte rendu)</label><textarea id="commentaire"></textarea><p></p><button type="button" class="plein" id="valider">Je valide cette fiche</button><p id="msg" role="status"></p>';}
+  else{z.innerHTML='<h2>Validation du tuteur</h2><p class="note">Vérifiez ou corrigez votre identité : si vous remplacez le tuteur habituel, indiquez vos propres nom et fonction.</p>'+
+    '<label for="prenom">Prénom</label><input id="prenom" autocomplete="given-name" value="'+esc(p.prenom||'')+'"><label for="nom">Nom</label><input id="nom" autocomplete="family-name" value="'+esc(p.nom||'')+'">'+
+    '<label for="fonction">Fonction dans l’entreprise</label><input id="fonction" value="'+esc(p.fonction||'')+'">'+
+    '<label for="telephone">Téléphone</label><input id="telephone" type="tel" inputmode="tel" autocomplete="tel"><label for="email">Courriel</label><input id="email" type="email" inputmode="email" autocomplete="email">'+
+    '<p class="note">Un téléphone ou un courriel au moins. Le compte rendu vous sera envoyé à ce courriel.</p>'+
+    '<label for="commentaire">Commentaire (facultatif)</label><textarea id="commentaire"></textarea>'+
+    '<label>Signature</label><canvas id="sig" aria-label="Zone de signature : signez au doigt ou à la souris"></canvas><p><button type="button" id="effacer">Effacer la signature</button></p>'+
+    '<button type="button" class="plein" id="valider">Je valide cette fiche</button><p id="msg" role="status"></p>';signature();}
+  $('valider').onclick=valider;}
+/* Signature au doigt ou à la souris. */
+function signature(){cv=$('sig');cx=cv.getContext('2d');var dessin=false;
+  function taille(){var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;cv.width=Math.round(r.width*k);cv.height=Math.round(r.height*k);cx.setTransform(k,0,0,k,0,0);cx.lineWidth=2.4;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#0b2545';trace=false;}
+  function pos(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+  cv.addEventListener('pointerdown',function(e){dessin=true;cv.setPointerCapture(e.pointerId);var p=pos(e);cx.beginPath();cx.moveTo(p.x,p.y);e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){if(!dessin)return;var p=pos(e);cx.lineTo(p.x,p.y);cx.stroke();trace=true;e.preventDefault();});
+  ['pointerup','pointercancel','pointerleave'].forEach(function(t){cv.addEventListener(t,function(){dessin=false;});});
+  $('effacer').onclick=function(){cx.clearRect(0,0,cv.width,cv.height);trace=false;};
+  taille();window.addEventListener('resize',function(){if(!trace)taille();});}
+function image(){var o=document.createElement('canvas');o.width=480;o.height=Math.round(480*cv.height/cv.width)||180;var k=o.getContext('2d');k.fillStyle='#fff';k.fillRect(0,0,o.width,o.height);k.drawImage(cv,0,0,o.width,o.height);return o.toDataURL('image/png');}
+function valider(){var bt=$('valider'),msg=$('msg'),q={v:V,via:VIA,empreinte:D.fiche.empreinte,nom:$('nom').value,commentaire:$('commentaire').value};msg.textContent='';
+  if(D.role==='TUTEUR'){q.prenom=$('prenom').value;q.fonction=$('fonction').value;q.telephone=$('telephone').value;q.email=$('email').value;
+    if(!q.prenom.trim()||!q.nom.trim()){msg.innerHTML='<span class="erreur">Indiquez votre prénom et votre nom.</span>';return;}
+    if(!q.telephone.trim()&&!q.email.trim()){msg.innerHTML='<span class="erreur">Indiquez un téléphone ou un courriel.</span>';return;}
+    if(!trace){msg.innerHTML='<span class="erreur">Signez dans le cadre avant de valider.</span>';return;}
+    q.signature=image();}
+  else if(!q.nom.trim()){msg.innerHTML='<span class="erreur">Indiquez votre nom.</span>';return;}
+  bt.disabled=true;bt.innerHTML='<span class="spin"></span>Validation…';
+  appel('EUC_DEV599_valider',q,function(r){var z=$('formulaire');z.className='fini';z.innerHTML='<h2>Merci, la fiche est validée ✓</h2><p>'+(r.diffuseA?'Le compte rendu a été envoyé à '+r.diffuseA+' destinataire(s).':'Votre validation est enregistrée.')+'</p><p class="note">Vous pouvez fermer cette page.</p>';},
+    function(e){bt.disabled=false;bt.textContent='Je valide cette fiche';msg.innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});}
+if(!V){$('etat').innerHTML='<span class="erreur">Lien incomplet. Scannez de nouveau le QR code ou demandez un nouveau lien à l’apprenti.</span>';return;}
+appel('EUC_DEV599_lireValidation',{v:V},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;afficher(r);},function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});
+})();
+</script>
+</body>
+</html>
