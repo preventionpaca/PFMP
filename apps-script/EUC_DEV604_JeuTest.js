@@ -59,6 +59,11 @@ function EUC_DEV604_jeuTest(q) {
   plan.periode = { libelle: libelle, debut: debut, fin: fin, existe: !!periode, id: periode ? Number(periode.id) : 0 };
   var eleve = classe ? EUC_DEV604_lignes_('EUC_ELEVES_PFMP').filter(function(r) { var f = r.fields || {}; return EUC_DEV604_n_(f.Nom) === EUC_DEV604_n_(nom) && EUC_DEV604_n_(f.Prenom) === EUC_DEV604_n_(prenom); })[0] : null;
   plan.eleve = { prenom: prenom, nom: nom, email: email, naissance: naissance, existe: !!eleve, id: eleve ? Number(eleve.id) : 0 };
+  /* Professeur principal de test (facultatif) : créé dans la table des professeurs, rattaché à la classe. */
+  var ppEmail = EUC_DEV604_t_(q.ppEmail).toLowerCase(), ppPrenom = EUC_DEV604_t_(q.ppPrenom) || 'Professeur', ppNom = (EUC_DEV604_t_(q.ppNom) || 'TEST').toUpperCase();
+  if (ppEmail && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(ppEmail)) throw new Error('Adresse du professeur principal de test invalide.');
+  var prof = ppEmail ? EUC_DEV604_lignes_('EUC_PROFESSEURS_PFMP').filter(function(r) { return EUC_DEV604_t_((r.fields || {}).Email).toLowerCase() === ppEmail; })[0] : null;
+  if (ppEmail) plan.pp = { prenom: ppPrenom, nom: ppNom, email: ppEmail, existe: !!prof, id: prof ? Number(prof.id) : 0 };
   if (q.confirmation !== 'CREER') { plan.apercu = true; plan.ok = true; plan.diagnostic = EUC_DEV604_diagnostic_(nomClasse, nom, prenom); return plan; }
 
   var anneeRefP = EUC_DEV604_ref_(cp.Annee_scolaire, annee, ['Code', 'Libelle']), typeRef = EUC_DEV604_ref_(cp.Type, 'PFMP', ['Type', 'Libelle', 'Code']);
@@ -75,6 +80,18 @@ function EUC_DEV604_jeuTest(q) {
   var champsE = EUC_DEV604_champs_(ce, { Nom: nom, Prenom: prenom, Date_naissance: naissance, Email_eleve: email, Courriel: email, Classe: plan.classe.id, Annee_scolaire: anneeRefE, Actif: true, Present_dernier_import: true });
   if (eleve) EUC_DEV604_etape_('mise à jour de l’élève', function() { EUC_ENT_grist('patch', '/tables/EUC_ELEVES_PFMP/records', { records: [{ id: eleve.id, fields: champsE }] }); });
   else plan.eleve.id = Number((EUC_DEV604_etape_('création de l’élève', function() { return EUC_ENT_grist('post', '/tables/EUC_ELEVES_PFMP/records', { records: [{ fields: champsE }] }); }).records || [{}])[0].id);
+  if (ppEmail) {
+    var cpr = EUC_DEV604_colonnes_('EUC_PROFESSEURS_PFMP'), ccp = EUC_DEV604_colonnes_('EUC_CLASSES_PROFESSEURS_PFMP');
+    if (!prof) plan.pp.id = Number((EUC_DEV604_etape_('création du professeur principal de test', function() { return EUC_ENT_grist('post', '/tables/EUC_PROFESSEURS_PFMP/records', { records: [{ fields: EUC_DEV604_champs_(cpr, { Civilite: 'M.', Prenom: ppPrenom, Nom: ppNom, Email: ppEmail, Actif: true }) }] }); }).records || [{}])[0].id);
+    else EUC_DEV604_etape_('mise à jour du professeur principal de test', function() { EUC_ENT_grist('patch', '/tables/EUC_PROFESSEURS_PFMP/records', { records: [{ id: prof.id, fields: EUC_DEV604_champs_(cpr, { Actif: true }) }] }); });
+    var liens = EUC_DEV604_lignes_('EUC_CLASSES_PROFESSEURS_PFMP').filter(function(r) { var f = r.fields || {}; return Number(Array.isArray(f.Classe) ? f.Classe[1] : f.Classe) === plan.classe.id; });
+    var lien = liens.filter(function(r) { return Number((r.fields || {}).Professeur) === plan.pp.id; })[0] || liens.filter(function(r) { return !Number((r.fields || {}).Professeur); })[0];
+    var champsL = EUC_DEV604_champs_(ccp, { Classe: plan.classe.id, Professeur: plan.pp.id, Role: 'PROFESSEUR_PRINCIPAL', Actif: true, Annee_scolaire: EUC_DEV604_ref_(ccp.Annee_scolaire, annee, ['Code', 'Libelle']), Retire_le: '', Source_pronote: 'Test (DEV604)', Date_modification: new Date().toISOString() });
+    EUC_DEV604_etape_('rattachement du professeur principal à la classe', function() {
+      if (lien) EUC_ENT_grist('patch', '/tables/EUC_CLASSES_PROFESSEURS_PFMP/records', { records: [{ id: lien.id, fields: champsL }] });
+      else EUC_ENT_grist('post', '/tables/EUC_CLASSES_PROFESSEURS_PFMP/records', { records: [{ fields: champsL }] });
+    });
+  }
   try { CacheService.getScriptCache().remove('EUC_DEV586_CLASSES'); } catch (e) {}
   plan.ok = true; plan.apercu = false; plan.auteur = ctx && ctx.email || '';
   plan.diagnostic = EUC_DEV604_diagnostic_(nomClasse, nom, prenom);

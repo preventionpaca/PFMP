@@ -12,8 +12,8 @@
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
 var EUC_SUIVI2_VERSION_ = '1.0.0-dev.605';
-/* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration et dans le
- * formulaire de secours, écartée des effectifs, du suivi des professeurs, de la carte et des books. */
+/* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
+ * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',

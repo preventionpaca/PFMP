@@ -167,7 +167,7 @@ test('DEV604 : classe de test « TEST … » — reconnue, écartée des effecti
   for (const x of ['TSEC', 'TESTEUR', '1MVA1', 'TPEEB', '']) assert.strictEqual(k.EUC_SUIVI2_classeTest_(x), false, x);
   assert.match(m, /test: EUC_SUIVI2_classeTest_\(nom\)/);
   assert.match(read('apps-script/EUC_DEV592_Effectifs.js'), /\(m\.classes \|\| \[\]\)\.forEach\(function\(c\) \{\n    if \(c\.test\) return;/);
-  assert.match(read('apps-script/EUC_SUIVI2_Enseignants.js'), /return !c\.test && \(c\.periodes\.length/);
+  assert.doesNotMatch(read('apps-script/EUC_SUIVI2_Enseignants.js'), /!c\.test/); /* visible dans le suivi pour les essais */
   const carte = read('apps-script/EUC_DEV583_CarteSuivi.js'); assert.match(carte, /if \(c\.test\) return;/); assert.match(carte, /c\.periodes\.length && !c\.test/);
   assert.match(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), /details\.forEach\(function\(d\)\{if\(typeof EUC_SUIVI2_classeTest_==='function'&&EUC_SUIVI2_classeTest_\(/);
   assert.doesNotMatch(read('apps-script/EUC_DEV603_Declaration.js'), /c\.test/);
@@ -199,6 +199,15 @@ test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFM
   assert.strictEqual(r2.classe.existe, true); assert.strictEqual(r2.periode.existe, true); assert.strictEqual(r2.eleve.existe, true);
   assert.strictEqual(tables.Classes.length, 1); assert.strictEqual(tables.Planning_Periodes.length, 1); assert.strictEqual(tables.EUC_ELEVES_PFMP.length, 1);
   assert.strictEqual(tables.Planning_Periodes[0].fields.Date_fin, Date.parse('2026-12-04T00:00:00Z') / 1000);
+  tables.EUC_PROFESSEURS_PFMP = []; tables.EUC_CLASSES_PROFESSEURS_PFMP = [{ id: 1, fields: { Classe: 1, Professeur: 0, Actif: false } }];
+  types.EUC_PROFESSEURS_PFMP = { Civilite: 'Text', Prenom: 'Text', Nom: 'Text', Email: 'Text', Actif: 'Bool' };
+  types.EUC_CLASSES_PROFESSEURS_PFMP = { Classe: 'Ref:Classes', Professeur: 'Ref:EUC_PROFESSEURS_PFMP', Role: 'Text', Actif: 'Bool', Annee_scolaire: 'Text', Retire_le: 'Text' };
+  const r3 = k.EUC_DEV604_jeuTest(Object.assign({}, q, { ppEmail: 'Prof.Test@Example.org', confirmation: 'CREER' }));
+  assert.strictEqual(r3.pp.id, 1); assert.strictEqual(tables.EUC_PROFESSEURS_PFMP[0].fields.Email, 'prof.test@example.org'); assert.strictEqual(tables.EUC_PROFESSEURS_PFMP[0].fields.Nom, 'TEST');
+  assert.strictEqual(tables.EUC_CLASSES_PROFESSEURS_PFMP.length, 1);
+  assert.deepStrictEqual(J(tables.EUC_CLASSES_PROFESSEURS_PFMP[0].fields), { Classe: 1, Professeur: 1, Actif: true, Role: 'PROFESSEUR_PRINCIPAL', Annee_scolaire: '2026-2027', Retire_le: '' });
+  k.EUC_DEV604_jeuTest(Object.assign({}, q, { ppEmail: 'prof.test@example.org', confirmation: 'CREER' }));
+  assert.strictEqual(tables.EUC_PROFESSEURS_PFMP.length, 1); assert.strictEqual(tables.EUC_CLASSES_PROFESSEURS_PFMP.length, 1);
   assert.doesNotMatch(read('apps-script/EUC_DEV604_JeuTest.js'), /@gmail|TARAYRE/i);
   assert.match(read('apps-script/Admin_PFMP.html'), /EUC_DEV604_jeuTest\(q\(conf\)\)/);
 });
