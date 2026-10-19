@@ -67,6 +67,7 @@ function EUC_DEV578_prechaufferBook_() {
 
 function EUC_DEV578_prechaufferHistoriques() {
   EUC_DEV578_prechaufferBook_();
+  try { if (typeof EUC_DEV600_prechaufferAnnuaire_ === 'function') EUC_DEV600_prechaufferAnnuaire_(); } catch (e) {}
   var memo = EUC_DEV572_lire_(EUC_DEV578_HIST_CLE_), temoin = EUC_DEV578_temoin_();
   var age = memo && memo.calcule ? Date.now() - new Date(memo.calcule).getTime() : Infinity;
   if (memo && memo.par && temoin && memo.temoin === temoin && age < EUC_DEV578_HIST_AGE_MAX_MS_) return { ok: true, inchange: true };

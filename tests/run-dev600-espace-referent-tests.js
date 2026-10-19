@@ -93,7 +93,25 @@ test('DEV600 : pages — route et page publique de l’espace, fil d’Ariane de
   }
   assert.match(ech, /header\{background:linear-gradient\(135deg,#eef9f5,#d8f0e6\);color:#0b4f40/);
   const book = read('apps-script/Book_Entreprises_DEV538.html');
-  assert.match(book, /#contactDirectory\{width:calc\(100vw - 24px\);max-width:none\}/); assert.match(book, /function directoryHideEmpty\(\)/); assert.match(book, /saveDirectoryContact\(button\)\);directoryHideEmpty\(\)\}/);
+  assert.match(book, /#contactDirectory\{inset:0;width:100vw;height:100vh/); assert.match(book, /function directoryHideEmpty\(\)/); assert.match(book, /saveDirectoryContact\(button\)\);directoryHideEmpty\(\)\}/);
+});
+
+test('DEV600 : répertoire des entreprises — mémoire 6 h réutilisée, mise à jour directe après correction de nom ou de site, préchauffage', () => {
+  const rel = read('apps-script/EUC_PFMP_DEV562_RelationsEntreprises.js'), store = {};
+  const k = { String, Number, Array, Object, JSON, Date, Math, Error, RegExp, console };
+  vm.createContext(k); vm.runInContext(rel, k);
+  let calculs = 0;
+  k.EUC_DEV538_admin_ = () => true; k.EUC_DEV538_t_ = v => v == null ? '' : String(v).trim();
+  k.EUC_DEV572_lire_ = c => store[c] ? JSON.parse(store[c]) : null; k.EUC_DEV572_ecrire_ = (c, v) => { store[c] = JSON.stringify(v); return true; };
+  k.EUC_DEV563_contactDirectoryCalcul_ = () => { calculs++; return { ok: true, contacts: [{ identity: 'SIRET|1', role: 'TUTEUR', contactKey: 'c1', nom: 'Avant', site: '' }] }; };
+  k.EUC_DEV563_contactDirectory(); const r2 = k.EUC_DEV563_contactDirectory();
+  assert.strictEqual(calculs, 1); assert.strictEqual(r2.depuisMemoire, true);
+  k.EUC_DEV600_annuaireMaj_(x => x.contactKey === 'c1', x => { x.nom = 'Après'; });
+  assert.strictEqual(k.EUC_DEV563_contactDirectory().contacts[0].nom, 'Après'); assert.strictEqual(calculs, 1);
+  assert.strictEqual(k.EUC_DEV600_prechaufferAnnuaire_(), false);
+  assert.match(rel, /EUC_DEV600_annuaireMaj_\(function\(x\)\{return x\.identity===EUC_DEV538_t_\(q\.identity\)&&x\.role===role&&x\.contactKey===contactKey;\},function\(x\)\{x\.nom=corrected;/);
+  assert.match(rel, /EUC_DEV600_annuaireMaj_\(function\(x\)\{return EUC_DEV562_companyKey_\(x\)===key;\},function\(x\)\{x\.site=site;\}\);return\{ok:true,site:site\}/);
+  assert.match(read('apps-script/EUC_DEV578_HistoriquesPrets.js'), /EUC_DEV600_prechaufferAnnuaire_\(\)/);
 });
 
 console.log(`\n${n} tests DEV600 espace référent réussis.`);
