@@ -208,7 +208,7 @@ function EUC_DEV603_deposer(q) {
     if (enAttente) EUC_ENT_grist('patch', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ id: enAttente.id, fields: fields }] });
     else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, ent.raisonSociale, periode.libelle, false);
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, ent.raisonSociale, periode.libelle, false, c.id);
   return { ok: true, numero: numero, remplace: !!enAttente, entreprise: ent.raisonSociale, periode: periode.libelle, courriel: emailEleve ? emailEleve.replace(/^(.).*(@.*)$/, '$1…$2') : '' };
 }
 
@@ -263,9 +263,21 @@ function EUC_DEV603_deposerEssai_(m, c, periode, ent, resp, tut) {
 
 /* ---------- Accusé de dépôt (élève) et copie au bureau des entreprises ---------- */
 var EUC_DEV603_BUREAU_ = 'bureau G205 — bureau des formations et des entreprises';
-function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme) {
+/* Professeur(s) principal(aux) de la classe, si la ligne « Professeur principal » est cochée pour les dépôts. */
+function EUC_DEV603_ppEmails_(classeId) {
   try {
-    var copie = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_() : '';
+    var ligne = EUC_IMPORT_lireRecords_(EUC_V158_TABLE_).filter(function(r) { return EUC_DEV603_t_(r.Code) === 'PROFESSEUR_PRINCIPAL'; })[0];
+    if (!ligne || ligne.Actif === false || !(ligne.DEPOTS_CONVENTIONS === true || /^(1|true|oui)$/i.test(String(ligne.DEPOTS_CONVENTIONS || '')))) return [];
+    var c = (EUC_SUIVI2_modele_('').classes || []).filter(function(x) { return Number(x.id) === Number(classeId); })[0], ids = (c && c.ppIds) || [];
+    if (!ids.length) return [];
+    return EUC_ENT_grist('get', '/tables/EUC_PROFESSEURS_PFMP/records?filter=' + encodeURIComponent(JSON.stringify({ id: ids }))).records.map(function(r) { return EUC_DEV603_t_((r.fields || {}).Email).toLowerCase(); })
+      .filter(function(m) { return /^[^@\s,;]+@[^@\s,;]+\.[a-z]{2,}$/.test(m); });
+  } catch (e) { return []; }
+}
+function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme, classeId) {
+  try {
+    var copie = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_('DEPOTS_CONVENTIONS') : '';
+    var pp = EUC_DEV603_ppEmails_(classeId); if (pp.length) copie = copie.split(',').filter(Boolean).concat(pp).filter(function(v, i, a) { return a.indexOf(v) === i; }).join(',');
     if (email) MailApp.sendEmail({ to: email, replyTo: copie || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta convention de stage — numéro d’enregistrement ') + numero,
       body: ['Bonjour ' + eleve.prenom + ',', '', probleme ? 'Ta demande ' + numero + ' est bien reçue : ton entreprise n’a pas pu être vérifiée automatiquement.' : 'Ta déclaration est bien reçue. Numéro d’enregistrement de ta convention : ' + numero + ' — recopie-le sur ta convention.',
         'Entreprise : ' + entreprise, 'Période : ' + periode, '', probleme ? 'Passe au plus vite au ' + EUC_DEV603_BUREAU_ + ' avec les coordonnées de ton entreprise.' : 'Le bureau des entreprises va la vérifier ; tu seras prévenu(e) par courriel quand elle sera validée. Le numéro ne changera pas.',
@@ -307,6 +319,6 @@ function EUC_DEV603_signalerProbleme(q) {
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
     EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true);
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id);
   return { ok: true, numero: numero, bureau: EUC_DEV603_BUREAU_ };
 }

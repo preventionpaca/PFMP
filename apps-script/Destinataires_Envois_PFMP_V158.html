@@ -56,6 +56,8 @@
           <th>Actif</th>
           <th>Tableaux de suivi PFMP</th>
           <th>Livret des apprentis</th>
+          <th>Dépôts et numéros de convention</th>
+          <th>Validations des tuteurs</th>
           <th>Organisme</th>
           <th>Établissement</th>
           <th>Filières concernées</th>
@@ -63,6 +65,8 @@
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+    <p class="tiny">Ligne « Professeur principal de la classe (automatique) » : pas d’adresse à saisir — cochée, elle envoie la copie au ou aux PP de la classe de l’élève (année en cours). Copie BFE : cochez la ligne « Responsable du bureau des entreprises ».</p>
+    <p class="tiny">Dépôts et numéros de convention : copie de chaque déclaration du formulaire de secours (numéro PFMP-…-S…) et des demandes « à traiter au bureau G205 ». Validations des tuteurs : copie de chaque bilan de visite validé par un tuteur et des alertes de vigilance. Si personne n’est coché, la copie part à l’adresse réglée dans l’échéancier.</p>
     <p class="tiny">Livret des apprentis : la personne reçoit les comptes rendus validés des apprentis de son périmètre (établissement, filières, organisme). L’apprenti, son tuteur, son professeur référent et les parents des mineurs les reçoivent toujours.</p>
     <p><input id="nouvelleFonction" type="text" placeholder="Fonction (ex. Coordonnateur électrotechnique)"> <button type="button" id="ajouter">+ Ajouter un destinataire</button></p>
 
@@ -128,6 +132,8 @@ function render(){
       '<td><input class="actif" type="checkbox" '+(x.actif?'checked':'')+'></td>'+
       '<td><input class="tableaux" type="checkbox" '+(x.tableauxSuivi?'checked':'')+'></td>'+
       '<td><input class="livret" type="checkbox" '+(x.livret?'checked':'')+'></td>'+
+      '<td><input class="depots" type="checkbox" '+(x.depots?'checked':'')+'></td>'+
+      '<td><input class="validations" type="checkbox" '+(x.validations?'checked':'')+'></td>'+
       '<td><select class="organisme"><option value="">Tous</option>'+(DATA.organismes||[]).concat(x.organisme&&(DATA.organismes||[]).indexOf(x.organisme)<0?[x.organisme]:[]).map(function(o){return '<option'+(o===x.organisme?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select></td>'+
       '<td><select class="etab">'+etabOptions(x.etablissement||'TOUS',false)+'</select></td>'+
       '<td><select class="filieres" multiple>'+filiereOptions(x.filieres)+'</select><div class="tiny">Vide = toutes</div></td>'+
@@ -190,6 +196,8 @@ save.onclick=function(){
       actif:tr.querySelector('.actif').checked,
       tableauxSuivi:tr.querySelector('.tableaux').checked,
       livret:tr.querySelector('.livret').checked,
+      depots:tr.querySelector('.depots').checked,
+      validations:tr.querySelector('.validations').checked,
       organisme:tr.querySelector('.organisme').value,
       fonction:tr.querySelector('.fonction')?tr.querySelector('.fonction').value.trim():'',
       etablissement:tr.querySelector('.etab').value,

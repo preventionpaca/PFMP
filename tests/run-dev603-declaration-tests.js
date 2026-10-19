@@ -236,4 +236,38 @@ test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger
   for (const x of ['EUC_DEV603_signalerProbleme', 'Mon SIRET ne fonctionne pas', 'value="MC"', 'surveiller(', 'mailErr(']) assert.ok(page.includes(x), x);
 });
 
+test('DEV605 : copies selon « Destinataires & envois » — dépôts et validations des tuteurs par rubrique cochée, secours sinon ; page et accueil', () => {
+  const k = contexte(base());
+  k.EUC_V158_TABLE_ = 'EUC_DESTINATAIRES_ENVOIS_PFMP';
+  let lignes = [{ Actif: true, Email: 'Bureau@Lycee.fr', DEPOTS_CONVENTIONS: true }, { Actif: true, Email: 'ddfpt@lycee.fr', DEPOTS_CONVENTIONS: true, VALIDATIONS_TUTEURS: true }, { Actif: false, Email: 'ancien@lycee.fr', DEPOTS_CONVENTIONS: true }, { Actif: true, Email: 'pasune', VALIDATIONS_TUTEURS: true }];
+  k.EUC_IMPORT_lireRecords_ = () => lignes;
+  assert.strictEqual(k.EUC_DEV598_copie_('DEPOTS_CONVENTIONS'), 'bureau@lycee.fr,ddfpt@lycee.fr');
+  assert.strictEqual(k.EUC_DEV598_copie_(), 'ddfpt@lycee.fr');
+  lignes = []; k.__props.EUC_DEV598_COPIE_VALIDATIONS = 'secours@lycee.fr';
+  assert.strictEqual(k.EUC_DEV598_copie_('DEPOTS_CONVENTIONS'), 'secours@lycee.fr');
+  assert.match(read('apps-script/EUC_DEV603_Declaration.js'), /EUC_DEV598_copie_\('DEPOTS_CONVENTIONS'\)/);
+  const dest = read('apps-script/EUC_SUIVI_PFMP_DestinatairesV158.gs'), page = read('apps-script/Destinataires_Envois_PFMP_V158.html'), admin = read('apps-script/Admin_PFMP.html');
+  assert.match(dest, /c\('DEPOTS_CONVENTIONS','Dépôts et numéros de convention','Bool'\)/); assert.match(dest, /VALIDATIONS_TUTEURS:x\.validations===true/);
+  for (const x of ['class="depots"', 'class="validations"', 'Dépôts et numéros de convention</th>', 'Validations des tuteurs</th>']) assert.ok(page.includes(x), x);
+  const glob = admin.indexOf('<h2>Paramétrage global</h2>'), sco = admin.indexOf('<h3>Paramétrage scolaires</h3>'), lien = admin.indexOf('page=destinataires-envois-pfmp');
+  assert.ok(lien > glob && admin.indexOf('page=destinataires-envois-pfmp', lien + 1) < 0 && !(lien > sco && lien < glob));
+});
+
+test('DEV605 : copie au professeur principal de la classe (ligne automatique cochée) et au BFE', () => {
+  const t = base(), k = contexte(t);
+  t.EUC_PROFESSEURS_PFMP = [{ id: 5, fields: { Email: 'PP.mva@ac-nice.fr' } }, { id: 6, fields: { Email: 'autre@ac-nice.fr' } }];
+  const modele = k.EUC_SUIVI2_modele_(); modele.classes[0].ppIds = [5]; k.EUC_SUIVI2_modele_ = () => modele;
+  k.EUC_V158_TABLE_ = 'EUC_DESTINATAIRES_ENVOIS_PFMP';
+  let lignes = [{ Code: 'BUREAU_ENTREPRISES', Actif: true, Email: 'bfe@lycee.fr', DEPOTS_CONVENTIONS: true }, { Code: 'PROFESSEUR_PRINCIPAL', Actif: true, Email: '', DEPOTS_CONVENTIONS: true }];
+  k.EUC_IMPORT_lireRecords_ = () => lignes;
+  const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
+  assert.deepStrictEqual(k.__mails.map(m => m.to), ['lea@ex.org', 'bfe@lycee.fr,pp.mva@ac-nice.fr']);
+  lignes[1].DEPOTS_CONVENTIONS = false; k.__mails.length = 0;
+  k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
+  assert.deepStrictEqual(k.__mails.map(m => m.to), ['lea@ex.org', 'bfe@lycee.fr']);
+  assert.match(read('apps-script/EUC_SUIVI_PFMP_DestinatairesV158.gs'), /code:'PROFESSEUR_PRINCIPAL',fonction:'Professeur principal de la classe \(automatique\)'/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /c\.ppIds = c\.ppIds \|\| \[\]/);
+});
+
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);

@@ -114,7 +114,7 @@ function EUC_DEV597_echeancier(annee) {
   r.professeurs = EUC_DEV597_lire_('EUC_PROFESSEURS_PFMP').map(function(p) { var f = p.fields || p; return { id: Number(p.id), nom: [EUC_DEV597_t_(f.Civilite), EUC_DEV597_t_(f.Prenom), EUC_DEV597_t_(f.Nom)].filter(Boolean).join(' '), actif: f.Actif !== false }; })
     .filter(function(p) { return p.nom && p.actif; }).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
   r.fiche = EUC_DEV597_fiche_();
-  r.copieValidations = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_() : '';
+  try { r.copieValidations = PropertiesService.getScriptProperties().getProperty('EUC_DEV598_COPIE_VALIDATIONS') || ''; } catch (e) { r.copieValidations = ''; }
   r.ok = true; return r;
 }
 

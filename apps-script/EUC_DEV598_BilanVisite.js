@@ -301,7 +301,17 @@ function EUC_DEV598_valider(q) {
 }
 
 /* Accusé de réception au signataire (s'il a donné un courriel), copie à l'administration. */
-function EUC_DEV598_copie_() {
+/* DEV605 : copies selon la page « Destinataires & envois » (rubrique cochée) ; à défaut, l'adresse
+ * réglée dans l'échéancier, puis le compte qui publie l'application. */
+function EUC_DEV598_copie_(colonne) {
+  colonne = colonne || 'VALIDATIONS_TUTEURS';
+  try {
+    if (typeof EUC_V158_TABLE_ !== 'undefined' && typeof EUC_IMPORT_lireRecords_ === 'function') {
+      var vus = {}, l = EUC_IMPORT_lireRecords_(EUC_V158_TABLE_).filter(function(r) { return r.Actif !== false && (r[colonne] === true || /^(1|true|oui)$/i.test(String(r[colonne] || ''))); })
+        .map(function(r) { return EUC_DEV598_t_(r.Email).toLowerCase(); }).filter(function(m) { if (!/^[^@\s,;]+@[^@\s,;]+\.[a-z]{2,}$/.test(m) || vus[m]) return false; vus[m] = 1; return true; });
+      if (l.length) return l.join(',');
+    }
+  } catch (e) {}
   var c = ''; try { c = PropertiesService.getScriptProperties().getProperty(EUC_DEV598_COPIE_PROP_) || ''; } catch (e) {}
   if (!c) try { c = Session.getEffectiveUser().getEmail() || ''; } catch (e) {}
   return c;

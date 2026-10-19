@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.604';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.605';
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration et dans le
  * formulaire de secours, écartée des effectifs, du suivi des professeurs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -581,6 +581,8 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var anPP = EUC_SUIVI2_annee_(l.Annee_scolaire, annees) || EUC_SUIVI2_t_(l.Annee_scolaire);
     if (anPP ? (anPP !== annee || !!l.Retire_le) : l.Actif === false) return;
     c.pp = c.pp || []; if (c.pp.indexOf(nom) < 0) c.pp.push(nom);
+    /* DEV605 : identifiants des PP (copie des dépôts au professeur principal). */
+    c.ppIds = c.ppIds || []; var pid = Number(EUC_SUIVI2_ref_(l.Professeur)); if (pid && c.ppIds.indexOf(pid) < 0) c.ppIds.push(pid);
   });
   var suivis = {};
   (src.affectations || []).map(EUC_SUIVI2_champs_).forEach(function(a) {

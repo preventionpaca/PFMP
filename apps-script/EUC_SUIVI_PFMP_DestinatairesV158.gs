@@ -17,7 +17,9 @@ var EUC_V158_SEED_=[
   {code:'CPE_LGT_2',fonction:'CPE vie scolaire — lycée général et technologique 2',legacy:'SUIVI_PFMP_CC_CPE_LGT_2',etab:'LGT'},
   {code:'DDFPT_NUMERIQUE',fonction:'DDFPT — filières du numérique',legacy:'SUIVI_PFMP_CC_DDFPT_NUMERIQUE',etab:'TOUS'},
   {code:'DDFPT_MECANIQUE',fonction:'DDFPT — filières mécaniques',legacy:'SUIVI_PFMP_CC_DDFPT_MECANIQUE',etab:'TOUS'},
-  {code:'ASSISTANTE_DDFPT',fonction:'Assistante DDFPT',legacy:'SUIVI_PFMP_CC_ASSISTANTE_DDFPT',etab:'TOUS'}
+  {code:'ASSISTANTE_DDFPT',fonction:'Assistante DDFPT',legacy:'SUIVI_PFMP_CC_ASSISTANTE_DDFPT',etab:'TOUS'},
+  /* DEV605 : ligne automatique — le ou les PP de la classe de l'élève (pas d'adresse à saisir). */
+  {code:'PROFESSEUR_PRINCIPAL',fonction:'Professeur principal de la classe (automatique)',legacy:'',etab:'TOUS'}
 ];
 
 function EUC_V158_txt_(v){return String(v==null?'':v).trim();}
@@ -44,7 +46,10 @@ function EUC_V158_assurerTable_(){
     c('Ordre','Ordre','Int'),
     /* DEV599 : comptes rendus du livret des apprentis, périmètre organisme (CFA, GRETA…). */
     c('LIVRET_APPRENTIS','Livret des apprentis','Bool'),
-    c('Organisme','Organisme (CFA, GRETA…)')
+    c('Organisme','Organisme (CFA, GRETA…)'),
+    /* DEV605 : copies des dépôts / numéros de convention et des validations des tuteurs. */
+    c('DEPOTS_CONVENTIONS','Dépôts et numéros de convention','Bool'),
+    c('VALIDATIONS_TUTEURS','Validations des tuteurs','Bool')
   ];
 
   if(!exists){
@@ -232,6 +237,8 @@ function EUC_V158_lire(){
       actif:r.Actif!==false,
       tableauxSuivi:EUC_V158_bool_(r.TABLEAUX_SUIVI),
       livret:EUC_V158_bool_(r.LIVRET_APPRENTIS),
+      depots:EUC_V158_bool_(r.DEPOTS_CONVENTIONS),
+      validations:EUC_V158_bool_(r.VALIDATIONS_TUTEURS),
       organisme:EUC_V158_txt_(r.Organisme),
       perso:/^PERSO_/.test(EUC_V158_txt_(r.Code)),
       etablissement:EUC_V158_txt_(r.Perimetre_etablissement).toUpperCase()||'TOUS',
@@ -293,6 +300,8 @@ function EUC_V158_sauver(payload){
         Actif:x.actif!==false,
         TABLEAUX_SUIVI:x.tableauxSuivi===true,
         LIVRET_APPRENTIS:x.livret===true,
+        DEPOTS_CONVENTIONS:x.depots===true,
+        VALIDATIONS_TUTEURS:x.validations===true,
         Organisme:EUC_V158_txt_(x.organisme),
         Perimetre_etablissement:etab,
         Filieres_JSON:JSON.stringify((x.filieres||[]).map(EUC_V158_txt_).filter(Boolean))
