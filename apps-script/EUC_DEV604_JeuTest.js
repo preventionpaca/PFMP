@@ -53,11 +53,13 @@ function EUC_DEV604_jeuTest(q) {
   var cc = EUC_DEV604_colonnes_('Classes'), cp = EUC_DEV604_colonnes_('Planning_Periodes'), ce = EUC_DEV604_colonnes_('EUC_ELEVES_PFMP');
   var classe = EUC_DEV604_lignes_('Classes').filter(function(r) { return EUC_DEV604_n_((r.fields || {}).Nom) === EUC_DEV604_n_(nomClasse); })[0];
   var plan = { annee: annee, classe: { nom: nomClasse, existe: !!classe, id: classe ? Number(classe.id) : 0 } };
-  var periode = classe ? EUC_DEV604_lignes_('Planning_Periodes').filter(function(r) { var f = r.fields || {}; var ids = Array.isArray(f.Classes_concernees) ? f.Classes_concernees.slice(1).map(Number) : [Number(f.Classe)]; return ids.indexOf(Number(classe.id)) >= 0 && EUC_DEV604_n_(f.Libelle_periode || f.Libelle || f.Nom) === EUC_DEV604_n_(libelle); })[0] : null;
+  /* Période de test : retrouvée par son commentaire (la table n'a pas toujours de colonne libellé). */
+  var commentaire = 'Période de test (DEV604)' + (EUC_DEV604_n_(libelle) === 'pfmptest' ? '' : ' — ' + libelle);
+  var periode = EUC_DEV604_lignes_('Planning_Periodes').filter(function(r) { var f = r.fields || {}; return EUC_DEV604_t_(f.Commentaire) === commentaire || (EUC_DEV604_n_(f.Libelle_periode || f.Libelle || f.Nom) === EUC_DEV604_n_(libelle) && /DEV604/.test(EUC_DEV604_t_(f.Commentaire))); })[0];
   plan.periode = { libelle: libelle, debut: debut, fin: fin, existe: !!periode, id: periode ? Number(periode.id) : 0 };
   var eleve = classe ? EUC_DEV604_lignes_('EUC_ELEVES_PFMP').filter(function(r) { var f = r.fields || {}; return EUC_DEV604_n_(f.Nom) === EUC_DEV604_n_(nom) && EUC_DEV604_n_(f.Prenom) === EUC_DEV604_n_(prenom); })[0] : null;
   plan.eleve = { prenom: prenom, nom: nom, email: email, naissance: naissance, existe: !!eleve, id: eleve ? Number(eleve.id) : 0 };
-  if (q.confirmation !== 'CREER') { plan.apercu = true; plan.ok = true; return plan; }
+  if (q.confirmation !== 'CREER') { plan.apercu = true; plan.ok = true; plan.diagnostic = EUC_DEV604_diagnostic_(nomClasse, nom, prenom); return plan; }
 
   var anneeRefP = EUC_DEV604_ref_(cp.Annee_scolaire, annee, ['Code', 'Libelle']), typeRef = EUC_DEV604_ref_(cp.Type, 'PFMP', ['Type', 'Libelle', 'Code']);
   var anneeRefE = EUC_DEV604_ref_(ce.Annee_scolaire, annee, ['Code', 'Libelle']);
@@ -65,13 +67,27 @@ function EUC_DEV604_jeuTest(q) {
     var fc = EUC_DEV604_champs_(cc, { Nom: nomClasse, Actif: true, Etab: 'LP', Code_import: nomClasse, Classe_PFMP: nomClasse });
     plan.classe.id = Number((EUC_DEV604_etape_('création de la classe', function() { return EUC_ENT_grist('post', '/tables/Classes/records', { records: [{ fields: fc }] }); }).records || [{}])[0].id);
   }
-  var champsP = EUC_DEV604_champs_(cp, { Libelle_periode: libelle, Libelle: libelle, Nom: libelle, Type: typeRef, Date_debut: debut, Date_fin: fin, Annee_scolaire: anneeRefP, Classes_concernees: [plan.classe.id], Classe_PFMP: nomClasse, Actif: true, Commentaire: 'Période de test (DEV604)' });
-  if (periode) EUC_DEV604_etape_('mise à jour de la période', function() { EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: [{ id: periode.id, fields: EUC_DEV604_champs_(cp, { Date_debut: debut, Date_fin: fin }) }] }); });
+  /* Références de classe : Classe_PFMP / Classe peuvent être du texte ou des références (résolues par leur texte). */
+  var refClasse = function(col) { return /^Ref/.test(cp[col] || '') ? EUC_DEV604_ref_(cp[col], nomClasse, ['Classe_PFMP', 'Nom', 'Code_import', 'Code', 'Libelle']) : nomClasse; };
+  var champsP = EUC_DEV604_champs_(cp, { Libelle_periode: libelle, Libelle: libelle, Nom: libelle, Type: typeRef, Date_debut: debut, Date_fin: fin, Annee_scolaire: anneeRefP, Classes_concernees: [plan.classe.id], Classe_PFMP: refClasse('Classe_PFMP'), Classe: /^Ref/.test(cp.Classe || '') ? plan.classe.id : nomClasse, Formation: nomClasse, Actif: true, Commentaire: commentaire });
+  if (periode) EUC_DEV604_etape_('mise à jour de la période', function() { EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: [{ id: periode.id, fields: champsP }] }); });
   else plan.periode.id = Number((EUC_DEV604_etape_('création de la période', function() { return EUC_ENT_grist('post', '/tables/Planning_Periodes/records', { records: [{ fields: champsP }] }); }).records || [{}])[0].id);
   var champsE = EUC_DEV604_champs_(ce, { Nom: nom, Prenom: prenom, Date_naissance: naissance, Email_eleve: email, Courriel: email, Classe: plan.classe.id, Annee_scolaire: anneeRefE, Actif: true, Present_dernier_import: true });
   if (eleve) EUC_DEV604_etape_('mise à jour de l’élève', function() { EUC_ENT_grist('patch', '/tables/EUC_ELEVES_PFMP/records', { records: [{ id: eleve.id, fields: champsE }] }); });
   else plan.eleve.id = Number((EUC_DEV604_etape_('création de l’élève', function() { return EUC_ENT_grist('post', '/tables/EUC_ELEVES_PFMP/records', { records: [{ fields: champsE }] }); }).records || [{}])[0].id);
   try { CacheService.getScriptCache().remove('EUC_DEV586_CLASSES'); } catch (e) {}
   plan.ok = true; plan.apercu = false; plan.auteur = ctx && ctx.email || '';
+  plan.diagnostic = EUC_DEV604_diagnostic_(nomClasse, nom, prenom);
   return plan;
+}
+
+/* Ce que voit le formulaire de secours (même moteur) : classe, périodes PFMP, élève. */
+function EUC_DEV604_diagnostic_(nomClasse, nom, prenom) {
+  try {
+    var m = EUC_SUIVI2_modele_(''), c = (m.classes || []).filter(function(x) { return EUC_DEV604_n_(x.nom) === EUC_DEV604_n_(nomClasse); })[0];
+    if (!c) return { visible: false, raison: 'La classe n’est pas vue par le moteur (absente, inactive ou nom différent).' , annee: m.annee };
+    var per = (c.periodes || []).filter(function(p) { return !p.suivi; }), el = (c.eleves || []).filter(function(e) { return EUC_DEV604_n_(e.nom) === EUC_DEV604_n_(nom) && EUC_DEV604_n_(e.prenom) === EUC_DEV604_n_(prenom); })[0];
+    var raison = !per.length ? 'La classe n’a aucune période PFMP de l’année ' + m.annee + ' (type, dates ou année de la période).' : !el ? 'L’élève n’est pas rattaché à la classe pour ' + m.annee + ' (classe, année, actif, présent au dernier import).' : '';
+    return { visible: !raison, raison: raison, annee: m.annee, periodes: per.map(function(p) { return p.libelle + ' (' + p.debut + ' → ' + p.fin + ')'; }), eleves: (c.eleves || []).length };
+  } catch (e) { return { visible: false, raison: 'Diagnostic impossible : ' + String(e && e.message || e) }; }
 }

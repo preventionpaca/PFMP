@@ -175,7 +175,7 @@ test('DEV604 : classe de test « TEST … » — reconnue, écartée des effecti
 
 test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFMP de l’année, élève), formats Grist respectés, sans doublon', () => {
   const tables = { Annees_Scolaires: [{ id: 3, fields: { Code: '2026-2027' } }], Types_Planning: [{ id: 9, fields: { Type: 'PFMP' } }], Classes: [], Planning_Periodes: [], EUC_ELEVES_PFMP: [] };
-  const types = { Classes: { Nom: 'Text', Actif: 'Bool', Etab: 'Choice', Code_import: 'Text' }, Planning_Periodes: { Libelle_periode: 'Text', Type: 'Ref:Types_Planning', Date_debut: 'Date', Date_fin: 'Date', Annee_scolaire: 'Ref:Annees_Scolaires', Classes_concernees: 'RefList:Classes', Actif: 'Bool' },
+  const types = { Classes: { Nom: 'Text', Actif: 'Bool', Etab: 'Choice', Code_import: 'Text' }, Planning_Periodes: { Libelle_periode: 'Text', Classe_PFMP: 'Ref:Classes', Commentaire: 'Text', Type: 'Ref:Types_Planning', Date_debut: 'Date', Date_fin: 'Date', Annee_scolaire: 'Ref:Annees_Scolaires', Classes_concernees: 'RefList:Classes', Actif: 'Bool' },
     EUC_ELEVES_PFMP: { Nom: 'Text', Prenom: 'Text', Date_naissance: 'Date', Email_eleve: 'Text', Courriel: 'Text*', Classe: 'Ref:Classes', Annee_scolaire: 'Text', Actif: 'Bool', Present_dernier_import: 'Bool' } };
   const k = { String, Number, Array, Object, JSON, Date, Math, Error, RegExp, CacheService: { getScriptCache: () => ({ remove() {} }) },
     EUC_ENT_grist(m, p, body) { const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c) return { columns: Object.keys(types[c[1]] || {}).map(id => { const ty = types[c[1]][id]; return { id, fields: /\*$/.test(ty) ? { type: 'Text', isFormula: true, formula: '$Email_eleve' } : { type: ty } }; }) };
@@ -192,7 +192,7 @@ test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFM
   assert.strictEqual(r.apercu, false);
   assert.deepStrictEqual(J(tables.Classes[0].fields), { Nom: 'TEST PFMP', Actif: true, Etab: 'LP', Code_import: 'TEST PFMP' });
   const p = tables.Planning_Periodes[0].fields;
-  assert.deepStrictEqual(J(p.Classes_concernees), ['L', 1]); assert.strictEqual(p.Type, 9); assert.strictEqual(p.Annee_scolaire, 3); assert.strictEqual(p.Date_debut, Date.parse('2026-11-02T00:00:00Z') / 1000); assert.strictEqual(p.Libelle_periode, 'PFMP test');
+  assert.deepStrictEqual(J(p.Classes_concernees), ['L', 1]); assert.strictEqual(p.Classe_PFMP, 1); assert.strictEqual(p.Commentaire, 'Période de test (DEV604)'); assert.strictEqual(p.Type, 9); assert.strictEqual(p.Annee_scolaire, 3); assert.strictEqual(p.Date_debut, Date.parse('2026-11-02T00:00:00Z') / 1000); assert.strictEqual(p.Libelle_periode, 'PFMP test');
   const e = tables.EUC_ELEVES_PFMP[0].fields;
   assert.strictEqual(e.Nom, 'TEST'); assert.strictEqual(e.Email_eleve, 'admin@example.org'); assert.strictEqual(e.Classe, 1); assert.strictEqual(e.Annee_scolaire, '2026-2027'); assert.strictEqual(e.Present_dernier_import, true); assert.strictEqual('Courriel' in e, false);
   const r2 = k.EUC_DEV604_jeuTest(Object.assign({}, q, { fin: '2026-12-04', confirmation: 'CREER' }));
