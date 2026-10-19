@@ -1,0 +1,49 @@
+<script id="EUC_DEV602_IDENTITES">
+/* DEV602 : civilité et contrôle des noms du responsable et du tuteur (mêmes règles que le serveur). */
+(function(){
+  'use strict';
+  var INTERDITS=['monsieur','madame','mademoiselle','mr','mme','mlle','m','mm','patron','patronne','chef','cheffe','gerant','gerante','responsable','tuteur','tutrice','directeur','directrice','inconnu','inconnue','aucun','aucune','rien','test','nc','na','xx','xxx','idem','pareil','moi','lui','elle','boss','manager','secretaire','accueil','contact','entreprise','societe'];
+  function t(v){return String(v==null?'':v).trim().replace(/\s+/g,' ');}
+  function n(v){return t(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z' -]/g,'').trim();}
+  function probleme(v,quoi){var s=t(v),x=n(s),l=x.replace(/[^a-z]/g,'');
+    if(!s)return quoi+' manquant';
+    if(/[0-9@_\/\\:;!?()\[\]{}<>=+*#%&$€]/.test(s))return quoi+' « '+s+' » contient des caractères non autorisés';
+    if(l.length<2)return quoi+' « '+s+' » est trop court (initiale seule ?)';
+    if(INTERDITS.indexOf(l)>=0)return quoi+' « '+s+' » n’est pas un vrai '+quoi.toLowerCase();
+    if(/^(m|mr|mme|mlle|monsieur|madame)[ .]/.test(x))return quoi+' « '+s+' » : choisissez la civilité dans la liste, pas dans le nom';
+    return '';}
+  function verifier(role,prenom,nom){var p=probleme(prenom,'Prénom')||probleme(nom,'Nom');
+    if(!p&&n(prenom)===n(nom))p='le prénom et le nom sont identiques';
+    if(!p){var mp=n(prenom).split(' ');if(n(nom).split(' ').some(function(w){return w.length>1&&mp.indexOf(w)>=0;}))p='le nom « '+t(nom)+' » reprend le prénom : n’écrivez que le nom de famille';}
+    return p?role+' : '+p+'.':'';}
+  function champ(nom){return document.querySelector('[name="'+nom+'"]');}
+  function ajouterCivilite(prefixe){
+    var nom=champ(prefixe+'Nom');if(!nom||champ(prefixe+'Civilite'))return;
+    var label=document.createElement('label');label.innerHTML='Civilité *';
+    var sel=document.createElement('select');sel.name=prefixe+'Civilite';sel.required=prefixe==='responsable';
+    sel.innerHTML='<option value="">— choisir —</option><option value="M.">M.</option><option value="Mme">Mme</option>';
+    label.appendChild(sel);
+    var lab=nom.closest('label')||nom.parentNode;lab.parentNode.insertBefore(label,lab);
+  }
+  function memeTuteur(){var s=document.getElementById('same')||champ('tuteurEstResponsable');return !!(s&&s.checked);}
+  function message(texte){
+    var st=document.getElementById('status')||document.querySelector('.status');
+    if(st){st.textContent=texte;st.className='status error';}else alert(texte);
+  }
+  function boot(){
+    ajouterCivilite('responsable');ajouterCivilite('tuteur');
+    var same=document.getElementById('same');
+    function sync(){var c=champ('tuteurCivilite');if(c)c.required=!memeTuteur();}
+    if(same)same.addEventListener('change',sync);sync();
+    var save=document.getElementById('save');
+    if(save)save.addEventListener('click',function(ev){
+      var err=verifier('Responsable de l’entreprise',(champ('responsablePrenom')||{}).value,(champ('responsableNom')||{}).value);
+      if(!err&&!(champ('responsableCivilite')||{}).value)err='Responsable de l’entreprise : choisissez la civilité.';
+      if(!err&&!memeTuteur()){err=verifier('Tuteur',(champ('tuteurPrenom')||{}).value,(champ('tuteurNom')||{}).value);
+        if(!err&&!(champ('tuteurCivilite')||{}).value)err='Tuteur : choisissez la civilité.';}
+      if(err){ev.preventDefault();ev.stopImmediatePropagation();message(err+' Demandez au besoin au tuteur d’écrire lui-même son nom.');}
+    },true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>

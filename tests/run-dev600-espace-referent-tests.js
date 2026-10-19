@@ -93,7 +93,7 @@ test('DEV600 : pages — route et page publique de l’espace, fil d’Ariane de
   }
   assert.match(ech, /header\{background:linear-gradient\(135deg,#eef9f5,#d8f0e6\);color:#0b4f40/);
   const book = read('apps-script/Book_Entreprises_DEV538.html');
-  assert.match(book, /#contactDirectory\{inset:0;width:100vw;height:100vh/); assert.match(book, /function directoryHideEmpty\(\)/); assert.match(book, /saveDirectoryContact\(button\)\);directoryHideEmpty\(\)\}/);
+  assert.match(book, /#contactDirectory\{inset:0;width:100vw;height:100vh/); assert.match(book, /function directoryHideEmpty\(\)/); assert.match(book, /archiveDirectoryContact\(button\)\);directoryHideEmpty\(\)\}/);
 });
 
 test('DEV600 : répertoire des entreprises — mémoire 6 h réutilisée, mise à jour directe après correction de nom ou de site, préchauffage', () => {

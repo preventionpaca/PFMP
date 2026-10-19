@@ -169,5 +169,9 @@ function EUC_DEV528_companyFields_(row,ctx,columns){
     Responsable_courriel:c.courriel,
     Tuteur_nom:c.tuteurNom
   };
+  /* DEV602 : nouvelles colonnes du formulaire JotForm (civilité, prénom, fonction, contacts du tuteur) ;
+   * une valeur vide ne remplace jamais une valeur déjà trouvée. */
+  if(typeof EUC_DEV602_jotform_==='function'){var j=EUC_DEV602_jotform_(row,EUC_DEV528_raw_(row));Object.keys(j).forEach(function(k){if(!extra[k])extra[k]=j[k];});}
+  Object.keys(extra).forEach(function(k){if(!extra[k]&&out[k])delete extra[k];});
   return Object.assign(out,EUC_DEV307_filterFields_(extra,columns));
 }

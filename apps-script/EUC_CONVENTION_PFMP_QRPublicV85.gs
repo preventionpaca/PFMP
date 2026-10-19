@@ -326,7 +326,7 @@ function EUC_CONVENTION_verifierNaissanceV113_(resolved,jour,mois){
   };
 }
 function EUC_CONVENTION_verifierIdentiteV113(rid,jour,mois){return EUC_CONVENTION_verifierNaissanceV113_(EUC_CONVENTION_resoudreLienV113_(rid),jour,mois);}
-function EUC_CONVENTION_assurerColonnesEntrepriseV117_(){var t=EUC_CONVENTION_ACCES_TABLE_,cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[],p={};cols.forEach(function(c){p[c.id]=true;});var defs=[['Entreprise_siret','SIRET entreprise','Text'],['Entreprise_nis','NIS Monaco','Text'],['Entreprise_identifiant_type','Type identifiant entreprise','Text'],['Entreprise_validation_statut','Statut validation entreprise','Text'],['Entreprise_raison_sociale','Raison sociale entreprise','Text'],['Entreprise_enseigne','Enseigne entreprise','Text'],['Entreprise_adresse','Adresse entreprise','Text'],['Entreprise_complement','Complément adresse entreprise','Text'],['Entreprise_code_postal','Code postal entreprise','Text'],['Entreprise_commune','Commune entreprise','Text'],['Entreprise_pays','Pays entreprise','Text'],['Responsable_nom','Nom responsable','Text'],['Responsable_prenom','Prénom responsable','Text'],['Responsable_fonction','Fonction responsable','Text'],['Responsable_telephone','Téléphone responsable','Text'],['Responsable_courriel','Courriel responsable','Text'],['Tuteur_est_responsable','Tuteur = responsable','Bool'],['Tuteur_nom','Nom tuteur','Text'],['Tuteur_prenom','Prénom tuteur','Text'],['Tuteur_fonction','Fonction tuteur','Text'],['Tuteur_telephone','Téléphone tuteur','Text'],['Tuteur_courriel','Courriel tuteur','Text'],['Date_saisie_entreprise','Date saisie entreprise','DateTime']];var missing=defs.filter(function(d){return !p[d[0]];}).map(function(d){return {id:d[0],fields:{label:d[1],type:d[2]}};});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});}
+function EUC_CONVENTION_assurerColonnesEntrepriseV117_(){var t=EUC_CONVENTION_ACCES_TABLE_,cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[],p={};cols.forEach(function(c){p[c.id]=true;});var defs=[['Entreprise_siret','SIRET entreprise','Text'],['Entreprise_nis','NIS Monaco','Text'],['Entreprise_identifiant_type','Type identifiant entreprise','Text'],['Entreprise_validation_statut','Statut validation entreprise','Text'],['Entreprise_raison_sociale','Raison sociale entreprise','Text'],['Entreprise_enseigne','Enseigne entreprise','Text'],['Entreprise_adresse','Adresse entreprise','Text'],['Entreprise_complement','Complément adresse entreprise','Text'],['Entreprise_code_postal','Code postal entreprise','Text'],['Entreprise_commune','Commune entreprise','Text'],['Entreprise_pays','Pays entreprise','Text'],['Responsable_nom','Nom responsable','Text'],['Responsable_prenom','Prénom responsable','Text'],['Responsable_fonction','Fonction responsable','Text'],['Responsable_telephone','Téléphone responsable','Text'],['Responsable_courriel','Courriel responsable','Text'],['Tuteur_est_responsable','Tuteur = responsable','Bool'],['Responsable_civilite','Civilité responsable','Text'],['Tuteur_civilite','Civilité tuteur','Text'],['Tuteur_nom','Nom tuteur','Text'],['Tuteur_prenom','Prénom tuteur','Text'],['Tuteur_fonction','Fonction tuteur','Text'],['Tuteur_telephone','Téléphone tuteur','Text'],['Tuteur_courriel','Courriel tuteur','Text'],['Date_saisie_entreprise','Date saisie entreprise','DateTime']];var missing=defs.filter(function(d){return !p[d[0]];}).map(function(d){return {id:d[0],fields:{label:d[1],type:d[2]}};});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});}
 function EUC_CONVENTION_repriseEntrepriseV117(token){
   var a=EUC_CONVENTION_lireRepriseV117_(token);
   EUC_CONVENTION_exigerQRValideV511_(a);
@@ -463,6 +463,13 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     throw new Error('Nom, prénom, fonction, téléphone et e-mail du tuteur sont obligatoires.');
   }
 
+  /* DEV602 : identités réutilisables (pas d'initiale seule, de « chef », de prénom = nom) et civilité. */
+  var respCivilite='',tCivilite='';
+  if(typeof EUC_DEV602_verifierPersonne_==='function'){
+    respCivilite=EUC_DEV602_verifierPersonne_('Responsable de l’entreprise',d.responsableCivilite,respPrenom,respNom).civilite;
+    tCivilite=tuteurEst?respCivilite:EUC_DEV602_verifierPersonne_('Tuteur',d.tuteurCivilite,tPrenom,tNom).civilite;
+  }
+
   var numeroEnregistrement=EUC_CONVENTION_numeroEnregistrementV568_(a);
   var now=new Date().toISOString();
 
@@ -480,12 +487,14 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Entreprise_pays:pays,
     Responsable_nom:respNom,
     Responsable_prenom:respPrenom,
+    Responsable_civilite:respCivilite,
     Responsable_fonction:respFonction,
     Responsable_telephone:respTelephone,
     Responsable_courriel:respCourriel,
     Tuteur_est_responsable:tuteurEst,
     Tuteur_nom:tuteurEst?respNom:tNom,
     Tuteur_prenom:tPrenom,
+    Tuteur_civilite:tCivilite,
     Tuteur_fonction:tFonction,
     Tuteur_telephone:tTelephone,
     Tuteur_courriel:tCourriel,
@@ -508,6 +517,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     if(EUC_CONVENTION_estDejaEnregistreeV568_(current))return EUC_CONVENTION_reponseDejaEnregistreeV568_(current);
 
     refresh=EUC_CONVENTION_debutRafraichissementV511_(current,'saisie-entreprise-qr');
+    if(typeof EUC_DEV602_assurerCivilites_==='function')EUC_DEV602_assurerCivilites_(fields);
     EUC_ENT_grist(
       'patch',
       '/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',
