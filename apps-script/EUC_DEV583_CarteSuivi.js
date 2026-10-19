@@ -48,6 +48,7 @@ function EUC_DEV583_entreprises_(m, q, nominatif) {
   q = q || {};
   var fam = EUC_DEV583_t_(q.famille).toUpperCase(), cid = Number(q.classeId) || 0, pid = Number(q.periodeId) || 0, par = {}, liste = [];
   (m.classes || []).forEach(function(c) {
+    if (c.test) return;
     if (cid && Number(c.id) !== cid) return;
     if (!cid && fam && c.famille !== fam) return;
     (c.periodes || []).forEach(function(p) {
@@ -138,7 +139,7 @@ function EUC_DEV583_catalogue(annee) {
   annee = EUC_DEV583_t_(annee);
   if (!annee || annee.toUpperCase() === 'ALL' || typeof EUC_SUIVI2_modele_ !== 'function') return null;
   var m = EUC_SUIVI2_modele_(annee);
-  return { ok: true, source: 'SUIVI2', annee: m.annee, classes: (m.classes || []).filter(function(c) { return c.periodes.length; }).map(function(c) {
+  return { ok: true, source: 'SUIVI2', annee: m.annee, classes: (m.classes || []).filter(function(c) { return c.periodes.length && !c.test; }).map(function(c) {
     return { classeId: Number(c.id), classe: c.nom, famille: c.famille, periodes: c.periodes.map(function(p) { return { id: Number(p.id), libelle: p.libelle }; }) };
   }) };
 }

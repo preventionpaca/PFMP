@@ -17,6 +17,7 @@ function EUC_DEV592_calcul_(m) {
   var groupes = {}, n = function(v) { return String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); };
   function groupe(nom) { return groupes[nom] = groupes[nom] || { nom: nom, classes: [], entreprises: {} }; }
   (m.classes || []).forEach(function(c) {
+    if (c.test) return;
     var ce = c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE', ents = {};
     (c.periodes || []).forEach(function(p) {
       var r = p.resume || {};

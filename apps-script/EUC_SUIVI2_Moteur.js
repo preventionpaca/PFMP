@@ -11,7 +11,10 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.595';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.604';
+/* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration et dans le
+ * formulaire de secours, écartée des effectifs, du suivi des professeurs, de la carte et des books. */
+function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
 var EUC_SUIVI2_TABLES_ = {
   periodes: 'Planning_Periodes',
   classes: 'Classes',
@@ -324,7 +327,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
     classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
-      apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), periodes: [], eleves: [] };
+      apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), test: EUC_SUIVI2_classeTest_(nom), periodes: [], eleves: [] };
   });
 
   /* R1–R3 : périodes de l'année, rattachées par Classes_concernees. */

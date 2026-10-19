@@ -161,4 +161,16 @@ test('DEV603 : mode essai 24 h — identité d’essai reconnue dans toute class
   assert.match(read('apps-script/Admin_PFMP.html'), /EUC_DEV603_activerEssai\(\)/);
 });
 
+test('DEV604 : classe de test « TEST … » — reconnue, écartée des effectifs, du suivi des professeurs, de la carte et des books, gardée pour le formulaire de secours', () => {
+  const m = read('apps-script/EUC_SUIVI2_Moteur.js'), k = { String, RegExp }; vm.createContext(k); vm.runInContext(/function EUC_SUIVI2_classeTest_[^\n]*/.exec(m)[0], k);
+  for (const x of ['TEST PFMP', 'test', 'TEST-PFMP', ' Test 1']) assert.strictEqual(k.EUC_SUIVI2_classeTest_(x), true, x);
+  for (const x of ['TSEC', 'TESTEUR', '1MVA1', 'TPEEB', '']) assert.strictEqual(k.EUC_SUIVI2_classeTest_(x), false, x);
+  assert.match(m, /test: EUC_SUIVI2_classeTest_\(nom\)/);
+  assert.match(read('apps-script/EUC_DEV592_Effectifs.js'), /\(m\.classes \|\| \[\]\)\.forEach\(function\(c\) \{\n    if \(c\.test\) return;/);
+  assert.match(read('apps-script/EUC_SUIVI2_Enseignants.js'), /return !c\.test && \(c\.periodes\.length/);
+  const carte = read('apps-script/EUC_DEV583_CarteSuivi.js'); assert.match(carte, /if \(c\.test\) return;/); assert.match(carte, /c\.periodes\.length && !c\.test/);
+  assert.match(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), /details\.forEach\(function\(d\)\{if\(typeof EUC_SUIVI2_classeTest_==='function'&&EUC_SUIVI2_classeTest_\(/);
+  assert.doesNotMatch(read('apps-script/EUC_DEV603_Declaration.js'), /c\.test/);
+});
+
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);
