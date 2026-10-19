@@ -49,6 +49,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV599_afficherValidation(e);
     case 'espace-referent':
       return EUC_DEV600_afficher(e);
+    case 'declaration-entreprise':
+      return EUC_DEV603_afficher(e);
     case 'listes-eleves-pfmp':
       return EUC_DEV578_afficherListesEleves(e);
 

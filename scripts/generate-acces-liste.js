@@ -33,6 +33,8 @@ const PAGES_PUBLIQUES = [
   'Validation_Livret_DEV599',
   /* DEV600 : espace du professeur référent (lien signé ; demande de lien sans révéler les adresses). */
   'Espace_Referent_DEV600',
+  /* DEV603 : formulaire public de secours (identité par date de naissance, captcha). */
+  'Declaration_Entreprise_DEV603',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

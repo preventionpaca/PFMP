@@ -59,7 +59,7 @@ function EUC_DEV602_jotform_(row, raw) {
     var R = r[0], x = r[1];
     out[R + '_civilite'] = EUC_DEV602_civilite_(pick(['Civilité du ' + x, 'Civilite du ' + x, 'Civilité ' + x, R + '_civilite']));
     out[R + '_prenom'] = EUC_DEV528_personName_(pick(['Prénom du ' + x, 'Prenom du ' + x, 'Prénom ' + x, 'Prenom ' + x, R + '_prenom']));
-    out[R + '_nom'] = EUC_DEV528_personName_(pick(r[2]));
+    out[R + '_nom'] = EUC_DEV528_personName_(pick(r[2])).toLocaleUpperCase('fr-FR');
     out[R + '_fonction'] = pick(['Fonction du ' + x, 'Fonction ' + x, R + '_fonction']);
     out[R + '_telephone'] = pick(['Téléphone du ' + x, 'Telephone du ' + x, 'Téléphone ' + x, R + '_telephone']);
     out[R + '_courriel'] = pick(['E-mail du ' + x, 'Email du ' + x, 'Adresse e-mail du ' + x, 'Courriel du ' + x, 'Courriel ' + x, 'Email ' + x, R + '_courriel']);

@@ -1,0 +1,146 @@
+'use strict';
+const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert'), crypto = require('crypto');
+const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
+const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV602_Identites.js', 'EUC_DEV603_Declaration.js'].map(f => read('apps-script/' + f)).join('\n');
+let n = 0;
+function test(name, fn) { try { fn(); n++; console.log('✓', name); } catch (e) { console.error('✗', name); throw e; } }
+const J = x => JSON.parse(JSON.stringify(x));
+const octets = buf => Array.from(buf).map(b => (b > 127 ? b - 256 : b));
+
+function contexte(tables, opts) {
+  opts = opts || {}; tables = tables || {};
+  const props = { EUC_DEV598_SECRET: 'secret' }, cache = {}, mails = [], calls = [];
+  const k = {
+    String, Number, Array, Object, JSON, Date, Math, Error, RegExp, console: { log() {} }, encodeURIComponent,
+    Utilities: { computeHmacSha256Signature: (t, s) => octets(crypto.createHmac('sha256', s).update(t, 'utf8').digest()), getUuid: () => crypto.randomUUID(), base64Encode: s => Buffer.from(s, 'utf8').toString('base64'), Charset: { UTF_8: 'UTF_8' } },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: x => props[x] || null, setProperty: (x, v) => { props[x] = v; } }) },
+    CacheService: { getScriptCache: () => ({ get: x => cache[x] || null, put: (x, v) => { cache[x] = v; } }) },
+    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
+    MailApp: { sendEmail: m => mails.push(m) },
+    EUC_CONVENTION_ACCES_TABLE_: 'EUC_ACCES_FORMULAIRES_PFMP', EUC_V160_TABLE_: 'EUC_MIGRATION_JOTFORM_PFMP',
+    EUC_ENT_validerSiret: v => /^\d{14}$/.test(String(v)) ? { valide: true, siret: String(v) } : { valide: false, message: 'SIRET : 14 chiffres attendus.' },
+    EUC_ENT_rechercherSiret: () => opts.siret || { source: 'grist', entreprise: { raisonSociale: 'CARROSSERIE MARTIN', enseigne: 'Martin Auto', adresseComplete: '3 RUE DU PORT', codePostal: '06000', commune: 'NICE', etat: 'Actif' } },
+    EUC_ENT_traiterReponseApiNavigateur: (json, s) => ({ entreprise: json && json.ok ? { raisonSociale: 'API SARL', adresseComplete: '1 AV', codePostal: '06100', commune: 'NICE', etat: 'Fermé' } : null }),
+    EUC_CONVENTION_numeroEnregistrementV568_: a => String(a.Numero_enregistrement || '').trim() || 'PFMP-2026-' + String(a.id).padStart(6, '0'),
+    EUC_ENT_grist(method, p, body) {
+      calls.push({ method, p, body });
+      const c = /^\/tables\/([^/?]+)\/columns$/.exec(p); if (c) return { columns: (opts.colonnes || Object.keys(k.EUC_DEV603_ligne_('X', 'A', { id: 1, nom: '', prenom: '' }, { id: 1, nom: '' }, { libelle: '' }, {}, {}, {}, ''))).map(id => ({ id })) };
+      const m = /^\/tables\/([^/?]+)\/records(?:\?filter=(.*))?$/.exec(p); if (!m) return {};
+      const t = tables[m[1]] = tables[m[1]] || [];
+      if (method === 'get') { if (!m[2]) return { records: t }; const f = JSON.parse(decodeURIComponent(m[2])), cle = Object.keys(f)[0]; return { records: t.filter(r => f[cle].includes(cle === 'id' ? r.id : r.fields[cle])) }; }
+      if (method === 'post') { body.records.forEach(r => t.push({ id: t.length + 100, fields: Object.assign({}, r.fields) })); return {}; }
+      if (method === 'patch') { body.records.forEach(r => Object.assign(t.find(x => x.id === r.id).fields, r.fields)); return {}; }
+      return {};
+    }
+  };
+  vm.createContext(k); vm.runInContext(sources, k);
+  k.EUC_SUIVI2_aujourdhui_ = () => '2026-10-20';
+  k.EUC_SUIVI2_modele_ = () => ({ annee: '2026-2027', classes: [
+    { id: 10, nom: '1MVA1', modeApprentissage: '', periodes: [{ id: 100, libelle: 'PFMP 1', debut: '2026-11-02', fin: '2026-11-27' }, { id: 101, libelle: 'Appel', suivi: 'APPEL' }], eleves: [{ id: 7, libelle: 'DUPONT Léa' }] },
+    { id: 11, nom: '1CAPP', modeApprentissage: 'CLASSE_ENTIERE', periodes: [{ id: 102, libelle: 'P' }], eleves: [{ id: 8 }] },
+    { id: 12, nom: '2MVA', modeApprentissage: '', periodes: [], eleves: [{ id: 9 }] }] });
+  Object.assign(k, { __mails: mails, __calls: calls, __cache: cache, __props: props });
+  return k;
+}
+function base() {
+  return { EUC_ELEVES_PFMP: [{ id: 7, fields: { Nom: 'Dupont', Prenom: 'Léa', Date_naissance: 1209600000, Email_eleve: 'lea@ex.org' } }, { id: 8, fields: { Nom: 'Dupont', Prenom: 'Léa', Date_naissance: 1209600000 } }],
+    EUC_ACCES_FORMULAIRES_PFMP: [], EUC_MIGRATION_JOTFORM_PFMP: [] };
+}
+/* Réponse au captcha : relue depuis la signature (le test connaît le secret). */
+function resoudre(k, jeton) {
+  const m = /^c(\d+)\.([0-9a-f]{16})\./.exec(jeton), al = 'ABCDEFGHJKMNPRSTUVWXYZ23456789';
+  const sig = c => k.EUC_DEV598_sig_('C|' + c + '|' + m[2] + '|' + m[1]);
+  /* Recherche bornée : le test régénère un code connu plutôt que de deviner. */
+  return { m, sig, al };
+}
+function captchaConnu(k, code, ilya) {
+  const emis = Date.now() - (ilya == null ? 10000 : ilya), nonce = '0123456789abcdef'.split('').sort(() => Math.random() - .5).join('');
+  return 'c' + emis + '.' + nonce + '.' + k.EUC_DEV598_sig_('C|' + code + '|' + nonce + '|' + emis);
+}
+const resp = { civilite: 'M.', prenom: 'paul', nom: 'martin', fonction: 'Gérant', telephone: '04 93 00 00 00', courriel: 'paul@martin.fr' };
+
+test('DEV603 : captcha — image tracée sans le code en clair, bonne réponse acceptée une seule fois, trop rapide / expirée / fausse refusées', () => {
+  const k = contexte(base());
+  const c = k.EUC_DEV603_captcha(), svg = Buffer.from(c.image.split(',')[1], 'base64').toString('utf8');
+  assert.match(svg, /^<svg/); assert.doesNotMatch(svg, /<text/); assert.match(svg, /<polyline/);
+  assert.match(c.jeton, /^c\d+\.[0-9a-f]{16}\.[0-9a-f]{32}$/);
+  const j = captchaConnu(k, 'AB2C9');
+  assert.throws(() => k.EUC_DEV603_verifierCaptcha_(j, 'AB2C8'), /incorrect/);
+  k.EUC_DEV603_verifierCaptcha_(j, ' ab2c9 ');
+  assert.throws(() => k.EUC_DEV603_verifierCaptcha_(j, 'AB2C9'), /déjà utilisé/);
+  assert.throws(() => k.EUC_DEV603_verifierCaptcha_(captchaConnu(k, 'AB2C9', 1000), 'AB2C9'), /trop rapide/);
+  assert.throws(() => k.EUC_DEV603_verifierCaptcha_(captchaConnu(k, 'AB2C9', 700000), 'AB2C9'), /expiré/);
+  for (const ch of 'ABCDEFGHJKMNPRSTUVWXYZ23456789') assert.ok(k.EUC_DEV603_GLYPHES_[ch], ch);
+});
+
+test('DEV603 : identification — classes PFMP seulement, élève reconnu par nom, prénom et date de naissance, case piège, tentatives limitées', () => {
+  const k = contexte(base());
+  assert.deepStrictEqual(J(k.EUC_DEV603_classes().classes), [{ id: 10, nom: '1MVA1' }]);
+  const q = x => Object.assign({ classeId: 10, nom: 'DUPONT', prenom: 'lea', naissance: '2008-05-01', captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZZ') }, x);
+  const r = k.EUC_DEV603_identifier(q());
+  assert.strictEqual(r.eleve, 'Léa DUPONT'); assert.deepStrictEqual(J(r.periodes).map(p => p.id), [100]);
+  assert.deepStrictEqual(J(k.EUC_DEV603_lireJeton_(r.jeton)), { eleveId: 7, classeId: 10 });
+  assert.throws(() => k.EUC_DEV603_identifier(q({ site: 'http://spam' })), /refusé/);
+  for (let i = 0; i < 6; i++) assert.throws(() => k.EUC_DEV603_identifier(q({ naissance: '2008-05-02', captchaJeton: captchaConnu(k, 'ZZZZZ') })), /ne trouvons pas/);
+  assert.throws(() => k.EUC_DEV603_identifier(q({ captchaJeton: captchaConnu(k, 'ZZZZZ') })), /Trop de tentatives/);
+  assert.throws(() => k.EUC_DEV603_lireJeton_(r.jeton.replace(/^e7/, 'e8')), /invalide/);
+});
+
+test('DEV603 : dépôt — SIRET revérifié, noms mis en forme (Prénom, NOM), ligne au format de l’import JotForm, élève déjà rapproché, numéro de dépôt', () => {
+  const t = base(), k = contexte(t);
+  const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  const d = k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: false, tuteur: { civilite: 'Mme', prenom: 'anne-sophie', nom: "d'arcy", fonction: 'Cheffe d’atelier', telephone: '0611223344', courriel: 'as@martin.fr' } });
+  assert.strictEqual(d.numero, 'D2026-0001'); assert.strictEqual(d.entreprise, 'CARROSSERIE MARTIN');
+  const f = t.EUC_MIGRATION_JOTFORM_PFMP[0].fields, raw = JSON.parse(f.Raw_JSON);
+  assert.strictEqual(f.Submission_ID, 'SECOURS-D2026-0001'); assert.strictEqual(f.Eleve_match_id, 7); assert.strictEqual(f.Classe_match_id, 10);
+  assert.strictEqual(f.SIRET_statut, 'VERIFIE'); assert.strictEqual(f.Decision, 'A_VALIDER'); assert.strictEqual(f.Date_debut_brut, '2026-11-02');
+  assert.strictEqual(f.Nom_tuteur, "D'ARCY"); assert.strictEqual(raw['Prénom du tuteur'], 'Anne-Sophie'); assert.strictEqual(raw['Civilité du tuteur'], 'Mme');
+  assert.strictEqual(raw['Nom du responsable'], 'MARTIN'); assert.strictEqual(raw['Prénom du responsable'], 'Paul'); assert.strictEqual(f.Email_eleve, 'lea@ex.org');
+  /* Deuxième envoi pour la même période : le dépôt en attente est remplacé, même numéro. */
+  const d2 = k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
+  assert.strictEqual(d2.numero, 'D2026-0001'); assert.strictEqual(d2.remplace, true); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 1); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Nom_tuteur, 'MARTIN');
+  /* Une fois validé, un nouvel envoi crée un nouveau dépôt. */
+  t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'VALIDEE';
+  assert.strictEqual(k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true }).numero, 'D2026-0002');
+});
+
+test('DEV603 : refus — contrôle des noms, téléphone, période inconnue, SIRET faux ou introuvable, convention déjà enregistrée', () => {
+  const t = base(), k = contexte(t), jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  const dep = x => () => k.EUC_DEV603_deposer(Object.assign({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true }, x));
+  assert.throws(dep({ responsable: Object.assign({}, resp, { nom: 'Chef' }) }), /n’est pas un vrai nom/);
+  assert.throws(dep({ responsable: Object.assign({}, resp, { civilite: '' }) }), /civilité/);
+  assert.throws(dep({ responsable: Object.assign({}, resp, { telephone: '0493' }) }), /10 chiffres/);
+  assert.throws(dep({ periodeId: 101 }), /période/);
+  assert.throws(dep({ siret: '123' }), /14 chiffres/);
+  const k2 = contexte(base(), { siret: { source: 'api_navigateur', url: 'u' } }), jeton2 = k2.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  assert.throws(() => k2.EUC_DEV603_deposer({ jeton: jeton2, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true, reponseApi: {} }), /introuvable/);
+  const ok = k2.EUC_DEV603_deposer({ jeton: jeton2, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true, reponseApi: { ok: 1 } });
+  assert.strictEqual(ok.entreprise, 'API SARL');
+  t.EUC_ACCES_FORMULAIRES_PFMP.push({ id: 55, fields: { Eleve: 7, Periode: 100, Entreprise_siret: '73282932000074' } });
+  assert.throws(dep({}), /déjà enregistrée pour cette période \(PFMP-2026-000055\)/);
+});
+
+test('DEV603 : après validation — numéro de convention écrit et envoyé à l’élève, uniquement pour le formulaire de secours', () => {
+  const t = base(), k = contexte(t);
+  t.EUC_MIGRATION_JOTFORM_PFMP.push({ id: 1, fields: { Submission_ID: 'SECOURS-D2026-0003', Email_eleve: 'lea@ex.org', Prenom_eleve: 'Léa', Periode_numero: 'PFMP 1', Raison_sociale_officielle: 'CARROSSERIE MARTIN' } }, { id: 2, fields: { Submission_ID: '6123', Email_eleve: 'x@ex.org' } });
+  t.EUC_ACCES_FORMULAIRES_PFMP.push({ id: 123, fields: { Annee_scolaire: '2026-2027' } }, { id: 124, fields: {} });
+  assert.strictEqual(k.EUC_DEV603_apresValidation_([{ rowId: 1, accessId: 123 }, { rowId: 2, accessId: 124 }]), 1);
+  assert.strictEqual(t.EUC_ACCES_FORMULAIRES_PFMP[0].fields.Numero_enregistrement, 'PFMP-2026-000123');
+  assert.strictEqual(k.__mails.length, 1); assert.strictEqual(k.__mails[0].to, 'lea@ex.org'); assert.match(k.__mails[0].subject, /n° PFMP-2026-000123/); assert.match(k.__mails[0].body, /déclaration n° D2026-0003/);
+});
+
+test('DEV603 : branchements — route publique, verrou, validation JotForm, accueil admin, page (étapes, captcha, case piège, boutons protégés), NOM en capitales du QR', () => {
+  assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'declaration-entreprise':\s*return EUC_DEV603_afficher\(e\);/);
+  assert.ok(read('scripts/generate-acces-liste.js').includes("'Declaration_Entreprise_DEV603'"));
+  assert.match(read('apps-script/EUC_PFMP_DEV466_JotFormReliable.js'), /EUC_DEV322_patchBufferValidated_\(items\.map\(function\(x\)\{return x\.rowId;\}\),ctx\);\n[^\n]*\n    if\(typeof EUC_DEV603_apresValidation_==='function'\)EUC_DEV603_apresValidation_\(items\);/);
+  const admin = read('apps-script/Admin_PFMP.html');
+  assert.match(admin, /page=migration-jotform-pfmp">Soumissions reçues/); assert.match(admin, /page=declaration-entreprise">Formulaire de secours/);
+  const page = read('apps-script/Declaration_Entreprise_DEV603.html');
+  for (const t of ['EUC_DEV603_classes', 'EUC_DEV603_identifier', 'EUC_DEV603_deposer', 'EUC_ENT_rechercherSiret', 'EUC_DEV603_traiterApi', 'id="site"', 'class="piege"', 'id="captchaImg"', 'Nouveau code', 'occupe(b,', 'class="spin"', 'AbortController', "toLocaleUpperCase('fr-FR')"]) assert.ok(page.includes(t), t);
+  assert.doesNotMatch(page, /<\?= *JSON\.stringify/);
+  const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs');
+  assert.match(qr, /respNom=String\(respNom\)\.toLocaleUpperCase\('fr-FR'\);tNom=String\(tNom\)\.toLocaleUpperCase\('fr-FR'\);/);
+  assert.match(read('apps-script/Identites_Contacts_DEV602.html'), /\['responsableNom','tuteurNom'\]\.forEach/);
+});
+
+console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Déclarer mon entreprise de stage — PFMP</title>
+<style>
+:root{--vert:#08745f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 Arial,sans-serif;color:var(--texte);background:#f4f6f9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;font-size:14px}
+main{max-width:760px;margin:auto;padding:12px 16px 50px}
+section{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:14px 16px;margin:12px 0}
+section[hidden]{display:none}
+h2{font-size:17px;margin:0 0 8px;color:var(--vert)}h3{font-size:15px;margin:14px 0 4px}
+.note{color:var(--gris);font-size:14px}
+label{display:block;margin:8px 0 2px;font-weight:700}
+input,select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px;background:#fff}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.trois{display:grid;grid-template-columns:110px 1fr 1fr;gap:0 12px}
+@media(max-width:560px){.deux,.trois{grid-template-columns:1fr}}
+button{font:inherit;border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer;margin-top:12px}
+button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.captcha{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.captcha img{border:1px solid var(--bord);border-radius:8px;background:#f4f8f6}
+.officiel{background:#ecfdf5;border:1px solid #86efac;border-radius:8px;padding:8px 10px;margin-top:8px}
+.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
+.piege{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.fini{background:#ecfdf5;border-color:#86efac}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0;font-size:13px}.etapes span{padding:2px 8px;border-radius:999px;background:#fff;border:1px solid var(--bord)}.etapes span.on{background:var(--vert);color:#fff;border-color:var(--vert)}
+</style>
+</head>
+<body>
+<header><h1>Déclarer mon entreprise de stage</h1><p>Lycée Les Eucalyptus — à utiliser si tu n’as pas pu enregistrer ton entreprise avec le QR code de ta convention.</p>
+<div class="etapes"><span id="e1" class="on">1. Moi</span><span id="e2">2. Période</span><span id="e3">3. Entreprise</span><span id="e4">4. Responsable et tuteur</span></div></header>
+<main>
+  <div id="etat" class="note" role="status">Chargement…</div>
+
+  <section id="s1" hidden>
+    <h2>1. Qui es-tu ?</h2>
+    <p class="note">Écris ton nom et ton prénom comme sur Pronote. Ta date de naissance sert à vérifier que c’est bien toi.</p>
+    <label for="classe">Classe</label><select id="classe"><option value="">— choisir —</option></select>
+    <div class="deux"><div><label for="nomEleve">Nom</label><input id="nomEleve" autocomplete="family-name"></div><div><label for="prenomEleve">Prénom</label><input id="prenomEleve" autocomplete="given-name"></div></div>
+    <label for="naissance">Date de naissance</label><input id="naissance" type="date">
+    <div class="piege" aria-hidden="true"><label>Site <input id="site" tabindex="-1" autocomplete="off"></label></div>
+    <label for="captcha">Recopie le code de l’image (5 caractères)</label>
+    <div class="captcha"><img id="captchaImg" alt="Code de sécurité" width="230" height="70"><button type="button" id="nouveauCode">Nouveau code</button></div>
+    <input id="captcha" autocomplete="off" autocapitalize="characters" maxlength="8" style="max-width:220px;margin-top:8px">
+    <button type="button" class="plein" id="b1">Continuer</button><p id="m1" role="status"></p>
+  </section>
+
+  <section id="s2" hidden>
+    <h2>2. Période de stage</h2><p id="bonjour" class="note"></p>
+    <label for="periode">Période</label><select id="periode"></select>
+    <label for="emailEleve">Ton adresse courriel (pour recevoir ton numéro de convention)</label><input id="emailEleve" type="email" autocomplete="email">
+    <button type="button" class="plein" id="b2">Continuer</button><p id="m2" role="status"></p>
+  </section>
+
+  <section id="s3" hidden>
+    <h2>3. Entreprise</h2>
+    <p class="note">Le numéro SIRET (14 chiffres) figure sur les factures, le site de l’entreprise ou annuaire-entreprises.data.gouv.fr. Demande-le à ton tuteur.</p>
+    <label for="siret">N° SIRET</label><input id="siret" inputmode="numeric" maxlength="20" placeholder="732 829 320 00074">
+    <button type="button" id="verifier">Vérifier le SIRET</button>
+    <div id="officiel"></div>
+    <label for="enseigne">Nom commercial (si différent)</label><input id="enseigne">
+    <button type="button" class="plein" id="b3" disabled>Continuer</button><p id="m3" role="status"></p>
+  </section>
+
+  <section id="s4" hidden>
+    <h2>4. Responsable et tuteur</h2>
+    <p class="note">Demande à ton tuteur d’écrire lui-même son nom si tu as un doute. Prénom et nom dans deux cases différentes.</p>
+    <h3>Responsable de l’entreprise</h3><div id="resp"></div>
+    <label style="font-weight:400"><input type="checkbox" id="meme" style="width:auto"> Le tuteur est aussi le responsable</label>
+    <div id="blocTuteur"><h3>Tuteur</h3><div id="tut"></div></div>
+    <button type="button" class="plein" id="b4">Envoyer ma déclaration</button><p id="m4" role="status"></p>
+  </section>
+
+  <section id="s5" class="fini" hidden><h2>Déclaration envoyée ✓</h2><div id="recu"></div></section>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},CAPTCHA='',JETON='',PERIODES=[],SIRET=null,REPONSE_API=null;
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
+function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifie ta connexion puis réessaie.'));},60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
+function occupe(b,t){b.disabled=true;b.dataset.lib=b.dataset.lib||b.textContent;b.innerHTML='<span class="spin"></span>'+esc(t);}
+function libre(b){b.disabled=false;b.textContent=b.dataset.lib||b.textContent;}
+function erreur(id,e){$(id).innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';}
+function etape(n){[1,2,3,4,5].forEach(function(i){$('s'+i).hidden=i!==n;if($('e'+i))$('e'+i).className=i<=n?'on':'';});window.scrollTo(0,0);}
+function prenom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,s,l){return s+l.toLocaleUpperCase('fr-FR');});}
+function nom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleUpperCase('fr-FR');}
+function personne(id){$(id).innerHTML='<div class="trois"><div><label>Civilité</label><select class="civ"><option value="">—</option><option>M.</option><option>Mme</option></select></div><div><label>Prénom</label><input class="pre" autocapitalize="words"></div><div><label>NOM</label><input class="nom" autocapitalize="characters"></div></div>'+
+  '<label>Fonction</label><input class="fon" placeholder="Gérant, chef d’atelier…"><div class="deux"><div><label>Téléphone</label><input class="tel" type="tel" inputmode="tel" placeholder="06 12 34 56 78"></div><div><label>Courriel</label><input class="mel" type="email"></div></div>';
+  var z=$(id);z.querySelector('.pre').addEventListener('blur',function(){this.value=prenom(this.value);});z.querySelector('.nom').addEventListener('blur',function(){this.value=nom(this.value);});}
+function lirePersonne(id){var z=$(id);return {civilite:z.querySelector('.civ').value,prenom:prenom(z.querySelector('.pre').value),nom:nom(z.querySelector('.nom').value),fonction:z.querySelector('.fon').value.trim(),telephone:z.querySelector('.tel').value.trim(),courriel:z.querySelector('.mel').value.trim()};}
+function nouveauCode(){appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg').src=r.captcha.image;$('captcha').value='';},function(e){erreur('m1',e);});}
+
+/* Étape 1 */
+$('nomEleve').addEventListener('blur',function(){this.value=nom(this.value);});$('prenomEleve').addEventListener('blur',function(){this.value=prenom(this.value);});
+$('nouveauCode').onclick=nouveauCode;
+$('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérification…');
+  appel('EUC_DEV603_identifier',{classeId:Number($('classe').value),nom:$('nomEleve').value,prenom:$('prenomEleve').value,naissance:$('naissance').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},
+    function(r){libre(b);JETON=r.jeton;PERIODES=r.periodes;$('bonjour').textContent='Bonjour '+r.eleve+' ('+r.classe+').';
+      $('periode').innerHTML=r.periodes.length?r.periodes.map(function(p){return '<option value="'+p.id+'">'+esc(p.libelle)+' — du '+dfr(p.debut)+' au '+dfr(p.fin)+'</option>';}).join(''):'<option value="">Aucune période définie pour ta classe</option>';etape(2);},
+    function(e){libre(b);erreur('m1',e);nouveauCode();});};
+/* Étape 2 */
+$('b2').onclick=function(){if(!$('periode').value){erreur('m2','Choisis ta période de stage.');return;}var m=$('emailEleve').value.trim();if(m&&!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(m)){erreur('m2','Adresse courriel invalide.');return;}$('m2').textContent='';etape(3);};
+/* Étape 3 : même vérification que le QR code (fiche connue ou Recherche d'entreprises). */
+$('siret').addEventListener('input',function(){SIRET=null;REPONSE_API=null;$('b3').disabled=true;$('officiel').innerHTML='';});
+$('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');
+  appel('EUC_ENT_rechercherSiret',s,function(r){
+    function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
+      $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
+      if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
+    if(r.entreprise){montrer(r.entreprise);return;}
+    var ctl=typeof AbortController==='function'?new AbortController():null,minu=setTimeout(function(){if(ctl)ctl.abort();},8000);
+    fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){return x.json();}).then(function(json){clearTimeout(minu);REPONSE_API=json;
+      appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});}).catch(function(){clearTimeout(minu);libre(b);erreur('m3','Le service de vérification ne répond pas. Réessaie dans un instant.');});
+  },function(e){libre(b);erreur('m3',e);});};
+$('b3').onclick=function(){if(!SIRET)return;etape(4);};
+/* Étape 4 */
+personne('resp');personne('tut');
+$('meme').onchange=function(){$('blocTuteur').hidden=this.checked;};
+$('b4').onclick=function(){var b=this;$('m4').textContent='';occupe(b,'Envoi…');
+  appel('EUC_DEV603_deposer',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),siret:SIRET,reponseApi:REPONSE_API,enseigne:$('enseigne').value.trim(),responsable:lirePersonne('resp'),tuteurEstResponsable:$('meme').checked,tuteur:lirePersonne('tut')},
+    function(r){libre(b);$('recu').innerHTML='<p>Numéro de dépôt : <b style="font-size:20px">'+esc(r.numero)+'</b>'+(r.remplace?' (ta déclaration précédente est remplacée)':'')+'</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration. Tu recevras ensuite ton <b>numéro de convention</b> par courriel. Note ton numéro de dépôt.</p>';etape(5);},
+    function(e){libre(b);erreur('m4',e);});};
+
+appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg').src=r.captcha.image;
+  $('classe').innerHTML='<option value="">— choisir —</option>'+r.classes.map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+'</option>';}).join('');
+  $('etat').hidden=true;etape(1);},function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});
+})();
+</script>
+</body>
+</html>

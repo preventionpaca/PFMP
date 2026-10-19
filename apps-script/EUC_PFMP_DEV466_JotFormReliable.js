@@ -354,6 +354,8 @@ function EUC_DEV466_importSelection(payload){
       throw new Error('PUBLICATION INCOMPLÈTE — aucune ligne du tampon n’est marquée validée. Relancez le même lot sans risque de doublon. '+viewErrors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
     }
     EUC_DEV322_patchBufferValidated_(items.map(function(x){return x.rowId;}),ctx);
+    /* DEV603 : déclarations du formulaire de secours — numéro de convention attribué et envoyé à l'élève. */
+    if(typeof EUC_DEV603_apresValidation_==='function')EUC_DEV603_apresValidation_(items);
     var list=EUC_DEV298_lister(),created=items.filter(function(x){return x.mode==='CREATE';}).length;
     var completed=items.filter(function(x){return x.mode==='COMPLETE';}).length;
     var existing=items.filter(function(x){return x.mode==='EXISTING';}).length;
