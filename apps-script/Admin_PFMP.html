@@ -140,6 +140,7 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer les apprentis Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Soumissions reçues (formulaire de secours et JotForm)<small>Contrôler puis valider : la convention et son numéro sont créés</small></a>
         <a class="link" target="_blank" rel="noopener" href="<?= adminBase ?>?page=declaration-entreprise">Formulaire de secours « Déclarer mon entreprise »<small>Lien public à mettre dans Atrium</small></a>
+        <button type="button" class="link" id="essaiForm" style="width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:800">Activer le mode essai (24 h)<small>Tester le formulaire sans élève réel : le dépôt « ESSAI » ne peut pas être validé</small></button><div id="essaiInfo" role="status" style="font-size:.85rem;margin-top:4px"></div>
       </div>
     </section>
 
@@ -186,6 +187,12 @@ if(!(window.google&&google.script&&google.script.run)){$('effEtat').textContent=
 google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r.annee||'';var ec=r.echeancier;if(ec&&(ec.RETARD||ec.ALERTE||ec.RAPPEL||ec.sansReferent)){var al=$('effAlertes');al.hidden=false;al.innerHTML='<a target="_top" href="'+(document.querySelector('a[href*="echeancier-apprentis-pfmp"]')||{}).href+'" style="font-weight:800;color:#9a3412">Contacts d’entrée des apprentis : '+[ec.RETARD?ec.RETARD+' en retard':'',ec.ALERTE?ec.ALERTE+' en alerte (45 j)':'',ec.RAPPEL?ec.RAPPEL+' à relancer (30 j)':'',ec.sansReferent?ec.sansReferent+' sans référent':''].filter(Boolean).join(' · ')+' →</a>';}$('effEtat').textContent='Cliquez sur un établissement ou un organisme pour voir ses classes. Une classe co-gérée (ex. CFA RAN + CFAI) figure dans les deux organismes, mais une seule fois dans le total.';rendre();})
   .withFailureHandler(function(e){$('effEtat').textContent='Effectifs indisponibles : '+(e&&e.message||e);}).EUC_DEV592_effectifs('');
 })();
+</script>
+<script>
+/* DEV603 : mode essai du formulaire de secours. */
+(function(){var b=document.getElementById('essaiForm');if(!b)return;b.onclick=function(){if(!(window.google&&google.script&&google.script.run))return;var lib=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span>Activation…';
+  google.script.run.withSuccessHandler(function(r){b.disabled=false;b.innerHTML=lib;document.getElementById('essaiInfo').innerHTML='Mode essai actif 24 h. Dans le formulaire, choisissez n’importe quelle classe puis : Nom <b>'+r.nom+'</b> · Prénom <b>'+r.prenom+'</b> · Date de naissance <b>'+r.naissance+'</b>.';})
+    .withFailureHandler(function(e){b.disabled=false;b.innerHTML=lib;document.getElementById('essaiInfo').textContent='Erreur : '+(e&&e.message||e);}).EUC_DEV603_activerEssai();};})();
 </script>
 </body>
 </html>

@@ -103,6 +103,11 @@ function EUC_DEV603_identifier(q) {
   if (essais >= 6) throw new Error('Trop de tentatives pour ce nom. Réessayez dans une heure ou demandez de l’aide au bureau des entreprises.');
   var m = EUC_SUIVI2_modele_(''), c = EUC_DEV603_classesModele_(m).filter(function(x) { return Number(x.id) === classeId; })[0];
   if (!c) throw new Error('Classe introuvable.');
+  var essai = EUC_DEV603_essai_();
+  if (essai && EUC_DEV603_n_(q.nom) === EUC_DEV603_n_(essai.nom) && EUC_DEV603_n_(q.prenom) === EUC_DEV603_n_(essai.prenom) && naissance === essai.naissance) {
+    return { ok: true, essai: true, jeton: EUC_DEV603_jeton_(0, classeId, Date.now() + EUC_DEV603_JETON_H_ * 3600000), eleve: 'Élève d’essai', classe: c.nom,
+      periodes: (c.periodes || []).filter(function(p) { return !p.suivi; }).map(function(p) { return { id: Number(p.id), libelle: p.libelle, debut: p.debut, fin: p.fin }; }) };
+  }
   var ids = c.eleves.map(function(e) { return Number(e.id); });
   var lignes = EUC_ENT_grist('get', '/tables/EUC_ELEVES_PFMP/records?filter=' + encodeURIComponent(JSON.stringify({ id: ids }))).records || [];
   var el = EUC_DEV603_trouverEleve_(lignes, ids, q.nom, q.prenom, naissance);
@@ -160,6 +165,7 @@ function EUC_DEV603_deposer(q) {
   if (!ent.raisonSociale || !ent.commune) throw new Error('Données officielles de l’entreprise incomplètes : faites valider par le bureau des entreprises.');
   var resp = EUC_DEV603_personne_('Responsable de l’entreprise', q.responsable, true);
   var tut = q.tuteurEstResponsable === true ? resp : EUC_DEV603_personne_('Tuteur', q.tuteur, true);
+  if (!j.eleveId) return EUC_DEV603_deposerEssai_(m, c, periode, ent, resp, tut);
   var el = (EUC_ENT_grist('get', '/tables/EUC_ELEVES_PFMP/records?filter=' + encodeURIComponent(JSON.stringify({ id: [j.eleveId] }))).records || [])[0];
   if (!el) throw new Error('Élève introuvable.');
   var ef = el.fields || {}, eleve = { id: j.eleveId, nom: EUC_DEV603_nom_(ef.Nom), prenom: EUC_DEV603_prenom_(ef.Prenom_usage || ef.Prenom), naissance: EUC_SUIVI2_date_(ef.Date_naissance) };
@@ -209,3 +215,24 @@ function EUC_DEV603_afficher(e) {
 }
 /* Relecture de la réponse officielle obtenue par le navigateur (même règle que le QR code). */
 function EUC_DEV603_traiterApi(q) { q = q || {}; return EUC_ENT_traiterReponseApiNavigateur(q.json, EUC_DEV603_t_(q.siret)); }
+
+/* ---------- Mode essai (24 h) : parcours complet sans élève réel, dépôt non validable ---------- */
+var EUC_DEV603_ESSAI_PROP_ = 'EUC_DEV603_ESSAI';
+function EUC_DEV603_essai_() {
+  try { var e = JSON.parse(PropertiesService.getScriptProperties().getProperty(EUC_DEV603_ESSAI_PROP_) || 'null'); return e && Number(e.jusqua) > Date.now() ? e : null; } catch (x) { return null; }
+}
+function EUC_DEV603_activerEssai() {
+  EUC_SUIVI2_exigerAdmin_();
+  var e = { nom: 'ESSAI', prenom: 'Formulaire', naissance: '2000-01-01', jusqua: Date.now() + 24 * 3600000 };
+  PropertiesService.getScriptProperties().setProperty(EUC_DEV603_ESSAI_PROP_, JSON.stringify(e));
+  return { ok: true, nom: e.nom, prenom: e.prenom, naissance: '01/01/2000', jusqua: new Date(e.jusqua).toISOString() };
+}
+function EUC_DEV603_deposerEssai_(m, c, periode, ent, resp, tut) {
+  var numero = 'ESSAI-' + Utilities.formatDate(new Date(), 'Europe/Paris', 'yyyyMMdd-HHmmss');
+  var ligne = EUC_DEV603_ligne_(numero, m.annee, { id: 0, nom: 'ESSAI', prenom: 'Formulaire', naissance: '2000-01-01' }, { id: Number(c.id), nom: c.nom }, periode, ent, resp, tut, '');
+  ligne.Submission_ID = numero; ligne.Eleve_match_id = 0; ligne.Eleve_match_libelle = 'Élève d’essai'; ligne.Niveau_controle = 'ROUGE'; ligne.Decision = 'ESSAI'; ligne.Alertes = 'Essai du formulaire de secours — ne pas valider (aucun élève rattaché)';
+  var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
+  Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
+  EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
+  return { ok: true, essai: true, numero: numero, remplace: false, entreprise: ent.raisonSociale, periode: periode.libelle };
+}

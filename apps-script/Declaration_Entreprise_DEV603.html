@@ -127,7 +127,7 @@ personne('resp');personne('tut');
 $('meme').onchange=function(){$('blocTuteur').hidden=this.checked;};
 $('b4').onclick=function(){var b=this;$('m4').textContent='';occupe(b,'Envoi…');
   appel('EUC_DEV603_deposer',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),siret:SIRET,reponseApi:REPONSE_API,enseigne:$('enseigne').value.trim(),responsable:lirePersonne('resp'),tuteurEstResponsable:$('meme').checked,tuteur:lirePersonne('tut')},
-    function(r){libre(b);$('recu').innerHTML='<p>Numéro de dépôt : <b style="font-size:20px">'+esc(r.numero)+'</b>'+(r.remplace?' (ta déclaration précédente est remplacée)':'')+'</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration. Tu recevras ensuite ton <b>numéro de convention</b> par courriel. Note ton numéro de dépôt.</p>';etape(5);},
+    function(r){libre(b);$('recu').innerHTML=(r.essai?'<p class="erreur">Mode essai : ce dépôt apparaît dans « Soumissions reçues » mais ne peut pas être validé.</p>':'')+'<p>Numéro de dépôt : <b style="font-size:20px">'+esc(r.numero)+'</b>'+(r.remplace?' (ta déclaration précédente est remplacée)':'')+'</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration. Tu recevras ensuite ton <b>numéro de convention</b> par courriel. Note ton numéro de dépôt.</p>';etape(5);},
     function(e){libre(b);erreur('m4',e);});};
 
 appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg').src=r.captcha.image;

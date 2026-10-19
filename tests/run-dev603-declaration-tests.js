@@ -12,7 +12,7 @@ function contexte(tables, opts) {
   const props = { EUC_DEV598_SECRET: 'secret' }, cache = {}, mails = [], calls = [];
   const k = {
     String, Number, Array, Object, JSON, Date, Math, Error, RegExp, console: { log() {} }, encodeURIComponent,
-    Utilities: { computeHmacSha256Signature: (t, s) => octets(crypto.createHmac('sha256', s).update(t, 'utf8').digest()), getUuid: () => crypto.randomUUID(), base64Encode: s => Buffer.from(s, 'utf8').toString('base64'), Charset: { UTF_8: 'UTF_8' } },
+    Utilities: { computeHmacSha256Signature: (t, s) => octets(crypto.createHmac('sha256', s).update(t, 'utf8').digest()), getUuid: () => crypto.randomUUID(), base64Encode: s => Buffer.from(s, 'utf8').toString('base64'), Charset: { UTF_8: 'UTF_8' }, formatDate: () => '20261020-101500' },
     PropertiesService: { getScriptProperties: () => ({ getProperty: x => props[x] || null, setProperty: (x, v) => { props[x] = v; } }) },
     CacheService: { getScriptCache: () => ({ get: x => cache[x] || null, put: (x, v) => { cache[x] = v; } }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
@@ -141,6 +141,24 @@ test('DEV603 : branchements — route publique, verrou, validation JotForm, accu
   const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs');
   assert.match(qr, /respNom=String\(respNom\)\.toLocaleUpperCase\('fr-FR'\);tNom=String\(tNom\)\.toLocaleUpperCase\('fr-FR'\);/);
   assert.match(read('apps-script/Identites_Contacts_DEV602.html'), /\['responsableNom','tuteurNom'\]\.forEach/);
+});
+
+test('DEV603 : mode essai 24 h — identité d’essai reconnue dans toute classe, dépôt ESSAI non rattaché et non validable, compteur intact, expiration', () => {
+  const t = base(), k = contexte(t);
+  k.EUC_SUIVI2_exigerAdmin_ = () => ({ email: 'admin@example.org' });
+  const q = { classeId: 10, nom: 'essai', prenom: 'FORMULAIRE', naissance: '2000-01-01', captcha: 'ZZZZZ' };
+  assert.throws(() => k.EUC_DEV603_identifier(Object.assign({}, q, { captchaJeton: captchaConnu(k, 'ZZZZZ') })), /ne trouvons pas/);
+  const a = k.EUC_DEV603_activerEssai(); assert.strictEqual(a.naissance, '01/01/2000');
+  const r = k.EUC_DEV603_identifier(Object.assign({}, q, { captchaJeton: captchaConnu(k, 'ZZZZZ') }));
+  assert.strictEqual(r.essai, true); assert.deepStrictEqual(J(k.EUC_DEV603_lireJeton_(r.jeton)), { eleveId: 0, classeId: 10 });
+  const d = k.EUC_DEV603_deposer({ jeton: r.jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true });
+  assert.strictEqual(d.essai, true); assert.match(d.numero, /^ESSAI-/);
+  const f = t.EUC_MIGRATION_JOTFORM_PFMP[0].fields;
+  assert.strictEqual(f.Decision, 'ESSAI'); assert.strictEqual(f.Eleve_match_id, 0); assert.strictEqual(f.Niveau_controle, 'ROUGE'); assert.match(f.Alertes, /ne pas valider/);
+  assert.strictEqual(k.__props['EUC_DEV603_COMPTEUR_2026-2027'], undefined);
+  k.__props.EUC_DEV603_ESSAI = JSON.stringify({ nom: 'ESSAI', prenom: 'Formulaire', naissance: '2000-01-01', jusqua: Date.now() - 1 });
+  assert.throws(() => k.EUC_DEV603_identifier(Object.assign({}, q, { captchaJeton: captchaConnu(k, 'ZZZZZ') })), /ne trouvons pas/);
+  assert.match(read('apps-script/Admin_PFMP.html'), /EUC_DEV603_activerEssai\(\)/);
 });
 
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);
