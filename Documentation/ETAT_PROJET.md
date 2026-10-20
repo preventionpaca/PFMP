@@ -20,6 +20,13 @@
   fichier du socle `18addab`.
 - Tests : ciblés (DEV449, DEV577, DEV456, DEV504, DEV462, DEV463, DEV484,
   DEV513) et suite complète 1062/1062.
+- Publié : commit `0c60cc9` en version immuable `@1095` sur les deux Web Apps
+  vertes, contrôle HTTP 31/31 routes.
+- Non vérifié dans le navigateur : `apprentis.loucodi.fr` affiche « Lien
+  d'accès requis » sans la clé Atrium (mode EXIGEE) et le navigateur intégré
+  n'est pas connecté au compte du lycée. À contrôler avec le lien Atrium :
+  onglet Réseau, un seul `EUC_DEV545_dashboardLive` au chargement et aucun
+  `EUC_DEV192_getDashboard`. Aucun parcours métier réel exécuté.
 
 ## Mise à jour du 20 octobre 2026 — DEV610 plannings annuels (lot A) publié (@1084)
 
