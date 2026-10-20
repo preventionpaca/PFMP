@@ -221,7 +221,28 @@ test('reprise du calendrier publié : périodes en entreprise rattachées à une
   g.k.EUC_DEV610_charger({ annee: '2026-2027' }); const avant = g.calls.filter(c => c.method !== 'get').length;
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
   assert.deepStrictEqual(J(r.periodes), [{ ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', origine: 'REPRISE', regle: null }]);
-  assert.strictEqual(r.ignorees, 1); assert.strictEqual(g.calls.filter(c => c.method !== 'get').length, avant);
+  assert.strictEqual(r.ignorees, 1); assert.strictEqual(r.nonReprises[0].raison, 'PLUSIEURS_LIGNES'); assert.strictEqual(g.calls.filter(c => c.method !== 'get').length, avant);
+});
+test('reprise : période T CAP dont la classe est inactive ou non rattachée retrouvée par sa classe PFMP, détail des non reprises', () => {
+  const lignes = lignesDefaut(), classesParId = { 23: { id: 23, nom: 'TCAP CAR', classePfmp: 'TCAP CAR', actif: false }, 30: { id: 30, nom: 'TMVA1', classePfmp: 'TMVA', actif: true }, 77: { id: 77, nom: 'TERM X', classePfmp: 'TX', actif: true } };
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [23] }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [23] });
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [30] }, { 30: 'TBP_MVA' }, classesParId, lignes)), { ligne: 'TBP_MVA', ajouts: [] });
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [], classePfmp: 'TCAP CAR' }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [] });
+  assert.strictEqual(k.EUC_DEV610_ligneDePeriode_({ classes: [77] }, {}, classesParId, lignes).raison, 'AUCUNE_LIGNE');
+  assert.strictEqual(k.EUC_DEV610_ligneDePeriode_({ classes: [] }, {}, classesParId, lignes).raison, 'SANS_CLASSE');
+  const g = grist({ periodes: [
+    { id: 1, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP T CAP', Date_debut: sec('2026-11-16'), Date_fin: sec('2026-12-04'), Classes_concernees: ['L', 23], Actif: true, Formation: 'CAP', Niveau: 'T CA' } },
+    { id: 2, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP TCAP', Date_debut: sec('2027-03-15'), Date_fin: sec('2027-04-09'), Classes_concernees: ['L', 23], Actif: true } },
+    { id: 3, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP 1ère', Date_debut: sec('2026-11-23'), Date_fin: sec('2026-12-18'), Classes_concernees: ['L', 555], Actif: true, Formation: '1 BAC PRO', Niveau: 'MP3' } }
+  ] });
+  g.tables.Classes.find(c => c.id === 23).fields.Actif = false;
+  g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
+  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])), [['TCAP', 'PFMP T CAP', '2026-11-16'], ['TCAP', 'PFMP TCAP', '2027-03-15']]);
+  assert.deepStrictEqual(J(r.suggestions), { TCAP: [23] });
+  assert.deepStrictEqual(J(r.nonReprises.map(x => [x.id, x.raison, x.classes, x.niveau])), [[3, 'AUCUNE_LIGNE', ['#555'], 'MP3']]);
+  const { s, idx } = calendrier('2026-2027'), gen = k.EUC_DEV610_generer_(lignesDefaut(), k.EUC_DEV610_reglesDefaut_('2026-2027'), s, idx, J(r.periodes));
+  assert.ok(!gen.alertes.some(a => /T CAP/.test(a)), 'les T CAP reprises ne sont plus « à placer à la main »');
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
@@ -270,7 +291,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');

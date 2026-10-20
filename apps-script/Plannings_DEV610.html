@@ -101,7 +101,7 @@ table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120
   </section>
 
   <section id="pPeriodes" class="panneau">
-    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button></div>
+    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button><button type="button" id="reprendre" title="Relit Planning_Periodes et remplace les périodes déjà reprises ; vos placements manuels sont conservés">Reprendre le calendrier publié</button></div>
     <table class="t"><thead><tr><th>Ligne</th><th>Type</th><th>Du</th><th>Au</th><th>Semaines</th><th>Origine</th><th></th></tr></thead><tbody id="tPeriodes"></tbody></table>
   </section>
 
@@ -181,7 +181,10 @@ function initialiser(){
   if(choisie){ouvrirVersion(choisie.numero);}
   else if(D.publiees){NUM=0;PER=[];$('version').value='0';$('commentaire').value='Reprise du calendrier publié';
     $('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Reprise des '+D.publiees+' période(s) déjà publiées…';
-    google.script.run.withSuccessHandler(function(r){PER=r.periodes;SALE=true;apresChargement('Reprise de '+r.periodes.length+' période(s) déjà publiées dans le calendrier des PFMP'+(r.ignorees?' ('+r.ignorees+' non rattachée(s) à une ligne)':'')+'. Enregistrez pour créer la version 1.');}).withFailureHandler(function(e){PER=[];apresChargement('<span class="erreur">Reprise impossible : '+esc(e&&e.message||e)+'</span>');}).EUC_DEV610_reprendreExistant({annee:a.code});
+    google.script.run.withSuccessHandler(function(r){PER=r.periodes;SALE=true;var aj=0;
+      Object.keys(r.suggestions||{}).forEach(function(c){var l=D.rattachements[c]=D.rattachements[c]||[];r.suggestions[c].forEach(function(id){if(l.indexOf(id)<0){l.push(id);aj++;}});l.sort(function(a,b){return a-b;});});
+      apresChargement('Reprise de '+r.periodes.length+' période(s) déjà publiées dans le calendrier des PFMP'+(r.ignorees?' ('+r.ignorees+' non reprise(s), détail ci-dessous)':'')+'. Enregistrez pour créer la version 1.'+(aj?' '+aj+' classe(s) ajoutée(s) au rattachement d’après les périodes publiées : vérifiez puis enregistrez l’onglet « Lignes et classes ».':''));
+      afficherNonReprises(r.nonReprises||[]);}).withFailureHandler(function(e){PER=[];apresChargement('<span class="erreur">Reprise impossible : '+esc(e&&e.message||e)+'</span>');}).EUC_DEV610_reprendreExistant({annee:a.code});
     return;}
   else{NUM=0;PER=[];$('commentaire').value='';var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,[]);PER=g.periodes;SALE=true;apresChargement('Première génération de '+a.code+' depuis les règles ('+PER.length+' périodes). Vérifiez, ajustez puis enregistrez.');afficherAlertes(g.alertes);return;}
   apresChargement('');
@@ -252,6 +255,8 @@ $('selPlacer').onclick=function(){var cs=cellulesSelection(),type=$('selType').v
 $('selEffacer').onclick=function(){var cs=cellulesSelection();Object.keys(cs).forEach(function(li){retirerSemaines(LIGNES_G[Number(li)].code,cs[li]);});SEL=[];modifie();};
 $('selAnnuler').onclick=function(){SEL=[];marquerSelection();};
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&SEL.length){SEL=[];marquerSelection();}});
+var RAISONS={AUCUNE_LIGNE:'ses classes ne sont rattachées à aucune ligne',PLUSIEURS_LIGNES:'ses classes relèvent de plusieurs lignes',SANS_CLASSE:'aucune classe concernée'};
+function afficherNonReprises(l){var z=$('changements');if(!l.length){return;}z.hidden=false;z.innerHTML='<b>Périodes publiées non reprises ('+l.length+')</b> — rattachez leurs classes dans « Lignes et classes », puis rechargez :<ul class="changements">'+l.map(function(x){return '<li>'+esc(x.type)+' du '+dfr(x.debut)+' au '+dfr(x.fin)+' — classes : '+esc(x.classes.join(', ')||'aucune')+(x.formation||x.niveau?' — ancien libellé « '+esc([x.formation,x.niveau].filter(Boolean).join(' / '))+' »':'')+' : '+esc(RAISONS[x.raison]||x.raison)+(x.lignes&&x.lignes.length?' ('+esc(x.lignes.join(', '))+')':'')+'.</li>';}).join('')+'</ul>';}
 function afficherAlertes(al){var z=$('alertes');z.hidden=!al||!al.length;z.innerHTML=al&&al.length?'<b>À vérifier</b><ul class="changements">'+al.map(function(a){return '<li>'+esc(a)+'</li>';}).join('')+'</ul>':'';}
 $('generer').onclick=function(){var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,PER),z=$('changements');afficherAlertes(g.alertes);
   if(!g.changements.length){z.hidden=false;z.innerHTML='<b>Aucun changement</b> : les périodes automatiques sont déjà conformes aux règles.';return;}
@@ -267,6 +272,12 @@ function rendrePeriodes(){var f=$('fLigne').value,lignes=lignesScolaires(),types
     function maj(){var d=tr.querySelector('.pd').value,fn=tr.querySelector('.pf').value;if(!d||!fn||fn<d){message('Dates invalides : la fin doit suivre le début.','erreur');return;}message('');PER[i]={ligne:tr.querySelector('.pl').value,type:tr.querySelector('.pt').value,debut:d,fin:fn,origine:'TABLEAU',regle:null};PER.sort(EUC_DEV610_ordrePeriodes_);modifie();}
     ['.pl','.pt','.pd','.pf'].forEach(function(s){tr.querySelector(s).onchange=maj;});tr.querySelector('.ps').onclick=function(){PER.splice(i,1);modifie();};});}
 $('fLigne').onchange=rendrePeriodes;
+$('reprendre').onclick=function(){occupe(this,'Lecture du calendrier publié…','EUC_DEV610_reprendreExistant',{annee:D.annee.code},function(r){
+  var cle=function(p){return p.ligne+'|'+EUC_DEV610_cleType_(p.type)+'|'+p.debut+'|'+p.fin;},garde=PER.filter(function(p){return p.origine!=='REPRISE';}),vus={};garde.forEach(function(p){vus[cle(p)]=1;});
+  var neuves=r.periodes.filter(function(p){return !vus[cle(p)];}),aj=0;PER=garde.concat(neuves).sort(EUC_DEV610_ordrePeriodes_);
+  Object.keys(r.suggestions||{}).forEach(function(c){var l=D.rattachements[c]=D.rattachements[c]||[];r.suggestions[c].forEach(function(id){if(l.indexOf(id)<0){l.push(id);aj++;}});});
+  message('<span class="ok">'+neuves.length+' période(s) reprise(s)</span> du calendrier publié'+(r.ignorees?', '+r.ignorees+' non reprise(s) (détail sous la grille)':'')+(aj?' · '+aj+' classe(s) ajoutée(s) au rattachement, à enregistrer':'')+'.');
+  modifie();rendreLignes();afficherNonReprises(r.nonReprises||[]);});};
 $('ajouterPeriode').onclick=function(){var l=$('fLigne').value||(lignesScolaires()[0]||{}).code;if(!l)return;var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:l,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
 
 /* ---------- Règles ---------- */
