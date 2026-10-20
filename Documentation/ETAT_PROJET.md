@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 octobre 2026 — correctifs de l'audit de performance 2 et 3
+
+- Repris de l'audit hors ligne du 14 octobre (dossier local `audit_perf/`,
+  non versionné). Le correctif 4 avait déjà été livré en DEV570 (@964).
+- **Correctif 2, tableau de bord apprentis** (`Apprentissage_PFMP_V190X.html`) :
+  un seul `EUC_DEV545_dashboardLive` en vol ; les demandes reçues pendant le
+  calcul sont fusionnées en une relance finale ; réponse d'une autre année
+  ignorée ; verrou libéré après 90 s ; plus de `EUC_DEV192_getDashboard`
+  doublon au chargement. Harnais de l'audit sur le code actuel : rafale
+  « chargement + 4 demandes » 5 appels simultanés → 1 en vol + 1 relance.
+- **Correctif 3, invalidation du cache famille** (`EUC_DEV456_familyCacheDrop_`) :
+  une lecture `getKeys()` puis suppression des seules clés présentes, au lieu
+  de 122 `deleteProperty` ; repli sur l'ancienne boucle si `getKeys()` échoue.
+  Vérifié : même état final des ScriptProperties (122 → 3 suppressions dans
+  le cas testé).
+- **Correctif 1 non appliqué** : décomptes de l'accueil du suivi calculés au
+  clic ; il dépend de la décision D1 (règle DEV331 ou DEV333/DEV336) et d'un
+  fichier du socle `18addab`.
+- Tests : ciblés (DEV449, DEV577, DEV456, DEV504, DEV462, DEV463, DEV484,
+  DEV513) et suite complète 1062/1062.
+
 ## Mise à jour du 20 octobre 2026 — DEV610 plannings annuels (lot A) publié (@1084)
 
 - Nouvelle page `?page=plannings-pfmp` (Administration › Paramétrage global ›

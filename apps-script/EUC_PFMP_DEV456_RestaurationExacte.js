@@ -41,7 +41,14 @@ function EUC_DEV456_familyPersistentPut_(annee,famille,data){
 function EUC_DEV456_familyCacheDrop_(annee,famille){
   var k=EUC_DEV456_familyKey_(annee,famille),c=CacheService.getScriptCache(),p=PropertiesService.getScriptProperties(),keys=[k+'_N',k+'_PN'];
   for(var i=0;i<60;i++){keys.push(k+'_'+i);keys.push(k+'_P'+i);}
-  try{c.removeAll(keys);}catch(e){}try{keys.forEach(function(x){p.deleteProperty(x);});}catch(e2){}
+  try{c.removeAll(keys);}catch(e){}
+  /* AUDIT-PERF (3) : l'ancienne boucle envoyait 122 deleteProperty (un appel
+   * de service chacun), que les blocs existent ou non, et une lecture peut
+   * enchaîner deux invalidations. Une seule lecture des clés, puis
+   * suppression des seules clés présentes : le résultat est identique. */
+  var wanted={},existing=null;keys.forEach(function(x){wanted[x]=true;});
+  try{existing=p.getKeys();}catch(e1){existing=null;}
+  try{(existing?existing.filter(function(x){return wanted[x]===true;}):keys).forEach(function(x){p.deleteProperty(x);});}catch(e2){}
 }
 function EUC_DEV456_rosters_(annee){
   var out={},rows=[];

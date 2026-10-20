@@ -2061,7 +2061,12 @@ function setKpis(s){
     BOOT.classes||[]
   );
 
-  if(window.EUC_DEV250_refreshDashboard){window.EUC_DEV250_refreshDashboard();}else{refreshDashboard();}
+  /* AUDIT-PERF (2) : à cet instant le script DEV250 n'est pas encore lu ;
+   * l'ancien appel lançait donc EUC_DEV192_getDashboard en plus du
+   * EUC_DEV545_dashboardLive de DEV250. On ne garde ici que le repli. */
+  if(window.EUC_DEV250_refreshDashboard){window.EUC_DEV250_refreshDashboard();}
+  else if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){if(!window.EUC_DEV250_refreshDashboard)refreshDashboard();},{once:true});}
+  else{refreshDashboard();}
 
   year.onchange=function(){
 
@@ -3096,24 +3101,47 @@ function setKpis(s){
     });
   }
 
+  /* AUDIT-PERF (2) : un seul calcul du tableau de bord à la fois.
+   * Chargement, changement de classe, changement d'année et retour
+   * d'enregistrement appelaient cette fonction sans coordination (jusqu'à
+   * deux EUC_DEV545_dashboardLive dans la même seconde, chacun réécrivant le
+   * snapshot). Les demandes reçues pendant un calcul sont fusionnées en une
+   * seule relance finale, pour que les chiffres affichés restent ceux de la
+   * dernière saisie. Une réponse d'une autre année n'est jamais affichée. */
+  var dev250InFlight=false,dev250Again=false,dev250Watchdog=0;
+  function dev250Done(){
+    clearTimeout(dev250Watchdog);
+    dev250InFlight=false;
+    if(dev250Again){dev250Again=false;window.EUC_DEV250_refreshDashboard();}
+  }
   window.EUC_DEV250_refreshDashboard=function(){
     var year=document.getElementById('year');
     if(!year)return;
+    if(dev250InFlight){dev250Again=true;return;}
+    dev250InFlight=true;
+    var requestedYear=year.value,settled=false;
+    dev250Watchdog=setTimeout(function(){if(settled)return;settled=true;dev250Done();},90000);
 
     google.script.run
       .withSuccessHandler(function(d){
-        d=d||{};
-        setKpis(d.global||{});
+        if(settled)return;settled=true;
+        try{
+          var current=document.getElementById('year');
+          if(!current||current.value===requestedYear){
+            d=d||{};
+            setKpis(d.global||{});
 
-        /* Le résumé de classe est calculé instantanément depuis les cartes. */
-        if(typeof classSummary==='function'){
-          try{classSummary();}catch(e){}
-        }
+            /* Le résumé de classe est calculé instantanément depuis les cartes. */
+            if(typeof classSummary==='function'){
+              try{classSummary();}catch(e){}
+            }
 
-        setTimeout(placeClassSummary,0);
+            setTimeout(placeClassSummary,0);
+          }
+        }finally{dev250Done();}
       })
-      .withFailureHandler(function(){})
-      .EUC_DEV545_dashboardLive(year.value);
+      .withFailureHandler(function(){if(settled)return;settled=true;dev250Done();})
+      .EUC_DEV545_dashboardLive(requestedYear);
   };
 
   function install(){
