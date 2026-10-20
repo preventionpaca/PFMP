@@ -113,4 +113,21 @@ test('DEV608 : accents des prénoms — dictionnaire Pronote + liste française,
   const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs'); assert.match(qr, /respPrenom=EUC_DEV608_prenom_\(respPrenom\)/); assert.match(qr, /tPrenom=EUC_DEV608_prenom_\(tPrenom\)/);
 });
 
+test('DEV608 : répertoire — propositions d’accents (aperçu), enregistrement des seules lignes cochées en un lot, mémoire mise à jour', () => {
+  const rows = [{ id: 9, fields: { Cle_entreprise: 'S|1', Role_contact: 'TUTEUR', Cle_contact_source: 'k1', Nom_corrige: 'Stephane Martin' } }], calls = [], memo = [];
+  const contacts = [{ identity: 'S|1', entreprise: 'GE', role: 'TUTEUR', contactKey: 'k1', nom: 'Stephane Martin' }, { identity: 'S|2', entreprise: 'CM', role: 'RESPONSABLE', contactKey: 'k2', nom: 'Herve Dupont' },
+    { identity: 'S|3', entreprise: 'X', role: 'TUTEUR', contactKey: 'k3', nom: 'Kevin Leroy' }, { identity: 'S|4', entreprise: 'Y', role: 'TUTEUR', contactKey: 'k4', nom: 'Stephane Roux', archive: true }, { identity: 'S|5', entreprise: 'Z', role: '', contactKey: '', nom: 'Aucun contact' }];
+  const k = ctx({ EUC_DEV538_admin_: () => ({ email: 'admin@example.org' }), EUC_DEV563_contactDirectory: () => ({ contacts }), EUC_DEV562_ensureContactTable_: () => {}, EUC_DEV562_CONTACT_TABLE_: 'T',
+    EUC_DEV562_contactRows_: () => rows, EUC_DEV538_fields_: r => r.fields, EUC_DEV538_t_: v => v == null ? '' : String(v).trim(), EUC_DEV562_matchCompany_: (r, q) => r.fields.Cle_entreprise === q.identity, EUC_DEV562_companyKey_: q => q.identity,
+    EUC_DEV600_annuaireMaj_: (test, maj) => contacts.filter(test).forEach(maj), EUC_ENT_grist: (m, p, body) => { calls.push({ m, n: body.records.length, recs: body.records }); return {}; } });
+  k.EUC_DEV608_dico_ = () => k.EUC_DEV608_construire_([]);
+  const a = J(k.EUC_DEV608_annuaireAccents({}));
+  assert.strictEqual(a.apercu, true); assert.deepStrictEqual(a.propositions.map(p => p.avant + ' → ' + p.apres), ['Stephane Martin → Stéphane Martin', 'Herve Dupont → Hervé Dupont']);
+  assert.strictEqual(calls.length, 0);
+  const r = k.EUC_DEV608_annuaireAccents({ confirmation: 'ENREGISTRER', cles: ['S|1|TUTEUR|k1'] });
+  assert.strictEqual(r.enregistrees, 1); assert.strictEqual(calls.length, 1); assert.strictEqual(calls[0].m, 'patch'); assert.strictEqual(calls[0].recs[0].id, 9); assert.strictEqual(calls[0].recs[0].fields.Nom_corrige, 'Stéphane Martin');
+  assert.strictEqual(contacts[0].nom, 'Stéphane Martin'); assert.strictEqual(contacts[1].nom, 'Herve Dupont');
+  const book = read('apps-script/Book_Entreprises_DEV538.html'); for (const x of ['contactDirectoryAccents', "confirmation:'ENREGISTRER'", 'accCle', 'Accents des prénoms']) assert.ok(book.includes(x), x);
+});
+
 console.log(`\n${n} tests DEV602 identités des contacts réussis.`);

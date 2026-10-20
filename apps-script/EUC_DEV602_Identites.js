@@ -183,3 +183,33 @@ function EUC_DEV608_dico_() {
 }
 /* Prénom final : majuscule initiale, puis accents si le dictionnaire est sans ambiguïté. */
 function EUC_DEV608_prenom_(v) { try { return EUC_DEV608_accentuer_(v, EUC_DEV608_dico_()); } catch (e) { return v; } }
+
+/* ---------- DEV608 : accents des prénoms dans le répertoire (aperçu, puis noms affichés corrigés en un lot) ---------- */
+/* Propositions (calcul pur) : contacts actifs dont le nom affiché change avec le dictionnaire. */
+function EUC_DEV608_propositions_(contacts, dico) {
+  return (contacts || []).filter(function(x) { return x.contactKey && !x.archive && x.role; }).map(function(x) {
+    var apres = EUC_DEV608_accentuer_(x.nom, dico);
+    return apres !== x.nom ? { identity: x.identity, siret: x.siret || '', entreprise: x.entreprise || '', adresse: x.adresse || '', role: x.role, contactKey: x.contactKey, nomSource: x.nomSource || '', avant: x.nom, apres: apres } : null;
+  }).filter(Boolean);
+}
+function EUC_DEV608_annuaireAccents(q) {
+  var ctx = EUC_DEV538_admin_(); q = q || {};
+  var annuaire = EUC_DEV563_contactDirectory(), props = EUC_DEV608_propositions_(annuaire.contacts, EUC_DEV608_dico_());
+  if (q.confirmation !== 'ENREGISTRER') return { ok: true, apercu: true, propositions: props };
+  var choisis = {}; (q.cles || []).forEach(function(k) { choisis[String(k)] = 1; });
+  var retenues = props.filter(function(p) { return choisis[p.identity + '|' + p.role + '|' + p.contactKey]; });
+  if (!retenues.length) return { ok: true, apercu: false, enregistrees: 0 };
+  EUC_DEV562_ensureContactTable_();
+  var lignes = EUC_DEV562_contactRows_(), now = new Date().toISOString(), posts = [], patches = [];
+  retenues.forEach(function(p) {
+    var ex = lignes.filter(function(r) { var f = EUC_DEV538_fields_(r); return EUC_DEV562_matchCompany_(r, p) && EUC_DEV538_t_(f.Role_contact).toUpperCase() === p.role && EUC_DEV538_t_(f.Cle_contact_source) === p.contactKey; })[0];
+    var fields = { Cle_entreprise: EUC_DEV562_companyKey_(p), SIRET: String(p.siret).replace(/\D/g, ''), Entreprise: String(p.entreprise).slice(0, 250), Adresse: String(p.adresse).slice(0, 500), Role_contact: p.role, Cle_contact_source: p.contactKey,
+      Nom_source: String(p.nomSource).slice(0, 200), Nom_corrige: p.apres, Actif: true, Updated_at: now, Updated_by: EUC_DEV538_t_(ctx && ctx.email) };
+    if (ex) patches.push({ id: ex.id, fields: fields }); else posts.push({ fields: fields });
+  });
+  if (posts.length) EUC_ENT_grist('post', '/tables/' + EUC_DEV562_CONTACT_TABLE_ + '/records', { records: posts });
+  if (patches.length) EUC_ENT_grist('patch', '/tables/' + EUC_DEV562_CONTACT_TABLE_ + '/records', { records: patches });
+  var parCle = {}; retenues.forEach(function(p) { parCle[p.identity + '|' + p.role + '|' + p.contactKey] = p.apres; });
+  if (typeof EUC_DEV600_annuaireMaj_ === 'function') EUC_DEV600_annuaireMaj_(function(x) { return !!parCle[x.identity + '|' + x.role + '|' + x.contactKey]; }, function(x) { x.nom = parCle[x.identity + '|' + x.role + '|' + x.contactKey]; x.corrige = true; });
+  return { ok: true, apercu: false, enregistrees: retenues.length };
+}
