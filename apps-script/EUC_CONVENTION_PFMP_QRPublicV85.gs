@@ -401,6 +401,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
   var commune=txt(d.entrepriseCommune,150);
   var respNom=person(d.responsableNom);
   var respPrenom=person(d.responsablePrenom);
+  if(typeof EUC_DEV608_prenom_==='function')respPrenom=EUC_DEV608_prenom_(respPrenom);
   var respFonction=txt(d.responsableFonction,200);
   var respTelephone=txt(d.responsableTelephone,50);
   var respCourriel=txt(d.responsableCourriel,250);
@@ -455,6 +456,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
 
   var tNom=tuteurEst?respNom:person(d.tuteurNom);
   var tPrenom=tuteurEst?respPrenom:person(d.tuteurPrenom);
+  if(!tuteurEst&&typeof EUC_DEV608_prenom_==='function')tPrenom=EUC_DEV608_prenom_(tPrenom);
   var tFonction=tuteurEst?respFonction:txt(d.tuteurFonction,200);
   var tTelephone=tuteurEst?respTelephone:txt(d.tuteurTelephone,50);
   var tCourriel=tuteurEst?respCourriel:txt(d.tuteurCourriel,250);

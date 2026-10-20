@@ -62,7 +62,7 @@ function EUC_DEV602_jotform_(row, raw) {
   [['Responsable', 'responsable', ['Nom_responsable', 'Responsable_nom', 'Nom du responsable', 'Nom responsable']], ['Tuteur', 'tuteur', ['Nom_tuteur', 'Tuteur_nom', 'Nom du tuteur', 'Nom tuteur']]].forEach(function(r) {
     var R = r[0], x = r[1];
     out[R + '_civilite'] = EUC_DEV602_civilite_(pick(['Civilité du ' + x, 'Civilite du ' + x, 'Civilité ' + x, R + '_civilite']));
-    out[R + '_prenom'] = EUC_DEV528_personName_(pick(['Prénom du ' + x, 'Prenom du ' + x, 'Prénom ' + x, 'Prenom ' + x, R + '_prenom']));
+    out[R + '_prenom'] = EUC_DEV608_prenom_(EUC_DEV528_personName_(pick(['Prénom du ' + x, 'Prenom du ' + x, 'Prénom ' + x, 'Prenom ' + x, R + '_prenom'])));
     out[R + '_nom'] = EUC_DEV602_nomCapitales_(pick(r[2]));
     out[R + '_fonction'] = pick(['Fonction du ' + x, 'Fonction ' + x, R + '_fonction']);
     out[R + '_telephone'] = pick(['Téléphone du ' + x, 'Telephone du ' + x, 'Téléphone ' + x, R + '_telephone']);
@@ -141,3 +141,45 @@ function EUC_DEV602_archiverContact(q) {
   if (typeof EUC_DEV600_annuaireMaj_ === 'function') EUC_DEV600_annuaireMaj_(function(x) { return x.identity === EUC_DEV602_t_(q.identity) && x.role === role && x.contactKey === contactKey; }, function(x) { x.archive = archiver; x.archiveLe = archiver ? now.slice(0, 10) : ''; });
   return { ok: true, archive: archiver, le: now.slice(0, 10) };
 }
+
+/* ---------- DEV608 : accents des prénoms d'après les prénoms connus (Pronote + liste française) ---------- */
+var EUC_DEV608_SEMENCE_ = ['Hervé', 'José', 'Stéphane', 'Stéphanie', 'Émile', 'Émilie', 'Éric', 'René', 'Renée', 'Hélène', 'Jérôme', 'Jérémy', 'Jérémie', 'Frédéric', 'Frédérique', 'Gérard', 'Gérald', 'Mélanie', 'Céline', 'Valérie',
+  'Sébastien', 'Benoît', 'Gaëlle', 'Gaël', 'Noël', 'Noémie', 'Joël', 'Joëlle', 'Raphaël', 'Raphaëlle', 'Michaël', 'Anaïs', 'Chloé', 'Léa', 'Léo', 'Léon', 'Léonie', 'Zoé', 'Inès', 'Maëlle', 'Maël', 'Loïc', 'Clément', 'Clémence',
+  'Grégory', 'Grégoire', 'Cédric', 'Aurélien', 'Aurélie', 'Amélie', 'Agnès', 'Thérèse', 'Geneviève', 'André', 'Andrée', 'Séverine', 'Pénélope', 'Héloïse', 'Élise', 'Élodie', 'Évelyne', 'Éloïse', 'Ève',
+  'Étienne', 'Édouard', 'Élie', 'Éléonore', 'Émeline', 'Josée', 'Théo', 'Timothée', 'Mégane', 'Désiré', 'Félix', 'Félicien', 'Lucrèce', 'Régis', 'Rémi', 'Rémy', 'Hugues', 'Léandre', 'Océane', 'Maïa', 'Naïma', 'Aïcha', 'Aïssa', 'Inès', 'Ludivine', 'Gaëtan', 'Médéric', 'Thaïs', 'Zoë', 'Anaëlle', 'Léane', 'Lénaïc'];
+function EUC_DEV608_cle_(v) { return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, ''); }
+function EUC_DEV608_accentue_(v) { return /[À-ɏ]/.test(String(v || '')); }
+/* Dictionnaire (calcul pur) : clé sans accent → formes vues et leur nombre. */
+function EUC_DEV608_construire_(prenoms) {
+  var d = {};
+  (prenoms || []).concat(EUC_DEV608_SEMENCE_).forEach(function(p) {
+    String(p == null ? '' : p).split(/[\s'-]+/).forEach(function(mot) {
+      mot = mot.trim(); if (mot.length < 2) return;
+      var k = EUC_DEV608_cle_(mot), forme = mot.charAt(0).toUpperCase() + mot.slice(1).toLowerCase(); if (!k) return;
+      var e = d[k] = d[k] || {}; e[forme] = (e[forme] || 0) + 1;
+    });
+  });
+  /* On ne garde que les clés dont une forme porte un accent : les autres ne servent à rien. */
+  var out = {}; Object.keys(d).forEach(function(k) { if (Object.keys(d[k]).some(EUC_DEV608_accentue_)) out[k] = d[k]; });
+  return out;
+}
+/* Accentue un prénom quand une seule forme accentuée est connue et qu'aucune forme sans accent n'existe (calcul pur). */
+function EUC_DEV608_accentuer_(prenom, dico) {
+  return String(prenom == null ? '' : prenom).split(/([\s'-]+)/).map(function(mot) {
+    if (!mot || /^[\s'-]+$/.test(mot) || EUC_DEV608_accentue_(mot)) return mot;
+    var e = (dico || {})[EUC_DEV608_cle_(mot)]; if (!e) return mot;
+    var formes = Object.keys(e), accentuees = formes.filter(EUC_DEV608_accentue_);
+    if (accentuees.length !== 1 || formes.length !== 1) return mot;
+    var f = accentuees[0]; return mot === mot.toUpperCase() && mot.length > 1 ? f.toUpperCase() : f;
+  }).join('');
+}
+function EUC_DEV608_dico_() {
+  var cache = CacheService.getScriptCache(), c = cache.get('EUC_DEV608_DICO');
+  if (c) try { return JSON.parse(c); } catch (e) {}
+  var lire = function(t, champs) { try { return (EUC_ENT_grist('get', '/tables/' + t + '/records').records || []).reduce(function(a, r) { var f = r.fields || {}; champs.forEach(function(x) { if (f[x]) a.push(f[x]); }); return a; }, []); } catch (e) { return []; } };
+  var dico = EUC_DEV608_construire_(lire('EUC_ELEVES_PFMP', ['Prenom', 'Prenom_usage']).concat(lire('EUC_RESPONSABLES_ELEVES_PFMP', ['Prenom']), lire('EUC_PROFESSEURS_PFMP', ['Prenom'])));
+  try { cache.put('EUC_DEV608_DICO', JSON.stringify(dico), 21600); } catch (e) {}
+  return dico;
+}
+/* Prénom final : majuscule initiale, puis accents si le dictionnaire est sans ambiguïté. */
+function EUC_DEV608_prenom_(v) { try { return EUC_DEV608_accentuer_(v, EUC_DEV608_dico_()); } catch (e) { return v; } }

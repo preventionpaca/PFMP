@@ -96,4 +96,21 @@ test('DEV602 : branchements — QR (contrôle, civilité, colonnes), pages QR, b
   for (const t of ['contactDirectoryArchives', 'EUC_DEV602_archiverContact', 'function directoryBadges', 'Nom incomplet', 'Confirmé par le tuteur', '(arch||!x.archive)', 'A quitté l’entreprise']) assert.ok(book.includes(t), t);
 });
 
+test('DEV608 : accents des prénoms — dictionnaire Pronote + liste française, correction seulement sans ambiguïté, prénoms composés', () => {
+  const k = ctx();
+  const d = k.EUC_DEV608_construire_(['Léa', 'Joao', 'João', 'Jose', 'Rene', 'Gökhan', 'Mehmet', 'Inès', 'Ayşe']);
+  const A = v => k.EUC_DEV608_accentuer_(v, d);
+  assert.strictEqual(A('Stephane'), 'Stéphane'); assert.strictEqual(A('Herve'), 'Hervé'); assert.strictEqual(A('Emile'), 'Émile'); assert.strictEqual(A('Eric'), 'Éric');
+  assert.strictEqual(A('Jean-Rene'), 'Jean-Rene'); /* « Rene » existe aussi sans accent dans la base : on ne touche pas */
+  assert.strictEqual(A('Jean-Herve'), 'Jean-Hervé'); assert.strictEqual(A('Marie Helene'), 'Marie Hélène');
+  assert.strictEqual(A('Jose'), 'Jose'); assert.strictEqual(A('Joao'), 'Joao');
+  assert.strictEqual(A('Gokhan'), 'Gökhan'); assert.strictEqual(A('Ayse'), 'Ayşe'); assert.strictEqual(A('Ines'), 'Inès');
+  assert.strictEqual(A('Mehmet'), 'Mehmet'); assert.strictEqual(A('Kevin'), 'Kevin'); assert.strictEqual(A('Stéphane'), 'Stéphane');
+  assert.strictEqual(A('HERVE'), 'HERVÉ');
+  for (const x of ['Emma', 'Eva', 'Elisa', 'Andrea', 'Melissa', 'Matheo', 'Maeva']) assert.strictEqual(A(x), x, x);
+  assert.ok(!('mehmet' in J(d)));
+  assert.match(read('apps-script/EUC_DEV603_Declaration.js'), /prenom: EUC_DEV608_prenom_\(EUC_DEV603_prenom_\(id\.prenom\)\)/);
+  const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs'); assert.match(qr, /respPrenom=EUC_DEV608_prenom_\(respPrenom\)/); assert.match(qr, /tPrenom=EUC_DEV608_prenom_\(tPrenom\)/);
+});
+
 console.log(`\n${n} tests DEV602 identités des contacts réussis.`);

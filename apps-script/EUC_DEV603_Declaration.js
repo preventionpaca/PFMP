@@ -128,7 +128,7 @@ function EUC_DEV603_personne_(role, x, obligatoireContact) {
   if (obligatoireContact && !t.ok) throw new Error(role + ' : ' + t.erreur);
   var em = EUC_DEV603_courriel_(mail);
   if (obligatoireContact && !em.ok) throw new Error(role + ' : ' + em.erreur);
-  return { civilite: id.civilite, prenom: EUC_DEV603_prenom_(id.prenom), nom: EUC_DEV603_nom_(id.nom), fonction: fonction, telephone: t.ok ? t.format : tel, courriel: mail };
+  return { civilite: id.civilite, prenom: EUC_DEV608_prenom_(EUC_DEV603_prenom_(id.prenom)), nom: EUC_DEV603_nom_(id.nom), fonction: fonction, telephone: t.ok ? t.format : tel, courriel: mail };
 }
 /* Téléphone selon le pays de l'entreprise (calcul pur) : France, Monaco (ou France), étranger (international). */
 function EUC_DEV603_telephone_(v, pays) {
