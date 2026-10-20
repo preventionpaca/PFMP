@@ -24,14 +24,17 @@
     des formateurs différents ; la saisie des initiales se fait donc par
     demi-journée.
   - **Formation complémentaire (partenariat carrosseries 5 Star, CAP
-    peintre)** : modules ajoutés en plus de la formation, auxquels se mêlent
-    des scolaires. Nouveau type de période (« Formation complémentaire » ou
-    « 5 Star », libellé à arrêter), placé sur le calendrier avec ses dates et
+    peintre)** : cas très particulier, modules ajoutés en plus de la
+    formation, auxquels se mêlent des scolaires. Type de période
+    « Formation complémentaire » avec un complément de libellé « 5 Star »
+    (décision du 20/10/2026), placé sur le calendrier avec ses dates et
     ses heures par formateur et par demi-journée. Ces heures sont **en plus** :
     elles ne sont jamais comptées dans le total annuel d'apprentissage du CAP
     ni comparées à son quota. Incident à l'origine (20/10/2026) : des heures
     surlignées en orange sans formateur avaient faussé le total du planning
     envoyé au CFA.
+    - Récapitulatif par formateur, limité au CAP peintre : deux totals
+      séparés, « CAP peintre » et « 5 Star » (décision du 20/10/2026).
     - Avant publication dans `Planning_Periodes` : ajouter le type à la liste
       Grist (accord explicite requis) et vérifier que les écrans consommateurs
       (conventions, suivi, ordres de mission) ne le prennent pas pour une PFMP.
