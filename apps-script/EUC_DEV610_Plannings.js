@@ -433,12 +433,13 @@ function EUC_DEV610_codeAnnee_(v, annees) {
   var id = EUC_DEV610_ref_(v); if (id) { var a = annees.filter(function(x) { return x.id === id; })[0]; if (a) return a.code; }
   var m = EUC_DEV610_t_(v).match(/20\d{2}-20\d{2}/); return m ? m[0] : '';
 }
-/* Réglages d'heures proposés tant qu'ils ne sont pas enregistrés (calcul pur) : 4 h le matin et 3 h l'après-midi ;
+/* Réglages d'heures proposés tant qu'ils ne sont pas enregistrés (calcul pur) : journées de 7 h (4 h + 3 h) pour toutes
+ * les formations, mixités comprises, sauf le CAP peintre en journées de 8 h (4 h + 4 h, décision du 20/10/2026) ;
  * quota des classes entières (CAP 450 h, BAC PRO et BTS 675 h) ; formateurs saisis pour le CAP peintre. */
 function EUC_DEV610_reglagesHeures_(l) {
   var txt = EUC_DEV610_n_([l.code, l.libelle, l.classePfmp].join(' ')), entiere = l.calendrier === 'CLASSE_ENTIERE';
   if (l.heuresMatin == null) l.heuresMatin = 4;
-  if (l.heuresApresMidi == null) l.heuresApresMidi = 3;
+  if (l.heuresApresMidi == null) l.heuresApresMidi = l.code === 'CAP_PEINTRE' ? 4 : 3;
   if (l.quota == null) l.quota = !entiere ? null : /BTS|BAC|BP|MELEC/.test(txt) ? 675 : /CAP/.test(txt) ? 450 : null;
   if (l.formateurs == null) l.formateurs = l.code === 'CAP_PEINTRE';
   return l;

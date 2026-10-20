@@ -453,9 +453,10 @@ test('heures : bilan par demi-journée, formation complémentaire 5 Star compté
   assert.deepStrictEqual(J(c.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, {})), J(k.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, {})));
   assert.strictEqual(c.EUC_DEV610_TYPE_COMPLEMENTAIRE_, 'Formation complémentaire');
 });
-test('heures : réglages proposés (4 h + 3 h, quotas CAP 450 h et BAC PRO / BTS 675 h, formateurs du CAP peintre), enregistrement sans suppression', () => {
+test('heures : réglages proposés (8 h pour le CAP peintre, 7 h ailleurs, quotas CAP 450 h et BAC PRO / BTS 675 h, formateurs du CAP peintre), enregistrement sans suppression', () => {
   const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' }), L = c => r.lignes.find(l => l.code === c);
-  assert.deepStrictEqual(J([L('CAP_PEINTRE').heuresMatin, L('CAP_PEINTRE').heuresApresMidi, L('CAP_PEINTRE').quota, L('CAP_PEINTRE').formateurs]), [4, 3, 450, true]);
+  assert.deepStrictEqual(J([L('CAP_PEINTRE').heuresMatin, L('CAP_PEINTRE').heuresApresMidi, L('CAP_PEINTRE').quota, L('CAP_PEINTRE').formateurs]), [4, 4, 450, true], 'CAP peintre : journées de 8 h');
+  assert.ok(r.lignes.filter(l => l.code !== 'CAP_PEINTRE').every(l => l.heuresMatin + l.heuresApresMidi === 7), 'toutes les autres formations, mixités comprises : journées de 7 h');
   assert.deepStrictEqual(J([L('1BTS_ELEC_ALT').quota, L('1MELEC_G').quota, L('1BTS_ELEC_ALT').formateurs, L('1CAP').quota]), [675, 675, false, null]);
   assert.deepStrictEqual(J(r.heures), []);
   const sauver = q => g.k.EUC_DEV610_enregistrerHeures(Object.assign({ annee: '2026-2027', ligne: 'CAP_PEINTRE' }, q));
@@ -479,7 +480,7 @@ test('formation complémentaire : complément conservé dans la version, jamais 
   const d = k.EUC_DEV610_diffPublication_({ periodes: [{ ligne: 'TBP_MVA', type: 'Formation complémentaire', complement: '5 Star', debut: '2027-01-11', fin: '2027-01-15' }] }, lignes, { TBP_MVA: [30, 31] }, [], '2026-2027');
   assert.strictEqual(d.creer.length, 0);
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', '||HSALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
+  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', "['4+4','8 h (4 + 4)'],['4+3','7 h (4 + 3)'],['4+0','½ journée matin (4 h)']", '||HSALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

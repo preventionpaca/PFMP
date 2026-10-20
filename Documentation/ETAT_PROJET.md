@@ -3,8 +3,10 @@
 ## Mise à jour du 20 octobre 2026 — DEV610 lot B : heures, formateurs et formation complémentaire (CAP peintre)
 
 - Calendrier d'une formation (`?page=plannings-pfmp&vue=ligne&ligne=…`) :
-  heures par demi-journée (4 h le matin, 3 h l'après-midi par défaut,
-  modifiables pour la ligne puis jour par jour ; case vide = défaut), total
+  heures par demi-journée : journées de 8 h (4 + 4) pour le CAP peintre, de
+  7 h (4 + 3) pour toutes les autres formations, mixités comprises (décision
+  du 20/10/2026) ; modifiables pour la ligne puis jour par jour, avec un choix
+  rapide « 8 h / 7 h / ½ journée de 4 h / aucune heure » (case vide = défaut), total
   de l'année comparé au quota (proposé : CAP 450 h, BAC PRO / BTS 675 h pour
   les classes entières ; modifiable), heures du mois dans le pied du
   calendrier. Clic sur un jour : la ligne correspondante de la saisie.
