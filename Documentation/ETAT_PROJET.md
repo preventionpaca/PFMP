@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 octobre 2026 — 1 BTS MV à 5 semaines (@1096)
+
+- Confirmé par l'utilisateur : 1 BTS MV et 2 BTS MV font 5 semaines. Règle par
+  défaut du 1 BTS MV corrigée (commit `f83cab3`), test DEV610 adapté, suite
+  1062/1062, version immuable `@1096`, 31/31 routes. Les règles déjà
+  enregistrées dans Grist pour une année ne sont pas modifiées.
+- Précisions du lot B consignées dans `PLAN_PROCHAIN_LOT.md`.
+
 ## Mise à jour du 20 octobre 2026 — correctifs de l'audit de performance 2 et 3
 
 - Repris de l'audit hors ligne du 14 octobre (dossier local `audit_perf/`,
