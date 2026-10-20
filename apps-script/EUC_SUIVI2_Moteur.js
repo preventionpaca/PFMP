@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.606';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.605';
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -97,7 +97,6 @@ function EUC_SUIVI2_anneeCourante_(aujourdhui) {
 function EUC_SUIVI2_famille_(classe, diplome) {
   var nom = EUC_SUIVI2_norm_(classe.Nom || classe.Libelle || classe.Code_import);
   var texte = EUC_SUIVI2_norm_([classe.Nom, classe.Libelle, classe.Formation, classe.Niveau, classe.Filiere, classe.Filiere_Pronote, classe.Niveau_Pronote, diplome && diplome.famille, diplome && diplome.diplome].join(' '));
-  if (EUC_SUIVI2_classeTest_(classe.Nom || classe.Libelle || classe.Code_import)) return 'AUTRES';
   if (/^(TPMMA|TPEEB|TSEC|CQPM|BACHELOR)/.test(nom) || /\b(TPMMA|TPEEB|TSEC|CQPM|BACHELOR)\b/.test(texte)) return 'AUTRES';
   if (/\bBTS\b/.test(texte) || /^[12]\s*(BTS|TS)/.test(nom)) return 'BTS';
   if (/\bCAP\b/.test(texte) || /^[12T]\s*CAP/.test(nom)) return 'CAP';
