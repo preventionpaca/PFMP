@@ -168,7 +168,7 @@ Valeurs initiales, telles qu'observées en 2026-2027, à confirmer :
 | TCAP | 2 périodes, placement **manuel** |
 | 1BTS_CIEL, 1BTS_ELEC | 6 sem. avant l'été |
 | 1BTS_CPI, 1BTS_CPRP | 8 sem. avant l'été |
-| 1BTS_MV | 4 sem. avant l'été (5 dans la grille 2026-2027, à vérifier) |
+| 1BTS_MV | 5 sem. avant l'été (confirmé par l'utilisateur le 20/10/2026) |
 | 2BTS_MV | 5 sem. avant Noël |
 | Mixités | héritent des PFMP + vacances, puis semaines ajoutées **à la main** |
 | Classes entières (FC_ALTERNANCE) | placement entièrement **manuel** |

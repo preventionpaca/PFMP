@@ -295,7 +295,7 @@ var EUC_DEV610_REGLES_DEFAUT_ = [
   ['TCAP', 1, 'PFMP T CAP', 3, 'MANUEL', '', 0, 'AVANT', 0], ['TCAP', 2, 'PFMP T CAP', 4, 'MANUEL', '', 0, 'AVANT', 0],
   ['1BTS_CIEL', 1, 'Stage BTS', 6, 'AUTO', 'ETE', 0, 'AVANT', 0], ['1BTS_ELEC', 1, 'Stage BTS', 6, 'AUTO', 'ETE', 0, 'AVANT', 0],
   ['1BTS_CPI', 1, 'Stage BTS', 8, 'AUTO', 'ETE', 0, 'AVANT', 0], ['1BTS_CPRP', 1, 'Stage BTS', 8, 'AUTO', 'ETE', 0, 'AVANT', 0],
-  ['1BTS_MV', 1, 'Stage BTS', 4, 'AUTO', 'ETE', 0, 'AVANT', 0], ['2BTS_MV', 1, 'Stage BTS', 5, 'AUTO', 'NOEL', 0, 'AVANT', 0]
+  ['1BTS_MV', 1, 'Stage BTS', 5, 'AUTO', 'ETE', 0, 'AVANT', 0], ['2BTS_MV', 1, 'Stage BTS', 5, 'AUTO', 'NOEL', 0, 'AVANT', 0]
 ];
 
 /* ===================== Accès Grist ===================== */

@@ -2,18 +2,27 @@
 
 ## Plannings annuels — lots B et C (après DEV610, lot A)
 
-- **À trancher avec l'utilisateur** : stage des 1 BTS MV en 2026-2027 —
-  la règle initiale compte 4 semaines (dire de l'utilisateur), le planning
-  publié en compte 5 (31/05 → 02/07). Corriger la règle 2026-2027 ou la
-  période selon sa réponse.
-- **Lot B — mixités et classes entières** : lignes `MIXITE` qui héritent des
-  PFMP de leurs lignes scolaires et des vacances, semaines ajoutées à la main,
-  visite la dernière semaine de chaque période en entreprise ; calendrier à part
-  « formation continue et alternance classe entière » (placement manuel,
-  appels et visites manuels) ; heures par jour (7 h par défaut, exceptions
-  stockées) et total annuel comparé au quota (CAP peintre 450 h, BAC PRO et BTS
-  675 h) ; calendriers de classe en colonnes par mois (D / J / H) imprimables,
-  comme l'annexe 32a.
+- **Réglé le 20 octobre 2026** : 1 BTS MV et 2 BTS MV font tous deux
+  5 semaines. Règle par défaut du 1 BTS MV corrigée (4 → 5). Des règles déjà
+  enregistrées dans Grist pour une année gardent leur valeur : à vérifier dans
+  l'onglet « Règles ».
+- **Lot B — précisions de l'utilisateur (20 octobre 2026)** :
+  - **Mixités** : elles héritent des PFMP de leur classe, mais ont des
+    périodes en plus que l'utilisateur place à la main, selon la position des
+    vacances, les enchaînements et les événements du lycée, là où elles gênent
+    le moins. Le générateur ne doit jamais déplacer ces périodes manuelles.
+  - **Heures** : dans le calendrier d'une formation (pas le planning général),
+    heures par jour proposées par défaut (7 h), modifiables à la main cellule
+    par cellule ; total annuel comparé au quota (CAP peintre 450 h, BAC PRO et
+    BTS 675 h). Concerne d'abord les classes entières.
+  - **Formateurs (CAP peintre, extensible à d'autres formations)** : colonne
+    supplémentaire où saisir les initiales du formateur par jour ou par
+    créneau ; récapitulatif par formateur avec le total d'heures
+    d'intervention à l'année. But : répartition financière équilibrée des
+    heures entre formateurs.
+  - Calendriers de classe imprimables, en colonnes par mois (D / J / H), comme
+    l'annexe 32a ; calendrier à part « formation continue et alternance classe
+    entière » (placement manuel, appels et visites manuels).
 - **Lot C — N+2 prévisionnel** : document « Prévisionnel » pour les entreprises
   depuis une version sur vacances prévisionnelles ; à la parution des dates
   officielles, recalcul avec aperçu avant/après (règles + placements manuels

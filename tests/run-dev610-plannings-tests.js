@@ -106,6 +106,7 @@ test('règles initiales : la génération 2026-2027 retrouve les périodes publi
   assert.deepStrictEqual(J(de('1BTS_CPI')), ['Stage BTS 2027-05-10 2027-07-02']);
   assert.deepStrictEqual(J(de('1BTS_CIEL')), ['Stage BTS 2027-05-24 2027-07-02']);
   assert.deepStrictEqual(J(de('2BTS_MV')), ['Stage BTS 2026-11-16 2026-12-18']);
+  assert.deepStrictEqual(J(de('1BTS_MV')), ['Stage BTS 2027-05-31 2027-07-02'], '1 BTS MV : 5 semaines avant l’été, comme le planning publié');
   assert.deepStrictEqual(J(de('TCAP')), []); assert.deepStrictEqual(J(de('MIX_1BP')), []); assert.deepStrictEqual(J(de('TSEC')), []);
   assert.deepStrictEqual(J(g.alertes), ['CAP — TCAP CAR — 2 période(s) « PFMP T CAP » à placer à la main (3 et 4 semaines).']);
   assert.ok(g.periodes.every(p => k.EUC_DEV610_typeFormation_(p.type)));
@@ -120,7 +121,7 @@ test('N+1 sur dates prévisionnelles : les périodes suivent les vacances 2027-2
 test('régénération : la reprise des types à règle est remplacée, le manuel (T CAP, grille) est conservé et jamais doublé', () => {
   const { s, idx } = calendrier('2026-2027'), lignes = lignesDefaut(), regles = k.EUC_DEV610_reglesDefaut_('2026-2027');
   const actuelles = [
-    { ligne: '1BTS_MV', type: 'Stage BTS', debut: '2027-05-31', fin: '2027-07-02', origine: 'REPRISE' },
+    { ligne: '1BTS_MV', type: 'Stage BTS', debut: '2027-05-24', fin: '2027-06-25', origine: 'REPRISE' },
     { ligne: 'TCAP', type: 'PFMP TCAP', debut: '2027-03-15', fin: '2027-04-09', origine: 'REPRISE' },
     { ligne: 'TCAP', type: 'PFMP T CAP', debut: '2026-11-16', fin: '2026-12-04', origine: 'GRILLE' },
     { ligne: '1BP_CIEL', type: 'PFMP 1ère', debut: '2026-11-16', fin: '2026-12-11', origine: 'GRILLE' },
@@ -128,13 +129,13 @@ test('régénération : la reprise des types à règle est remplacée, le manuel
   ];
   const g = k.EUC_DEV610_generer_(lignes, regles, s, idx, actuelles);
   const de = code => g.periodes.filter(p => p.ligne === code).map(p => [p.debut, p.origine]);
-  assert.deepStrictEqual(J(de('1BTS_MV')), [['2027-06-07', 'REGLE']]);
+  assert.deepStrictEqual(J(de('1BTS_MV')), [['2027-05-31', 'REGLE']]);
   assert.deepStrictEqual(J(de('TCAP')), [['2026-11-16', 'GRILLE'], ['2027-03-15', 'REPRISE']]);
   assert.deepStrictEqual(J(de('1BP_CIEL')), [['2026-11-16', 'GRILLE'], ['2027-03-22', 'REGLE']]);
   assert.deepStrictEqual(J(de('TSEC')), [['2026-11-16', 'GRILLE']]);
   assert.ok(g.alertes.some(a => /1 BAC PRO — 1CIEL — période n°1 non replacée/.test(a)));
   assert.ok(!g.alertes.some(a => /T CAP/.test(a)), 'les deux T CAP sont placées');
-  const c = g.changements.find(x => x.ligne === '1BTS_MV'); assert.strictEqual(c.nature, 'DEPLACEE'); assert.strictEqual(c.avant.debut, '2027-05-31');
+  const c = g.changements.find(x => x.ligne === '1BTS_MV'); assert.strictEqual(c.nature, 'DEPLACEE'); assert.strictEqual(c.avant.debut, '2027-05-24');
   const again = k.EUC_DEV610_generer_(lignes, regles, s, idx, g.periodes); assert.strictEqual(again.changements.length, 0);
 });
 test('appel la première semaine de chaque période en entreprise, pas pendant le P.dif.', () => {
