@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 octobre 2026 — DEV610 plannings annuels (lot A), non publié
+
+- Nouvelle page `?page=plannings-pfmp` (Administration › Paramétrage global ›
+  Plannings annuels), commit `9aeec9a` sur `codex/dev570-book-familles`. Elle
+  remplace, pour les calendriers scolaires, l'outil Google Sheets « Planning
+  PFMP et autres dates EK » : matrice semaines × lignes, règles par année
+  (durée + ancrage), saisie par sélection de cellules, versions, aperçu puis
+  publication dans `Planning_Periodes` avec `Classes_concernees`. Modèle validé
+  par l'utilisateur : `Documentation/PROPOSITION_GENERATEUR_PLANNINGS.md`.
+- Tests simulés : 18 tests DEV610 (dont reproduction des 52 périodes
+  scolaires 2026-2027 à partir des règles, 51 identiques et un écart 1 BTS MV
+  à trancher), suite complète 1053/1053. Page pilotée dans Chromium sans tête
+  avec un serveur simulé : sélection, placement, scission, régénération sans
+  doublon, spinner, erreur, délai dépassé, aperçu prévisionnel.
+- **Publication verte bloquée** : `scripts/pfmp-release.sh release-stable` a
+  échoué à l'étape 2/6 (`invalid_grant` / `invalid_rapt`, jeton clasp à
+  renouveler par `clasp login`). Rien n'a été poussé ni déployé ; les Web Apps
+  vertes restent sur leur version précédente. Aucune table Grist n'a encore été
+  créée et aucune écriture Grist n'a eu lieu.
+- Routes, navigation et parcours métier sur le vert : non exécutés (pas de
+  publication).
+
 ## Mise à jour du 19 octobre 2026 — DEV601 répertoire entreprises plein écran et mis en cache
 
 - Le répertoire transversal des entreprises et contacts occupe désormais toute

@@ -1,5 +1,27 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Plannings annuels — lots B et C (après DEV610, lot A)
+
+- **À trancher avec l'utilisateur** : stage des 1 BTS MV en 2026-2027 —
+  la règle initiale compte 4 semaines (dire de l'utilisateur), le planning
+  publié en compte 5 (31/05 → 02/07). Corriger la règle 2026-2027 ou la
+  période selon sa réponse.
+- **Lot B — mixités et classes entières** : lignes `MIXITE` qui héritent des
+  PFMP de leurs lignes scolaires et des vacances, semaines ajoutées à la main,
+  visite la dernière semaine de chaque période en entreprise ; calendrier à part
+  « formation continue et alternance classe entière » (placement manuel,
+  appels et visites manuels) ; heures par jour (7 h par défaut, exceptions
+  stockées) et total annuel comparé au quota (CAP peintre 450 h, BAC PRO et BTS
+  675 h) ; calendriers de classe en colonnes par mois (D / J / H) imprimables,
+  comme l'annexe 32a.
+- **Lot C — N+2 prévisionnel** : document « Prévisionnel » pour les entreprises
+  depuis une version sur vacances prévisionnelles ; à la parution des dates
+  officielles, recalcul avec aperçu avant/après (règles + placements manuels
+  conservés en position relative aux vacances voisines), puis publication.
+- Publication des mixités et des classes entières dans `Planning_Periodes`
+  seulement après avoir vérifié chaque écran consommateur (formulaire de
+  convention, suivi, affectations, ordres de mission).
+
 ## DEV569 publié (@962) — confirmation réelle ou orientation G205
 
 - Sur la prochaine saisie légitime, vérifier qu'un SIRET introuvable ou un
