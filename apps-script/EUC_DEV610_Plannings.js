@@ -119,14 +119,14 @@ function EUC_DEV610_generer_(lignes, regles, semaines, indexVacances, periodesAc
     var rs = parProfil[l.profil] || [], auto = {};
     rs.forEach(function(r) { if (r.placement !== 'MANUEL') auto[EUC_DEV610_cleType_(r.type)] = 1; });
     var res = EUC_DEV610_placer_(rs, semaines, indexVacances), neuves = res.periodes.map(function(p) { return { ligne: l.code, type: p.type, debut: p.debut, fin: p.fin, origine: 'REGLE', regle: p.numero }; });
-    res.alertes.forEach(function(a) { alertes.push(l.libelle + ' — ' + a); });
+    res.alertes.forEach(function(a) { alertes.push(EUC_DEV610_nomLigne_(l) + ' — ' + a); });
     var remplacees = actuelles.filter(function(p) { return (p.origine === 'REGLE' || p.origine === 'REPRISE') && auto[EUC_DEV610_cleType_(p.type)]; });
     var conservees = actuelles.filter(function(p) { return remplacees.indexOf(p) < 0; });
     gardees = gardees.concat(conservees);
     /* Une période retouchée à la main l'emporte : la règle qui la chevaucherait n'est pas replacée. */
     neuves = neuves.filter(function(n) {
       var gene = conservees.filter(function(p) { return p.debut <= n.fin && p.fin >= n.debut; })[0];
-      if (gene) alertes.push(l.libelle + ' — période n°' + n.regle + ' non replacée : une période placée à la main (' + gene.type + ' du ' + gene.debut + ') occupe ces semaines.');
+      if (gene) alertes.push(EUC_DEV610_nomLigne_(l) + ' — période n°' + n.regle + ' non replacée : une période placée à la main (' + gene.type + ' du ' + gene.debut + ') occupe ces semaines.');
       return !gene;
     });
     Object.keys(auto).forEach(function(k) {
@@ -141,11 +141,13 @@ function EUC_DEV610_generer_(lignes, regles, semaines, indexVacances, periodesAc
     nouvelles = nouvelles.concat(neuves);
     /* Règles à placer à la main : rappel tant qu'il manque des périodes de ce type. */
     var manuelles = {}; rs.forEach(function(r) { if (r.placement === 'MANUEL') { var k = EUC_DEV610_cleType_(r.type); manuelles[k] = manuelles[k] || { type: r.type, n: 0, durees: [] }; manuelles[k].n++; manuelles[k].durees.push(r.duree); } });
-    Object.keys(manuelles).forEach(function(k) { var m = manuelles[k], places = actuelles.filter(function(p) { return EUC_DEV610_cleType_(p.type) === k; }).length; if (places < m.n) alertes.push(l.libelle + ' — ' + (m.n - places) + ' période(s) « ' + m.type + ' » à placer à la main (' + m.durees.join(' et ') + ' semaines).'); });
+    Object.keys(manuelles).forEach(function(k) { var m = manuelles[k], places = actuelles.filter(function(p) { return EUC_DEV610_cleType_(p.type) === k; }).length; if (places < m.n) alertes.push(EUC_DEV610_nomLigne_(l) + ' — ' + (m.n - places) + ' période(s) « ' + m.type + ' » à placer à la main (' + m.durees.join(' et ') + ' semaines).'); });
   });
   Object.keys(parLigne).forEach(function(c) { if (!codes[c]) gardees = gardees.concat(parLigne[c]); });
   return { periodes: nouvelles.concat(gardees).sort(EUC_DEV610_ordrePeriodes_), changements: changements, alertes: alertes };
 }
+/* Nom complet d'une ligne pour les messages : « T BAC PRO — TMVA ». */
+function EUC_DEV610_nomLigne_(l) { var lib = String(l.libelle || l.code || ''); return l.groupe && lib.indexOf(l.groupe) !== 0 ? l.groupe + ' — ' + lib : lib; }
 function EUC_DEV610_ordrePeriodes_(a, b) { return String(a.ligne).localeCompare(String(b.ligne)) || String(a.debut).localeCompare(String(b.debut)); }
 /* Une période de type formation est reconnue par le moteur du suivi (R1–R7) : PFMP…, P.dif., stage BTS. */
 function EUC_DEV610_typeFormation_(type) {
@@ -186,12 +188,12 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
   });
   ((version && version.periodes) || []).forEach(function(p) {
     var l = lignesParCode[p.ligne]; if (!l || !EUC_DEV610_typeFormation_(p.type)) return;
-    if (!(rattachements[p.ligne] || []).length) { if (res.sansClasse.indexOf(l.libelle) < 0) res.sansClasse.push(l.libelle); return; }
+    if (!(rattachements[p.ligne] || []).length) { if (res.sansClasse.indexOf(EUC_DEV610_nomLigne_(l)) < 0) res.sansClasse.push(EUC_DEV610_nomLigne_(l)); return; }
     var k = p.ligne + '|' + EUC_DEV610_cleType_(p.type); (groupes[k] = groupes[k] || { existantes: [], nouvelles: [] }).nouvelles.push(p);
   });
   var tri = function(a, b) { return String(a.debut).localeCompare(String(b.debut)) || (a.id || 0) - (b.id || 0); };
   Object.keys(groupes).sort().forEach(function(k) {
-    var g = groupes[k], code = k.split('|')[0], l = lignesParCode[code]; g.existantes.sort(tri); g.nouvelles.sort(tri);
+    var g = groupes[k], code = k.split('|')[0], l = Object.assign({}, lignesParCode[code]); l.libelle = EUC_DEV610_nomLigne_(l); g.existantes.sort(tri); g.nouvelles.sort(tri);
     /* D'abord les périodes identiques (mêmes dates), puis le reste dans l'ordre chronologique. */
     g.nouvelles = g.nouvelles.filter(function(p) {
       var i = -1; g.existantes.some(function(e, j) { if (e.debut === p.debut && e.fin === p.fin) { i = j; return true; } return false; });
@@ -221,64 +223,69 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_].map(String).join('\n');
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_].map(String).join('\n');
 }
 
 /* ===================== Table de vérité initiale (observée dans le planning 2026-2027) ===================== */
 
-/* Table de vérité initiale des lignes, dans l'ordre d'affichage.
- * [code, libellé, calendrier, groupe, profil, classe PFMP, ligne de l'ancienne feuille, Formation (colonne A), Niveau (colonne B)]
- * Calendriers : SCOLAIRE, MIXITE, CLASSE_ENTIERE (CFA / CFAI), GRETA. */
+/* Table de vérité initiale des lignes (version 2 du modèle), dans l'ordre d'affichage.
+ * [code, libellé affiché (nom Pronote ou « Mixité … »), calendrier, groupe (bandeau), profil de règles, classe PFMP,
+ *  ligne de l'ancienne feuille, ancienne Formation (col. A), ancien Niveau (col. B), établissement support, organismes]
+ * Formation / Niveau anciens ne servent qu'à retrouver les périodes saisies avec l'ancien outil. */
+var EUC_DEV610_MODELE_ = 2;
 var EUC_DEV610_LIGNES_DEFAUT_ = [
-  ['1CAP', 'CAP — 1re année (CAR)', 'SCOLAIRE', 'CAP', '1CAP', '1CAP CAR', 8, 'CAP', '1 CA'],
-  ['TCAP', 'CAP — 2e année (CAR)', 'SCOLAIRE', 'CAP', 'TCAP', 'TCAP CAR', 9, 'CAP', 'T CA'],
-  ['2BP_CPA', '2 BAC PRO — CPA', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2CAR', 11, '2 BAC PRO', 'CPA'],
-  ['2BP_MVA', '2 BAC PRO — MVA', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MVA', 12, '2 BAC PRO', 'MVA'],
-  ['2BP_REMI', '2 BAC PRO — REMI', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2REMI', 13, '2 BAC PRO', 'REMI'],
-  ['2BP_MP3D', '2 BAC PRO — MP3D', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MP3D', 14, '2 BAC PRO', 'MP3D'],
-  ['2BP_MTNE', '2 BAC PRO — MTNE', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MTNE', 15, '2 BAC PRO', 'MTNE'],
-  ['1BP_CIEL', '1 BAC PRO — CIEL', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1CIEL', 16, '1 BAC PRO', 'CIEL'],
-  ['1BP_CPA', '1 BAC PRO — CPA', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1CAR', 17, '1 BAC PRO', 'CPA'],
-  ['1BP_MVA', '1 BAC PRO — MVA', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MVA', 18, '1 BAC PRO', 'MVA'],
-  ['1BP_MELEC', '1 BAC PRO — MELEC', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MELEC', 19, '1 BAC PRO', 'MELEC'],
-  ['1BP_MP3D', '1 BAC PRO — MP3D', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MP3D', 20, '1 BAC PRO', 'MP3'],
-  ['1BP_MT', '1 BAC PRO — MT', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MT', 21, '1 BAC PRO', 'MT'],
-  ['1BP_RMO', '1 BAC PRO — RMO', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1RMO', 22, '1 BAC PRO', 'RMO'],
-  ['1BP_RSP', '1 BAC PRO — RSP', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1RSP', 23, '1 BAC PRO', 'RSP'],
-  ['MIX_1BP', '1 BAC PRO — Mixité', 'MIXITE', '1 BAC PRO', 'MIX_1BACPRO', '', 24, '1 BAC PRO', 'Mixité'],
-  ['TBP_CIEL', 'T BAC PRO — CIEL', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TCIEL', 25, 'T BAC PRO', 'CIEL'],
-  ['TBP_CPA', 'T BAC PRO — CPA', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TCAR', 26, 'T BAC PRO', 'CPA'],
-  ['TBP_MELEC', 'T BAC PRO — MELEC', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMELEC', 27, 'T BAC PRO', 'MELEC'],
-  ['TBP_MT', 'T BAC PRO — MT', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMT', 28, 'T BAC PRO', 'MT'],
-  ['TBP_MP3D', 'T BAC PRO — MP3D', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMP3D', 29, 'T BAC PRO', 'MP3D'],
-  ['TBP_MVA', 'T BAC PRO — MVA', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMVA', 30, 'T BAC PRO', 'MVA'],
-  ['TBP_RMO', 'T BAC PRO — RMO', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TRMO', 31, 'T BAC PRO', 'RMO'],
-  ['TBP_RSP', 'T BAC PRO — RSP', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TRSP', 32, 'T BAC PRO', 'RSP'],
-  ['MIX_TBP', 'T BAC PRO — Mixité', 'MIXITE', 'T BAC PRO', 'MIX_TBACPRO', '', 33, 'T BAC PRO', 'Mixité'],
-  ['1BTS_CIEL', '1 BTS — CIEL', 'SCOLAIRE', '1 BTS', '1BTS_CIEL', '1BTS CIEL', 35, '1BTS', 'CIEL'],
-  ['1BTS_ELEC', '1 BTS — ELEC', 'SCOLAIRE', '1 BTS', '1BTS_ELEC', '1BTS ELEC', 36, '1BTS', 'ELEC'],
-  ['1BTS_CPI', '1 BTS — CPI', 'SCOLAIRE', '1 BTS', '1BTS_CPI', '1BTS CPI', 37, '1BTS', 'CPI'],
-  ['1BTS_CPRP', '1 BTS — CPRP', 'SCOLAIRE', '1 BTS', '1BTS_CPRP', '1BTS CPRP', 38, '1BTS', 'CPRP'],
-  ['MIX_1BTS_CPI_CPRP', '1 BTS CPI-CPRP — Mixité', 'MIXITE', '1 BTS', 'MIX_1BTS_CPI_CPRP', '', 39, '1BTS CPI-CPRP', 'Mixité'],
-  ['1BTS_MV', '1 BTS — MV', 'SCOLAIRE', '1 BTS', '1BTS_MV', '1BTS MV', 40, '1BTS', 'MV'],
-  ['MIX_1BTS_MV', '1 BTS MV — Mixité', 'MIXITE', '1 BTS', 'MIX_1BTS_MV', '', 41, '1BTS MV', 'Mixité'],
-  ['MIX_2BTS_CPI_CPRP', '2 BTS CPI-CPRP — Mixité', 'MIXITE', '2 BTS', 'MIX_2BTS_CPI_CPRP', '', 42, '2BTS CPI-CPRP', 'Mixité'],
-  ['2BTS_MV', '2 BTS — MV', 'SCOLAIRE', '2 BTS', '2BTS_MV', '2BTS MV', 43, '2BTS', 'MV'],
-  ['MIX_2BTS_MV', '2 BTS MV — Mixité', 'MIXITE', '2 BTS', 'MIX_2BTS_MV', '', 44, '2BTS MV', 'Mixité'],
-  ['CAP_PEINTRE', 'CAP peintre (CP)', 'CLASSE_ENTIERE', 'Classes entières — CFA / CFAI', 'CAP_PEINTRE', '1CAPP', 10, 'CAP Connexe', 'CP'],
-  ['TSEC', 'Titre pro TSEC (Ducretet)', 'CLASSE_ENTIERE', 'Classes entières — CFA / CFAI', 'TSEC', 'TSEC', 34, 'Ducretet', 'TSEC'],
-  ['1BTS_ELEC_ALT', 'BTS ELEC alternance — 1re année', 'CLASSE_ENTIERE', 'Classes entières — CFA / CFAI', '1BTS_ELEC_ALT', '1BTS ELEC Alt', 0, 'BTS ELEC Alt', '1re année'],
-  ['2BTS_ELEC_ALT', 'BTS ELEC alternance — 2e année', 'CLASSE_ENTIERE', 'Classes entières — CFA / CFAI', '2BTS_ELEC_ALT', '2BTS ELEC Alt', 0, 'BTS ELEC Alt', '2e année'],
-  ['BACHELOR_IP', 'Bachelor IP', 'CLASSE_ENTIERE', 'Classes entières — CFA / CFAI', 'BACHELOR_IP', 'Bachelor IP', 45, 'BACHELOR', 'IP'],
-  ['TPMMA', 'TPMMA (GRETA)', 'GRETA', 'GRETA', 'TPMMA', 'TPMMA', 0, 'GRETA', 'TPMMA'],
-  ['CQPM_ASC', 'CQPM ASC (GRETA)', 'GRETA', 'GRETA', 'CQPM_ASC', 'CQPM ASC', 0, 'GRETA', 'CQPM ASC'],
-  ['TPEEB_19', 'TPEEB 19 (GRETA)', 'GRETA', 'GRETA', 'TPEEB_19', 'TPEEB 19', 0, 'GRETA', 'TPEEB 19'],
-  ['TPEEB_20', 'TPEEB 20 (GRETA)', 'GRETA', 'GRETA', 'TPEEB_20', 'TPEEB 20', 0, 'GRETA', 'TPEEB 20'],
-  ['1MELEC_G', '1MELEC G (GRETA)', 'GRETA', 'GRETA', '1MELEC_G', '1MELEC G', 0, 'GRETA', '1MELEC G'],
-  ['TMELEC_G', 'TMELEC G (GRETA)', 'GRETA', 'GRETA', 'TMELEC_G', 'TMELEC G', 0, 'GRETA', 'TMELEC G']
+  ['1CAP', '1CAP CAR', 'SCOLAIRE', 'CAP', '1CAP', '1CAP CAR', 8, 'CAP', '1 CA', 'LP', ''],
+  ['TCAP', 'TCAP CAR', 'SCOLAIRE', 'CAP', 'TCAP', 'TCAP CAR', 9, 'CAP', 'T CA', 'LP', ''],
+  ['2BP_CPA', '2CAR', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2CAR', 11, '2 BAC PRO', 'CPA', 'LP', ''],
+  ['2BP_MVA', '2MVA', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MVA', 12, '2 BAC PRO', 'MVA', 'LP', ''],
+  ['2BP_REMI', '2REMI', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2REMI', 13, '2 BAC PRO', 'REMI', 'LP', ''],
+  ['2BP_MP3D', '2MP3D', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MP3D', 14, '2 BAC PRO', 'MP3D', 'LP', ''],
+  ['2BP_MTNE', '2MTNE', 'SCOLAIRE', '2 BAC PRO', '2NDE', '2MTNE', 15, '2 BAC PRO', 'MTNE', 'LP', ''],
+  ['1BP_CIEL', '1CIEL', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1CIEL', 16, '1 BAC PRO', 'CIEL', 'LP', ''],
+  ['1BP_CPA', '1CAR', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1CAR', 17, '1 BAC PRO', 'CPA', 'LP', ''],
+  ['1BP_MVA', '1MVA', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MVA', 18, '1 BAC PRO', 'MVA', 'LP', ''],
+  ['1BP_MELEC', '1MELEC', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MELEC', 19, '1 BAC PRO', 'MELEC', 'LP', ''],
+  ['1BP_MP3D', '1MP3D', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MP3D', 20, '1 BAC PRO', 'MP3', 'LP', ''],
+  ['1BP_MT', '1MT', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1MT', 21, '1 BAC PRO', 'MT', 'LP', ''],
+  ['1BP_RMO', '1RMO', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1RMO', 22, '1 BAC PRO', 'RMO', 'LP', ''],
+  ['1BP_RSP', '1RSP', 'SCOLAIRE', '1 BAC PRO', '1BACPRO', '1RSP', 23, '1 BAC PRO', 'RSP', 'LP', ''],
+  ['MIX_1BP', 'Mixité', 'MIXITE', '1 BAC PRO', 'MIX_1BACPRO', '', 24, '1 BAC PRO', 'Mixité', 'LP', 'CFA RAN'],
+  ['TBP_CIEL', 'TCIEL', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TCIEL', 25, 'T BAC PRO', 'CIEL', 'LP', ''],
+  ['TBP_CPA', 'TCAR', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TCAR', 26, 'T BAC PRO', 'CPA', 'LP', ''],
+  ['TBP_MELEC', 'TMELEC', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMELEC', 27, 'T BAC PRO', 'MELEC', 'LP', ''],
+  ['TBP_MT', 'TMT', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMT', 28, 'T BAC PRO', 'MT', 'LP', ''],
+  ['TBP_MP3D', 'TMP3D', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMP3D', 29, 'T BAC PRO', 'MP3D', 'LP', ''],
+  ['TBP_MVA', 'TMVA', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TMVA', 30, 'T BAC PRO', 'MVA', 'LP', ''],
+  ['TBP_RMO', 'TRMO', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TRMO', 31, 'T BAC PRO', 'RMO', 'LP', ''],
+  ['TBP_RSP', 'TRSP', 'SCOLAIRE', 'T BAC PRO', 'TBACPRO', 'TRSP', 32, 'T BAC PRO', 'RSP', 'LP', ''],
+  ['MIX_TBP', 'Mixité', 'MIXITE', 'T BAC PRO', 'MIX_TBACPRO', '', 33, 'T BAC PRO', 'Mixité', 'LP', 'CFA RAN'],
+  ['1BTS_CIEL', '1BTS CIEL', 'SCOLAIRE', '1 BTS', '1BTS_CIEL', '1BTS CIEL', 35, '1BTS', 'CIEL', 'LGT', ''],
+  ['1BTS_ELEC', '1BTS ELEC', 'SCOLAIRE', '1 BTS', '1BTS_ELEC', '1BTS ELEC', 36, '1BTS', 'ELEC', 'LGT', ''],
+  ['1BTS_CPI', '1BTS CPI', 'SCOLAIRE', '1 BTS', '1BTS_CPI', '1BTS CPI', 37, '1BTS', 'CPI', 'LGT', ''],
+  ['1BTS_CPRP', '1BTS CPRP', 'SCOLAIRE', '1 BTS', '1BTS_CPRP', '1BTS CPRP', 38, '1BTS', 'CPRP', 'LGT', ''],
+  ['MIX_1BTS_CPI', 'Mixité CPI', 'MIXITE', '1 BTS', 'MIX_1BTS_CPI', '', 39, '1BTS CPI-CPRP', 'Mixité', 'LGT', 'CFAI'],
+  ['MIX_1BTS_CPRP', 'Mixité CPRP', 'MIXITE', '1 BTS', 'MIX_1BTS_CPRP', '', 39, '1BTS CPI-CPRP', 'Mixité', 'LGT', 'CFAI'],
+  ['1BTS_MV', '1BTS MV', 'SCOLAIRE', '1 BTS', '1BTS_MV', '1BTS MV', 40, '1BTS', 'MV', 'LGT', ''],
+  ['MIX_1BTS_MV', 'Mixité MV', 'MIXITE', '1 BTS', 'MIX_1BTS_MV', '', 41, '1BTS MV', 'Mixité', 'LGT', 'CFA RAN'],
+  ['MIX_2BTS_CPI', 'Mixité CPI', 'MIXITE', '2 BTS', 'MIX_2BTS_CPI', '', 42, '2BTS CPI-CPRP', 'Mixité', 'LGT', 'CFAI'],
+  ['MIX_2BTS_CPRP', 'Mixité CPRP', 'MIXITE', '2 BTS', 'MIX_2BTS_CPRP', '', 42, '2BTS CPI-CPRP', 'Mixité', 'LGT', 'CFAI'],
+  ['2BTS_MV', '2BTS MV', 'SCOLAIRE', '2 BTS', '2BTS_MV', '2BTS MV', 43, '2BTS', 'MV', 'LGT', ''],
+  ['MIX_2BTS_MV', 'Mixité MV', 'MIXITE', '2 BTS', 'MIX_2BTS_MV', '', 44, '2BTS MV', 'Mixité', 'LGT', 'CFA RAN'],
+  ['TSEC', 'TSEC', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'TSEC', 'TSEC', 34, 'Ducretet', 'TSEC', 'LP', 'CFA RAN, Ducretet'],
+  ['BACHELOR_IP', 'Bachelor IP', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'BACHELOR_IP', 'Bachelor IP', 45, 'BACHELOR', 'IP', 'LGT', 'CFAI'],
+  ['CAP_PEINTRE', '1CAPP', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'CAP_PEINTRE', '1CAPP', 10, 'CAP Connexe', 'CP', 'LP', 'CFA RAN'],
+  ['TPMMA', 'TPMMA', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'TPMMA', 'TPMMA', 0, 'GRETA', 'TPMMA', 'LP', 'GRETA'],
+  ['CQPM_ASC', 'CQPM ASC', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'CQPM_ASC', 'CQPM ASC', 0, 'GRETA', 'CQPM ASC', 'LP', 'GRETA, CFAI'],
+  ['TPEEB_19', 'TPEEB 19', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'TPEEB_19', 'TPEEB 19', 0, 'GRETA', 'TPEEB 19', 'LP', 'GRETA'],
+  ['TPEEB_20', 'TPEEB 20', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'TPEEB_20', 'TPEEB 20', 0, 'GRETA', 'TPEEB 20', 'LP', 'GRETA'],
+  ['1BTS_ELEC_ALT', '1BTS ELEC Alt', 'CLASSE_ENTIERE', 'Formation continue et alternance', '1BTS_ELEC_ALT', '1BTS ELEC Alt', 0, 'BTS ELEC Alt', '1re année', 'LGT', 'CFAI'],
+  ['2BTS_ELEC_ALT', '2BTS ELEC Alt', 'CLASSE_ENTIERE', 'Formation continue et alternance', '2BTS_ELEC_ALT', '2BTS ELEC Alt', 0, 'BTS ELEC Alt', '2e année', 'LGT', 'CFAI'],
+  ['1MELEC_G', '1MELEC G', 'CLASSE_ENTIERE', 'Formation continue et alternance', '1MELEC_G', '1MELEC G', 0, 'GRETA', '1MELEC G', 'LP', 'GRETA'],
+  ['TMELEC_G', 'TMELEC G', 'CLASSE_ENTIERE', 'Formation continue et alternance', 'TMELEC_G', 'TMELEC G', 0, 'GRETA', 'TMELEC G', 'LP', 'GRETA']
 ];
-/* Codes de la première version de la table, remplacés depuis. */
-var EUC_DEV610_LIGNES_RETIREES_ = ['TPEEB'];
+/* Codes remplacés : la ligne TPEEB unique (→ TPEEB 19 et 20), les mixités CPI-CPRP réunies (→ CPI et CPRP séparées). */
+var EUC_DEV610_LIGNES_RETIREES_ = ['TPEEB', 'MIX_1BTS_CPI_CPRP', 'MIX_2BTS_CPI_CPRP'];
+var EUC_DEV610_ORGANISMES_ = ['CFA RAN', 'CFAI', 'GRETA', 'Ducretet'];
 /* [profil, numéro, type, durée (semaines), placement, ancrage, période d'ancrage, position, écart] */
 var EUC_DEV610_REGLES_DEFAUT_ = [
   ['TBACPRO', 1, 'PFMP Tbac', 3, 'AUTO', 'TOUSSAINT', 0, 'AVANT', 0], ['TBACPRO', 2, 'PFMP Tbac', 3, 'AUTO', 'REGLE', 3, 'AVANT', 0], ['TBACPRO', 3, 'P.dif.', 2, 'AUTO', 'HIVER', 0, 'AVANT', 0],
@@ -299,6 +306,15 @@ function EUC_DEV610_ref_(v) { return typeof EUC_SUIVI2_ref_ === 'function' ? EUC
 function EUC_DEV610_refs_(v) { if (typeof EUC_SUIVI2_refs_ === 'function') return EUC_SUIVI2_refs_(v); return Array.isArray(v) ? v.filter(function(x) { return typeof x === 'number'; }) : []; }
 function EUC_DEV610_date_(v) { return typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(v) : EUC_DEV610_t_(v).slice(0, 10); }
 
+/* Écriture de lignes Grist : Grist exige que toutes les lignes d'une même requête portent les mêmes colonnes.
+ * Les lignes sont donc regroupées par jeu de colonnes, puis envoyées par paquets de 200. */
+function EUC_DEV610_ecrire_(methode, table, records) {
+  var groupes = {}, ordre = [];
+  (records || []).forEach(function(r) { var k = Object.keys(r.fields || {}).sort().join('|'); if (!groupes[k]) { groupes[k] = []; ordre.push(k); } groupes[k].push(r); });
+  var ids = [];
+  ordre.forEach(function(k) { var g = groupes[k]; for (var i = 0; i < g.length; i += 200) { var res = EUC_ENT_grist(methode, '/tables/' + table + '/records', { records: g.slice(i, i + 200) }) || {}; (res.records || []).forEach(function(x) { ids.push(x.id); }); } });
+  return ids;
+}
 /* Actions Grist groupées : en cas de refus, l'erreur nomme l'étape et reprend le message de Grist (jamais la clé). */
 function EUC_DEV610_apply_(actions, etape) {
   var c = typeof EUC_ENT_lireConfiguration === 'function' ? EUC_ENT_lireConfiguration() : {};
@@ -314,7 +330,7 @@ function EUC_DEV610_etape_(nom, fn) { try { return fn(); } catch (e) { var m = S
 
 var EUC_DEV610_AVERT_ = [];
 function EUC_DEV610_tables_() {
-  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES3')) return;
+  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES4')) return;
   var ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; }), col = EUC_DEV441_col_;
   var def = {};
   def[EUC_DEV610_T_.lignes] = [col('Code', 'Code'), col('Libelle', 'Libellé'), col('Calendrier', 'Calendrier'), col('Groupe', 'Groupe d’affichage'), col('Profil', 'Profil de règles'), col('Classe_PFMP', 'Classe PFMP'), col('Formation', 'Formation (colonne A)'), col('Niveau', 'Niveau (colonne B)'), col('Ordre', 'Ordre', 'Int'), col('Ligne_sheet', 'Ligne de l’ancienne feuille', 'Int'), col('Quota_heures', 'Quota d’heures', 'Numeric'), col('Heures_jour', 'Heures par jour', 'Numeric'), col('Jours_lycee', 'Jours au lycée'), col('Actif', 'Actif', 'Bool')];
@@ -326,36 +342,38 @@ function EUC_DEV610_tables_() {
   if (manquantes.length) EUC_DEV610_etape_('création des tables du générateur', function() { EUC_ENT_grist('post', '/tables', { tables: manquantes.map(function(t) { return { id: t, columns: def[t] }; }) }); });
   try { EUC_DEV610_etape_('mise à jour des lignes de planning', EUC_DEV610_migrerLignes_); }
   catch (e) { EUC_DEV610_AVERT_.push(String(e && e.message || e)); console.log('DEV610_MIGRATION ' + String(e && e.message || e)); return; }
-  cache.put('EUC_DEV610_TABLES3', '1', 21600);
+  cache.put('EUC_DEV610_TABLES4', '1', 21600);
 }
 
 function EUC_DEV610_champsLigneDefaut_(l, i) {
-  return { Code: l[0], Libelle: l[1], Calendrier: l[2], Groupe: l[3], Profil: l[4], Classe_PFMP: l[5], Ordre: (i + 1) * 10, Ligne_sheet: l[6] || null, Formation: l[7], Niveau: l[8], Heures_jour: l[2] === 'SCOLAIRE' ? null : 7, Actif: true };
+  return { Code: l[0], Libelle: l[1], Calendrier: l[2], Groupe: l[3], Profil: l[4], Classe_PFMP: l[5], Ordre: (i + 1) * 10, Ligne_sheet: l[6] || null, Formation: l[7], Niveau: l[8], Etablissement: l[9] || '', Organismes: l[10] || '', Heures_jour: l[2] === 'SCOLAIRE' ? null : 7, Version_modele: EUC_DEV610_MODELE_, Actif: true };
 }
-/* Complète la table des lignes : colonnes Formation / Niveau, lignes manquantes, lignes de la première version
- * mises à jour une seule fois (tant que leur Formation est vide), anciens codes désactivés. */
+/* Met la table des lignes au modèle courant : colonnes manquantes ; lignes jamais modifiées dans la page
+ * (Version_modele inférieure) remplacées par la table de vérité ; codes remplacés désactivés ; lignes manquantes créées.
+ * Les lignes enregistrées depuis « Organisation du tableau » (Version_modele à jour) ne sont jamais écrasées. */
 function EUC_DEV610_migrerLignes_() {
   var t = EUC_DEV610_T_.lignes, col = EUC_DEV441_col_;
   var cols = (EUC_ENT_grist('get', '/tables/' + t + '/columns').columns || []).map(function(c) { return c.id; });
-  var ajout = [col('Formation', 'Formation (colonne A)'), col('Niveau', 'Niveau (colonne B)')].filter(function(c) { return cols.indexOf(c.id) < 0; });
+  var ajout = [col('Formation', 'Ancienne Formation (colonne A)'), col('Niveau', 'Ancien Niveau (colonne B)'), col('Etablissement', 'Établissement support'), col('Organismes', 'Organismes de formation'), col('Version_modele', 'Version du modèle', 'Int')].filter(function(c) { return cols.indexOf(c.id) < 0; });
   if (ajout.length) EUC_ENT_grist('post', '/tables/' + t + '/columns', { columns: ajout });
   var existantes = {}; EUC_DEV610_lire_(t).forEach(function(r) { existantes[EUC_DEV610_t_((r.fields || {}).Code)] = r; });
-  var creer = [], modifier = [];
+  var aJour = function(r) { return Number((r.fields || {}).Version_modele) >= EUC_DEV610_MODELE_; };
+  var creer = [], modifier = [], connus = {};
   EUC_DEV610_LIGNES_DEFAUT_.forEach(function(l, i) {
-    var r = existantes[l[0]], f = EUC_DEV610_champsLigneDefaut_(l, i);
+    connus[l[0]] = 1; var r = existantes[l[0]], f = EUC_DEV610_champsLigneDefaut_(l, i);
     if (!r) creer.push({ fields: f });
-    else if (!EUC_DEV610_t_((r.fields || {}).Formation)) { delete f.Code; delete f.Profil; delete f.Heures_jour; delete f.Actif; if (EUC_DEV610_t_(r.fields.Classe_PFMP)) delete f.Classe_PFMP; modifier.push({ id: r.id, fields: f }); }
+    else if (!aJour(r)) { delete f.Code; delete f.Heures_jour; modifier.push({ id: r.id, fields: f }); }
   });
-  EUC_DEV610_LIGNES_RETIREES_.forEach(function(c) { var r = existantes[c]; if (r && r.fields.Actif !== false) modifier.push({ id: r.id, fields: { Actif: false } }); });
-  if (creer.length) EUC_ENT_grist('post', '/tables/' + t + '/records', { records: creer });
-  if (modifier.length) EUC_ENT_grist('patch', '/tables/' + t + '/records', { records: modifier });
-  /* Calendrier : liste déroulante des quatre valeurs admises. */
+  Object.keys(existantes).forEach(function(c) { var r = existantes[c]; if (connus[c] || aJour(r)) return;
+    modifier.push({ id: r.id, fields: { Actif: EUC_DEV610_LIGNES_RETIREES_.indexOf(c) >= 0 ? false : r.fields.Actif !== false, Version_modele: EUC_DEV610_MODELE_ } }); });
+  if (creer.length) EUC_DEV610_ecrire_('post', t, creer);
+  if (modifier.length) EUC_DEV610_ecrire_('patch', t, modifier);
   /* Étape facultative : un refus de Grist ne doit jamais bloquer la page (la valeur reste contrôlée à l'enregistrement). */
   try { var cal = EUC_DEV610_colonnesDetail_(t).Calendrier;
     if (cal && cal.type !== 'Choice') EUC_DEV610_apply_([['ModifyColumn', t, 'Calendrier', { type: 'Choice', widgetOptions: JSON.stringify({ choices: EUC_DEV610_CALENDRIERS_ }) }]], 'liste déroulante Calendrier');
   } catch (e) { console.log('DEV610_CALENDRIER_CHOICE ' + String(e && e.message || e)); }
 }
-var EUC_DEV610_CALENDRIERS_ = ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE', 'GRETA'];
+var EUC_DEV610_CALENDRIERS_ = ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE'];
 /* Code d'une nouvelle ligne (calcul pur) : majuscules, chiffres et _, unique. */
 function EUC_DEV610_nouveauCode_(base, existants) {
   var c = EUC_DEV610_t_(base).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 30) || 'LIGNE', k = c, i = 2;
@@ -365,12 +383,14 @@ function EUC_DEV610_nouveauCode_(base, existants) {
 /* Ligne proposée pour une classe Pronote sans ligne (calcul pur) : calendrier d'après l'établissement et la modalité,
  * groupe et position d'après les lignes dont la classe PFMP commence pareil (1…, T…, 2…, 1BTS…). */
 function EUC_DEV610_ligneProposee_(classe, lignes) {
-  var m = EUC_DEV610_n_(classe.modalite), e = EUC_DEV610_n_(classe.etab), cal = /GRETA/.test(e) ? 'GRETA' : /CLASSEENTIERE|FORMATIONCONTINUE/.test(m) ? 'CLASSE_ENTIERE' : 'SCOLAIRE';
+  var m = EUC_DEV610_n_(classe.modalite), e = EUC_DEV610_n_(classe.etab), cal = /GRETA|CFA/.test(e) || /CLASSEENTIERE|FORMATIONCONTINUE/.test(m) ? 'CLASSE_ENTIERE' : 'SCOLAIRE';
+  var orgs = [classe.gestionnaire, classe.donneur, /GRETA/.test(e) ? 'GRETA' : ''].filter(function(x, i, a) { return x && a.indexOf(x) === i; });
   var cp = classe.classePfmp || classe.nom, n = EUC_DEV610_n_(cp), voisine = null, meilleur = 0;
   (lignes || []).forEach(function(l) { if (l.calendrier !== cal) return; var x = EUC_DEV610_n_(l.classePfmp), k = 0; while (k < x.length && k < n.length && x[k] === n[k]) k++; if (k > meilleur || (k === meilleur && voisine && l.ordre > voisine.ordre)) { meilleur = k; voisine = l; } });
   if (meilleur < 1) voisine = null;
-  return { code: '', libelle: (voisine ? voisine.groupe + ' — ' : '') + cp, calendrier: cal, groupe: voisine ? voisine.groupe : (cal === 'GRETA' ? 'GRETA' : cal === 'CLASSE_ENTIERE' ? 'Classes entières — CFA / CFAI' : 'À classer'),
-    profil: voisine && cal === 'SCOLAIRE' ? voisine.profil : '', classePfmp: cp, formation: voisine ? voisine.formation : (cal === 'GRETA' ? 'GRETA' : cp), niveau: cp, apres: voisine ? voisine.code : '', actif: true, classeId: classe.id };
+  return { code: '', libelle: cp, calendrier: cal, groupe: voisine ? voisine.groupe : (cal === 'CLASSE_ENTIERE' ? 'Formation continue et alternance' : 'À classer'),
+    profil: voisine && cal === 'SCOLAIRE' ? voisine.profil : '', classePfmp: cp, formation: voisine ? voisine.formation : cp, niveau: cp, apres: voisine ? voisine.code : '', actif: true, classeId: classe.id,
+    etablissement: /^(LP|LGT)$/.test(e) ? e : (voisine ? voisine.etablissement : ''), organismes: orgs };
 }
 
 function EUC_DEV610_annees_() {
@@ -382,7 +402,7 @@ function EUC_DEV610_codeAnnee_(v, annees) {
   var m = EUC_DEV610_t_(v).match(/20\d{2}-20\d{2}/); return m ? m[0] : '';
 }
 function EUC_DEV610_lignes_() {
-  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false }; })
+  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), etablissement: EUC_DEV610_t_(f.Etablissement), organismes: EUC_DEV610_t_(f.Organismes).split(/\s*,\s*/).filter(Boolean), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false }; })
     .filter(function(l) { return l.code; }).sort(function(a, b) { return a.ordre - b.ordre || a.code.localeCompare(b.code); });
 }
 function EUC_DEV610_regles_(annee) {
@@ -399,7 +419,7 @@ function EUC_DEV610_vacances_(annee, annees) {
     .filter(function(v) { return (v.actif || v.previsionnel) && v.debut && v.fin && (!annee || v.annee === annee); });
 }
 function EUC_DEV610_classes_() {
-  return EUC_DEV610_lire_('Classes').map(function(r) { var f = r.fields || {}; return { id: Number(r.id), nom: EUC_DEV610_t_(f.Nom || f.Libelle), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), etab: EUC_DEV610_t_(f.Etab), modalite: EUC_DEV610_t_(f.Modalite_apprentissage), actif: f.Actif !== false }; })
+  return EUC_DEV610_lire_('Classes').map(function(r) { var f = r.fields || {}; return { id: Number(r.id), nom: EUC_DEV610_t_(f.Nom || f.Libelle), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), etab: EUC_DEV610_t_(f.Etab), modalite: EUC_DEV610_t_(f.Modalite_apprentissage), gestionnaire: EUC_DEV610_t_(f.Organisme_gestionnaire), donneur: EUC_DEV610_t_(f.Organisme_donneur_ordre), actif: f.Actif !== false }; })
     .filter(function(c) { return c.nom; }).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
 }
 function EUC_DEV610_rattachements_(annee) {
@@ -461,7 +481,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, avertissements: EUC_DEV610_AVERT_.slice() };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -482,8 +502,8 @@ function EUC_DEV610_enregistrerRegles(q) {
   });
   var gardes = modifier.map(function(m) { return m.id; });
   var retirer = EUC_DEV610_regles_(annee).filter(function(r) { return gardes.indexOf(r.id) < 0; }).map(function(r) { return { id: r.id, fields: { Actif: false } }; });
-  if (modifier.length || retirer.length) EUC_ENT_grist('patch', '/tables/' + EUC_DEV610_T_.regles + '/records', { records: modifier.concat(retirer) });
-  if (creer.length) EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.regles + '/records', { records: creer });
+  if (modifier.length || retirer.length) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.regles, modifier.concat(retirer));
+  if (creer.length) EUC_DEV610_ecrire_('post', EUC_DEV610_T_.regles, creer);
   return { ok: true, creees: creer.length, modifiees: modifier.length, retirees: retirer.length };
 }
 
@@ -498,8 +518,8 @@ function EUC_DEV610_enregistrerRattachements(q) {
     var champs = { Annee_scolaire: annee, Ligne: code, Classes: ['L'].concat(ids), Date_modification: maintenant };
     if (ratt.ids[code]) modifier.push({ id: ratt.ids[code], fields: champs }); else creer.push({ fields: champs });
   });
-  if (modifier.length) EUC_ENT_grist('patch', '/tables/' + EUC_DEV610_T_.rattachements + '/records', { records: modifier });
-  if (creer.length) EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.rattachements + '/records', { records: creer });
+  if (modifier.length) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.rattachements, modifier);
+  if (creer.length) EUC_DEV610_ecrire_('post', EUC_DEV610_T_.rattachements, creer);
   return { ok: true, lignes: modifier.length + creer.length };
 }
 
@@ -541,13 +561,15 @@ function EUC_DEV610_enregistrerVersion(q) {
  *  3. sinon par le texte Classe_PFMP de la période ;
  *  4. sinon par Formation + Niveau (colonnes A et B de l'ancienne feuille), puis par le seul Niveau s'il est unique.
  * Rend aussi les classes à proposer au rattachement de la ligne. */
-function EUC_DEV610_ligneParLibelles_(p, lignes) {
-  var f = EUC_DEV610_n_(p.formation), n = EUC_DEV610_n_(p.niveau); if (!n) return '';
+/* Lignes portant ces anciens libellés : plusieurs quand une ligne a été séparée (mixité CPI-CPRP → CPI et CPRP). */
+function EUC_DEV610_lignesParLibelles_(p, lignes) {
+  var f = EUC_DEV610_n_(p.formation), n = EUC_DEV610_n_(p.niveau); if (!n) return [];
   var exact = (lignes || []).filter(function(l) { return EUC_DEV610_n_(l.niveau) === n && EUC_DEV610_n_(l.formation) === f; });
-  if (exact.length === 1) return exact[0].code;
+  if (exact.length) return exact.map(function(l) { return l.code; });
   var parNiveau = (lignes || []).filter(function(l) { return EUC_DEV610_n_(l.niveau) === n; });
-  return parNiveau.length === 1 ? parNiveau[0].code : '';
+  return parNiveau.length === 1 ? [parNiveau[0].code] : [];
 }
+function EUC_DEV610_ligneParLibelles_(p, lignes) { return EUC_DEV610_lignesParLibelles_(p, lignes)[0] || ''; }
 function EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes) {
   /* 0. Ligne choisie dans Planning_Periodes (colonne Ligne_planning) : elle fait foi. */
   if (p.ligneId) { var choisie = (lignes || []).filter(function(l) { return l.id === p.ligneId; })[0]; if (choisie) return { ligne: choisie.code, ajouts: [] }; }
@@ -561,8 +583,8 @@ function EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes) {
   k = Object.keys(trouvees);
   if (k.length === 1) return { ligne: k[0], ajouts: ajouts };
   if (!k.length && p.classePfmp && parPfmp[EUC_DEV610_n_(p.classePfmp)]) return { ligne: parPfmp[EUC_DEV610_n_(p.classePfmp)], ajouts: [] };
-  var parLib = !k.length ? EUC_DEV610_ligneParLibelles_(p, lignes) : '';
-  if (parLib) return { ligne: parLib, ajouts: [] };
+  var parLib = !k.length ? EUC_DEV610_lignesParLibelles_(p, lignes) : [];
+  if (parLib.length) return { ligne: parLib[0], autres: parLib.slice(1), ajouts: [] };
   return { ligne: '', raison: k.length > 1 ? 'PLUSIEURS_LIGNES' : ((p.classes || []).length ? 'AUCUNE_LIGNE' : 'SANS_CLASSE'), lignes: k };
 }
 
@@ -581,8 +603,10 @@ function EUC_DEV610_reprendreExistant(q) {
     var r = EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes);
     if (!r.ligne) { ignorees.push({ id: p.id, type: p.type, debut: p.debut, fin: p.fin, raison: r.raison, lignes: r.lignes || [], classes: (p.classes || []).map(function(id) { var c = classesParId[id]; return c ? c.nom + (c.actif ? '' : ' (inactive)') + (c.classePfmp && c.classePfmp !== c.nom ? ' / ' + c.classePfmp : '') : '#' + id; }), formation: p.formation, niveau: p.niveau }); return; }
     r.ajouts.forEach(function(id) { var s = suggestions[r.ligne] = suggestions[r.ligne] || []; if (s.indexOf(id) < 0) s.push(id); });
-    var cle = r.ligne + '|' + p.type + '|' + p.debut + '|' + p.fin; if (vues[cle]) return; vues[cle] = 1;
-    periodes.push({ ligne: r.ligne, type: p.type, debut: p.debut, fin: p.fin, origine: 'REPRISE', regle: null });
+    [r.ligne].concat(r.autres || []).forEach(function(code) {
+      var cle = code + '|' + p.type + '|' + p.debut + '|' + p.fin; if (vues[cle]) return; vues[cle] = 1;
+      periodes.push({ ligne: code, type: p.type, debut: p.debut, fin: p.fin, origine: 'REPRISE', regle: null });
+    });
   });
   return { ok: true, periodes: periodes.sort(EUC_DEV610_ordrePeriodes_), ignorees: ignorees.length, nonReprises: ignorees, suggestions: suggestions, tests: tests };
 }
@@ -625,11 +649,11 @@ function EUC_DEV610_publier(q) {
     };
     var creer = d.creer.map(function(x) { return { fields: champs(x) }; });
     var modifier = d.modifier.map(function(x) { var f = champs(x); delete f.Commentaire; return { id: x.id, fields: f }; }).concat(d.desactiver.map(function(x) { return { id: x.id, fields: { Actif: false } }; }));
-    if (creer.length) EUC_ENT_grist('post', '/tables/Planning_Periodes/records', { records: creer });
-    if (modifier.length) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: modifier });
+    if (creer.length) EUC_DEV610_ecrire_('post', 'Planning_Periodes', creer);
+    if (modifier.length) EUC_DEV610_ecrire_('patch', 'Planning_Periodes', modifier);
     var maintenant = new Date().toISOString(), statuts = EUC_DEV610_versions_(c.annee.code).filter(function(v) { return v.statut === 'PUBLIE' && v.numero !== c.version.numero; }).map(function(v) { return { id: v.id, fields: { Statut: 'REMPLACE' } }; });
     statuts.push({ id: c.version.id, fields: { Statut: 'PUBLIE', Date_publication: maintenant, Auteur: EUC_DEV610_t_(ctx && ctx.email) } });
-    EUC_ENT_grist('patch', '/tables/' + EUC_DEV610_T_.versions + '/records', { records: statuts });
+    EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.versions, statuts);
     try { CacheService.getScriptCache().removeAll(['EUC_DEV586_CLASSES']); } catch (e) {}
     return { ok: true, annee: c.annee.code, numero: c.version.numero, creees: creer.length, modifiees: d.modifier.length, desactivees: d.desactiver.length, inchangees: d.inchangees };
   } finally { lock.releaseLock(); }
@@ -665,14 +689,15 @@ function EUC_DEV610_typeCanonique_(type, types) {
 /* Plan du calibrage (calcul pur) : périodes à renseigner, types à uniformiser, cas douteux. */
 function EUC_DEV610_planCalibrage_(periodes, lignes, parClasseParAnnee, classesParId, types, uniformiser) {
   var parId = {}, parCode = {}; lignes.forEach(function(l) { parId[l.id] = l; parCode[l.code] = l; });
-  var maj = [], douteux = [], typesChanges = {}, deja = 0;
+  var maj = [], douteux = [], typesChanges = {}, deja = 0, copies = [];
   periodes.forEach(function(p) {
     var champs = {}, ligne = p.ligneId && parId[p.ligneId] ? parId[p.ligneId] : null;
     if (!ligne) {
       if (p.classes.length && p.classes.every(function(id) { var c = classesParId[id]; return c && /^TEST/.test(EUC_DEV610_n_(c.nom)); })) return;
       var r = EUC_DEV610_ligneDePeriode_(p, parClasseParAnnee[p.annee] || {}, classesParId, lignes);
       if (!r.ligne) { douteux.push({ id: p.id, annee: p.annee, type: p.type, debut: p.debut, fin: p.fin, formation: p.formation, niveau: p.niveau, ligneSheet: p.ligneSheet, raison: r.raison }); }
-      else { ligne = parCode[r.ligne]; champs.Ligne_planning = ligne.id; }
+      else { ligne = parCode[r.ligne]; champs.Ligne_planning = ligne.id;
+        (r.autres || []).forEach(function(c) { var o = parCode[c]; if (o) copies.push({ source: p.id, ligne: o, type: uniformiser ? EUC_DEV610_typeCanonique_(p.type, types) : p.type, debut: p.debut, fin: p.fin }); }); }
     } else deja++;
     if (ligne) {
       if (ligne.formation && p.formation !== ligne.formation) champs.Formation = ligne.formation;
@@ -682,7 +707,7 @@ function EUC_DEV610_planCalibrage_(periodes, lignes, parClasseParAnnee, classesP
     if (uniformiser) { var c = EUC_DEV610_typeCanonique_(p.type, types); if (c !== p.type) { champs.Type = c; var k = p.type + ' → ' + c; typesChanges[k] = (typesChanges[k] || 0) + 1; } }
     if (Object.keys(champs).length) maj.push({ id: p.id, fields: champs, avant: { formation: p.formation, niveau: p.niveau, ligneSheet: p.ligneSheet, type: p.type }, ligne: ligne ? ligne.libelle : '' });
   });
-  return { maj: maj, douteux: douteux, typesChanges: typesChanges, deja: deja };
+  return { maj: maj, douteux: douteux, typesChanges: typesChanges, deja: deja, copies: copies };
 }
 function EUC_DEV610_colonnesDetail_(table) {
   var out = {}; (EUC_ENT_grist('get', '/tables/' + table + '/columns').columns || []).forEach(function(c) { out[c.id] = c.fields || {}; }); return out;
@@ -699,7 +724,7 @@ function EUC_DEV610_contexteCalibrage_(uniformiser) {
   classes.forEach(function(c) { classesParId[c.id] = c; });
   var cols = EUC_DEV610_colonnesDetail_('Planning_Periodes');
   var periodes = EUC_DEV610_lire_('Planning_Periodes').map(function(r) { var f = r.fields || {}, ids = EUC_DEV610_refs_(f.Classes_concernees).map(Number); if (!ids.length && EUC_DEV610_ref_(f.Classe)) ids = [EUC_DEV610_ref_(f.Classe)];
-    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), ligneSheet: Number(f.Ligne_sheet) || 0, classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0 }; });
+    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), ligneSheet: Number(f.Ligne_sheet) || 0, classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0, brut: f }; });
   periodes.forEach(function(p) { if (parClasseParAnnee[p.annee]) return; var ratt = EUC_DEV610_rattachements_(p.annee).classes, m = parClasseParAnnee[p.annee] = {};
     lignes.forEach(function(l) { (ratt[l.code] || EUC_DEV610_proposerClasses_(l, classes)).forEach(function(id) { m[id] = l.code; }); }); });
   var types = EUC_DEV610_types_().map(function(t) { return t.type; });
@@ -710,13 +735,15 @@ function EUC_DEV610_contexteCalibrage_(uniformiser) {
   if (!cols.Ligne_planning) schema.push('Créer la colonne « Ligne_planning » (liste des lignes de planning, affichée par leur libellé).');
   ['Formation', 'Niveau', 'Ligne_sheet'].forEach(function(c) { if (cols[c] && !EUC_DEV610_t_(cols[c].formula)) schema.push('Recopier automatiquement « ' + c + ' » depuis la ligne choisie.'); });
   if (cols.Type && !/^Ref/.test(cols.Type.type || '') && (cols.Type.type !== 'Choice' || Object.keys(choix).some(function(t) { var w = {}; try { w = JSON.parse(cols.Type.widgetOptions || '{}'); } catch (e) {} return (w.choices || []).indexOf(t) < 0; }))) schema.push('Transformer « Type » en liste déroulante (' + Object.keys(choix).length + ' types).');
-  return { cols: cols, plan: plan, schema: schema, choix: Object.keys(choix).sort(), periodes: periodes.length };
+  var parId = {}; periodes.forEach(function(p) { parId[p.id] = p; });
+  return { cols: cols, plan: plan, schema: schema, choix: Object.keys(choix).sort(), periodes: periodes.length, parId: parId };
 }
 function EUC_DEV610_calibrer(q) {
   EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV610_tables_();
   var uniformiser = q.uniformiserTypes !== false, c = EUC_DEV610_contexteCalibrage_(uniformiser), p = c.plan;
   var resume = { ok: true, apercu: q.confirmation !== 'CALIBRER', periodes: c.periodes, schema: c.schema, aRenseigner: p.maj.filter(function(m) { return m.fields.Ligne_planning; }).length, aCorriger: p.maj.length, deja: p.deja, douteux: p.douteux, typesChanges: p.typesChanges,
-    exemples: p.maj.slice(0, 60).map(function(m) { return { id: m.id, ligne: m.ligne, avant: m.avant, apres: m.fields }; }) };
+    exemples: p.maj.slice(0, 60).map(function(m) { return { id: m.id, ligne: m.ligne, avant: m.avant, apres: m.fields }; }),
+    copies: p.copies.map(function(x) { return { source: x.source, ligne: x.ligne.libelle, groupe: x.ligne.groupe, type: x.type, debut: x.debut, fin: x.fin }; }) };
   if (resume.apercu) return resume;
   var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) throw new Error('Un autre calibrage est en cours.');
   try {
@@ -734,7 +761,16 @@ function EUC_DEV610_calibrer(q) {
     });
     if (cols.Type && !/^Ref/.test(cols.Type.type || '')) actions.push(['ModifyColumn', 'Planning_Periodes', 'Type', { type: 'Choice', widgetOptions: JSON.stringify({ choices: c.choix }) }]);
     if (actions.length) EUC_DEV610_apply_(actions, 'formules et liste des types');
-    for (var i = 0; i < p.maj.length; i += 200) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: p.maj.slice(i, i + 200).map(function(m) { return { id: m.id, fields: m.fields }; }) });
+    EUC_DEV610_ecrire_('patch', 'Planning_Periodes', p.maj.map(function(m) { return { id: m.id, fields: m.fields }; }));
+    /* Copies pour les lignes séparées (mixité CPI-CPRP → CPRP) : mêmes dates et type, ligne de planning propre. */
+    var colsCopie = EUC_DEV610_colonnesDetail_('Planning_Periodes'), gardees = ['Annee_scolaire', 'Type', 'Date_debut', 'Date_fin', 'Couleur', 'Groupe', 'Duree_jour', 'Date_affichage_debut', 'Date_affichage_fin'];
+    var copies = p.copies.map(function(x) { var b = (c.parId[x.source] || {}).brut || {}, f = {};
+      gardees.forEach(function(k) { if (colsCopie[k] && !colsCopie[k].isFormula && b[k] != null && b[k] !== '') f[k] = b[k]; });
+      f.Type = x.type; f.Ligne_planning = x.ligne.id; if (colsCopie.Formation) f.Formation = x.ligne.formation; if (colsCopie.Niveau) f.Niveau = x.ligne.niveau; if (colsCopie.Ligne_sheet && x.ligne.ligneSheet) f.Ligne_sheet = x.ligne.ligneSheet;
+      if (colsCopie.Commentaire) f.Commentaire = 'Copie de la période #' + x.source + ' pour ' + x.ligne.libelle + ' (ligne séparée)'; if (colsCopie.Actif) f.Actif = true;
+      return { fields: f }; });
+    if (copies.length) EUC_DEV610_ecrire_('post', 'Planning_Periodes', copies);
+    resume.copiees = copies.length;
     resume.apercu = false; resume.ecrites = p.maj.length; resume.actions = actions.length + (c.cols.Ligne_planning ? 0 : 1);
     return resume;
   } finally { lock.releaseLock(); }
@@ -751,12 +787,14 @@ function EUC_DEV610_enregistrerOrganisation(q) {
     if (EUC_DEV610_CALENDRIERS_.indexOf(cal) < 0) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : calendrier à choisir dans la liste.');
     if (!groupe) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : indiquez son groupe (bandeau du tableau).');
     if (!libelle) throw new Error('Ligne n°' + (i + 1) + ' : libellé obligatoire.');
-    var champs = { Libelle: libelle.slice(0, 120), Calendrier: cal, Groupe: groupe.slice(0, 80), Formation: EUC_DEV610_t_(l.formation).slice(0, 80), Niveau: EUC_DEV610_t_(l.niveau).slice(0, 80), Classe_PFMP: EUC_DEV610_t_(l.classePfmp).slice(0, 80), Profil: EUC_DEV610_t_(l.profil).slice(0, 40), Ordre: (i + 1) * 10, Actif: l.actif !== false };
+    var orgs = (Array.isArray(l.organismes) ? l.organismes : EUC_DEV610_t_(l.organismes).split(/\s*,\s*/)).map(EUC_DEV610_t_).filter(Boolean);
+    var etab = EUC_DEV610_t_(l.etablissement); if (etab && ['LP', 'LGT'].indexOf(etab) < 0) throw new Error('Ligne « ' + libelle + ' » : établissement support LP ou LGT.');
+    var champs = { Libelle: libelle.slice(0, 120), Calendrier: cal, Groupe: groupe.slice(0, 80), Formation: (EUC_DEV610_t_(l.formation) || groupe).slice(0, 80), Niveau: (EUC_DEV610_t_(l.niveau) || libelle).slice(0, 80), Classe_PFMP: EUC_DEV610_t_(l.classePfmp).slice(0, 80), Profil: EUC_DEV610_t_(l.profil).slice(0, 40), Etablissement: etab, Organismes: orgs.join(', '), Ordre: (i + 1) * 10, Version_modele: EUC_DEV610_MODELE_, Actif: l.actif !== false };
     if (Number(l.id) > 0 && parId[Number(l.id)]) { if (vus[l.id]) throw new Error('Ligne en double dans l’organisation.'); vus[l.id] = 1; modifier.push({ id: Number(l.id), fields: champs }); }
     else { var code = EUC_DEV610_nouveauCode_(l.classePfmp || libelle, codes); codes.push(code); champs.Code = code; if (!champs.Profil) champs.Profil = code; champs.Heures_jour = cal === 'SCOLAIRE' ? null : 7; creer.push({ fields: champs }); }
   });
-  var retirees = actuelles.filter(function(l) { return !vus[l.id] && l.actif; }).map(function(l) { return { id: l.id, fields: { Actif: false } }; });
-  if (modifier.length || retirees.length) EUC_ENT_grist('patch', '/tables/' + EUC_DEV610_T_.lignes + '/records', { records: modifier.concat(retirees) });
-  if (creer.length) EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.lignes + '/records', { records: creer });
+  var retirees = actuelles.filter(function(l) { return !vus[l.id] && l.actif; }).map(function(l) { return { id: l.id, fields: { Actif: false, Version_modele: EUC_DEV610_MODELE_ } }; });
+  if (modifier.length || retirees.length) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.lignes, modifier.concat(retirees));
+  if (creer.length) EUC_DEV610_ecrire_('post', EUC_DEV610_T_.lignes, creer);
   return { ok: true, modifiees: modifier.length, creees: creer.length, desactivees: retirees.length };
 }

@@ -47,6 +47,8 @@ function grist(opts) {
       const m = /^\/tables\/([^/]+)\/records$/.exec(p); if (!m) return {};
       const t = tables[m[1]] = tables[m[1]] || [];
       if (method === 'get') return { records: J(t) };
+      /* Comme Grist : toutes les lignes d'une requête portent les mêmes colonnes. */
+      if ((method === 'post' || method === 'patch') && new Set(body.records.map(r => Object.keys(r.fields || {}).sort().join('|'))).size > 1) throw new Error('Grist indisponible ou requête refusée (400).');
       if (method === 'post') { const ids = body.records.map(r => { const id = 1000 + t.length; t.push({ id, fields: J(r.fields) }); return { id }; }); return { records: ids }; }
       if (method === 'patch') { body.records.forEach(r => Object.assign(t.find(x => x.id === r.id).fields, J(r.fields))); return {}; }
       throw new Error('méthode interdite ' + method);
@@ -105,7 +107,7 @@ test('règles initiales : la génération 2026-2027 retrouve les périodes publi
   assert.deepStrictEqual(J(de('1BTS_CIEL')), ['Stage BTS 2027-05-24 2027-07-02']);
   assert.deepStrictEqual(J(de('2BTS_MV')), ['Stage BTS 2026-11-16 2026-12-18']);
   assert.deepStrictEqual(J(de('TCAP')), []); assert.deepStrictEqual(J(de('MIX_1BP')), []); assert.deepStrictEqual(J(de('TSEC')), []);
-  assert.deepStrictEqual(J(g.alertes), ['CAP — 2e année (CAR) — 2 période(s) « PFMP T CAP » à placer à la main (3 et 4 semaines).']);
+  assert.deepStrictEqual(J(g.alertes), ['CAP — TCAP CAR — 2 période(s) « PFMP T CAP » à placer à la main (3 et 4 semaines).']);
   assert.ok(g.periodes.every(p => k.EUC_DEV610_typeFormation_(p.type)));
 });
 test('N+1 sur dates prévisionnelles : les périodes suivent les vacances 2027-2028 sans ressaisie', () => {
@@ -130,7 +132,7 @@ test('régénération : la reprise des types à règle est remplacée, le manuel
   assert.deepStrictEqual(J(de('TCAP')), [['2026-11-16', 'GRILLE'], ['2027-03-15', 'REPRISE']]);
   assert.deepStrictEqual(J(de('1BP_CIEL')), [['2026-11-16', 'GRILLE'], ['2027-03-22', 'REGLE']]);
   assert.deepStrictEqual(J(de('TSEC')), [['2026-11-16', 'GRILLE']]);
-  assert.ok(g.alertes.some(a => /1 BAC PRO — CIEL — période n°1 non replacée/.test(a)));
+  assert.ok(g.alertes.some(a => /1 BAC PRO — 1CIEL — période n°1 non replacée/.test(a)));
   assert.ok(!g.alertes.some(a => /T CAP/.test(a)), 'les deux T CAP sont placées');
   const c = g.changements.find(x => x.ligne === '1BTS_MV'); assert.strictEqual(c.nature, 'DEPLACEE'); assert.strictEqual(c.avant.debut, '2027-05-31');
   const again = k.EUC_DEV610_generer_(lignes, regles, s, idx, g.periodes); assert.strictEqual(again.changements.length, 0);
@@ -168,7 +170,7 @@ test('aperçu de publication : inchangé, déplacé, à créer, à désactiver ;
   assert.deepStrictEqual(J(d.modifier.map(x => [x.id, x.avant.debut, x.debut])), [[2, '2027-01-11', '2027-01-18']]);
   assert.deepStrictEqual(J(d.creer.map(x => [x.ligne, x.type, x.debut, x.classes])), [['1BP_MVA', 'PFMP 1ère', '2026-11-23', [9, 10]], ['TBP_MVA', 'P.dif.', '2027-02-08', [30, 31]]]);
   assert.deepStrictEqual(J(d.desactiver.map(x => x.id)), [7]);
-  assert.deepStrictEqual(J(d.sansClasse), ['1 BTS — MV']);
+  assert.deepStrictEqual(J(d.sansClasse), ['1 BTS — 1BTS MV']);
 });
 test('le code pur injecté dans la page s’évalue seul et calcule la même matrice', () => {
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
@@ -252,7 +254,8 @@ test('reprise : période T CAP dont la classe est inactive ou non rattachée ret
 test('reprise des mixités et classes entières par Formation / Niveau (colonnes A et B), quelle que soit la ligne de l’ancienne feuille ; classes de test écartées', () => {
   const lignes = lignesDefaut();
   const L = (f, n) => k.EUC_DEV610_ligneParLibelles_({ formation: f, niveau: n }, lignes);
-  assert.deepStrictEqual([L('1BTS MV', 'Mixité'), L('2BTS CPI-CPRP', 'Mixité'), L('2BTS MV', 'Mixité'), L('1 BAC PRO', 'Mixité'), L('CAP Connexe', 'CP'), L('CAP', 'CP'), L('Ducretet', 'TSEC'), L('BACHELOR', 'IP'), L('1BTS', 'MV'), L('1 BAC PRO', 'MP3'), L('X', 'Mixité'), L('', '')], ['MIX_1BTS_MV', 'MIX_2BTS_CPI_CPRP', 'MIX_2BTS_MV', 'MIX_1BP', 'CAP_PEINTRE', 'CAP_PEINTRE', 'TSEC', 'BACHELOR_IP', '1BTS_MV', '1BP_MP3D', '', '']);
+  assert.deepStrictEqual(J(k.EUC_DEV610_lignesParLibelles_({ formation: '1BTS CPI-CPRP', niveau: 'Mixité' }, lignes)), ['MIX_1BTS_CPI', 'MIX_1BTS_CPRP'], 'ligne séparée : les deux lignes');
+  assert.deepStrictEqual([L('1BTS MV', 'Mixité'), L('2BTS CPI-CPRP', 'Mixité'), L('2BTS MV', 'Mixité'), L('1 BAC PRO', 'Mixité'), L('CAP Connexe', 'CP'), L('CAP', 'CP'), L('Ducretet', 'TSEC'), L('BACHELOR', 'IP'), L('1BTS', 'MV'), L('1 BAC PRO', 'MP3'), L('X', 'Mixité'), L('', '')], ['MIX_1BTS_MV', 'MIX_2BTS_CPI', 'MIX_2BTS_MV', 'MIX_1BP', 'CAP_PEINTRE', 'CAP_PEINTRE', 'TSEC', 'BACHELOR_IP', '1BTS_MV', '1BP_MP3D', '', '']);
   const g = grist({ periodes: [
     { id: 280, fields: { Annee_scolaire: '2026-2027', Type: 'Stage BTS', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 41, Date_debut: sec('2027-05-31'), Date_fin: sec('2027-08-31'), Actif: true } },
     { id: 291, fields: { Annee_scolaire: '2026-2027', Type: 'ENT.', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 42, Date_debut: sec('2026-10-12'), Date_fin: sec('2026-10-16'), Actif: true } },
@@ -262,7 +265,7 @@ test('reprise des mixités et classes entières par Formation / Niveau (colonnes
   ] });
   g.k.EUC_DEV610_charger({ annee: '2026-2027' });
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
-  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])).sort(), [['CAP_PEINTRE', 'VISITE', '2026-12-16'], ['MIX_1BTS_MV', 'ENT.', '2026-10-12'], ['MIX_1BTS_MV', 'Stage BTS', '2027-05-31'], ['MIX_2BTS_CPI_CPRP', 'VISITE', '2026-12-14']]);
+  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])).sort(), [['CAP_PEINTRE', 'VISITE', '2026-12-16'], ['MIX_1BTS_MV', 'ENT.', '2026-10-12'], ['MIX_1BTS_MV', 'Stage BTS', '2027-05-31'], ['MIX_2BTS_CPI', 'VISITE', '2026-12-14'], ['MIX_2BTS_CPRP', 'VISITE', '2026-12-14']]);
   assert.strictEqual(r.tests, 1); assert.strictEqual(r.ignorees, 0);
 });
 test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_planning, recopie Formation/Niveau/Ligne_sheet, Type en liste, cas douteux jamais écrits', () => {
@@ -292,7 +295,12 @@ test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_pla
   assert.strictEqual(mod[3][2], 'Type'); assert.strictEqual(mod[3][3].type, 'Choice'); const choix = JSON.parse(mod[3][3].widgetOptions).choices; assert.ok(choix.includes('VISITE') && choix.includes('Stage BTS') && choix.includes('PFMP T CAP') && !choix.includes('Visite'));
   const f = id => g.tables.Planning_Periodes.find(x => x.id === id).fields, L = code => g.tables.EUC_PLAN_LIGNES.find(x => x.fields.Code === code).id;
   assert.deepStrictEqual([f(369).Ligne_planning, f(369).Ligne_sheet, f(369).Formation], [L('MIX_1BTS_MV'), 41, '1BTS MV']);
-  assert.deepStrictEqual([f(330).Ligne_planning, f(330).Type, f(330).Ligne_sheet], [L('MIX_2BTS_CPI_CPRP'), 'VISITE', 42]);
+  assert.deepStrictEqual([f(330).Ligne_planning, f(330).Type, f(330).Ligne_sheet], [L('MIX_2BTS_CPI'), 'VISITE', 42]);
+  /* Mixité CPI-CPRP séparée : une copie est créée pour CPRP, avec sa propre ligne et les mêmes dates. */
+  assert.deepStrictEqual(J(ap.copies.map(x => [x.source, x.ligne])), [[330, 'Mixité CPRP']]);
+  const copie = g.tables.Planning_Periodes.find(x => x.fields.Ligne_planning === L('MIX_2BTS_CPRP'));
+  assert.deepStrictEqual([copie.fields.Type, copie.fields.Date_debut, copie.fields.Annee_scolaire, copie.fields.Formation, copie.fields.Niveau], ['VISITE', sec('2026-11-02'), '2026-2027', '2BTS CPI-CPRP', 'Mixité']);
+  assert.match(copie.fields.Commentaire, /Copie de la période #330/); assert.strictEqual(r.copiees, 1);
   assert.deepStrictEqual([f(284).Ligne_planning, f(284).Type], [L('TCAP'), 'PFMP T CAP']);
   assert.deepStrictEqual([f(74).Ligne_planning, f(74).Formation, f(74).Niveau, f(74).Ligne_sheet], [L('CAP_PEINTRE'), 'CAP Connexe', 'CP', 10]);
   assert.strictEqual(f(500).Ligne_planning, undefined); assert.strictEqual(f(500).Formation, 'Inconnue');
@@ -306,11 +314,13 @@ test('organisation du tableau : ordre et groupes enregistrés, nouvelle classe p
   const lignes = lignesDefaut().map((l, i) => Object.assign({ ordre: (i + 1) * 10 }, l));
   const p = k.EUC_DEV610_ligneProposee_({ id: 777, nom: '1MELEC2', classePfmp: '1MELEC2', etab: 'LP' }, lignes);
   assert.deepStrictEqual([p.calendrier, p.groupe, p.profil, p.apres], ['SCOLAIRE', '1 BAC PRO', '1BACPRO', '1BP_MELEC']);
-  assert.deepStrictEqual([k.EUC_DEV610_ligneProposee_({ nom: 'TPEEB 21', classePfmp: 'TPEEB 21', etab: 'GRETA', modalite: 'Classe entière' }, lignes).calendrier, k.EUC_DEV610_ligneProposee_({ nom: 'CAP X', classePfmp: 'CAP X', etab: 'CFA', modalite: 'Classe entière' }, lignes).calendrier], ['GRETA', 'CLASSE_ENTIERE']);
+  const pg = k.EUC_DEV610_ligneProposee_({ nom: 'TPEEB 21', classePfmp: 'TPEEB 21', etab: 'GRETA', modalite: 'Classe entière', gestionnaire: 'GRETA', donneur: 'GRETA' }, lignes);
+  assert.deepStrictEqual(J([pg.calendrier, pg.groupe, pg.organismes, pg.libelle]), ['CLASSE_ENTIERE', 'Formation continue et alternance', ['GRETA'], 'TPEEB 21']);
+  assert.strictEqual(k.EUC_DEV610_ligneProposee_({ nom: 'CAP X', classePfmp: 'CAP X', etab: 'CFA', modalite: 'Classe entière' }, lignes).calendrier, 'CLASSE_ENTIERE');
   assert.strictEqual(k.EUC_DEV610_nouveauCode_('1 BAC PRO — Élec 2', ['1_BAC_PRO_ELEC_2']), '1_BAC_PRO_ELEC_2_2');
   const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
-  assert.ok(g.opts.applies.some(a => a[0][0] === 'ModifyColumn' && a[0][2] === 'Calendrier' && JSON.parse(a[0][3].widgetOptions).choices.join() === 'SCOLAIRE,MIXITE,CLASSE_ENTIERE,GRETA'));
-  assert.deepStrictEqual(J(r.calendriers), ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE', 'GRETA']);
+  assert.ok(g.opts.applies.some(a => a[0][0] === 'ModifyColumn' && a[0][2] === 'Calendrier' && JSON.parse(a[0][3].widgetOptions).choices.join() === 'SCOLAIRE,MIXITE,CLASSE_ENTIERE'));
+  assert.deepStrictEqual(J(r.calendriers), ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE']); assert.deepStrictEqual(J(r.organismes), ['CFA RAN', 'CFAI', 'GRETA', 'Ducretet']);
   const org = J(r.lignes).sort((a, b) => a.ordre - b.ordre), i = org.findIndex(l => l.code === 'MIX_TBP'), mix = org.splice(i, 1)[0];
   org.splice(org.findIndex(l => l.code === 'TBP_CIEL'), 0, mix);
   org.push({ id: 0, libelle: '1 BAC PRO — 1MELEC2', groupe: '1 BAC PRO', calendrier: 'SCOLAIRE', classePfmp: '1MELEC2', profil: '1BACPRO', formation: '1 BAC PRO', niveau: 'MELEC2', actif: true });
@@ -332,10 +342,28 @@ test('organisation du tableau : ordre et groupes enregistrés, nouvelle classe p
 test('chargement robuste : un refus de Grist sur la liste Calendrier ou la mise à jour des lignes ne bloque pas la page', () => {
   const g = grist({ refuserApply: true }); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
   assert.strictEqual(r.annee.code, '2026-2027'); assert.strictEqual(r.lignes.length, k.EUC_DEV610_LIGNES_DEFAUT_.length); assert.deepStrictEqual(J(r.avertissements), []);
-  const g2 = grist(); g2.k.EUC_DEV610_charger({}); g2.tables.EUC_PLAN_LIGNES.forEach(x => { x.fields.Formation = ''; }); g2.k.CacheService.getScriptCache().put('EUC_DEV610_TABLES3', '');
+  const g2 = grist(); g2.k.EUC_DEV610_charger({}); g2.tables.EUC_PLAN_LIGNES.forEach(x => { x.fields.Version_modele = 1; }); g2.k.CacheService.getScriptCache().put('EUC_DEV610_TABLES3', '');
   const g3 = grist({ refuserLignes: true }); g3.tables.EUC_PLAN_LIGNES = J(g2.tables.EUC_PLAN_LIGNES);
   const r3 = g3.k.EUC_DEV610_charger({ annee: '2026-2027' });
   assert.strictEqual(r3.annee.code, '2026-2027'); assert.ok(/mise à jour des lignes de planning/.test(r3.avertissements[0]), r3.avertissements[0]);
+});
+test('mise au modèle 2 : lignes de la première version remplacées (TPEEB unique désactivée, mixités CPI et CPRP séparées, GRETA dans « Formation continue et alternance »), lignes modifiées dans la page respectées', () => {
+  const g = grist();
+  g.tables.EUC_PLAN_LIGNES = [
+    { id: 1, fields: { Code: 'TBP_MVA', Libelle: 'T BAC PRO — MVA', Calendrier: 'SCOLAIRE', Groupe: 'T BAC PRO', Classe_PFMP: 'TMVA', Ordre: 10, Actif: true } },
+    { id: 2, fields: { Code: 'TPEEB', Libelle: 'TPEEB', Calendrier: 'FC_ALTERNANCE', Groupe: 'Formation continue et alternance', Classe_PFMP: 'TPEEB', Ordre: 20, Actif: true } },
+    { id: 3, fields: { Code: 'MIX_1BTS_CPI_CPRP', Libelle: '1 BTS CPI-CPRP — Mixité', Calendrier: 'MIXITE', Groupe: '1 BTS', Ordre: 30, Actif: true } },
+    { id: 4, fields: { Code: 'TSEC', Libelle: 'Mon TSEC', Calendrier: 'CLASSE_ENTIERE', Groupe: 'Mon groupe', Classe_PFMP: 'TSEC', Ordre: 40, Version_modele: 2, Actif: true } },
+    { id: 5, fields: { Code: 'PERSO', Libelle: 'Classe ajoutée', Calendrier: 'SCOLAIRE', Groupe: 'X', Ordre: 50, Actif: true } }
+  ];
+  const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' }), l = c => r.lignes.find(x => x.code === c);
+  assert.deepStrictEqual(J([l('TBP_MVA').libelle, l('TBP_MVA').etablissement, l('TBP_MVA').formation, l('TBP_MVA').niveau]), ['TMVA', 'LP', 'T BAC PRO', 'MVA']);
+  assert.strictEqual(l('TPEEB').actif, false); assert.strictEqual(l('MIX_1BTS_CPI_CPRP').actif, false);
+  assert.deepStrictEqual(J([l('MIX_1BTS_CPI').libelle, l('MIX_1BTS_CPRP').organismes, l('MIX_1BTS_MV').organismes, l('MIX_TBP').organismes]), ['Mixité CPI', ['CFAI'], ['CFA RAN'], ['CFA RAN']]);
+  assert.deepStrictEqual(J([l('TPEEB_19').calendrier, l('TPEEB_19').groupe, l('1MELEC_G').organismes, l('CQPM_ASC').organismes, l('BACHELOR_IP').etablissement]), ['CLASSE_ENTIERE', 'Formation continue et alternance', ['GRETA'], ['GRETA', 'CFAI'], 'LGT']);
+  assert.deepStrictEqual(J([l('TSEC').libelle, l('TSEC').groupe]), ['Mon TSEC', 'Mon groupe'], 'ligne enregistrée depuis la page : jamais écrasée');
+  assert.strictEqual(l('PERSO').actif, true, 'une ligne ajoutée à la main reste active');
+  assert.ok(!r.lignes.some(x => x.actif && x.calendrier === 'GRETA'));
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [

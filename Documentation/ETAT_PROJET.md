@@ -47,6 +47,16 @@
   jours au lycée et en entreprise, estimation à 7 h par jour). Bouton
   « Appliquer les noms Pronote » et « Ajouter une classe à la main » (classe
   pas encore dans Pronote : affichée, non publiée tant qu'elle n'existe pas).
+- Correctif majeur : Grist refuse (400) une écriture groupée dont les lignes
+  ne portent pas les mêmes colonnes ; toutes les écritures du générateur sont
+  regroupées par jeu de colonnes (`EUC_DEV610_ecrire_`). C'était la cause de
+  l'erreur de chargement et de la mise à jour des lignes jamais appliquée.
+- Modèle des lignes v2 : libellé affiché = nom Pronote (ou « Mixité … »),
+  établissement support (LP / LGT) et organismes (CFA RAN, CFAI, GRETA,
+  Ducretet) par ligne, affichés dans le planning ; mixités CPI et CPRP
+  séparées (anciennes périodes communes dupliquées à la reprise, copiées au
+  calibrage) ; ligne TPEEB unique retirée ; formations GRETA dans « Formation
+  continue et alternance » avec un filtre « Formations GRETA ».
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :

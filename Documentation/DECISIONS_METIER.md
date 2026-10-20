@@ -14,6 +14,12 @@
   Dans `Planning_Periodes`, la ligne d'une période se choisit dans
   `Ligne_planning` ; Formation, Niveau et Ligne_sheet en découlent. L'ordre et
   les numéros de ligne se changent une seule fois dans `EUC_PLAN_LIGNES`.
+  Chaque ligne porte son établissement support (LP ou LGT) et ses organismes
+  de formation : BAC PRO et CAP au LP ; mixités BAC PRO LP + CFA RAN ; BTS au
+  LGT ; mixités BTS CPI et CPRP LGT + CFAI, BTS MV LGT + CFA RAN ; TSEC LP + CFA
+  RAN + Ducretet ; Bachelor IP et BTS ELEC Alt LGT + CFAI ; CAP peintre LP + CFA
+  RAN ; TPMMA, TPEEB 19 / 20, 1MELEC G et TMELEC G LP + GRETA ; CQPM ASC LP +
+  GRETA + CFAI.
 
 - Dans le parcours QR élève, une réponse perdue ou un échec apparent après le
   clic sur « Enregistrer » impose une relecture serveur avant d'afficher le
