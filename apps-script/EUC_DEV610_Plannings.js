@@ -30,8 +30,9 @@ function EUC_DEV610_semaineIso_(iso) {
   var an = d.getUTCFullYear(), debut = new Date(Date.UTC(an, 0, 1, 12));
   return Math.floor((d - debut) / 86400000 / 7) + 1;
 }
-/* Nom canonique des vacances : TOUSSAINT, NOEL, HIVER, PRINTEMPS, ETE, ASCENSION. */
-function EUC_DEV610_nomVacances_(nom) {
+/* Nom canonique des vacances : TOUSSAINT, NOEL, HIVER, PRINTEMPS, ETE, ASCENSION.
+ * Nom illisible : déduit des dates (1er novembre, 25 décembre, 14 juillet, février-mars, avril-mai). */
+function EUC_DEV610_nomVacances_(nom, debut, fin) {
   var n = EUC_DEV610_n_(nom);
   if (/TOUSSAINT/.test(n)) return 'TOUSSAINT';
   if (/NOEL/.test(n)) return 'NOEL';
@@ -39,6 +40,16 @@ function EUC_DEV610_nomVacances_(nom) {
   if (/PRINTEMPS|PAQUES/.test(n)) return 'PRINTEMPS';
   if (/ETE|GRANDES/.test(n)) return 'ETE';
   if (/ASCENSION|PONT/.test(n)) return 'ASCENSION';
+  if (debut && fin) {
+    var contient = function(md) { var y = Number(debut.slice(0, 4)); return [y, y + 1].some(function(a) { var j = a + '-' + md; return j >= debut && j <= fin; }); };
+    var duree = (Date.parse(fin + 'T12:00:00Z') - Date.parse(debut + 'T12:00:00Z')) / 86400000, m = Number(debut.slice(5, 7));
+    if (contient('11-01')) return 'TOUSSAINT';
+    if (contient('12-25')) return 'NOEL';
+    if (contient('07-14') || duree > 30) return 'ETE';
+    if (duree < 6) return 'ASCENSION';
+    if (m === 2 || m === 3) return 'HIVER';
+    if (m === 4 || m === 5) return 'PRINTEMPS';
+  }
   return n;
 }
 /* Semaines (lundi → vendredi) de l'année scolaire, de la semaine de la rentrée à celle du 31 août. */
@@ -56,7 +67,7 @@ function EUC_DEV610_semaines_(debutAnnee, finAnnee) {
 function EUC_DEV610_marquerVacances_(semaines, vacances) {
   var index = {};
   (vacances || []).forEach(function(v) {
-    var nom = EUC_DEV610_nomVacances_(v.nom); if (!v.debut || !v.fin) return;
+    if (!v.debut || !v.fin) return; var nom = EUC_DEV610_nomVacances_(v.nom, v.debut, v.fin);
     semaines.forEach(function(s) {
       var n = 0; for (var k = 0; k < 5; k++) { var j = EUC_DEV610_plus_(s.lundi, k); if (j >= v.debut && j <= v.fin) n++; }
       if (n >= 3) { s.vacances = nom; s.previsionnel = !!v.previsionnel; var x = index[nom] = index[nom] || { premier: s.i, dernier: s.i }; x.premier = Math.min(x.premier, s.i); x.dernier = Math.max(x.dernier, s.i); }
@@ -288,10 +299,11 @@ function EUC_DEV610_regles_(annee) {
 function EUC_DEV610_reglesDefaut_(annee) {
   return EUC_DEV610_REGLES_DEFAUT_.map(function(r) { return { id: 0, annee: annee, profil: r[0], numero: r[1], type: r[2], duree: r[3], placement: r[4], ancrage: r[5], regleAncrage: r[6], position: r[7], ecart: r[8], reference: '', actif: true }; });
 }
+/* Vacances de l'année. Les vacances prévisionnelles comptent même décochées « Actif » (comme dans la table actuelle). */
 function EUC_DEV610_vacances_(annee, annees) {
   annees = annees || EUC_DEV610_annees_();
   return EUC_DEV610_lire_('Vacances_Scolaires').map(function(r) { var f = r.fields || {}; return { annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), nom: EUC_DEV610_t_(f.Nom_vacances), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), previsionnel: f.Previsionnel === true || /PREVISION/.test(EUC_DEV610_n_(f.Statut)), commentaire: EUC_DEV610_t_(f.Commentaire), actif: f.Actif !== false }; })
-    .filter(function(v) { return v.actif && v.debut && v.fin && (!annee || v.annee === annee); });
+    .filter(function(v) { return (v.actif || v.previsionnel) && v.debut && v.fin && (!annee || v.annee === annee); });
 }
 function EUC_DEV610_classes_() {
   return EUC_DEV610_lire_('Classes').map(function(r) { var f = r.fields || {}; return { id: Number(r.id), nom: EUC_DEV610_t_(f.Nom || f.Libelle), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), etab: EUC_DEV610_t_(f.Etab), actif: f.Actif !== false }; })

@@ -20,7 +20,8 @@ function grist(opts) {
   opts = opts || {};
   const tables = {
     Annees_Scolaires: [{ id: 1, fields: { Code: '2026-2027', Date_debut: sec('2026-09-01'), Date_fin: sec('2027-08-31'), Active: true } }, { id: 2, fields: { Code: '2027-2028', Date_debut: sec('2027-09-01'), Date_fin: sec('2028-08-31'), Previsionnelle: true } }],
-    Vacances_Scolaires: VAC.map((v, i) => ({ id: i + 1, fields: { Annee_scolaire: v[0], Nom_vacances: v[1], Date_debut: sec(v[2]), Date_fin: sec(v[3]), Previsionnel: !!v[4], Statut: v[4] ? 'Prévisionnel' : '', Actif: true } })),
+    /* Comme dans Grist : dates en texte ISO, années prévisionnelles décochées « Actif ». */
+    Vacances_Scolaires: VAC.map((v, i) => ({ id: i + 1, fields: { Annee_scolaire: v[0], Nom_vacances: v[1], Date_debut: v[2], Date_fin: v[3], Previsionnel: !!v[4], Statut: v[4] ? 'Prévisionnel' : '', Actif: !v[4] } })).concat([{ id: 99, fields: { Annee_scolaire: '2026-2027', Nom_vacances: 'Ancienne saisie', Date_debut: '2026-10-05', Date_fin: '2026-10-09', Actif: false } }]),
     Classes: CLASSES.map(c => ({ id: c[0], fields: { Nom: c[1], Classe_PFMP: c[2], Actif: c[3] !== false } })),
     Types_Planning: [{ id: 1, fields: { Type: 'PFMP Tbac', Couleur: '#00C853' } }, { id: 2, fields: { Type: 'P.dif.', Couleur: '#C00000' } }, { id: 3, fields: { Type: 'BTS_STAGE', Libelle: 'Stage BTS', Couleur: '#FF00CC' } }, { id: 4, fields: { Type: 'PFMP 1ère', Couleur: '#00C890' } }],
     Planning_Periodes: (opts.periodes || []).map(J)
@@ -67,6 +68,10 @@ test('vacances : Toussaint = S43-S44, été à partir de S27 ; le pont de l’As
   assert.deepStrictEqual(J([s[idx.TOUSSAINT.premier].numero, s[idx.TOUSSAINT.dernier].numero]), [43, 44]);
   assert.strictEqual(s[idx.ETE.premier].numero, 27); assert.strictEqual(idx.ASCENSION, undefined);
   const asc = s.find(x => x.lundi === '2027-05-03'); assert.strictEqual(asc.vacances, ''); assert.deepStrictEqual(J(asc.jours), [{ nature: 'VACANCES', nom: 'ASCENSION', nb: 2 }]);
+});
+test('vacances nommées autrement : reconnues par leurs dates', () => {
+  const t = (n, d, f) => k.EUC_DEV610_nomVacances_(n, d, f);
+  assert.deepStrictEqual([t('3', '2026-10-17', '2026-11-01'), t('', '2026-12-19', '2027-01-03'), t('B1', '2027-02-22', '2027-03-05'), t('B2', '2027-04-18', '2027-04-30'), t('x', '2027-05-06', '2027-05-07'), t('', '2027-07-03', '2027-08-31'), t('Vacances de la Toussaint')], ['TOUSSAINT', 'NOEL', 'HIVER', 'PRINTEMPS', 'ASCENSION', 'ETE', 'TOUSSAINT']);
 });
 test('Terminale BAC PRO : 3 sem. avant la Toussaint, puis 3 sem. accolées au P.dif. collé avant l’hiver (dates publiées 2026-2027)', () => {
   const { s, idx } = calendrier('2026-2027');
@@ -174,7 +179,8 @@ test('chargement : tables créées une fois, lignes initiales, année N+1 choisi
   assert.strictEqual(g.tables.EUC_PLAN_LIGNES.length, k.EUC_DEV610_LIGNES_DEFAUT_.length);
   assert.strictEqual(r.annee.code, '2027-2028'); assert.strictEqual(r.origineRegles, 'DEFAUT'); assert.ok(r.vacances.length === 5 && r.vacances.every(v => v.previsionnel));
   assert.deepStrictEqual(J(r.rattachements.TBP_MVA), [30, 31]); assert.strictEqual(r.publiees, 0);
-  const r2 = g.k.EUC_DEV610_charger({ annee: '2026-2027' }); assert.strictEqual(r2.annee.code, '2026-2027'); assert.ok(r2.vacances.every(v => !v.previsionnel));
+  const r2 = g.k.EUC_DEV610_charger({ annee: '2026-2027' }); assert.strictEqual(r2.annee.code, '2026-2027'); assert.ok(r2.vacances.every(v => !v.previsionnel)); assert.strictEqual(r2.vacances.length, 6, 'une vacance décochée et non prévisionnelle est ignorée');
+  assert.strictEqual(r2.vacances[0].debut, '2026-10-17');
   assert.ok(!g.calls.some(c => c.method === 'delete'));
   assert.throws(() => grist({ refuser: true }).k.EUC_DEV610_charger({}), /réservé/);
 });
@@ -267,6 +273,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   for (const fn of ['EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
+  assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
+  assert.match(h, /Aucune vacance trouvée pour/);
   assert.match(h, /@media print\{@page\{size:A3 landscape/); assert.match(h, /PRÉVISIONNEL/);
 });
 

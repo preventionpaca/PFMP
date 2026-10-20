@@ -171,7 +171,10 @@ function initialiser(){
   var a=D.annee,y=Number(a.code.slice(0,4));
   $('annee').innerHTML=D.annees.map(function(x){var r=x.code===D.courante?' (en cours)':x.code>D.courante?(x.code.slice(0,4)-D.courante.slice(0,4)===1?' (N+1)':' (N+2)'):'';return '<option value="'+esc(x.code)+'"'+(x.code===a.code?' selected':'')+'>'+esc(x.code+r)+'</option>';}).join('');$('annee').disabled=false;
   SEM=EUC_DEV610_semaines_(a.debut||y+'-09-01',a.fin||(y+1)+'-08-31');IDX=EUC_DEV610_marquerVacances_(SEM,D.vacances);
-  var prev=D.vacances.some(function(v){return v.previsionnel;});D.previsionnel=prev;
+  var prev=D.vacances.some(function(v){return v.previsionnel;});D.previsionnel=prev;afficherAlertes([]);$('changements').hidden=true;
+  var trouvees=Object.keys(IDX).length;
+  D.listeVacances=D.vacances.slice().sort(function(x,y){return x.debut.localeCompare(y.debut);}).map(function(v){return esc(v.nom)+' '+dfr(v.debut).slice(0,5)+'→'+dfr(v.fin).slice(0,5);}).join(' · ');
+  if(!trouvees)message('Aucune vacance trouvée pour '+esc(a.code)+' dans Vacances_Scolaires : les périodes collées aux vacances ne peuvent pas être placées.','erreur');
   $('base').innerHTML=!D.vacances.length?'<span class="chip PREV">Aucune vacance saisie pour cette année</span>':prev?'<span class="chip PREV">Vacances prévisionnelles — planning « Prévisionnel »</span>':'<span class="chip OFF">Vacances officielles</span>';
   var v=D.versions.slice().reverse(),brouillon=v.filter(function(x){return x.statut==='BROUILLON';})[0],choisie=brouillon||v[0];
   $('version').innerHTML='<option value="0">Nouvelle version</option>'+D.versions.map(function(x){return '<option value="'+x.numero+'">v'+x.numero+' — '+esc(LIBSTATUT(x.statut))+'</option>';}).join('');
@@ -186,7 +189,7 @@ function initialiser(){
 function LIBSTATUT(s){return {BROUILLON:'brouillon',PUBLIE:'publiée',REMPLACE:'remplacée',PREVISIONNEL_DIFFUSE:'prévisionnel diffusé'}[s]||s;}
 function ouvrirVersion(n){var x=D.versions.filter(function(v){return v.numero===n;})[0];if(!x)return;NUM=n;PER=JSON.parse(JSON.stringify(x.periodes||[]));SALE=false;$('version').value=String(n);$('commentaire').value=x.commentaire||'';}
 function apresChargement(info){
-  var a=D.annee;$('etat').innerHTML=esc(a.code)+' · '+SEM.length+' semaines · '+lignesScolaires().length+' lignes scolaires · '+D.versions.length+' version(s) · '+D.publiees+' période(s) en entreprise déjà publiées'+(info?'<br>'+info:'');
+  var a=D.annee;$('etat').innerHTML=esc(a.code)+' · '+SEM.length+' semaines · '+lignesScolaires().length+' lignes scolaires · '+D.versions.length+' version(s) · '+D.publiees+' période(s) en entreprise déjà publiées'+(D.listeVacances?'<br>Vacances : '+D.listeVacances:'')+(info?'<br>'+info:'');
   $('origineRegles').innerHTML=D.origineRegles==='ENREGISTREES'?'Règles enregistrées pour '+esc(a.code)+'.':D.origineRegles==='DEFAUT'?'<span class="alerte">Règles initiales (relevées sur le planning 2026-2027), pas encore enregistrées pour '+esc(a.code)+'.</span>':'<span class="alerte">Règles reprises de '+esc(D.origineRegles.replace('COPIE_',''))+', pas encore enregistrées pour '+esc(a.code)+'.</span>';
   $('titreImpression').textContent='Planning PFMP — stages — '+a.code+(D.previsionnel?' — PRÉVISIONNEL (dates de vacances non officielles)':'')+(NUM?' — version '+NUM:'');
   $('fLigne').innerHTML='<option value="">Toutes</option>'+lignesScolaires().map(function(l){return '<option value="'+esc(l.code)+'">'+esc(l.libelle)+'</option>';}).join('');
