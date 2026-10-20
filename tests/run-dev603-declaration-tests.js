@@ -139,7 +139,7 @@ test('DEV603 : branchements — route publique, verrou, validation JotForm, accu
   for (const t of ['EUC_DEV603_classes', 'EUC_DEV603_identifier', 'EUC_DEV603_deposer', 'EUC_ENT_rechercherSiret', 'EUC_DEV603_traiterApi', 'id="site"', 'class="piege"', 'id="captchaImg"', 'Nouveau code', 'occupe(b,', 'class="spin"', 'AbortController', "toLocaleUpperCase('fr-FR')"]) assert.ok(page.includes(t), t);
   assert.doesNotMatch(page, /<\?= *JSON\.stringify/);
   const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs');
-  assert.match(qr, /respNom=String\(respNom\)\.toLocaleUpperCase\('fr-FR'\);tNom=String\(tNom\)\.toLocaleUpperCase\('fr-FR'\);/);
+  assert.match(qr, /respNom=EUC_DEV602_nomCapitales_\(respNom\);/);
   assert.match(read('apps-script/Identites_Contacts_DEV602.html'), /\['responsableNom','tuteurNom'\]\.forEach/);
 });
 
@@ -182,7 +182,7 @@ test('DEV604 : jeu de test — aperçu puis création (classe TEST, période PFM
       const r = /^\/tables\/([^/]+)\/records$/.exec(p), t = tables[r[1]]; if (m === 'get') return { records: t };
       if (m === 'post') return { records: body.records.map(x => { const id = t.length + 1; t.push({ id, fields: x.fields }); return { id }; }) };
       body.records.forEach(x => Object.assign(t.find(y => y.id === x.id).fields, x.fields)); return {}; } };
-  vm.createContext(k); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js') + '\n' + read('apps-script/EUC_DEV604_JeuTest.js'), k);
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js') + '\n' + read('apps-script/EUC_DEV602_Identites.js') + '\n' + read('apps-script/EUC_DEV604_JeuTest.js'), k);
   k.EUC_SUIVI2_exigerAdmin_ = () => ({ email: 'admin@example.org' }); k.EUC_SUIVI2_aujourdhui_ = () => '2026-10-20';
   const q = { prenom: 'René', nom: 'Test', email: 'Admin@Example.org', naissance: '2008-01-01', debut: '2026-11-02', fin: '2026-11-27' };
   const a = k.EUC_DEV604_jeuTest(q);
@@ -296,6 +296,16 @@ test('DEV606 : code de secours de la convention — signé, imprimé sous le QR,
   assert.match(read('apps-script/EUC_CONVENTION_PFMP_PdfV95.gs'), /data\.codeSecours=typeof EUC_DEV603_codeConvention_==='function'\?EUC_DEV603_codeConvention_\(rid\):'';/);
   const pdf = read('apps-script/Convention_PFMP_PdfV95.html'); assert.match(pdf, /Sans QR : Atrium \+ code/); assert.match(pdf, /if\(data\.codeSecours\)/);
   const page = read('apps-script/Declaration_Entreprise_DEV603.html'); assert.ok(page.includes('EUC_DEV603_ouvrirCode')); assert.ok(page.includes('target="_top" href="'));
+});
+
+test('DEV607 : NOM en capitales sans accents partout (prénom inchangé, majuscule initiale)', () => {
+  const k = contexte(base());
+  for (const [x, y] of [['Ozturk', 'OZTURK'], ['Lopès da Conceição', 'LOPES DA CONCEICAO'], ["d'Arcy", "D'ARCY"], ['Hélène-Bœuf', 'HELENE-BOEUF'], ['  le   gall ', 'LE GALL']]) assert.strictEqual(k.EUC_DEV602_nomCapitales_(x), y, x);
+  assert.strictEqual(k.EUC_DEV603_prenom_('rené'), 'René');
+  const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000), t = k.__tables || null;
+  k.EUC_DEV603_deposer({ jeton, periodeId: 100, siret: '73282932000074', responsable: Object.assign({}, resp, { nom: 'Gonçalves' }), tuteurEstResponsable: true });
+  for (const f of ['apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs']) assert.match(read(f), /respNom=EUC_DEV602_nomCapitales_\(respNom\);tNom=EUC_DEV602_nomCapitales_\(tNom\);/);
+  for (const f of ['apps-script/Declaration_Entreprise_DEV603.html', 'apps-script/Identites_Contacts_DEV602.html']) assert.match(read(f), /normalize\('NFD'\)\.replace\(\/\[\\u0300-\\u036f\]\/g,''\)\.toUpperCase\(\)/, f);
 });
 
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);

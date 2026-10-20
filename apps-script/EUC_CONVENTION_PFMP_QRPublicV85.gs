@@ -468,7 +468,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
   if(typeof EUC_DEV602_verifierPersonne_==='function'){
     respCivilite=EUC_DEV602_verifierPersonne_('Responsable de l’entreprise',d.responsableCivilite,respPrenom,respNom).civilite;
     /* NOM en capitales partout (choix de l'administration) ; le prénom garde sa majuscule. */
-    respNom=String(respNom).toLocaleUpperCase('fr-FR');tNom=String(tNom).toLocaleUpperCase('fr-FR');
+    respNom=EUC_DEV602_nomCapitales_(respNom);tNom=EUC_DEV602_nomCapitales_(tNom);
     tCivilite=tuteurEst?respCivilite:EUC_DEV602_verifierPersonne_('Tuteur',d.tuteurCivilite,tPrenom,tNom).civilite;
   }
 

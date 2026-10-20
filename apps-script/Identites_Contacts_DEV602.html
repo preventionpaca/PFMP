@@ -33,7 +33,7 @@
   function boot(){
     ajouterCivilite('responsable');ajouterCivilite('tuteur');
     /* NOM en capitales (le prénom garde sa majuscule). */
-    ['responsableNom','tuteurNom'].forEach(function(x){var el=champ(x);if(el){el.setAttribute('autocapitalize','characters');el.addEventListener('blur',function(){el.value=t(el.value).toLocaleUpperCase('fr-FR');});}});
+    ['responsableNom','tuteurNom'].forEach(function(x){var el=champ(x);if(el){el.setAttribute('autocapitalize','characters');el.addEventListener('blur',function(){el.value=t(el.value).replace(/[œŒ]/g,'OE').replace(/[æÆ]/g,'AE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();});}});
     var same=document.getElementById('same');
     function sync(){var c=champ('tuteurCivilite');if(c)c.required=!memeTuteur();}
     if(same)same.addEventListener('change',sync);sync();

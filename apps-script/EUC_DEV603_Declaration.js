@@ -20,7 +20,7 @@ function EUC_DEV603_t_(v) { return v == null ? '' : String(v).trim().replace(/\s
 function EUC_DEV603_n_(v) { return EUC_DEV603_t_(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, ''); }
 /* Mise en forme : Prénom avec majuscule (Jean-Pierre), NOM en capitales (LE GALL). */
 function EUC_DEV603_prenom_(v) { return EUC_DEV603_t_(v).toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(_, s, l) { return s + l.toLocaleUpperCase('fr-FR'); }); }
-function EUC_DEV603_nom_(v) { return EUC_DEV603_t_(v).toLocaleUpperCase('fr-FR'); }
+function EUC_DEV603_nom_(v) { return EUC_DEV602_nomCapitales_(v); }
 
 /* ---------- Captcha (lettres tracées, sans texte dans l'image) ---------- */
 var EUC_DEV603_ALPHABET_ = 'ABCDEFGHJKMNPRSTUVWXYZ23456789';

@@ -43,7 +43,7 @@ function EUC_DEV604_jeuTest(q) {
   var annee = EUC_SUIVI2_anneeCourante_(EUC_SUIVI2_aujourdhui_());
   var nomClasse = EUC_DEV604_t_(q.classe || 'TEST PFMP').toUpperCase();
   if (!EUC_SUIVI2_classeTest_(nomClasse)) throw new Error('Le nom de la classe doit commencer par « TEST » (ex. TEST PFMP).');
-  var prenom = EUC_DEV604_t_(q.prenom), nom = EUC_DEV604_t_(q.nom).toUpperCase(), email = EUC_DEV604_t_(q.email).toLowerCase(), naissance = EUC_DEV604_t_(q.naissance);
+  var prenom = EUC_DEV604_t_(q.prenom), nom = EUC_DEV602_nomCapitales_(q.nom), email = EUC_DEV604_t_(q.email).toLowerCase(), naissance = EUC_DEV604_t_(q.naissance);
   var debut = EUC_DEV604_t_(q.debut), fin = EUC_DEV604_t_(q.fin), libelle = EUC_DEV604_t_(q.libelle || 'PFMP test');
   if (!prenom || !nom) throw new Error('Indiquez le prénom et le nom de l’élève de test.');
   if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(email)) throw new Error('Adresse courriel invalide.');
@@ -60,7 +60,7 @@ function EUC_DEV604_jeuTest(q) {
   var eleve = classe ? EUC_DEV604_lignes_('EUC_ELEVES_PFMP').filter(function(r) { var f = r.fields || {}; return EUC_DEV604_n_(f.Nom) === EUC_DEV604_n_(nom) && EUC_DEV604_n_(f.Prenom) === EUC_DEV604_n_(prenom); })[0] : null;
   plan.eleve = { prenom: prenom, nom: nom, email: email, naissance: naissance, existe: !!eleve, id: eleve ? Number(eleve.id) : 0 };
   /* Professeur principal de test (facultatif) : créé dans la table des professeurs, rattaché à la classe. */
-  var ppEmail = EUC_DEV604_t_(q.ppEmail).toLowerCase(), ppPrenom = EUC_DEV604_t_(q.ppPrenom) || 'Professeur', ppNom = (EUC_DEV604_t_(q.ppNom) || 'TEST').toUpperCase();
+  var ppEmail = EUC_DEV604_t_(q.ppEmail).toLowerCase(), ppPrenom = EUC_DEV604_t_(q.ppPrenom) || 'Professeur', ppNom = EUC_DEV602_nomCapitales_(EUC_DEV604_t_(q.ppNom) || 'TEST');
   if (ppEmail && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(ppEmail)) throw new Error('Adresse du professeur principal de test invalide.');
   var prof = ppEmail ? EUC_DEV604_lignes_('EUC_PROFESSEURS_PFMP').filter(function(r) { return EUC_DEV604_t_((r.fields || {}).Email).toLowerCase() === ppEmail; })[0] : null;
   if (ppEmail) plan.pp = { prenom: ppPrenom, nom: ppNom, email: ppEmail, existe: !!prof, id: prof ? Number(prof.id) : 0 };

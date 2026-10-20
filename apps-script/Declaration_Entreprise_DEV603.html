@@ -112,7 +112,7 @@ function libre(b){b.disabled=false;b.textContent=b.dataset.lib||b.textContent;}
 function erreur(id,e){$(id).innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';}
 function etape(n){$('s3b').hidden=n!=='3b';[1,2,3,4,5].forEach(function(i){$('s'+i).hidden=i!==n;if($('e'+i))$('e'+i).className=i<=n?'on':'';});window.scrollTo(0,0);}
 function prenom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,s,l){return s+l.toLocaleUpperCase('fr-FR');});}
-function nom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleUpperCase('fr-FR');}
+function nom(v){return String(v||'').trim().replace(/\s+/g,' ').replace(/[œŒ]/g,'OE').replace(/[æÆ]/g,'AE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}
 function personne(id){$(id).innerHTML='<div class="trois"><div><label>Civilité</label><select class="civ"><option value="">—</option><option>M.</option><option>Mme</option></select></div><div><label>Prénom</label><input class="pre" autocapitalize="words"></div><div><label>NOM</label><input class="nom" autocapitalize="characters"></div></div>'+
   '<label>Fonction</label><input class="fon" placeholder="Gérant, chef d’atelier…"><div class="deux"><div><label>Téléphone</label><input class="tel" type="tel" inputmode="tel" placeholder="06 12 34 56 78"></div><div><label>Courriel</label><input class="mel" type="email"></div></div>';
   var z=$(id);surveiller(z.querySelector('.tel'),'FR');surveiller(z.querySelector('.mel'));z.querySelector('.tel').placeholder='06 12 34 56 78';z.querySelector('.pre').addEventListener('blur',function(){this.value=prenom(this.value);});z.querySelector('.nom').addEventListener('blur',function(){this.value=nom(this.value);});}

@@ -11,6 +11,10 @@
 var EUC_DEV602_INTERDITS_ = ['monsieur', 'madame', 'mademoiselle', 'mr', 'mme', 'mlle', 'm', 'mm', 'patron', 'patronne', 'chef', 'cheffe', 'gerant', 'gerante', 'responsable', 'tuteur', 'tutrice',
   'directeur', 'directrice', 'inconnu', 'inconnue', 'aucun', 'aucune', 'rien', 'test', 'nc', 'na', 'xx', 'xxx', 'idem', 'pareil', 'moi', 'lui', 'elle', 'boss', 'manager', 'secretaire', 'accueil', 'contact', 'entreprise', 'societe'];
 
+/* NOM de famille : capitales sans accents (choix de l'administration : un seul format, quelle que soit l'origine du nom). */
+function EUC_DEV602_nomCapitales_(v) {
+  return String(v == null ? '' : v).trim().replace(/\s+/g, ' ').replace(/[œŒ]/g, 'OE').replace(/[æÆ]/g, 'AE').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+}
 function EUC_DEV602_t_(v) { return v == null ? '' : String(v).trim().replace(/\s+/g, ' '); }
 function EUC_DEV602_n_(v) { return EUC_DEV602_t_(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z' -]/g, '').trim(); }
 
@@ -59,7 +63,7 @@ function EUC_DEV602_jotform_(row, raw) {
     var R = r[0], x = r[1];
     out[R + '_civilite'] = EUC_DEV602_civilite_(pick(['Civilité du ' + x, 'Civilite du ' + x, 'Civilité ' + x, R + '_civilite']));
     out[R + '_prenom'] = EUC_DEV528_personName_(pick(['Prénom du ' + x, 'Prenom du ' + x, 'Prénom ' + x, 'Prenom ' + x, R + '_prenom']));
-    out[R + '_nom'] = EUC_DEV528_personName_(pick(r[2])).toLocaleUpperCase('fr-FR');
+    out[R + '_nom'] = EUC_DEV602_nomCapitales_(pick(r[2]));
     out[R + '_fonction'] = pick(['Fonction du ' + x, 'Fonction ' + x, R + '_fonction']);
     out[R + '_telephone'] = pick(['Téléphone du ' + x, 'Telephone du ' + x, 'Téléphone ' + x, R + '_telephone']);
     out[R + '_courriel'] = pick(['E-mail du ' + x, 'Email du ' + x, 'Adresse e-mail du ' + x, 'Courriel du ' + x, 'Courriel ' + x, 'Email ' + x, R + '_courriel']);
