@@ -322,3 +322,27 @@ function EUC_DEV603_signalerProbleme(q) {
   EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id);
   return { ok: true, numero: numero, bureau: EUC_DEV603_BUREAU_ };
 }
+
+/* ---------- DEV606 : code de secours imprimé sur la convention (QR illisible ou convention perdue) ---------- */
+/* Code « identifiant-6 caractères » signé : on ne devine pas celui d'un autre élève en changeant un chiffre. */
+function EUC_DEV603_codeConvention_(rid) {
+  rid = Number(rid); if (!rid) return '';
+  var h = EUC_DEV598_sig_('Q|' + rid), out = '';
+  for (var i = 0; i < 6; i++) out += EUC_DEV603_ALPHABET_.charAt(parseInt(h.substr(i * 2, 2), 16) % EUC_DEV603_ALPHABET_.length);
+  return rid + '-' + out;
+}
+function EUC_DEV603_lireCode_(code) {
+  var c = EUC_DEV603_t_(code).toUpperCase().replace(/[\s.]/g, '').replace(/[–—_]/g, '-'), m = /^(\d+)-?([A-Z0-9]{6})$/.exec(c);
+  if (!m || !EUC_DEV598_egal_(EUC_DEV603_codeConvention_(m[1]), m[1] + '-' + m[2])) throw new Error('Code de convention inconnu : recopie-le exactement comme sur ta convention (ex. 4821-K7QM9P).');
+  return Number(m[1]);
+}
+/* Le code ouvre la même page que le QR code (qui redemande la date de naissance de l'élève). */
+function EUC_DEV603_ouvrirCode(q) {
+  q = q || {};
+  if (EUC_DEV603_t_(q.site)) throw new Error('Envoi refusé.');
+  EUC_DEV603_verifierCaptcha_(q.captchaJeton, q.captcha);
+  var rid = EUC_DEV603_lireCode_(q.code);
+  var a = (EUC_ENT_grist('get', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ id: [rid] }))).records || [])[0];
+  if (!a || (a.fields || {}).Revoked === true) throw new Error('Cette convention n’est plus active : passe au bureau G205 — bureau des formations et des entreprises.');
+  return { ok: true, url: EUC_DEV598_base_() + '?page=pfmp&rid=' + rid };
+}

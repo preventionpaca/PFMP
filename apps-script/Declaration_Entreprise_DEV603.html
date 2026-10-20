@@ -39,6 +39,11 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
   <div id="etat" class="note" role="status">Chargement…</div>
 
   <section id="s1" hidden>
+    <div class="officiel" style="margin:0 0 12px">
+      <b>Tu as ta convention papier ?</b> Sous le QR code figure un <b>code de secours</b> (ex. 4821-K7QM9P).
+      <div class="deux" style="margin-top:6px"><input id="codeConv" placeholder="Code de la convention" autocomplete="off" autocapitalize="characters"><button type="button" id="bCode" style="margin-top:0">Utiliser mon code</button></div>
+      <span class="note">Recopie aussi le code de l’image plus bas. Sinon, remplis le formulaire ci-dessous.</span><p id="mCode" role="status"></p>
+    </div>
     <h2>1. Qui es-tu ?</h2>
     <p class="note">Écris ton nom et ton prénom comme sur Pronote. Ta date de naissance sert à vérifier que c’est bien toi.</p>
     <label for="classe">Classe</label><select id="classe"><option value="">— choisir —</option></select>
@@ -125,6 +130,9 @@ function nouveauCode(){appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captc
 /* Étape 1 */
 $('nomEleve').addEventListener('blur',function(){this.value=nom(this.value);});$('prenomEleve').addEventListener('blur',function(){this.value=prenom(this.value);});
 $('nouveauCode').onclick=nouveauCode;
+$('bCode').onclick=function(){var b=this;$('mCode').textContent='';if(!$('captcha').value.trim()){erreur('mCode','Recopie d’abord le code de l’image (plus bas).');return;}occupe(b,'Vérification…');
+  appel('EUC_DEV603_ouvrirCode',{code:$('codeConv').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},function(r){libre(b);$('mCode').innerHTML='<a class="plein" style="display:inline-block;background:#08745f;color:#fff;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none" target="_top" href="'+esc(r.url)+'">Continuer vers ma convention →</a>';},
+    function(e){libre(b);erreur('mCode',e);nouveauCode();});};
 $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérification…');
   appel('EUC_DEV603_identifier',{classeId:Number($('classe').value),nom:$('nomEleve').value,prenom:$('prenomEleve').value,naissance:$('naissance').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},
     function(r){libre(b);JETON=r.jeton;PERIODES=r.periodes;$('bonjour').textContent='Bonjour '+r.eleve+' ('+r.classe+').';

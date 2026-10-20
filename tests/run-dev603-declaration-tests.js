@@ -279,4 +279,23 @@ test('DEV605 : copie au professeur principal de la classe (ligne automatique coc
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /c\.ppIds = c\.ppIds \|\| \[\]/);
 });
 
+test('DEV606 : code de secours de la convention — signé, imprimé sous le QR, ouvre la page du QR code après captcha', () => {
+  const t = base(), k = contexte(t);
+  const code = k.EUC_DEV603_codeConvention_(4821);
+  assert.match(code, /^4821-[ABCDEFGHJKMNPRSTUVWXYZ23456789]{6}$/);
+  assert.strictEqual(k.EUC_DEV603_lireCode_(' ' + code.toLowerCase().replace('-', ' - ') + ' '), 4821);
+  assert.strictEqual(k.EUC_DEV603_lireCode_(code.replace('-', '')), 4821);
+  assert.throws(() => k.EUC_DEV603_lireCode_(code.replace(/^4821/, '4822')), /inconnu/);
+  assert.throws(() => k.EUC_DEV603_lireCode_('4821-AAAAAA'), /inconnu/);
+  t.EUC_ACCES_FORMULAIRES_PFMP.push({ id: 4821, fields: {} }, { id: 4822, fields: { Revoked: true } });
+  k.EUC_DEV598_base_ = () => 'https://script.google.com/macros/s/ID/exec';
+  const r = k.EUC_DEV603_ouvrirCode({ code, captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZZ') });
+  assert.strictEqual(r.url, 'https://script.google.com/macros/s/ID/exec?page=pfmp&rid=4821');
+  assert.throws(() => k.EUC_DEV603_ouvrirCode({ code, captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZY') }), /incorrect/);
+  assert.throws(() => k.EUC_DEV603_ouvrirCode({ code: k.EUC_DEV603_codeConvention_(4822), captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZZ') }), /plus active/);
+  assert.match(read('apps-script/EUC_CONVENTION_PFMP_PdfV95.gs'), /data\.codeSecours=typeof EUC_DEV603_codeConvention_==='function'\?EUC_DEV603_codeConvention_\(rid\):'';/);
+  const pdf = read('apps-script/Convention_PFMP_PdfV95.html'); assert.match(pdf, /Sans QR : Atrium \+ code/); assert.match(pdf, /if\(data\.codeSecours\)/);
+  const page = read('apps-script/Declaration_Entreprise_DEV603.html'); assert.ok(page.includes('EUC_DEV603_ouvrirCode')); assert.ok(page.includes('target="_top" href="'));
+});
+
 console.log(`\n${n} tests DEV603 formulaire de secours réussis.`);
