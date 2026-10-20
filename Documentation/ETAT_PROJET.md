@@ -1,6 +1,6 @@
 # État du projet Eucalyptus PFMP
 
-## Mise à jour du 20 octobre 2026 — DEV610 plannings annuels (lot A), non publié
+## Mise à jour du 20 octobre 2026 — DEV610 plannings annuels (lot A) publié (@1084)
 
 - Nouvelle page `?page=plannings-pfmp` (Administration › Paramétrage global ›
   Plannings annuels), commit `9aeec9a` sur `codex/dev570-book-familles`. Elle
@@ -14,13 +14,14 @@
   à trancher), suite complète 1053/1053. Page pilotée dans Chromium sans tête
   avec un serveur simulé : sélection, placement, scission, régénération sans
   doublon, spinner, erreur, délai dépassé, aperçu prévisionnel.
-- **Publication verte bloquée** : `scripts/pfmp-release.sh release-stable` a
-  échoué à l'étape 2/6 (`invalid_grant` / `invalid_rapt`, jeton clasp à
-  renouveler par `clasp login`). Rien n'a été poussé ni déployé ; les Web Apps
-  vertes restent sur leur version précédente. Aucune table Grist n'a encore été
-  créée et aucune écriture Grist n'a eu lieu.
-- Routes, navigation et parcours métier sur le vert : non exécutés (pas de
-  publication).
+- Publication verte : premier essai bloqué par le jeton clasp (`invalid_rapt`),
+  rien poussé ; second essai réussi, version immuable `@1084` sur les deux Web
+  Apps vertes, contrôle HTTP 31/31 routes dont `plannings-pfmp`.
+- Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
+  le navigateur intégré n'est pas connecté au compte Google du lycée (page
+  « Connexion administration PFMP »). Aucune table Grist créée à ce stade :
+  elles le seront au premier chargement de la page par l'administration.
+  Aucune publication dans `Planning_Periodes`.
 
 ## Mise à jour du 19 octobre 2026 — DEV601 répertoire entreprises plein écran et mis en cache
 
