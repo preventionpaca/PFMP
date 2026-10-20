@@ -22,6 +22,7 @@
     {"page": "apprentissage-public-pfmp", "scope": "admin", "expected": "Gestion des apprentis"},
     {"page": "conventions-pfmp", "scope": "admin", "expected": "Génération des conventions PFMP"},
     {"page": "destinataires-envois-pfmp", "scope": "admin", "expected": "Destinataires"},
+    {"page": "plannings-pfmp", "scope": "admin", "expected": "Plannings annuels"},
     {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
     {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},
     {"page": "gestion-pfmp", "scope": "admin", "expected": "Gestion administrative PFMP"},

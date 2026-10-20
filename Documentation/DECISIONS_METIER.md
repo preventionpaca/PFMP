@@ -1,5 +1,17 @@
 # Décisions métier permanentes
 
+- Plannings annuels (20 octobre 2026) : les durées et ancrages des périodes en
+  entreprise sont définis par année scolaire dans `EUC_PLAN_REGLES` (collées à
+  des vacances ou accolées à une autre période). Le rattachement d'une ligne de
+  planning aux classes Pronote est annuel et remplit toujours
+  `Planning_Periodes.Classes_concernees`. L'appel a lieu la première semaine de
+  chaque période en entreprise ; la visite la dernière semaine des périodes en
+  entreprise des mixités ; les classes entières ont des appels et visites placés
+  à la main. Un planning dont les vacances sont prévisionnelles (N+2) reste un
+  document « Prévisionnel » et n'est jamais publié dans `Planning_Periodes`.
+  Publier ne supprime rien : une période retirée est désactivée, une période
+  déplacée est modifiée sur place pour que les conventions gardent leur période.
+
 - Dans le parcours QR élève, une réponse perdue ou un échec apparent après le
   clic sur « Enregistrer » impose une relecture serveur avant d'afficher le
   résultat. Si la donnée est déjà persistée, l'écran confirme « déjà
