@@ -20,6 +20,21 @@
     créneau ; récapitulatif par formateur avec le total d'heures
     d'intervention à l'année. But : répartition financière équilibrée des
     heures entre formateurs.
+  - **Formateurs à la demi-journée** : le matin et l'après-midi peuvent avoir
+    des formateurs différents ; la saisie des initiales se fait donc par
+    demi-journée.
+  - **Formation complémentaire (partenariat carrosseries 5 Star, CAP
+    peintre)** : modules ajoutés en plus de la formation, auxquels se mêlent
+    des scolaires. Nouveau type de période (« Formation complémentaire » ou
+    « 5 Star », libellé à arrêter), placé sur le calendrier avec ses dates et
+    ses heures par formateur et par demi-journée. Ces heures sont **en plus** :
+    elles ne sont jamais comptées dans le total annuel d'apprentissage du CAP
+    ni comparées à son quota. Incident à l'origine (20/10/2026) : des heures
+    surlignées en orange sans formateur avaient faussé le total du planning
+    envoyé au CFA.
+    - Avant publication dans `Planning_Periodes` : ajouter le type à la liste
+      Grist (accord explicite requis) et vérifier que les écrans consommateurs
+      (conventions, suivi, ordres de mission) ne le prennent pas pour une PFMP.
   - Calendriers de classe imprimables, en colonnes par mois (D / J / H), comme
     l'annexe 32a ; calendrier à part « formation continue et alternance classe
     entière » (placement manuel, appels et visites manuels).
