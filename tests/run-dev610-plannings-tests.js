@@ -274,7 +274,7 @@ test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_pla
   ] });
   g.tables.Types_Planning.push({ id: 9, fields: { Type: 'VISITE' } }, { id: 10, fields: { Type: 'PFMP T CAP' } }, { id: 11, fields: { Type: 'ENT.' } });
   g.k.EUC_DEV610_charger({ annee: '2026-2027' });
-  const ecritures = () => g.calls.filter(c => c.method !== 'get' && /Planning_Periodes|apply/.test(c.p)).length;
+  const ecritures = () => g.calls.filter(c => c.method !== 'get' && (/Planning_Periodes/.test(c.p) || (c.p === '/apply' && JSON.stringify(c.body).includes('Planning_Periodes')))).length;
   const ap = g.k.EUC_DEV610_calibrer({});
   assert.strictEqual(ap.apercu, true); assert.strictEqual(ecritures(), 0, 'l’aperçu n’écrit rien');
   assert.deepStrictEqual(J(ap.douteux.map(x => x.id)), [500]);
@@ -283,7 +283,7 @@ test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_pla
   assert.strictEqual(g.k.EUC_DEV610_calibrer({ confirmation: 'NON' }).apercu, true); assert.strictEqual(ecritures(), 0, 'sans confirmation CALIBRER, rien n’est écrit');
   const r = g.k.EUC_DEV610_calibrer({ confirmation: 'CALIBRER' });
   assert.strictEqual(r.apercu, false);
-  const a = J(g.opts.applies);
+  const a = J(g.opts.applies).filter(x => JSON.stringify(x).includes('Planning_Periodes'));
   assert.deepStrictEqual(a[0], [['AddColumn', 'Planning_Periodes', 'Ligne_planning', { type: 'Ref:EUC_PLAN_LIGNES', isFormula: false, label: 'Ligne de planning' }]]);
   assert.deepStrictEqual(a[1], [['SetDisplayFormula', 'Planning_Periodes', null, 900, '$Ligne_planning.Libelle']]);
   const mod = a[2]; assert.deepStrictEqual(mod.slice(0, 3).map(x => [x[2], x[3].formula, x[3].recalcWhen, x[3].recalcDeps]), [['Formation', '$Ligne_planning.Formation if $Ligne_planning and $Ligne_planning.Formation else value', 1, ['L', 900]], ['Niveau', '$Ligne_planning.Niveau if $Ligne_planning and $Ligne_planning.Niveau else value', 1, ['L', 900]], ['Ligne_sheet', '$Ligne_planning.Ligne_sheet if $Ligne_planning and $Ligne_planning.Ligne_sheet else value', 1, ['L', 900]]]);
@@ -299,6 +299,33 @@ test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_pla
   const r2 = g.k.EUC_DEV610_calibrer({}); assert.deepStrictEqual([r2.schema.filter(x => /Ligne_planning|Recopier/.test(x)).length, r2.aCorriger, r2.douteux.length], [0, 0, 1]);
   f(369).Formation = 'Autre chose'; f(369).Niveau = 'X';
   const rep = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' }); assert.ok(rep.periodes.some(p => p.ligne === 'MIX_1BTS_MV' && p.debut === '2026-10-12'));
+});
+test('organisation du tableau : ordre et groupes enregistrés, nouvelle classe proposée à sa place, Calendrier en liste, rien de supprimé', () => {
+  const lignes = lignesDefaut().map((l, i) => Object.assign({ ordre: (i + 1) * 10 }, l));
+  const p = k.EUC_DEV610_ligneProposee_({ id: 777, nom: '1MELEC2', classePfmp: '1MELEC2', etab: 'LP' }, lignes);
+  assert.deepStrictEqual([p.calendrier, p.groupe, p.profil, p.apres], ['SCOLAIRE', '1 BAC PRO', '1BACPRO', '1BP_MELEC']);
+  assert.deepStrictEqual([k.EUC_DEV610_ligneProposee_({ nom: 'TPEEB 21', classePfmp: 'TPEEB 21', etab: 'GRETA', modalite: 'Classe entière' }, lignes).calendrier, k.EUC_DEV610_ligneProposee_({ nom: 'CAP X', classePfmp: 'CAP X', etab: 'CFA', modalite: 'Classe entière' }, lignes).calendrier], ['GRETA', 'CLASSE_ENTIERE']);
+  assert.strictEqual(k.EUC_DEV610_nouveauCode_('1 BAC PRO — Élec 2', ['1_BAC_PRO_ELEC_2']), '1_BAC_PRO_ELEC_2_2');
+  const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.ok(g.opts.applies.some(a => a[0][0] === 'ModifyColumn' && a[0][2] === 'Calendrier' && JSON.parse(a[0][3].widgetOptions).choices.join() === 'SCOLAIRE,MIXITE,CLASSE_ENTIERE,GRETA'));
+  assert.deepStrictEqual(J(r.calendriers), ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE', 'GRETA']);
+  const org = J(r.lignes).sort((a, b) => a.ordre - b.ordre), i = org.findIndex(l => l.code === 'MIX_TBP'), mix = org.splice(i, 1)[0];
+  org.splice(org.findIndex(l => l.code === 'TBP_CIEL'), 0, mix);
+  org.push({ id: 0, libelle: '1 BAC PRO — 1MELEC2', groupe: '1 BAC PRO', calendrier: 'SCOLAIRE', classePfmp: '1MELEC2', profil: '1BACPRO', formation: '1 BAC PRO', niveau: 'MELEC2', actif: true });
+  org.find(l => l.code === 'TPMMA').actif = false;
+  assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org.map(l => Object.assign({}, l, l.code === 'TSEC' ? { calendrier: 'FC' } : {})) }), /calendrier/);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org.map(l => Object.assign({}, l, l.code === 'TSEC' ? { groupe: '' } : {})) }), /groupe/);
+  const res = g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org });
+  assert.deepStrictEqual([res.creees, res.desactivees], [1, 0]);
+  const lu = g.k.EUC_DEV610_lignes_(), codes = lu.map(l => l.code);
+  assert.strictEqual(codes.indexOf('MIX_TBP') + 1, codes.indexOf('TBP_CIEL'), 'la mixité est placée juste avant CIEL');
+  assert.strictEqual(lu[lu.length - 1].code, '1MELEC2'); assert.strictEqual(lu[lu.length - 1].profil, '1BACPRO');
+  assert.strictEqual(lu.find(l => l.code === 'TPMMA').actif, false);
+  const sans = org.filter(l => l.code !== 'CQPM_ASC'); const res2 = g.k.EUC_DEV610_enregistrerOrganisation({ lignes: sans.concat([]) .map(l => l.id ? l : Object.assign({}, l, { id: lu.find(x => x.code === '1MELEC2').id })) });
+  assert.strictEqual(res2.desactivees, 1); assert.strictEqual(g.k.EUC_DEV610_lignes_().find(l => l.code === 'CQPM_ASC').actif, false);
+  assert.ok(!g.calls.some(c => c.method === 'delete'));
+  const h = read('apps-script/Plannings_DEV610.html');
+  for (const t of ['data-p="pOrganisation"', 'draggable="true"', "addEventListener('drop'", "occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation'", 'Ajouter au tableau', 'function etiquette(l)']) assert.ok(h.includes(t), t);
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
@@ -357,7 +384,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');

@@ -35,6 +35,11 @@
   `EUC_PLAN_LIGNES`), Formation / Niveau / Ligne_sheet recopiés par formule
   déclenchée, Type en liste déroulante, ligne renseignée sur les périodes
   existantes avec aperçu ; cas douteux listés, jamais écrits.
+- Onglet « Organisation du tableau » : l'ordre du planning se règle par
+  glisser-déposer (ou ↑ ↓) sur toutes les lignes, mixités placées sous leurs
+  classes ; groupe, libellé, calendrier (liste de 4 valeurs, aussi en liste
+  dans Grist), Formation / Niveau, classe PFMP et règles éditables ; les
+  classes Pronote sans ligne sont proposées à leur place. Aucune suppression.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :
