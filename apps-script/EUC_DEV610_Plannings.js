@@ -13,11 +13,12 @@
  *   EUC_PLAN_REGLES          durées et ancrages, par année scolaire et par profil
  *   EUC_PLAN_VERSIONS        versions d'un planning annuel (périodes en JSON : historique intégral)
  *   EUC_PLAN_JOURS_PARTICULIERS  jours travaillés en rattrapage, non travaillés, banalisés
+ *   EUC_PLAN_HEURES          heures et formateurs saisis par demi-journée dans le calendrier d'une formation (lot B)
  *
  * Seules les périodes en entreprise des calendriers scolaires (PFMP, P.dif., stages BTS) sont publiées
  * dans Planning_Periodes ; une année dont les vacances sont prévisionnelles ne peut pas être publiée.
  */
-var EUC_DEV610_T_ = { lignes: 'EUC_PLAN_LIGNES', rattachements: 'EUC_PLAN_LIGNES_CLASSES', regles: 'EUC_PLAN_REGLES', versions: 'EUC_PLAN_VERSIONS', jours: 'EUC_PLAN_JOURS_PARTICULIERS' };
+var EUC_DEV610_T_ = { lignes: 'EUC_PLAN_LIGNES', rattachements: 'EUC_PLAN_LIGNES_CLASSES', regles: 'EUC_PLAN_REGLES', versions: 'EUC_PLAN_VERSIONS', jours: 'EUC_PLAN_JOURS_PARTICULIERS', heures: 'EUC_PLAN_HEURES' };
 var EUC_DEV610_COMMENTAIRE_ = 'Générateur de plannings';
 
 /* ===================== Calcul pur (partagé avec la page, voir EUC_DEV610_codeClient_) ===================== */
@@ -165,6 +166,35 @@ function EUC_DEV610_appels_(periodes, semaines) {
   });
   return out;
 }
+/* Formation complémentaire (ex. partenariat 5 Star du CAP peintre) : heures en plus de la formation, jamais publiées
+ * ni comptées dans le quota ; le complément de libellé (« 5 Star ») distingue les totaux. */
+var EUC_DEV610_TYPE_COMPLEMENTAIRE_ = 'Formation complémentaire';
+function EUC_DEV610_estComplementaire_(type) { return /^FORMATIONCOMPLEMENTAIRE/.test(EUC_DEV610_n_(type)); }
+function EUC_DEV610_libelleType_(p) { return String(p && p.type || '') + (p && p.complement ? ' – ' + p.complement : ''); }
+/* Bilan des heures d'une formation (calcul pur, partagé avec la page).
+ * jours : [{ date, nature: 'FORMATION' | 'COMPLEMENTAIRE', complement }] (jours de cours et de formation complémentaire) ;
+ * reglages : { matin, apresMidi } heures par défaut ; saisies : { date: { hm, ha, fm, fa } } (heures vides = défaut).
+ * Rend les jours avec leurs heures, le total de la formation, un total par formation complémentaire,
+ * le récapitulatif par formateur (deux totaux séparés) et les heures sans formateur. */
+function EUC_DEV610_bilanHeures_(jours, reglages, saisies) {
+  var r2 = function(x) { return Math.round(x * 100) / 100; }, num = function(v, d) { return v === '' || v == null || !isFinite(Number(v)) ? d : Number(v); };
+  var dm = num(reglages && reglages.matin, 4), da = num(reglages && reglages.apresMidi, 3), parF = {}, ordre = [];
+  var out = { jours: [], formation: 0, complementaires: {}, formateurs: [], sansFormateur: { formation: 0, complementaires: {} } };
+  var ajouter = function(cible, comp, h) { if (comp == null) cible.formation = r2(cible.formation + h); else cible.complementaires[comp] = r2((cible.complementaires[comp] || 0) + h); };
+  (jours || []).forEach(function(j) {
+    var s = (saisies || {})[j.date] || {}, comp = j.nature === 'COMPLEMENTAIRE' ? (j.complement || EUC_DEV610_TYPE_COMPLEMENTAIRE_) : null;
+    var x = { date: j.date, nature: j.nature, complement: comp, hm: num(s.hm, dm), ha: num(s.ha, da), fm: String(s.fm || '').trim().toUpperCase(), fa: String(s.fa || '').trim().toUpperCase() };
+    x.total = r2(x.hm + x.ha); out.jours.push(x); ajouter(out, comp, x.total);
+    [[x.fm, x.hm], [x.fa, x.ha]].forEach(function(d) {
+      if (!(d[1] > 0)) return;
+      if (!d[0]) { ajouter(out.sansFormateur, comp, d[1]); return; }
+      if (!parF[d[0]]) { parF[d[0]] = { initiales: d[0], formation: 0, complementaires: {}, total: 0 }; ordre.push(d[0]); }
+      ajouter(parF[d[0]], comp, d[1]); parF[d[0]].total = r2(parF[d[0]].total + d[1]);
+    });
+  });
+  out.formateurs = ordre.sort().map(function(k) { return parF[k]; });
+  return out;
+}
 /* Proposition de rattachement : classes actives dont Classe_PFMP (ou le nom) vaut la classe PFMP de la ligne. */
 function EUC_DEV610_proposerClasses_(ligne, classes) {
   var cible = EUC_DEV610_n_(ligne.classePfmp); if (!cible) return [];
@@ -223,7 +253,8 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_].map(String).join('\n');
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_].map(String).join('\n')
+    + '\nvar EUC_DEV610_TYPE_COMPLEMENTAIRE_ = ' + JSON.stringify(EUC_DEV610_TYPE_COMPLEMENTAIRE_) + ';';
 }
 
 /* ===================== Table de vérité initiale (observée dans le planning 2026-2027) ===================== */
@@ -330,7 +361,7 @@ function EUC_DEV610_etape_(nom, fn) { try { return fn(); } catch (e) { var m = S
 
 var EUC_DEV610_AVERT_ = [];
 function EUC_DEV610_tables_() {
-  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES4')) return;
+  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES5')) return;
   var ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; }), col = EUC_DEV441_col_;
   var def = {};
   def[EUC_DEV610_T_.lignes] = [col('Code', 'Code'), col('Libelle', 'Libellé'), col('Calendrier', 'Calendrier'), col('Groupe', 'Groupe d’affichage'), col('Profil', 'Profil de règles'), col('Classe_PFMP', 'Classe PFMP'), col('Formation', 'Formation (colonne A)'), col('Niveau', 'Niveau (colonne B)'), col('Ordre', 'Ordre', 'Int'), col('Ligne_sheet', 'Ligne de l’ancienne feuille', 'Int'), col('Quota_heures', 'Quota d’heures', 'Numeric'), col('Heures_jour', 'Heures par jour', 'Numeric'), col('Jours_lycee', 'Jours au lycée'), col('Actif', 'Actif', 'Bool')];
@@ -338,11 +369,12 @@ function EUC_DEV610_tables_() {
   def[EUC_DEV610_T_.regles] = [col('Annee_scolaire', 'Année scolaire'), col('Profil', 'Profil'), col('Numero', 'Numéro', 'Int'), col('Type', 'Type'), col('Duree_semaines', 'Durée (semaines)', 'Numeric'), col('Placement', 'Placement'), col('Ancrage', 'Ancrage'), col('Regle_ancrage', 'Période d’ancrage', 'Int'), col('Position', 'Position'), col('Ecart_semaines', 'Écart (semaines)', 'Int'), col('Reference_texte', 'Texte de référence'), col('Actif', 'Actif', 'Bool')];
   def[EUC_DEV610_T_.versions] = [col('Annee_scolaire', 'Année scolaire'), col('Numero', 'Numéro', 'Int'), col('Statut', 'Statut'), col('Base_dates', 'Base des dates'), col('Commentaire', 'Commentaire'), col('Periodes_json', 'Périodes (JSON)'), col('Auteur', 'Auteur'), col('Date_creation', 'Date de création'), col('Date_publication', 'Date de publication')];
   def[EUC_DEV610_T_.jours] = [col('Annee_scolaire', 'Année scolaire'), col('Date', 'Date', 'Date'), col('Nature', 'Nature'), col('Libelle', 'Libellé'), col('Heures', 'Heures', 'Numeric'), col('Actif', 'Actif', 'Bool')];
+  def[EUC_DEV610_T_.heures] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Date', 'Date', 'Date'), col('Heures_matin', 'Heures du matin', 'Numeric'), col('Heures_apres_midi', 'Heures de l’après-midi', 'Numeric'), col('Formateur_matin', 'Formateur du matin'), col('Formateur_apres_midi', 'Formateur de l’après-midi'), col('Date_modification', 'Date modification')];
   var manquantes = Object.keys(def).filter(function(t) { return ids.indexOf(t) < 0; });
   if (manquantes.length) EUC_DEV610_etape_('création des tables du générateur', function() { EUC_ENT_grist('post', '/tables', { tables: manquantes.map(function(t) { return { id: t, columns: def[t] }; }) }); });
   try { EUC_DEV610_etape_('mise à jour des lignes de planning', EUC_DEV610_migrerLignes_); }
   catch (e) { EUC_DEV610_AVERT_.push(String(e && e.message || e)); console.log('DEV610_MIGRATION ' + String(e && e.message || e)); return; }
-  cache.put('EUC_DEV610_TABLES4', '1', 21600);
+  cache.put('EUC_DEV610_TABLES5', '1', 21600);
 }
 
 function EUC_DEV610_champsLigneDefaut_(l, i) {
@@ -354,7 +386,7 @@ function EUC_DEV610_champsLigneDefaut_(l, i) {
 function EUC_DEV610_migrerLignes_() {
   var t = EUC_DEV610_T_.lignes, col = EUC_DEV441_col_;
   var cols = (EUC_ENT_grist('get', '/tables/' + t + '/columns').columns || []).map(function(c) { return c.id; });
-  var ajout = [col('Formation', 'Ancienne Formation (colonne A)'), col('Niveau', 'Ancien Niveau (colonne B)'), col('Etablissement', 'Établissement support'), col('Organismes', 'Organismes de formation'), col('Version_modele', 'Version du modèle', 'Int')].filter(function(c) { return cols.indexOf(c.id) < 0; });
+  var ajout = [col('Formation', 'Ancienne Formation (colonne A)'), col('Niveau', 'Ancien Niveau (colonne B)'), col('Etablissement', 'Établissement support'), col('Organismes', 'Organismes de formation'), col('Version_modele', 'Version du modèle', 'Int'), col('Heures_matin', 'Heures du matin par défaut', 'Numeric'), col('Heures_apres_midi', 'Heures de l’après-midi par défaut', 'Numeric'), col('Quota_heures', 'Quota d’heures annuel', 'Numeric'), col('Formateurs', 'Saisie des formateurs', 'Bool')].filter(function(c) { return cols.indexOf(c.id) < 0; });
   if (ajout.length) EUC_ENT_grist('post', '/tables/' + t + '/columns', { columns: ajout });
   var existantes = {}; EUC_DEV610_lire_(t).forEach(function(r) { existantes[EUC_DEV610_t_((r.fields || {}).Code)] = r; });
   var aJour = function(r) { return Number((r.fields || {}).Version_modele) >= EUC_DEV610_MODELE_; };
@@ -401,8 +433,19 @@ function EUC_DEV610_codeAnnee_(v, annees) {
   var id = EUC_DEV610_ref_(v); if (id) { var a = annees.filter(function(x) { return x.id === id; })[0]; if (a) return a.code; }
   var m = EUC_DEV610_t_(v).match(/20\d{2}-20\d{2}/); return m ? m[0] : '';
 }
+/* Réglages d'heures proposés tant qu'ils ne sont pas enregistrés (calcul pur) : 4 h le matin et 3 h l'après-midi ;
+ * quota des classes entières (CAP 450 h, BAC PRO et BTS 675 h) ; formateurs saisis pour le CAP peintre. */
+function EUC_DEV610_reglagesHeures_(l) {
+  var txt = EUC_DEV610_n_([l.code, l.libelle, l.classePfmp].join(' ')), entiere = l.calendrier === 'CLASSE_ENTIERE';
+  if (l.heuresMatin == null) l.heuresMatin = 4;
+  if (l.heuresApresMidi == null) l.heuresApresMidi = 3;
+  if (l.quota == null) l.quota = !entiere ? null : /BTS|BAC|BP|MELEC/.test(txt) ? 675 : /CAP/.test(txt) ? 450 : null;
+  if (l.formateurs == null) l.formateurs = l.code === 'CAP_PEINTRE';
+  return l;
+}
 function EUC_DEV610_lignes_() {
-  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), etablissement: EUC_DEV610_t_(f.Etablissement), organismes: EUC_DEV610_t_(f.Organismes).split(/\s*,\s*/).filter(Boolean), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false }; })
+  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), etablissement: EUC_DEV610_t_(f.Etablissement), organismes: EUC_DEV610_t_(f.Organismes).split(/\s*,\s*/).filter(Boolean), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false, heuresMatin: f.Heures_matin == null ? null : Number(f.Heures_matin), heuresApresMidi: f.Heures_apres_midi == null ? null : Number(f.Heures_apres_midi), quota: f.Quota_heures == null ? null : Number(f.Quota_heures), formateurs: f.Formateurs == null ? null : f.Formateurs === true }; })
+    .map(EUC_DEV610_reglagesHeures_)
     .filter(function(l) { return l.code; }).sort(function(a, b) { return a.ordre - b.ordre || a.code.localeCompare(b.code); });
 }
 function EUC_DEV610_regles_(annee) {
@@ -481,7 +524,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -532,7 +575,8 @@ function EUC_DEV610_validerPeriodes_(periodes, lignes, annee) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(debut) || !/^\d{4}-\d{2}-\d{2}$/.test(fin) || fin < debut) throw new Error(ligne + ' : dates de période invalides.');
     if (annee && (debut < annee.debut || fin > annee.fin)) throw new Error(ligne + ' : la période du ' + debut + ' sort de l’année ' + annee.code + '.');
     if (!type) throw new Error(ligne + ' : type de période manquant.');
-    return { ligne: ligne, type: type, debut: debut, fin: fin, origine: ['REGLE', 'GRILLE', 'TABLEAU', 'REPRISE'].indexOf(p.origine) >= 0 ? p.origine : 'TABLEAU', regle: Number(p.regle) || null };
+    var complement = EUC_DEV610_estComplementaire_(type) ? EUC_DEV610_t_(p.complement).slice(0, 40) : '';
+    return { ligne: ligne, type: type, complement: complement || undefined, debut: debut, fin: fin, origine: ['REGLE', 'GRILLE', 'TABLEAU', 'REPRISE'].indexOf(p.origine) >= 0 ? p.origine : 'TABLEAU', regle: Number(p.regle) || null };
   }).sort(EUC_DEV610_ordrePeriodes_);
 }
 
@@ -670,6 +714,42 @@ function EUC_DEV610_enregistrerJour(q) {
   if (heures != null && !(heures >= 0 && heures <= 12)) throw new Error('Heures entre 0 et 12.');
   EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.jours + '/records', { records: [{ fields: { Annee_scolaire: annee, Date: Math.round(Date.parse(date + 'T00:00:00Z') / 1000), Nature: nature, Libelle: EUC_DEV610_t_(q.libelle).slice(0, 200), Heures: heures, Actif: true } }] });
   return { ok: true };
+}
+
+/* Heures et formateurs saisis dans le calendrier d'une formation, pour une année. */
+function EUC_DEV610_heures_(annee) {
+  var out = [], vus = {};
+  EUC_DEV610_lire_(EUC_DEV610_T_.heures).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV610_t_(f.Annee_scolaire) !== annee) return;
+    var x = { id: Number(r.id), ligne: EUC_DEV610_t_(f.Ligne), date: EUC_DEV610_date_(f.Date), hm: f.Heures_matin == null ? null : Number(f.Heures_matin), ha: f.Heures_apres_midi == null ? null : Number(f.Heures_apres_midi), fm: EUC_DEV610_t_(f.Formateur_matin), fa: EUC_DEV610_t_(f.Formateur_apres_midi) };
+    if (!x.ligne || !x.date) return; var k = x.ligne + '|' + x.date; if (vus[k] && vus[k].id > x.id) return; if (vus[k]) out.splice(out.indexOf(vus[k]), 1); vus[k] = x; out.push(x); });
+  return out;
+}
+/* Enregistre les réglages d'heures d'une ligne (heures par défaut, quota, saisie des formateurs) et les jours modifiés.
+ * Une ligne par ligne de planning et par date ; un jour remis au défaut garde sa ligne, vidée (aucune suppression). */
+function EUC_DEV610_enregistrerHeures(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV610_tables_();
+  var code = EUC_DEV610_t_(q.annee), annee = EUC_DEV610_annees_().filter(function(a) { return a.code === code; })[0];
+  if (!annee) throw new Error('Année scolaire inconnue.');
+  var l = EUC_DEV610_lignes_().filter(function(x) { return x.code === EUC_DEV610_t_(q.ligne); })[0];
+  if (!l) throw new Error('Formation introuvable : ' + EUC_DEV610_t_(q.ligne) + '.');
+  var heures = function(v, quoi, max) { if (v === '' || v == null) return null; var n = Number(String(v).replace(',', '.')); if (!(n >= 0 && n <= max)) throw new Error(quoi + ' : entre 0 et ' + max + ' h.'); return Math.round(n * 100) / 100; };
+  var initiales = function(v) { var t = EUC_DEV610_t_(v).toUpperCase(); if (t.length > 12) throw new Error('Formateur « ' + t + ' » : 12 caractères au plus (initiales).'); return t; };
+  var reg = q.reglages || null, maj = 0;
+  if (reg) {
+    var champs = { Heures_matin: heures(reg.matin, 'Heures du matin', 8), Heures_apres_midi: heures(reg.apresMidi, 'Heures de l’après-midi', 8), Quota_heures: heures(reg.quota, 'Quota annuel', 3000), Formateurs: reg.formateurs === true };
+    EUC_ENT_grist('patch', '/tables/' + EUC_DEV610_T_.lignes + '/records', { records: [{ id: l.id, fields: champs }] }); maj++;
+  }
+  var existants = {}; EUC_DEV610_heures_(code).forEach(function(x) { if (x.ligne === l.code) existants[x.date] = x.id; });
+  var maintenant = new Date().toISOString(), creer = [], modifier = [], vus = {};
+  (q.jours || []).forEach(function(j) {
+    var date = EUC_DEV610_t_(j.date); if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < annee.debut || date > annee.fin) throw new Error('Date hors de l’année ' + code + ' : ' + date + '.');
+    if (vus[date]) throw new Error('Jour en double : ' + date + '.'); vus[date] = 1;
+    var f = { Annee_scolaire: code, Ligne: l.code, Date: Math.round(Date.parse(date + 'T00:00:00Z') / 1000), Heures_matin: heures(j.hm, date + ' matin', 8), Heures_apres_midi: heures(j.ha, date + ' après-midi', 8), Formateur_matin: initiales(j.fm), Formateur_apres_midi: initiales(j.fa), Date_modification: maintenant };
+    if (existants[date]) modifier.push({ id: existants[date], fields: f }); else creer.push({ fields: f });
+  });
+  if (modifier.length) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.heures, modifier);
+  if (creer.length) EUC_DEV610_ecrire_('post', EUC_DEV610_T_.heures, creer);
+  return { ok: true, reglages: maj, jours: modifier.length + creer.length, heures: EUC_DEV610_heures_(code).filter(function(x) { return x.ligne === l.code; }), ligne: EUC_DEV610_lignes_().filter(function(x) { return x.code === l.code; })[0] };
 }
 
 /* ===================== Calibrage de Planning_Periodes (accord de l'utilisateur du 20 octobre 2026) =====================

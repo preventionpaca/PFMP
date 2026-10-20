@@ -6,6 +6,9 @@
   5 semaines. Règle par défaut du 1 BTS MV corrigée (4 → 5). Des règles déjà
   enregistrées dans Grist pour une année gardent leur valeur : à vérifier dans
   l'onglet « Règles ».
+- **Lot B, partie CAP peintre livrée le 20 octobre 2026** (heures par demi-journée, quota, formateurs
+  et récapitulatif, formation complémentaire 5 Star) ; restent les mixités et les calendriers imprimables
+  en colonnes par mois (D / J / H).
 - **Lot B — précisions de l'utilisateur (20 octobre 2026)** :
   - **Mixités** : elles héritent des PFMP de leur classe, mais ont des
     périodes en plus que l'utilisateur place à la main, selon la position des

@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 octobre 2026 — DEV610 lot B : heures, formateurs et formation complémentaire (CAP peintre)
+
+- Calendrier d'une formation (`?page=plannings-pfmp&vue=ligne&ligne=…`) :
+  heures par demi-journée (4 h le matin, 3 h l'après-midi par défaut,
+  modifiables pour la ligne puis jour par jour ; case vide = défaut), total
+  de l'année comparé au quota (proposé : CAP 450 h, BAC PRO / BTS 675 h pour
+  les classes entières ; modifiable), heures du mois dans le pied du
+  calendrier. Clic sur un jour : la ligne correspondante de la saisie.
+- Formateurs (activés par défaut pour le CAP peintre, case à cocher pour les
+  autres) : initiales du matin et de l'après-midi, affichées dans les cases ;
+  récapitulatif imprimable par formateur avec deux totaux séparés (formation
+  et 5 Star) et une ligne « Sans formateur » pour les heures non attribuées.
+- Type de période « Formation complémentaire » avec complément de libellé
+  (« 5 Star » proposé), placé dans la grille ou le tableau des périodes,
+  en orange par défaut. Ses jours sont comptés à part, hors quota, et ne sont
+  jamais publiés dans `Planning_Periodes` (ce n'est pas une période en
+  entreprise).
+- Stockage : nouvelle table `EUC_PLAN_HEURES` (une ligne par formation et par
+  date, vidée et jamais supprimée quand un jour revient au défaut) ; colonnes
+  `Heures_matin`, `Heures_apres_midi`, `Quota_heures`, `Formateurs` ajoutées à
+  `EUC_PLAN_LIGNES`. Aucun changement de `Planning_Periodes`.
+- Tests simulés : 3 tests DEV610 ajoutés (29/29). Page pilotée dans Chromium
+  sans tête avec un serveur simulé : calendrier, totaux, 5 Star à part,
+  récapitulatif, spinner puis succès, erreur et délai dépassé (bouton rétabli,
+  modifications gardées), grille et ligne scolaire sans erreur.
+
 ## Mise à jour du 20 octobre 2026 — 1 BTS MV à 5 semaines (@1096)
 
 - Confirmé par l'utilisateur : 1 BTS MV et 2 BTS MV font 5 semaines. Règle par

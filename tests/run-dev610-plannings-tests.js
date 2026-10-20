@@ -182,7 +182,7 @@ test('le code pur injecté dans la page s’évalue seul et calcule la même mat
 
 test('chargement : tables créées une fois, lignes initiales, année N+1 choisie, règles initiales et vacances prévisionnelles', () => {
   const g = grist(); const r = g.k.EUC_DEV610_charger({});
-  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
+  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_HEURES', 'EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
   assert.strictEqual(g.tables.EUC_PLAN_LIGNES.length, k.EUC_DEV610_LIGNES_DEFAUT_.length);
   assert.strictEqual(r.annee.code, '2027-2028'); assert.strictEqual(r.origineRegles, 'DEFAUT'); assert.ok(r.vacances.length === 5 && r.vacances.every(v => v.previsionnel));
   assert.deepStrictEqual(J(r.rattachements.TBP_MVA), [30, 31]); assert.strictEqual(r.publiees, 0);
@@ -426,7 +426,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
@@ -434,6 +434,52 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="GRETA"', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
+});
+
+test('heures : bilan par demi-journée, formation complémentaire 5 Star comptée à part, récapitulatif par formateur', () => {
+  const jours = [{ date: '2026-09-07', nature: 'FORMATION' }, { date: '2026-09-08', nature: 'FORMATION' }, { date: '2027-01-11', nature: 'COMPLEMENTAIRE', complement: '5 Star' }, { date: '2027-01-12', nature: 'COMPLEMENTAIRE', complement: '' }];
+  const b = k.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, { '2026-09-07': { hm: null, ha: 4, fm: 'ab', fa: 'CD' }, '2027-01-11': { hm: 3.5, ha: '', fm: 'AB', fa: 'EF' }, '2026-09-08': { hm: 0, ha: '', fm: '', fa: 'CD' } });
+  assert.deepStrictEqual(J(b.jours.map(x => [x.date, x.hm, x.ha, x.total, x.complement])), [['2026-09-07', 4, 4, 8, null], ['2026-09-08', 0, 3, 3, null], ['2027-01-11', 3.5, 3, 6.5, '5 Star'], ['2027-01-12', 4, 3, 7, 'Formation complémentaire']]);
+  assert.strictEqual(b.formation, 11, 'les heures 5 Star ne sont jamais comptées dans la formation');
+  assert.deepStrictEqual(J(b.complementaires), { '5 Star': 6.5, 'Formation complémentaire': 7 });
+  assert.deepStrictEqual(J(b.formateurs), [
+    { initiales: 'AB', formation: 4, complementaires: { '5 Star': 3.5 }, total: 7.5 },
+    { initiales: 'CD', formation: 7, complementaires: {}, total: 7 },
+    { initiales: 'EF', formation: 0, complementaires: { '5 Star': 3 }, total: 3 }]);
+  assert.deepStrictEqual(J(b.sansFormateur), { formation: 0, complementaires: { 'Formation complémentaire': 7 } }, 'une demi-journée sans formateur est signalée, la demi-journée à 0 h ne compte pas');
+  assert.ok(!k.EUC_DEV610_typeFormation_('Formation complémentaire'), 'jamais publiée comme période en entreprise');
+  assert.strictEqual(k.EUC_DEV610_libelleType_({ type: 'Formation complémentaire', complement: '5 Star' }), 'Formation complémentaire – 5 Star');
+  const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
+  assert.deepStrictEqual(J(c.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, {})), J(k.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, {})));
+  assert.strictEqual(c.EUC_DEV610_TYPE_COMPLEMENTAIRE_, 'Formation complémentaire');
+});
+test('heures : réglages proposés (4 h + 3 h, quotas CAP 450 h et BAC PRO / BTS 675 h, formateurs du CAP peintre), enregistrement sans suppression', () => {
+  const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' }), L = c => r.lignes.find(l => l.code === c);
+  assert.deepStrictEqual(J([L('CAP_PEINTRE').heuresMatin, L('CAP_PEINTRE').heuresApresMidi, L('CAP_PEINTRE').quota, L('CAP_PEINTRE').formateurs]), [4, 3, 450, true]);
+  assert.deepStrictEqual(J([L('1BTS_ELEC_ALT').quota, L('1MELEC_G').quota, L('1BTS_ELEC_ALT').formateurs, L('1CAP').quota]), [675, 675, false, null]);
+  assert.deepStrictEqual(J(r.heures), []);
+  const sauver = q => g.k.EUC_DEV610_enregistrerHeures(Object.assign({ annee: '2026-2027', ligne: 'CAP_PEINTRE' }, q));
+  assert.throws(() => sauver({ jours: [{ date: '2025-09-08' }] }), /hors de l’année/);
+  assert.throws(() => sauver({ jours: [{ date: '2026-09-08', hm: 9 }] }), /entre 0 et 8/);
+  assert.throws(() => sauver({ jours: [{ date: '2026-09-08', fm: 'ABCDEFGHIJKLM' }] }), /12 caractères/);
+  assert.throws(() => sauver({ ligne: 'INCONNUE', jours: [] }), /introuvable/);
+  let res = sauver({ reglages: { matin: '3,5', apresMidi: 3.5, quota: 460, formateurs: true }, jours: [{ date: '2026-09-08', hm: '', ha: 4, fm: 'ab', fa: 'cd' }, { date: '2027-01-11', hm: 3, fm: 'AB' }] });
+  assert.deepStrictEqual(J([res.jours, res.ligne.heuresMatin, res.ligne.quota, res.heures.length]), [2, 3.5, 460, 2]);
+  res = sauver({ jours: [{ date: '2026-09-08', hm: null, ha: null, fm: '', fa: '' }] });
+  const h = g.k.EUC_DEV610_heures_('2026-2027');
+  assert.deepStrictEqual(J(h.map(x => [x.ligne, x.date, x.hm, x.ha, x.fm, x.fa])), [['CAP_PEINTRE', '2026-09-08', null, null, '', ''], ['CAP_PEINTRE', '2027-01-11', 3, null, 'AB', '']], 'jour remis au défaut : ligne vidée, jamais supprimée');
+  assert.strictEqual(g.tables.EUC_PLAN_HEURES.length, 2);
+  assert.deepStrictEqual(J(g.k.EUC_DEV610_charger({ annee: '2026-2027' }).heures.length), 2);
+  assert.ok(!g.calls.some(c => c.method === 'delete'));
+});
+test('formation complémentaire : complément conservé dans la version, jamais publié dans Planning_Periodes', () => {
+  const lignes = lignesDefaut(), annee = { code: '2026-2027', debut: '2026-09-01', fin: '2027-08-31' };
+  const v = k.EUC_DEV610_validerPeriodes_([{ ligne: 'CAP_PEINTRE', type: 'Formation complémentaire', complement: ' 5 Star ', debut: '2027-01-11', fin: '2027-01-15' }, { ligne: 'CAP_PEINTRE', type: 'ENT.', complement: 'x', debut: '2026-11-16', fin: '2026-11-20' }], lignes, annee);
+  assert.deepStrictEqual(J(v.map(p => [p.type, p.complement || ''])), [['ENT.', ''], ['Formation complémentaire', '5 Star']]); assert.ok(!('complement' in J(v[0])), 'aucun complément stocké hors formation complémentaire');
+  const d = k.EUC_DEV610_diffPublication_({ periodes: [{ ligne: 'TBP_MVA', type: 'Formation complémentaire', complement: '5 Star', debut: '2027-01-11', fin: '2027-01-15' }] }, lignes, { TBP_MVA: [30, 31] }, [], '2026-2027');
+  assert.strictEqual(d.creer.length, 0);
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', '||HSALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');
