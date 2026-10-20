@@ -376,7 +376,10 @@ test('page : jours fériés de l’année scolaire (Pâques, Ascension, Pentecô
 });
 test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, boutons asynchrones protégés', () => {
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'plannings-pfmp':\s*return EUC_DEV610_afficher\(e\);/);
-  assert.match(read('apps-script/Admin_PFMP.html'), /\?page=plannings-pfmp">Plannings annuels/);
+  const adm = read('apps-script/Admin_PFMP.html');
+  assert.match(adm, /<section class="card plannings">\s*<h2>Plannings<\/h2>/);
+  for (const t of ['?page=plannings-pfmp">Planning général', '?page=plannings-pfmp&amp;vue=formations">Plannings par formation', '<h3>Paramétrage plannings</h3>', '&amp;onglet=pOrganisation">Organisation du tableau', '&amp;onglet=pRegles">', '&amp;onglet=pLignes">', '&amp;onglet=pJours">', '&amp;onglet=pPublication">']) assert.ok(adm.includes(t), t);
+  assert.ok(adm.indexOf('card plannings') < adm.indexOf('card global'), 'la vignette Plannings ouvre le bloc transversal');
   assert.ok(JSON.parse(read('scripts/pfmp-release-config.json')).routes.some(r => r.page === 'plannings-pfmp' && r.expected === 'Plannings annuels'));
   const h = read('apps-script/Plannings_DEV610.html');
   assert.match(h, /<nav class="ariane"[^>]*><a href="https:\/\/alternance\.loucodi\.fr\/" target="_top">Accueil PFMP<\/a> › <a href="<\?= adminBase \?>\?page=admin-pfmp" target="_top">Administration PFMP<\/a>/);
@@ -390,7 +393,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
   for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="GRETA"', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
-  assert.match(h, /@media print\{@page\{size:A3 landscape/); assert.match(h, /PRÉVISIONNEL/);
+  assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
+  for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

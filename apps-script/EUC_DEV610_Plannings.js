@@ -413,7 +413,9 @@ function EUC_DEV610_afficher(e) {
   EUC_SUIVI2_exigerAdmin_();
   var t = HtmlService.createTemplateFromFile('Plannings_DEV610');
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
-  t.annee = EUC_DEV610_t_(e && e.parameter && e.parameter.annee);
+  var prm = (e && e.parameter) || {}, propre = function(v) { return EUC_DEV610_t_(v).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40); };
+  t.annee = EUC_DEV610_t_(prm.annee).replace(/[^0-9-]/g, '').slice(0, 9);
+  t.onglet = propre(prm.onglet); t.vue = propre(prm.vue); t.ligne = propre(prm.ligne);
   t.codeClient = EUC_DEV610_codeClient_();
   return t.evaluate().setTitle('Plannings annuels').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

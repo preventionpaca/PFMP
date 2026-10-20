@@ -40,6 +40,13 @@
   classes ; groupe, libellé, calendrier (liste de 4 valeurs, aussi en liste
   dans Grist), Formation / Niveau, classe PFMP et règles éditables ; les
   classes Pronote sans ligne sont proposées à leur place. Aucune suppression.
+- Administration : vignette « Plannings » (bloc transversal) avec Planning
+  général, Plannings par formation et sous-bloc « Paramétrage plannings »
+  (organisation, règles, lignes et classes, jours particuliers, versions).
+  Calendrier individuel d'une formation (mois en colonnes, jours en lignes,
+  jours au lycée et en entreprise, estimation à 7 h par jour). Bouton
+  « Appliquer les noms Pronote » et « Ajouter une classe à la main » (classe
+  pas encore dans Pronote : affichée, non publiée tant qu'elle n'existe pas).
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :

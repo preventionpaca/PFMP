@@ -30,6 +30,7 @@
     .card.public{border-top:4px solid #7c3aed}
     .card.public .link{background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6}
     .card.transverse{border-top:4px solid #0891b2}
+    .card.plannings{border-top:4px solid #be185d}
     .card.dev{border-top:4px solid #94a3b8;background:#fbfcfd}
     .card.dev .link{background:#fff;border-color:#e2e8f0;color:#475569;font-weight:700}
     .separateur{margin:26px 0 0;font-size:.78rem;font-weight:800;letter-spacing:.12em;color:#49627a}
@@ -120,6 +121,24 @@
 
   <p class="separateur">TRANSVERSAL</p>
   <section class="grid">
+    <section class="card plannings">
+      <h2>Plannings</h2>
+      <p>Calendriers de l’année : PFMP, stages, mixité et alternance.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp">Planning général<small>Toute l’alternance : scolaires, mixités, classes entières CFA / CFAI, GRETA — impression PDF</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;vue=formations">Plannings par formation<small>Calendrier d’une classe entière, d’une mixité ou d’une classe</small></a>
+      </div>
+      <div class="param">
+        <h3>Paramétrage plannings</h3>
+        <div class="links">
+          <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pOrganisation">Organisation du tableau<small>Ordre et groupes des lignes, nouvelles classes Pronote</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pRegles">Règles et durées<small>Durées des périodes et vacances d’ancrage, par année</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pLignes">Lignes et classes<small>Rattachement aux classes Pronote, saisie sans erreur dans Planning_Periodes</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pJours">Jours particuliers<small>Samedis travaillés, jours non travaillés, journées banalisées</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pPublication">Versions et publication<small>Historique, aperçu puis publication dans le calendrier des PFMP</small></a>
+        </div>
+      </div>
+    </section>
     <section class="card transverse">
       <h2>Listes et documents</h2>
       <p>Feuilles d’émargement et listes rapides, tous parcours confondus.</p>
@@ -133,7 +152,6 @@
       <h2>Paramétrage global</h2>
       <p>Imports et référentiels communs aux trois parcours.</p>
       <div class="links">
-        <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp">Plannings annuels<small>PFMP, stages et mixité : règles de placement, grille des semaines, versions, publication</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=destinataires-envois-pfmp">Destinataires &amp; envois<small>Qui reçoit quoi : tableaux de suivi, dépôts et numéros de convention, validations des tuteurs, livret des apprentis</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-pronote-pfmp">Importer les élèves Pronote<small>Correspondances et exclusions de classes</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
