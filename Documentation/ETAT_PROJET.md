@@ -22,6 +22,11 @@
   étaient ignorées ; les alertes d'une année restaient affichées après un
   changement d'année. Vacances aussi reconnues par leurs dates.
 - Premier chargement par l'utilisateur : tables `EUC_PLAN_*` créées dans Grist.
+- Correctif `c95e65c` publié en `@1087` (31/31 routes) : les T CAP publiées
+  n'étaient pas reprises ; la reprise retrouve maintenant la ligne par la classe
+  PFMP quand la classe est inactive ou non rattachée, propose ces classes au
+  rattachement, liste les périodes non reprises avec leur raison, et un bouton
+  « Reprendre le calendrier publié » relance la reprise dans une version.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :
