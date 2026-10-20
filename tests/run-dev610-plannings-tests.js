@@ -26,11 +26,11 @@ function grist(opts) {
     Types_Planning: [{ id: 1, fields: { Type: 'PFMP Tbac', Couleur: '#00C853' } }, { id: 2, fields: { Type: 'P.dif.', Couleur: '#C00000' } }, { id: 3, fields: { Type: 'BTS_STAGE', Libelle: 'Stage BTS', Couleur: '#FF00CC' } }, { id: 4, fields: { Type: 'PFMP 1ère', Couleur: '#00C890' } }],
     Planning_Periodes: (opts.periodes || []).map(J)
   };
-  const calls = [], creees = [];
+  const calls = [], creees = [], cache = {};
   const cols = { Planning_Periodes: { Annee_scolaire: 'Text', Type: 'Text', Date_debut: 'Date', Date_fin: 'Date', Classes_concernees: 'RefList:Classes', Classe: 'Ref:Classes', Classe_PFMP: 'Text', Formation: 'Text', Niveau: 'Text', Couleur: 'Text', Ligne_sheet: 'Int', Commentaire: 'Text', Actif: 'Bool', Duree_jour: 'Text' } };
   const k = {
     String, Number, Array, Object, JSON, Date, Math, Error, RegExp, console: { log() {} }, isFinite, isNaN,
-    CacheService: { getScriptCache: () => { const c = {}; return { get: x => c[x] || null, put: (x, v) => { c[x] = v; }, removeAll() {} }; } },
+    CacheService: { getScriptCache: () => ({ get: x => cache[x] || null, put: (x, v) => { cache[x] = v; }, removeAll() {} }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     HtmlService: { createTemplateFromFile: () => ({ evaluate() { return { setTitle() { return { addMetaTag() { return this; } }; } }; } }) },
     EUC_PFMP_contexteAdmin_: () => opts.refuser ? null : { autorise: true, role: 'DDFPT', email: 'ddfpt@example.org' },
@@ -38,8 +38,9 @@ function grist(opts) {
     EUC_ENT_grist(method, p, body) {
       calls.push({ method, p, body: J(body || null) });
       if (p === '/tables' && method === 'get') return { tables: Object.keys(tables).map(id => ({ id })) };
-      if (p === '/tables' && method === 'post') { body.tables.forEach(t => { tables[t.id] = []; creees.push(t.id); }); return {}; }
-      const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c) return { columns: Object.keys(cols[c[1]] || {}).map(id => ({ id, fields: { type: cols[c[1]][id] } })) };
+      if (p === '/tables' && method === 'post') { body.tables.forEach(t => { tables[t.id] = []; creees.push(t.id); cols[t.id] = {}; t.columns.forEach(x => { cols[t.id][x.id] = x.fields.type; }); }); return {}; }
+      const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c && method === 'post') { body.columns.forEach(x => { (cols[c[1]] = cols[c[1]] || {})[x.id] = x.fields.type; }); return {}; }
+      if (c) return { columns: Object.keys(cols[c[1]] || {}).map(id => ({ id, fields: { type: cols[c[1]][id] } })) };
       const m = /^\/tables\/([^/]+)\/records$/.exec(p); if (!m) return {};
       const t = tables[m[1]] = tables[m[1]] || [];
       if (method === 'get') return { records: J(t) };
@@ -54,7 +55,7 @@ function grist(opts) {
   return { k, tables, calls, creees };
 }
 const { k } = grist();
-const lignesDefaut = () => k.EUC_DEV610_LIGNES_DEFAUT_.map((l, i) => ({ code: l[0], libelle: l[1], calendrier: l[2], groupe: l[3], profil: l[4], classePfmp: l[5], ordre: i, actif: true }));
+const lignesDefaut = () => k.EUC_DEV610_LIGNES_DEFAUT_.map((l, i) => ({ code: l[0], libelle: l[1], calendrier: l[2], groupe: l[3], profil: l[4], classePfmp: l[5], ordre: i, formation: l[7], niveau: l[8], actif: true }));
 const vac = annee => VAC.filter(v => v[0] === annee).map(v => ({ nom: v[1], debut: v[2], fin: v[3], previsionnel: !!v[4] }));
 function calendrier(annee) { const y = Number(annee.slice(0, 4)), s = k.EUC_DEV610_semaines_(y + '-09-01', (y + 1) + '-08-31'); return { s, idx: k.EUC_DEV610_marquerVacances_(s, vac(annee)) }; }
 
@@ -220,7 +221,7 @@ test('reprise du calendrier publié : périodes en entreprise rattachées à une
   ] });
   g.k.EUC_DEV610_charger({ annee: '2026-2027' }); const avant = g.calls.filter(c => c.method !== 'get').length;
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
-  assert.deepStrictEqual(J(r.periodes), [{ ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', origine: 'REPRISE', regle: null }]);
+  assert.deepStrictEqual(J(r.periodes), [{ ligne: 'TBP_MVA', type: 'VFMP', debut: '2026-09-23', fin: '2026-09-25', origine: 'REPRISE', regle: null }, { ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', origine: 'REPRISE', regle: null }]);
   assert.strictEqual(r.ignorees, 1); assert.strictEqual(r.nonReprises[0].raison, 'PLUSIEURS_LIGNES'); assert.strictEqual(g.calls.filter(c => c.method !== 'get').length, avant);
 });
 test('reprise : période T CAP dont la classe est inactive ou non rattachée retrouvée par sa classe PFMP, détail des non reprises', () => {
@@ -233,16 +234,33 @@ test('reprise : période T CAP dont la classe est inactive ou non rattachée ret
   const g = grist({ periodes: [
     { id: 1, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP T CAP', Date_debut: sec('2026-11-16'), Date_fin: sec('2026-12-04'), Classes_concernees: ['L', 23], Actif: true, Formation: 'CAP', Niveau: 'T CA' } },
     { id: 2, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP TCAP', Date_debut: sec('2027-03-15'), Date_fin: sec('2027-04-09'), Classes_concernees: ['L', 23], Actif: true } },
-    { id: 3, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP 1ère', Date_debut: sec('2026-11-23'), Date_fin: sec('2026-12-18'), Classes_concernees: ['L', 555], Actif: true, Formation: '1 BAC PRO', Niveau: 'MP3' } }
+    { id: 3, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP 1ère', Date_debut: sec('2026-11-23'), Date_fin: sec('2026-12-18'), Classes_concernees: ['L', 555], Actif: true, Formation: '1 BAC PRO', Niveau: 'MP3' } },
+    { id: 4, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP 1ère', Date_debut: sec('2026-11-23'), Date_fin: sec('2026-12-18'), Classes_concernees: ['L', 555], Actif: true, Formation: '1 BAC PRO', Niveau: 'XYZ' } }
   ] });
   g.tables.Classes.find(c => c.id === 23).fields.Actif = false;
   g.k.EUC_DEV610_charger({ annee: '2026-2027' });
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
-  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])), [['TCAP', 'PFMP T CAP', '2026-11-16'], ['TCAP', 'PFMP TCAP', '2027-03-15']]);
+  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])), [['1BP_MP3D', 'PFMP 1ère', '2026-11-23'], ['TCAP', 'PFMP T CAP', '2026-11-16'], ['TCAP', 'PFMP TCAP', '2027-03-15']]);
   assert.deepStrictEqual(J(r.suggestions), { TCAP: [23] });
-  assert.deepStrictEqual(J(r.nonReprises.map(x => [x.id, x.raison, x.classes, x.niveau])), [[3, 'AUCUNE_LIGNE', ['#555'], 'MP3']]);
+  assert.deepStrictEqual(J(r.nonReprises.map(x => [x.id, x.raison, x.classes, x.niveau])), [[4, 'AUCUNE_LIGNE', ['#555'], 'XYZ']]);
   const { s, idx } = calendrier('2026-2027'), gen = k.EUC_DEV610_generer_(lignesDefaut(), k.EUC_DEV610_reglesDefaut_('2026-2027'), s, idx, J(r.periodes));
   assert.ok(!gen.alertes.some(a => /T CAP/.test(a)), 'les T CAP reprises ne sont plus « à placer à la main »');
+});
+test('reprise des mixités et classes entières par Formation / Niveau (colonnes A et B), quelle que soit la ligne de l’ancienne feuille ; classes de test écartées', () => {
+  const lignes = lignesDefaut();
+  const L = (f, n) => k.EUC_DEV610_ligneParLibelles_({ formation: f, niveau: n }, lignes);
+  assert.deepStrictEqual([L('1BTS MV', 'Mixité'), L('2BTS CPI-CPRP', 'Mixité'), L('2BTS MV', 'Mixité'), L('1 BAC PRO', 'Mixité'), L('CAP Connexe', 'CP'), L('CAP', 'CP'), L('Ducretet', 'TSEC'), L('BACHELOR', 'IP'), L('1BTS', 'MV'), L('1 BAC PRO', 'MP3'), L('X', 'Mixité'), L('', '')], ['MIX_1BTS_MV', 'MIX_2BTS_CPI_CPRP', 'MIX_2BTS_MV', 'MIX_1BP', 'CAP_PEINTRE', 'CAP_PEINTRE', 'TSEC', 'BACHELOR_IP', '1BTS_MV', '1BP_MP3D', '', '']);
+  const g = grist({ periodes: [
+    { id: 280, fields: { Annee_scolaire: '2026-2027', Type: 'Stage BTS', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 41, Date_debut: sec('2027-05-31'), Date_fin: sec('2027-08-31'), Actif: true } },
+    { id: 291, fields: { Annee_scolaire: '2026-2027', Type: 'ENT.', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 42, Date_debut: sec('2026-10-12'), Date_fin: sec('2026-10-16'), Actif: true } },
+    { id: 289, fields: { Annee_scolaire: '2026-2027', Type: 'VISITE', Formation: '2BTS CPI-CPRP', Niveau: 'Mixité', Ligne_sheet: 42, Date_debut: sec('2026-12-14'), Date_fin: sec('2026-12-18'), Actif: true } },
+    { id: 74, fields: { Annee_scolaire: '2026-2027', Type: 'VISITE', Formation: 'CAP', Niveau: 'CP', Date_debut: sec('2026-12-16'), Date_fin: sec('2026-12-18'), Actif: true } },
+    { id: 400, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP', Formation: 'TEST PFMP', Date_debut: sec('2026-10-26'), Date_fin: sec('2026-11-20'), Classes_concernees: ['L', 90], Actif: true } }
+  ] });
+  g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
+  assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])).sort(), [['CAP_PEINTRE', 'VISITE', '2026-12-16'], ['MIX_1BTS_MV', 'ENT.', '2026-10-12'], ['MIX_1BTS_MV', 'Stage BTS', '2027-05-31'], ['MIX_2BTS_CPI_CPRP', 'VISITE', '2026-12-14']]);
+  assert.strictEqual(r.tests, 1); assert.strictEqual(r.ignorees, 0);
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
@@ -281,6 +299,16 @@ test('jours particuliers : samedi travaillé en rattrapage, contrôle, retrait s
   const j = g.k.EUC_DEV610_jours_('2026-2027'); assert.deepStrictEqual(J([j[0].date, j[0].nature, j[0].heures]), ['2027-02-06', 'TRAVAILLE', 4]);
   g.k.EUC_DEV610_enregistrerJour({ retirer: j[0].id }); assert.strictEqual(g.k.EUC_DEV610_jours_('2026-2027').length, 0);
 });
+test('page : jours fériés de l’année scolaire (Pâques, Ascension, Pentecôte) et repères des événements', () => {
+  const h = read('apps-script/Plannings_DEV610.html'), c = {};
+  const code = ['paques', 'feries', 'jourLong', 'evenement'].map(n => h.match(new RegExp('function ' + n + '\\(.*')) [0]).join('\n');
+  vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\nvar JOURS=' + h.match(/var JOURS=(\[[^\]]*\])/)[1] + ',MOISL=' + h.match(/MOISL=(\[[^\]]*\])/)[1] + ';\n' + code, c);
+  const f = c.feries(2026);
+  assert.strictEqual(c.paques(2027), '2027-03-28');
+  assert.deepStrictEqual([f['2027-03-29'], f['2027-05-06'], f['2027-05-17'], f['2027-05-01'], f['2026-11-11']], ['Lundi de Pâques', 'Ascension', 'Lundi de Pentecôte', 'Fête du Travail', 'Armistice']);
+  assert.strictEqual(c.jourLong('2027-05-01'), 'Samedi 1er mai'); assert.strictEqual(c.jourLong('2027-05-06'), 'Jeudi 6 mai');
+  assert.deepStrictEqual(['VISITE', 'Visite', 'APPEL TEL', 'EXAMENS', 'CONSEIL', 'VFMP', 'ENT.', 'PFMP Tbac'].map(c.evenement), ['V', 'V', 'A', 'E', 'C', '✓', '', '']);
+});
 test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, boutons asynchrones protégés', () => {
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'plannings-pfmp':\s*return EUC_DEV610_afficher\(e\);/);
   assert.match(read('apps-script/Admin_PFMP.html'), /\?page=plannings-pfmp">Plannings annuels/);
@@ -296,6 +324,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
+  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="GRETA"', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /@media print\{@page\{size:A3 landscape/); assert.match(h, /PRÉVISIONNEL/);
 });
 
