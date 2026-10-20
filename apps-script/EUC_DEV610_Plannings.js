@@ -299,6 +299,20 @@ function EUC_DEV610_ref_(v) { return typeof EUC_SUIVI2_ref_ === 'function' ? EUC
 function EUC_DEV610_refs_(v) { if (typeof EUC_SUIVI2_refs_ === 'function') return EUC_SUIVI2_refs_(v); return Array.isArray(v) ? v.filter(function(x) { return typeof x === 'number'; }) : []; }
 function EUC_DEV610_date_(v) { return typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(v) : EUC_DEV610_t_(v).slice(0, 10); }
 
+/* Actions Grist groupées : en cas de refus, l'erreur nomme l'étape et reprend le message de Grist (jamais la clé). */
+function EUC_DEV610_apply_(actions, etape) {
+  var c = typeof EUC_ENT_lireConfiguration === 'function' ? EUC_ENT_lireConfiguration() : {};
+  if (!c.EUC_ENT_GRIST_API_URL || !c.EUC_ENT_GRIST_DOC_ID || !c.EUC_ENT_GRIST_API_KEY) return EUC_ENT_grist('post', '/apply', actions);
+  if (typeof EUC_ENT_controlerCibleRecette_ === 'function') EUC_ENT_controlerCibleRecette_();
+  var r = UrlFetchApp.fetch(c.EUC_ENT_GRIST_API_URL.replace(/\/$/, '') + '/api/docs/' + encodeURIComponent(c.EUC_ENT_GRIST_DOC_ID) + '/apply', { method: 'post', muteHttpExceptions: true, contentType: 'application/json', payload: JSON.stringify(actions), headers: { Authorization: 'Bearer ' + c.EUC_ENT_GRIST_API_KEY, Accept: 'application/json' } });
+  var code = r.getResponseCode();
+  if (code < 200 || code >= 300) { var txt = String(r.getContentText() || '').replace(/\s+/g, ' ').slice(0, 300); throw new Error('Grist a refusé l’étape « ' + (etape || 'modification') + ' » (' + code + ') : ' + txt); }
+  return JSON.parse(r.getContentText() || '{}');
+}
+/* Étape nommée : une erreur dit ce qui était en cours. */
+function EUC_DEV610_etape_(nom, fn) { try { return fn(); } catch (e) { var m = String(e && e.message || e).replace(/^Error:\s*/, ''); throw new Error(/étape/.test(m) ? m : 'Échec de l’étape « ' + nom + ' » : ' + m); } }
+
+var EUC_DEV610_AVERT_ = [];
 function EUC_DEV610_tables_() {
   var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES3')) return;
   var ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; }), col = EUC_DEV441_col_;
@@ -309,8 +323,9 @@ function EUC_DEV610_tables_() {
   def[EUC_DEV610_T_.versions] = [col('Annee_scolaire', 'Année scolaire'), col('Numero', 'Numéro', 'Int'), col('Statut', 'Statut'), col('Base_dates', 'Base des dates'), col('Commentaire', 'Commentaire'), col('Periodes_json', 'Périodes (JSON)'), col('Auteur', 'Auteur'), col('Date_creation', 'Date de création'), col('Date_publication', 'Date de publication')];
   def[EUC_DEV610_T_.jours] = [col('Annee_scolaire', 'Année scolaire'), col('Date', 'Date', 'Date'), col('Nature', 'Nature'), col('Libelle', 'Libellé'), col('Heures', 'Heures', 'Numeric'), col('Actif', 'Actif', 'Bool')];
   var manquantes = Object.keys(def).filter(function(t) { return ids.indexOf(t) < 0; });
-  if (manquantes.length) EUC_ENT_grist('post', '/tables', { tables: manquantes.map(function(t) { return { id: t, columns: def[t] }; }) });
-  EUC_DEV610_migrerLignes_();
+  if (manquantes.length) EUC_DEV610_etape_('création des tables du générateur', function() { EUC_ENT_grist('post', '/tables', { tables: manquantes.map(function(t) { return { id: t, columns: def[t] }; }) }); });
+  try { EUC_DEV610_etape_('mise à jour des lignes de planning', EUC_DEV610_migrerLignes_); }
+  catch (e) { EUC_DEV610_AVERT_.push(String(e && e.message || e)); console.log('DEV610_MIGRATION ' + String(e && e.message || e)); return; }
   cache.put('EUC_DEV610_TABLES3', '1', 21600);
 }
 
@@ -335,8 +350,10 @@ function EUC_DEV610_migrerLignes_() {
   if (creer.length) EUC_ENT_grist('post', '/tables/' + t + '/records', { records: creer });
   if (modifier.length) EUC_ENT_grist('patch', '/tables/' + t + '/records', { records: modifier });
   /* Calendrier : liste déroulante des quatre valeurs admises. */
-  var cal = EUC_DEV610_colonnesDetail_(t).Calendrier;
-  if (cal && cal.type !== 'Choice') EUC_ENT_grist('post', '/apply', [['ModifyColumn', t, 'Calendrier', { type: 'Choice', widgetOptions: JSON.stringify({ choices: EUC_DEV610_CALENDRIERS_ }) }]]);
+  /* Étape facultative : un refus de Grist ne doit jamais bloquer la page (la valeur reste contrôlée à l'enregistrement). */
+  try { var cal = EUC_DEV610_colonnesDetail_(t).Calendrier;
+    if (cal && cal.type !== 'Choice') EUC_DEV610_apply_([['ModifyColumn', t, 'Calendrier', { type: 'Choice', widgetOptions: JSON.stringify({ choices: EUC_DEV610_CALENDRIERS_ }) }]], 'liste déroulante Calendrier');
+  } catch (e) { console.log('DEV610_CALENDRIER_CHOICE ' + String(e && e.message || e)); }
 }
 var EUC_DEV610_CALENDRIERS_ = ['SCOLAIRE', 'MIXITE', 'CLASSE_ENTIERE', 'GRETA'];
 /* Code d'une nouvelle ligne (calcul pur) : majuscules, chiffres et _, unique. */
@@ -444,7 +461,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_ };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -705,10 +722,10 @@ function EUC_DEV610_calibrer(q) {
   try {
     var cols = c.cols;
     if (!cols.Ligne_planning) {
-      EUC_ENT_grist('post', '/apply', [['AddColumn', 'Planning_Periodes', 'Ligne_planning', { type: 'Ref:' + EUC_DEV610_T_.lignes, isFormula: false, label: 'Ligne de planning' }]]);
+      EUC_DEV610_apply_([['AddColumn', 'Planning_Periodes', 'Ligne_planning', { type: 'Ref:' + EUC_DEV610_T_.lignes, isFormula: false, label: 'Ligne de planning' }]], 'création de la colonne Ligne_planning');
       cols = EUC_DEV610_colonnesDetail_('Planning_Periodes');
       var nouvelle = EUC_DEV610_colRef_('Planning_Periodes', 'Ligne_planning', cols);
-      if (nouvelle) EUC_ENT_grist('post', '/apply', [['SetDisplayFormula', 'Planning_Periodes', null, nouvelle, '$Ligne_planning.Libelle']]);
+      if (nouvelle) EUC_DEV610_apply_([['SetDisplayFormula', 'Planning_Periodes', null, nouvelle, '$Ligne_planning.Libelle']], 'affichage du libellé de la ligne');
     }
     var ref = EUC_DEV610_colRef_('Planning_Periodes', 'Ligne_planning', cols), actions = [];
     if (!ref) throw new Error('Colonne Ligne_planning introuvable après création : calibrage interrompu, rien d’autre n’a été modifié.');
@@ -716,7 +733,7 @@ function EUC_DEV610_calibrer(q) {
       if (cols[x[0]] && !EUC_DEV610_t_(cols[x[0]].formula)) actions.push(['ModifyColumn', 'Planning_Periodes', x[0], { formula: '$Ligne_planning.' + x[1] + ' if $Ligne_planning and $Ligne_planning.' + x[1] + ' else value', recalcWhen: 1, recalcDeps: ['L', ref] }]);
     });
     if (cols.Type && !/^Ref/.test(cols.Type.type || '')) actions.push(['ModifyColumn', 'Planning_Periodes', 'Type', { type: 'Choice', widgetOptions: JSON.stringify({ choices: c.choix }) }]);
-    if (actions.length) EUC_ENT_grist('post', '/apply', actions);
+    if (actions.length) EUC_DEV610_apply_(actions, 'formules et liste des types');
     for (var i = 0; i < p.maj.length; i += 200) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: p.maj.slice(i, i + 200).map(function(m) { return { id: m.id, fields: m.fields }; }) });
     resume.apercu = false; resume.ecrites = p.maj.length; resume.actions = actions.length + (c.cols.Ligne_planning ? 0 : 1);
     return resume;

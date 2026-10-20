@@ -236,6 +236,7 @@ function initialiser(){
   var prev=D.vacances.some(function(v){return v.previsionnel;});D.previsionnel=prev;afficherAlertes([]);$('changements').hidden=true;
   var trouvees=Object.keys(IDX).length;
   D.listeVacances=D.vacances.slice().sort(function(x,y){return x.debut.localeCompare(y.debut);}).map(function(v){return esc(v.nom)+' '+dfr(v.debut).slice(0,5)+'→'+dfr(v.fin).slice(0,5);}).join(' · ');
+  if((D.avertissements||[]).length)message('Avertissement (la page reste utilisable) : '+esc(D.avertissements.join(' · ')),'alerte');
   if(!trouvees)message('Aucune vacance trouvée pour '+esc(a.code)+' dans Vacances_Scolaires : les périodes collées aux vacances ne peuvent pas être placées.','erreur');
   $('base').innerHTML=!D.vacances.length?'<span class="chip PREV">Aucune vacance saisie pour cette année</span>':prev?'<span class="chip PREV">Vacances prévisionnelles — planning « Prévisionnel »</span>':'<span class="chip OFF">Vacances officielles</span>';
   var v=D.versions.slice().reverse(),brouillon=v.filter(function(x){return x.statut==='BROUILLON';})[0],choisie=brouillon||v[0];

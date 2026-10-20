@@ -39,6 +39,8 @@ function grist(opts) {
       calls.push({ method, p, body: J(body || null) });
       if (p === '/tables' && method === 'get') return { tables: Object.keys(tables).map(id => ({ id })) };
       if (p === '/tables' && method === 'post') { body.tables.forEach(t => { tables[t.id] = []; creees.push(t.id); cols[t.id] = {}; t.columns.forEach(x => { cols[t.id][x.id] = x.fields.type; }); }); return {}; }
+      if (p === '/apply' && opts.refuserApply) throw new Error('Grist indisponible ou requête refusée (400).');
+      if (p === '/tables/EUC_PLAN_LIGNES/records' && method === 'patch' && opts.refuserLignes) throw new Error('Grist indisponible ou requête refusée (400).');
       if (p === '/apply') { (opts.applies = opts.applies || []).push(J(body)); body.forEach(a => { if (a[0] === 'AddColumn') { cols[a[1]][a[2]] = a[3].type; refs[a[2]] = 900; } if (a[0] === 'ModifyColumn') { if (a[3].type) cols[a[1]][a[2]] = a[3].type; if (a[3].formula) formules[a[2]] = a[3]; } }); return {}; }
       const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c && method === 'post') { body.columns.forEach(x => { (cols[c[1]] = cols[c[1]] || {})[x.id] = x.fields.type; }); return {}; }
       if (c) return { columns: Object.keys(cols[c[1]] || {}).map(id => ({ id, fields: Object.assign({ type: cols[c[1]][id] }, refs[id] && c[1] === 'Planning_Periodes' ? { colRef: refs[id] } : {}, formules[id] && c[1] === 'Planning_Periodes' ? { formula: formules[id].formula } : {}) })) };
@@ -326,6 +328,14 @@ test('organisation du tableau : ordre et groupes enregistrés, nouvelle classe p
   assert.ok(!g.calls.some(c => c.method === 'delete'));
   const h = read('apps-script/Plannings_DEV610.html');
   for (const t of ['data-p="pOrganisation"', 'draggable="true"', "addEventListener('drop'", "occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation'", 'Ajouter au tableau', 'function etiquette(l)']) assert.ok(h.includes(t), t);
+});
+test('chargement robuste : un refus de Grist sur la liste Calendrier ou la mise à jour des lignes ne bloque pas la page', () => {
+  const g = grist({ refuserApply: true }); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.strictEqual(r.annee.code, '2026-2027'); assert.strictEqual(r.lignes.length, k.EUC_DEV610_LIGNES_DEFAUT_.length); assert.deepStrictEqual(J(r.avertissements), []);
+  const g2 = grist(); g2.k.EUC_DEV610_charger({}); g2.tables.EUC_PLAN_LIGNES.forEach(x => { x.fields.Formation = ''; }); g2.k.CacheService.getScriptCache().put('EUC_DEV610_TABLES3', '');
+  const g3 = grist({ refuserLignes: true }); g3.tables.EUC_PLAN_LIGNES = J(g2.tables.EUC_PLAN_LIGNES);
+  const r3 = g3.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.strictEqual(r3.annee.code, '2026-2027'); assert.ok(/mise à jour des lignes de planning/.test(r3.avertissements[0]), r3.avertissements[0]);
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
