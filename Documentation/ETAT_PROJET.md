@@ -17,6 +17,11 @@
 - Publication verte : premier essai bloqué par le jeton clasp (`invalid_rapt`),
   rien poussé ; second essai réussi, version immuable `@1084` sur les deux Web
   Apps vertes, contrôle HTTP 31/31 routes dont `plannings-pfmp`.
+- Correctif `3035038` publié en `@1085` (31/31 routes) : les vacances
+  prévisionnelles 2027-2028 et 2028-2029, décochées « Actif » dans Grist,
+  étaient ignorées ; les alertes d'une année restaient affichées après un
+  changement d'année. Vacances aussi reconnues par leurs dates.
+- Premier chargement par l'utilisateur : tables `EUC_PLAN_*` créées dans Grist.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :
