@@ -27,6 +27,14 @@
   PFMP quand la classe est inactive ou non rattachée, propose ces classes au
   rattachement, liste les périodes non reprises avec leur raison, et un bouton
   « Reprendre le calendrier publié » relance la reprise dans une version.
+- `56ecdaf` (`@1089`) : planning complet (scolaire, mixité, classes entières
+  CFA / CFAI, bloc GRETA), lignes repérées par Formation / Niveau et jamais par
+  `Ligne_sheet`, rangées Du / Au, semaines fériées en rouge, impression A3.
+- Calibrage de `Planning_Periodes` (accord de l'utilisateur du 20 octobre 2026),
+  lancé depuis « Lignes et classes » : colonne `Ligne_planning` (référence vers
+  `EUC_PLAN_LIGNES`), Formation / Niveau / Ligne_sheet recopiés par formule
+  déclenchée, Type en liste déroulante, ligne renseignée sur les périodes
+  existantes avec aperçu ; cas douteux listés, jamais écrits.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :

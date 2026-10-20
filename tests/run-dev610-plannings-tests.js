@@ -26,7 +26,7 @@ function grist(opts) {
     Types_Planning: [{ id: 1, fields: { Type: 'PFMP Tbac', Couleur: '#00C853' } }, { id: 2, fields: { Type: 'P.dif.', Couleur: '#C00000' } }, { id: 3, fields: { Type: 'BTS_STAGE', Libelle: 'Stage BTS', Couleur: '#FF00CC' } }, { id: 4, fields: { Type: 'PFMP 1ère', Couleur: '#00C890' } }],
     Planning_Periodes: (opts.periodes || []).map(J)
   };
-  const calls = [], creees = [], cache = {};
+  const calls = [], creees = [], cache = {}, refs = {}, formules = {};
   const cols = { Planning_Periodes: { Annee_scolaire: 'Text', Type: 'Text', Date_debut: 'Date', Date_fin: 'Date', Classes_concernees: 'RefList:Classes', Classe: 'Ref:Classes', Classe_PFMP: 'Text', Formation: 'Text', Niveau: 'Text', Couleur: 'Text', Ligne_sheet: 'Int', Commentaire: 'Text', Actif: 'Bool', Duree_jour: 'Text' } };
   const k = {
     String, Number, Array, Object, JSON, Date, Math, Error, RegExp, console: { log() {} }, isFinite, isNaN,
@@ -39,8 +39,9 @@ function grist(opts) {
       calls.push({ method, p, body: J(body || null) });
       if (p === '/tables' && method === 'get') return { tables: Object.keys(tables).map(id => ({ id })) };
       if (p === '/tables' && method === 'post') { body.tables.forEach(t => { tables[t.id] = []; creees.push(t.id); cols[t.id] = {}; t.columns.forEach(x => { cols[t.id][x.id] = x.fields.type; }); }); return {}; }
+      if (p === '/apply') { (opts.applies = opts.applies || []).push(J(body)); body.forEach(a => { if (a[0] === 'AddColumn') { cols[a[1]][a[2]] = a[3].type; refs[a[2]] = 900; } if (a[0] === 'ModifyColumn') { if (a[3].type) cols[a[1]][a[2]] = a[3].type; if (a[3].formula) formules[a[2]] = a[3]; } }); return {}; }
       const c = /^\/tables\/([^/]+)\/columns$/.exec(p); if (c && method === 'post') { body.columns.forEach(x => { (cols[c[1]] = cols[c[1]] || {})[x.id] = x.fields.type; }); return {}; }
-      if (c) return { columns: Object.keys(cols[c[1]] || {}).map(id => ({ id, fields: { type: cols[c[1]][id] } })) };
+      if (c) return { columns: Object.keys(cols[c[1]] || {}).map(id => ({ id, fields: Object.assign({ type: cols[c[1]][id] }, refs[id] && c[1] === 'Planning_Periodes' ? { colRef: refs[id] } : {}, formules[id] && c[1] === 'Planning_Periodes' ? { formula: formules[id].formula } : {}) })) };
       const m = /^\/tables\/([^/]+)\/records$/.exec(p); if (!m) return {};
       const t = tables[m[1]] = tables[m[1]] || [];
       if (method === 'get') return { records: J(t) };
@@ -52,7 +53,7 @@ function grist(opts) {
   vm.createContext(k); vm.runInContext(sources, k);
   k.EUC_SUIVI2_aujourdhui_ = () => '2026-10-20';
   /* Les cellules RefList arrivent de Grist sous la forme ['L', …] : la lecture doit les comprendre. */
-  return { k, tables, calls, creees };
+  return { k, tables, calls, creees, opts, formules };
 }
 const { k } = grist();
 const lignesDefaut = () => k.EUC_DEV610_LIGNES_DEFAUT_.map((l, i) => ({ code: l[0], libelle: l[1], calendrier: l[2], groupe: l[3], profil: l[4], classePfmp: l[5], ordre: i, formation: l[7], niveau: l[8], actif: true }));
@@ -262,6 +263,43 @@ test('reprise des mixités et classes entières par Formation / Niveau (colonnes
   assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])).sort(), [['CAP_PEINTRE', 'VISITE', '2026-12-16'], ['MIX_1BTS_MV', 'ENT.', '2026-10-12'], ['MIX_1BTS_MV', 'Stage BTS', '2027-05-31'], ['MIX_2BTS_CPI_CPRP', 'VISITE', '2026-12-14']]);
   assert.strictEqual(r.tests, 1); assert.strictEqual(r.ignorees, 0);
 });
+test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_planning, recopie Formation/Niveau/Ligne_sheet, Type en liste, cas douteux jamais écrits', () => {
+  const g = grist({ periodes: [
+    { id: 280, fields: { Annee_scolaire: '2026-2027', Type: 'Stage BTS', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 41, Date_debut: sec('2027-05-31'), Date_fin: sec('2027-08-31'), Actif: true } },
+    { id: 369, fields: { Annee_scolaire: '2026-2027', Type: 'ENT.', Formation: '1BTS MV', Niveau: 'Mixité', Ligne_sheet: 42, Date_debut: sec('2026-10-12'), Date_fin: sec('2026-10-16'), Actif: true } },
+    { id: 330, fields: { Annee_scolaire: '2026-2027', Type: 'Visite', Formation: '2BTS CPI-CPRP', Niveau: 'Mixité', Ligne_sheet: 42, Date_debut: sec('2026-11-02'), Date_fin: sec('2026-11-06'), Actif: true } },
+    { id: 284, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP TCAP', Formation: 'CAP', Niveau: 'T CA', Ligne_sheet: 9, Date_debut: sec('2027-03-15'), Date_fin: sec('2027-04-09'), Classes_concernees: ['L', 23], Actif: true } },
+    { id: 74, fields: { Annee_scolaire: '2026-2027', Type: 'VISITE', Formation: 'CAP', Niveau: 'CP', Date_debut: sec('2026-12-16'), Date_fin: sec('2026-12-18'), Actif: true } },
+    { id: 500, fields: { Annee_scolaire: '2026-2027', Type: 'ENT.', Formation: 'Inconnue', Niveau: 'Mixité', Date_debut: sec('2026-12-16'), Date_fin: sec('2026-12-18'), Actif: true } }
+  ] });
+  g.tables.Types_Planning.push({ id: 9, fields: { Type: 'VISITE' } }, { id: 10, fields: { Type: 'PFMP T CAP' } }, { id: 11, fields: { Type: 'ENT.' } });
+  g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const ecritures = () => g.calls.filter(c => c.method !== 'get' && /Planning_Periodes|apply/.test(c.p)).length;
+  const ap = g.k.EUC_DEV610_calibrer({});
+  assert.strictEqual(ap.apercu, true); assert.strictEqual(ecritures(), 0, 'l’aperçu n’écrit rien');
+  assert.deepStrictEqual(J(ap.douteux.map(x => x.id)), [500]);
+  assert.deepStrictEqual(J(ap.typesChanges), { 'Visite → VISITE': 1, 'PFMP TCAP → PFMP T CAP': 1 });
+  assert.ok(ap.schema.some(x => /Ligne_planning/.test(x)) && ap.schema.some(x => /Type/.test(x)));
+  assert.strictEqual(g.k.EUC_DEV610_calibrer({ confirmation: 'NON' }).apercu, true); assert.strictEqual(ecritures(), 0, 'sans confirmation CALIBRER, rien n’est écrit');
+  const r = g.k.EUC_DEV610_calibrer({ confirmation: 'CALIBRER' });
+  assert.strictEqual(r.apercu, false);
+  const a = J(g.opts.applies);
+  assert.deepStrictEqual(a[0], [['AddColumn', 'Planning_Periodes', 'Ligne_planning', { type: 'Ref:EUC_PLAN_LIGNES', isFormula: false, label: 'Ligne de planning' }]]);
+  assert.deepStrictEqual(a[1], [['SetDisplayFormula', 'Planning_Periodes', null, 900, '$Ligne_planning.Libelle']]);
+  const mod = a[2]; assert.deepStrictEqual(mod.slice(0, 3).map(x => [x[2], x[3].formula, x[3].recalcWhen, x[3].recalcDeps]), [['Formation', '$Ligne_planning.Formation if $Ligne_planning and $Ligne_planning.Formation else value', 1, ['L', 900]], ['Niveau', '$Ligne_planning.Niveau if $Ligne_planning and $Ligne_planning.Niveau else value', 1, ['L', 900]], ['Ligne_sheet', '$Ligne_planning.Ligne_sheet if $Ligne_planning and $Ligne_planning.Ligne_sheet else value', 1, ['L', 900]]]);
+  assert.strictEqual(mod[3][2], 'Type'); assert.strictEqual(mod[3][3].type, 'Choice'); const choix = JSON.parse(mod[3][3].widgetOptions).choices; assert.ok(choix.includes('VISITE') && choix.includes('Stage BTS') && choix.includes('PFMP T CAP') && !choix.includes('Visite'));
+  const f = id => g.tables.Planning_Periodes.find(x => x.id === id).fields, L = code => g.tables.EUC_PLAN_LIGNES.find(x => x.fields.Code === code).id;
+  assert.deepStrictEqual([f(369).Ligne_planning, f(369).Ligne_sheet, f(369).Formation], [L('MIX_1BTS_MV'), 41, '1BTS MV']);
+  assert.deepStrictEqual([f(330).Ligne_planning, f(330).Type, f(330).Ligne_sheet], [L('MIX_2BTS_CPI_CPRP'), 'VISITE', 42]);
+  assert.deepStrictEqual([f(284).Ligne_planning, f(284).Type], [L('TCAP'), 'PFMP T CAP']);
+  assert.deepStrictEqual([f(74).Ligne_planning, f(74).Formation, f(74).Niveau, f(74).Ligne_sheet], [L('CAP_PEINTRE'), 'CAP Connexe', 'CP', 10]);
+  assert.strictEqual(f(500).Ligne_planning, undefined); assert.strictEqual(f(500).Formation, 'Inconnue');
+  assert.ok(!g.calls.some(c => c.method === 'delete'));
+  /* Deuxième passage : structure en place, plus rien à modifier ; la reprise lit Ligne_planning en priorité. */
+  const r2 = g.k.EUC_DEV610_calibrer({}); assert.deepStrictEqual([r2.schema.filter(x => /Ligne_planning|Recopier/.test(x)).length, r2.aCorriger, r2.douteux.length], [0, 0, 1]);
+  f(369).Formation = 'Autre chose'; f(369).Niveau = 'X';
+  const rep = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' }); assert.ok(rep.periodes.some(p => p.ligne === 'MIX_1BTS_MV' && p.debut === '2026-10-12'));
+});
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
     { id: 50, fields: { Annee_scolaire: '2026-2027', Type: 'PFMP Tbac', Date_debut: sec('2027-01-11'), Date_fin: sec('2027-01-29'), Classes_concernees: ['L', 30, 31], Actif: true, Commentaire: 'ancien outil' } },
@@ -319,7 +357,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');

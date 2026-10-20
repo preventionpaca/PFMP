@@ -125,6 +125,12 @@ table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120
     <div id="nonRattachees" class="note"></div>
     <table class="t"><thead><tr><th>Ligne</th><th>Calendrier</th><th>Formation (col. A)</th><th>Niveau (col. B)</th><th>Profil</th><th>Classe PFMP</th><th>Classes rattachées</th></tr></thead><tbody id="tLignes"></tbody></table>
     <div class="barre"><span style="flex:1"></span><button type="button" class="plein" id="enregistrerLignes" disabled>Enregistrer le rattachement</button></div>
+    <div class="cadre">
+      <h3 style="margin:0 0 4px">Saisie sans erreur dans Planning_Periodes</h3>
+      <p class="note">Ajoute la colonne « Ligne_planning » (vous choisissez la ligne dans une liste), recopie automatiquement Formation, Niveau et Ligne_sheet depuis la ligne choisie, transforme « Type » en liste déroulante et renseigne la ligne des périodes existantes. Les cas douteux sont seulement listés. Pour changer l’ordre ou les numéros de ligne, modifiez « Ordre » ou « Ligne_sheet » dans EUC_PLAN_LIGNES, puis relancez cet aperçu : les périodes sont réalignées.</p>
+      <div class="barre"><label><input type="checkbox" id="uniformiser" checked> Uniformiser les libellés de type (ex. « Visite » → « VISITE »)</label><span style="flex:1"></span><button type="button" id="calibrerApercu">Aperçu du calibrage</button><button type="button" class="plein" id="calibrer" disabled>Appliquer le calibrage</button></div>
+      <div id="resultatCalibrage"></div>
+    </div>
   </section>
 
   <section id="pJours" class="panneau">
@@ -340,6 +346,17 @@ function rendreLignes(){var cl={};D.classes.forEach(function(c){cl[c.id]=c;});va
   Array.prototype.forEach.call($('tLignes').querySelectorAll('tr[data-c]'),function(tr){var code=tr.dataset.c;
     tr.querySelector('.aj').onchange=function(){var v=Number(this.value);if(!v)return;D.rattachements[code]=(D.rattachements[code]||[]).concat([v]).sort(function(a,b){return a-b;});rendreLignes();};
     Array.prototype.forEach.call(tr.querySelectorAll('[data-r]'),function(b){b.onclick=function(){D.rattachements[code]=(D.rattachements[code]||[]).filter(function(id){return id!==Number(b.dataset.r);});rendreLignes();};});});}
+function rendreCalibrage(r){var t=Object.keys(r.typesChanges||{});
+  $('resultatCalibrage').innerHTML='<p><b>'+(r.apercu?'Aperçu':'Calibrage appliqué')+'</b> : '+r.periodes+' période(s) dans Planning_Periodes · '+r.aRenseigner+' ligne(s) de planning à renseigner · '+r.aCorriger+' période(s) modifiée(s) au total · '+r.deja+' déjà renseignée(s) · '+r.douteux.length+' cas douteux (non modifiés).</p>'+
+    (r.schema.length?'<p>Structure :</p><ul class="changements">'+r.schema.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'<p class="ok">Structure déjà en place.</p>')+
+    (t.length?'<p>Types uniformisés :</p><ul class="changements">'+t.map(function(k){return '<li>'+esc(k)+' ('+r.typesChanges[k]+')</li>';}).join('')+'</ul>':'')+
+    (r.douteux.length?'<p class="alerte">Cas douteux, à choisir à la main dans la colonne Ligne_planning :</p><ul class="changements">'+r.douteux.map(function(x){return '<li>#'+x.id+' · '+esc(x.annee)+' · '+esc(x.type)+' du '+dfr(x.debut)+' au '+dfr(x.fin)+' · « '+esc([x.formation,x.niveau].filter(Boolean).join(' / ')||'sans libellé')+' »'+(x.ligneSheet?' · ligne '+x.ligneSheet:'')+'</li>';}).join('')+'</ul>':'')+
+    (r.exemples.length?'<details><summary>Exemples de modifications ('+r.exemples.length+' premières)</summary><ul class="changements">'+r.exemples.map(function(x){var a=x.apres,av=x.avant;return '<li>#'+x.id+' → '+esc(x.ligne||'')+(a.Formation||a.Niveau?' · « '+esc(av.formation+' / '+av.niveau)+' » → « '+esc((a.Formation||av.formation)+' / '+(a.Niveau||av.niveau))+' »':'')+(a.Ligne_sheet?' · ligne '+(av.ligneSheet||'vide')+' → '+a.Ligne_sheet:'')+(a.Type?' · type « '+esc(av.type)+' » → « '+esc(a.Type)+' »':'')+'</li>';}).join('')+'</ul></details>':'');
+  $('calibrer').disabled=!r.apercu||!(r.aCorriger||r.schema.length);}
+$('calibrerApercu').onclick=function(){occupe(this,'Analyse de Planning_Periodes…','EUC_DEV610_calibrer',{uniformiserTypes:$('uniformiser').checked},rendreCalibrage,120000);};
+$('uniformiser').onchange=function(){$('calibrer').disabled=true;$('resultatCalibrage').innerHTML='';};
+$('calibrer').onclick=function(){if(!confirm('Modifier la structure de Planning_Periodes et renseigner les périodes existantes, comme dans l’aperçu ?'))return;
+  occupe(this,'Calibrage en cours…','EUC_DEV610_calibrer',{uniformiserTypes:$('uniformiser').checked,confirmation:'CALIBRER'},function(r){rendreCalibrage(r);message('<span class="ok">Calibrage appliqué</span> : '+r.ecrites+' période(s) mises à jour.');},180000);};
 $('enregistrerLignes').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerRattachements',{annee:D.annee.code,rattachements:D.rattachements},function(r){message('<span class="ok">Rattachement enregistré pour '+esc(D.annee.code)+'</span> ('+r.lignes+' ligne(s)).');D.rattachementsEnregistres=Object.keys(D.rattachements);rendreLignes();});};
 
 /* ---------- Jours particuliers ---------- */

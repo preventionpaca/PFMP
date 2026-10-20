@@ -384,7 +384,7 @@ function EUC_DEV610_jours_(annee) {
 /* Périodes en place dans Planning_Periodes (lecture seule, forme simplifiée). */
 function EUC_DEV610_existantes_(annees) {
   return EUC_DEV610_lire_('Planning_Periodes').map(function(r) { var f = r.fields || {}; var ids = EUC_DEV610_refs_(f.Classes_concernees).map(Number); if (!ids.length && EUC_DEV610_ref_(f.Classe)) ids = [EUC_DEV610_ref_(f.Classe)];
-    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, actif: f.Actif !== false, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '' }; });
+    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, actif: f.Actif !== false, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0 }; });
 }
 
 /* ===================== Services de la page ===================== */
@@ -506,6 +506,8 @@ function EUC_DEV610_ligneParLibelles_(p, lignes) {
   return parNiveau.length === 1 ? parNiveau[0].code : '';
 }
 function EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes) {
+  /* 0. Ligne choisie dans Planning_Periodes (colonne Ligne_planning) : elle fait foi. */
+  if (p.ligneId) { var choisie = (lignes || []).filter(function(l) { return l.id === p.ligneId; })[0]; if (choisie) return { ligne: choisie.code, ajouts: [] }; }
   var codes = {}; (p.classes || []).forEach(function(id) { if (parClasse[id]) codes[parClasse[id]] = 1; });
   var k = Object.keys(codes);
   if (k.length === 1) return { ligne: k[0], ajouts: [] };
@@ -576,7 +578,7 @@ function EUC_DEV610_publier(q) {
     var anneeVal = /^Ref/.test(cols.Annee_scolaire || '') ? c.annee.id : c.annee.code, commentaire = EUC_DEV610_COMMENTAIRE_ + ' — ' + c.annee.code + ' v' + c.version.numero;
     var champs = function(x) {
       var l = lignes[x.ligne], niveau = l.libelle.split('—').pop().trim();
-      return EUC_DEV604_champs_(cols, { Annee_scolaire: anneeVal, Type: x.type, Date_debut: x.debut, Date_fin: x.fin, Classes_concernees: x.classes, Classe_PFMP: /^Ref/.test(cols.Classe_PFMP || '') ? undefined : l.classePfmp, Formation: l.groupe, Niveau: niveau, Couleur: types[EUC_DEV610_n_(x.type)] || undefined, Ligne_sheet: l.ligneSheet || undefined, Commentaire: commentaire, Actif: true });
+      return EUC_DEV604_champs_(cols, { Annee_scolaire: anneeVal, Type: x.type, Date_debut: x.debut, Date_fin: x.fin, Classes_concernees: x.classes, Classe_PFMP: /^Ref/.test(cols.Classe_PFMP || '') ? undefined : l.classePfmp, Formation: l.formation || l.groupe, Niveau: l.niveau || niveau, Couleur: types[EUC_DEV610_n_(x.type)] || undefined, Ligne_sheet: l.ligneSheet || undefined, Ligne_planning: l.id || undefined, Commentaire: commentaire, Actif: true });
     };
     var creer = d.creer.map(function(x) { return { fields: champs(x) }; });
     var modifier = d.modifier.map(function(x) { var f = champs(x); delete f.Commentaire; return { id: x.id, fields: f }; }).concat(d.desactiver.map(function(x) { return { id: x.id, fields: { Actif: false } }; }));
@@ -601,4 +603,96 @@ function EUC_DEV610_enregistrerJour(q) {
   if (heures != null && !(heures >= 0 && heures <= 12)) throw new Error('Heures entre 0 et 12.');
   EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.jours + '/records', { records: [{ fields: { Annee_scolaire: annee, Date: Math.round(Date.parse(date + 'T00:00:00Z') / 1000), Nature: nature, Libelle: EUC_DEV610_t_(q.libelle).slice(0, 200), Heures: heures, Actif: true } }] });
   return { ok: true };
+}
+
+/* ===================== Calibrage de Planning_Periodes (accord de l'utilisateur du 20 octobre 2026) =====================
+ * - colonne Ligne_planning (référence vers EUC_PLAN_LIGNES, affichée par son libellé) : la ligne se choisit dans une liste ;
+ * - Formation, Niveau et Ligne_sheet recopiés automatiquement de la ligne choisie (formule déclenchée par Ligne_planning,
+ *   les colonnes restent modifiables par l'ancien outil) ;
+ * - Type en liste déroulante alimentée par Types_Planning, libellés existants uniformisés ;
+ * - Ligne_planning renseignée une fois sur les périodes existantes, cas douteux listés et jamais écrits. */
+var EUC_DEV610_TYPES_GARDES_ = ['Stage BTS'];
+/* Libellé canonique d'un type (calcul pur) : celui de Types_Planning à la casse, aux espaces et aux accents près. */
+function EUC_DEV610_typeCanonique_(type, types) {
+  var t = EUC_DEV610_t_(type); if (!t) return t;
+  if (EUC_DEV610_TYPES_GARDES_.indexOf(t) >= 0) return t;
+  var n = EUC_DEV610_n_(t), trouve = (types || []).filter(function(x) { return EUC_DEV610_n_(x) === n; })[0];
+  return trouve || t;
+}
+/* Plan du calibrage (calcul pur) : périodes à renseigner, types à uniformiser, cas douteux. */
+function EUC_DEV610_planCalibrage_(periodes, lignes, parClasseParAnnee, classesParId, types, uniformiser) {
+  var parId = {}, parCode = {}; lignes.forEach(function(l) { parId[l.id] = l; parCode[l.code] = l; });
+  var maj = [], douteux = [], typesChanges = {}, deja = 0;
+  periodes.forEach(function(p) {
+    var champs = {}, ligne = p.ligneId && parId[p.ligneId] ? parId[p.ligneId] : null;
+    if (!ligne) {
+      if (p.classes.length && p.classes.every(function(id) { var c = classesParId[id]; return c && /^TEST/.test(EUC_DEV610_n_(c.nom)); })) return;
+      var r = EUC_DEV610_ligneDePeriode_(p, parClasseParAnnee[p.annee] || {}, classesParId, lignes);
+      if (!r.ligne) { douteux.push({ id: p.id, annee: p.annee, type: p.type, debut: p.debut, fin: p.fin, formation: p.formation, niveau: p.niveau, ligneSheet: p.ligneSheet, raison: r.raison }); }
+      else { ligne = parCode[r.ligne]; champs.Ligne_planning = ligne.id; }
+    } else deja++;
+    if (ligne) {
+      if (ligne.formation && p.formation !== ligne.formation) champs.Formation = ligne.formation;
+      if (ligne.niveau && p.niveau !== ligne.niveau) champs.Niveau = ligne.niveau;
+      if (ligne.ligneSheet && p.ligneSheet !== ligne.ligneSheet) champs.Ligne_sheet = ligne.ligneSheet;
+    }
+    if (uniformiser) { var c = EUC_DEV610_typeCanonique_(p.type, types); if (c !== p.type) { champs.Type = c; var k = p.type + ' → ' + c; typesChanges[k] = (typesChanges[k] || 0) + 1; } }
+    if (Object.keys(champs).length) maj.push({ id: p.id, fields: champs, avant: { formation: p.formation, niveau: p.niveau, ligneSheet: p.ligneSheet, type: p.type }, ligne: ligne ? ligne.libelle : '' });
+  });
+  return { maj: maj, douteux: douteux, typesChanges: typesChanges, deja: deja };
+}
+function EUC_DEV610_colonnesDetail_(table) {
+  var out = {}; (EUC_ENT_grist('get', '/tables/' + table + '/columns').columns || []).forEach(function(c) { out[c.id] = c.fields || {}; }); return out;
+}
+/* Identifiant interne d'une colonne (pour les formules déclenchées et l'affichage d'une référence). */
+function EUC_DEV610_colRef_(table, col, cols) {
+  if (cols && cols[col] && cols[col].colRef) return Number(cols[col].colRef);
+  var q = "SELECT c.id AS id FROM _grist_Tables_column c JOIN _grist_Tables t ON t.id = c.parentId WHERE t.tableId = '" + table.replace(/'/g, '') + "' AND c.colId = '" + col.replace(/'/g, '') + "'";
+  var r = EUC_ENT_grist('get', '/sql?q=' + encodeURIComponent(q)).records || [];
+  return r.length ? Number((r[0].fields || r[0]).id) : 0;
+}
+function EUC_DEV610_contexteCalibrage_(uniformiser) {
+  var annees = EUC_DEV610_annees_(), lignes = EUC_DEV610_lignes_().filter(function(l) { return l.actif; }), classes = EUC_DEV610_classes_(), classesParId = {}, parClasseParAnnee = {};
+  classes.forEach(function(c) { classesParId[c.id] = c; });
+  var cols = EUC_DEV610_colonnesDetail_('Planning_Periodes');
+  var periodes = EUC_DEV610_lire_('Planning_Periodes').map(function(r) { var f = r.fields || {}, ids = EUC_DEV610_refs_(f.Classes_concernees).map(Number); if (!ids.length && EUC_DEV610_ref_(f.Classe)) ids = [EUC_DEV610_ref_(f.Classe)];
+    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), ligneSheet: Number(f.Ligne_sheet) || 0, classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0 }; });
+  periodes.forEach(function(p) { if (parClasseParAnnee[p.annee]) return; var ratt = EUC_DEV610_rattachements_(p.annee).classes, m = parClasseParAnnee[p.annee] = {};
+    lignes.forEach(function(l) { (ratt[l.code] || EUC_DEV610_proposerClasses_(l, classes)).forEach(function(id) { m[id] = l.code; }); }); });
+  var types = EUC_DEV610_types_().map(function(t) { return t.type; });
+  var plan = EUC_DEV610_planCalibrage_(periodes, lignes, parClasseParAnnee, classesParId, types, uniformiser);
+  var choix = {}; types.concat(EUC_DEV610_TYPES_GARDES_).forEach(function(t) { choix[t] = 1; });
+  periodes.forEach(function(p) { var t = uniformiser ? EUC_DEV610_typeCanonique_(p.type, types) : p.type; if (t) choix[t] = 1; });
+  var schema = [];
+  if (!cols.Ligne_planning) schema.push('Créer la colonne « Ligne_planning » (liste des lignes de planning, affichée par leur libellé).');
+  ['Formation', 'Niveau', 'Ligne_sheet'].forEach(function(c) { if (cols[c] && !EUC_DEV610_t_(cols[c].formula)) schema.push('Recopier automatiquement « ' + c + ' » depuis la ligne choisie.'); });
+  if (cols.Type && !/^Ref/.test(cols.Type.type || '') && (cols.Type.type !== 'Choice' || Object.keys(choix).some(function(t) { var w = {}; try { w = JSON.parse(cols.Type.widgetOptions || '{}'); } catch (e) {} return (w.choices || []).indexOf(t) < 0; }))) schema.push('Transformer « Type » en liste déroulante (' + Object.keys(choix).length + ' types).');
+  return { cols: cols, plan: plan, schema: schema, choix: Object.keys(choix).sort(), periodes: periodes.length };
+}
+function EUC_DEV610_calibrer(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV610_tables_();
+  var uniformiser = q.uniformiserTypes !== false, c = EUC_DEV610_contexteCalibrage_(uniformiser), p = c.plan;
+  var resume = { ok: true, apercu: q.confirmation !== 'CALIBRER', periodes: c.periodes, schema: c.schema, aRenseigner: p.maj.filter(function(m) { return m.fields.Ligne_planning; }).length, aCorriger: p.maj.length, deja: p.deja, douteux: p.douteux, typesChanges: p.typesChanges,
+    exemples: p.maj.slice(0, 60).map(function(m) { return { id: m.id, ligne: m.ligne, avant: m.avant, apres: m.fields }; }) };
+  if (resume.apercu) return resume;
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) throw new Error('Un autre calibrage est en cours.');
+  try {
+    var cols = c.cols;
+    if (!cols.Ligne_planning) {
+      EUC_ENT_grist('post', '/apply', [['AddColumn', 'Planning_Periodes', 'Ligne_planning', { type: 'Ref:' + EUC_DEV610_T_.lignes, isFormula: false, label: 'Ligne de planning' }]]);
+      cols = EUC_DEV610_colonnesDetail_('Planning_Periodes');
+      var nouvelle = EUC_DEV610_colRef_('Planning_Periodes', 'Ligne_planning', cols);
+      if (nouvelle) EUC_ENT_grist('post', '/apply', [['SetDisplayFormula', 'Planning_Periodes', null, nouvelle, '$Ligne_planning.Libelle']]);
+    }
+    var ref = EUC_DEV610_colRef_('Planning_Periodes', 'Ligne_planning', cols), actions = [];
+    if (!ref) throw new Error('Colonne Ligne_planning introuvable après création : calibrage interrompu, rien d’autre n’a été modifié.');
+    if (ref) [['Formation', 'Formation'], ['Niveau', 'Niveau'], ['Ligne_sheet', 'Ligne_sheet']].forEach(function(x) {
+      if (cols[x[0]] && !EUC_DEV610_t_(cols[x[0]].formula)) actions.push(['ModifyColumn', 'Planning_Periodes', x[0], { formula: '$Ligne_planning.' + x[1] + ' if $Ligne_planning and $Ligne_planning.' + x[1] + ' else value', recalcWhen: 1, recalcDeps: ['L', ref] }]);
+    });
+    if (cols.Type && !/^Ref/.test(cols.Type.type || '')) actions.push(['ModifyColumn', 'Planning_Periodes', 'Type', { type: 'Choice', widgetOptions: JSON.stringify({ choices: c.choix }) }]);
+    if (actions.length) EUC_ENT_grist('post', '/apply', actions);
+    for (var i = 0; i < p.maj.length; i += 200) EUC_ENT_grist('patch', '/tables/Planning_Periodes/records', { records: p.maj.slice(i, i + 200).map(function(m) { return { id: m.id, fields: m.fields }; }) });
+    resume.apercu = false; resume.ecrites = p.maj.length; resume.actions = actions.length + (c.cols.Ligne_planning ? 0 : 1);
+    return resume;
+  } finally { lock.releaseLock(); }
 }

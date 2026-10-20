@@ -11,6 +11,9 @@
   document « Prévisionnel » et n'est jamais publié dans `Planning_Periodes`.
   Publier ne supprime rien : une période retirée est désactivée, une période
   déplacée est modifiée sur place pour que les conventions gardent leur période.
+  Dans `Planning_Periodes`, la ligne d'une période se choisit dans
+  `Ligne_planning` ; Formation, Niveau et Ligne_sheet en découlent. L'ordre et
+  les numéros de ligne se changent une seule fois dans `EUC_PLAN_LIGNES`.
 
 - Dans le parcours QR élève, une réponse perdue ou un échec apparent après le
   clic sur « Enregistrer » impose une relecture serveur avant d'afficher le
