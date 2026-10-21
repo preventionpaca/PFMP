@@ -1,5 +1,25 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : mixités nommées, sans classe ; lignes inactives masquées
+
+- Mixités renommées par niveau et section (« 1 BAC PRO Mixité », « T BAC PRO
+  Mixité », « 1BTS CPI Mixité », « 2BTS CPRP Mixité », « 1BTS MV Mixité »…) :
+  `EUC_DEV610_libelleMixite_`. Les anciens noms par défaut (« Mixité »,
+  « Mixité CPI »…) sont renommés une fois au chargement ; un nom saisi n'est
+  jamais touché. « Appliquer les noms Pronote » suit la même règle. Clé de cache
+  des tables portée à `EUC_DEV610_TABLES8` pour lancer ce renommage.
+- Mixités sans classe rattachée : les apprentis sont suivis dans leurs classes
+  scolaires. Onglet « Lignes et classes » sans sélecteur pour les mixités ;
+  publication et reprise ignorent un éventuel rattachement de mixité ; une
+  période en entreprise d'une mixité n'est pas publiée (la ligne scolaire la
+  publie) et ne déclenche plus d'alerte « sans classe ». Logos des mixités :
+  section lue dans le code de la ligne.
+- Lignes inactives masquées dans « Lignes et classes » (case « Afficher les
+  lignes inactives ») ; lignes retirées du modèle (TPEEB, anciennes mixités
+  CPI-CPRP) masquées dans « Organisation du tableau ». Pas de suppression.
+- Tests simulés : 35/35 DEV610, suite complète verte ; onglets vérifiés dans
+  Chromium sur la copie locale.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : vocabulaire « Classe entière » / « Formation continue »
 
 - Planning général : cases « Classe entière » et « Formation continue » (au lieu

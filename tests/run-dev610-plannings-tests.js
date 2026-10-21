@@ -324,7 +324,7 @@ test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_pla
   assert.deepStrictEqual([f(369).Ligne_planning, f(369).Ligne_sheet, f(369).Formation], [L('MIX_1BTS_MV'), 41, '1BTS MV']);
   assert.deepStrictEqual([f(330).Ligne_planning, f(330).Type, f(330).Ligne_sheet], [L('MIX_2BTS_CPI'), 'VISITE', 42]);
   /* Mixité CPI-CPRP séparée : une copie est créée pour CPRP, avec sa propre ligne et les mêmes dates. */
-  assert.deepStrictEqual(J(ap.copies.map(x => [x.source, x.ligne])), [[330, 'Mixité CPRP']]);
+  assert.deepStrictEqual(J(ap.copies.map(x => [x.source, x.ligne])), [[330, '2BTS CPRP Mixité']]);
   const copie = g.tables.Planning_Periodes.find(x => x.fields.Ligne_planning === L('MIX_2BTS_CPRP'));
   assert.deepStrictEqual([copie.fields.Type, copie.fields.Date_debut, copie.fields.Annee_scolaire, copie.fields.Formation, copie.fields.Niveau], ['VISITE', sec('2026-11-02'), '2026-2027', '2BTS CPI-CPRP', 'Mixité']);
   assert.match(copie.fields.Commentaire, /Copie de la période #330/); assert.strictEqual(r.copiees, 1);
@@ -386,7 +386,7 @@ test('mise au modèle 2 : lignes de la première version remplacées (TPEEB uniq
   const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' }), l = c => r.lignes.find(x => x.code === c);
   assert.deepStrictEqual(J([l('TBP_MVA').libelle, l('TBP_MVA').etablissement, l('TBP_MVA').formation, l('TBP_MVA').niveau]), ['TMVA', 'LP', 'T BAC PRO', 'MVA']);
   assert.strictEqual(l('TPEEB').actif, false); assert.strictEqual(l('MIX_1BTS_CPI_CPRP').actif, false);
-  assert.deepStrictEqual(J([l('MIX_1BTS_CPI').libelle, l('MIX_1BTS_CPRP').organismes, l('MIX_1BTS_MV').organismes, l('MIX_TBP').organismes]), ['Mixité CPI', ['CFAI'], ['CFA RAN'], ['CFA RAN']]);
+  assert.deepStrictEqual(J([l('MIX_1BTS_CPI').libelle, l('MIX_1BTS_CPRP').organismes, l('MIX_1BTS_MV').organismes, l('MIX_TBP').organismes]), ['1BTS CPI Mixité', ['CFAI'], ['CFA RAN'], ['CFA RAN']]);
   assert.deepStrictEqual(J([l('TPEEB_19').calendrier, l('TPEEB_19').groupe, l('1MELEC_G').organismes, l('CQPM_ASC').organismes, l('BACHELOR_IP').etablissement]), ['CLASSE_ENTIERE', 'Formation continue et alternance', ['GRETA'], ['GRETA', 'CFAI'], 'LGT']);
   assert.deepStrictEqual(J([l('TSEC').libelle, l('TSEC').groupe]), ['Mon TSEC', 'Mon groupe'], 'ligne enregistrée depuis la page : jamais écrasée');
   assert.strictEqual(l('PERSO').actif, true, 'une ligne ajoutée à la main reste active');
@@ -603,6 +603,25 @@ test('modalité des lignes comme le suivi des apprentis : formation continue d�
     const m = k.EUC_DEV610_modalitesLignes_(lignes, {}, []);
     assert.deepStrictEqual(J(m), { TPMMA: 'FORMATION_CONTINUE' }, 'une seule formation continue : le TPMMA');
   } finally { delete k.EUC_DEV579_profilDefaut_; }
+});
+
+test('mixités : noms distincts par niveau et section, anciens noms renommés une fois, jamais de classe rattachée ni de période en entreprise publiée', () => {
+  assert.deepStrictEqual(['MIX_1BP', 'MIX_TBP', 'MIX_1BTS_CPI', 'MIX_2BTS_CPI', 'MIX_1BTS_CPRP', 'MIX_2BTS_MV'].map(c => k.EUC_DEV610_libelleMixite_(c)), ['1 BAC PRO Mixité', 'T BAC PRO Mixité', '1BTS CPI Mixité', '2BTS CPI Mixité', '1BTS CPRP Mixité', '2BTS MV Mixité']);
+  const libs = lignesDefaut().filter(l => l.calendrier === 'MIXITE').map(l => l.libelle); assert.strictEqual(new Set(libs).size, libs.length, 'aucun doublon de nom');
+  const g = grist();
+  g.tables.EUC_PLAN_LIGNES = [
+    { id: 1, fields: { Code: 'MIX_2BTS_CPI', Libelle: 'Mixité CPI', Calendrier: 'MIXITE', Groupe: '2 BTS', Ordre: 10, Version_modele: 2, Actif: true } },
+    { id: 2, fields: { Code: 'MIX_1BTS_MV', Libelle: 'Mixité MV des apprentis', Calendrier: 'MIXITE', Groupe: '1 BTS', Ordre: 20, Version_modele: 2, Actif: true } }
+  ];
+  g.k.EUC_DEV610_charger({});
+  const lig = g.tables.EUC_PLAN_LIGNES, cpi = lig.find(r => r.fields.Code === 'MIX_2BTS_CPI'), mv = lig.find(r => r.fields.Code === 'MIX_1BTS_MV');
+  assert.strictEqual(lig.find(r => r.fields.Code === 'MIX_1BTS_CPRP').fields.Libelle, '1BTS CPRP Mixité', 'nouvelle ligne : nouveau nom');
+  assert.strictEqual(cpi.fields.Libelle, '2BTS CPI Mixité', 'ancien nom par défaut renommé'); assert.strictEqual(mv.fields.Libelle, 'Mixité MV des apprentis', 'nom saisi gardé');
+  const lignes = lignesDefaut(), d = k.EUC_DEV610_diffPublication_({ periodes: [{ ligne: 'MIX_1BTS_MV', type: 'Stage BTS', debut: '2027-05-31', fin: '2027-07-02' }, { ligne: 'MIX_1BTS_MV', type: 'ENT.', debut: '2026-10-12', fin: '2026-10-16' }] },
+    lignes, { MIX_1BTS_MV: [40], '1BTS_MV': [40] }, [{ id: 7, annee: '2026-2027', type: 'Stage BTS', debut: '2027-05-31', fin: '2027-07-02', classes: [40] }], '2026-2027');
+  assert.deepStrictEqual(J([d.sansClasse, d.creer.map(x => [x.ligne, x.type, x.classes])]), [[], [['MIX_1BTS_MV', 'ENT.', []]]], 'mixité : ENT. publiée sans classe, stage laissé à la ligne scolaire, pas d’alerte');
+  assert.deepStrictEqual(J(d.desactiver.map(x => [x.id, x.ligne])), [[7, '1BTS_MV']], 'la classe 40 reste celle de la ligne scolaire');
+  const pg = read('apps-script/Plannings_DEV610.html'); for (const x of ['id="voirInactives"', 'Mixités : aucune classe à rattacher', '(D.retirees||[]).indexOf(l.code)>=0']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');
