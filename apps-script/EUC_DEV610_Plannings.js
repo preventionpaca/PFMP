@@ -987,8 +987,10 @@ function EUC_DEV610_enregistrerOrganisation(q) {
   actuelles.forEach(function(l) { parId[l.id] = l; });
   (q.lignes || []).forEach(function(l, i) {
     var cal = EUC_DEV610_t_(l.calendrier), groupe = EUC_DEV610_t_(l.groupe), libelle = EUC_DEV610_t_(l.libelle);
-    if (EUC_DEV610_CALENDRIERS_.indexOf(cal) < 0) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : calendrier à choisir dans la liste.');
-    if (!groupe) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : indiquez son groupe (bandeau du tableau).');
+    /* Ligne masquée à l'ancien calendrier (TPEEB, GRETA, FC_ALTERNANCE) : gardée telle quelle, jamais bloquante. */
+    var ancien = l.actif === false && EUC_DEV610_CALENDRIERS_.indexOf(cal) < 0;
+    if (!ancien && EUC_DEV610_CALENDRIERS_.indexOf(cal) < 0) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : calendrier à choisir dans la liste.');
+    if (!groupe && l.actif !== false) throw new Error('Ligne « ' + (libelle || i + 1) + ' » : indiquez son groupe (bandeau du tableau).');
     if (!libelle) throw new Error('Ligne n°' + (i + 1) + ' : libellé obligatoire.');
     var orgs = (Array.isArray(l.organismes) ? l.organismes : EUC_DEV610_t_(l.organismes).split(/\s*,\s*/)).map(EUC_DEV610_t_).filter(Boolean);
     var etab = EUC_DEV610_t_(l.etablissement); if (etab && ['LP', 'LGT'].indexOf(etab) < 0) throw new Error('Ligne « ' + libelle + ' » : établissement support LP ou LGT.');
@@ -997,6 +999,7 @@ function EUC_DEV610_enregistrerOrganisation(q) {
     if (ad && af && af < ad) throw new Error('Ligne « ' + libelle + ' » : la dernière année précède la première.');
     var sections = cal === 'MIXITE' ? (Array.isArray(l.sections) ? l.sections : EUC_DEV610_t_(l.sections).split(/\s*,\s*/)).map(EUC_DEV610_t_).filter(Boolean) : [];
     var champs = { Annee_debut: ad, Annee_fin: af, Sections: sections.join(', '), Libelle: libelle.slice(0, 120), Calendrier: cal, Groupe: groupe.slice(0, 80), Formation: (EUC_DEV610_t_(l.formation) || groupe).slice(0, 80), Niveau: (EUC_DEV610_t_(l.niveau) || libelle).slice(0, 80), Classe_PFMP: EUC_DEV610_t_(l.classePfmp).slice(0, 80), Profil: EUC_DEV610_t_(l.profil).slice(0, 40), Etablissement: etab, Organismes: orgs.join(', '), Ordre: (i + 1) * 10, Version_modele: EUC_DEV610_MODELE_, Actif: l.actif !== false };
+    if (ancien) delete champs.Calendrier;
     if (Number(l.id) > 0 && parId[Number(l.id)]) { if (vus[l.id]) throw new Error('Ligne en double dans l’organisation.'); vus[l.id] = 1; modifier.push({ id: Number(l.id), fields: champs }); }
     else { var code = EUC_DEV610_nouveauCode_(l.classePfmp || libelle, codes); codes.push(code); champs.Code = code; if (!champs.Profil) champs.Profil = code; champs.Heures_jour = cal === 'SCOLAIRE' ? null : 7; creer.push({ fields: champs }); }
   });

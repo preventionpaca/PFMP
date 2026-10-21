@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : enregistrement de l'organisation bloqué par TPEEB
+
+- Constat utilisateur : « Enregistrer l'organisation » refusé (« Ligne TPEEB :
+  calendrier à choisir dans la liste »). La ligne retirée TPEEB, masquée de
+  l'écran depuis @1111, était encore envoyée avec son ancien calendrier.
+- Corrigé : la page n'envoie plus les lignes retirées ; le serveur accepte une
+  ligne masquée à un ancien calendrier sans le réécrire (une ligne affichée
+  reste contrôlée). Test ajouté (38/38 DEV610), suite complète verte.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : années de validité des formations et mixités par filière
 
 - Années de validité : colonnes `Annee_debut` / `Annee_fin` de `EUC_PLAN_LIGNES`

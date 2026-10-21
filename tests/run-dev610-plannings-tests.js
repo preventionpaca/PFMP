@@ -669,4 +669,13 @@ test('mixités par filière : couverture (cochées ou le reste du groupe), alert
   assert.deepStrictEqual(J(k.EUC_DEV610_classesDesFilieres_(lignesDefaut().find(l => l.code === 'MIX_1BP'), lignesDefaut(), ra)).sort(), [11, 12, 13]);
 });
 
+test('organisation : une ligne masquée à l’ancien calendrier (TPEEB) ne bloque jamais l’enregistrement et n’est pas envoyée par la page', () => {
+  const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const org = J(r.lignes).concat([{ id: 0, code: 'TPEEB', libelle: 'TPEEB', groupe: '', calendrier: 'FC_ALTERNANCE', actif: false }]);
+  const res = g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org }); assert.strictEqual(res.creees, 1);
+  const t = g.tables.EUC_PLAN_LIGNES.find(x => x.fields.Libelle === 'TPEEB' && x.fields.Actif === false); assert.ok(t && t.fields.Calendrier === undefined, 'calendrier ancien jamais réécrit');
+  assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: J(r.lignes).map(l => l.code === 'TSEC' ? Object.assign(l, { calendrier: 'FC' }) : l) }), /calendrier/, 'une ligne affichée reste contrôlée');
+  assert.ok(read('apps-script/Plannings_DEV610.html').includes("{lignes:ORG.filter(function(l){return (D.retirees||[]).indexOf(l.code)<0;})}"));
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');
