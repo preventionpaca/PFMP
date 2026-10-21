@@ -42,12 +42,14 @@ table.g thead .lib{z-index:6;background:#f4f8f6}
 table.g .lib{min-width:150px;max-width:150px}table.g .lib2{position:sticky;left:150px;background:#fff;z-index:3;text-align:left;padding:0 4px;font-size:10px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid #cfe3da}table.g thead .lib2{z-index:6;background:#f4f8f6}table.g tr.groupe td.lib2{background:#e8f3ee}
 table.g tr.groupe td{background:#e8f3ee;font-weight:800;text-align:left;padding:2px 8px;font-size:12px;position:sticky;left:0}
 table.g td.c{cursor:crosshair;overflow:visible;white-space:nowrap;font-weight:700;font-size:10px;text-align:left;position:relative}
-table.g td.c .et.bande{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;z-index:2}table.g td.c.run{border-right-color:transparent}table.g td.c.cont::after{content:'';position:absolute;left:-2px;bottom:-2px;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);z-index:3}table.g td.c.part{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+table.g td.c .et.bande{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;z-index:2}table.g td.c.run{border-right-color:transparent}/* Repères de comptage : un point à chaque angle bas de semaine, aux deux bouts compris (4 semaines = 5 points, 4 intervalles). */
+table.g td.c.cont::after,table.g td.c .ptf{content:'';display:block;position:absolute;bottom:-2px;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);z-index:3}table.g td.c.cont::after{left:-2px}table.g td.c .ptf{right:-2px;pointer-events:none}table.g td.c.part{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 table.g td.c .et{position:relative;z-index:2;padding-left:2px;pointer-events:none}
 table.g td.v,table.g th.v{background:var(--vac);color:#ccc}
-table.g td.pv{background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(0,0,0,.12) 4px 6px)}
+table.g td.pv{background-image:repeating-linear-gradient(45deg,#ffffff 0 4px,#e2e2e2 4px 6px)}
 table.g td.sel{outline:2px solid #2563eb;outline-offset:-2px;box-shadow:inset 0 0 0 99px rgba(37,99,235,.22)}
-table.g td.ap{background-image:linear-gradient(225deg,#7f00ff 0 7px,transparent 7px)}
+/* Appel de la première semaine : petit « A » discret dans l'angle haut gauche (jamais de dégradé transparent : noir dans certains PDF). */
+table.g td.ap::before{content:'A';position:absolute;left:1px;top:1px;font-size:7px;font-weight:800;line-height:8px;padding:0 1px;border-radius:2px;background:#7F00FF;color:#fff;z-index:4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 table.g td.man{box-shadow:inset 0 -3px 0 #111}
 table.g th .jp{color:#b45309}
 .action{position:sticky;bottom:0;background:#fffbea;border:1px solid #f0d78c;border-radius:10px;padding:8px 10px;margin-top:8px;display:none;gap:8px;align-items:center;flex-wrap:wrap;z-index:5}
@@ -503,8 +505,8 @@ function rendreGrille(){
     corps+='<tr><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
       var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':'')+(!s.vacances&&s.jours.length?' pv':''),st='',txt='';
       if(o){var c=couleur(o.p.type);
-        if(o.entiere){st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(!o.suiteBande)txt='<span class="et bande" style="width:'+(o.n*26-2)+'px">'+esc(etiq(o.p))+'</span>';else cls+=' cont';var ap=occ[s.i+1];if(ap&&ap.suiteBande)cls+=' run';}
-        else{var g=o.masque.map(function(x,k){return (x===1?c:'transparent')+' '+(k*20)+'% '+((k+1)*20)+'%';}).join(',');st=' style="background-image:linear-gradient(to right,'+g+')"';cls+=' part';}
+        if(o.entiere){st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(!o.suiteBande)txt='<span class="et bande" style="width:'+(o.n*26-2)+'px">'+esc(etiq(o.p))+'</span>';cls+=' cont';var ap=occ[s.i+1];if(ap&&ap.suiteBande)cls+=' run';else txt+='<i class="ptf"></i>';}
+        else{var g=o.masque.map(function(x,k){return (x===1?c:'#ffffff')+' '+(k*20)+'% '+((k+1)*20)+'%';}).join(',');st=' style="background-image:linear-gradient(to right,'+g+')"';cls+=' part';}
         if(o.p.origine==='GRILLE'||o.p.origine==='TABLEAU')cls+=' man';if(o.suite)cls+=' suite';}
       if(appels[l.code+'|'+s.i])cls+=' ap';
       var e=evs[s.i]||[],vusEv={};e.forEach(function(p){var x=evenement(p.type);if(vusEv[x])return;vusEv[x]=1;var c=couleur(p.type);txt='<span class="ev" style="background:'+c+';color:'+texteSur(c)+'">'+esc(x)+'</span>'+txt;});
@@ -515,7 +517,7 @@ function rendreGrille(){
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><i style="background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></i>Appel (règle)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();

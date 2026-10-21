@@ -1,5 +1,19 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : carrés noirs du PDF, repères de comptage, appel en « A »
+
+- Carrés noirs au PDF seulement (semaines partielles du CAP peintre, du Bachelor,
+  de la 1 BAC PRO Mixité en semaine 22, triangle d'appel) : dégradés à parties
+  transparentes, rendus noirs par certains lecteurs PDF. Remplacés par du blanc
+  franc ; hachures des ponts opaques. Test : aucun dégradé transparent dans les
+  styles de la grille.
+- Repères de comptage : un point à chaque angle bas de semaine, bouts compris
+  (4 semaines = 5 points).
+- Appel de la première semaine : petit « A » violet dans l'angle haut gauche au
+  lieu du triangle qui passait sous le libellé ; légende « A Appel (1re semaine) ».
+- Tests simulés : 42/42 DEV610, suite complète verte ; PDF de la copie locale
+  contrôlé en zoom.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : planning général, bandes fusionnées et semaines partielles
 
 - Impression : bureau formation entreprise (BFE) et téléphone dans la ligne de

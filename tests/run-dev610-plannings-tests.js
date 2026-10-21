@@ -731,4 +731,11 @@ test('couleurs par type et pied de page : saisis dans la page, contrôlés, prio
   for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", 'function miseEnPageImpression()', '.misePage{flex-direction:column;align-items:center}', '<span class="bfe">', "cls+=' part'", 'et bande']) assert.ok(pg.includes(x), x);
 });
 
+test('impression : aucun dégradé transparent dans la grille (rendu noir dans certains lecteurs PDF), appel en « A », repères aux deux bouts des bandes', () => {
+  const pg = read('apps-script/Plannings_DEV610.html'), css = pg.slice(0, pg.indexOf('</style>'));
+  assert.ok(!/table\.g[^{]*\{[^}]*gradient\([^)]*transparent/.test(css), 'aucun dégradé transparent dans les styles de la grille');
+  assert.ok(pg.includes("(x===1?c:'#ffffff')"), 'semaines partielles : blanc franc');
+  for (const x of ["table.g td.ap::before{content:'A'", '<i class=\"ptf\"></i>', "cls+=' cont'"]) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');
