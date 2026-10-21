@@ -975,7 +975,9 @@ function EUC_DEV610_suite_(annee, annees) {
 }
 var EUC_DEV610_ORGANISMES_LOGOS_ = ['Lycée Les Eucalyptus', 'CFA RAN', 'CFAI', 'GRETA', 'Ducretet'];
 function EUC_DEV610_logos_() {
-  var out = {}; EUC_DEV610_lire_(EUC_DEV610_T_.logos).forEach(function(r) { var f = r.fields || {}, o = EUC_DEV610_t_(f.Organisme); if (o && /^data:image\//.test(EUC_DEV610_t_(f.Image))) out[o] = { id: Number(r.id), image: EUC_DEV610_t_(f.Image) }; });
+  var out = {}, def = typeof EUC_DEV610_LOGOS_DEFAUT_ !== 'undefined' ? EUC_DEV610_LOGOS_DEFAUT_ : {};
+  Object.keys(def).forEach(function(o) { out[o] = { id: 0, image: def[o], defaut: true }; });
+  EUC_DEV610_lire_(EUC_DEV610_T_.logos).forEach(function(r) { var f = r.fields || {}, o = EUC_DEV610_t_(f.Organisme); if (o && /^data:image\//.test(EUC_DEV610_t_(f.Image))) out[o] = { id: Number(r.id), image: EUC_DEV610_t_(f.Image) }; });
   return out;
 }
 /* Logo d'un organisme : image déjà redimensionnée par la page (PNG ou JPEG en data URL, 400 Ko au plus). Vide = retrait. */
@@ -986,7 +988,7 @@ function EUC_DEV610_enregistrerLogo(q) {
   if (img && !/^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(img)) throw new Error('Image PNG ou JPEG attendue.');
   if (img.length > 400000) throw new Error('Image trop lourde, même réduite (400 Ko au plus).');
   var ex = EUC_DEV610_logos_()[o], champs = { Organisme: o, Image: img, Date_modification: new Date().toISOString() };
-  if (ex) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: ex.id, fields: champs }]);
+  if (ex && ex.id) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: ex.id, fields: champs }]);
   else { var tous = EUC_DEV610_lire_(EUC_DEV610_T_.logos).filter(function(r) { return EUC_DEV610_t_((r.fields || {}).Organisme) === o; })[0]; if (tous) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: tous.id, fields: champs }]); else EUC_DEV610_ecrire_('post', EUC_DEV610_T_.logos, [{ fields: champs }]); }
   return { ok: true, organisme: o, image: img };
 }
@@ -1004,6 +1006,8 @@ function EUC_DEV610_organismesLigne_(l, lignes, rattachements, classesParId) {
   var out = [], ajouter = function(v) { var t = EUC_DEV610_t_(v); if (!t) return; var k = EUC_DEV610_ORGANISMES_LOGOS_.filter(function(o) { return EUC_DEV610_n_(o) === EUC_DEV610_n_(t); })[0] || t; if (out.indexOf(k) < 0) out.push(k); };
   ids.forEach(function(id) { var c = classesParId[id]; if (c) ajouter(c.gestionnaire); });
   ids.forEach(function(id) { var c = classesParId[id]; if (c) ajouter(c.donneur); });
+  /* Organismes cochés sur la ligne et absents de la table (Ducretet pour le TSEC) : ajoutés à la suite. */
+  if (out.length) (l.organismes || []).forEach(ajouter);
   return out;
 }
 function EUC_DEV610_organismesLignes_(lignes, rattachements, classes) {

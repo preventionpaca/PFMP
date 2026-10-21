@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert');
 const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_SUIVI2_Controle.js', 'EUC_DEV604_JeuTest.js', 'EUC_DEV610_Plannings.js'].map(f => read('apps-script/' + f)).join('\n');
+const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_SUIVI2_Controle.js', 'EUC_DEV604_JeuTest.js', 'EUC_DEV610_Logos.js', 'EUC_DEV610_Plannings.js'].map(f => read('apps-script/' + f)).join('\n');
 let n = 0;
 function test(name, fn) { try { fn(); n++; console.log('✓', name); } catch (e) { console.error('✗', name); throw e; } }
 const J = x => JSON.parse(JSON.stringify(x));
@@ -416,12 +416,14 @@ test('calendrier d’une formation : intitulé du diplôme, périodes après l�
   assert.throws(() => g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/gif;base64,AAAA' }), /PNG ou JPEG/);
   g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/png;base64,iVBORw0KGgo=' });
   g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/png;base64,iVBORw0KGgoAAAA=' });
-  assert.strictEqual(g.tables.EUC_PLAN_LOGOS.length, 1); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI.image, 'data:image/png;base64,iVBORw0KGgoAAAA=');
-  g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: '' }); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI, undefined);
+  assert.strictEqual(g.tables.EUC_PLAN_LOGOS.length, 1); assert.strictEqual(g.k.EUC_DEV610_logos_().GRETA.defaut, true); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI.image, 'data:image/png;base64,iVBORw0KGgoAAAA=');
+  g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: '' }); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI.defaut, true, 'retiré : le logo par défaut revient');
+  assert.deepStrictEqual(J(Object.keys(g.k.EUC_DEV610_LOGOS_DEFAUT_).sort()), ['CFA RAN', 'CFAI', 'Ducretet', 'GRETA', 'Lycée Les Eucalyptus']); assert.ok(Object.values(g.k.EUC_DEV610_LOGOS_DEFAUT_).every(v => /^data:image\/(png|jpeg);base64,/.test(v) && v.length < 30000));
   /* Placement d'après la table Classes : gestionnaire puis donneur d'ordre ; mixité d'après les classes « Mixité » du groupe. */
   const cl = { 1: { id: 1, nom: '1BTS CPI', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFAI' }, 2: { id: 2, nom: '1BTS MV', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFA RAN' }, 3: { id: 3, nom: 'CQPM ASC', modalite: 'Classe entière', gestionnaire: 'GRETA', donneur: 'CFAI' }, 4: { id: 4, nom: 'TPEEB 19', gestionnaire: 'GRETA', donneur: 'GRETA' } };
-  const ls = lignesDefaut(), ra = { '1BTS_CPI': [1], '1BTS_MV': [2], CQPM_ASC: [3], TPEEB_19: [4] }, O = code => J(k.EUC_DEV610_organismesLigne_(ls.find(x => x.code === code), ls, ra, cl));
-  assert.deepStrictEqual([O('CQPM_ASC'), O('TPEEB_19'), O('MIX_1BTS_CPI'), O('MIX_1BTS_MV'), O('MIX_1BTS_CPRP'), O('TBP_MVA')], [['GRETA', 'CFAI'], ['GRETA'], ['CFA RAN', 'CFAI'], ['CFA RAN'], [], []]);
+  cl[5] = { id: 5, nom: 'TSEC', modalite: 'Classe entière', gestionnaire: 'CFA RAN', donneur: 'CFA RAN' };
+  const ls = lignesDefaut().map(l => l.code === 'TSEC' ? Object.assign(l, { organismes: ['CFA RAN', 'Ducretet'] }) : l), ra = { '1BTS_CPI': [1], '1BTS_MV': [2], CQPM_ASC: [3], TPEEB_19: [4], TSEC: [5] }, O = code => J(k.EUC_DEV610_organismesLigne_(ls.find(x => x.code === code), ls, ra, cl));
+  assert.deepStrictEqual([O('CQPM_ASC'), O('TPEEB_19'), O('MIX_1BTS_CPI'), O('MIX_1BTS_MV'), O('MIX_1BTS_CPRP'), O('TBP_MVA'), O('TSEC')], [['GRETA', 'CFAI'], ['GRETA'], ['CFA RAN', 'CFAI'], ['CFA RAN'], [], [], ['CFA RAN', 'Ducretet']]);
   const h = read('apps-script/Plannings_DEV610.html'), c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\nvar D=null;\n' + h.match(/function logosFormation\(l\)\{[\s\S]*?droite:'Lycée Les Eucalyptus'\};\}/)[0], c);
   const L = o => J(c.logosFormation({ organismes: o }));
   c.D = { organismesLignes: { X: ['GRETA', 'CFAI'] } }; assert.deepStrictEqual(J(c.logosFormation({ code: 'X', organismes: ['CFA RAN'] })), { gauche: ['GRETA', 'CFAI'], droite: 'Lycée Les Eucalyptus' }, 'la table Classes prime');
