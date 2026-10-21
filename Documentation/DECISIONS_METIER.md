@@ -1,5 +1,15 @@
 # Décisions métier permanentes
 
+- Plannings annuels, source unique (21 octobre 2026) : la saisie se fait dans la
+  page Plannings ; `Planning_Periodes` est conservée (les conventions et
+  affectations y pointent par numéro de ligne) mais n'est plus saisie à la main.
+  La publication y écrit toutes les périodes de la version (sauf formations
+  complémentaires) et remet au propre les lignes existantes sur place : type
+  (libellé exact de Types_Planning), classes concernées (rattachement de la
+  ligne), formation, niveau, classe PFMP, ligne et couleur viennent de la ligne
+  du planning. Une ligne en trop est désactivée, jamais supprimée ; une ligne non
+  rattachée reste telle quelle et se traite dans le bilan de la reprise. Une
+  période en entreprise d'une ligne sans classe rattachée n'est pas publiée.
 - Plannings annuels (20 octobre 2026) : les durées et ancrages des périodes en
   entreprise sont définis par année scolaire dans `EUC_PLAN_REGLES` (collées à
   des vacances ou accolées à une autre période). Le rattachement d'une ligne de

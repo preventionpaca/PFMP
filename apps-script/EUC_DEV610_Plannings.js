@@ -217,48 +217,83 @@ function EUC_DEV610_proposerClasses_(ligne, classes) {
 
 /* Compare les périodes en entreprise d'une version aux lignes existantes de l'année.
  * Rapprochement par ligne (mêmes classes), type et rang. Les lignes hors du périmètre ne sont jamais touchées. */
-function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes, annee) {
-  var lignesParCode = {}, perimetre = {}, res = { creer: [], modifier: [], desactiver: [], inchangees: 0, sansClasse: [] };
-  (lignes || []).forEach(function(l) { if (l.calendrier === 'SCOLAIRE' && l.actif !== false) lignesParCode[l.code] = l; });
-  Object.keys(lignesParCode).forEach(function(code) { (rattachements[code] || []).forEach(function(id) { perimetre[id] = code; }); });
-  var ligneDe = function(ids) { var codes = {}; ids.forEach(function(id) { if (perimetre[id]) codes[perimetre[id]] = 1; }); var k = Object.keys(codes); return k.length === 1 ? k[0] : (k.length ? '*' : ''); };
-  var groupes = {};
+/* Champs propres d'une période publiée (calcul pur) : tout vient de la ligne du planning et de la table Types_Planning,
+ * jamais d'une saisie ; c'est ce qui remet au propre les lignes existantes de Planning_Periodes. */
+function EUC_DEV610_champsPropres_(l, p, classes, typesParCle) {
+  var t = (typesParCle || {})[EUC_DEV610_cleType_(p.type)] || {}, lib = String(l.libelle || '').split('—').pop().trim();
+  var c = String(t.couleur || '').trim(); if (/^[0-9A-Fa-f]{6}$/.test(c)) c = '#' + c;
+  return { type: String(t.type || p.type || '').trim(), debut: p.debut, fin: p.fin, classes: (classes || []).slice().sort(function(a, b) { return a - b; }),
+    formation: String(l.formation || l.groupe || '').trim(), niveau: String(l.niveau || lib).trim(), classePfmp: String(l.classePfmp || '').trim(),
+    ligneSheet: Number(l.ligneSheet) || 0, ligneId: Number(l.id) || 0, couleur: /^#[0-9A-Fa-f]{6}$/.test(c) ? c.toUpperCase() : '' };
+}
+var EUC_DEV610_LIBELLES_CHAMPS_ = { type: 'type', debut: 'début', fin: 'fin', classes: 'classes', formation: 'formation', niveau: 'niveau', classePfmp: 'classe PFMP', ligneSheet: 'ligne', ligneId: 'ligne du planning', couleur: 'couleur' };
+/* Champs d'une ligne existante qui diffèrent des champs propres (valeurs brutes : un espace en trop compte). */
+function EUC_DEV610_ecarts_(e, propre) {
+  var b = e.brut || {}, out = [];
+  var val = { type: b.type != null ? b.type : e.type, debut: e.debut, fin: e.fin, classes: (b.classes || e.classes || []).slice().sort(function(x, y) { return x - y; }), formation: b.formation != null ? b.formation : e.formation,
+    niveau: b.niveau != null ? b.niveau : e.niveau, classePfmp: b.classePfmp != null ? b.classePfmp : e.classePfmp, ligneSheet: Number(b.ligneSheet) || 0, ligneId: Number(e.ligneId) || 0, couleur: String(b.couleur || '').trim().toUpperCase().replace(/^([0-9A-F]{6})$/, '#$1') };
+  Object.keys(EUC_DEV610_LIBELLES_CHAMPS_).forEach(function(k) {
+    if (k === 'ligneId' && !e.aLignePlanning) return;
+    var a = k === 'classes' ? val[k].join() : String(val[k] == null ? '' : val[k]), n = k === 'classes' ? propre[k].join() : String(propre[k] == null ? '' : propre[k]);
+    if (k === 'couleur' && !n) return;
+    if (k === 'ligneSheet' && !propre[k]) return;
+    if (a !== n) out.push(k);
+  });
+  return out;
+}
+/* Publication complète (calcul pur) : toutes les lignes actives, tous les types sauf les formations complémentaires.
+ * Chaque ligne existante de l'année est rattachée à sa ligne du planning (comme la reprise), puis appariée par type :
+ * mêmes dates d'abord, sinon la plus proche ; elle est remise au propre sur place (les conventions gardent leur
+ * période). Les lignes en trop sont désactivées, jamais supprimées ; celles qu'on ne sait pas rattacher restent
+ * telles quelles et sont listées. Une période en entreprise d'une ligne sans classe rattachée n'est pas publiée. */
+function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes, annee, opts) {
+  opts = opts || {};
+  var lignesParCode = {}, parClasse = {}, res = { creer: [], modifier: [], desactiver: [], inchangees: 0, sansClasse: [], nonRattachees: [], laissees: [], tests: 0 };
+  var classesParId = opts.classesParId || {}, typesParCle = opts.typesParCle || {}, dossiers = opts.dossiers || {};
+  (lignes || []).forEach(function(l) { if (l.actif !== false) lignesParCode[l.code] = l; });
+  Object.keys(lignesParCode).forEach(function(code) { (rattachements[code] || []).forEach(function(id) { parClasse[id] = code; }); });
+  var actives = Object.keys(lignesParCode).map(function(c) { return lignesParCode[c]; });
+  var nom = function(code) { return EUC_DEV610_nomLigne_(lignesParCode[code]); };
+  var sautes = {}, groupes = {}, grp = function(k) { return groupes[k] = groupes[k] || { existantes: [], nouvelles: [] }; };
   (existantes || []).forEach(function(r) {
-    if (r.actif === false || r.annee !== annee || !EUC_DEV610_typeFormation_(r.type)) return;
-    var code = ligneDe(r.classes || []); if (!code || code === '*') return;
-    var k = code + '|' + EUC_DEV610_cleType_(r.type); (groupes[k] = groupes[k] || { existantes: [], nouvelles: [] }).existantes.push(r);
+    if (r.actif === false || r.annee !== annee || !r.type || !r.debut || !r.fin) return;
+    if (r.classes && r.classes.length && r.classes.every(function(id) { var c = classesParId[id]; return c && /^TEST/.test(EUC_DEV610_n_(c.nom)); })) { res.tests++; return; }
+    var x = EUC_DEV610_ligneDePeriode_(r, parClasse, classesParId, actives);
+    if (!x.ligne || !lignesParCode[x.ligne]) { res.nonRattachees.push({ id: r.id, type: r.type, debut: r.debut, fin: r.fin, formation: r.formation, niveau: r.niveau, raison: x.raison || 'AUCUNE_LIGNE', dossiers: dossiers[r.id] || 0 }); return; }
+    grp(x.ligne + '|' + EUC_DEV610_cleType_(r.type)).existantes.push(r);
   });
   ((version && version.periodes) || []).forEach(function(p) {
-    var l = lignesParCode[p.ligne]; if (!l || !EUC_DEV610_typeFormation_(p.type)) return;
-    if (!(rattachements[p.ligne] || []).length) { if (res.sansClasse.indexOf(EUC_DEV610_nomLigne_(l)) < 0) res.sansClasse.push(EUC_DEV610_nomLigne_(l)); return; }
-    var k = p.ligne + '|' + EUC_DEV610_cleType_(p.type); (groupes[k] = groupes[k] || { existantes: [], nouvelles: [] }).nouvelles.push(p);
+    var l = lignesParCode[p.ligne]; if (!l || !p.type || EUC_DEV610_estComplementaire_(p.type)) return;
+    if (EUC_DEV610_typeFormation_(p.type) && !(rattachements[p.ligne] || []).length) { if (res.sansClasse.indexOf(nom(p.ligne)) < 0) res.sansClasse.push(nom(p.ligne)); sautes[p.ligne + '|' + EUC_DEV610_cleType_(p.type)] = 1; return; }
+    grp(p.ligne + '|' + EUC_DEV610_cleType_(p.type)).nouvelles.push(p);
   });
+  /* Colonnes absentes ou de type référence : jamais écrites, donc jamais comptées comme écarts. */
+  var propres = function(l, p, classes) { var x = EUC_DEV610_champsPropres_(l, p, classes, typesParCle); if (opts.sansClassePfmp) x.classePfmp = ''; if (opts.sansLigneSheet) x.ligneSheet = 0; return x; };
   var tri = function(a, b) { return String(a.debut).localeCompare(String(b.debut)) || (a.id || 0) - (b.id || 0); };
+  var jours = function(a, b) { return Math.abs(Date.parse(a + 'T12:00:00Z') - Date.parse(b + 'T12:00:00Z')); };
   Object.keys(groupes).sort().forEach(function(k) {
-    var g = groupes[k], code = k.split('|')[0], l = Object.assign({}, lignesParCode[code]); l.libelle = EUC_DEV610_nomLigne_(l); g.existantes.sort(tri); g.nouvelles.sort(tri);
-    /* D'abord les périodes identiques (mêmes dates), puis le reste dans l'ordre chronologique. */
+    var g = groupes[k], code = k.split('|')[0], l = lignesParCode[code], libelle = nom(code), classes = (rattachements[code] || []).slice(), paires = [];
+    /* Ligne sans classe rattachée : ses périodes ne sont pas publiées et ses lignes existantes restent telles quelles. */
+    if (sautes[k]) { g.existantes.forEach(function(e) { res.laissees.push({ id: e.id, ligne: code, libelle: libelle, type: e.type, debut: e.debut, fin: e.fin, dossiers: dossiers[e.id] || 0 }); }); return; }
+    g.existantes.sort(tri); g.nouvelles.sort(tri);
+    /* D'abord les périodes identiques (mêmes dates), puis les plus proches dans le temps. */
     g.nouvelles = g.nouvelles.filter(function(p) {
       var i = -1; g.existantes.some(function(e, j) { if (e.debut === p.debut && e.fin === p.fin) { i = j; return true; } return false; });
-      if (i < 0) return true;
-      var e = g.existantes.splice(i, 1)[0];
-      if (EUC_DEV610_n_(e.type) !== EUC_DEV610_n_(p.type) || (e.classes || []).slice().sort().join() !== rattachements[code].slice().sort().join()) res.modifier.push({ id: e.id, ligne: code, libelle: l.libelle, type: p.type, avant: { debut: e.debut, fin: e.fin, type: e.type }, debut: p.debut, fin: p.fin, classes: rattachements[code].slice() });
-      else res.inchangees++;
-      return false;
+      if (i < 0) return true; paires.push([g.existantes.splice(i, 1)[0], p]); return false;
     });
-    /* Puis les plus proches dans le temps : la période existante est modifiée sur place (les conventions
-     * qui la référencent gardent leur période). */
-    var paires = [], jours = function(a, b) { return Math.abs(Date.parse(a + 'T12:00:00Z') - Date.parse(b + 'T12:00:00Z')); };
     while (g.existantes.length && g.nouvelles.length) {
       var best = null; g.existantes.forEach(function(e, i) { g.nouvelles.forEach(function(p, j) { var d = jours(e.debut, p.debut); if (!best || d < best.d) best = { d: d, i: i, j: j }; }); });
       paires.push([g.existantes.splice(best.i, 1)[0], g.nouvelles.splice(best.j, 1)[0]]);
     }
     g.existantes.forEach(function(e) { paires.push([e, null]); }); g.nouvelles.forEach(function(p) { paires.push([null, p]); });
-    for (var i = 0; i < paires.length; i++) {
-      var e = paires[i][0], p = paires[i][1];
-      if (p && !e) res.creer.push({ ligne: code, libelle: l.libelle, type: p.type, debut: p.debut, fin: p.fin, classes: rattachements[code].slice() });
-      else if (e && !p) res.desactiver.push({ id: e.id, ligne: code, libelle: l.libelle, type: e.type, debut: e.debut, fin: e.fin });
-      else res.modifier.push({ id: e.id, ligne: code, libelle: l.libelle, type: p.type, avant: { debut: e.debut, fin: e.fin, type: e.type }, debut: p.debut, fin: p.fin, classes: rattachements[code].slice() });
-    }
+    paires.forEach(function(x) {
+      var e = x[0], p = x[1];
+      if (!e) { res.creer.push(Object.assign({ ligne: code, libelle: libelle }, propres(l, p, classes))); return; }
+      if (!p) { res.desactiver.push({ id: e.id, ligne: code, libelle: libelle, type: e.type, debut: e.debut, fin: e.fin, dossiers: dossiers[e.id] || 0 }); return; }
+      var propre = propres(l, p, classes), ecarts = EUC_DEV610_ecarts_(e, propre);
+      if (!ecarts.length) { res.inchangees++; return; }
+      res.modifier.push(Object.assign({ id: e.id, ligne: code, libelle: libelle, avant: { debut: e.debut, fin: e.fin, type: (e.brut && e.brut.type != null) ? e.brut.type : e.type, classes: e.classes || [] }, ecarts: ecarts, dossiers: dossiers[e.id] || 0 }, propre));
+    });
   });
   return res;
 }
@@ -500,7 +535,9 @@ function EUC_DEV610_jours_(annee) {
 /* Périodes en place dans Planning_Periodes (lecture seule, forme simplifiée). */
 function EUC_DEV610_existantes_(annees) {
   return EUC_DEV610_lire_('Planning_Periodes').map(function(r) { var f = r.fields || {}; var ids = EUC_DEV610_refs_(f.Classes_concernees).map(Number); if (!ids.length && EUC_DEV610_ref_(f.Classe)) ids = [EUC_DEV610_ref_(f.Classe)];
-    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, actif: f.Actif !== false, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0 }; });
+    return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), type: EUC_DEV610_t_(f.Type), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), classes: ids, actif: f.Actif !== false, formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), classePfmp: typeof f.Classe_PFMP === 'string' ? EUC_DEV610_t_(f.Classe_PFMP) : '', ligneId: EUC_DEV610_ref_(f.Ligne_planning) || 0, aLignePlanning: 'Ligne_planning' in f,
+      /* Valeurs brutes : la publication remet au propre ce qui a été saisi à la main (espaces, libellés, couleurs). */
+      brut: { type: typeof f.Type === 'string' ? f.Type : null, formation: typeof f.Formation === 'string' ? f.Formation : '', niveau: typeof f.Niveau === 'string' ? f.Niveau : '', classePfmp: typeof f.Classe_PFMP === 'string' ? f.Classe_PFMP : '', ligneSheet: Number(f.Ligne_sheet) || 0, couleur: typeof f.Couleur === 'string' ? f.Couleur : '', classes: EUC_DEV610_refs_(f.Classes_concernees).map(Number) } }; });
 }
 
 /* ===================== Services de la page ===================== */
@@ -688,8 +725,15 @@ function EUC_DEV610_contextePublication_(q) {
   var lignes = EUC_DEV610_lignes_(), classes = EUC_DEV610_classes_(), ratt = EUC_DEV610_rattachements_(code).classes, rattachements = {};
   lignes.forEach(function(l) { rattachements[l.code] = ratt[l.code] || EUC_DEV610_proposerClasses_(l, classes); });
   var previsionnel = EUC_DEV610_vacances_(code, annees).some(function(v) { return v.previsionnel; });
-  var diff = EUC_DEV610_diffPublication_({ periodes: periodes }, lignes, rattachements, EUC_DEV610_existantes_(annees), code);
-  return { annee: annee, version: version, lignes: lignes, diff: diff, previsionnel: previsionnel, rattachementsEnregistres: Object.keys(ratt).length > 0 };
+  var classesParId = {}, typesParCle = {}, dossiers = {};
+  classes.forEach(function(c) { classesParId[c.id] = c; });
+  EUC_DEV610_types_().forEach(function(t) { var k = EUC_DEV610_cleType_(t.type); if (!typesParCle[k]) typesParCle[k] = t; });
+  /* Dossiers de convention et affectations qui pointent vers chaque période : signalés avant toute modification. */
+  try { EUC_DEV610_lire_('EUC_ACCES_FORMULAIRES_PFMP').forEach(function(x) { var id = EUC_DEV610_ref_((x.fields || {}).Periode); if (id) dossiers[id] = (dossiers[id] || 0) + 1; }); } catch (e) {}
+  try { EUC_DEV610_lire_('EUC_AFFECTATIONS_SUIVI_PFMP').forEach(function(x) { var id = Number((x.fields || {}).Periode_id) || 0; if (id) dossiers[id] = (dossiers[id] || 0) + 1; }); } catch (e) {}
+  var cols = EUC_DEV604_colonnes_('Planning_Periodes');
+  var diff = EUC_DEV610_diffPublication_({ periodes: periodes }, lignes, rattachements, EUC_DEV610_existantes_(annees), code, { classesParId: classesParId, typesParCle: typesParCle, dossiers: dossiers, sansClassePfmp: !cols.Classe_PFMP || /^Ref/.test(cols.Classe_PFMP), sansLigneSheet: !cols.Ligne_sheet });
+  return { cols: cols, annee: annee, version: version, lignes: lignes, diff: diff, previsionnel: previsionnel, rattachementsEnregistres: Object.keys(ratt).length > 0 };
 }
 
 function EUC_DEV610_apercuPublication(q) {
@@ -698,7 +742,7 @@ function EUC_DEV610_apercuPublication(q) {
   return { ok: true, annee: c.annee.code, numero: c.version.numero, statut: c.version.statut, previsionnel: c.previsionnel, rattachementsEnregistres: c.rattachementsEnregistres, diff: c.diff };
 }
 
-/* Publication : écrit les périodes en entreprise de la version dans Planning_Periodes (confirmation 'PUBLIER'). */
+/* Publication : écrit toutes les périodes de la version dans Planning_Periodes et remet au propre les lignes existantes (confirmation 'PUBLIER'). */
 function EUC_DEV610_publier(q) {
   var ctx = EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV610_tables_();
   if (q.confirmation !== 'PUBLIER') throw new Error('Confirmation de publication manquante.');
@@ -707,13 +751,11 @@ function EUC_DEV610_publier(q) {
     var c = EUC_DEV610_contextePublication_(q), d = c.diff;
     if (c.previsionnel) throw new Error('Les vacances de ' + c.annee.code + ' sont encore prévisionnelles : ce planning reste un document « Prévisionnel » et n’est pas publié.');
     if (!c.rattachementsEnregistres) throw new Error('Enregistrez d’abord le rattachement des lignes aux classes (onglet « Lignes et classes »).');
-    var cols = EUC_DEV604_colonnes_('Planning_Periodes'), lignes = {}, types = {};
-    c.lignes.forEach(function(l) { lignes[l.code] = l; });
-    EUC_DEV610_types_().forEach(function(t) { types[EUC_DEV610_n_(t.type)] = t.couleur; });
+    var cols = c.cols;
     var anneeVal = /^Ref/.test(cols.Annee_scolaire || '') ? c.annee.id : c.annee.code, commentaire = EUC_DEV610_COMMENTAIRE_ + ' — ' + c.annee.code + ' v' + c.version.numero;
+    /* Champs propres calculés par le diff (ligne du planning + Types_Planning) : rien ne vient d'une saisie. */
     var champs = function(x) {
-      var l = lignes[x.ligne], niveau = l.libelle.split('—').pop().trim();
-      return EUC_DEV604_champs_(cols, { Annee_scolaire: anneeVal, Type: x.type, Date_debut: x.debut, Date_fin: x.fin, Classes_concernees: x.classes, Classe_PFMP: /^Ref/.test(cols.Classe_PFMP || '') ? undefined : l.classePfmp, Formation: l.formation || l.groupe, Niveau: l.niveau || niveau, Couleur: types[EUC_DEV610_n_(x.type)] || undefined, Ligne_sheet: l.ligneSheet || undefined, Ligne_planning: l.id || undefined, Commentaire: commentaire, Actif: true });
+      return EUC_DEV604_champs_(cols, { Annee_scolaire: anneeVal, Type: x.type, Date_debut: x.debut, Date_fin: x.fin, Classes_concernees: x.classes, Classe_PFMP: /^Ref/.test(cols.Classe_PFMP || '') ? undefined : x.classePfmp, Formation: x.formation, Niveau: x.niveau, Couleur: x.couleur || undefined, Ligne_sheet: x.ligneSheet || undefined, Ligne_planning: x.ligneId || undefined, Commentaire: commentaire, Actif: true });
     };
     var creer = d.creer.map(function(x) { return { fields: champs(x) }; });
     var modifier = d.modifier.map(function(x) { var f = champs(x); delete f.Commentaire; return { id: x.id, fields: f }; }).concat(d.desactiver.map(function(x) { return { id: x.id, fields: { Actif: false } }; }));

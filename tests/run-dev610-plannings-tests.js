@@ -149,29 +149,49 @@ test('rattachement proposé par Classe_PFMP : groupes 1MVA1 + 1MVA2, sans classe
   assert.deepStrictEqual(J(k.EUC_DEV610_proposerClasses_({ classePfmp: '' }, classes)), []);
   assert.deepStrictEqual(J(k.EUC_DEV610_proposerClasses_({ classePfmp: 'tcap car' }, classes)), [23]);
 });
-test('aperçu de publication : inchangé, déplacé, à créer, à désactiver ; hors périmètre jamais touché', () => {
+test('aperçu de publication complète : toutes les lignes et tous les types, lignes existantes remises au propre sur place, en trop désactivées, non rattachées jamais touchées', () => {
   const lignes = lignesDefaut(), ratt = { TBP_MVA: [30, 31], '1BP_MVA': [9, 10], TCAP: [23], '1BTS_MV': [] };
+  const types = { PFMPTBAC: { type: 'PFMP Tbac', couleur: '00c853' }, ENT: { type: 'ENT.', couleur: '#92D050' } };
+  const L = c => lignes.find(l => l.code === c), propre = (c, type, d, f, cl) => k.EUC_DEV610_champsPropres_(L(c), { type, debut: d, fin: f }, cl, types);
+  /* Ligne existante propre (comme écrite par l'application), éventuellement salie par une saisie à la main. */
+  const ex = (id, c, type, d, f, cl, sale) => { const p = propre(c, type, d, f, cl); return { id, annee: '2026-2027', type: p.type, debut: d, fin: f, classes: cl, formation: p.formation, niveau: p.niveau,
+    brut: Object.assign({ type: p.type, formation: p.formation, niveau: p.niveau, classePfmp: p.classePfmp, ligneSheet: 0, couleur: p.couleur, classes: cl }, sale || {}) }; };
+  assert.deepStrictEqual(J(propre('TBP_MVA', 'pfmp  tbac', '2026-09-28', '2026-10-16', [31, 30])), { type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', classes: [30, 31], formation: L('TBP_MVA').formation, niveau: L('TBP_MVA').niveau, classePfmp: 'TMVA', ligneSheet: 0, ligneId: 0, couleur: '#00C853' });
   const existantes = [
-    { id: 1, annee: '2026-2027', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', classes: [30, 31] },
-    { id: 2, annee: '2026-2027', type: 'PFMP Tbac', debut: '2027-01-11', fin: '2027-01-29', classes: [30, 31] },
-    { id: 3, annee: '2026-2027', type: 'PFMP 1ère', debut: '2027-03-22', fin: '2027-04-16', classes: [9, 10] },
-    { id: 4, annee: '2026-2027', type: 'VFMP', debut: '2026-09-23', fin: '2026-09-25', classes: [30, 31] },
+    ex(1, 'TBP_MVA', 'PFMP Tbac', '2026-09-28', '2026-10-16', [30, 31]),
+    ex(2, 'TBP_MVA', 'PFMP Tbac', '2027-01-11', '2027-01-29', [30, 31]),
+    ex(3, '1BP_MVA', 'PFMP 1ère', '2027-03-22', '2027-04-16', [9, 10], { formation: ' 1 BAC PRO', niveau: 'MVA ' }),
+    ex(4, 'TBP_MVA', 'VFMP', '2026-09-23', '2026-09-25', [30, 31]),
     { id: 5, annee: '2026-2027', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', classes: [77] },
-    { id: 6, annee: '2025-2026', type: 'PFMP Tbac', debut: '2025-09-29', fin: '2025-10-17', classes: [30, 31] },
-    { id: 7, annee: '2026-2027', type: 'PFMP TCAP', debut: '2027-03-15', fin: '2027-04-09', classes: [23] },
-    { id: 8, annee: '2026-2027', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', classes: [30, 9], actif: true }
+    ex(6, 'TBP_MVA', 'PFMP Tbac', '2025-09-29', '2025-10-17', [30, 31]),
+    ex(7, 'TCAP', 'PFMP TCAP', '2027-03-15', '2027-04-09', [23]),
+    { id: 8, annee: '2026-2027', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', classes: [30, 9] },
+    ex(9, 'TSEC', 'ENT.', '2026-11-16', '2026-11-20', [], { classePfmp: '', couleur: '#92d050' }),
+    Object.assign(ex(10, 'TBP_MVA', 'PFMP Tbac', '2026-09-28', '2026-10-16', [30, 31]), { actif: false })
   ];
+  existantes[5].annee = '2025-2026';
   const version = { periodes: [
     { ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16' }, { ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2027-01-18', fin: '2027-02-05' }, { ligne: 'TBP_MVA', type: 'P.dif.', debut: '2027-02-08', fin: '2027-02-19' },
     { ligne: '1BP_MVA', type: 'PFMP 1ère', debut: '2026-11-23', fin: '2026-12-18' }, { ligne: '1BP_MVA', type: 'PFMP 1ère', debut: '2027-03-22', fin: '2027-04-16' },
-    { ligne: '1BTS_MV', type: 'Stage BTS', debut: '2027-06-07', fin: '2027-07-02' }
+    { ligne: '1BTS_MV', type: 'Stage BTS', debut: '2027-06-07', fin: '2027-07-02' },
+    { ligne: 'TSEC', type: 'ENT.', debut: '2026-11-16', fin: '2026-11-20' }, { ligne: 'TSEC', type: 'VISITE', debut: '2027-02-15', fin: '2027-02-19' },
+    { ligne: 'TBP_MVA', type: 'Formation complémentaire', complement: '5 Star', debut: '2027-01-04', fin: '2027-01-08' }
   ] };
-  const d = k.EUC_DEV610_diffPublication_(version, lignes, ratt, existantes, '2026-2027');
-  assert.strictEqual(d.inchangees, 2);
-  assert.deepStrictEqual(J(d.modifier.map(x => [x.id, x.avant.debut, x.debut])), [[2, '2027-01-11', '2027-01-18']]);
-  assert.deepStrictEqual(J(d.creer.map(x => [x.ligne, x.type, x.debut, x.classes])), [['1BP_MVA', 'PFMP 1ère', '2026-11-23', [9, 10]], ['TBP_MVA', 'P.dif.', '2027-02-08', [30, 31]]]);
-  assert.deepStrictEqual(J(d.desactiver.map(x => x.id)), [7]);
+  const d = k.EUC_DEV610_diffPublication_(version, lignes, ratt, existantes, '2026-2027', { typesParCle: types, dossiers: { 7: 3, 3: 2 } });
+  assert.strictEqual(d.inchangees, 1);
+  assert.deepStrictEqual(J(d.modifier.map(x => [x.id, x.avant.debut, x.debut, x.ecarts, x.dossiers])), [[3, '2027-03-22', '2027-03-22', ['formation', 'niveau'], 2], [2, '2027-01-11', '2027-01-18', ['debut', 'fin'], 0], [9, '2026-11-16', '2026-11-16', ['classePfmp'], 0]]);
+  assert.deepStrictEqual(J(d.modifier[0].niveau), L('1BP_MVA').niveau.trim(), 'espace retiré');
+  assert.deepStrictEqual(J(d.creer.map(x => [x.ligne, x.type, x.debut, x.classes])), [['1BP_MVA', 'PFMP 1ère', '2026-11-23', [9, 10]], ['TBP_MVA', 'P.dif.', '2027-02-08', [30, 31]], ['TSEC', 'VISITE', '2027-02-15', []]]);
+  assert.deepStrictEqual(J(d.desactiver.map(x => [x.id, x.dossiers])), [[4, 0], [7, 3]]);
+  assert.deepStrictEqual(J(d.nonRattachees.map(x => [x.id, x.raison])), [[5, 'AUCUNE_LIGNE'], [8, 'PLUSIEURS_LIGNES']]);
   assert.deepStrictEqual(J(d.sansClasse), ['1 BTS — 1BTS MV']);
+  /* Ligne sans classe rattachée : sa période existante n'est ni modifiée ni désactivée. */
+  const e3 = k.EUC_DEV610_diffPublication_(version, lignes, ratt, existantes.concat([ex(11, '1BTS_MV', 'BTS_STAGE', '2027-05-31', '2027-06-25', [])]), '2026-2027', { typesParCle: types });
+  assert.deepStrictEqual(J([e3.laissees.map(x => x.id), e3.desactiver.map(x => x.id)]), [[11], [4, 7]]);
+  assert.ok(!JSON.stringify(d).includes('5 Star'), 'formation complémentaire jamais publiée');
+  /* Colonne Classe_PFMP de type référence : jamais écrite, donc jamais un écart. */
+  const r2 = k.EUC_DEV610_diffPublication_(version, lignes, ratt, existantes.map(e => e.brut ? Object.assign({}, e, { brut: Object.assign({}, e.brut, { classePfmp: '' }) }) : e), '2026-2027', { typesParCle: types, sansClassePfmp: true });
+  assert.deepStrictEqual(J(r2.modifier.find(x => x.id === 9) || null), null); assert.strictEqual(r2.inchangees, 2);
 });
 test('le code pur injecté dans la page s’évalue seul et calcule la même matrice', () => {
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
@@ -450,16 +470,17 @@ test('publication : confirmation, refus sur vacances prévisionnelles ou sans ra
   assert.throws(() => g.k.EUC_DEV610_publier({ annee: '2026-2027', numero: 1 }), /Confirmation/);
   assert.throws(() => g.k.EUC_DEV610_publier({ annee: '2026-2027', numero: 1, confirmation: 'PUBLIER' }), /rattachement/);
   const ap = g.k.EUC_DEV610_apercuPublication({ annee: '2026-2027', numero: 1 });
-  assert.deepStrictEqual(J([ap.diff.creer.length, ap.diff.modifier.length, ap.diff.desactiver.length, ap.rattachementsEnregistres]), [1, 1, 0, false]);
+  assert.deepStrictEqual(J([ap.diff.creer.length, ap.diff.modifier.length, ap.diff.desactiver.length, ap.rattachementsEnregistres]), [1, 1, 1, false], 'la VFMP absente de la version est à désactiver');
   g.k.EUC_DEV610_enregistrerRattachements({ annee: '2026-2027', rattachements: { TBP_MVA: [30, 31, 999] } });
   assert.deepStrictEqual(J(g.tables.EUC_PLAN_LIGNES_CLASSES[0].fields.Classes), ['L', 30, 31]);
   const res = g.k.EUC_DEV610_publier({ annee: '2026-2027', numero: 1, confirmation: 'PUBLIER' });
-  assert.deepStrictEqual(J([res.creees, res.modifiees, res.desactivees]), [1, 1, 0]);
+  assert.deepStrictEqual(J([res.creees, res.modifiees, res.desactivees]), [1, 1, 1]);
   const cree = g.tables.Planning_Periodes.find(r => r.id >= 1000).fields;
   assert.deepStrictEqual(J(cree.Classes_concernees), ['L', 30, 31]); assert.strictEqual(cree.Date_debut, sec('2026-09-28')); assert.strictEqual(cree.Date_fin, sec('2026-10-16'));
   assert.strictEqual(cree.Annee_scolaire, '2026-2027'); assert.strictEqual(cree.Type, 'PFMP Tbac'); assert.strictEqual(cree.Classe_PFMP, 'TMVA'); assert.strictEqual(cree.Formation, 'T BAC PRO'); assert.strictEqual(cree.Niveau, 'MVA'); assert.strictEqual(cree.Ligne_sheet, 30); assert.strictEqual(cree.Couleur, '#00C853'); assert.match(cree.Commentaire, /Générateur de plannings — 2026-2027 v1/);
   const modif = g.tables.Planning_Periodes.find(r => r.id === 50).fields; assert.strictEqual(modif.Date_debut, sec('2027-01-18')); assert.strictEqual(modif.Commentaire, 'ancien outil');
-  assert.strictEqual(g.tables.Planning_Periodes.find(r => r.id === 51).fields.Date_debut, sec('2026-09-23'));
+  assert.strictEqual(g.tables.Planning_Periodes.find(r => r.id === 51).fields.Date_debut, sec('2026-09-23')); assert.strictEqual(g.tables.Planning_Periodes.find(r => r.id === 51).fields.Actif, false, 'désactivée, jamais supprimée');
+  assert.strictEqual(modif.Classe_PFMP, 'TMVA'); assert.strictEqual(modif.Niveau, 'MVA'); assert.deepStrictEqual(J(modif.Classes_concernees), ['L', 30, 31]);
   assert.strictEqual(g.tables.EUC_PLAN_VERSIONS[0].fields.Statut, 'PUBLIE');
   /* Le moteur du suivi reconnaît la période créée (R1–R7 : type, dates, année, classes concernées). */
   const pp = Object.assign({ id: 1001 }, cree); assert.ok(g.k.EUC_SUIVI2_typeFormation_(pp.Type)); assert.deepStrictEqual(J(g.k.EUC_SUIVI2_refs_(pp.Classes_concernees)), [30, 31]); assert.strictEqual(g.k.EUC_SUIVI2_date_(pp.Date_debut), '2026-09-28');

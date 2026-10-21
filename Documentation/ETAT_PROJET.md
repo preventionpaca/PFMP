@@ -1,5 +1,32 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : publication complète, Planning_Periodes remise au propre
+
+- Décision utilisateur : la saisie se fait dans la page Plannings ;
+  `Planning_Periodes` est gardée (conventions et affectations y pointent par
+  numéro) mais n'est plus saisie à la main.
+- `EUC_DEV610_diffPublication_` réécrit : toutes les lignes actives et tous les
+  types (sauf formations complémentaires). Chaque ligne existante de l'année est
+  rattachée comme à la reprise (Ligne_planning, classes, classe PFMP, libellés),
+  appariée par type (mêmes dates, sinon la plus proche) et remise au propre sur
+  place : type exact de Types_Planning, Classes_concernees du rattachement,
+  Formation, Niveau, Classe_PFMP, Ligne_sheet, Ligne_planning, couleur
+  (`EUC_DEV610_champsPropres_`, écarts sur valeurs brutes : un espace compte).
+  En trop : désactivées. Non rattachées : laissées telles quelles et listées.
+  Ligne sans classe rattachée : périodes en entreprise non publiées, lignes
+  existantes laissées. L'aperçu compte les dossiers de convention et
+  affectations qui pointent vers chaque ligne modifiée ou désactivée.
+- Simulation sur la copie locale du 9 octobre : 48 créations (copies des
+  mixités CPI / CPRP séparées), 366 lignes remises au propre (types « Stage
+  BTS », « Visite », « PFMP TCAP » normalisés ; classe ajoutée aux 62 lignes du
+  CAP peintre et aux 44 du TSEC ; aucune classe de PFMP changée), 1 doublon
+  désactivé (examen Bachelor n° 132), stage 1BTS Mixité MV laissé (ligne sans
+  classe). Une seconde publication ne trouve plus rien à corriger.
+- Tests simulés : test de publication complète réécrit et test de publication
+  mis à jour (la VFMP absente de la version est désactivée), 33/33 DEV610, suite
+  complète verte. Aucune publication réelle exécutée : elle reste à lancer par
+  l'utilisateur depuis l'onglet Publication.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : tableau des périodes par ligne et recopie des dates
 
 - Onglet « Périodes » : toutes les lignes actives du planning apparaissent dans
