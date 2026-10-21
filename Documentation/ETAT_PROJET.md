@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : périodes en entreprise pendant les vacances
+
+- Rappel métier (utilisateur) : les jeunes en mixité ont, en plus des PFMP
+  communes aux scolaires, des périodes en entreprise sur les vacances scolaires,
+  autour d'elles, en fin d'année et l'été.
+- Calendrier d'une formation : un jour de vacances couvert par une période en
+  entreprise (ENT., PFMP, stage) s'affiche « en entreprise » (vert de la charte)
+  avec l'infobulle « Vacances … · en entreprise » ; sans période, les petites
+  vacances restent noires et l'été blanc. La grille et la saisie acceptaient déjà
+  des périodes sur les semaines de vacances.
+- Tests simulés : test de la charte complété (Noël et été, avec et sans période),
+  suite complète verte.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : mixités nommées, sans classe ; lignes inactives masquées
 
 - Mixités renommées par niveau et section (« 1 BAC PRO Mixité », « T BAC PRO

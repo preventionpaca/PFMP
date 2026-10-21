@@ -425,6 +425,12 @@ test('calendrier d’une formation (annexe 32a) : nature de chaque jour selon la
   const N = e => c.natureJour(e);
   assert.deepStrictEqual([N({ c: 'fe' }), N({ c: 'we' }), N({ c: 'va' }), N({ c: '', lycee: true }), N({ c: '', entreprise: true, p: { type: 'ENT.' } }), N({ c: '', entreprise: true, evp: { type: 'VISITE' } }), N({ c: '', lycee: true, evp: { type: 'CONSEIL' } }), N({ c: '', evp: { type: 'APPEL TEL' } }), N({ c: '', evp: { type: 'EXAMENS' } }), N({ c: 'hors' }), N({ c: 'blanc' }), N({ c: '', comp: true })],
     ['fe', 'we', 'va', 'ufa', 'ent', 'vi', 'cs', 'ap', 'ex', 'blanc', 'blanc', 'comp']);
+  /* Jeune en entreprise pendant les vacances (mixité, alternance) : le jour est « en entreprise », pas noirci. */
+  vm.runInContext(h.match(/function etatJour\(iso,l,pers,fo\)\{[\s\S]*?return \{c:'',lycee:true,ev:ev,evp:evp\};\}/)[0], c);
+  c.D = { jours: [], vacances: [], toutesVacances: [{ nom: 'Noël', debut: '2026-12-19', fin: '2027-01-03' }, { nom: 'Été', debut: '2027-07-03', fin: '2027-08-31' }] }; c.FERIES = {};
+  const pers = [{ ligne: 'MIX_1BP', type: 'ENT.', debut: '2026-12-21', fin: '2026-12-24' }, { ligne: 'MIX_1BP', type: 'ENT.', debut: '2027-07-05', fin: '2027-07-30' }];
+  const E = iso => N(c.etatJour(iso, { code: 'MIX_1BP' }, pers, {}));
+  assert.deepStrictEqual([E('2026-12-22'), E('2026-12-29'), E('2027-07-07'), E('2027-08-10')], ['ent', 'va', 'ent', 'blanc']);
 });
 test('calendrier d’une formation : intitulé du diplôme, périodes après l’été, logos (porteur à gauche, lycée à droite)', () => {
   const g = grist({ periodes: [

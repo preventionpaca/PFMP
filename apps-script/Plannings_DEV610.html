@@ -324,7 +324,9 @@ function etatJour(iso,l,pers,fo){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay
   if(wd===0||wd===6)return {c:'we'};if(FERIES[iso])return {c:'fe',t:FERIES[iso]};if(jp&&jp.nature==='NON_TRAVAILLE')return {c:'fe',t:jp.libelle||'Non travaillé'};
   var fond=null,comp=null,ev=[],evp=null;pers.forEach(function(p){if(p.debut<=iso&&p.fin>=iso){var x=evenement(p.type);if(x){if(ev.indexOf(x)<0)ev.push(x);if(!evp)evp=p;}else if(EUC_DEV610_estComplementaire_(p.type)){if(!comp)comp=p;}else if(!fond)fond=p;}});
   var vac=(D.toutesVacances||D.vacances).filter(function(v){return v.debut<=iso&&v.fin>=iso;})[0];
-  /* Petites vacances en noir ; l'été n'est pas noirci : la période saisie (entreprise) s'affiche, sinon la case reste blanche. */
+  /* Vacances : un jeune en entreprise (mixité, alternance) y a souvent des périodes ; elles s'affichent en entreprise.
+   * Sinon, petites vacances en noir ; l'été n'est pas noirci (case blanche). */
+  if(vac&&fond&&!comp&&EUC_DEV610_n_(fond.type)!=='COURS')return {c:'',p:fond,ev:ev,evp:evp,entreprise:true,vac:true,t:'Vacances '+vac.nom+' · en entreprise ('+fond.type+')'};
   if(vac&&EUC_DEV610_nomVacances_(vac.nom,vac.debut,vac.fin)!=='ETE')return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true};
   if(vac&&!fond&&!comp)return {c:'blanc',t:'Vacances '+vac.nom,ev:ev,evp:evp};
   if(comp)return {c:'',p:comp,ev:ev,evp:evp,comp:true};
