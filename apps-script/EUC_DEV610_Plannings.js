@@ -577,7 +577,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), diplomes: EUC_DEV610_diplomes_(rattachements), organismesLignes: EUC_DEV610_organismesLignes_(lignes, rattachements, classes), suite: EUC_DEV610_suite_(annee, annees), logos: EUC_DEV610_logos_(), organismesLogos: EUC_DEV610_ORGANISMES_LOGOS_, toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), diplomes: EUC_DEV610_diplomes_(rattachements), organismesLignes: EUC_DEV610_organismesLignes_(lignes, rattachements, classes), modalitesLignes: EUC_DEV610_modalitesLignes_(lignes, rattachements, classes), suite: EUC_DEV610_suite_(annee, annees), logos: EUC_DEV610_logos_(), organismesLogos: EUC_DEV610_ORGANISMES_LOGOS_, toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -1069,6 +1069,21 @@ function EUC_DEV610_organismesLigne_(l, lignes, rattachements, classesParId) {
   ids.forEach(function(id) { var c = classesParId[id]; if (c) ajouter(c.donneur); });
   /* Organismes cochés sur la ligne et absents de la table (Ducretet pour le TSEC) : ajoutés à la suite. */
   if (out.length) (l.organismes || []).forEach(ajouter);
+  return out;
+}
+/* Modalité d'une ligne, comme dans le suivi des apprentis (calcul pur) : « Formation continue » si une de ses classes
+ * l'est dans la table Classes (colonne modalité), sinon d'après le profil par défaut du suivi (TPMMA : GRETA). */
+function EUC_DEV610_modaliteLigne_(l, rattachements, classesParId) {
+  var vues = (rattachements[l.code] || []).map(function(id) { return classesParId[id]; }).filter(Boolean);
+  var fc = function(m) { return /^FORMATIONCONTINUE|^FC$/.test(EUC_DEV610_n_(m)); };
+  if (vues.some(function(c) { return fc(c.modalite); })) return 'FORMATION_CONTINUE';
+  if (vues.some(function(c) { return EUC_DEV610_t_(c.modalite); })) return '';
+  var p = typeof EUC_DEV579_profilDefaut_ === 'function' ? EUC_DEV579_profilDefaut_(l.classePfmp || l.libelle, l.etablissement) : null;
+  return p && p.mode === 'FORMATION_CONTINUE' ? 'FORMATION_CONTINUE' : '';
+}
+function EUC_DEV610_modalitesLignes_(lignes, rattachements, classes) {
+  var cpi = {}, out = {}; (classes || []).forEach(function(c) { cpi[c.id] = c; });
+  (lignes || []).forEach(function(l) { if (EUC_DEV610_modaliteLigne_(l, rattachements, cpi)) out[l.code] = 'FORMATION_CONTINUE'; });
   return out;
 }
 function EUC_DEV610_organismesLignes_(lignes, rattachements, classes) {

@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : vocabulaire « Classe entière » / « Formation continue »
+
+- Planning général : cases « Classe entière » et « Formation continue » (au lieu
+  de « Formation continue et alternance » et « Formations GRETA »). Une ligne est
+  en formation continue d'après la modalité de ses classes dans la table Classes,
+  sinon d'après le profil par défaut du suivi des apprentis
+  (`EUC_DEV579_profilDefaut_` : seul le TPMMA est en formation continue ; TPEEB,
+  MELEC G, CQPM en classe entière GRETA). Titre des calendriers : « Formation
+  continue » pour le TPMMA seulement. Libellés d'affichage uniquement : les codes
+  (CLASSE_ENTIERE, FORMATION_CONTINUE) et le suivi des apprentis ne changent pas.
+- Le bandeau de groupe « Formation continue et alternance » est une donnée de
+  `EUC_PLAN_LIGNES`, modifiable dans « Organisation du tableau ».
+- Tests simulés : 34/34 DEV610, suite complète verte ; cases vérifiées dans
+  Chromium sur la copie locale (TPMMA seul en formation continue).
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : publication complète, Planning_Periodes remise au propre
 
 - Décision utilisateur : la saisie se fait dans la page Plannings ;

@@ -525,7 +525,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
-  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="GRETA"', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
+  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Classe entière', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
@@ -592,6 +592,17 @@ test('recopie des dates d’une classe vers les classes du même niveau : pério
   assert.ok(k.EUC_DEV610_codeClient_().includes('function EUC_DEV610_recopier_'));
   const pg = read('apps-script/Plannings_DEV610.html');
   for (const x of ['class="petit pr">Recopier ces dates…', 'id="annulerCopie"', 'Lignes inactives ou retirées', 'tr class="teteLigne"']) assert.ok(pg.includes(x), x);
+});
+
+test('modalité des lignes comme le suivi des apprentis : formation continue d’après la colonne modalité des classes, sinon le profil par défaut (TPMMA)', () => {
+  const lignes = lignesDefaut(), cpi = { 1: { id: 1, modalite: 'Formation continue' }, 2: { id: 2, modalite: 'Classe entière' } };
+  assert.strictEqual(k.EUC_DEV610_modaliteLigne_({ code: 'X' }, { X: [2, 1] }, cpi), 'FORMATION_CONTINUE');
+  assert.strictEqual(k.EUC_DEV610_modaliteLigne_({ code: 'TPMMA', classePfmp: 'TPMMA' }, { TPMMA: [2] }, cpi), '', 'la table Classes fait foi');
+  k.EUC_DEV579_profilDefaut_ = n => /^TP ?MMA/.test(String(n).toUpperCase()) ? { mode: 'FORMATION_CONTINUE' } : { mode: 'CLASSE_ENTIERE' };
+  try {
+    const m = k.EUC_DEV610_modalitesLignes_(lignes, {}, []);
+    assert.deepStrictEqual(J(m), { TPMMA: 'FORMATION_CONTINUE' }, 'une seule formation continue : le TPMMA');
+  } finally { delete k.EUC_DEV579_profilDefaut_; }
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

@@ -119,8 +119,8 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <div class="blocs noprint" id="blocs"><span class="note">Afficher :</span>
       <label><input type="checkbox" data-cal="SCOLAIRE" checked> Scolaire</label>
       <label><input type="checkbox" data-cal="MIXITE" checked> Mixité</label>
-      <label><input type="checkbox" data-cal="CLASSE_ENTIERE" checked> Formation continue et alternance</label>
-      <label><input type="checkbox" data-cal="GRETA"> Formations GRETA</label></div>
+      <label><input type="checkbox" data-cal="CLASSE_ENTIERE" checked> Classe entière</label>
+      <label><input type="checkbox" data-cal="FC" checked> Formation continue</label></div>
     <div class="legende" id="legende"></div>
     <div class="grille" id="grille"><p class="note" style="padding:10px">Chargement de la matrice…</p></div>
     <div class="action" id="action"><b id="selInfo"></b>
@@ -221,7 +221,7 @@ var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>,ADMIN=<?= ad
 var MOIS=['','Janv.','Févr.','Mars','Avril','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
 var ANCRAGES={TOUSSAINT:'Toussaint',NOEL:'Noël',HIVER:'Hiver',PRINTEMPS:'Printemps',ETE:'Été',REGLE:'Autre période'};
 var ORIGINES={REGLE:'Règle',GRILLE:'Grille',TABLEAU:'Tableau',REPRISE:'Reprise du calendrier publié'};
-var CALENDRIERS={SCOLAIRE:'Scolaire',MIXITE:'Mixité',CLASSE_ENTIERE:'Formation continue et alternance',GRETA:'GRETA (ancien)',FC_ALTERNANCE:'Formation continue / alternance (ancien)'};
+var CALENDRIERS={SCOLAIRE:'Scolaire',MIXITE:'Mixité',CLASSE_ENTIERE:'Classe entière (alternance)',GRETA:'GRETA (ancien)',FC_ALTERNANCE:'Formation continue / alternance (ancien)'};
 var JOURS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],MOISL=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 /* Événements affichés en repère (lettre) et non en fond de case. */
 function evenement(type){var n=EUC_DEV610_n_(type);if(/^VISITE/.test(n))return 'V';if(/^APPEL|^TEL/.test(n))return 'A';if(/^EXAMEN/.test(n))return 'E';if(/^CONSEIL/.test(n))return 'C';if(/^VFMP/.test(n))return '✓';if(/^ORAL/.test(n))return 'O';if(/^PORTES/.test(n))return 'PO';if(/^BANALIS/.test(n))return 'B';return '';}
@@ -234,8 +234,9 @@ var FERIES={},FE_SEM=[];
 function feriesSemaine(s){var out=[];for(var k=0;k<7;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&k<5)out.push(jourLong(j)+' — '+FERIES[j]);}(D.jours||[]).forEach(function(x){if(x.date>=s.lundi&&x.date<=EUC_DEV610_plus_(s.lundi,6))out.push(jourLong(x.date)+' — '+(x.libelle||x.nature));});return out;}
 function joursFermes(s){var n=0;for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]||(D.jours||[]).some(function(x){return x.date===j&&x.nature==='NON_TRAVAILLE';}))n++;}return n;}
 function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.checked)v[c.dataset.cal]=1;});v.FC_ALTERNANCE=v.CLASSE_ENTIERE;return v;}
-function estGreta(l){return l.calendrier==='GRETA'||(l.organismes||[]).some(function(o){return EUC_DEV610_n_(o)==='GRETA';});}
-function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return l.actif&&v[cal]&&(v.GRETA||!estGreta(l));});}
+/* Formation continue : modalité des classes de la ligne dans le suivi des apprentis (TPMMA), ou ancien calendrier GRETA. */
+function estFC(l){return l.calendrier==='GRETA'||((D&&D.modalitesLignes)||{})[l.code]==='FORMATION_CONTINUE';}
+function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return l.actif&&(estFC(l)?v.FC:v[cal]);});}
 function supports(l){return [l.etablissement].concat(l.organismes||[]).filter(Boolean).join(' · ');}
 function nomLigne(l){return (l.groupe?l.groupe+' — ':'')+etiquette(l);}
 /* Libellé dans la grille : le Niveau (colonne B), précédé de la Formation quand elle diffère du groupe (ex. « 1BTS MV Mixité »). */
@@ -308,7 +309,7 @@ function majTitreImpression(){var a=D.annee,d=new Date(),h=String(d.getHours()).
   $('titreImpression').innerHTML='<h2>PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE'+(D.previsionnel?' — PRÉVISIONNEL':'')+'</h2><p><b>Année scolaire '+esc(a.code)+(a.zone?' - Zone '+esc(a.zone):'')+'</b> · généré le '+dfr(d.toISOString().slice(0,10))+' à '+h+(NUM?' · version '+NUM:'')+(D.previsionnel?' · dates de vacances non officielles, susceptibles d’évoluer autour des petites vacances':'')+'</p>';}
 function ouvrirPanneau(id){Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});}
 function lienPlannings(params){return ADMIN+'?page=plannings-pfmp&annee='+encodeURIComponent(D.annee.code)+params;}
-function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Formation continue et alternance',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
+function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Classes entières et formation continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
   $('listeFormations').innerHTML=blocs.map(function(b){var ls=D.lignes.filter(function(l){return l.actif&&b[1].indexOf(l.calendrier)>=0;}).sort(function(x,y){return x.ordre-y.ordre;});if(!ls.length)return '';
     return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';}
 /* Calendrier d'une formation (mois en colonnes, jours en lignes). Jours au lycée : jours ouvrés hors vacances, fériés et périodes en entreprise.
@@ -345,7 +346,7 @@ function logosFormation(l){var t=(typeof D!=='undefined'&&D&&D.organismesLignes|
   var o=(l.organismes||[]).slice(),n=o.map(EUC_DEV610_n_),porteur=n.indexOf('GRETA')>=0?'GRETA':n.indexOf('CFARAN')>=0?'CFA RAN':'';
   var autres=o.filter(function(x){return x!==porteur;});return {gauche:(porteur?[porteur]:[]).concat(autres),droite:'Lycée Les Eucalyptus'};}
 function titresDefautA32(l){return {titre:l.formation||l.groupe||etiquette(l),sousTitre:l.niveau||etiquette(l)};}
-function titresDefaut(l){var c=l.calendrier,greta=estGreta(l),nat=c==='MIXITE'?'Mixité — scolaires et apprentis':c==='SCOLAIRE'?'Formation scolaire':greta?'Formation continue':'Formation en alternance';
+function titresDefaut(l){var c=l.calendrier,greta=estFC(l),nat=c==='MIXITE'?'Mixité — scolaires et apprentis':c==='SCOLAIRE'?'Formation scolaire':greta?'Formation continue':'Formation en alternance';
   return {titre:c==='MIXITE'?'Mixité '+(l.groupe||'')+(etiquette(l)!=='Mixité'?' '+etiquette(l).replace(/^Mixité\s*/,''):''):'Formation '+etiquette(l),sousTitre:nat+(supports(l)?' · '+supports(l):'')};}
 /* Heures et formateurs de la formation affichée : réglages et saisies en cours (enregistrés d'un seul clic). */
 var HL=null,HREG=null,HSAI={},HMODIF={},HSALE=false;
