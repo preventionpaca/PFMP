@@ -597,7 +597,7 @@ test('recopie des dates d’une classe vers les classes du même niveau : pério
   assert.ok(k.EUC_DEV610_estEntreprise_('ENT.') && k.EUC_DEV610_estEntreprise_('P.dif.') && !k.EUC_DEV610_estEntreprise_('VISITE'));
   assert.ok(k.EUC_DEV610_codeClient_().includes('function EUC_DEV610_recopier_'));
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ['class="petit pr">Recopier ces dates…', 'id="annulerCopie"', 'Lignes inactives ou retirées', 'tr class="teteLigne"']) assert.ok(pg.includes(x), x);
+  for (const x of ['Période fusionnée avec', 'class="petit pr">Recopier ces dates…', 'id="annulerCopie"', 'Lignes inactives ou retirées', 'tr class="teteLigne"']) assert.ok(pg.includes(x), x);
 });
 
 test('modalité des lignes comme le suivi des apprentis : formation continue d’après la colonne modalité des classes, sinon le profil par défaut (TPMMA)', () => {

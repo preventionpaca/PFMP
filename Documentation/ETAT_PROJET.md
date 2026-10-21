@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : grille et tableau des périodes, saisie dans les deux sens
+
+- Vérifié dans Chromium (copie locale, ligne « 1 BAC PRO Mixité ») : une période
+  placée dans la grille apparaît aussitôt dans le tableau (semaines accolées
+  regroupées) ; une date changée dans le tableau redessine aussitôt la grille.
+  Les deux vues modifient la même version, enregistrée par « Enregistrer la
+  version ».
+- Corrigé : une période prolongée dans le tableau sur une autre période du même
+  type de la même ligne créait un chevauchement ; elle est désormais fusionnée
+  avec elle (message affiché).
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : périodes en entreprise pendant les vacances
 
 - Rappel métier (utilisateur) : les jeunes en mixité ont, en plus des PFMP
