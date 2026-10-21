@@ -165,17 +165,17 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 
   <section id="pOrganisation" class="panneau">
     <p class="note">L’ordre de cette liste est l’ordre du planning, toutes lignes confondues : scolaires, mixités (placez-les sous leurs classes), classes entières CFA / CFAI et GRETA. Glissez une ligne avec la poignée ⠿, ou utilisez ↑ ↓. Le bandeau d’un groupe apparaît quand le « Groupe » change d’une ligne à la suivante. Le planning se met à jour aussitôt ; enregistrez pour le garder.</p>
-    <div id="nouvellesClasses"></div>
+    <div id="nouvellesClasses"></div><div id="orgAlertes"></div>
     <div class="barre"><button type="button" id="ajouterLigne" title="Pour une section qui ouvrira et n’est pas encore dans Pronote">Ajouter une classe à la main</button><button type="button" id="nomsPronote" title="Libellé de chaque ligne = nom de la classe PFMP Pronote ; mixités : niveau, section et « Mixité » (ex. « 1BTS CPI Mixité »)">Appliquer les noms Pronote</button><span id="orgEtat" class="note"></span><span style="flex:1"></span><button type="button" class="plein" id="enregistrerOrganisation" disabled>Enregistrer l’organisation</button></div>
     <datalist id="dlGroupes"></datalist><datalist id="dlClassesPfmp"></datalist>
-    <table class="t org"><thead><tr><th></th><th>Libellé dans le tableau</th><th>Groupe (bandeau)</th><th>Calendrier</th><th>Établissement</th><th>Organismes</th><th>Classe PFMP (Pronote)</th><th>Règles</th><th>Affichée</th><th></th></tr></thead><tbody id="tOrganisation"></tbody></table>
+    <table class="t org"><thead><tr><th></th><th>Libellé dans le tableau</th><th>Groupe (bandeau)</th><th>Calendrier</th><th>Établissement</th><th>Organismes</th><th>Classe PFMP (Pronote)</th><th>Règles</th><th>Affichée · années</th><th></th></tr></thead><tbody id="tOrganisation"></tbody></table>
   </section>
 
   <section id="pLignes" class="panneau">
     <p class="note">Rattachement de chaque ligne aux classes Pronote pour l’année choisie. Il remplit « Classes concernées » de chaque période publiée : c’est le lien que lit le suivi des PFMP. La proposition automatique vient de la colonne Classe_PFMP de la table Classes.</p>
     <p class="note">Mixités : aucune classe à rattacher. Les apprentis en mixité sont suivis dans leurs classes scolaires (1BTS CPI, TMVA…), que publie déjà la ligne scolaire de la section ; la ligne de mixité ne sert qu’au calendrier d’alternance.</p>
     <div id="nonRattachees" class="note"></div>
-    <label class="note"><input type="checkbox" id="voirInactives"> Afficher les lignes inactives <span id="nbInactives"></span></label>
+    <label class="note"><input type="checkbox" id="voirInactives"> Afficher les lignes inactives ou hors de l’année <span id="nbInactives"></span></label>
     <table class="t"><thead><tr><th>Ligne</th><th>Calendrier</th><th>Ancienne formation (A)</th><th>Ancien niveau (B)</th><th>Profil</th><th>Classe PFMP</th><th>Classes rattachées</th></tr></thead><tbody id="tLignes"></tbody></table>
     <div class="barre"><span style="flex:1"></span><button type="button" class="plein" id="enregistrerLignes" disabled>Enregistrer le rattachement</button></div>
     <div class="cadre">
@@ -238,12 +238,14 @@ function joursFermes(s){var n=0;for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lu
 function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.checked)v[c.dataset.cal]=1;});v.FC_ALTERNANCE=v.CLASSE_ENTIERE;return v;}
 /* Formation continue : modalité des classes de la ligne dans le suivi des apprentis (TPMMA), ou ancien calendrier GRETA. */
 function estFC(l){return l.calendrier==='GRETA'||((D&&D.modalitesLignes)||{})[l.code]==='FORMATION_CONTINUE';}
-function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return l.actif&&(estFC(l)?v.FC:v[cal]);});}
+function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return actifAnnee(l)&&(estFC(l)?v.FC:v[cal]);});}
 function supports(l){return [l.etablissement].concat(l.organismes||[]).filter(Boolean).join(' · ');}
 function nomLigne(l){return (l.groupe?l.groupe+' — ':'')+etiquette(l);}
 /* Libellé dans la grille : le Niveau (colonne B), précédé de la Formation quand elle diffère du groupe (ex. « 1BTS MV Mixité »). */
 function etiquette(l){return String(l.libelle||l.code).split(' — ').pop();}
-function lignesActives(){return D.lignes.filter(function(l){return l.actif;});}
+/* Ligne affichée l'année consultée : active et entre sa première et sa dernière année. */
+function actifAnnee(l){return !!l.actif&&EUC_DEV610_ligneDeLAnnee_(l,D&&D.annee&&D.annee.code);}
+function lignesActives(){return D.lignes.filter(actifAnnee);}
 function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
 function message(html,classe){$('messages').innerHTML=html?'<p class="'+(classe||'note')+'">'+html+'</p>':'';}
@@ -260,7 +262,7 @@ function texteSur(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),1
 /* Étiquette d'une période dans une case : le complément (« 5 Star ») d'une formation complémentaire, sinon le type abrégé. */
 function etiq(p){return EUC_DEV610_estComplementaire_(p.type)?(p.complement||'F. compl.'):abrege(p.type);}
 function abrege(type){var n=EUC_DEV610_n_(type);if(n==='PDIF')return 'P.dif.';if(/STAGE/.test(n))return 'Stage';return String(type).replace(/^PFMP\s*/i,'PFMP ');}
-function lignesScolaires(){return D.lignes.filter(function(l){return l.calendrier==='SCOLAIRE'&&l.actif;});}
+function lignesScolaires(){return D.lignes.filter(function(l){return l.calendrier==='SCOLAIRE'&&actifAnnee(l);});}
 function ligne(code){return D.lignes.filter(function(l){return l.code===code;})[0];}
 function typesTous(){var f=typesFormation(),vus={},out=f.slice();f.forEach(function(t){vus[EUC_DEV610_n_(t)]=1;});(D.types||[]).forEach(function(t){var k=EUC_DEV610_n_(t.type);if(k==='BTSSTAGE'||vus[k])return;vus[k]=1;out.push(t.type);});if(!vus[EUC_DEV610_n_(EUC_DEV610_TYPE_COMPLEMENTAIRE_)])out.push(EUC_DEV610_TYPE_COMPLEMENTAIRE_);return out;}
 function typesFormation(){var vus={},out=[];(D.types||[]).forEach(function(t){if(EUC_DEV610_typeFormation_(t.type)||EUC_DEV610_n_(t.type)==='BTSSTAGE'){var v=EUC_DEV610_n_(t.type)==='BTSSTAGE'?'Stage BTS':t.type;if(!vus[EUC_DEV610_n_(v)]){vus[EUC_DEV610_n_(v)]=1;out.push(v);}}});
@@ -292,7 +294,7 @@ function initialiser(){
       apresChargement('Reprise de '+r.periodes.length+' période(s) déjà publiées dans le calendrier des PFMP'+(r.ignorees?' ('+r.ignorees+' non reprise(s), détail ci-dessous)':'')+'. Enregistrez pour créer la version 1.'+(aj?' '+aj+' classe(s) ajoutée(s) au rattachement d’après les périodes publiées : vérifiez puis enregistrez l’onglet « Lignes et classes ».':''));
       BILAN=r.bilan||null;rendreBilan();afficherNonReprises(r.nonReprises||[]);}).withFailureHandler(function(e){PER=[];apresChargement('<span class="erreur">Reprise impossible : '+esc(e&&e.message||e)+'</span>');}).EUC_DEV610_reprendreExistant({annee:a.code});
     return;}
-  else{NUM=0;PER=[];$('commentaire').value='';var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,[]);PER=g.periodes;SALE=true;apresChargement('Première génération de '+a.code+' depuis les règles ('+PER.length+' périodes). Vérifiez, ajustez puis enregistrez.');afficherAlertes(g.alertes);return;}
+  else{NUM=0;PER=[];$('commentaire').value='';var g=EUC_DEV610_generer_(lignesActives(),D.regles,SEM,IDX,[]);PER=g.periodes;SALE=true;apresChargement('Première génération de '+a.code+' depuis les règles ('+PER.length+' périodes). Vérifiez, ajustez puis enregistrez.');afficherAlertes(g.alertes);return;}
   apresChargement('');
 }
 function LIBSTATUT(s){return {BROUILLON:'brouillon',PUBLIE:'publiée',REMPLACE:'remplacée',PREVISIONNEL_DIFFUSE:'prévisionnel diffusé'}[s]||s;}
@@ -312,7 +314,7 @@ function majTitreImpression(){var a=D.annee,d=new Date(),h=String(d.getHours()).
 function ouvrirPanneau(id){Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});}
 function lienPlannings(params){return ADMIN+'?page=plannings-pfmp&annee='+encodeURIComponent(D.annee.code)+params;}
 function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Classes entières et formation continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
-  $('listeFormations').innerHTML=blocs.map(function(b){var ls=D.lignes.filter(function(l){return l.actif&&b[1].indexOf(l.calendrier)>=0;}).sort(function(x,y){return x.ordre-y.ordre;});if(!ls.length)return '';
+  $('listeFormations').innerHTML=blocs.map(function(b){var ls=D.lignes.filter(function(l){return actifAnnee(l)&&b[1].indexOf(l.calendrier)>=0;}).sort(function(x,y){return x.ordre-y.ordre;});if(!ls.length)return '';
     return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';}
 /* Calendrier d'une formation (mois en colonnes, jours en lignes). Jours au lycée : jours ouvrés hors vacances, fériés et périodes en entreprise.
  * Une formation complémentaire (ex. 5 Star) l'emporte sur les autres périodes : ses heures sont comptées à part, hors quota. */
@@ -546,7 +548,7 @@ function rendreBilan(){var z=$('bilanReprise');if(!BILAN){z.hidden=true;return;}
     if(bp)bp.onclick=function(){var c=tr.querySelector('.bl').value;if(!c){message('Choisissez la ligne du planning où placer cette période.','erreur');return;}x.lignes=[c];PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">Période n° '+x.id+' placée dans '+esc(nomCode(c))+'</span> : enregistrez la version pour la garder.');modifie();};
     if(br)br.onclick=function(){(x.lignes||[]).forEach(function(c){if(!couvert(c,x.type,x.debut,x.fin))PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'REPRISE',regle:null});});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">Période n° '+x.id+' remise dans la version</span> : enregistrez pour la garder.');modifie();};});}
 function afficherAlertes(al){var z=$('alertes');z.hidden=!al||!al.length;z.innerHTML=al&&al.length?'<b>À vérifier</b><ul class="changements">'+al.map(function(a){return '<li>'+esc(a)+'</li>';}).join('')+'</ul>':'';}
-$('generer').onclick=function(){var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,PER),z=$('changements');afficherAlertes(g.alertes);
+$('generer').onclick=function(){var g=EUC_DEV610_generer_(lignesActives(),D.regles,SEM,IDX,PER),z=$('changements');afficherAlertes(g.alertes);
   if(!g.changements.length){z.hidden=false;z.innerHTML='<b>Aucun changement</b> : les périodes automatiques sont déjà conformes aux règles.';return;}
   var lib={NOUVELLE:'Nouvelle',DEPLACEE:'Déplacée',RETIREE:'Retirée'};
   z.hidden=false;z.innerHTML='<b>'+g.changements.length+' changement(s) proposé(s)</b><ul class="changements">'+g.changements.map(function(c){var l=ligne(c.ligne);return '<li>'+lib[c.nature]+' — '+esc(l?l.libelle:c.ligne)+' · '+esc(c.type)+' : '+(c.avant?dfr(c.avant.debut)+' → '+dfr(c.avant.fin):'')+(c.avant&&c.apres?' devient ':'')+(c.apres?dfr(c.apres.debut)+' → '+dfr(c.apres.fin):'')+'</li>';}).join('')+'</ul><button type="button" class="plein" id="appliquer">Appliquer</button> <button type="button" id="ignorer">Annuler</button>';
@@ -627,6 +629,7 @@ function rendreOrganisation(){if(!ORG)ORG=orgDepuisD();
   $('dlGroupes').innerHTML=Object.keys(groupes).map(function(g){return '<option value="'+esc(g)+'">';}).join('');$('dlClassesPfmp').innerHTML=Object.keys(cps).sort().map(function(c){return '<option value="'+esc(c)+'">';}).join('');
   var cal0=(D.calendriers||['SCOLAIRE','MIXITE','CLASSE_ENTIERE']),orgs=(D.organismes||['CFA RAN','CFAI','GRETA','Ducretet']),html='',g=null;
   /* Lignes retirées du modèle (TPEEB, anciennes mixités CPI-CPRP) : gardées dans Grist pour l'historique, jamais affichées ici. */
+  var cov=EUC_DEV610_couvertureMixites_(ORG.filter(actifAnnee));
   ORG.forEach(function(l,i){if((D.retirees||[]).indexOf(l.code)>=0)return;if(l.groupe!==g){g=l.groupe;html+='<tr class="gr"><td colspan="10">'+esc(g||'(sans groupe)')+'</td></tr>';}
     html+='<tr class="ln'+(l.actif?'':' inactive')+'" draggable="true" data-i="'+i+'"><td class="cal-'+esc(l.calendrier)+'"><span class="poignee" title="Glisser pour déplacer">⠿</span></td>'+
       '<td><input class="lib" data-k="libelle" value="'+esc(l.libelle)+'"></td><td><input class="mid" data-k="groupe" list="dlGroupes" value="'+esc(l.groupe)+'"></td>'+
@@ -635,11 +638,20 @@ function rendreOrganisation(){if(!ORG)ORG=orgDepuisD();
       '<td style="white-space:nowrap">'+orgs.map(function(o){return '<label style="font-size:11px;margin-right:4px"><input type="checkbox" data-org="'+esc(o)+'"'+((l.organismes||[]).indexOf(o)>=0?' checked':'')+'>'+esc(o)+'</label>';}).join('')+'</td>'+
       '<td><input class="mid" data-k="classePfmp" list="dlClassesPfmp" value="'+esc(l.classePfmp)+'"></td>'+
       '<td><select data-k="profil"><option value="">(aucune)</option>'+Object.keys(profils).sort().map(function(p){return '<option'+(p===l.profil?' selected':'')+'>'+esc(p)+'</option>';}).join('')+'</select></td>'+
-      '<td><input type="checkbox" data-k="actif"'+(l.actif?' checked':'')+' title="Décocher pour masquer la ligne sans la supprimer"></td>'+
-      '<td style="white-space:nowrap"><button type="button" class="petit" data-m="-1" aria-label="Monter">↑</button><button type="button" class="petit" data-m="1" aria-label="Descendre">↓</button></td></tr>';});
+      '<td style="white-space:nowrap"><input type="checkbox" data-k="actif"'+(l.actif?' checked':'')+' title="Décocher pour masquer la ligne sans la supprimer"> <span class="note">de</span> <select data-k="anneeDebut" title="Première année de la formation (vide : toujours)">'+optAnnees(l.anneeDebut)+'</select> <span class="note">à</span> <select data-k="anneeFin" title="Dernière année de la formation (vide : sans fin)">'+optAnnees(l.anneeFin)+'</select>'+(EUC_DEV610_ligneDeLAnnee_(l,D.annee.code)?'':' <span class="chip PREV">hors '+esc(D.annee.code)+'</span>')+'</td>'+
+      '<td style="white-space:nowrap"><button type="button" class="petit" data-m="-1" aria-label="Monter">↑</button><button type="button" class="petit" data-m="1" aria-label="Descendre">↓</button></td></tr>';
+    /* Mixité : filières couvertes (aucune cochée = le reste des filières du groupe). */
+    if(l.calendrier==='MIXITE'){var sc=ORG.filter(function(x){return x.groupe===l.groupe&&x.calendrier==='SCOLAIRE'&&actifAnnee(x);}),cv=cov.parLigne[l.code]||{sections:[]};
+      html+='<tr class="fil" data-i="'+i+'"><td></td><td colspan="9"><span class="note">Filières couvertes'+((l.sections||[]).length?'':' (aucune cochée : '+(cv.parCode?'d’après le code de la ligne':cv.reste?'le reste du groupe':'tout le groupe')+')')+' :</span> '+sc.map(function(x){return '<label style="font-size:12px;margin-right:6px"><input type="checkbox" data-sec="'+esc(x.code)+'"'+((l.sections||[]).indexOf(x.code)>=0?' checked':'')+'>'+esc(x.libelle)+'</label>';}).join('')+' <span class="note">→ nom proposé : « '+esc(EUC_DEV610_nomMixite_(l,ORG,cov.parLigne))+' »</span></td></tr>';}});
   $('tOrganisation').innerHTML=html||'<tr><td colspan="10" class="note">Aucune ligne.</td></tr>';
+  $('orgAlertes').innerHTML=cov.alertes.length?'<p class="alerte">Mixités à vérifier : '+esc(cov.alertes.join(' · '))+'</p>':'';
+  Array.prototype.forEach.call($('tOrganisation').querySelectorAll('tr.fil'),function(tr){var l=ORG[Number(tr.dataset.i)];
+    Array.prototype.forEach.call(tr.querySelectorAll('[data-sec]'),function(c){c.onchange=function(){var avant=EUC_DEV610_nomMixite_(l,ORG,EUC_DEV610_couvertureMixites_(ORG.filter(actifAnnee)).parLigne);
+      l.sections=Array.prototype.filter.call(tr.querySelectorAll('[data-sec]'),function(x){return x.checked;}).map(function(x){return x.dataset.sec;});
+      /* Nom automatique : suivi tant qu'il n'a pas été changé à la main. */
+      if(l.libelle===avant)l.libelle=EUC_DEV610_nomMixite_(l,ORG,EUC_DEV610_couvertureMixites_(ORG.filter(actifAnnee)).parLigne);orgAppliquer();rendreOrganisation();};});});
   Array.prototype.forEach.call($('tOrganisation').querySelectorAll('tr.ln'),function(tr){var i=Number(tr.dataset.i),l=ORG[i];
-    Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){l[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();orgAppliquer();if(el.dataset.k==='groupe'||el.dataset.k==='calendrier'||el.dataset.k==='actif')rendreOrganisation();};});
+    Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){l[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();orgAppliquer();if(['groupe','calendrier','actif','anneeDebut','anneeFin'].indexOf(el.dataset.k)>=0)rendreOrganisation();};});
     Array.prototype.forEach.call(tr.querySelectorAll('[data-org]'),function(c){c.onchange=function(){l.organismes=Array.prototype.filter.call(tr.querySelectorAll('[data-org]'),function(x){return x.checked;}).map(function(x){return x.dataset.org;});orgAppliquer();};});
     Array.prototype.forEach.call(tr.querySelectorAll('[data-m]'),function(b){b.onclick=function(){var j=i+Number(b.dataset.m);if(j<0||j>=ORG.length)return;var x=ORG.splice(i,1)[0];ORG.splice(j,0,x);orgAppliquer();rendreOrganisation();};});
     tr.addEventListener('dragstart',function(e){GLISSE=i;tr.classList.add('glisse');try{e.dataTransfer.setData('text/plain',String(i));e.dataTransfer.effectAllowed='move';}catch(x){}});
@@ -651,28 +663,29 @@ function rendreOrganisation(){if(!ORG)ORG=orgDepuisD();
       x.groupe=ORG[j+1]&&ORG[j+1].groupe||x.groupe;GLISSE=-1;orgAppliquer();rendreOrganisation();});});
   $('enregistrerOrganisation').disabled=!ORG_SALE;if(!ORG_SALE)$('orgEtat').textContent=ORG.filter(function(l){return l.actif;}).length+' ligne(s) affichée(s), '+ORG.filter(function(l){return !l.actif;}).length+' masquée(s).';
   rendreNouvellesClasses();}
+function optAnnees(v){return '<option value="">—</option>'+(D.annees||[]).map(function(a){return '<option'+(a.code===v?' selected':'')+'>'+esc(a.code)+'</option>';}).join('')+(v&&!(D.annees||[]).some(function(a){return a.code===v;})?'<option selected>'+esc(v)+'</option>':'');}
 function rendreNouvellesClasses(){var n=(D.nouvellesClasses||[]).filter(function(x){return !ORG.some(function(l){return EUC_DEV610_n_(l.classePfmp)===EUC_DEV610_n_(x.proposition.classePfmp);});});
   $('nouvellesClasses').innerHTML=n.length?'<div class="cadre"><b>Classes Pronote sans ligne dans le tableau ('+n.length+')</b><ul class="changements">'+n.map(function(x,i){var p=x.proposition;return '<li>'+esc(x.classe.nom)+(x.classe.etab?' · '+esc(x.classe.etab):'')+(x.classe.modalite?' · '+esc(x.classe.modalite):'')+' → '+esc(CALENDRIERS[p.calendrier]||p.calendrier)+', groupe « '+esc(p.groupe)+' »'+(supports(p)?' · '+esc(supports(p)):'')+(p.apres?' (après '+esc(nomLigne(ligne(p.apres)||{libelle:p.apres}))+')':'')+' <button type="button" class="petit" data-n="'+i+'">Ajouter au tableau</button></li>';}).join('')+'</ul></div>':'';
   Array.prototype.forEach.call($('nouvellesClasses').querySelectorAll('[data-n]'),function(b){b.onclick=function(){var p=JSON.parse(JSON.stringify(n[Number(b.dataset.n)].proposition)),pos=ORG.length;
     if(p.apres){var k=ORG.map(function(l){return l.code;}).indexOf(p.apres);if(k>=0){pos=k+1;while(pos<ORG.length&&ORG[pos].groupe===p.groupe&&ORG[pos].calendrier===p.calendrier)pos++;}}
-    p.id=0;p.code='NOUVELLE_'+Date.now();ORG.splice(pos,0,p);if(p.classeId){(D.rattachements[p.code]=[p.classeId]);}orgAppliquer();rendreOrganisation();};});}
-$('nomsPronote').onclick=function(){var n=0;ORG.forEach(function(l){var v=l.calendrier==='MIXITE'?(/^MIX_/.test(l.code)?EUC_DEV610_libelleMixite_(l.code):''):l.classePfmp;if(!v)return;if(l.libelle!==v){l.libelle=v;n++;}});
+    p.id=0;p.code='NOUVELLE_'+Date.now();p.anneeDebut=D.annee.code;p.anneeFin='';p.sections=[];ORG.splice(pos,0,p);if(p.classeId){(D.rattachements[p.code]=[p.classeId]);}orgAppliquer();rendreOrganisation();};});}
+$('nomsPronote').onclick=function(){var n=0;ORG.forEach(function(l){var v=l.calendrier==='MIXITE'?EUC_DEV610_nomMixite_(l,ORG,EUC_DEV610_couvertureMixites_(ORG.filter(actifAnnee)).parLigne):l.classePfmp;if(!v)return;if(l.libelle!==v){l.libelle=v;n++;}});
   if(n){orgAppliquer();rendreOrganisation();}message(n?n+' ligne(s) renommée(s) d’après Pronote : vérifiez le planning puis enregistrez l’organisation. Relancez ensuite le calibrage (onglet « Lignes et classes ») pour reporter les noms dans Planning_Periodes.':'Les lignes portent déjà les noms Pronote.',n?'alerte':'ok');};
 $('fEnregistrer').onclick=function(){var code=LIGNE_COURANTE;if(!code)return;var q={annee:D.annee.code,ligne:code,debut:$('fDebut').value,fin:$('fFin').value,titre:$('fTitre').value,sousTitre:$('fSousTitre').value,intitule:$('fIntitule').value};
   if(q.debut&&q.fin&&q.fin<q.debut){message('La fin de la formation doit suivre son début.','erreur');return;}
   occupe(this,'Enregistrement…','EUC_DEV610_enregistrerFormation',q,function(r){D.formations=D.formations||{};D.formations[code]=r.formation;rendreCalendrier(code);message('<span class="ok">Dates et titres enregistrés.</span>');});};
 $('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:5mm}';var c=document.querySelector('.a32');if(c){var z=Math.min(1,1080/c.scrollWidth,740/c.scrollHeight);c.style.zoom=String(Math.floor(z*100)/100);}window.print();if(c)c.style.zoom='';$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
-$('ajouterLigne').onclick=function(){ORG.push({id:0,code:'NOUVELLE_'+Date.now(),libelle:'Nouvelle classe',groupe:(ORG[ORG.length-1]||{}).groupe||'À classer',calendrier:'SCOLAIRE',formation:'',niveau:'',classePfmp:'',profil:'',etablissement:'',organismes:[],actif:true});orgAppliquer();rendreOrganisation();};
+$('ajouterLigne').onclick=function(){ORG.push({id:0,anneeDebut:D.annee.code,anneeFin:'',sections:[],code:'NOUVELLE_'+Date.now(),libelle:'Nouvelle classe',groupe:(ORG[ORG.length-1]||{}).groupe||'À classer',calendrier:'SCOLAIRE',formation:'',niveau:'',classePfmp:'',profil:'',etablissement:'',organismes:[],actif:true});orgAppliquer();rendreOrganisation();};
 $('enregistrerOrganisation').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation',{lignes:ORG},function(r){ORG_SALE=false;charger(D.annee.code);message('<span class="ok">Organisation enregistrée</span> : '+r.modifiees+' ligne(s) mise(s) à jour, '+r.creees+' créée(s)'+(r.desactivees?', '+r.desactivees+' masquée(s)':'')+'.');});};
 
 /* ---------- Lignes et classes ---------- */
 function rendreLignes(){var cl={};D.classes.forEach(function(c){cl[c.id]=c;});var pris={};
-  var toutes=D.lignes.slice().sort(function(a,b){return a.ordre-b.ordre;}),inact=toutes.filter(function(l){return !l.actif;}).length;
-  $('nbInactives').textContent=inact?'('+inact+')':'';var ordre=toutes.filter(function(l){return l.actif||$('voirInactives').checked;});
-  $('tLignes').innerHTML=ordre.map(function(l){if(l.calendrier==='MIXITE')return '<tr><td><b>'+esc(l.libelle)+'</b>'+(l.actif?'':' <span class="note">(inactive)</span>')+'</td><td>'+esc(CALENDRIERS[l.calendrier]||l.calendrier)+'</td><td>'+esc(l.formation)+'</td><td>'+esc(l.niveau)+'</td><td>'+esc(l.profil)+'</td><td>—</td><td class="note">Aucune classe : apprentis suivis dans les classes scolaires</td></tr>';
+  var toutes=D.lignes.slice().sort(function(a,b){return a.ordre-b.ordre;}),inact=toutes.filter(function(l){return !actifAnnee(l);}).length;
+  $('nbInactives').textContent=inact?'('+inact+')':'';var ordre=toutes.filter(function(l){return actifAnnee(l)||$('voirInactives').checked;});
+  $('tLignes').innerHTML=ordre.map(function(l){if(l.calendrier==='MIXITE')return '<tr><td><b>'+esc(l.libelle)+'</b>'+(l.actif?(actifAnnee(l)?'':' <span class="note">(hors de l’année)</span>'):' <span class="note">(inactive)</span>')+'</td><td>'+esc(CALENDRIERS[l.calendrier]||l.calendrier)+'</td><td>'+esc(l.formation)+'</td><td>'+esc(l.niveau)+'</td><td>'+esc(l.profil)+'</td><td>—</td><td class="note">Aucune classe : apprentis suivis dans les classes scolaires</td></tr>';
     var ids=D.rattachements[l.code]||[];ids.forEach(function(id){pris[id]=1;});
     var prop=(D.proposes[l.code]||[]).join()!==ids.join()&&D.rattachementsEnregistres.indexOf(l.code)>=0?' <span class="note">(proposition : '+esc((D.proposes[l.code]||[]).map(function(id){return cl[id]?cl[id].nom:id;}).join(', ')||'aucune')+')</span>':'';
-    return '<tr data-c="'+esc(l.code)+'"><td><b>'+esc(l.libelle)+'</b>'+(l.actif?'':' <span class="note">(inactive)</span>')+'</td><td>'+esc(CALENDRIERS[l.calendrier]||l.calendrier)+'</td><td>'+esc(l.formation)+'</td><td>'+esc(l.niveau)+'</td><td>'+esc(l.profil)+'</td><td>'+esc(l.classePfmp)+'</td><td><div class="puces">'+ids.map(function(id){return '<span class="puce">'+esc(cl[id]?cl[id].nom:'#'+id)+'<button type="button" data-r="'+id+'" aria-label="Retirer">×</button></span>';}).join('')+
+    return '<tr data-c="'+esc(l.code)+'"><td><b>'+esc(l.libelle)+'</b>'+(l.actif?(actifAnnee(l)?'':' <span class="note">(hors de l’année)</span>'):' <span class="note">(inactive)</span>')+'</td><td>'+esc(CALENDRIERS[l.calendrier]||l.calendrier)+'</td><td>'+esc(l.formation)+'</td><td>'+esc(l.niveau)+'</td><td>'+esc(l.profil)+'</td><td>'+esc(l.classePfmp)+'</td><td><div class="puces">'+ids.map(function(id){return '<span class="puce">'+esc(cl[id]?cl[id].nom:'#'+id)+'<button type="button" data-r="'+id+'" aria-label="Retirer">×</button></span>';}).join('')+
       '<select class="aj"><option value="">+ classe</option>'+D.classes.filter(function(c){return c.actif&&ids.indexOf(c.id)<0;}).map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+'</option>';}).join('')+'</select></div>'+prop+'</td></tr>';}).join('');
   var seules=D.classes.filter(function(c){return c.actif&&!pris[c.id]&&!/^TEST/i.test(c.nom);});
   $('nonRattachees').innerHTML=seules.length?'<span class="alerte">Classes actives sans ligne de planning (normal si elles n’ont aucune période en entreprise cette année) : '+esc(seules.map(function(c){return c.nom;}).join(', '))+'.</span>':'<span class="ok">Toutes les classes actives sont rattachées.</span>';

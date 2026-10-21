@@ -630,4 +630,43 @@ test('mixités : noms distincts par niveau et section, anciens noms renommés un
   const pg = read('apps-script/Plannings_DEV610.html'); for (const x of ['id="voirInactives"', 'Mixités : aucune classe à rattacher', '(D.retirees||[]).indexOf(l.code)>=0']) assert.ok(pg.includes(x), x);
 });
 
+test('années de validité : une formation n’apparaît qu’entre sa première et sa dernière année (page, reprise, publication), enregistrées depuis l’organisation', () => {
+  const V = (d, f, a) => k.EUC_DEV610_ligneDeLAnnee_({ anneeDebut: d, anneeFin: f }, a);
+  assert.deepStrictEqual([V('', '', '2025-2026'), V('2026-2027', '', '2025-2026'), V('2026-2027', '', '2026-2027'), V('2026-2027', '', '2028-2029'), V('', '2026-2027', '2027-2028'), V('2025-2026', '2026-2027', '2026-2027')], [true, false, true, true, false, true]);
+  const g = grist({ periodes: [{ id: 1, fields: { Annee_scolaire: '2026-2027', Type: 'ENT.', Formation: 'Ducretet', Niveau: 'TSEC', Date_debut: sec('2026-11-16'), Date_fin: sec('2026-11-20'), Actif: true } }] });
+  const c0 = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const org = c0.lignes.map(l => Object.assign({}, l, l.code === 'TSEC' ? { anneeDebut: '2027-2028' } : {}, l.code === 'MIX_1BP' ? { sections: ['1BP_MP3D', '1BP_MT'] } : {}));
+  assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org.map(l => l.code === 'TSEC' ? Object.assign({}, l, { anneeFin: '2026-2027' }) : l) }), /précède/);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org.map(l => l.code === 'TSEC' ? Object.assign({}, l, { anneeDebut: '2027' }) : l) }), /format/);
+  g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org });
+  const t = g.tables.EUC_PLAN_LIGNES.find(r => r.fields.Code === 'TSEC').fields, m = g.tables.EUC_PLAN_LIGNES.find(r => r.fields.Code === 'MIX_1BP').fields;
+  assert.deepStrictEqual([t.Annee_debut, t.Annee_fin, m.Sections], ['2027-2028', '', '1BP_MP3D, 1BP_MT']);
+  const c1 = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.deepStrictEqual(J(c1.lignes.find(l => l.code === 'MIX_1BP').sections), ['1BP_MP3D', '1BP_MT']);
+  assert.ok(!g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' }).periodes.some(p => p.ligne === 'TSEC'), 'TSEC pas encore ouvert en 2026-2027 : rien repris');
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['function actifAnnee(l)', 'data-k="anneeDebut"', 'anneeDebut:D.annee.code', 'EUC_DEV610_generer_(lignesActives()']) assert.ok(pg.includes(x), x);
+});
+test('mixités par filière : couverture (cochées ou le reste du groupe), alertes, nom automatique, logos et diplôme d’après les filières', () => {
+  const ls = lignesDefaut().map(l => l.code === 'MIX_1BP' ? Object.assign({}, l, { sections: ['1BP_MP3D', '1BP_MT'] }) : l)
+    .concat([{ code: '1_BAC_PRO_MIXITE', libelle: '1 BAC PRO Mixité', calendrier: 'MIXITE', groupe: '1 BAC PRO', sections: [], actif: true }]);
+  const cov = k.EUC_DEV610_couvertureMixites_(ls), sc = ls.filter(l => l.groupe === '1 BAC PRO' && l.calendrier === 'SCOLAIRE').map(l => l.code);
+  assert.deepStrictEqual(J(cov.parLigne.MIX_1BP), { sections: ['1BP_MP3D', '1BP_MT'], partielle: true, reste: false, parCode: false });
+  assert.deepStrictEqual(J(cov.parLigne['1_BAC_PRO_MIXITE'].sections), J(sc.filter(c => c !== '1BP_MP3D' && c !== '1BP_MT')));
+  assert.deepStrictEqual(J(cov.alertes), []);
+  assert.deepStrictEqual([k.EUC_DEV610_nomMixite_(ls.find(l => l.code === 'MIX_1BP'), ls, cov.parLigne), k.EUC_DEV610_nomMixite_(ls.find(l => l.code === '1_BAC_PRO_MIXITE'), ls, cov.parLigne), k.EUC_DEV610_nomMixite_(ls.find(l => l.code === 'MIX_TBP'), ls, cov.parLigne)],
+    ['1 BAC PRO Mixité MP3D MT', '1 BAC PRO Mixité (autres filières)', 'T BAC PRO Mixité']);
+  assert.strictEqual(k.EUC_DEV610_nomMixite_(ls.find(l => l.code === 'MIX_1BTS_CPI'), ls, cov.parLigne), '1BTS CPI Mixité', 'section lue dans le code : nom du code');
+  const deux = ls.map(l => l.code === '1_BAC_PRO_MIXITE' ? Object.assign({}, l, { sections: ['1BP_MT'] }) : l);
+  assert.ok(k.EUC_DEV610_couvertureMixites_(deux).alertes.some(a => /1BP_MT est couverte par deux/.test(a)));
+  assert.deepStrictEqual(J(k.EUC_DEV610_couvertureMixites_(lignesDefaut()).alertes), [], 'modèle par défaut : aucune alerte');
+  /* Logos et diplôme : classes des seules filières couvertes. */
+  const ra = { '1BP_MP3D': [11], '1BP_MT': [12], '1BP_MVA': [13] }, cl = { 11: { id: 11, modalite: 'Mixité', gestionnaire: 'CFAI' }, 12: { id: 12, modalite: 'Mixité', gestionnaire: 'CFAI' }, 13: { id: 13, modalite: 'Mixité', gestionnaire: 'CFA RAN' } };
+  assert.deepStrictEqual(J(k.EUC_DEV610_organismesLigne_(ls.find(l => l.code === 'MIX_1BP'), ls, ra, cl)), ['CFAI']);
+  assert.deepStrictEqual(J(k.EUC_DEV610_organismesLigne_(ls.find(l => l.code === '1_BAC_PRO_MIXITE'), ls, ra, cl)), ['CFA RAN']);
+  assert.deepStrictEqual(J(k.EUC_DEV610_classesDesFilieres_(ls.find(l => l.code === 'MIX_1BP'), ls, ra)), [11, 12]);
+  /* Sans filière cochée dans le groupe : comportement inchangé (section lue dans le code). */
+  assert.deepStrictEqual(J(k.EUC_DEV610_classesDesFilieres_(lignesDefaut().find(l => l.code === 'MIX_1BP'), lignesDefaut(), ra)).sort(), [11, 12, 13]);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');

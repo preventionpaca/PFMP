@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : années de validité des formations et mixités par filière
+
+- Années de validité : colonnes `Annee_debut` / `Annee_fin` de `EUC_PLAN_LIGNES`
+  (« de … à … » dans « Organisation du tableau »). Une ligne n'apparaît que sur
+  les années comprises (`EUC_DEV610_ligneDeLAnnee_`) : grille, tableau des
+  périodes, plannings par formation, génération, reprise et publication. Sans
+  bornes : toutes les années. Une ligne ajoutée à la main ou depuis Pronote
+  commence à l'année consultée. Une formation qui ferme reçoit une dernière
+  année au lieu d'être désactivée : les années passées la gardent.
+- Mixités par filière : colonne `Sections` (filières couvertes). Cochées : la
+  mixité couvre ces lignes scolaires ; aucune cochée : section lue dans le code
+  (MIX_1BTS_CPI → CPI) ou, pour une mixité créée à la main, « le reste » du
+  groupe. Nom proposé : « 1 BAC PRO Mixité », « 1 BAC PRO Mixité MP3D MT »,
+  « 1 BAC PRO Mixité (autres filières) » ; suivi automatiquement tant qu'il n'a
+  pas été modifié. Alertes : filière couverte deux fois, deux mixités « le
+  reste ». Logos et intitulé du diplôme d'une mixité d'après les classes de ses
+  filières (`EUC_DEV610_classesDesFilieres_`).
+- Tests simulés : 2 tests ajoutés (37/37 DEV610), suite complète 1076/1076.
+  Onglet Organisation piloté dans Chromium sur la copie locale (filières,
+  nom automatique, nouvelle ligne datée, TSEC hors de l'année masqué de la
+  grille).
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : grille et tableau des périodes, saisie dans les deux sens
 
 - Vérifié dans Chromium (copie locale, ligne « 1 BAC PRO Mixité ») : une période
