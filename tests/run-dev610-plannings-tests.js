@@ -229,12 +229,16 @@ test('reprise du calendrier publié : périodes en entreprise rattachées à une
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
   assert.deepStrictEqual(J(r.periodes), [{ ligne: 'TBP_MVA', type: 'VFMP', debut: '2026-09-23', fin: '2026-09-25', origine: 'REPRISE', regle: null }, { ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', origine: 'REPRISE', regle: null }]);
   assert.strictEqual(r.ignorees, 1); assert.strictEqual(r.nonReprises[0].raison, 'PLUSIEURS_LIGNES'); assert.strictEqual(g.calls.filter(c => c.method !== 'get').length, avant);
+  /* Bilan : chaque ligne Grist de l'année avec son résultat, sans écriture. */
+  assert.deepStrictEqual(J(r.bilan.map(x => [x.id, x.statut, x.lignes || null, x.par || null, x.raison || null])), [
+    [3, 'PLACEE', ['TBP_MVA'], 'CLASSES', null], [1, 'PLACEE', ['TBP_MVA'], 'CLASSES', null], [2, 'DOUBLON', ['TBP_MVA'], 'CLASSES', null],
+    [4, 'NON_PLACEE', ['TBP_MVA', '1BP_MVA'], null, 'PLUSIEURS_LIGNES'], [5, 'INACTIVE', null, null, null]]);
 });
 test('reprise : période T CAP dont la classe est inactive ou non rattachée retrouvée par sa classe PFMP, détail des non reprises', () => {
   const lignes = lignesDefaut(), classesParId = { 23: { id: 23, nom: 'TCAP CAR', classePfmp: 'TCAP CAR', actif: false }, 30: { id: 30, nom: 'TMVA1', classePfmp: 'TMVA', actif: true }, 77: { id: 77, nom: 'TERM X', classePfmp: 'TX', actif: true } };
-  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [23] }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [23] });
-  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [30] }, { 30: 'TBP_MVA' }, classesParId, lignes)), { ligne: 'TBP_MVA', ajouts: [] });
-  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [], classePfmp: 'TCAP CAR' }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [] });
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [23] }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [23], par: 'CLASSE_PFMP' });
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [30] }, { 30: 'TBP_MVA' }, classesParId, lignes)), { ligne: 'TBP_MVA', ajouts: [], par: 'CLASSES' });
+  assert.deepStrictEqual(J(k.EUC_DEV610_ligneDePeriode_({ classes: [], classePfmp: 'TCAP CAR' }, {}, classesParId, lignes)), { ligne: 'TCAP', ajouts: [], par: 'TEXTE_CLASSE_PFMP' });
   assert.strictEqual(k.EUC_DEV610_ligneDePeriode_({ classes: [77] }, {}, classesParId, lignes).raison, 'AUCUNE_LIGNE');
   assert.strictEqual(k.EUC_DEV610_ligneDePeriode_({ classes: [] }, {}, classesParId, lignes).raison, 'SANS_CLASSE');
   const g = grist({ periodes: [
@@ -268,6 +272,8 @@ test('reprise des mixités et classes entières par Formation / Niveau (colonnes
   const r = g.k.EUC_DEV610_reprendreExistant({ annee: '2026-2027' });
   assert.deepStrictEqual(J(r.periodes.map(p => [p.ligne, p.type, p.debut])).sort(), [['CAP_PEINTRE', 'VISITE', '2026-12-16'], ['MIX_1BTS_MV', 'ENT.', '2026-10-12'], ['MIX_1BTS_MV', 'Stage BTS', '2027-05-31'], ['MIX_2BTS_CPI', 'VISITE', '2026-12-14'], ['MIX_2BTS_CPRP', 'VISITE', '2026-12-14']]);
   assert.strictEqual(r.tests, 1); assert.strictEqual(r.ignorees, 0);
+  const b = id => r.bilan.find(x => x.id === id);
+  assert.deepStrictEqual(J([b(400).statut, b(289).statut, b(289).lignes, b(289).par, b(74).par]), ['TEST', 'PLACEE', ['MIX_2BTS_CPI', 'MIX_2BTS_CPRP'], 'LIBELLES', 'LIBELLES']);
 });
 test('calibrage de Planning_Periodes : aperçu sans écriture, colonne Ligne_planning, recopie Formation/Niveau/Ligne_sheet, Type en liste, cas douteux jamais écrits', () => {
   const g = grist({ periodes: [

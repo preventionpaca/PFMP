@@ -27,6 +27,7 @@ button.petit{padding:2px 7px;font-size:12px}
 .onglets button{border:1px solid var(--bord);border-bottom:none;border-radius:8px 8px 0 0;background:#eef6f2;color:var(--texte)}
 .onglets button[aria-selected="true"]{background:var(--vert);color:#fff;border-color:var(--vert)}
 .panneau{display:none}.panneau.actif{display:block}
+.ok2{background:#dcfce7;color:#166534}.ko2{background:#fee2e2;color:#991b1b}.gris2{background:#f1f5f9;color:#475569}.bilanFiltre{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
 .cadre{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 12px;margin:8px 0}
 .grille{overflow:auto;max-width:100%;border:1px solid var(--bord);border-radius:10px;background:#fff;max-height:75vh}
 table.g{border-collapse:separate;border-spacing:0;font-size:11px;user-select:none;table-layout:fixed}
@@ -134,8 +135,9 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   </section>
 
   <section id="pPeriodes" class="panneau">
-    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button><button type="button" id="reprendre" title="Relit Planning_Periodes et remplace les périodes déjà reprises ; vos placements manuels sont conservés">Reprendre le calendrier publié</button></div>
+    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button><button type="button" id="reprendre" title="Relit Planning_Periodes et remplace les périodes déjà reprises ; vos placements manuels sont conservés">Reprendre le calendrier publié</button><button type="button" id="controlerReprise" title="Lecture seule : compare chaque ligne de Planning_Periodes avec la version ouverte">Contrôler la reprise</button></div>
     <table class="t"><thead><tr><th>Ligne</th><th>Type</th><th>Du</th><th>Au</th><th>Semaines</th><th>Origine</th><th></th></tr></thead><tbody id="tPeriodes"></tbody></table>
+    <div id="bilanReprise" class="cadre" hidden></div>
   </section>
 
   <section id="pRegles" class="panneau">
@@ -264,7 +266,7 @@ function semainesDe(p){var out=[];SEM.forEach(function(s){if(s.lundi<=p.fin&&s.v
 /* ---------- Chargement ---------- */
 function charger(annee){
   $('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement de l’année…';$('annee').disabled=true;message('');
-  google.script.run.withSuccessHandler(function(r){D=r;HL=null;initialiser();}).withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span> <button type="button" class="petit" id="reessayer">Réessayer</button>';$('reessayer').onclick=function(){charger(annee);};}).EUC_DEV610_charger({annee:annee});
+  google.script.run.withSuccessHandler(function(r){D=r;HL=null;BILAN=null;initialiser();}).withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span> <button type="button" class="petit" id="reessayer">Réessayer</button>';$('reessayer').onclick=function(){charger(annee);};}).EUC_DEV610_charger({annee:annee});
 }
 function initialiser(){
   var a=D.annee,y=Number(a.code.slice(0,4));
@@ -284,7 +286,7 @@ function initialiser(){
     google.script.run.withSuccessHandler(function(r){PER=r.periodes;SALE=true;var aj=0;
       Object.keys(r.suggestions||{}).forEach(function(c){var l=D.rattachements[c]=D.rattachements[c]||[];r.suggestions[c].forEach(function(id){if(l.indexOf(id)<0){l.push(id);aj++;}});l.sort(function(a,b){return a-b;});});
       apresChargement('Reprise de '+r.periodes.length+' période(s) déjà publiées dans le calendrier des PFMP'+(r.ignorees?' ('+r.ignorees+' non reprise(s), détail ci-dessous)':'')+'. Enregistrez pour créer la version 1.'+(aj?' '+aj+' classe(s) ajoutée(s) au rattachement d’après les périodes publiées : vérifiez puis enregistrez l’onglet « Lignes et classes ».':''));
-      afficherNonReprises(r.nonReprises||[]);}).withFailureHandler(function(e){PER=[];apresChargement('<span class="erreur">Reprise impossible : '+esc(e&&e.message||e)+'</span>');}).EUC_DEV610_reprendreExistant({annee:a.code});
+      BILAN=r.bilan||null;rendreBilan();afficherNonReprises(r.nonReprises||[]);}).withFailureHandler(function(e){PER=[];apresChargement('<span class="erreur">Reprise impossible : '+esc(e&&e.message||e)+'</span>');}).EUC_DEV610_reprendreExistant({annee:a.code});
     return;}
   else{NUM=0;PER=[];$('commentaire').value='';var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,[]);PER=g.periodes;SALE=true;apresChargement('Première génération de '+a.code+' depuis les règles ('+PER.length+' périodes). Vérifiez, ajustez puis enregistrez.');afficherAlertes(g.alertes);return;}
   apresChargement('');
@@ -426,14 +428,14 @@ function rendreEditeurHeures(l,B){var f=HREG.formateurs,v=function(x){return x==
       HL=null;rendreCalendrier(l.code);message('Heures enregistrées ('+r.jours+' jour(s) modifié(s)).','ok');});};}
 function majHeuresEtat(){if($('hEtat'))$('hEtat').innerHTML=HSALE?'<span class="alerte">Modifications non enregistrées</span>':'';}
 $('calendrier').addEventListener('click',function(ev){var td=ev.target.closest('td[data-date]');if(!td)return;var det=$('heures').querySelector('details');if(det)det.open=true;var tr=$('heures').querySelector('tr[data-date="'+td.dataset.date+'"]');if(tr){tr.scrollIntoView({block:'center'});var i=tr.querySelector('input');if(i)i.focus();}});
-function rendreTout(){ORG=null;VAC=null;rendreAnnees();rendreLogos();rendreOrganisation();rendreGrille();rendrePeriodes();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
+function rendreTout(){ORG=null;VAC=null;rendreAnnees();rendreLogos();rendreOrganisation();rendreGrille();rendrePeriodes();rendreBilan();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
 function majBoutons(){var pret=!!D;['generer','imprimer'].forEach(function(id){$(id).disabled=!pret;});
   $('enregistrer').disabled=!pret||!PER.length&&!NUM;$('nouvelle').disabled=!pret||!NUM;$('enregistrerRegles').disabled=!pret;$('enregistrerLignes').disabled=!pret;
   var v=NUM&&D?D.versions.filter(function(x){return x.numero===NUM;})[0]:null;
   $('statutVersion').innerHTML=v?'<span class="chip '+esc(v.statut)+'">'+esc(LIBSTATUT(v.statut))+'</span>'+(SALE?' <span class="alerte">modifications non enregistrées</span>':''):(SALE?'<span class="alerte">non enregistrée</span>':'');
   $('apercu').disabled=!pret||!NUM;$('publier').disabled=!APERCU||SALE||!!(D&&D.previsionnel);
   if(v&&v.statut!=='BROUILLON')$('enregistrer').textContent='Enregistrer (nouvelle version)';else $('enregistrer').textContent='Enregistrer la version';}
-function modifie(){SALE=true;EDIT=true;APERCU=null;$('resultatPublication').innerHTML='';rendreGrille();rendrePeriodes();majBoutons();}
+function modifie(){SALE=true;EDIT=true;APERCU=null;$('resultatPublication').innerHTML='';rendreGrille();rendrePeriodes();rendreBilan();majBoutons();}
 
 /* ---------- Grille ---------- */
 function rendreGrille(){
@@ -498,6 +500,45 @@ $('selAnnuler').onclick=function(){SEL=[];marquerSelection();};
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&SEL.length){SEL=[];marquerSelection();}});
 var RAISONS={AUCUNE_LIGNE:'ses classes ne sont rattachées à aucune ligne',PLUSIEURS_LIGNES:'ses classes relèvent de plusieurs lignes',SANS_CLASSE:'aucune classe concernée'};
 function afficherNonReprises(l){var z=$('changements');if(!l.length){return;}z.hidden=false;z.innerHTML='<b>Périodes publiées non reprises ('+l.length+')</b> — rattachez leurs classes dans « Lignes et classes », puis rechargez :<ul class="changements">'+l.map(function(x){return '<li>'+esc(x.type)+' du '+dfr(x.debut)+' au '+dfr(x.fin)+' — classes : '+esc(x.classes.join(', ')||'aucune')+(x.formation||x.niveau?' — ancien libellé « '+esc([x.formation,x.niveau].filter(Boolean).join(' / '))+' »':'')+' : '+esc(RAISONS[x.raison]||x.raison)+(x.lignes&&x.lignes.length?' ('+esc(x.lignes.join(', '))+')':'')+'.</li>';}).join('')+'</ul>';}
+/* Bilan de la reprise : chaque ligne de Planning_Periodes de l'année, son résultat et sa présence dans la version ouverte. */
+var BILAN=null,BILAN_FILTRE='A_TRAITER';
+var STATUTS_BILAN={PLACEE:'Placée',NON_PLACEE:'Non placée',DOUBLON:'En double',TEST:'Classe de test',INACTIVE:'Inactive dans Grist',INCOMPLETE:'Type ou dates manquants'};
+var PAR_BILAN={LIGNE_PLANNING:'colonne Ligne_planning',CLASSES:'classes rattachées',CLASSE_PFMP:'classe PFMP des classes',TEXTE_CLASSE_PFMP:'texte Classe_PFMP',LIBELLES:'ancien libellé Formation / Niveau'};
+/* Une période est dans la version si chacun de ses jours ouvrés est couvert par une période de la même ligne et du même type. */
+function couvert(ligne,type,debut,fin){var t=EUC_DEV610_cleType_(type),ps=PER.filter(function(p){return p.ligne===ligne&&EUC_DEV610_cleType_(p.type)===t;});if(!ps.length)return false;
+  var d=new Date(debut+'T12:00:00Z'),f=new Date(fin+'T12:00:00Z'),vu=false;
+  for(;d<=f;d.setUTCDate(d.getUTCDate()+1)){var wd=d.getUTCDay();if(wd===0||wd===6)continue;vu=true;var iso=d.toISOString().slice(0,10);if(!ps.some(function(p){return p.debut<=iso&&p.fin>=iso;}))return false;}
+  return vu||ps.some(function(p){return p.debut<=fin&&p.fin>=debut;});}
+function etatBilan(x){if(x.statut!=='PLACEE'&&x.statut!=='NON_PLACEE')return 'IGNOREE';var ou=PER.length?(x.lignes||[]).filter(function(c){return couvert(c,x.type,x.debut,x.fin);}):[];
+  /* Non placée par la reprise : cherchée dans toutes les lignes de la version (placement à la main déjà enregistré). */
+  if(x.statut==='NON_PLACEE'){if(!ou.length){var vus={};PER.forEach(function(p){vus[p.ligne]=1;});ou=Object.keys(vus).filter(function(c){return couvert(c,x.type,x.debut,x.fin);});if(ou.length)x.lignes=ou;}return ou.length?'PLACEE_MAIN':'A_PLACER';}return ou.length===(x.lignes||[]).length?'OK':'ABSENTE';}
+function rendreBilan(){var z=$('bilanReprise');if(!BILAN){z.hidden=true;return;}z.hidden=false;
+  var b=BILAN.map(function(x){x.etat=etatBilan(x);return x;}),n=function(e){return b.filter(function(x){return x.etat===e;}).length;};
+  var lignes=lignesActives(),parLigne={};b.forEach(function(x){if(x.statut!=='PLACEE')return;(x.lignes||[]).forEach(function(c){var o=parLigne[c]=parLigne[c]||{n:0,abs:0};o.n++;if(x.etat==='ABSENTE')o.abs++;});});
+  var sans=lignes.filter(function(l){return !parLigne[l.code]&&!PER.some(function(p){return p.ligne===l.code;});});
+  var filtres=[['A_TRAITER','À traiter',n('A_PLACER')+n('ABSENTE')],['TOUT','Toutes',b.length],['OK','Dans la version',n('OK')+n('PLACEE_MAIN')],['IGNOREE','Ignorées',n('IGNOREE')]];
+  var vis=b.filter(function(x){if(BILAN_FILTRE==='TOUT')return true;if(BILAN_FILTRE==='A_TRAITER')return x.etat==='A_PLACER'||x.etat==='ABSENTE';if(BILAN_FILTRE==='OK')return x.etat==='OK'||x.etat==='PLACEE_MAIN';return x.etat==='IGNOREE';});
+  var nomCode=function(c){var l=D.lignes.filter(function(y){return y.code===c;})[0];return l?nomLigne(l):c;};
+  var resultat=function(x){if(x.etat==='A_PLACER')return '<span class="chip ko2">Non placée</span> '+esc(RAISONS[x.raison]||x.raison||'')+(x.lignes&&x.lignes.length?' ('+esc(x.lignes.map(nomCode).join(', '))+')':'');
+    if(x.etat==='PLACEE_MAIN')return '<span class="chip ok2">Placée à la main</span> dans '+esc((x.lignes||[]).map(nomCode).join(', '));
+    var lib=esc((x.lignes||[]).map(nomCode).join(', '))+(x.par?' <small class="note">(par '+esc(PAR_BILAN[x.par]||x.par)+')</small>':'');
+    if(x.etat==='IGNOREE'&&x.statut!=='DOUBLON')return '<span class="chip gris2">'+esc(STATUTS_BILAN[x.statut])+'</span>';
+    if(x.statut==='DOUBLON')return '<span class="chip gris2">En double</span> même type et mêmes dates qu’une autre ligne, dans '+lib;
+    return x.etat==='ABSENTE'?'<span class="chip ko2">Absente de la version</span> attendue dans '+lib:'<span class="chip ok2">Placée</span> dans '+lib;};
+  var options='<option value="">Ligne du planning…</option>'+lignes.map(function(l){return '<option value="'+esc(l.code)+'">'+esc(nomLigne(l))+'</option>';}).join('');
+  var action=function(x){if(x.etat==='A_PLACER')return '<select class="bl">'+options+'</select> <button type="button" class="petit bp">Placer</button>';if(x.etat==='ABSENTE')return '<button type="button" class="petit br">Remettre</button>';return '';};
+  z.innerHTML='<b>Bilan de la reprise — Planning_Periodes '+esc(D.annee.code)+'</b> <span class="note">('+b.length+' ligne(s) Grist lues, version '+(NUM?'v'+NUM:'non enregistrée')+')</span>'+
+    '<p><span class="chip ok2">'+n('OK')+' dans la version</span> <span class="chip ok2">'+n('PLACEE_MAIN')+' placée(s) à la main</span> <span class="chip ko2">'+n('A_PLACER')+' non placée(s)</span> <span class="chip ko2">'+n('ABSENTE')+' absente(s) de la version</span> <span class="chip gris2">'+n('IGNOREE')+' ignorée(s) (double, test, inactive, incomplète)</span>'+(n('ABSENTE')?' <button type="button" class="petit" id="toutRemettre">Remettre les '+n('ABSENTE')+' absente(s) dans la version</button>':'')+'</p>'+
+    (sans.length?'<p class="note"><b>Lignes du planning sans aucune période</b> (ni dans Grist ni dans la version) : '+esc(sans.map(nomLigne).join(' · '))+'</p>':'')+
+    '<details><summary>Périodes reprises par ligne du planning</summary><table class="t"><thead><tr><th>Ligne</th><th>Lignes Grist placées</th><th>Absentes de la version</th></tr></thead><tbody>'+lignes.filter(function(l){return parLigne[l.code];}).map(function(l){var o=parLigne[l.code];return '<tr><td>'+esc(nomLigne(l))+'</td><td>'+o.n+'</td><td>'+(o.abs?'<b>'+o.abs+'</b>':'0')+'</td></tr>';}).join('')+'</tbody></table></details>'+
+    '<div class="bilanFiltre">'+filtres.map(function(f){return '<label><input type="radio" name="bilanF" value="'+f[0]+'"'+(f[0]===BILAN_FILTRE?' checked':'')+'> '+f[1]+' ('+f[2]+')</label>';}).join('')+'</div>'+
+    (vis.length?'<table class="t"><thead><tr><th>N° Grist</th><th>Type</th><th>Du</th><th>Au</th><th>Ancien libellé</th><th>Classes</th><th>Résultat</th><th></th></tr></thead><tbody>'+vis.map(function(x){return '<tr data-id="'+x.id+'"><td>'+x.id+'</td><td>'+esc(x.type||'—')+'</td><td>'+dfr(x.debut)+'</td><td>'+dfr(x.fin)+'</td><td>'+esc([x.formation,x.niveau].filter(Boolean).join(' / ')||'—')+'</td><td>'+esc((x.classes||[]).join(', ')||'—')+'</td><td>'+resultat(x)+'</td><td>'+action(x)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="note">'+(BILAN_FILTRE==='A_TRAITER'?'Rien à traiter : chaque période de Grist est placée dans la version ou volontairement ignorée.':'Aucune ligne.')+'</p>');
+  if($('toutRemettre'))$('toutRemettre').onclick=function(){var k=0;b.filter(function(x){return x.etat==='ABSENTE';}).forEach(function(x){(x.lignes||[]).forEach(function(c){if(!couvert(c,x.type,x.debut,x.fin)){PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'REPRISE',regle:null});k++;}});});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">'+k+' période(s) remise(s) dans la version</span> : enregistrez pour les garder.');modifie();};
+  Array.prototype.forEach.call(z.querySelectorAll('input[name=bilanF]'),function(r){r.onchange=function(){BILAN_FILTRE=r.value;rendreBilan();};});
+  Array.prototype.forEach.call(z.querySelectorAll('tr[data-id]'),function(tr){var x=BILAN.filter(function(y){return String(y.id)===tr.dataset.id;})[0];if(!x)return;
+    var bp=tr.querySelector('.bp'),br=tr.querySelector('.br');
+    if(bp)bp.onclick=function(){var c=tr.querySelector('.bl').value;if(!c){message('Choisissez la ligne du planning où placer cette période.','erreur');return;}x.lignes=[c];PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">Période n° '+x.id+' placée dans '+esc(nomCode(c))+'</span> : enregistrez la version pour la garder.');modifie();};
+    if(br)br.onclick=function(){(x.lignes||[]).forEach(function(c){if(!couvert(c,x.type,x.debut,x.fin))PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'REPRISE',regle:null});});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">Période n° '+x.id+' remise dans la version</span> : enregistrez pour la garder.');modifie();};});}
 function afficherAlertes(al){var z=$('alertes');z.hidden=!al||!al.length;z.innerHTML=al&&al.length?'<b>À vérifier</b><ul class="changements">'+al.map(function(a){return '<li>'+esc(a)+'</li>';}).join('')+'</ul>':'';}
 $('generer').onclick=function(){var g=EUC_DEV610_generer_(D.lignes,D.regles,SEM,IDX,PER),z=$('changements');afficherAlertes(g.alertes);
   if(!g.changements.length){z.hidden=false;z.innerHTML='<b>Aucun changement</b> : les périodes automatiques sont déjà conformes aux règles.';return;}
@@ -518,7 +559,8 @@ $('reprendre').onclick=function(){occupe(this,'Lecture du calendrier publié…'
   var neuves=r.periodes.filter(function(p){return !vus[cle(p)];}),aj=0;PER=garde.concat(neuves).sort(EUC_DEV610_ordrePeriodes_);
   Object.keys(r.suggestions||{}).forEach(function(c){var l=D.rattachements[c]=D.rattachements[c]||[];r.suggestions[c].forEach(function(id){if(l.indexOf(id)<0){l.push(id);aj++;}});});
   message('<span class="ok">'+neuves.length+' période(s) reprise(s)</span> du calendrier publié'+(r.ignorees?', '+r.ignorees+' non reprise(s) (détail sous la grille)':'')+(aj?' · '+aj+' classe(s) ajoutée(s) au rattachement, à enregistrer':'')+'.');
-  modifie();rendreLignes();afficherNonReprises(r.nonReprises||[]);});};
+  BILAN=r.bilan||null;modifie();rendreLignes();afficherNonReprises(r.nonReprises||[]);});};
+$('controlerReprise').onclick=function(){occupe(this,'Contrôle de la reprise…','EUC_DEV610_reprendreExistant',{annee:D.annee.code},function(r){BILAN=r.bilan||[];BILAN_FILTRE='A_TRAITER';rendreBilan();var a=BILAN.filter(function(x){return x.etat==='A_PLACER'||x.etat==='ABSENTE';}).length;message(a?'<span class="erreur">'+a+' période(s) de Planning_Periodes à traiter</span> : détail sous le tableau des périodes.':'<span class="ok">Toutes les périodes de Planning_Periodes sont dans la version ou volontairement ignorées.</span>');$('bilanReprise').scrollIntoView({block:'start'});});};
 $('ajouterPeriode').onclick=function(){var l=$('fLigne').value||(lignesScolaires()[0]||{}).code;if(!l)return;var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:l,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
 
 /* ---------- Règles ---------- */

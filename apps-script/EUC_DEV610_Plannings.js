@@ -621,19 +621,19 @@ function EUC_DEV610_lignesParLibelles_(p, lignes) {
 function EUC_DEV610_ligneParLibelles_(p, lignes) { return EUC_DEV610_lignesParLibelles_(p, lignes)[0] || ''; }
 function EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes) {
   /* 0. Ligne choisie dans Planning_Periodes (colonne Ligne_planning) : elle fait foi. */
-  if (p.ligneId) { var choisie = (lignes || []).filter(function(l) { return l.id === p.ligneId; })[0]; if (choisie) return { ligne: choisie.code, ajouts: [] }; }
+  if (p.ligneId) { var choisie = (lignes || []).filter(function(l) { return l.id === p.ligneId; })[0]; if (choisie) return { ligne: choisie.code, ajouts: [], par: 'LIGNE_PLANNING' }; }
   var codes = {}; (p.classes || []).forEach(function(id) { if (parClasse[id]) codes[parClasse[id]] = 1; });
   var k = Object.keys(codes);
-  if (k.length === 1) return { ligne: k[0], ajouts: [] };
+  if (k.length === 1) return { ligne: k[0], ajouts: [], par: 'CLASSES' };
   if (k.length > 1) return { ligne: '', raison: 'PLUSIEURS_LIGNES', lignes: k };
   var parPfmp = {}; (lignes || []).forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = l.code; });
   var trouvees = {}, ajouts = [];
   (p.classes || []).forEach(function(id) { var c = classesParId[id]; if (!c) return; var code = parPfmp[EUC_DEV610_n_(c.classePfmp)] || parPfmp[EUC_DEV610_n_(c.nom)]; if (code) { trouvees[code] = 1; ajouts.push(id); } });
   k = Object.keys(trouvees);
-  if (k.length === 1) return { ligne: k[0], ajouts: ajouts };
-  if (!k.length && p.classePfmp && parPfmp[EUC_DEV610_n_(p.classePfmp)]) return { ligne: parPfmp[EUC_DEV610_n_(p.classePfmp)], ajouts: [] };
+  if (k.length === 1) return { ligne: k[0], ajouts: ajouts, par: 'CLASSE_PFMP' };
+  if (!k.length && p.classePfmp && parPfmp[EUC_DEV610_n_(p.classePfmp)]) return { ligne: parPfmp[EUC_DEV610_n_(p.classePfmp)], ajouts: [], par: 'TEXTE_CLASSE_PFMP' };
   var parLib = !k.length ? EUC_DEV610_lignesParLibelles_(p, lignes) : [];
-  if (parLib.length) return { ligne: parLib[0], autres: parLib.slice(1), ajouts: [] };
+  if (parLib.length) return { ligne: parLib[0], autres: parLib.slice(1), ajouts: [], par: 'LIBELLES' };
   return { ligne: '', raison: k.length > 1 ? 'PLUSIEURS_LIGNES' : ((p.classes || []).length ? 'AUCUNE_LIGNE' : 'SANS_CLASSE'), lignes: k };
 }
 
@@ -644,20 +644,27 @@ function EUC_DEV610_reprendreExistant(q) {
   var ratt = EUC_DEV610_rattachements_(code).classes, classes = EUC_DEV610_classes_(), parClasse = {}, classesParId = {}, tests = 0;
   classes.forEach(function(c) { classesParId[c.id] = c; });
   lignes.forEach(function(l) { (ratt[l.code] || EUC_DEV610_proposerClasses_(l, classes)).forEach(function(id) { parClasse[id] = l.code; }); });
-  var vues = {}, periodes = [], ignorees = [], suggestions = {};
+  var vues = {}, periodes = [], ignorees = [], suggestions = {}, bilan = [];
+  var nomsClasses = function(p) { return (p.classes || []).map(function(id) { var c = classesParId[id]; return c ? c.nom + (c.actif ? '' : ' (inactive)') + (c.classePfmp && c.classePfmp !== c.nom ? ' / ' + c.classePfmp : '') : '#' + id; }); };
+  /* Bilan : chaque ligne de Planning_Periodes de l'année, avec son résultat (placée, non placée, doublon, test, inactive, incomplète). */
+  var noter = function(p, statut, x) { bilan.push(Object.assign({ id: p.id, type: p.type, debut: p.debut, fin: p.fin, formation: p.formation, niveau: p.niveau, classes: nomsClasses(p), statut: statut }, x || {})); };
   EUC_DEV610_existantes_(annees).forEach(function(p) {
-    if (p.annee !== code || !p.actif || !p.type || !p.debut || !p.fin) return;
+    if (p.annee !== code) return;
+    if (!p.actif) { noter(p, 'INACTIVE'); return; }
+    if (!p.type || !p.debut || !p.fin) { noter(p, 'INCOMPLETE'); return; }
     /* Périodes des classes de test (TEST PFMP…) : jamais dans les plannings. */
-    if (p.classes.length && p.classes.every(function(id) { var c = classesParId[id]; return c && /^TEST/.test(EUC_DEV610_n_(c.nom)); })) { tests++; return; }
+    if (p.classes.length && p.classes.every(function(id) { var c = classesParId[id]; return c && /^TEST/.test(EUC_DEV610_n_(c.nom)); })) { tests++; noter(p, 'TEST'); return; }
     var r = EUC_DEV610_ligneDePeriode_(p, parClasse, classesParId, lignes);
-    if (!r.ligne) { ignorees.push({ id: p.id, type: p.type, debut: p.debut, fin: p.fin, raison: r.raison, lignes: r.lignes || [], classes: (p.classes || []).map(function(id) { var c = classesParId[id]; return c ? c.nom + (c.actif ? '' : ' (inactive)') + (c.classePfmp && c.classePfmp !== c.nom ? ' / ' + c.classePfmp : '') : '#' + id; }), formation: p.formation, niveau: p.niveau }); return; }
+    if (!r.ligne) { ignorees.push({ id: p.id, type: p.type, debut: p.debut, fin: p.fin, raison: r.raison, lignes: r.lignes || [], classes: nomsClasses(p), formation: p.formation, niveau: p.niveau }); noter(p, 'NON_PLACEE', { raison: r.raison, lignes: r.lignes || [] }); return; }
     r.ajouts.forEach(function(id) { var s = suggestions[r.ligne] = suggestions[r.ligne] || []; if (s.indexOf(id) < 0) s.push(id); });
+    var placees = [];
     [r.ligne].concat(r.autres || []).forEach(function(code) {
-      var cle = code + '|' + p.type + '|' + p.debut + '|' + p.fin; if (vues[cle]) return; vues[cle] = 1;
+      var cle = code + '|' + p.type + '|' + p.debut + '|' + p.fin; if (vues[cle]) return; vues[cle] = 1; placees.push(code);
       periodes.push({ ligne: code, type: p.type, debut: p.debut, fin: p.fin, origine: 'REPRISE', regle: null });
     });
+    noter(p, placees.length ? 'PLACEE' : 'DOUBLON', { lignes: placees.length ? placees : [r.ligne].concat(r.autres || []), par: r.par });
   });
-  return { ok: true, periodes: periodes.sort(EUC_DEV610_ordrePeriodes_), ignorees: ignorees.length, nonReprises: ignorees, suggestions: suggestions, tests: tests };
+  return { ok: true, periodes: periodes.sort(EUC_DEV610_ordrePeriodes_), ignorees: ignorees.length, nonReprises: ignorees, suggestions: suggestions, tests: tests, bilan: bilan.sort(function(a, b) { return String(a.debut).localeCompare(String(b.debut)) || a.id - b.id; }) };
 }
 
 function EUC_DEV610_contextePublication_(q) {

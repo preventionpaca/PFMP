@@ -1,5 +1,28 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : bilan de la reprise de Planning_Periodes
+
+- Onglet « Périodes » de la page Plannings : bouton « Contrôler la reprise »
+  (lecture seule) et bilan affiché après chaque reprise. Chaque ligne de
+  `Planning_Periodes` de l'année y figure avec son résultat : placée (ligne du
+  planning et moyen de correspondance : Ligne_planning, classes, classe PFMP,
+  ancien libellé Formation / Niveau), non placée (raison), en double, classe de
+  test, inactive, type ou dates manquants, ou absente de la version ouverte.
+  Les lignes du planning sans aucune période sont signalées. Une période non
+  placée se place dans une ligne choisie ; une période absente se remet dans la
+  version (une à une ou toutes). Rien n'est écrit dans Grist avant
+  « Enregistrer la version ».
+- Cas réel constaté sur la copie locale du 9 octobre : les 44 périodes du TSEC
+  (ENT., appel, visites, conseils, examen) sont reprises par l'ancien libellé
+  « Ducretet / TSEC » ; une version enregistrée sans elles explique un
+  calendrier TSEC tout orange.
+- Tests simulés : test de reprise complété (bilan par ligne, doublon, inactive,
+  test, correspondance par libellés), suite complète 1071/1071. Page pilotée
+  dans Chromium sur la copie locale : contrôle, filtre, « Remettre »,
+  « Remettre les 44 absentes », placement à la main conservé au contrôle
+  suivant, erreur Grist simulée (bouton rétabli). Non vérifié avec le compte
+  réel de l'utilisateur.
+
 ## Mise à jour du 20 octobre 2026 — DEV610 lot B : heures, formateurs et formation complémentaire (CAP peintre)
 
 - Calendrier d'une formation (`?page=plannings-pfmp&vue=ligne&ligne=…`) :
