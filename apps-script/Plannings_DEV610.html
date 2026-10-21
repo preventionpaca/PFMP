@@ -101,6 +101,9 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   <div class="barre"><label style="flex:1">Commentaire de version <input id="commentaire" style="width:100%" placeholder="ex. P.dif. déplacé après la 2e période, dates de vacances prévisionnelles"></label></div>
   <div id="etat" class="note" role="status">Chargement…</div>
   <div id="messages" role="status"></div>
+  <!-- Résultat de « Générer depuis les règles » et alertes : visibles quel que soit l'onglet ouvert. -->
+  <div id="alertes" class="cadre noprint" hidden></div>
+  <div id="changements" class="cadre noprint" hidden></div>
   <div class="onglets" role="tablist">
     <button type="button" role="tab" data-p="pGrille" aria-selected="true">Planning général</button>
     <button type="button" role="tab" data-p="pPeriodes" aria-selected="false">Périodes</button>
@@ -130,13 +133,11 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
       <button type="button" id="selEffacer">Effacer ces semaines</button>
       <button type="button" id="selAnnuler">Annuler la sélection</button>
     </div>
-    <div id="alertes" class="cadre noprint" hidden></div>
-    <div id="changements" class="cadre noprint" hidden></div>
     <p class="note noprint">Mixités, classes entières et GRETA : périodes reprises du calendrier publié et placées à la main dans la grille. La publication écrit toutes les périodes de la version dans Planning_Periodes ; le suivi des PFMP n’y lit que les périodes en entreprise des classes rattachées, et les appels et visites des classes d’apprentis.</p>
   </section>
 
   <section id="pPeriodes" class="panneau">
-    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button><button type="button" id="reprendre" title="Relit Planning_Periodes et remplace les périodes déjà reprises ; vos placements manuels sont conservés">Reprendre le calendrier publié</button><button type="button" id="controlerReprise" title="Lecture seule : compare chaque ligne de Planning_Periodes avec la version ouverte">Contrôler la reprise</button></div>
+    <div class="barre"><label>Ligne <select id="fLigne"><option value="">Toutes</option></select></label><button type="button" id="ajouterPeriode">Ajouter une période</button><button type="button" id="toutDeplier">Tout déplier</button><button type="button" id="toutReplier">Tout replier</button><button type="button" id="reprendre" title="Relit Planning_Periodes et remplace les périodes déjà reprises ; vos placements manuels sont conservés">Reprendre le calendrier publié</button><button type="button" id="controlerReprise" title="Lecture seule : compare chaque ligne de Planning_Periodes avec la version ouverte">Contrôler la reprise</button></div>
     <table class="t"><thead><tr><th>Ligne</th><th>Type</th><th>Du</th><th>Au</th><th>Semaines</th><th>Origine</th><th></th></tr></thead><tbody id="tPeriodes"></tbody></table>
     <div id="bilanReprise" class="cadre" hidden></div>
   </section>
@@ -240,7 +241,7 @@ function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.qu
 function estFC(l){return l.calendrier==='GRETA'||((D&&D.modalitesLignes)||{})[l.code]==='FORMATION_CONTINUE';}
 function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return actifAnnee(l)&&(estFC(l)?v.FC:v[cal]);});}
 function supports(l){return [l.etablissement].concat(l.organismes||[]).filter(Boolean).join(' · ');}
-function nomLigne(l){return (l.groupe?l.groupe+' — ':'')+etiquette(l);}
+function nomLigne(l){var e=etiquette(l);return (l.groupe&&e.indexOf(l.groupe)!==0?l.groupe+' — ':'')+e;}
 /* Libellé dans la grille : le Niveau (colonne B), précédé de la Formation quand elle diffère du groupe (ex. « 1BTS MV Mixité »). */
 function etiquette(l){return String(l.libelle||l.code).split(' — ').pop();}
 /* Ligne affichée l'année consultée : active et entre sa première et sa dernière année. */
@@ -549,9 +550,9 @@ function rendreBilan(){var z=$('bilanReprise');if(!BILAN){z.hidden=true;return;}
     if(br)br.onclick=function(){(x.lignes||[]).forEach(function(c){if(!couvert(c,x.type,x.debut,x.fin))PER.push({ligne:c,type:x.type,debut:x.debut,fin:x.fin,origine:'REPRISE',regle:null});});PER.sort(EUC_DEV610_ordrePeriodes_);message('<span class="ok">Période n° '+x.id+' remise dans la version</span> : enregistrez pour la garder.');modifie();};});}
 function afficherAlertes(al){var z=$('alertes');z.hidden=!al||!al.length;z.innerHTML=al&&al.length?'<b>À vérifier</b><ul class="changements">'+al.map(function(a){return '<li>'+esc(a)+'</li>';}).join('')+'</ul>':'';}
 $('generer').onclick=function(){var g=EUC_DEV610_generer_(lignesActives(),D.regles,SEM,IDX,PER),z=$('changements');afficherAlertes(g.alertes);
-  if(!g.changements.length){z.hidden=false;z.innerHTML='<b>Aucun changement</b> : les périodes automatiques sont déjà conformes aux règles.';return;}
+  if(!g.changements.length){z.hidden=false;z.innerHTML='<b>Aucun changement</b> : les périodes calculées par les règles sont déjà en place. La génération ne touche que les lignes scolaires, et seulement les périodes issues d’une règle ou reprises du calendrier publié : une période placée dans la grille, saisie ou recopiée dans le tableau (origine « Grille » ou « Tableau ») n’est jamais remplacée. <button type="button" id="fermerChangements">Fermer</button>';$('fermerChangements').onclick=function(){z.hidden=true;};z.scrollIntoView({block:'nearest'});return;}
   var lib={NOUVELLE:'Nouvelle',DEPLACEE:'Déplacée',RETIREE:'Retirée'};
-  z.hidden=false;z.innerHTML='<b>'+g.changements.length+' changement(s) proposé(s)</b><ul class="changements">'+g.changements.map(function(c){var l=ligne(c.ligne);return '<li>'+lib[c.nature]+' — '+esc(l?l.libelle:c.ligne)+' · '+esc(c.type)+' : '+(c.avant?dfr(c.avant.debut)+' → '+dfr(c.avant.fin):'')+(c.avant&&c.apres?' devient ':'')+(c.apres?dfr(c.apres.debut)+' → '+dfr(c.apres.fin):'')+'</li>';}).join('')+'</ul><button type="button" class="plein" id="appliquer">Appliquer</button> <button type="button" id="ignorer">Annuler</button>';
+  z.hidden=false;z.innerHTML='<b>'+g.changements.length+' changement(s) proposé(s)</b><ul class="changements">'+g.changements.map(function(c){var l=ligne(c.ligne);return '<li>'+lib[c.nature]+' — '+esc(l?l.libelle:c.ligne)+' · '+esc(c.type)+' : '+(c.avant?dfr(c.avant.debut)+' → '+dfr(c.avant.fin):'')+(c.avant&&c.apres?' devient ':'')+(c.apres?dfr(c.apres.debut)+' → '+dfr(c.apres.fin):'')+'</li>';}).join('')+'</ul><button type="button" class="plein" id="appliquer">Appliquer</button> <button type="button" id="ignorer">Annuler</button>';z.scrollIntoView({block:'nearest'});
   $('appliquer').onclick=function(){PER=g.periodes;z.hidden=true;modifie();};$('ignorer').onclick=function(){z.hidden=true;};};
 
 /* ---------- Tableau des périodes ---------- */
@@ -571,22 +572,26 @@ function brancherCopie(){if(!COPIE||!$('copieOk'))return;
     $('annulerCopie').onclick=function(){if(!AVANT_COPIE)return;PER=AVANT_COPIE;AVANT_COPIE=null;modifie();message('Recopie annulée.');};};}
 /* Tableau des périodes : toutes les lignes du planning dans l'ordre du tableau, même sans période, chacune avec
  * « Ajouter » et « Recopier ces dates » (vers les autres classes du même groupe, par défaut). */
-var COPIE=null,AVANT_COPIE=null;
+var COPIE=null,AVANT_COPIE=null,OUVERTES={};
 function rendrePeriodes(){var f=$('fLigne').value,lignes=lignesActives().slice().sort(function(a,b){return (a.ordre||0)-(b.ordre||0);}),types=typesTous();
   var ligneP=function(x){var p=x.p;return '<tr data-i="'+x.i+'"><td><select class="pl">'+lignes.map(function(l){return '<option value="'+esc(l.code)+'"'+(l.code===p.ligne?' selected':'')+'>'+esc(nomLigne(l))+'</option>';}).join('')+'</select></td>'+
     '<td><select class="pt">'+types.concat(types.indexOf(p.type)<0?[p.type]:[]).map(function(t){return '<option'+(t===p.type?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select>'+(EUC_DEV610_estComplementaire_(p.type)?' <input class="pc" maxlength="40" size="8" placeholder="Complément" value="'+esc(p.complement||'')+'">':'')+'</td><td><input type="date" class="pd" value="'+esc(p.debut)+'"></td><td><input type="date" class="pf" value="'+esc(p.fin)+'"></td><td>'+semainesDe(p).length+'</td><td>'+esc(ORIGINES[p.origine]||p.origine)+(p.regle?' n°'+p.regle:'')+'</td><td><button type="button" class="petit ps">Retirer</button></td></tr>';};
   var connues={};lignes.forEach(function(l){connues[l.code]=1;});
   var blocs=lignes.filter(function(l){return !f||l.code===f;}).map(function(l){var rows=PER.map(function(p,i){return {p:p,i:i};}).filter(function(x){return x.p.ligne===l.code;});
     var ent=rows.filter(function(x){return EUC_DEV610_estEntreprise_(x.p.type);}).length;
-    var tete='<tr class="teteLigne" data-l="'+esc(l.code)+'"><td colspan="7"><b>'+esc(nomLigne(l))+'</b> <span class="note">'+rows.length+' période(s)'+(rows.length?' dont '+ent+' en entreprise':'')+'</span> <button type="button" class="petit pa">Ajouter</button>'+(rows.length?' <button type="button" class="petit pr">Recopier ces dates…</button>':'')+'</td></tr>';
+    /* Lignes repliées par défaut (sauf filtre sur une ligne) : un clic sur le nom les déplie. */
+    var ouverte=!!f||!!OUVERTES[l.code],fus=rows.length>1?EUC_DEV610_regrouper_(PER,l.code,FERIES).fusions:0,dates=rows.length?' · du '+dfr(rows[0].p.debut)+' au '+dfr(rows.reduce(function(m,x){return x.p.fin>m?x.p.fin:m;},''))+'':'';
+    var tete='<tr class="teteLigne" data-l="'+esc(l.code)+'"><td colspan="7"><button type="button" class="petit pt0" aria-expanded="'+ouverte+'" title="'+(ouverte?'Replier':'Déplier')+'">'+(ouverte?'▾':'▸')+'</button> <b class="pt0n" style="cursor:pointer">'+esc(nomLigne(l))+'</b> <span class="note">'+rows.length+' période(s)'+(rows.length?' dont '+ent+' en entreprise':'')+dates+'</span> <button type="button" class="petit pa">Ajouter</button>'+(rows.length?' <button type="button" class="petit pr">Recopier ces dates…</button>':'')+(fus?' <button type="button" class="petit pg" title="Fusionne les périodes du même type séparées seulement par un week-end ou un jour férié">Regrouper les semaines accolées ('+fus+')</button>':'')+'</td></tr>';
     var copie=COPIE&&COPIE.source===l.code?panneauCopie(l,lignes):'';
-    return tete+copie+(rows.length?rows.map(ligneP).join(''):'<tr><td colspan="7" class="note" style="padding-left:18px">Aucune période.</td></tr>');}).join('');
+    return tete+copie+(!ouverte?'':rows.length?rows.map(ligneP).join(''):'<tr><td colspan="7" class="note" style="padding-left:18px">Aucune période.</td></tr>');}).join('');
   /* Périodes d'une ligne retirée ou inactive : listées à part pour ne rien perdre. */
   var orph=PER.map(function(p,i){return {p:p,i:i};}).filter(function(x){return !connues[x.p.ligne]&&(!f||x.p.ligne===f);});
   if(orph.length)blocs+='<tr class="teteLigne"><td colspan="7"><b>Lignes inactives ou retirées</b></td></tr>'+orph.map(ligneP).join('');
   $('tPeriodes').innerHTML=blocs||'<tr><td colspan="7" class="note">Aucune ligne.</td></tr>';
-  Array.prototype.forEach.call($('tPeriodes').querySelectorAll('tr.teteLigne[data-l]'),function(tr){var c=tr.dataset.l,pa=tr.querySelector('.pa'),pr=tr.querySelector('.pr');
-    pa.onclick=function(){var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:c,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
+  Array.prototype.forEach.call($('tPeriodes').querySelectorAll('tr.teteLigne[data-l]'),function(tr){var c=tr.dataset.l,pa=tr.querySelector('.pa'),pr=tr.querySelector('.pr'),pg=tr.querySelector('.pg');
+    tr.querySelector('.pt0').onclick=tr.querySelector('.pt0n').onclick=function(){OUVERTES[c]=!OUVERTES[c];rendrePeriodes();};
+    if(pg)pg.onclick=function(){var r=EUC_DEV610_regrouper_(PER,c,FERIES);AVANT_COPIE=JSON.parse(JSON.stringify(PER));PER=r.periodes;OUVERTES[c]=true;modifie();message('<span class="ok">'+r.fusions+' période(s) fusionnée(s)</span> avec la précédente : enregistrez la version pour garder ce regroupement. <button type="button" class="petit" id="annulerCopie">Annuler</button>');$('annulerCopie').onclick=function(){if(!AVANT_COPIE)return;PER=AVANT_COPIE;AVANT_COPIE=null;modifie();message('Regroupement annulé.');};};
+    pa.onclick=function(){OUVERTES[c]=true;var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:c,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
     if(pr)pr.onclick=function(){var src=D.lignes.filter(function(l){return l.code===c;})[0];COPIE={source:c,tout:false,cibles:lignes.filter(function(l){return l.code!==c&&l.groupe===src.groupe&&l.calendrier===src.calendrier;}).map(function(l){return l.code;})};rendrePeriodes();};});
   brancherCopie();
   Array.prototype.forEach.call($('tPeriodes').querySelectorAll('tr[data-i]'),function(tr){var i=Number(tr.dataset.i);
@@ -596,6 +601,8 @@ function rendrePeriodes(){var f=$('fLigne').value,lignes=lignesActives().slice()
       PER.push(np);PER.sort(EUC_DEV610_ordrePeriodes_);modifie();if(fus.length)message('Période fusionnée avec '+fus.length+' période(s) du même type qu’elle chevauchait : du '+dfr(np.debut)+' au '+dfr(np.fin)+'.','alerte');}
     ['.pl','.pt','.pd','.pf','.pc'].forEach(function(s){var x=tr.querySelector(s);if(x)x.onchange=maj;});tr.querySelector('.ps').onclick=function(){PER.splice(i,1);modifie();};});}
 $('fLigne').onchange=rendrePeriodes;
+$('toutDeplier').onclick=function(){lignesActives().forEach(function(l){OUVERTES[l.code]=true;});rendrePeriodes();};
+$('toutReplier').onclick=function(){OUVERTES={};rendrePeriodes();};
 $('reprendre').onclick=function(){occupe(this,'Lecture du calendrier publié…','EUC_DEV610_reprendreExistant',{annee:D.annee.code},function(r){
   var cle=function(p){return p.ligne+'|'+EUC_DEV610_cleType_(p.type)+'|'+p.debut+'|'+p.fin;},garde=PER.filter(function(p){return p.origine!=='REPRISE';}),vus={};garde.forEach(function(p){vus[cle(p)]=1;});
   var neuves=r.periodes.filter(function(p){return !vus[cle(p)];}),aj=0;PER=garde.concat(neuves).sort(EUC_DEV610_ordrePeriodes_);
@@ -603,7 +610,7 @@ $('reprendre').onclick=function(){occupe(this,'Lecture du calendrier publié…'
   message('<span class="ok">'+neuves.length+' période(s) reprise(s)</span> du calendrier publié'+(r.ignorees?', '+r.ignorees+' non reprise(s) (détail sous la grille)':'')+(aj?' · '+aj+' classe(s) ajoutée(s) au rattachement, à enregistrer':'')+'.');
   BILAN=r.bilan||null;modifie();rendreLignes();afficherNonReprises(r.nonReprises||[]);});};
 $('controlerReprise').onclick=function(){occupe(this,'Contrôle de la reprise…','EUC_DEV610_reprendreExistant',{annee:D.annee.code},function(r){BILAN=r.bilan||[];BILAN_FILTRE='A_TRAITER';rendreBilan();var a=BILAN.filter(function(x){return x.etat==='A_PLACER'||x.etat==='ABSENTE';}).length;message(a?'<span class="erreur">'+a+' période(s) de Planning_Periodes à traiter</span> : détail sous le tableau des périodes.':'<span class="ok">Toutes les périodes de Planning_Periodes sont dans la version ou volontairement ignorées.</span>');$('bilanReprise').scrollIntoView({block:'start'});});};
-$('ajouterPeriode').onclick=function(){var l=$('fLigne').value||(lignesScolaires()[0]||{}).code;if(!l)return;var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:l,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
+$('ajouterPeriode').onclick=function(){var l=$('fLigne').value||(lignesScolaires()[0]||{}).code;if(!l)return;OUVERTES[l]=true;var s=SEM.filter(function(x){return !x.vacances;})[0]||SEM[0];PER.push({ligne:l,type:typesFormation()[0]||'PFMP',debut:s.lundi,fin:s.vendredi,origine:'TABLEAU',regle:null});PER.sort(EUC_DEV610_ordrePeriodes_);modifie();};
 
 /* ---------- Règles ---------- */
 function rendreRegles(){var profils={};D.lignes.forEach(function(l){if(l.calendrier==='SCOLAIRE')profils[l.profil]=1;});D.regles.forEach(function(r){profils[r.profil]=1;});var types=typesFormation();

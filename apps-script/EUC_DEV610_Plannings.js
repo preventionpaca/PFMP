@@ -178,6 +178,22 @@ function EUC_DEV610_recopier_(periodes, source, cibles, tout) {
     modeles.forEach(function(m) { var x = { ligne: c, type: m.type, debut: m.debut, fin: m.fin, origine: 'TABLEAU', regle: null }; if (m.complement) x.complement = m.complement; out.push(x); ajoutees++; }); });
   return { periodes: out.sort(EUC_DEV610_ordrePeriodes_), modeles: modeles.length, remplacees: remplacees, ajoutees: ajoutees, parLigne: parLigne };
 }
+/* Regroupe les périodes accolées d'une ligne (calcul pur) : même type et même complément, séparées seulement par un
+ * week-end ou un jour férié (ENT. saisies semaine par semaine → une seule période). feries : { 'AAAA-MM-JJ': nom }.
+ * Rend aussi le nombre de périodes fusionnées. */
+function EUC_DEV610_regrouper_(periodes, ligne, feries) {
+  var autres = [], miennes = [];
+  (periodes || []).forEach(function(p) { (p.ligne === ligne ? miennes : autres).push(p); });
+  miennes.sort(function(a, b) { return String(a.debut).localeCompare(String(b.debut)); });
+  var cle = function(p) { return EUC_DEV610_cleType_(p.type) + '|' + (p.complement || ''); }, out = [], fusions = 0;
+  var accole = function(a, b) { var j = EUC_DEV610_plus_(a.fin, 1); while (j < b.debut) { var d = new Date(j + 'T12:00:00Z').getUTCDay(); if (d !== 0 && d !== 6 && !(feries || {})[j]) return false; j = EUC_DEV610_plus_(j, 1); } return b.debut <= EUC_DEV610_plus_(a.fin, 1) || j >= b.debut; };
+  miennes.forEach(function(p) {
+    var prec = out.filter(function(x) { return cle(x) === cle(p); }).pop();
+    if (prec && p.debut <= EUC_DEV610_plus_(prec.fin, 5) && accole(prec, p)) { if (p.fin > prec.fin) prec.fin = p.fin; if (p.origine !== 'REPRISE' && p.origine !== 'REGLE') prec.origine = 'TABLEAU'; fusions++; return; }
+    out.push(Object.assign({}, p));
+  });
+  return { periodes: autres.concat(out).sort(EUC_DEV610_ordrePeriodes_), fusions: fusions };
+}
 /* Formation complémentaire (ex. partenariat 5 Star du CAP peintre) : heures en plus de la formation, jamais publiées
  * ni comptées dans le quota ; le complément de libellé (« 5 Star ») distingue les totaux. */
 var EUC_DEV610_TYPE_COMPLEMENTAIRE_ = 'Formation complémentaire';
@@ -304,7 +320,7 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_].map(String).join('\n')
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_, EUC_DEV610_regrouper_].map(String).join('\n')
     + '\nvar EUC_DEV610_TYPE_COMPLEMENTAIRE_ = ' + JSON.stringify(EUC_DEV610_TYPE_COMPLEMENTAIRE_) + ';';
 }
 

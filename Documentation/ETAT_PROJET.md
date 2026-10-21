@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : génération visible, tableau des périodes replié, regroupement des semaines
+
+- « Générer depuis les règles » semblait sans effet : son résultat (changements
+  proposés, Appliquer / Annuler) s'affichait sous la grille du Planning général,
+  invisible depuis les autres onglets. Il s'affiche désormais en haut de la page
+  quel que soit l'onglet ; « Aucun changement » explique ce que la génération
+  touche (lignes scolaires, périodes issues d'une règle ou reprises ; jamais les
+  périodes de la grille ou du tableau).
+- Onglet Périodes : lignes repliées par défaut (nom, nombre de périodes, première
+  et dernière date) ; clic sur le nom pour déplier ; « Tout déplier / Tout
+  replier ». « Regrouper les semaines accolées (n) » fusionne les périodes du
+  même type séparées seulement par un week-end ou un jour férié
+  (`EUC_DEV610_regrouper_`), annulable. Copie locale : 1 BAC PRO Mixité passe de
+  40 à 11 périodes.
+- Nom des lignes sans répétition du groupe (« 1 BAC PRO Mixité »).
+- Tests simulés : 40/40 DEV610, suite complète 1079/1079.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : « Grist indisponible ou requête refusée » à l'enregistrement de l'organisation
 
 - Cause : les colonnes `Annee_debut`, `Annee_fin` et `Sections` (@1114) ne sont

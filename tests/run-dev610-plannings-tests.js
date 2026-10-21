@@ -697,4 +697,16 @@ test('organisation : enregistrée même si les nouvelles colonnes manquent encor
   assert.deepStrictEqual(J(g.calls.slice(calls).filter(c => c.p === '/tables/EUC_PLAN_LIGNES/columns' && c.method === 'post').map(c => c.body.columns.map(x => x.id))), [['Annee_debut', 'Annee_fin', 'Sections']], 'colonnes manquantes créées avant l’écriture');
 });
 
+test('tableau des périodes : lignes repliées, regroupement des semaines accolées (week-end ou jour férié entre deux), génération visible depuis tout onglet', () => {
+  const P = (d, f, t, o) => ({ ligne: 'MIX_1BP', type: t || 'ENT.', debut: d, fin: f, origine: o || 'REPRISE' });
+  const r = k.EUC_DEV610_regrouper_([P('2026-12-21', '2026-12-24'), P('2026-12-28', '2026-12-31', 'ENT.', 'GRILLE'), P('2027-01-11', '2027-01-15'), P('2027-01-18', '2027-01-22'), P('2027-01-18', '2027-01-18', 'VISITE'), P('2027-02-01', '2027-02-05'), { ligne: 'X', type: 'ENT.', debut: '2027-01-04', fin: '2027-01-08' }], 'MIX_1BP', { '2026-12-25': 'Noël' });
+  assert.strictEqual(r.fusions, 2);
+  assert.deepStrictEqual(J(r.periodes.filter(p => p.ligne === 'MIX_1BP').map(p => [p.type, p.debut, p.fin, p.origine])), [['ENT.', '2026-12-21', '2026-12-31', 'TABLEAU'], ['ENT.', '2027-01-11', '2027-01-22', 'REPRISE'], ['VISITE', '2027-01-18', '2027-01-18', 'REPRISE'], ['ENT.', '2027-02-01', '2027-02-05', 'REPRISE']]);
+  assert.strictEqual(r.periodes.filter(p => p.ligne === 'X').length, 1, 'autres lignes intactes');
+  assert.strictEqual(k.EUC_DEV610_regrouper_([P('2026-12-21', '2026-12-24'), P('2026-12-28', '2026-12-31')], 'MIX_1BP', {}).fusions, 0, 'sans férié, un jour ouvré sépare : pas de fusion');
+  const pg = read('apps-script/Plannings_DEV610.html');
+  assert.ok(pg.indexOf('id="changements"') < pg.indexOf('role="tablist"'), 'résultat de la génération au-dessus des onglets');
+  for (const x of ['id="toutDeplier"', 'Regrouper les semaines accolées', 'OUVERTES[c]=!OUVERTES[c]']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');
