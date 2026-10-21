@@ -182,7 +182,7 @@ test('le code pur injecté dans la page s’évalue seul et calcule la même mat
 
 test('chargement : tables créées une fois, lignes initiales, année N+1 choisie, règles initiales et vacances prévisionnelles', () => {
   const g = grist(); const r = g.k.EUC_DEV610_charger({});
-  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_FORMATIONS', 'EUC_PLAN_HEURES', 'EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
+  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_FORMATIONS', 'EUC_PLAN_HEURES', 'EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_LOGOS', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
   assert.strictEqual(g.tables.EUC_PLAN_LIGNES.length, k.EUC_DEV610_LIGNES_DEFAUT_.length);
   assert.strictEqual(r.annee.code, '2027-2028'); assert.strictEqual(r.origineRegles, 'DEFAUT'); assert.ok(r.vacances.length === 5 && r.vacances.every(v => v.previsionnel));
   assert.deepStrictEqual(J(r.rattachements.TBP_MVA), [30, 31]); assert.strictEqual(r.publiees, 0);
@@ -208,7 +208,7 @@ test('versions : création v1, mise à jour du brouillon, contrôle des dates, n
   const p = [{ ligne: 'TBP_MVA', type: 'PFMP Tbac', debut: '2026-09-28', fin: '2026-10-16', origine: 'REGLE', regle: 1 }];
   assert.throws(() => g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', periodes: [{ ligne: 'INCONNUE', type: 'X', debut: '2026-09-28', fin: '2026-10-02' }] }), /inconnue/);
   assert.throws(() => g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', periodes: [{ ligne: 'TBP_MVA', type: 'X', debut: '2026-10-02', fin: '2026-09-28' }] }), /invalides/);
-  assert.throws(() => g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', periodes: [{ ligne: 'TBP_MVA', type: 'X', debut: '2027-09-06', fin: '2027-09-10' }] }), /sort de l’année/);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', periodes: [{ ligne: 'TBP_MVA', type: 'X', debut: '2027-12-06', fin: '2027-12-10' }] }), /sort de l’année/);
   const v1 = g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', numero: 0, periodes: p, commentaire: 'essai' });
   assert.deepStrictEqual(J([v1.numero, v1.creee, v1.base]), [1, true, 'OFFICIELLES']);
   const v1b = g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', numero: 1, periodes: p.concat([{ ligne: 'TBP_MVA', type: 'P.dif.', debut: '2027-02-08', fin: '2027-02-19', origine: 'GRILLE' }]) });
@@ -388,7 +388,7 @@ test('formations de l’année : dates de début et de fin, titres ; années et 
   assert.strictEqual(g.tables.Annees_Scolaires.find(x => x.fields.Code === '2028-2029').fields.Previsionnelle, false);
   assert.ok(!g.calls.some(c => c.method === 'delete'));
   const h = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", "'<th class=\"hc\" colspan=\"2\">H / P</th>'", 'Total annuel <b>', 'Formation en alternance', 'Formation continue', 'CFA RÉGIONAL DE L’ACADÉMIE DE NICE', 'Ce calendrier de formation est donné à titre indicatif', "ufa:['#E46C0A'", "va:['#262626'", "ent:['#92D050'", "vi:['#00B0F0'", "ap:['#7F00FF'", "cs:['#2342D9'", "fe:['#DA9694'", "!=='ETE')return {c:'va'"]) assert.ok(h.includes(t), t);
+  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", "'<th class=\"hc\" colspan=\"2\">H / P</th>'", 'Total annuel <b>', 'Formation en alternance', 'Formation continue', 'Ce calendrier de formation est donné à titre indicatif', "ufa:['#E46C0A'", "va:['#262626'", "ent:['#92D050'", "vi:['#00B0F0'", "ap:['#7F00FF'", "cs:['#2342D9'", "fe:['#DA9694'", "!=='ETE')return {c:'va'"]) assert.ok(h.includes(t), t);
   assert.doesNotMatch(h, /if\(fe\[s\.i\]\.ferme\)cls\+=' fe'/, 'plus d’allusion aux fériés dans les cases du planning');
   assert.ok(read('apps-script/Admin_PFMP.html').includes('&amp;onglet=pAnnees">Années et vacances'));
 });
@@ -399,6 +399,31 @@ test('calendrier d’une formation (annexe 32a) : nature de chaque jour selon la
   const N = e => c.natureJour(e);
   assert.deepStrictEqual([N({ c: 'fe' }), N({ c: 'we' }), N({ c: 'va' }), N({ c: '', lycee: true }), N({ c: '', entreprise: true, p: { type: 'ENT.' } }), N({ c: '', entreprise: true, evp: { type: 'VISITE' } }), N({ c: '', lycee: true, evp: { type: 'CONSEIL' } }), N({ c: '', evp: { type: 'APPEL TEL' } }), N({ c: '', evp: { type: 'EXAMENS' } }), N({ c: 'hors' }), N({ c: 'blanc' }), N({ c: '', comp: true })],
     ['fe', 'we', 'va', 'ufa', 'ent', 'vi', 'cs', 'ap', 'ex', 'blanc', 'blanc', 'comp']);
+});
+test('calendrier d’une formation : intitulé du diplôme, périodes après l’été, logos (porteur à gauche, lycée à droite)', () => {
+  const g = grist({ periodes: [
+    { id: 900, fields: { Annee_scolaire: '2027-2028', Type: 'ENT.', Formation: 'BACHELOR', Niveau: 'IP', Date_debut: sec('2027-09-20'), Date_fin: sec('2027-10-01'), Actif: true } },
+    { id: 901, fields: { Annee_scolaire: '2027-2028', Type: 'ENT.', Formation: 'BACHELOR', Niveau: 'IP', Date_debut: sec('2028-01-10'), Date_fin: sec('2028-01-14'), Actif: true } }
+  ] });
+  g.tables.Classes.push({ id: 60, fields: { Nom: 'Bachelor IP', Classe_PFMP: 'Bachelor IP', Actif: true } });
+  g.tables.EUC_CLASSES_DIPLOMES_PFMP = [{ id: 1, fields: { Classe: 60, Intitule_diplome: 'Bachelor intégration des procédés', Actif: true } }, { id: 2, fields: { Classe: 9, Intitule_diplome: 'Bac pro MVA', Actif: true } }, { id: 3, fields: { Classe: 10, Intitule_diplome: 'Bac pro MVA', Actif: true } }];
+  const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.strictEqual(r.diplomes.BACHELOR_IP, 'Bachelor intégration des procédés'); assert.strictEqual(r.diplomes['1BP_MVA'], 'Bac pro MVA');
+  assert.deepStrictEqual(J(r.suite.map(p => [p.ligne, p.debut])), [['BACHELOR_IP', '2027-09-20']], 'seuls les trois premiers mois de l’année suivante');
+  g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', numero: 0, periodes: [{ ligne: 'BACHELOR_IP', type: 'ENT.', debut: '2027-10-04', fin: '2027-10-08' }] });
+  assert.throws(() => g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', numero: 0, periodes: [{ ligne: 'BACHELOR_IP', type: 'ENT.', debut: '2027-12-06', fin: '2027-12-10' }] }), /sort de l’année/);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerLogo({ organisme: 'Inconnu', image: '' }), /inconnu/);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/gif;base64,AAAA' }), /PNG ou JPEG/);
+  g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/png;base64,iVBORw0KGgo=' });
+  g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/png;base64,iVBORw0KGgoAAAA=' });
+  assert.strictEqual(g.tables.EUC_PLAN_LOGOS.length, 1); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI.image, 'data:image/png;base64,iVBORw0KGgoAAAA=');
+  g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: '' }); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI, undefined);
+  const h = read('apps-script/Plannings_DEV610.html'), c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\n' + h.match(/function logosFormation\(l\)\{[\s\S]*?droite:'Lycée Les Eucalyptus'\};\}/)[0], c);
+  const L = o => J(c.logosFormation({ organismes: o }));
+  assert.deepStrictEqual([L(['CFA RAN', 'Ducretet']), L(['GRETA', 'CFAI']), L(['CFAI']), L(['GRETA']), L([])], [
+    { gauche: ['CFA RAN', 'Ducretet'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['GRETA', 'CFAI'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['CFAI'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['GRETA'], droite: 'Lycée Les Eucalyptus' }, { gauche: [], droite: 'Lycée Les Eucalyptus' }]);
+  for (const t of ['data-p="pLogos"', 'function reduireImage(', '480/im.width,160/im.height', "'EUC_DEV610_enregistrerLogo'", 'id="fIntitule"', "concat((D.suite||[])", 'feries(y-1),feries(y),feries(y+1)']) assert.ok(h.includes(t), t);
+  assert.ok(read('apps-script/Admin_PFMP.html').includes('&amp;onglet=pLogos">Logos des calendriers'));
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
@@ -460,7 +485,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_enregistrerVacances', 'EUC_DEV610_enregistrerAnnee', 'EUC_DEV610_enregistrerFormation', 'EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_enregistrerLogo', 'EUC_DEV610_enregistrerVacances', 'EUC_DEV610_enregistrerAnnee', 'EUC_DEV610_enregistrerFormation', 'EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');

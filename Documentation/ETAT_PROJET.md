@@ -135,6 +135,13 @@
 - `fa1f8fa` publié en `@1103` (31/31 routes) : calendrier d'une formation sur le
   modèle de l'annexe 32a du CFA (charte des couleurs de la légende, D | J | H et
   H / P, petites vacances en noir, été non noirci, totaux, page A4 paysage).
+- Calendrier d'une formation : mois affichés du début à la fin de la formation
+  (au-delà de l'été : périodes, vacances et fériés de l'année suivante), en-tête
+  « CALENDRIER 2026-2027 — ZONE B » puis intitulé du diplôme
+  (`EUC_CLASSES_DIPLOMES_PFMP`, modifiable), logos par organisme
+  (`EUC_PLAN_LOGOS`, réduits à 480 × 160 px dans la page) : porteur à gauche
+  (GRETA, sinon CFA RAN) puis associés, lycée toujours à droite. Périodes d'une
+  version admises jusqu'à trois mois après la fin de l'année.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :

@@ -18,7 +18,7 @@
  * Seules les périodes en entreprise des calendriers scolaires (PFMP, P.dif., stages BTS) sont publiées
  * dans Planning_Periodes ; une année dont les vacances sont prévisionnelles ne peut pas être publiée.
  */
-var EUC_DEV610_T_ = { lignes: 'EUC_PLAN_LIGNES', rattachements: 'EUC_PLAN_LIGNES_CLASSES', regles: 'EUC_PLAN_REGLES', versions: 'EUC_PLAN_VERSIONS', jours: 'EUC_PLAN_JOURS_PARTICULIERS', heures: 'EUC_PLAN_HEURES', formations: 'EUC_PLAN_FORMATIONS' };
+var EUC_DEV610_T_ = { lignes: 'EUC_PLAN_LIGNES', rattachements: 'EUC_PLAN_LIGNES_CLASSES', regles: 'EUC_PLAN_REGLES', versions: 'EUC_PLAN_VERSIONS', jours: 'EUC_PLAN_JOURS_PARTICULIERS', heures: 'EUC_PLAN_HEURES', formations: 'EUC_PLAN_FORMATIONS', logos: 'EUC_PLAN_LOGOS' };
 var EUC_DEV610_COMMENTAIRE_ = 'Générateur de plannings';
 
 /* ===================== Calcul pur (partagé avec la page, voir EUC_DEV610_codeClient_) ===================== */
@@ -361,7 +361,7 @@ function EUC_DEV610_etape_(nom, fn) { try { return fn(); } catch (e) { var m = S
 
 var EUC_DEV610_AVERT_ = [];
 function EUC_DEV610_tables_() {
-  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES6')) return;
+  var cache = CacheService.getScriptCache(); if (cache.get('EUC_DEV610_TABLES7')) return;
   var ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; }), col = EUC_DEV441_col_;
   var def = {};
   def[EUC_DEV610_T_.lignes] = [col('Code', 'Code'), col('Libelle', 'Libellé'), col('Calendrier', 'Calendrier'), col('Groupe', 'Groupe d’affichage'), col('Profil', 'Profil de règles'), col('Classe_PFMP', 'Classe PFMP'), col('Formation', 'Formation (colonne A)'), col('Niveau', 'Niveau (colonne B)'), col('Ordre', 'Ordre', 'Int'), col('Ligne_sheet', 'Ligne de l’ancienne feuille', 'Int'), col('Quota_heures', 'Quota d’heures', 'Numeric'), col('Heures_jour', 'Heures par jour', 'Numeric'), col('Jours_lycee', 'Jours au lycée'), col('Actif', 'Actif', 'Bool')];
@@ -370,12 +370,14 @@ function EUC_DEV610_tables_() {
   def[EUC_DEV610_T_.versions] = [col('Annee_scolaire', 'Année scolaire'), col('Numero', 'Numéro', 'Int'), col('Statut', 'Statut'), col('Base_dates', 'Base des dates'), col('Commentaire', 'Commentaire'), col('Periodes_json', 'Périodes (JSON)'), col('Auteur', 'Auteur'), col('Date_creation', 'Date de création'), col('Date_publication', 'Date de publication')];
   def[EUC_DEV610_T_.jours] = [col('Annee_scolaire', 'Année scolaire'), col('Date', 'Date', 'Date'), col('Nature', 'Nature'), col('Libelle', 'Libellé'), col('Heures', 'Heures', 'Numeric'), col('Actif', 'Actif', 'Bool')];
   def[EUC_DEV610_T_.heures] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Date', 'Date', 'Date'), col('Heures_matin', 'Heures du matin', 'Numeric'), col('Heures_apres_midi', 'Heures de l’après-midi', 'Numeric'), col('Formateur_matin', 'Formateur du matin'), col('Formateur_apres_midi', 'Formateur de l’après-midi'), col('Date_modification', 'Date modification')];
-  def[EUC_DEV610_T_.formations] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Debut_formation', 'Début de la formation', 'Date'), col('Fin_formation', 'Fin de la formation', 'Date'), col('Titre', 'Titre du calendrier'), col('Sous_titre', 'Sous-titre du calendrier'), col('Date_modification', 'Date modification')];
+  def[EUC_DEV610_T_.formations] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Debut_formation', 'Début de la formation', 'Date'), col('Fin_formation', 'Fin de la formation', 'Date'), col('Titre', 'Titre du calendrier'), col('Sous_titre', 'Sous-titre du calendrier'), col('Intitule', 'Intitulé du diplôme affiché'), col('Date_modification', 'Date modification')];
+  def[EUC_DEV610_T_.logos] = [col('Organisme', 'Organisme'), col('Image', 'Image (redimensionnée, data URL)'), col('Date_modification', 'Date modification')];
   var manquantes = Object.keys(def).filter(function(t) { return ids.indexOf(t) < 0; });
   if (manquantes.length) EUC_DEV610_etape_('création des tables du générateur', function() { EUC_ENT_grist('post', '/tables', { tables: manquantes.map(function(t) { return { id: t, columns: def[t] }; }) }); });
+  try { var cf = (EUC_ENT_grist('get', '/tables/' + EUC_DEV610_T_.formations + '/columns').columns || []).map(function(c) { return c.id; }); if (cf.length && cf.indexOf('Intitule') < 0) EUC_ENT_grist('post', '/tables/' + EUC_DEV610_T_.formations + '/columns', { columns: [col('Intitule', 'Intitulé du diplôme affiché')] }); } catch (e) { console.log('DEV610_INTITULE ' + e); }
   try { EUC_DEV610_etape_('mise à jour des lignes de planning', EUC_DEV610_migrerLignes_); }
   catch (e) { EUC_DEV610_AVERT_.push(String(e && e.message || e)); console.log('DEV610_MIGRATION ' + String(e && e.message || e)); return; }
-  cache.put('EUC_DEV610_TABLES6', '1', 21600);
+  cache.put('EUC_DEV610_TABLES7', '1', 21600);
 }
 
 function EUC_DEV610_champsLigneDefaut_(l, i) {
@@ -526,7 +528,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), diplomes: EUC_DEV610_diplomes_(rattachements), suite: EUC_DEV610_suite_(annee, annees), logos: EUC_DEV610_logos_(), organismesLogos: EUC_DEV610_ORGANISMES_LOGOS_, toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -575,7 +577,8 @@ function EUC_DEV610_validerPeriodes_(periodes, lignes, annee) {
     var debut = EUC_DEV610_t_(p.debut), fin = EUC_DEV610_t_(p.fin), type = EUC_DEV610_t_(p.type), ligne = EUC_DEV610_t_(p.ligne);
     if (!codes[ligne]) throw new Error('Ligne de planning inconnue : ' + ligne + '.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(debut) || !/^\d{4}-\d{2}-\d{2}$/.test(fin) || fin < debut) throw new Error(ligne + ' : dates de période invalides.');
-    if (annee && (debut < annee.debut || fin > annee.fin)) throw new Error(ligne + ' : la période du ' + debut + ' sort de l’année ' + annee.code + '.');
+    /* Une formation peut finir après l'été (Bachelor, TSEC, CAP peintre) : trois mois de dépassement admis. */
+    if (annee && (debut < annee.debut || fin > EUC_DEV610_plus_(annee.fin, 92))) throw new Error(ligne + ' : la période du ' + debut + ' sort de l’année ' + annee.code + '.');
     if (!type) throw new Error(ligne + ' : type de période manquant.');
     var complement = EUC_DEV610_estComplementaire_(type) ? EUC_DEV610_t_(p.complement).slice(0, 40) : '';
     return { ligne: ligne, type: type, complement: complement || undefined, debut: debut, fin: fin, origine: ['REGLE', 'GRILLE', 'TABLEAU', 'REPRISE'].indexOf(p.origine) >= 0 ? p.origine : 'TABLEAU', regle: Number(p.regle) || null };
@@ -885,7 +888,7 @@ function EUC_DEV610_enregistrerOrganisation(q) {
 function EUC_DEV610_formations_(annee) {
   var out = {}, ids = {};
   EUC_DEV610_lire_(EUC_DEV610_T_.formations).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV610_t_(f.Annee_scolaire) !== annee) return; var c = EUC_DEV610_t_(f.Ligne); if (!c || (ids[c] && ids[c] > r.id)) return; ids[c] = Number(r.id);
-    out[c] = { id: Number(r.id), debut: EUC_DEV610_date_(f.Debut_formation), fin: EUC_DEV610_date_(f.Fin_formation), titre: EUC_DEV610_t_(f.Titre), sousTitre: EUC_DEV610_t_(f.Sous_titre) }; });
+    out[c] = { id: Number(r.id), debut: EUC_DEV610_date_(f.Debut_formation), fin: EUC_DEV610_date_(f.Fin_formation), titre: EUC_DEV610_t_(f.Titre), sousTitre: EUC_DEV610_t_(f.Sous_titre), intitule: EUC_DEV610_t_(f.Intitule) }; });
   return out;
 }
 function EUC_DEV610_enregistrerFormation(q) {
@@ -896,10 +899,10 @@ function EUC_DEV610_enregistrerFormation(q) {
   var debut = EUC_DEV610_t_(q.debut), fin = EUC_DEV610_t_(q.fin), iso = /^\d{4}-\d{2}-\d{2}$/;
   if ((debut && !iso.test(debut)) || (fin && !iso.test(fin))) throw new Error('Dates de formation invalides.');
   if (debut && fin && fin < debut) throw new Error('La fin de la formation doit suivre son début.');
-  var champs = { Annee_scolaire: code, Ligne: ligne, Debut_formation: debut ? Math.round(Date.parse(debut + 'T00:00:00Z') / 1000) : null, Fin_formation: fin ? Math.round(Date.parse(fin + 'T00:00:00Z') / 1000) : null, Titre: EUC_DEV610_t_(q.titre).slice(0, 150), Sous_titre: EUC_DEV610_t_(q.sousTitre).slice(0, 200), Date_modification: new Date().toISOString() };
+  var champs = { Annee_scolaire: code, Ligne: ligne, Debut_formation: debut ? Math.round(Date.parse(debut + 'T00:00:00Z') / 1000) : null, Fin_formation: fin ? Math.round(Date.parse(fin + 'T00:00:00Z') / 1000) : null, Titre: EUC_DEV610_t_(q.titre).slice(0, 150), Sous_titre: EUC_DEV610_t_(q.sousTitre).slice(0, 200), Intitule: EUC_DEV610_t_(q.intitule).slice(0, 200), Date_modification: new Date().toISOString() };
   var ex = EUC_DEV610_formations_(code)[ligne];
   if (ex) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.formations, [{ id: ex.id, fields: champs }]); else EUC_DEV610_ecrire_('post', EUC_DEV610_T_.formations, [{ fields: champs }]);
-  return { ok: true, formation: { debut: debut, fin: fin, titre: champs.Titre, sousTitre: champs.Sous_titre } };
+  return { ok: true, formation: { debut: debut, fin: fin, titre: champs.Titre, sousTitre: champs.Sous_titre, intitule: champs.Intitule } };
 }
 
 /* ===================== Années scolaires et vacances, saisies dans la page (Grist ne sert que de stockage) ===================== */
@@ -946,4 +949,44 @@ function EUC_DEV610_enregistrerVacances(q) {
 function EUC_DEV610_toutesVacances_(annees) {
   return EUC_DEV610_lire_('Vacances_Scolaires').map(function(r) { var f = r.fields || {}; return { id: Number(r.id), annee: EUC_DEV610_codeAnnee_(f.Annee_scolaire, annees), nom: EUC_DEV610_t_(f.Nom_vacances), debut: EUC_DEV610_date_(f.Date_debut), fin: EUC_DEV610_date_(f.Date_fin), previsionnel: f.Previsionnel === true || /PREVISION/.test(EUC_DEV610_n_(f.Statut)), commentaire: EUC_DEV610_t_(f.Commentaire), zone: EUC_DEV610_t_(f.Zone), actif: f.Actif !== false }; })
     .filter(function(v) { return v.actif || v.previsionnel; });
+}
+
+/* ===================== Intitulés des diplômes, périodes de l'année suivante, logos ===================== */
+/* Intitulé du diplôme de chaque ligne, d'après ses classes (EUC_CLASSES_DIPLOMES_PFMP, « Diplômes par classe »). */
+function EUC_DEV610_diplomes_(rattachements) {
+  var parClasse = {};
+  EUC_DEV610_lire_('EUC_CLASSES_DIPLOMES_PFMP').forEach(function(r) { var f = r.fields || {}; if (f.Actif === false) return; var cid = EUC_DEV610_ref_(f.Classe !== undefined ? f.Classe : f.Classe_id); var lib = EUC_DEV610_t_(f.Intitule_diplome || f.Intitule || f.Diplome || f.Diplome_imprime || f.Libelle); if (cid && lib && !parClasse[cid]) parClasse[cid] = lib; });
+  var out = {}; Object.keys(rattachements || {}).forEach(function(code) { var libs = {}; (rattachements[code] || []).forEach(function(id) { if (parClasse[id]) libs[parClasse[id]] = 1; }); var k = Object.keys(libs); if (k.length === 1) out[code] = k[0]; });
+  return out;
+}
+/* Périodes de l'année suivante pour les formations qui finissent après l'été : dernière version de l'année suivante,
+ * sinon le calendrier publié ; seulement les trois premiers mois. */
+function EUC_DEV610_suite_(annee, annees) {
+  var suivante = annees.filter(function(a) { return a.code > annee.code; })[0]; if (!suivante) return [];
+  var limite = EUC_DEV610_plus_(annee.fin, 92), garder = function(p) { return p.debut <= limite; };
+  var v = EUC_DEV610_versions_(suivante.code).pop();
+  if (v) { try { return JSON.parse(v.json || '[]').filter(garder); } catch (e) { return []; } }
+  var lignes = EUC_DEV610_lignes_().filter(function(l) { return l.actif; }), classes = EUC_DEV610_classes_(), cpi = {}, parClasse = {}, ratt = EUC_DEV610_rattachements_(suivante.code).classes;
+  classes.forEach(function(c) { cpi[c.id] = c; }); lignes.forEach(function(l) { (ratt[l.code] || EUC_DEV610_proposerClasses_(l, classes)).forEach(function(id) { parClasse[id] = l.code; }); });
+  var out = [];
+  EUC_DEV610_existantes_(annees).forEach(function(p) { if (p.annee !== suivante.code || !p.actif || !p.debut || !garder(p)) return; var r = EUC_DEV610_ligneDePeriode_(p, parClasse, cpi, lignes); if (!r.ligne) return;
+    [r.ligne].concat(r.autres || []).forEach(function(c) { out.push({ ligne: c, type: p.type, debut: p.debut, fin: p.fin, origine: 'REPRISE', regle: null }); }); });
+  return out;
+}
+var EUC_DEV610_ORGANISMES_LOGOS_ = ['Lycée Les Eucalyptus', 'CFA RAN', 'CFAI', 'GRETA', 'Ducretet'];
+function EUC_DEV610_logos_() {
+  var out = {}; EUC_DEV610_lire_(EUC_DEV610_T_.logos).forEach(function(r) { var f = r.fields || {}, o = EUC_DEV610_t_(f.Organisme); if (o && /^data:image\//.test(EUC_DEV610_t_(f.Image))) out[o] = { id: Number(r.id), image: EUC_DEV610_t_(f.Image) }; });
+  return out;
+}
+/* Logo d'un organisme : image déjà redimensionnée par la page (PNG ou JPEG en data URL, 400 Ko au plus). Vide = retrait. */
+function EUC_DEV610_enregistrerLogo(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV610_tables_();
+  var o = EUC_DEV610_t_(q.organisme), img = EUC_DEV610_t_(q.image);
+  if (EUC_DEV610_ORGANISMES_LOGOS_.indexOf(o) < 0) throw new Error('Organisme inconnu.');
+  if (img && !/^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(img)) throw new Error('Image PNG ou JPEG attendue.');
+  if (img.length > 400000) throw new Error('Image trop lourde, même réduite (400 Ko au plus).');
+  var ex = EUC_DEV610_logos_()[o], champs = { Organisme: o, Image: img, Date_modification: new Date().toISOString() };
+  if (ex) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: ex.id, fields: champs }]);
+  else { var tous = EUC_DEV610_lire_(EUC_DEV610_T_.logos).filter(function(r) { return EUC_DEV610_t_((r.fields || {}).Organisme) === o; })[0]; if (tous) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: tous.id, fields: champs }]); else EUC_DEV610_ecrire_('post', EUC_DEV610_T_.logos, [{ fields: champs }]); }
+  return { ok: true, organisme: o, image: img };
 }
