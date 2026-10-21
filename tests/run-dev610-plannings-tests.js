@@ -205,7 +205,7 @@ test('le code pur injecté dans la page s’évalue seul et calcule la même mat
 
 test('chargement : tables créées une fois, lignes initiales, année N+1 choisie, règles initiales et vacances prévisionnelles', () => {
   const g = grist(); const r = g.k.EUC_DEV610_charger({});
-  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_FORMATIONS', 'EUC_PLAN_HEURES', 'EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_LOGOS', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
+  assert.deepStrictEqual(J(g.creees.sort()), ['EUC_PLAN_COULEURS', 'EUC_PLAN_FORMATIONS', 'EUC_PLAN_HEURES', 'EUC_PLAN_JOURS_PARTICULIERS', 'EUC_PLAN_LIGNES', 'EUC_PLAN_LIGNES_CLASSES', 'EUC_PLAN_LOGOS', 'EUC_PLAN_PARAMETRES', 'EUC_PLAN_REGLES', 'EUC_PLAN_VERSIONS']);
   assert.strictEqual(g.tables.EUC_PLAN_LIGNES.length, k.EUC_DEV610_LIGNES_DEFAUT_.length);
   assert.strictEqual(r.annee.code, '2027-2028'); assert.strictEqual(r.origineRegles, 'DEFAUT'); assert.ok(r.vacances.length === 5 && r.vacances.every(v => v.previsionnel));
   assert.deepStrictEqual(J(r.rattachements.TBP_MVA), [30, 31]); assert.strictEqual(r.publiees, 0);
@@ -345,7 +345,7 @@ test('organisation du tableau : ordre et groupes enregistrés, nouvelle classe p
   const p = k.EUC_DEV610_ligneProposee_({ id: 777, nom: '1MELEC2', classePfmp: '1MELEC2', etab: 'LP' }, lignes);
   assert.deepStrictEqual([p.calendrier, p.groupe, p.profil, p.apres], ['SCOLAIRE', '1 BAC PRO', '1BACPRO', '1BP_MELEC']);
   const pg = k.EUC_DEV610_ligneProposee_({ nom: 'TPEEB 21', classePfmp: 'TPEEB 21', etab: 'GRETA', modalite: 'Classe entière', gestionnaire: 'GRETA', donneur: 'GRETA' }, lignes);
-  assert.deepStrictEqual(J([pg.calendrier, pg.groupe, pg.organismes, pg.libelle]), ['CLASSE_ENTIERE', 'Formation continue et alternance', ['GRETA'], 'TPEEB 21']);
+  assert.deepStrictEqual(J([pg.calendrier, pg.groupe, pg.organismes, pg.libelle]), ['CLASSE_ENTIERE', 'Formation en alternance et continue', ['GRETA'], 'TPEEB 21']);
   assert.strictEqual(k.EUC_DEV610_ligneProposee_({ nom: 'CAP X', classePfmp: 'CAP X', etab: 'CFA', modalite: 'Classe entière' }, lignes).calendrier, 'CLASSE_ENTIERE');
   assert.strictEqual(k.EUC_DEV610_nouveauCode_('1 BAC PRO — Élec 2', ['1_BAC_PRO_ELEC_2']), '1_BAC_PRO_ELEC_2_2');
   const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
@@ -390,7 +390,7 @@ test('mise au modèle 2 : lignes de la première version remplacées (TPEEB uniq
   assert.deepStrictEqual(J([l('TBP_MVA').libelle, l('TBP_MVA').etablissement, l('TBP_MVA').formation, l('TBP_MVA').niveau]), ['TMVA', 'LP', 'T BAC PRO', 'MVA']);
   assert.strictEqual(l('TPEEB').actif, false); assert.strictEqual(l('MIX_1BTS_CPI_CPRP').actif, false);
   assert.deepStrictEqual(J([l('MIX_1BTS_CPI').libelle, l('MIX_1BTS_CPRP').organismes, l('MIX_1BTS_MV').organismes, l('MIX_TBP').organismes]), ['1BTS CPI Mixité', ['CFAI'], ['CFA RAN'], ['CFA RAN']]);
-  assert.deepStrictEqual(J([l('TPEEB_19').calendrier, l('TPEEB_19').groupe, l('1MELEC_G').organismes, l('CQPM_ASC').organismes, l('BACHELOR_IP').etablissement]), ['CLASSE_ENTIERE', 'Formation continue et alternance', ['GRETA'], ['GRETA', 'CFAI'], 'LGT']);
+  assert.deepStrictEqual(J([l('TPEEB_19').calendrier, l('TPEEB_19').groupe, l('1MELEC_G').organismes, l('CQPM_ASC').organismes, l('BACHELOR_IP').etablissement]), ['CLASSE_ENTIERE', 'Formation en alternance et continue', ['GRETA'], ['GRETA', 'CFAI'], 'LGT']);
   assert.deepStrictEqual(J([l('TSEC').libelle, l('TSEC').groupe]), ['Mon TSEC', 'Mon groupe'], 'ligne enregistrée depuis la page : jamais écrasée');
   assert.strictEqual(l('PERSO').actif, true, 'une ligne ajoutée à la main reste active');
   assert.ok(!r.lignes.some(x => x.actif && x.calendrier === 'GRETA'));
@@ -529,12 +529,12 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
-  for (const fn of ['EUC_DEV610_enregistrerLogo', 'EUC_DEV610_enregistrerVacances', 'EUC_DEV610_enregistrerAnnee', 'EUC_DEV610_enregistrerFormation', 'EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV610_enregistrerCouleurs', 'EUC_DEV610_enregistrerParametres', 'EUC_DEV610_enregistrerLogo', 'EUC_DEV610_enregistrerVacances', 'EUC_DEV610_enregistrerAnnee', 'EUC_DEV610_enregistrerFormation', 'EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
-  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Classe entière', 'rowspan="4"', 'PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
+  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)', 'rowspan="4"', 'PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE – FORMATION CONTINUE', 'id="piedPlanning"', 'aside class="legende" id="legende"', 'data-p="pCouleurs"', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
@@ -583,7 +583,7 @@ test('formation complémentaire : complément conservé dans la version, jamais 
   const d = k.EUC_DEV610_diffPublication_({ periodes: [{ ligne: 'TBP_MVA', type: 'Formation complémentaire', complement: '5 Star', debut: '2027-01-11', fin: '2027-01-15' }] }, lignes, { TBP_MVA: [30, 31] }, [], '2026-2027');
   assert.strictEqual(d.creer.length, 0);
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', "['4+4','8 h (4 + 4)'],['4+3','7 h (4 + 3)'],['4+0','½ journée matin (4 h)']", '||HSALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
+  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', "['4+4','8 h (4 + 4)'],['4+3','7 h (4 + 3)'],['4+0','½ journée matin (4 h)']", '||HSALE||COUL_SALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
 });
 
 test('recopie des dates d’une classe vers les classes du même niveau : périodes en entreprise remplacées, le reste gardé, placées à la main', () => {
@@ -707,6 +707,28 @@ test('tableau des périodes : lignes repliées, regroupement des semaines accol�
   const pg = read('apps-script/Plannings_DEV610.html');
   assert.ok(pg.indexOf('id="changements"') < pg.indexOf('role="tablist"'), 'résultat de la génération au-dessus des onglets');
   for (const x of ['id="toutDeplier"', 'Regrouper les semaines accolées', 'OUVERTES[c]=!OUVERTES[c]']) assert.ok(pg.includes(x), x);
+});
+
+test('couleurs par type et pied de page : saisis dans la page, contrôlés, prioritaires dans la publication ; ligne scolaire proposée sans organisme', () => {
+  const g = grist({ periodes: [] }); g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  assert.throws(() => g.k.EUC_DEV610_enregistrerCouleurs({ couleurs: [{ type: 'ENT.', couleur: 'vert' }] }), /hexadécimal/);
+  const r = g.k.EUC_DEV610_enregistrerCouleurs({ couleurs: [{ type: 'ENT.', couleur: '#92d050' }, { type: 'PFMP Tbac', couleur: '' }, { type: 'Stage BTS', couleur: '#ff00cc' }] });
+  assert.deepStrictEqual(J([r.creees, r.modifiees]), [2, 0]);
+  const c = g.k.EUC_DEV610_charger({ annee: '2026-2027' }).couleurs;
+  assert.deepStrictEqual(J([c.ENT.couleur, c.STAGEBTS.couleur, c.PFMPTBAC || null]), ['#92D050', '#FF00CC', null]);
+  assert.deepStrictEqual(J(g.k.EUC_DEV610_enregistrerCouleurs({ couleurs: [{ type: 'ENT.', couleur: '#00FF00' }] })), { ok: true, creees: 0, modifiees: 1 });
+  assert.throws(() => g.k.EUC_DEV610_enregistrerParametres({ parametres: { PIED_TELEPHONE: 'appeler Paul' } }), /Téléphone/);
+  const p = g.k.EUC_DEV610_enregistrerParametres({ parametres: { PIED_LIBELLE: 'Bureau formation entreprise (BFE)', PIED_TELEPHONE: '04 93 00 00 00' } });
+  assert.deepStrictEqual(J(p.parametres), { PIED_LIBELLE: 'Bureau formation entreprise (BFE)', PIED_TELEPHONE: '04 93 00 00 00' });
+  assert.strictEqual(g.k.EUC_DEV610_charger({ annee: '2026-2027' }).parametres.PIED_TELEPHONE, '04 93 00 00 00');
+  /* Publication : la couleur choisie prime sur Types_Planning. */
+  g.k.EUC_DEV610_enregistrerVersion({ annee: '2026-2027', numero: 0, periodes: [{ ligne: 'TSEC', type: 'ENT.', debut: '2026-11-16', fin: '2026-11-20', origine: 'TABLEAU' }] });
+  const ap = g.k.EUC_DEV610_apercuPublication({ annee: '2026-2027', numero: 1 });
+  assert.strictEqual(ap.diff.creer[0].couleur, '#00FF00');
+  const prop = k.EUC_DEV610_ligneProposee_({ id: 99, nom: '2BTS CPI', classePfmp: '2BTS CPI', etab: 'LGT', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFAI' }, lignesDefaut());
+  assert.deepStrictEqual(J([prop.calendrier, prop.organismes]), ['SCOLAIRE', []], 'ligne scolaire : pas d’organisme de la classe');
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", '.misePage .legende{order:2;flex:0 0 175px;width:175px;flex-direction:column']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

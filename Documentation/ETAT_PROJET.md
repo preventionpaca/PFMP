@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : planning général sur une page, couleurs et pied de page saisis dans l'application
+
+- Impression A3 : titre « PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE –
+  FORMATION CONTINUE » et année / zone / génération / version sur une ligne ;
+  légende en colonne à droite sur toute la hauteur ; réduction calculée sur la
+  largeur et la hauteur restantes : tout le planning tient sur une page (PDF
+  vérifié sur la copie locale : 1 page au lieu de 2).
+- Le planning va au-delà du 31 août jusqu'à la fin de la formation la plus
+  tardive (dates de formation, périodes des versions, année suivante), trois mois
+  au plus ; les périodes de l'année suivante (Bachelor en septembre) s'y
+  affichent en clair, non modifiables.
+- Bandeau de groupe écrit en entier ; groupe « Formation continue et
+  alternance » renommé une fois « Formation en alternance et continue » (nom
+  exact seulement) ; case « Alternance (classe entière) ». Clé de cache des
+  tables `EUC_DEV610_TABLES11`.
+- Onglet « Couleurs et mise en page » : couleur par type de période (palette du
+  planning PFMP – stages – mixité, vue hebdomadaire, ou code #RRGGBB), table
+  `EUC_PLAN_COULEURS`, prioritaire sur Types_Planning dans la page, les
+  calendriers et la colonne Couleur publiée ; pied de page « Bureau formation
+  entreprise (BFE) » + téléphone direct (sans courriel), table
+  `EUC_PLAN_PARAMETRES`. Aucun numéro n'est connu : à saisir par l'utilisateur.
+- Ligne scolaire : n'affiche que son établissement ; une ligne scolaire proposée
+  depuis Pronote ne reprend plus les organismes de la classe (cause des
+  « LGT · CFA RAN · CFAI » des 2BTS CPI et CPRP).
+- Tests simulés : 41/41 DEV610, suite complète verte.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : génération visible, tableau des périodes replié, regroupement des semaines
 
 - « Générer depuis les règles » semblait sans effet : son résultat (changements

@@ -55,6 +55,8 @@ table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var
 table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
 table.t tr.teteLigne td{background:#eef6f2;border-top:2px solid var(--bord);padding-top:8px}table.t tr.copie td{background:#fbfdfc}
 table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120px}
+table.g td.c.suite{opacity:.55}table.g tr.groupe td.lib{overflow:visible;z-index:4;text-overflow:clip}table.g tr.groupe td.lib b{position:relative;white-space:nowrap}
+.misePage{display:flex;flex-direction:column}.misePage .legende{order:-1}.pied{font-size:12px;color:#334155;margin:6px 0 0}.pied b{color:#0b4f40}
 .legende{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:6px 0}.legende span{display:inline-flex;align-items:center;gap:4px}.legende i{display:inline-block;width:14px;height:12px;border-radius:2px;border:1px solid #0002}
 .puces{display:flex;gap:4px;flex-wrap:wrap}.puce{background:#eef6f2;border:1px solid var(--bord);border-radius:999px;padding:1px 4px 1px 8px;font-size:12px}
 .puce button{border:none;background:none;padding:0 4px;color:#991b1b}
@@ -79,7 +81,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 .poignee{font-size:16px;color:#6b7c76;cursor:grab;user-select:none;padding:0 4px}
 .cal-SCOLAIRE{border-left:4px solid #0b6b4f}.cal-MIXITE{border-left:4px solid #92D050}.cal-CLASSE_ENTIERE{border-left:4px solid #7E57C2}.cal-GRETA{border-left:4px solid #f59e0b}
 .titreImpression{display:none}.titreImpression h2{margin:0;font-size:18px;color:#1b396a}.titreImpression p{margin:2px 0 6px;font-size:13px}
-@media print{.blocs{display:none!important}body{background:#fff}header,.ariane,.barre,.onglets,.action,#etat,#messages,.noprint,.panneau:not(.actif){display:none!important}.grille{max-height:none;overflow:visible;border:none}.titreImpression{display:block;font-size:16px;font-weight:800;margin:0 0 6px}table.g thead th{position:static}table.g .lib{position:static}table.g td,table.g th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{.blocs{display:none!important}body{background:#fff}header,.ariane,.barre,.onglets,.action,#etat,#messages,.noprint,.panneau:not(.actif){display:none!important}.grille{max-height:none;overflow:visible;border:none}.titreImpression{display:block;font-size:16px;font-weight:800;margin:0 0 6px}table.g thead th{position:static}table.g .lib{position:static}table.g td,table.g th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.misePage{flex-direction:row;align-items:flex-start;gap:8px}.misePage .grille{flex:1 1 auto;min-width:0}.misePage .legende{order:2;flex:0 0 175px;width:175px;flex-direction:column;flex-wrap:nowrap;gap:4px;margin:0;font-size:11px;overflow:hidden}.legende .ecran{display:none}.legende i,.legende b{-webkit-print-color-adjust:exact;print-color-adjust:exact}.titreImpression h2{display:inline;font-size:17px;margin:0}.titreImpression p{display:inline;margin:0 0 0 10px;font-size:13px}}
 </style>
 <style id="stylePage">@page{size:A3 landscape;margin:8mm}</style>
 </head>
@@ -113,6 +115,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <button type="button" role="tab" data-p="pAnnees" aria-selected="false">Années et vacances</button>
     <button type="button" role="tab" data-p="pJours" aria-selected="false">Jours particuliers</button>
     <button type="button" role="tab" data-p="pLogos" aria-selected="false">Logos</button>
+    <button type="button" role="tab" data-p="pCouleurs" aria-selected="false">Couleurs et mise en page</button>
     <button type="button" role="tab" data-p="pPublication" aria-selected="false">Publication</button>
   </div>
 
@@ -122,10 +125,13 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <div class="blocs noprint" id="blocs"><span class="note">Afficher :</span>
       <label><input type="checkbox" data-cal="SCOLAIRE" checked> Scolaire</label>
       <label><input type="checkbox" data-cal="MIXITE" checked> Mixité</label>
-      <label><input type="checkbox" data-cal="CLASSE_ENTIERE" checked> Classe entière</label>
+      <label><input type="checkbox" data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)</label>
       <label><input type="checkbox" data-cal="FC" checked> Formation continue</label></div>
-    <div class="legende" id="legende"></div>
+    <div class="misePage" id="misePage">
     <div class="grille" id="grille"><p class="note" style="padding:10px">Chargement de la matrice…</p></div>
+    <aside class="legende" id="legende"></aside>
+    </div>
+    <p class="pied" id="piedPlanning"></p>
     <div class="action" id="action"><b id="selInfo"></b>
       <label>Type <select id="selType"></select></label>
       <label id="selComplementBloc" hidden>Complément <input id="selComplement" value="5 Star" maxlength="40" size="10"></label>
@@ -197,6 +203,15 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <div class="barre"><button type="button" id="ajouterVacance">Ajouter des vacances</button><button type="button" id="proposerVacances" title="Reprend les vacances de l’année précédente décalées de 52 semaines, marquées prévisionnelles">Proposer d’après l’année précédente</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerVacances">Enregistrer les vacances</button></div>
   </section>
 
+  <section id="pCouleurs" class="panneau">
+    <p class="note">Couleur de chaque type de période dans le planning, les calendriers et la colonne Couleur publiée dans Planning_Periodes. Choisissez une couleur proposée (celles du planning PFMP – stages – mixité, vue hebdomadaire) ou saisissez un code #RRGGBB. Vide : couleur de la table Types_Planning.</p>
+    <table class="t"><thead><tr><th>Type</th><th>Aperçu</th><th>Couleur</th><th>Couleurs proposées</th><th></th></tr></thead><tbody id="tCouleurs"></tbody></table>
+    <div class="barre"><span id="couleursEtat" class="note"></span><span style="flex:1"></span><button type="button" class="plein" id="enregistrerCouleurs" disabled>Enregistrer les couleurs</button></div>
+    <h3>Pied de page du planning</h3>
+    <p class="note">Imprimé sous le planning général. Un numéro direct : les entreprises appellent, pas de courriel.</p>
+    <div class="barre"><label style="flex:2">Libellé <input id="piedLibelle" style="width:100%" maxlength="120"></label><label>Téléphone <input id="piedTelephone" maxlength="25" placeholder="04 93 00 00 00"></label><button type="button" class="plein" id="enregistrerPied">Enregistrer le pied de page</button></div>
+  </section>
+
   <section id="pLogos" class="panneau">
     <p class="note">Logos des calendriers de formation. Déposez n’importe quelle image PNG ou JPEG (fond transparent de préférence) : elle est réduite automatiquement à 480 × 160 pixels au plus avant l’envoi. Placement d’après la table Classes : à gauche l’organisme gestionnaire, puis à sa droite l’organisme donneur d’ordre ; à droite de la page, toujours le lycée.</p>
     <table class="t"><thead><tr><th>Organisme</th><th>Logo actuel</th><th>Remplacer</th><th></th></tr></thead><tbody id="tLogos"></tbody></table>
@@ -240,7 +255,8 @@ function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.qu
 /* Formation continue : modalité des classes de la ligne dans le suivi des apprentis (TPMMA), ou ancien calendrier GRETA. */
 function estFC(l){return l.calendrier==='GRETA'||((D&&D.modalitesLignes)||{})[l.code]==='FORMATION_CONTINUE';}
 function lignesVisibles(){var v=calendriersVisibles();return D.lignes.filter(function(l){var cal=l.calendrier==='GRETA'?'CLASSE_ENTIERE':l.calendrier;return actifAnnee(l)&&(estFC(l)?v.FC:v[cal]);});}
-function supports(l){return [l.etablissement].concat(l.organismes||[]).filter(Boolean).join(' · ');}
+/* Établissement et organismes d'une ligne ; une ligne scolaire n'affiche que son établissement. */
+function supports(l){return [l.etablissement].concat(l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])).filter(Boolean).join(' · ');}
 function nomLigne(l){var e=etiquette(l);return (l.groupe&&e.indexOf(l.groupe)!==0?l.groupe+' — ':'')+e;}
 /* Libellé dans la grille : le Niveau (colonne B), précédé de la Formation quand elle diffère du groupe (ex. « 1BTS MV Mixité »). */
 function etiquette(l){return String(l.libelle||l.code).split(' — ').pop();}
@@ -258,7 +274,7 @@ function occupe(btn,libelle,fn,arg,ok,delai){
   google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);retablir();ok(r);})
     .withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);retablir();message('Erreur : '+esc(e&&e.message||e),'erreur');})[fn](arg);
 }
-function couleur(type){var n=EUC_DEV610_n_(type),t=(D.types||[]).filter(function(x){return EUC_DEV610_n_(x.type)===n||(n==='STAGEBTS'&&EUC_DEV610_n_(x.type)==='BTSSTAGE');})[0];var c=t&&t.couleur||'';if(/^[0-9A-Fa-f]{6}$/.test(c))c='#'+c;return /^#[0-9A-Fa-f]{6}$/.test(c)?c:(EUC_DEV610_estComplementaire_(type)?'#F4B183':'#92D050');}
+function couleur(type){var ch=((D&&D.couleurs)||{})[EUC_DEV610_cleType_(type)];if(ch&&ch.couleur)return ch.couleur;var n=EUC_DEV610_n_(type),t=(D.types||[]).filter(function(x){return EUC_DEV610_n_(x.type)===n||(n==='STAGEBTS'&&EUC_DEV610_n_(x.type)==='BTSSTAGE');})[0];var c=t&&t.couleur||'';if(/^[0-9A-Fa-f]{6}$/.test(c))c='#'+c;return /^#[0-9A-Fa-f]{6}$/.test(c)?c:(EUC_DEV610_estComplementaire_(type)?'#F4B183':'#92D050');}
 function texteSur(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16);return 0.299*r+0.587*g+0.114*b>150?'#000':'#fff';}
 /* Étiquette d'une période dans une case : le complément (« 5 Star ») d'une formation complémentaire, sinon le type abrégé. */
 function etiq(p){return EUC_DEV610_estComplementaire_(p.type)?(p.complement||'F. compl.'):abrege(p.type);}
@@ -278,7 +294,10 @@ function charger(annee){
 function initialiser(){
   var a=D.annee,y=Number(a.code.slice(0,4));
   $('annee').innerHTML=D.annees.map(function(x){var r=x.code===D.courante?' (en cours)':x.code>D.courante?(x.code.slice(0,4)-D.courante.slice(0,4)===1?' (N+1)':' (N+2)'):'';return '<option value="'+esc(x.code)+'"'+(x.code===a.code?' selected':'')+'>'+esc(x.code+r)+'</option>';}).join('');$('annee').disabled=false;
-  SEM=EUC_DEV610_semaines_(a.debut||y+'-09-01',a.fin||(y+1)+'-08-31');IDX=EUC_DEV610_marquerVacances_(SEM,D.vacances);FERIES=Object.assign({},feries(y-1),feries(y),feries(y+1));
+  /* Le planning va au-delà du 31 août quand une formation finit plus tard (Bachelor en septembre…), trois mois au plus. */
+  var finA=a.fin||(y+1)+'-08-31',finMax=EUC_DEV610_plus_(finA,92),finP=finA,pousse=function(d){if(d&&d>finP)finP=d>finMax?finMax:d;};
+  (D.versions||[]).forEach(function(v){(v.periodes||[]).forEach(function(p){pousse(p.fin);});});(D.suite||[]).forEach(function(p){pousse(p.fin);});Object.keys(D.formations||{}).forEach(function(c){pousse(D.formations[c].fin);});
+  SEM=EUC_DEV610_semaines_(a.debut||y+'-09-01',finP);IDX=EUC_DEV610_marquerVacances_(SEM,D.vacances);FERIES=Object.assign({},feries(y-1),feries(y),feries(y+1));
   var prev=D.vacances.some(function(v){return v.previsionnel;});D.previsionnel=prev;afficherAlertes([]);$('changements').hidden=true;
   var trouvees=Object.keys(IDX).length;
   D.listeVacances=D.vacances.slice().sort(function(x,y){return x.debut.localeCompare(y.debut);}).map(function(v){return esc(v.nom)+' '+dfr(v.debut).slice(0,5)+'→'+dfr(v.fin).slice(0,5);}).join(' · ');
@@ -310,11 +329,13 @@ function apresChargement(info){
   if(PREMIER){PREMIER=false;if(VUE==='formations'){rendreFormations();ouvrirPanneau('pFormations');}else if(VUE==='ligne'){rendreCalendrier(LIGNE_DEMANDEE);ouvrirPanneau('pCalendrier');}else if(ONGLET&&$(ONGLET))ouvrirPanneau(ONGLET);}
   else if($('pFormations').classList.contains('actif'))rendreFormations();else if($('pCalendrier').classList.contains('actif'))rendreCalendrier(LIGNE_DEMANDEE);
 }
+/* Pied du planning : coordonnées du bureau formation entreprise (téléphone direct, sans courriel). */
+function majPied(){var p=D.parametres||{},lib=p.PIED_LIBELLE||'Bureau formation entreprise (BFE)';$('piedPlanning').innerHTML=p.PIED_TELEPHONE?'<b>'+esc(lib)+'</b> · Tél. '+esc(p.PIED_TELEPHONE):'<b>'+esc(lib)+'</b><span class="noprint note"> · téléphone à renseigner (onglet « Couleurs et mise en page »)</span>';}
 function majTitreImpression(){var a=D.annee,d=new Date(),h=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  $('titreImpression').innerHTML='<h2>PLANNING PFMP - STAGES - MIXITÉ - ALTERNANCE'+(D.previsionnel?' — PRÉVISIONNEL':'')+'</h2><p><b>Année scolaire '+esc(a.code)+(a.zone?' - Zone '+esc(a.zone):'')+'</b> · généré le '+dfr(d.toISOString().slice(0,10))+' à '+h+(NUM?' · version '+NUM:'')+(D.previsionnel?' · dates de vacances non officielles, susceptibles d’évoluer autour des petites vacances':'')+'</p>';}
+  $('titreImpression').innerHTML='<h2>PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE – FORMATION CONTINUE'+(D.previsionnel?' — PRÉVISIONNEL':'')+'</h2><p><b>Année scolaire '+esc(a.code)+(a.zone?' - Zone '+esc(a.zone):'')+'</b> · généré le '+dfr(d.toISOString().slice(0,10))+' à '+h+(NUM?' · version '+NUM:'')+(D.previsionnel?' · dates de vacances non officielles, susceptibles d’évoluer autour des petites vacances':'')+'</p>';}
 function ouvrirPanneau(id){Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});}
 function lienPlannings(params){return ADMIN+'?page=plannings-pfmp&annee='+encodeURIComponent(D.annee.code)+params;}
-function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Classes entières et formation continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
+function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Formation en alternance et continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
   $('listeFormations').innerHTML=blocs.map(function(b){var ls=D.lignes.filter(function(l){return actifAnnee(l)&&b[1].indexOf(l.calendrier)>=0;}).sort(function(x,y){return x.ordre-y.ordre;});if(!ls.length)return '';
     return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';}
 /* Calendrier d'une formation (mois en colonnes, jours en lignes). Jours au lycée : jours ouvrés hors vacances, fériés et périodes en entreprise.
@@ -437,7 +458,7 @@ function rendreEditeurHeures(l,B){var f=HREG.formateurs,v=function(x){return x==
       HL=null;rendreCalendrier(l.code);message('Heures enregistrées ('+r.jours+' jour(s) modifié(s)).','ok');});};}
 function majHeuresEtat(){if($('hEtat'))$('hEtat').innerHTML=HSALE?'<span class="alerte">Modifications non enregistrées</span>':'';}
 $('calendrier').addEventListener('click',function(ev){var td=ev.target.closest('td[data-date]');if(!td)return;var det=$('heures').querySelector('details');if(det)det.open=true;var tr=$('heures').querySelector('tr[data-date="'+td.dataset.date+'"]');if(tr){tr.scrollIntoView({block:'center'});var i=tr.querySelector('input');if(i)i.focus();}});
-function rendreTout(){ORG=null;VAC=null;rendreAnnees();rendreLogos();rendreOrganisation();rendreGrille();rendrePeriodes();rendreBilan();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
+function rendreTout(){ORG=null;VAC=null;COUL=null;COUL_SALE=false;rendreAnnees();rendreLogos();rendreCouleurs();rendreOrganisation();rendreGrille();rendrePeriodes();rendreBilan();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
 function majBoutons(){var pret=!!D;['generer','imprimer'].forEach(function(id){$(id).disabled=!pret;});
   $('enregistrer').disabled=!pret||!PER.length&&!NUM;$('nouvelle').disabled=!pret||!NUM;$('enregistrerRegles').disabled=!pret;$('enregistrerLignes').disabled=!pret;
   var v=NUM&&D?D.versions.filter(function(x){return x.numero===NUM;})[0]:null;
@@ -464,24 +485,26 @@ function rendreGrille(){
   FE_SEM=fe;
   var corps='',groupe=null;
   lignes.forEach(function(l,li){
-    if(l.groupe!==groupe){groupe=l.groupe;corps+='<tr class="groupe"><td class="lib" colspan="1">'+esc(groupe)+'</td><td class="lib2"></td><td colspan="'+SEM.length+'"></td></tr>';}
+    if(l.groupe!==groupe){groupe=l.groupe;corps+='<tr class="groupe"><td class="lib" colspan="1" title="'+esc(groupe)+'"><b>'+esc(groupe)+'</b></td><td class="lib2"></td><td colspan="'+SEM.length+'"></td></tr>';}
     var occ={},evs={};PER.forEach(function(p){if(p.ligne!==l.code)return;var ev=evenement(p.type);semainesDe(p).forEach(function(si,k){if(ev){var e=evs[si]=evs[si]||[];e.push(p);}else if(!occ[si])occ[si]={p:p};});});
+    /* Après le 31 août : périodes de l'année suivante (Bachelor qui finit en septembre…), en clair, non modifiables ici. */
+    (D.suite||[]).forEach(function(p){if(p.ligne!==l.code||p.debut<=(D.annee.fin||'')||evenement(p.type))return;semainesDe(p).forEach(function(si){if(!occ[si])occ[si]={p:p,suite:true};});});
     /* Libellé seulement au début d'une suite de semaines du même type (ex. ENT. hebdomadaires accolées). */
     Object.keys(occ).forEach(function(si){var o=occ[si],av=occ[Number(si)-1];o.premier=!av||EUC_DEV610_n_(av.p.type)!==EUC_DEV610_n_(o.p.type);});
     corps+='<tr><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
       var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':'')+(!s.vacances&&s.jours.length?' pv':''),st='',txt='';
-      if(o){var c=couleur(o.p.type);st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(o.premier)txt='<span class="et">'+esc(etiq(o.p))+'</span>';if(o.p.origine==='GRILLE'||o.p.origine==='TABLEAU')cls+=' man';}
+      if(o){var c=couleur(o.p.type);st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(o.premier)txt='<span class="et">'+esc(etiq(o.p))+'</span>';if(o.p.origine==='GRILLE'||o.p.origine==='TABLEAU')cls+=' man';if(o.suite)cls+=' suite';}
       if(appels[l.code+'|'+s.i])cls+=' ap';
       var e=evs[s.i]||[],vusEv={};e.forEach(function(p){var x=evenement(p.type);if(vusEv[x])return;vusEv[x]=1;var c=couleur(p.type);txt='<span class="ev" style="background:'+c+';color:'+texteSur(c)+'">'+esc(x)+'</span>'+txt;});
-      var info=[];if(o)info.push(EUC_DEV610_libelleType_(o.p)+' du '+dfr(o.p.debut)+' au '+dfr(o.p.fin)+' · '+(ORIGINES[o.p.origine]||o.p.origine));else if(s.vacances)info.push('Vacances');
+      var info=[];if(o&&o.suite)info.push('Année '+esc((D.annees.filter(function(x){return x.code>D.annee.code;})[0]||{}).code||'suivante'));if(o)info.push(EUC_DEV610_libelleType_(o.p)+' du '+dfr(o.p.debut)+' au '+dfr(o.p.fin)+' · '+(ORIGINES[o.p.origine]||o.p.origine));else if(s.vacances)info.push('Vacances');
       e.forEach(function(p){info.push(p.type+' du '+dfr(p.debut)+' au '+dfr(p.fin));});if(s.jours.length)info.push(s.jours.map(function(j){return j.nb+' j. de '+j.nom;}).join(', '));
       return '<td class="'+cls+'" data-l="'+li+'" data-s="'+s.i+'"'+st+' title="'+esc(info.join(' · '))+'">'+txt+'</td>';}).join('')+'</tr>';
   });
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><i style="background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></i>Appel (règle)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine (cliquer sur le point)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
-  marquerSelection();
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><i style="background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></i>Appel (règle)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();
   var d=document.createElement('div');d.id='infoFerie';d.innerHTML='<b>Jours fériés</b><br>'+FE_SEM[Number(b.dataset.fe)].liste.map(esc).join('<br>');document.body.appendChild(d);var r=b.getBoundingClientRect();d.style.left=Math.min(window.innerWidth-270,r.left)+'px';d.style.top=(r.bottom+6)+'px';});
@@ -738,6 +761,28 @@ $('enregistrerVacances').onclick=function(){var bad=VAC.filter(function(v){retur
 function reduireImage(fichier,ok,ko){var lec=new FileReader();lec.onerror=function(){ko('Lecture du fichier impossible.');};lec.onload=function(){var im=new Image();im.onerror=function(){ko('Ce fichier n’est pas une image lisible.');};im.onload=function(){
   var r=Math.min(1,480/im.width,160/im.height),w=Math.max(1,Math.round(im.width*r)),h=Math.max(1,Math.round(im.height*r)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
   var u=c.toDataURL('image/png');if(u.length>380000){var c2=document.createElement('canvas');c2.width=w;c2.height=h;var x=c2.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);u=c2.toDataURL('image/jpeg',0.85);}ok(u,w,h);};im.src=lec.result;};lec.readAsDataURL(fichier);}
+/* Couleurs proposées : celles du planning PFMP – stages – mixité (vue hebdomadaire), vives et lisibles. */
+var PALETTE=['#00C853','#00C890','#B9F1FE','#FFD54F','#C00000','#FF00CC','#92D050','#07B7F7','#7F00FF','#18C46B','#213FEA','#00FFEF','#F4B183','#FF9800','#FFEB3B','#E91E63'];
+var COUL=null,COUL_SALE=false;
+function typesCouleurs(){var vus={},out=[];function aj(t){var k=EUC_DEV610_cleType_(t);if(!t||vus[k])return;vus[k]=1;out.push(t);}
+  (D.types||[]).forEach(function(t){aj(t.type);});PER.forEach(function(p){aj(p.type);});Object.keys(D.couleurs||{}).forEach(function(k){aj(D.couleurs[k].type);});return out;}
+function rendreCouleurs(){if(!COUL){COUL={};Object.keys(D.couleurs||{}).forEach(function(k){COUL[k]={type:D.couleurs[k].type,couleur:D.couleurs[k].couleur};});}
+  $('tCouleurs').innerHTML=typesCouleurs().map(function(t){var k=EUC_DEV610_cleType_(t),c=(COUL[k]||{}).couleur||'',vue=c||couleur(t);
+    return '<tr data-k="'+esc(k)+'" data-t="'+esc(t)+'"><td><b>'+esc(t)+'</b></td><td><span style="display:inline-block;min-width:70px;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:700;background:'+vue+';color:'+texteSur(vue)+'">'+esc(abrege(t))+'</span></td>'+
+      '<td style="white-space:nowrap"><input type="color" class="cc1" value="'+esc(vue)+'"> <input class="cc2" size="8" maxlength="7" placeholder="'+esc(couleur(t))+'" value="'+esc(c)+'"></td>'+
+      '<td>'+PALETTE.map(function(x){return '<button type="button" class="petit cp" data-c="'+x+'" title="'+x+'" style="background:'+x+';width:20px;height:18px;padding:0;border:1px solid #0003'+(x===c?';outline:2px solid #111':'')+'"></button>';}).join(' ')+'</td>'+
+      '<td><button type="button" class="petit cr"'+(c?'':' disabled')+'>Par défaut</button></td></tr>';}).join('');
+  $('enregistrerCouleurs').disabled=!COUL_SALE;$('couleursEtat').innerHTML=COUL_SALE?'<span class="alerte">Couleurs modifiées, non enregistrées : le planning les montre déjà.</span>':'';
+  Array.prototype.forEach.call($('tCouleurs').querySelectorAll('tr[data-k]'),function(tr){var k=tr.dataset.k,t=tr.dataset.t;
+    function fixer(c){COUL[k]={type:t,couleur:c};COUL_SALE=true;D.couleurs=JSON.parse(JSON.stringify(COUL));rendreCouleurs();rendreGrille();}
+    tr.querySelector('.cc1').onchange=function(){fixer(this.value.toUpperCase());};
+    tr.querySelector('.cc2').onchange=function(){var v=this.value.trim().toUpperCase();if(v&&v[0]!=='#')v='#'+v;if(v&&!/^#[0-9A-F]{6}$/.test(v)){message('Code couleur attendu : # suivi de 6 chiffres ou lettres A à F (ex. #92D050).','erreur');return;}message('');fixer(v);};
+    Array.prototype.forEach.call(tr.querySelectorAll('.cp'),function(b){b.onclick=function(){fixer(b.dataset.c);};});
+    tr.querySelector('.cr').onclick=function(){fixer('');};});
+  var p=D.parametres||{};$('piedLibelle').value=p.PIED_LIBELLE||'Bureau formation entreprise (BFE)';$('piedTelephone').value=p.PIED_TELEPHONE||'';}
+$('enregistrerCouleurs').onclick=function(){var l=Object.keys(COUL||{}).map(function(k){return COUL[k];});
+  occupe(this,'Enregistrement…','EUC_DEV610_enregistrerCouleurs',{couleurs:l},function(r){COUL_SALE=false;rendreCouleurs();message('<span class="ok">Couleurs enregistrées</span> ('+r.creees+' ajoutée(s), '+r.modifiees+' modifiée(s)). Elles seront aussi écrites dans Planning_Periodes à la prochaine publication.');});};
+$('enregistrerPied').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerParametres',{parametres:{PIED_LIBELLE:$('piedLibelle').value,PIED_TELEPHONE:$('piedTelephone').value}},function(r){D.parametres=r.parametres;majPied();message('<span class="ok">Pied de page enregistré.</span>');});};
 function rendreLogos(){var orgs=D.organismesLogos||['Lycée Les Eucalyptus','CFA RAN','CFAI','GRETA','Ducretet'];
   $('tLogos').innerHTML=orgs.map(function(o,i){var x=(D.logos||{})[o];return '<tr data-o="'+esc(o)+'"><td><b>'+esc(o)+'</b></td><td>'+(x?'<img src="'+x.image+'" alt="" style="max-height:56px;max-width:180px">'+(x.defaut?' <span class="note">logo par défaut</span>':''):'<span class="note">aucun</span>')+'</td><td><input type="file" accept="image/png,image/jpeg" class="lf"></td><td>'+(x&&!x.defaut?'<button type="button" class="petit lr" title="Revient au logo par défaut">Retirer</button>':'')+'</td></tr>';}).join('');
   Array.prototype.forEach.call($('tLogos').querySelectorAll('tr[data-o]'),function(tr){var o=tr.dataset.o,inp=tr.querySelector('.lf'),rb=tr.querySelector('.lr');
@@ -768,7 +813,7 @@ $('version').onchange=function(){var n=Number(this.value);if(SALE&&!confirm('Les
 $('annee').onchange=function(){if(SALE&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee.code;return;}APERCU=null;$('resultatPublication').innerHTML='';charger(this.value);};
 $('imprimer').onclick=function(){document.querySelector('[data-p="pGrille"]').click();majTitreImpression();window.print();};
 /* Impression : le planning tient sur une page A3 paysage (réduction calculée). */
-window.addEventListener('beforeprint',function(){var t=document.querySelector('table.g');if(!t)return;majTitreImpression();var l=1530,h=1000,z=Math.min(1,l/t.scrollWidth,h/(t.scrollHeight+60));t.style.zoom=String(Math.floor(z*100)/100);});
+window.addEventListener('beforeprint',function(){var t=document.querySelector('table.g');if(!t)return;majTitreImpression();var l=1527-205,h=1062-130,z=Math.min(1,l/t.scrollWidth,h/t.scrollHeight);t.style.zoom=String(Math.floor(z*100)/100);});
 window.addEventListener('afterprint',function(){var t=document.querySelector('table.g');if(t)t.style.zoom='';});
 try{var mem=JSON.parse(localStorage.getItem('dev610_blocs')||'null');if(mem)Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.dataset.cal in mem)c.checked=!!mem[c.dataset.cal];});}catch(e){}
 Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){c.onchange=function(){var m={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(x){m[x.dataset.cal]=x.checked;});try{localStorage.setItem('dev610_blocs',JSON.stringify(m));}catch(e){}SEL=[];if(D)rendreGrille();};});
@@ -792,7 +837,7 @@ $('publier').onclick=function(){if(!APERCU)return;var d=APERCU.diff;if(!(d.creer
 
 /* ---------- Onglets ---------- */
 Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x===b));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===b.dataset.p);});};});
-window.addEventListener('beforeunload',function(e){if((SALE&&EDIT)||ORG_SALE||HSALE){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',function(e){if((SALE&&EDIT)||ORG_SALE||HSALE||COUL_SALE){e.preventDefault();e.returnValue='';}});
 charger(ANNEE_DEMANDEE);
 })();
 </script>
