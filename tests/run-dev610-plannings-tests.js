@@ -49,6 +49,9 @@ function grist(opts) {
       if (method === 'get') return { records: J(t) };
       /* Comme Grist : toutes les lignes d'une requête portent les mêmes colonnes. */
       if ((method === 'post' || method === 'patch') && new Set(body.records.map(r => Object.keys(r.fields || {}).sort().join('|'))).size > 1) throw new Error('Grist indisponible ou requête refusée (400).');
+      /* Comme Grist : une colonne inconnue d'une table du générateur est refusée (400). */
+      const connues = Object.assign({}, cols[m[1]] || {}); t.forEach(x => Object.keys(x.fields || {}).forEach(f => { connues[f] = 1; }));
+      if ((method === 'post' || method === 'patch') && /^EUC_PLAN_/.test(m[1]) && cols[m[1]]) body.records.forEach(r => Object.keys(r.fields || {}).forEach(f => { if (!(f in connues)) throw new Error('Grist indisponible ou requête refusée (400) : colonne inconnue ' + m[1] + '.' + f); }));
       if (method === 'post') { const ids = body.records.map(r => { const id = 1000 + t.length; t.push({ id, fields: J(r.fields) }); return { id }; }); return { records: ids }; }
       if (method === 'patch') { body.records.forEach(r => Object.assign(t.find(x => x.id === r.id).fields, J(r.fields))); return {}; }
       throw new Error('méthode interdite ' + method);
@@ -57,7 +60,7 @@ function grist(opts) {
   vm.createContext(k); vm.runInContext(sources, k);
   k.EUC_SUIVI2_aujourdhui_ = () => '2026-10-20';
   /* Les cellules RefList arrivent de Grist sous la forme ['L', …] : la lecture doit les comprendre. */
-  return { k, tables, calls, creees, opts, formules };
+  return { k, tables, calls, creees, opts, formules, cols };
 }
 const { k } = grist();
 const lignesDefaut = () => k.EUC_DEV610_LIGNES_DEFAUT_.map((l, i) => ({ code: l[0], libelle: l[1], calendrier: l[2], groupe: l[3], profil: l[4], classePfmp: l[5], ordre: i, formation: l[7], niveau: l[8], actif: true }));
@@ -676,6 +679,22 @@ test('organisation : une ligne masquée à l’ancien calendrier (TPEEB) ne bloq
   const t = g.tables.EUC_PLAN_LIGNES.find(x => x.fields.Libelle === 'TPEEB' && x.fields.Actif === false); assert.ok(t && t.fields.Calendrier === undefined, 'calendrier ancien jamais réécrit');
   assert.throws(() => g.k.EUC_DEV610_enregistrerOrganisation({ lignes: J(r.lignes).map(l => l.code === 'TSEC' ? Object.assign(l, { calendrier: 'FC' }) : l) }), /calendrier/, 'une ligne affichée reste contrôlée');
   assert.ok(read('apps-script/Plannings_DEV610.html').includes("{lignes:ORG.filter(function(l){return (D.retirees||[]).indexOf(l.code)<0;})}"));
+});
+
+test('organisation : enregistrée même si les nouvelles colonnes manquent encore dans Grist (contrôle des tables déjà fait dans les 6 h)', () => {
+  const g = grist(); const r = g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  /* Table créée par une version précédente : sans Annee_debut, Annee_fin ni Sections ; contrôle des tables en cache. */
+  g.tables.EUC_PLAN_LIGNES.forEach(x => { delete x.fields.Annee_debut; delete x.fields.Annee_fin; delete x.fields.Sections; });
+  ['Annee_debut', 'Annee_fin', 'Sections'].forEach(c => { delete g.cols.EUC_PLAN_LIGNES[c]; });
+  const avant = J(Object.keys(g.k.EUC_DEV610_defLignes_().reduce((o, c) => (o[c.id] = 1, o), {})));
+  assert.ok(avant.includes('Annee_debut') && avant.includes('Etablissement') && avant.includes('Version_modele'), 'définition complète de la table');
+  g.k.CacheService.getScriptCache().put('EUC_DEV610_TABLES9', '1');
+  const calls = g.calls.length;
+  const org = J(r.lignes).map(l => l.code === 'TSEC' ? Object.assign(l, { anneeDebut: '2027-2028' }) : l);
+  const res = g.k.EUC_DEV610_enregistrerOrganisation({ lignes: org }); assert.ok(res.ok);
+  assert.strictEqual(g.tables.EUC_PLAN_LIGNES.find(x => x.fields.Code === 'TSEC').fields.Annee_debut, '2027-2028');
+  assert.ok(g.calls.slice(calls).some(c => c.p === '/tables/EUC_PLAN_LIGNES/columns' && c.method === 'get'), 'colonnes vérifiées avant l’écriture');
+  assert.deepStrictEqual(J(g.calls.slice(calls).filter(c => c.p === '/tables/EUC_PLAN_LIGNES/columns' && c.method === 'post').map(c => c.body.columns.map(x => x.id))), [['Annee_debut', 'Annee_fin', 'Sections']], 'colonnes manquantes créées avant l’écriture');
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

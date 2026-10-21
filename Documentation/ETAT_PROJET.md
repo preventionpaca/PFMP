@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : « Grist indisponible ou requête refusée » à l'enregistrement de l'organisation
+
+- Cause : les colonnes `Annee_debut`, `Annee_fin` et `Sections` (@1114) ne sont
+  ajoutées à `EUC_PLAN_LIGNES` qu'au contrôle des tables, mis en cache 6 h ; le
+  cache posé depuis @1111 l'a empêché, et l'écriture visait des colonnes
+  inconnues de Grist (400).
+- Corrigé : `EUC_DEV610_colonnesLignes_` crée toute colonne manquante d'après la
+  définition complète de la table (`EUC_DEV610_defLignes_`, plus de liste à part),
+  au chargement et avant chaque enregistrement de l'organisation ; clé de cache
+  portée à `EUC_DEV610_TABLES9`. Le Grist simulé des tests refuse désormais une
+  colonne inconnue d'une table du générateur ; test de non-régression qui échoue
+  sans la correction. Suite complète verte.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : enregistrement de l'organisation bloqué par TPEEB
 
 - Constat utilisateur : « Enregistrer l'organisation » refusé (« Ligne TPEEB :
