@@ -32,14 +32,14 @@ button.petit{padding:2px 7px;font-size:12px}
 .grille{overflow:auto;max-width:100%;border:1px solid var(--bord);border-radius:10px;background:#fff;max-height:75vh}
 table.g{border-collapse:separate;border-spacing:0;font-size:11px;user-select:none;table-layout:fixed}
 table.g th,table.g td{border-right:1px solid #e3eee9;border-bottom:1px solid #e3eee9;padding:0;text-align:center;height:22px}
-table.g thead th{position:sticky;background:#f4f8f6;z-index:5;font-weight:700;color:#334;overflow:hidden}
+table.g thead th{position:sticky;background:#f4f8f6;z-index:9;font-weight:700;color:#334;overflow:hidden}
 table.g thead tr:nth-child(1) th{top:0}table.g thead tr:nth-child(2) th{top:22px}table.g thead tr:nth-child(3) th{top:44px}table.g thead tr:nth-child(4) th{top:66px}
 table.g th .pf{color:#e11d48;font-size:13px;line-height:8px;cursor:pointer;margin-left:1px}#infoFerie{position:fixed;z-index:50;background:#fff;border:1px solid #e11d48;border-radius:8px;padding:6px 10px;box-shadow:0 4px 14px #0003;font-size:12px;max-width:260px}
 table.g td.c .ev{position:relative;z-index:2;float:right;font-size:9px;font-weight:800;background:#fff;color:#111;border-radius:3px;padding:0 2px;margin:3px 1px 0 0;line-height:12px;pointer-events:none}
 .blocs{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:4px 0 6px}.blocs label{font-weight:700}
-table.g .lib{position:sticky;left:0;background:#fff;z-index:3;text-align:left;padding:0 8px;min-width:190px;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
-table.g thead .lib{z-index:6;background:#f4f8f6}
-table.g .lib{min-width:150px;max-width:150px}table.g .lib2{position:sticky;left:150px;background:#fff;z-index:3;text-align:left;padding:0 4px;font-size:10px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid #cfe3da}table.g thead .lib2{z-index:6;background:#f4f8f6}table.g tr.groupe td.lib2{background:#e8f3ee}
+table.g .lib{position:sticky;left:0;background:#fff;z-index:6;text-align:left;padding:0 8px;min-width:190px;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+table.g thead .lib{z-index:10;background:#f4f8f6}
+table.g .lib{min-width:150px;max-width:150px}table.g .lib2{position:sticky;left:150px;background:#fff;z-index:6;text-align:left;padding:0 4px;font-size:10px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid #cfe3da}table.g thead .lib2{z-index:10;background:#f4f8f6}table.g tr.groupe td.lib2{background:#e8f3ee}
 table.g tr.groupe td{background:#e8f3ee;font-weight:800;text-align:left;padding:2px 8px;font-size:12px;position:sticky;left:0}
 table.g td.c{cursor:crosshair;overflow:visible;white-space:nowrap;font-weight:700;font-size:10px;text-align:left;position:relative}
 table.g td.c .et.bande{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;z-index:2}table.g td.c.run{border-right-color:transparent}/* Repères de comptage : un point à chaque angle bas de semaine, aux deux bouts compris (4 semaines = 5 points, 4 intervalles). */
@@ -58,7 +58,7 @@ table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var
 table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
 table.t tr.teteLigne td{background:#eef6f2;border-top:2px solid var(--bord);padding-top:8px}table.t tr.copie td{background:#fbfdfc}
 table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120px}
-table.g td.c.suite{opacity:.55}table.g tr.groupe td.lib{overflow:visible;z-index:4;text-overflow:clip}table.g tr.groupe td.lib b{position:relative;white-space:nowrap}
+table.g td.c.suite{opacity:.55}table.g th.pontH{box-shadow:inset 0 2px 0 #e11d48,inset 2px 0 0 #e11d48,inset -2px 0 0 #e11d48}table.g th.pontB{box-shadow:inset 0 -2px 0 #e11d48,inset 2px 0 0 #e11d48,inset -2px 0 0 #e11d48}table.g th.pontH,table.g th.pontB{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.g tr.groupe td.lib{overflow:visible;z-index:7;text-overflow:clip}table.g tr.groupe td.lib b{position:relative;white-space:nowrap}
 .misePage{display:flex;flex-direction:column}.misePage .legende{order:-1}.pied{font-size:12px;color:#334155;margin:6px 0 0}.pied b{color:#0b4f40}
 .legende{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:6px 0}.legende span{display:inline-flex;align-items:center;gap:4px}.legende i{display:inline-block;width:14px;height:12px;border-radius:2px;border:1px solid #0002}
 .puces{display:flex;gap:4px;flex-wrap:wrap}.puce{background:#eef6f2;border:1px solid var(--bord);border-radius:999px;padding:1px 4px 1px 8px;font-size:12px}
@@ -124,7 +124,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 
   <section id="pGrille" class="panneau actif">
     <div class="titreImpression" id="titreImpression"></div>
-    <p class="note noprint">Glissez sur les cases pour sélectionner des semaines (sur une ou plusieurs lignes ; Ctrl ou ⌘ pour ajouter une autre zone), puis choisissez le type et « Placer ». Une période placée ou retouchée à la main (trait noir) n’est jamais déplacée par « Générer depuis les règles ». Coin violet <b style="display:inline-block;width:12px;height:12px;vertical-align:-1px;background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></b> : appel la première semaine de chaque période en entreprise.</p>
+    <p class="note noprint">Glissez sur les cases pour sélectionner des semaines (sur une ou plusieurs lignes ; Ctrl ou ⌘ pour ajouter une autre zone), puis choisissez le type et « Placer ». Une période placée ou retouchée à la main (trait noir) n’est jamais déplacée par « Générer depuis les règles ». « A » violet dans l’angle : appel la première semaine de chaque période en entreprise. Pont (ex. de l’Ascension) : dates du lundi et du vendredi encadrées de rouge.</p>
     <div class="blocs noprint" id="blocs"><span class="note">Afficher :</span>
       <label><input type="checkbox" data-cal="SCOLAIRE" checked> Scolaire</label>
       <label><input type="checkbox" data-cal="MIXITE" checked> Mixité</label>
@@ -485,8 +485,11 @@ function rendreGrille(){
   var titreFe=function(i){return fe[i].liste.length?' title="'+esc(fe[i].liste.join(' · '))+'"':'';};
   /* Jour férié : point rouge dans les cases Du et Au ; un clic sur le point liste les jours de la semaine. */
   var point=function(i){return fe[i].liste.length?'<span class="pf" data-fe="'+i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'';};
-  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.lundi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
-  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.vendredi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
+  /* Pont (jours de vacances dans une semaine de cours, ex. pont de l'Ascension) : cadre rouge autour des dates du lundi et du vendredi. */
+  var pont=function(s){var js=s.vacances?[]:s.jours.filter(function(j){return /ASCENSION|PONT/.test(EUC_DEV610_n_(j.nom));});return js.map(function(j){return 'Pont de l’Ascension ('+j.nb+' j.)';}).join(' · ');};
+  var titrePont=function(s,i){var p=pont(s),f=fe[i].liste.join(' · ');return p||f?' title="'+esc([p,f].filter(Boolean).join(' · '))+'"':'';};
+  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
+  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
   FE_SEM=fe;
   var corps='',groupe=null;
   lignes.forEach(function(l,li){
@@ -498,7 +501,7 @@ function rendreGrille(){
      * (CAP peintre en entreprise du mercredi au vendredi) n'est colorée que sur ces jours. Les semaines entières
      * accolées du même type forment une bande : un seul libellé centré, un point par semaine sur le bord du bas. */
     var memes=function(o){return PER.concat(D.suite||[]).filter(function(p){return p.ligne===l.code&&!evenement(p.type)&&EUC_DEV610_cleType_(p.type)===EUC_DEV610_cleType_(o.p.type)&&(p.complement||'')===(o.p.complement||'');});};
-    Object.keys(occ).forEach(function(si){var o=occ[si],s=SEM[Number(si)],ps=memes(o),m=[];for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);m.push(ps.some(function(p){return p.debut<=j&&p.fin>=j;})?1:(FERIES[j]?2:0));}
+    Object.keys(occ).forEach(function(si){var o=occ[si],s=SEM[Number(si)],ps=memes(o),m=[];for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);m.push(ps.some(function(p){return p.debut<=j&&p.fin>=j;})?1:(FERIES[j]||(D.vacances||[]).some(function(v){return v.debut<=j&&v.fin>=j;})?2:0));}
       o.masque=m;o.entiere=m.indexOf(0)<0;o.cle=EUC_DEV610_cleType_(o.p.type)+'|'+(o.p.complement||'')+'|'+(o.suite?1:0);});
     Object.keys(occ).map(Number).sort(function(a,b){return a-b;}).forEach(function(si){var o=occ[si],av=occ[si-1];o.suiteBande=!!(av&&av.entiere&&o.entiere&&av.cle===o.cle);});
     Object.keys(occ).map(Number).sort(function(a,b){return b-a;}).forEach(function(si){var o=occ[si],ap=occ[si+1];o.n=o.entiere?(ap&&ap.suiteBande?ap.n+1:1):1;});
@@ -517,7 +520,7 @@ function rendreGrille(){
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #e11d48"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();

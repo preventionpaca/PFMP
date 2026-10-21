@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension encadré, bandes continues sur le pont
+
+- Pont de l'Ascension : dates du lundi et du vendredi de la semaine encadrées de
+  rouge dans l'en-tête, infobulle « Pont de l'Ascension (n j.) » ; légende
+  « Pont (dates encadrées) ». Les fins et débuts de vacances ne sont pas encadrés.
+- Une période qui traverse un pont ou des jours de vacances reste une bande
+  continue (jours de vacances neutres dans le calcul des jours couverts) : fin du
+  « Stage » coupé en « ge » des BTS.
+- Écran : les colonnes Ligne / Établissement restent au premier plan quand on
+  fait défiler la grille (les « A » et points ne passent plus dessus).
+- Suite complète verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : carrés noirs du PDF, repères de comptage, appel en « A »
 
 - Carrés noirs au PDF seulement (semaines partielles du CAP peintre, du Bachelor,
