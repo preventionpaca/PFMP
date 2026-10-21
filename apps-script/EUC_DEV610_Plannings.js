@@ -528,7 +528,7 @@ function EUC_DEV610_charger(q) {
   var parPfmp = {}; lignes.forEach(function(l) { if (l.classePfmp) parPfmp[EUC_DEV610_n_(l.classePfmp)] = 1; });
   var nouvelles = classes.filter(function(c) { return c.actif && !prises[c.id] && !/^TEST/.test(EUC_DEV610_n_(c.nom)) && !parPfmp[EUC_DEV610_n_(c.classePfmp || c.nom)]; })
     .map(function(c) { return { classe: { id: c.id, nom: c.nom, classePfmp: c.classePfmp, etab: c.etab, modalite: c.modalite }, proposition: EUC_DEV610_ligneProposee_(c, lignes) }; });
-  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), diplomes: EUC_DEV610_diplomes_(rattachements), suite: EUC_DEV610_suite_(annee, annees), logos: EUC_DEV610_logos_(), organismesLogos: EUC_DEV610_ORGANISMES_LOGOS_, toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
+  return { annees: annees, annee: annee, courante: courante, vacances: EUC_DEV610_vacances_(annee.code, annees), jours: EUC_DEV610_jours_(annee.code), heures: EUC_DEV610_heures_(annee.code), formations: EUC_DEV610_formations_(annee.code), diplomes: EUC_DEV610_diplomes_(rattachements), organismesLignes: EUC_DEV610_organismesLignes_(lignes, rattachements, classes), suite: EUC_DEV610_suite_(annee, annees), logos: EUC_DEV610_logos_(), organismesLogos: EUC_DEV610_ORGANISMES_LOGOS_, toutesVacances: EUC_DEV610_toutesVacances_(annees), nomsVacances: EUC_DEV610_NOMS_VACANCES_, lignes: lignes, classes: classes, rattachements: rattachements, proposes: proposes, rattachementsEnregistres: Object.keys(ratt.classes), regles: regles, origineRegles: origineRegles, types: EUC_DEV610_types_(), versions: versions, publiees: existantes.length, nouvellesClasses: nouvelles, calendriers: EUC_DEV610_CALENDRIERS_, organismes: EUC_DEV610_ORGANISMES_, avertissements: EUC_DEV610_AVERT_.slice() };
 }
 
 /* Enregistre les règles d'une année : mise à jour, création, retrait (Actif = false). */
@@ -989,4 +989,25 @@ function EUC_DEV610_enregistrerLogo(q) {
   if (ex) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: ex.id, fields: champs }]);
   else { var tous = EUC_DEV610_lire_(EUC_DEV610_T_.logos).filter(function(r) { return EUC_DEV610_t_((r.fields || {}).Organisme) === o; })[0]; if (tous) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.logos, [{ id: tous.id, fields: champs }]); else EUC_DEV610_ecrire_('post', EUC_DEV610_T_.logos, [{ fields: champs }]); }
   return { ok: true, organisme: o, image: img };
+}
+
+/* Organismes d'une ligne pour les logos, d'après la table Classes (Organisme_gestionnaire = porteur, puis
+ * Organisme_donneur_ordre) des classes rattachées (calcul pur). Mixité sans classe propre : les classes « Mixité » du
+ * même groupe (pour une mixité nommée « Mixité CPI », celles dont la classe PFMP contient CPI). */
+function EUC_DEV610_organismesLigne_(l, lignes, rattachements, classesParId) {
+  var ids = (rattachements[l.code] || []).slice();
+  if (!ids.length && l.calendrier === 'MIXITE') {
+    var suffixe = EUC_DEV610_n_(String(l.libelle || '').replace(/^Mixit[ée]\s*/i, ''));
+    (lignes || []).forEach(function(x) { if (x.groupe !== l.groupe || x.calendrier !== 'SCOLAIRE') return; if (suffixe && EUC_DEV610_n_(x.classePfmp).indexOf(suffixe) < 0) return;
+      (rattachements[x.code] || []).forEach(function(id) { var c = classesParId[id]; if (c && /MIXITE/.test(EUC_DEV610_n_(c.modalite))) ids.push(id); }); });
+  }
+  var out = [], ajouter = function(v) { var t = EUC_DEV610_t_(v); if (!t) return; var k = EUC_DEV610_ORGANISMES_LOGOS_.filter(function(o) { return EUC_DEV610_n_(o) === EUC_DEV610_n_(t); })[0] || t; if (out.indexOf(k) < 0) out.push(k); };
+  ids.forEach(function(id) { var c = classesParId[id]; if (c) ajouter(c.gestionnaire); });
+  ids.forEach(function(id) { var c = classesParId[id]; if (c) ajouter(c.donneur); });
+  return out;
+}
+function EUC_DEV610_organismesLignes_(lignes, rattachements, classes) {
+  var cpi = {}, out = {}; (classes || []).forEach(function(c) { cpi[c.id] = c; });
+  (lignes || []).forEach(function(l) { var o = EUC_DEV610_organismesLigne_(l, lignes, rattachements, cpi); if (o.length) out[l.code] = o; });
+  return out;
 }

@@ -418,8 +418,14 @@ test('calendrier d’une formation : intitulé du diplôme, périodes après l�
   g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: 'data:image/png;base64,iVBORw0KGgoAAAA=' });
   assert.strictEqual(g.tables.EUC_PLAN_LOGOS.length, 1); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI.image, 'data:image/png;base64,iVBORw0KGgoAAAA=');
   g.k.EUC_DEV610_enregistrerLogo({ organisme: 'CFAI', image: '' }); assert.strictEqual(g.k.EUC_DEV610_logos_().CFAI, undefined);
-  const h = read('apps-script/Plannings_DEV610.html'), c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\n' + h.match(/function logosFormation\(l\)\{[\s\S]*?droite:'Lycée Les Eucalyptus'\};\}/)[0], c);
+  /* Placement d'après la table Classes : gestionnaire puis donneur d'ordre ; mixité d'après les classes « Mixité » du groupe. */
+  const cl = { 1: { id: 1, nom: '1BTS CPI', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFAI' }, 2: { id: 2, nom: '1BTS MV', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFA RAN' }, 3: { id: 3, nom: 'CQPM ASC', modalite: 'Classe entière', gestionnaire: 'GRETA', donneur: 'CFAI' }, 4: { id: 4, nom: 'TPEEB 19', gestionnaire: 'GRETA', donneur: 'GRETA' } };
+  const ls = lignesDefaut(), ra = { '1BTS_CPI': [1], '1BTS_MV': [2], CQPM_ASC: [3], TPEEB_19: [4] }, O = code => J(k.EUC_DEV610_organismesLigne_(ls.find(x => x.code === code), ls, ra, cl));
+  assert.deepStrictEqual([O('CQPM_ASC'), O('TPEEB_19'), O('MIX_1BTS_CPI'), O('MIX_1BTS_MV'), O('MIX_1BTS_CPRP'), O('TBP_MVA')], [['GRETA', 'CFAI'], ['GRETA'], ['CFA RAN', 'CFAI'], ['CFA RAN'], [], []]);
+  const h = read('apps-script/Plannings_DEV610.html'), c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\nvar D=null;\n' + h.match(/function logosFormation\(l\)\{[\s\S]*?droite:'Lycée Les Eucalyptus'\};\}/)[0], c);
   const L = o => J(c.logosFormation({ organismes: o }));
+  c.D = { organismesLignes: { X: ['GRETA', 'CFAI'] } }; assert.deepStrictEqual(J(c.logosFormation({ code: 'X', organismes: ['CFA RAN'] })), { gauche: ['GRETA', 'CFAI'], droite: 'Lycée Les Eucalyptus' }, 'la table Classes prime');
+  c.D = null;
   assert.deepStrictEqual([L(['CFA RAN', 'Ducretet']), L(['GRETA', 'CFAI']), L(['CFAI']), L(['GRETA']), L([])], [
     { gauche: ['CFA RAN', 'Ducretet'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['GRETA', 'CFAI'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['CFAI'], droite: 'Lycée Les Eucalyptus' }, { gauche: ['GRETA'], droite: 'Lycée Les Eucalyptus' }, { gauche: [], droite: 'Lycée Les Eucalyptus' }]);
   for (const t of ['data-p="pLogos"', 'function reduireImage(', '480/im.width,160/im.height', "'EUC_DEV610_enregistrerLogo'", 'id="fIntitule"', "concat((D.suite||[])", 'feries(y-1),feries(y),feries(y+1)']) assert.ok(h.includes(t), t);

@@ -192,7 +192,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   </section>
 
   <section id="pLogos" class="panneau">
-    <p class="note">Logos des calendriers de formation. Déposez n’importe quelle image PNG ou JPEG (fond transparent de préférence) : elle est réduite automatiquement à 480 × 160 pixels au plus avant l’envoi. À gauche du calendrier : le porteur (GRETA, sinon CFA RAN) puis les organismes associés (CFAI, Ducretet) ; à droite, toujours le lycée.</p>
+    <p class="note">Logos des calendriers de formation. Déposez n’importe quelle image PNG ou JPEG (fond transparent de préférence) : elle est réduite automatiquement à 480 × 160 pixels au plus avant l’envoi. Placement d’après la table Classes : à gauche l’organisme gestionnaire, puis à sa droite l’organisme donneur d’ordre ; à droite de la page, toujours le lycée.</p>
     <table class="t"><thead><tr><th>Organisme</th><th>Logo actuel</th><th>Remplacer</th><th></th></tr></thead><tbody id="tLogos"></tbody></table>
   </section>
 
@@ -335,7 +335,11 @@ function natureJour(e){if(e.c==='fe')return 'fe';if(e.c==='we')return 'we';var x
   if(x==='E')return 'ex';if(x==='C')return 'cs';if(x==='A')return 'ap';if(x==='V')return 'vi';if(e.c==='va')return 'va';if(e.comp)return 'comp';if(e.lycee)return 'ufa';if(e.entreprise)return 'ent';return 'blanc';}
 function formationDe(code){return (D.formations||{})[code]||{};}
 /* Logos : à gauche le porteur (GRETA, sinon CFA RAN) puis les organismes associés (CFAI, Ducretet) ; à droite, toujours le lycée. */
-function logosFormation(l){var o=(l.organismes||[]).slice(),n=o.map(EUC_DEV610_n_),porteur=n.indexOf('GRETA')>=0?'GRETA':n.indexOf('CFARAN')>=0?'CFA RAN':'';
+function logosFormation(l){var t=(typeof D!=='undefined'&&D&&D.organismesLignes||{})[l.code];
+  /* D'après la table Classes : organisme gestionnaire (porteur) puis donneur d'ordre ; le lycée est toujours à droite. */
+  if(t&&t.length)return {gauche:t.filter(function(x){return EUC_DEV610_n_(x)!==EUC_DEV610_n_('Lycée Les Eucalyptus');}),droite:'Lycée Les Eucalyptus'};
+  /* Sans classe rattachée : organismes saisis sur la ligne, porteur d'abord (GRETA, sinon CFA RAN). */
+  var o=(l.organismes||[]).slice(),n=o.map(EUC_DEV610_n_),porteur=n.indexOf('GRETA')>=0?'GRETA':n.indexOf('CFARAN')>=0?'CFA RAN':'';
   var autres=o.filter(function(x){return x!==porteur;});return {gauche:(porteur?[porteur]:[]).concat(autres),droite:'Lycée Les Eucalyptus'};}
 function titresDefautA32(l){return {titre:l.formation||l.groupe||etiquette(l),sousTitre:l.niveau||etiquette(l)};}
 function titresDefaut(l){var c=l.calendrier,greta=estGreta(l),nat=c==='MIXITE'?'Mixité — scolaires et apprentis':c==='SCOLAIRE'?'Formation scolaire':greta?'Formation continue':'Formation en alternance';
