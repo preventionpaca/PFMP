@@ -121,6 +121,17 @@
   séparées (anciennes périodes communes dupliquées à la reprise, copiées au
   calibrage) ; ligne TPEEB unique retirée ; formations GRETA dans « Formation
   continue et alternance » avec un filtre « Formations GRETA ».
+- Calendrier d'une formation : dates de début et de fin par formation et par
+  année (`EUC_PLAN_FORMATIONS`), jours hors formation grisés sauf période
+  saisie, vacances toujours visibles, événements (visite, appel, conseil…) aux
+  couleurs de `Types_Planning`, colonne H par mois et total annuel en bas à
+  droite, titre et sous-titre modifiables (« Formation Bachelor IP »,
+  « Formation en alternance · LGT · CFAI »), mois étendus jusqu'à la fin de la
+  formation, quota Bachelor 455 h. Planning général : jour férié signalé par un
+  point rouge dans Du / Au (liste au clic), plus aucune allusion dans les cases.
+  Onglet « Années et vacances » : création des années futures, vacances
+  officielles ou prévisionnelles saisies dans la page (proposition d'après
+  l'année précédente), retrait sans suppression.
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :

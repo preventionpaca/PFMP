@@ -33,7 +33,7 @@ table.g{border-collapse:separate;border-spacing:0;font-size:11px;user-select:non
 table.g th,table.g td{border-right:1px solid #e3eee9;border-bottom:1px solid #e3eee9;padding:0;text-align:center;height:22px}
 table.g thead th{position:sticky;background:#f4f8f6;z-index:5;font-weight:700;color:#334;overflow:hidden}
 table.g thead tr:nth-child(1) th{top:0}table.g thead tr:nth-child(2) th{top:22px}table.g thead tr:nth-child(3) th{top:44px}table.g thead tr:nth-child(4) th{top:66px}
-table.g th.fe{background:#e11d48;color:#fff}table.g td.fe{box-shadow:inset 0 2px 0 #e11d48}
+table.g th .pf{color:#e11d48;font-size:13px;line-height:8px;cursor:pointer;margin-left:1px}#infoFerie{position:fixed;z-index:50;background:#fff;border:1px solid #e11d48;border-radius:8px;padding:6px 10px;box-shadow:0 4px 14px #0003;font-size:12px;max-width:260px}
 table.g td.c .ev{position:relative;z-index:2;float:right;font-size:9px;font-weight:800;background:#fff;color:#111;border-radius:3px;padding:0 2px;margin:3px 1px 0 0;line-height:12px;pointer-events:none}
 .blocs{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:4px 0 6px}.blocs label{font-weight:700}
 table.g .lib{position:sticky;left:0;background:#fff;z-index:3;text-align:left;padding:0 8px;min-width:190px;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
@@ -59,7 +59,7 @@ table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120
 .changements li{margin:2px 0}
 table.cal{border-collapse:collapse;font-size:11px;background:#fff;width:100%;table-layout:fixed}table.cal th,table.cal td{border:1px solid #d6e2dc;padding:1px 2px;text-align:center;height:17px;overflow:hidden;white-space:nowrap}
 table.cal th{background:#1b396a;color:#fff;font-size:11px}table.cal td.j{color:#555;width:16px}table.cal td.we{background:#d9d9d9;color:#777}table.cal td.fe{background:#e11d48;color:#fff}table.cal td.va{background:#555;color:#ddd}
-table.cal tr.tot td{background:#f4f8f6;font-weight:700}table.cal td.hj{cursor:pointer}table.cal td .ini{font-size:9px}table.cal td small{font-size:9px}.chip.comp{background:#F4B183;color:#000;border-radius:4px;padding:0 4px}table.heures input{width:70px}table.heures input.hf{width:80px;text-transform:uppercase}.defile{max-height:60vh;overflow:auto}table.recap td,table.recap th{text-align:right}table.recap td:first-child,table.recap th:first-child{text-align:left}table.cal td .ev{font-size:9px;font-weight:800;background:#fff;color:#111;border-radius:3px;padding:0 2px;margin-left:2px}
+table.cal tr.tot td{background:#f4f8f6;font-weight:700}table.cal td.hors{background:repeating-linear-gradient(45deg,#e5e7eb 0 4px,#f3f4f6 4px 8px);color:#9ca3af}table.cal td.h{width:24px;font-weight:700;color:#0b4f40;background:#f8fbfa}table.cal tr.annuel td{background:#1b396a;color:#fff;font-weight:800;text-align:right;font-size:13px;padding:4px 8px}table.cal td.hj{cursor:pointer}table.cal td .ini{font-size:11px;font-weight:800}table.cal td small{font-size:9px}.chip.comp{background:#F4B183;color:#000;border-radius:4px;padding:0 4px}table.heures input{width:70px}table.heures input.hf{width:80px;text-transform:uppercase}.defile{max-height:60vh;overflow:auto}table.recap td,table.recap th{text-align:right}table.recap td:first-child,table.recap th:first-child{text-align:left}table.cal td .ev{font-size:9px;font-weight:800;background:#fff;color:#111;border-radius:3px;padding:0 2px;margin-left:2px}
 .formations{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.formations a{display:block;background:#fff;border:1px solid var(--bord);border-radius:8px;padding:6px 10px;color:var(--texte);text-decoration:none;font-weight:700}.formations a small{display:block;font-weight:400;color:var(--gris)}
 table.org td{padding:3px 4px}table.org input,table.org select{font-size:12px;max-width:100%}table.org input.lib{width:220px}table.org input.mid{width:120px}
 table.org tr.ln{cursor:grab}table.org tr.ln.glisse{opacity:.4}table.org tr.ln.cible td{box-shadow:inset 0 3px 0 #2563eb}
@@ -95,6 +95,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <button type="button" role="tab" data-p="pRegles" aria-selected="false">Règles et durées</button>
     <button type="button" role="tab" data-p="pOrganisation" aria-selected="false">Organisation du tableau</button>
     <button type="button" role="tab" data-p="pLignes" aria-selected="false">Lignes et classes</button>
+    <button type="button" role="tab" data-p="pAnnees" aria-selected="false">Années et vacances</button>
     <button type="button" role="tab" data-p="pJours" aria-selected="false">Jours particuliers</button>
     <button type="button" role="tab" data-p="pPublication" aria-selected="false">Publication</button>
   </div>
@@ -140,6 +141,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 
   <section id="pCalendrier" class="panneau">
     <div class="barre noprint"><a class="bouton" id="retourFormations" href="#" target="_top">← Plannings par formation</a><span style="flex:1"></span><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
+    <div class="cadre noprint barre" id="reglageFormation"><label>Début de la formation <input type="date" id="fDebut"></label><label>Fin <input type="date" id="fFin"></label><label style="flex:1">Titre <input id="fTitre" style="width:100%"></label><label style="flex:2">Sous-titre <input id="fSousTitre" style="width:100%"></label><button type="button" class="plein" id="fEnregistrer">Enregistrer</button></div>
     <div id="titreCalendrier" class="titreImpression" style="display:block"></div>
     <div id="calendrier"></div>
     <div class="legende" id="legendeCalendrier"></div>
@@ -166,6 +168,16 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
       <div class="barre"><label><input type="checkbox" id="uniformiser" checked> Uniformiser les libellés de type (ex. « Visite » → « VISITE »)</label><span style="flex:1"></span><button type="button" id="calibrerApercu">Aperçu du calibrage</button><button type="button" class="plein" id="calibrer" disabled>Appliquer le calibrage</button></div>
       <div id="resultatCalibrage"></div>
     </div>
+  </section>
+
+  <section id="pAnnees" class="panneau">
+    <p class="note">Années scolaires et dates de vacances, saisies ici (Grist ne sert que de stockage). Une vacance « prévisionnelle » rend le planning de l’année prévisionnel : il s’imprime pour les entreprises mais ne se publie pas. Quand les dates officielles paraissent, corrigez-les ici, décochez « prévisionnelle », puis « Générer depuis les règles » recale les périodes.</p>
+    <h3>Années scolaires</h3>
+    <table class="t"><thead><tr><th>Année</th><th>Début</th><th>Fin</th><th>Zone</th><th>Statut</th><th></th></tr></thead><tbody id="tAnnees"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterAnnee">Créer l’année suivante</button></div>
+    <h3 id="titreVacances">Vacances</h3>
+    <table class="t"><thead><tr><th>Vacances</th><th>Du</th><th>Au</th><th>Prévisionnelle</th><th>Commentaire</th><th></th></tr></thead><tbody id="tVacances"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterVacance">Ajouter des vacances</button><button type="button" id="proposerVacances" title="Reprend les vacances de l’année précédente décalées de 52 semaines, marquées prévisionnelles">Proposer d’après l’année précédente</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerVacances">Enregistrer les vacances</button></div>
   </section>
 
   <section id="pJours" class="panneau">
@@ -199,7 +211,7 @@ var LIB_EV={V:'Visite',A:'Appel',E:'Examens',C:'Conseil','✓':'VFMP (point par 
 function paques(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),j=((h+l-7*m+114)%31)+1;return y+'-'+String(mo).padStart(2,'0')+'-'+String(j).padStart(2,'0');}
 function feries(y1){var y2=y1+1,p=paques(y2),out={};[[y1+'-11-01','Toussaint'],[y1+'-11-11','Armistice'],[y1+'-12-25','Noël'],[y2+'-01-01','Jour de l’an'],[EUC_DEV610_plus_(p,1),'Lundi de Pâques'],[y2+'-05-01','Fête du Travail'],[y2+'-05-08','Victoire 1945'],[EUC_DEV610_plus_(p,39),'Ascension'],[EUC_DEV610_plus_(p,50),'Lundi de Pentecôte'],[y2+'-07-14','Fête nationale'],[y2+'-08-15','Assomption']].forEach(function(x){out[x[0]]=x[1];});return out;}
 function jourLong(iso){var d=new Date(iso+'T12:00:00Z'),j=d.getUTCDate();return JOURS[d.getUTCDay()]+' '+(j===1?'1er':j)+' '+MOISL[d.getUTCMonth()];}
-var FERIES={};
+var FERIES={},FE_SEM=[];
 function feriesSemaine(s){var out=[];for(var k=0;k<7;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&k<5)out.push(jourLong(j)+' — '+FERIES[j]);}(D.jours||[]).forEach(function(x){if(x.date>=s.lundi&&x.date<=EUC_DEV610_plus_(s.lundi,6))out.push(jourLong(x.date)+' — '+(x.libelle||x.nature));});return out;}
 function joursFermes(s){var n=0;for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]||(D.jours||[]).some(function(x){return x.date===j&&x.nature==='NON_TRAVAILLE';}))n++;}return n;}
 function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.checked)v[c.dataset.cal]=1;});v.FC_ALTERNANCE=v.CLASSE_ENTIERE;return v;}
@@ -282,14 +294,24 @@ function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIX
     return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';}
 /* Calendrier d'une formation (mois en colonnes, jours en lignes). Jours au lycée : jours ouvrés hors vacances, fériés et périodes en entreprise.
  * Une formation complémentaire (ex. 5 Star) l'emporte sur les autres périodes : ses heures sont comptées à part, hors quota. */
-function etatJour(iso,l,pers){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay();var jp=(D.jours||[]).filter(function(x){return x.date===iso;})[0];
+/* État d'un jour pour une formation : week-end, férié, vacances (toujours visibles), période (entreprise, cours, formation
+ * complémentaire), hors des dates de la formation (grisé s'il n'y a aucune période), sinon jour au lycée.
+ * Les événements (visite, appel, conseil…) colorent la case avec leur couleur normalisée. */
+function etatJour(iso,l,pers,fo){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay();var jp=(D.jours||[]).filter(function(x){return x.date===iso;})[0];
   if(jp&&jp.nature==='TRAVAILLE')return {c:'',t:jp.libelle||'Jour travaillé',lycee:true};
   if(wd===0||wd===6)return {c:'we'};if(FERIES[iso])return {c:'fe',t:FERIES[iso]};if(jp&&jp.nature==='NON_TRAVAILLE')return {c:'fe',t:jp.libelle||'Non travaillé'};
-  var fond=null,comp=null,ev=[];pers.forEach(function(p){if(p.debut<=iso&&p.fin>=iso){var x=evenement(p.type);if(x){if(ev.indexOf(x)<0)ev.push(x);}else if(EUC_DEV610_estComplementaire_(p.type)){if(!comp)comp=p;}else if(!fond)fond=p;}});
-  if(comp)return {c:'',p:comp,ev:ev,comp:true};
-  if(fond){var cours=EUC_DEV610_n_(fond.type)==='COURS';return {c:'',p:fond,ev:ev,entreprise:!cours,lycee:cours};}
-  var vac=D.vacances.filter(function(v){return v.debut<=iso&&v.fin>=iso;})[0];if(vac)return {c:'va',t:'Vacances '+vac.nom,ev:ev};
-  return {c:'',lycee:true,ev:ev};}
+  var fond=null,comp=null,ev=[],evp=null;pers.forEach(function(p){if(p.debut<=iso&&p.fin>=iso){var x=evenement(p.type);if(x){if(ev.indexOf(x)<0)ev.push(x);if(!evp)evp=p;}else if(EUC_DEV610_estComplementaire_(p.type)){if(!comp)comp=p;}else if(!fond)fond=p;}});
+  var vac=D.vacances.filter(function(v){return v.debut<=iso&&v.fin>=iso;})[0];
+  if(vac)return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true};
+  if(comp)return {c:'',p:comp,ev:ev,evp:evp,comp:true};
+  if(fond){var cours=EUC_DEV610_n_(fond.type)==='COURS';return {c:'',p:fond,ev:ev,evp:evp,entreprise:!cours,lycee:cours};}
+  var hors=fo&&((fo.debut&&iso<fo.debut)||(fo.fin&&iso>fo.fin));
+  if(hors)return {c:'hors',t:fo.debut&&iso<fo.debut?'Avant le début de la formation':'Après la fin de la formation',ev:ev,evp:evp};
+  return {c:'',lycee:true,ev:ev,evp:evp};}
+function evLeg(pers){var vus={};return pers.filter(function(p){var x=evenement(p.type);if(!x||vus[x])return false;vus[x]=1;return true;}).map(function(p){var c=couleur(p.type);return '<span><i style="background:'+c+'"></i>'+esc(LIB_EV[evenement(p.type)]||p.type)+'</span>';}).join('');}
+function formationDe(code){return (D.formations||{})[code]||{};}
+function titresDefaut(l){var c=l.calendrier,greta=estGreta(l),nat=c==='MIXITE'?'Mixité — scolaires et apprentis':c==='SCOLAIRE'?'Formation scolaire':greta?'Formation continue':'Formation en alternance';
+  return {titre:c==='MIXITE'?'Mixité '+(l.groupe||'')+(etiquette(l)!=='Mixité'?' '+etiquette(l).replace(/^Mixité\s*/,''):''):'Formation '+etiquette(l),sousTitre:nat+(supports(l)?' · '+supports(l):'')};}
 /* Heures et formateurs de la formation affichée : réglages et saisies en cours (enregistrés d'un seul clic). */
 var HL=null,HREG=null,HSAI={},HMODIF={},HSALE=false;
 /* Journées types : 8 h (CAP peintre), 7 h (toutes les autres formations), demi-journée de 4 h, absence. */
@@ -299,29 +321,36 @@ function preparerHeures(l){if(HL===l.code)return;HL=l.code;HSALE=false;HMODIF={}
 function hfmt(h){return String(Math.round(h*100)/100).replace('.',',');}
 function initialesJour(x){return x.fm&&x.fa&&x.fm!==x.fa?x.fm+'/'+x.fa:(x.fm||x.fa||'');}
 /* Second argument à true : seule la saisie jour par jour est gardée telle quelle (le curseur reste dans sa case). */
-function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(code);if(!l){$('calendrier').innerHTML='<p class="erreur">Formation introuvable : '+esc(code)+'.</p>';$('heures').innerHTML='';return;}
+var LIGNE_COURANTE='';
+function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(code);LIGNE_COURANTE=code;if(!l){$('calendrier').innerHTML='<p class="erreur">Formation introuvable : '+esc(code)+'.</p>';$('heures').innerHTML='';return;}
   preparerHeures(l);
-  var a=D.annee,pers=PER.filter(function(p){return p.ligne===code;}),mois=[],d=new Date((a.debut||a.code.slice(0,4)+'-09-01').slice(0,7)+'-01T12:00:00Z'),fin=a.fin||(Number(a.code.slice(0,4))+1)+'-08-31';
-  while(d.toISOString().slice(0,7)<=fin.slice(0,7)&&mois.length<13){mois.push({y:d.getUTCFullYear(),m:d.getUTCMonth()});d.setUTCMonth(d.getUTCMonth()+1);}
-  var etats={},jours=[];mois.forEach(function(x){for(var j=1;j<=31;j++){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)break;var iso=dt.toISOString().slice(0,10),e=etatJour(iso,l,pers);etats[iso]=e;
+  var a=D.annee,pers=PER.filter(function(p){return p.ligne===code;}),mois=[],fo0=formationDe(code),deb0=(a.debut||a.code.slice(0,4)+'-09-01'),d=new Date(((fo0.debut&&fo0.debut<deb0)?fo0.debut:deb0).slice(0,7)+'-01T12:00:00Z'),fin=a.fin||(Number(a.code.slice(0,4))+1)+'-08-31';
+  /* Une formation qui déborde l'année (Bachelor jusqu'en septembre) : le calendrier s'étend jusqu'à son dernier mois. */
+  if(fo0.fin&&fo0.fin>fin)fin=fo0.fin;
+  while(d.toISOString().slice(0,7)<=fin.slice(0,7)&&mois.length<15){mois.push({y:d.getUTCFullYear(),m:d.getUTCMonth()});d.setUTCMonth(d.getUTCMonth()+1);}
+  var fo=formationDe(code),etats={},jours=[];mois.forEach(function(x){for(var j=1;j<=31;j++){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)break;var iso=dt.toISOString().slice(0,10),e=etatJour(iso,l,pers,fo);etats[iso]=e;
     if(e.lycee)jours.push({date:iso,nature:'FORMATION'});else if(e.comp)jours.push({date:iso,nature:'COMPLEMENTAIRE',complement:e.p.complement||''});}});
   var B=EUC_DEV610_bilanHeures_(jours,HREG,HSAI),parDate={};B.jours.forEach(function(x){parDate[x.date]=x;});
   var tot=mois.map(function(){return {lycee:0,ent:0,h:0,hc:0};}),corps='';
-  for(var j=1;j<=31;j++){corps+='<tr>'+mois.map(function(x,mi){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)return '<td class="j"></td><td></td>';var iso=dt.toISOString().slice(0,10),e=etats[iso],st='',txt=String(j),titre=e.t||'',h=parDate[iso],att='';
+  for(var j=1;j<=31;j++){corps+='<tr>'+mois.map(function(x,mi){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)return '<td class="j"></td><td></td><td class="h"></td>';var iso=dt.toISOString().slice(0,10),e=etats[iso],st='',txt=String(j),titre=e.t||'',h=parDate[iso],att='';
     if(e.p){var c=couleur(e.p.type);st=' style="background:'+c+';color:'+texteSur(c)+'"';titre=EUC_DEV610_libelleType_(e.p)+(titre?' · '+titre:'');txt+=' '+esc(etiq(e.p));}
+    if(e.evp){var ce=couleur(e.evp.type);st=' style="background:'+ce+';color:'+texteSur(ce)+'"';titre=e.evp.type+(titre?' · '+titre:'');}
     if(e.lycee)tot[mi].lycee++;if(e.entreprise)tot[mi].ent++;
     if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;att=' data-date="'+iso+'"';var ini=HREG.formateurs?initialesJour(h):'';if(ini)txt+=' <b class="ini">'+esc(ini)+'</b>';if(h.total!==(Number(HREG.matin)||0)+(Number(HREG.apresMidi)||0))txt+=' <small>'+hfmt(h.total)+'h</small>';titre+=(titre?' · ':'')+hfmt(h.total)+' h'+(h.fm||h.fa?' · matin '+(h.fm||'—')+', après-midi '+(h.fa||'—'):'');}
-    if(e.ev&&e.ev.length)txt+='<span class="ev">'+esc(e.ev.join(''))+'</span>';
-    return '<td class="j '+(e.c==='we'?'we':'')+'">'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td class="'+e.c+(h?' hj':'')+'"'+st+att+(titre?' title="'+esc(titre)+'"':'')+'>'+txt+'</td>';}).join('')+'</tr>';}
+    if(e.ev&&e.ev.length)txt+=' <b>'+esc(e.ev.join(''))+'</b>';
+    return '<td class="j '+(e.c==='we'?'we':'')+'">'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td class="'+(e.evp?'':e.c)+(h?' hj':'')+'"'+st+att+(titre?' title="'+esc(titre)+'"':'')+'>'+txt+'</td><td class="h">'+(h&&h.total?hfmt(h.total):'')+'</td>';}).join('')+'</tr>';}
   var tl=tot.reduce(function(s,x){return s+x.lycee;},0),te=tot.reduce(function(s,x){return s+x.ent;},0);
-  var tete='<tr>'+mois.map(function(x){return '<th colspan="2">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+' '+x.y+'</th>';}).join('')+'</tr>';
-  var pied='<tr class="tot">'+tot.map(function(x){return '<td colspan="2" title="jours au lycée / en entreprise">'+x.lycee+' j / '+x.ent+' j</td>';}).join('')+'</tr><tr class="tot">'+tot.map(function(x){return '<td colspan="2" title="heures de formation'+(x.hc?' + heures de formation complémentaire':'')+'">'+hfmt(x.h)+' h'+(x.hc?' + '+hfmt(x.hc)+' h':'')+'</td>';}).join('')+'</tr>';
-  $('calendrier').innerHTML='<table class="cal"><thead>'+tete+'</thead><tbody>'+corps+pied+'</tbody></table>';
+  var tete='<tr>'+mois.map(function(x){return '<th colspan="3">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+' '+x.y+'</th>';}).join('')+'</tr>';
+  var pied='<tr class="tot">'+tot.map(function(x){return '<td colspan="3" title="heures de formation du mois'+(x.hc?' + heures de formation complémentaire':'')+'">'+hfmt(x.h)+' h'+(x.hc?' + '+hfmt(x.hc)+' h':'')+'</td>';}).join('')+'</tr>';
+  var annuel='<tr class="annuel"><td colspan="'+(mois.length*3)+'">Total annuel : '+hfmt(B.formation)+' h'+(Number(HREG.quota)?' / quota '+hfmt(Number(HREG.quota))+' h':'')+Object.keys(B.complementaires).map(function(c){return ' · '+esc(c)+' : '+hfmt(B.complementaires[c])+' h';}).join('')+'</td></tr>';
+  $('calendrier').innerHTML='<table class="cal"><thead>'+tete+'</thead><tbody>'+corps+pied+annuel+'</tbody></table>';
   var comps=Object.keys(B.complementaires),q=Number(HREG.quota)||0,ecart=Math.round((q-B.formation)*100)/100;
   var quota=q?' / quota '+hfmt(q)+' h ('+(ecart>=0?'reste '+hfmt(ecart)+' h':'<span class="erreur">dépassement de '+hfmt(-ecart)+' h</span>')+')':'';
-  var dd=new Date();$('titreCalendrier').innerHTML='<h2>CALENDRIER '+(D.previsionnel?'PRÉVISIONNEL ':'')+esc(a.code)+' — '+esc(nomLigne(l))+'</h2><p><b>'+esc(CALENDRIERS[l.calendrier]||l.calendrier)+(supports(l)?' · '+esc(supports(l)):'')+(a.zone?' · Zone '+esc(a.zone):'')+'</b> · '+tl+' jours au lycée · <b>'+hfmt(B.formation)+' h de formation</b>'+quota+comps.map(function(c){return ' · <b>'+esc(c)+' : '+hfmt(B.complementaires[c])+' h</b> (en plus, hors quota)';}).join('')+' · '+te+' jours en entreprise · généré le '+dfr(dd.toISOString().slice(0,10))+'</p>';
+  var dd=new Date(),td=titresDefaut(l),titre=fo.titre||td.titre,sous=fo.sousTitre||td.sousTitre;
+  $('titreCalendrier').innerHTML='<p style="margin:0;font-weight:800;color:#1b396a">CALENDRIER '+(D.previsionnel?'PRÉVISIONNEL ':'')+esc(a.code)+(a.zone?' — ZONE '+esc(a.zone):'')+'</p><h2>'+esc(titre)+'</h2><p><b>'+esc(sous)+'</b>'+(fo.debut||fo.fin?' · du '+(fo.debut?dfr(fo.debut):'…')+' au '+(fo.fin?dfr(fo.fin):'…'):'')+' · '+tl+' jours au lycée · <b>'+hfmt(B.formation)+' h de formation</b>'+quota+comps.map(function(c){return ' · <b>'+esc(c)+' : '+hfmt(B.complementaires[c])+' h</b> (en plus, hors quota)';}).join('')+' · généré le '+dfr(dd.toISOString().slice(0,10))+'</p>';
+  if(!garderEditeur){$('fDebut').value=fo.debut||'';$('fFin').value=fo.fin||'';$('fTitre').value=fo.titre||'';$('fTitre').placeholder=td.titre;$('fSousTitre').value=fo.sousTitre||'';$('fSousTitre').placeholder=td.sousTitre;}
   var vus={},leg=[];pers.forEach(function(p){if(evenement(p.type))return;var k=EUC_DEV610_n_(EUC_DEV610_libelleType_(p));if(!vus[k]){vus[k]=1;leg.push(p);}});
-  $('legendeCalendrier').innerHTML='<span><i style="background:#fff"></i>Au lycée</span>'+leg.map(function(p){return '<span><i style="background:'+couleur(p.type)+'"></i>'+esc(EUC_DEV610_libelleType_(p))+'</span>';}).join('')+'<span><i style="background:#555"></i>Vacances</span><span><i style="background:#e11d48"></i>Férié / non travaillé</span><span><i style="background:#d9d9d9"></i>Week-end</span><span class="note">Heures par défaut : '+hfmt(Number(HREG.matin)||0)+' h le matin, '+hfmt(Number(HREG.apresMidi)||0)+' h l’après-midi ; un nombre dans une case signale un jour ajusté.</span>';
+  $('legendeCalendrier').innerHTML='<span><i style="background:#fff"></i>Au lycée</span>'+leg.map(function(p){return '<span><i style="background:'+couleur(p.type)+'"></i>'+esc(EUC_DEV610_libelleType_(p))+'</span>';}).join('')+evLeg(pers)+'<span><i style="background:#555"></i>Vacances</span><span><i style="background:#e11d48"></i>Férié / non travaillé</span><span><i style="background:#d9d9d9"></i>Week-end</span><span><i style="background:repeating-linear-gradient(45deg,#e5e7eb 0 3px,#f3f4f6 3px 6px)"></i>Hors des dates de la formation</span><span class="note">Heures par défaut : '+hfmt(Number(HREG.matin)||0)+' h le matin, '+hfmt(Number(HREG.apresMidi)||0)+' h l’après-midi ; un nombre dans une case signale un jour ajusté.</span>';
   rendreRecap(l,B);if(!garderEditeur)rendreEditeurHeures(l,B);majHeuresEtat();
   $('retourFormations').href=lienPlannings('&vue=formations');}
 /* Récapitulatif par formateur : total de la formation et total de chaque formation complémentaire, séparés. */
@@ -356,7 +385,7 @@ function rendreEditeurHeures(l,B){var f=HREG.formateurs,v=function(x){return x==
       HL=null;rendreCalendrier(l.code);message('Heures enregistrées ('+r.jours+' jour(s) modifié(s)).','ok');});};}
 function majHeuresEtat(){if($('hEtat'))$('hEtat').innerHTML=HSALE?'<span class="alerte">Modifications non enregistrées</span>':'';}
 $('calendrier').addEventListener('click',function(ev){var td=ev.target.closest('td[data-date]');if(!td)return;var det=$('heures').querySelector('details');if(det)det.open=true;var tr=$('heures').querySelector('tr[data-date="'+td.dataset.date+'"]');if(tr){tr.scrollIntoView({block:'center'});var i=tr.querySelector('input');if(i)i.focus();}});
-function rendreTout(){ORG=null;rendreOrganisation();rendreGrille();rendrePeriodes();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
+function rendreTout(){ORG=null;VAC=null;rendreAnnees();rendreOrganisation();rendreGrille();rendrePeriodes();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
 function majBoutons(){var pret=!!D;['generer','imprimer'].forEach(function(id){$(id).disabled=!pret;});
   $('enregistrer').disabled=!pret||!PER.length&&!NUM;$('nouvelle').disabled=!pret||!NUM;$('enregistrerRegles').disabled=!pret;$('enregistrerLignes').disabled=!pret;
   var v=NUM&&D?D.versions.filter(function(x){return x.numero===NUM;})[0]:null;
@@ -376,8 +405,11 @@ function rendreGrille(){
   var h2='<tr>'+SEM.map(function(s){var j=jp[s.i];return '<th class="'+(s.vacances?'v':'')+'" title="'+esc(s.vacances?'Vacances '+s.vacances:'')+(j?esc(j.map(function(x){return ' · '+dfr(x.date)+' '+x.libelle;}).join('')):'')+'">'+s.numero+(j?'<span class="jp">★</span>':'')+'</th>';}).join('')+'</tr>';
   var fe=SEM.map(function(s){var f=feriesSemaine(s);return {liste:f,ferme:joursFermes(s)>0};});
   var titreFe=function(i){return fe[i].liste.length?' title="'+esc(fe[i].liste.join(' · '))+'"':'';};
-  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(fe[s.i].ferme?'fe':s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.lundi.slice(8,10))+'</th>';}).join('')+'</tr>';
-  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(fe[s.i].ferme?'fe':s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.vendredi.slice(8,10))+'</th>';}).join('')+'</tr>';
+  /* Jour férié : point rouge dans les cases Du et Au ; un clic sur le point liste les jours de la semaine. */
+  var point=function(i){return fe[i].liste.length?'<span class="pf" data-fe="'+i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'';};
+  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.lundi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
+  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+'" style="font-weight:400"'+titreFe(s.i)+'>'+Number(s.vendredi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
+  FE_SEM=fe;
   var corps='',groupe=null;
   lignes.forEach(function(l,li){
     if(l.groupe!==groupe){groupe=l.groupe;corps+='<tr class="groupe"><td class="lib" colspan="1">'+esc(groupe)+'</td><td class="lib2"></td><td colspan="'+SEM.length+'"></td></tr>';}
@@ -387,18 +419,20 @@ function rendreGrille(){
     corps+='<tr><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
       var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':'')+(!s.vacances&&s.jours.length?' pv':''),st='',txt='';
       if(o){var c=couleur(o.p.type);st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(o.premier)txt='<span class="et">'+esc(etiq(o.p))+'</span>';if(o.p.origine==='GRILLE'||o.p.origine==='TABLEAU')cls+=' man';}
-      if(appels[l.code+'|'+s.i])cls+=' ap';if(fe[s.i].ferme)cls+=' fe';
-      var e=evs[s.i]||[],lettres=[];e.forEach(function(p){var x=evenement(p.type);if(lettres.indexOf(x)<0)lettres.push(x);});if(lettres.length)txt='<span class="ev">'+esc(lettres.join(''))+'</span>'+txt;
+      if(appels[l.code+'|'+s.i])cls+=' ap';
+      var e=evs[s.i]||[],vusEv={};e.forEach(function(p){var x=evenement(p.type);if(vusEv[x])return;vusEv[x]=1;var c=couleur(p.type);txt='<span class="ev" style="background:'+c+';color:'+texteSur(c)+'">'+esc(x)+'</span>'+txt;});
       var info=[];if(o)info.push(EUC_DEV610_libelleType_(o.p)+' du '+dfr(o.p.debut)+' au '+dfr(o.p.fin)+' · '+(ORIGINES[o.p.origine]||o.p.origine));else if(s.vacances)info.push('Vacances');
-      e.forEach(function(p){info.push(p.type+' du '+dfr(p.debut)+' au '+dfr(p.fin));});if(s.jours.length)info.push(s.jours.map(function(j){return j.nb+' j. de '+j.nom;}).join(', '));info=info.concat(fe[s.i].liste);
+      e.forEach(function(p){info.push(p.type+' du '+dfr(p.debut)+' au '+dfr(p.fin));});if(s.jours.length)info.push(s.jours.map(function(j){return j.nb+' j. de '+j.nom;}).join(', '));
       return '<td class="'+cls+'" data-l="'+li+'" data-s="'+s.i+'"'+st+' title="'+esc(info.join(' · '))+'">'+txt+'</td>';}).join('')+'</tr>';
   });
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
-  var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){lev[x]=1;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><i style="background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></i>Appel (règle)</span><span><i style="background:#e11d48"></i>Semaine avec jour férié ou fermé</span>'+Object.keys(lev).map(function(x){return '<span><b style="border:1px solid #999;border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><i style="background:linear-gradient(225deg,#7f00ff 0 7px,#eee 7px)"></i>Appel (règle)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine (cliquer sur le point)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   marquerSelection();
 }
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();
+  var d=document.createElement('div');d.id='infoFerie';d.innerHTML='<b>Jours fériés</b><br>'+FE_SEM[Number(b.dataset.fe)].liste.map(esc).join('<br>');document.body.appendChild(d);var r=b.getBoundingClientRect();d.style.left=Math.min(window.innerWidth-270,r.left)+'px';d.style.top=(r.bottom+6)+'px';});
 function cellule(e){var t=e.target.closest&&e.target.closest('td.c');return t?{l:Number(t.dataset.l),s:Number(t.dataset.s)}:null;}
 $('grille').addEventListener('pointerdown',function(e){var c=cellule(e);if(!c||e.button!==0)return;e.preventDefault();if(!(e.ctrlKey||e.metaKey))SEL=[];DRAG={l1:c.l,s1:c.s,l2:c.l,s2:c.s};SEL.push(DRAG);marquerSelection();});
 $('grille').addEventListener('pointerover',function(e){if(!DRAG)return;var c=cellule(e);if(!c)return;DRAG.l2=c.l;DRAG.s2=c.s;marquerSelection();});
@@ -500,6 +534,9 @@ function rendreNouvellesClasses(){var n=(D.nouvellesClasses||[]).filter(function
     p.id=0;p.code='NOUVELLE_'+Date.now();ORG.splice(pos,0,p);if(p.classeId){(D.rattachements[p.code]=[p.classeId]);}orgAppliquer();rendreOrganisation();};});}
 $('nomsPronote').onclick=function(){var n=0;ORG.forEach(function(l){if(l.calendrier==='MIXITE'||!l.classePfmp)return;if(l.libelle!==l.classePfmp){l.libelle=l.classePfmp;n++;}});
   if(n){orgAppliquer();rendreOrganisation();}message(n?n+' ligne(s) renommée(s) d’après Pronote : vérifiez le planning puis enregistrez l’organisation. Relancez ensuite le calibrage (onglet « Lignes et classes ») pour reporter les noms dans Planning_Periodes.':'Les lignes portent déjà les noms Pronote.',n?'alerte':'ok');};
+$('fEnregistrer').onclick=function(){var code=LIGNE_COURANTE;if(!code)return;var q={annee:D.annee.code,ligne:code,debut:$('fDebut').value,fin:$('fFin').value,titre:$('fTitre').value,sousTitre:$('fSousTitre').value};
+  if(q.debut&&q.fin&&q.fin<q.debut){message('La fin de la formation doit suivre son début.','erreur');return;}
+  occupe(this,'Enregistrement…','EUC_DEV610_enregistrerFormation',q,function(r){D.formations=D.formations||{};D.formations[code]=r.formation;rendreCalendrier(code);message('<span class="ok">Dates et titres enregistrés.</span>');});};
 $('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:6mm}';window.print();$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
 $('ajouterLigne').onclick=function(){ORG.push({id:0,code:'NOUVELLE_'+Date.now(),libelle:'Nouvelle classe',groupe:(ORG[ORG.length-1]||{}).groupe||'À classer',calendrier:'SCOLAIRE',formation:'',niveau:'',classePfmp:'',profil:'',etablissement:'',organismes:[],actif:true});orgAppliquer();rendreOrganisation();};
 $('enregistrerOrganisation').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation',{lignes:ORG},function(r){ORG_SALE=false;charger(D.annee.code);message('<span class="ok">Organisation enregistrée</span> : '+r.modifiees+' ligne(s) mise(s) à jour, '+r.creees+' créée(s)'+(r.desactivees?', '+r.desactivees+' masquée(s)':'')+'.');});};
@@ -528,6 +565,26 @@ $('uniformiser').onchange=function(){$('calibrer').disabled=true;$('resultatCali
 $('calibrer').onclick=function(){if(!confirm('Modifier la structure de Planning_Periodes et renseigner les périodes existantes, comme dans l’aperçu ?'))return;
   occupe(this,'Calibrage en cours…','EUC_DEV610_calibrer',{uniformiserTypes:$('uniformiser').checked,confirmation:'CALIBRER'},function(r){rendreCalibrage(r);message('<span class="ok">Calibrage appliqué</span> : '+r.ecrites+' période(s) mises à jour.');},180000);};
 $('enregistrerLignes').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerRattachements',{annee:D.annee.code,rattachements:D.rattachements},function(r){message('<span class="ok">Rattachement enregistré pour '+esc(D.annee.code)+'</span> ('+r.lignes+' ligne(s)).');D.rattachementsEnregistres=Object.keys(D.rattachements);rendreLignes();});};
+
+/* ---------- Années et vacances ---------- */
+var VAC=null;
+function rendreAnnees(){var a=D.annee;
+  $('tAnnees').innerHTML=D.annees.map(function(x){var prev=(D.toutesVacances||[]).some(function(v){return v.annee===x.code&&v.previsionnel;});return '<tr data-c="'+esc(x.code)+'"><td><b>'+esc(x.code)+'</b>'+(x.code===a.code?' <span class="note">(affichée)</span>':'')+'</td><td><input type="date" class="ad" value="'+esc(x.debut)+'"></td><td><input type="date" class="af" value="'+esc(x.fin)+'"></td><td><input class="az" size="3" value="'+esc(x.zone||'B')+'"></td><td>'+(prev?'<span class="chip PREV">prévisionnelle</span>':(D.toutesVacances||[]).some(function(v){return v.annee===x.code;})?'<span class="chip OFF">vacances officielles</span>':'<span class="note">aucune vacance</span>')+'</td><td><button type="button" class="petit as">Enregistrer</button> <a target="_top" href="'+esc(ADMIN+'?page=plannings-pfmp&onglet=pAnnees&annee='+encodeURIComponent(x.code))+'">Ouvrir</a></td></tr>';}).join('');
+  Array.prototype.forEach.call($('tAnnees').querySelectorAll('tr[data-c]'),function(tr){tr.querySelector('.as').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerAnnee',{code:tr.dataset.c,debut:tr.querySelector('.ad').value,fin:tr.querySelector('.af').value,zone:tr.querySelector('.az').value},function(){charger(D.annee.code);message('<span class="ok">Année '+esc(tr.dataset.c)+' enregistrée.</span>');});};});
+  if(!VAC)VAC=(D.toutesVacances||[]).filter(function(v){return v.annee===a.code;}).sort(function(x,y){return x.debut.localeCompare(y.debut);}).map(function(v){return JSON.parse(JSON.stringify(v));});
+  $('titreVacances').textContent='Vacances '+a.code+(a.zone?' — zone '+a.zone:'');
+  var noms=D.nomsVacances||['Toussaint','Noël','Hiver','Printemps',"Pont de l'Ascension",'Été'];
+  $('tVacances').innerHTML=VAC.length?VAC.map(function(v,i){return '<tr data-i="'+i+'"><td><select data-k="nom">'+noms.concat(noms.indexOf(v.nom)<0&&v.nom?[v.nom]:[]).map(function(n){return '<option'+(n===v.nom?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select></td><td><input type="date" data-k="debut" value="'+esc(v.debut)+'"></td><td><input type="date" data-k="fin" value="'+esc(v.fin)+'"></td><td><input type="checkbox" data-k="previsionnel"'+(v.previsionnel?' checked':'')+'></td><td><input data-k="commentaire" value="'+esc(v.commentaire||'')+'" placeholder="ex. rotation estimée"></td><td><button type="button" class="petit vr">Retirer</button></td></tr>';}).join(''):'<tr><td colspan="6" class="note">Aucune vacance pour '+esc(a.code)+'. Utilisez « Proposer d’après l’année précédente » ou ajoutez-les.</td></tr>';
+  Array.prototype.forEach.call($('tVacances').querySelectorAll('tr[data-i]'),function(tr){var v=VAC[Number(tr.dataset.i)];Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){v[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;};});tr.querySelector('.vr').onclick=function(){VAC.splice(Number(tr.dataset.i),1);rendreAnnees();};});}
+$('ajouterAnnee').onclick=function(){var der=D.annees[D.annees.length-1],y=der?Number(der.code.slice(5)):new Date().getFullYear(),code=y+'-'+(y+1);
+  if(!confirm('Créer l’année scolaire '+code+' ?'))return;occupe(this,'Création…','EUC_DEV610_enregistrerAnnee',{code:code,zone:(der&&der.zone)||'B',previsionnelle:true},function(){charger(code);message('<span class="ok">Année '+esc(code)+' créée.</span> Saisissez ou proposez ses vacances.');});};
+$('ajouterVacance').onclick=function(){VAC.push({id:0,nom:'Toussaint',debut:'',fin:'',previsionnel:true,commentaire:''});rendreAnnees();};
+$('proposerVacances').onclick=function(){var a=D.annee,py=(Number(a.code.slice(0,4))-1)+'-'+a.code.slice(0,4),prec=(D.toutesVacances||[]).filter(function(v){return v.annee===py;});
+  if(!prec.length){message('Aucune vacance en '+esc(py)+' pour faire une proposition.','erreur');return;}
+  var deja={};VAC.forEach(function(v){deja[v.nom]=1;});var n=0;prec.forEach(function(v){if(deja[v.nom])return;VAC.push({id:0,nom:v.nom,debut:EUC_DEV610_plus_(v.debut,364),fin:v.nom==='Été'?a.code.slice(5)+'-08-31':EUC_DEV610_plus_(v.fin,364),previsionnel:true,commentaire:'Proposé d’après '+py+' (52 semaines plus tard)'});n++;});
+  VAC.sort(function(x,y){return String(x.debut).localeCompare(String(y.debut));});rendreAnnees();message(n?n+' vacance(s) proposée(s), marquées prévisionnelles : ajustez les dates puis enregistrez.':'Toutes les vacances de '+esc(py)+' sont déjà présentes.',n?'alerte':'ok');};
+$('enregistrerVacances').onclick=function(){var bad=VAC.filter(function(v){return !v.debut||!v.fin||v.fin<v.debut;})[0];if(bad){message('Dates à compléter ou incohérentes : '+esc(bad.nom)+'.','erreur');return;}
+  occupe(this,'Enregistrement des vacances…','EUC_DEV610_enregistrerVacances',{annee:D.annee.code,vacances:VAC},function(r){charger(D.annee.code);message('<span class="ok">Vacances enregistrées</span> ('+r.creees+' créée(s), '+r.modifiees+' mise(s) à jour).');});};
 
 /* ---------- Jours particuliers ---------- */
 var NATURES={TRAVAILLE:'Travaillé (rattrapage)',NON_TRAVAILLE:'Non travaillé au lycée',BANALISE:'Banalisé'};
