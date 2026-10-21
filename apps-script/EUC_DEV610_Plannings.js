@@ -166,6 +166,18 @@ function EUC_DEV610_appels_(periodes, semaines) {
   });
   return out;
 }
+/* Période en entreprise : PFMP, P.dif., stage BTS, ou « ENT. » des mixités et des classes entières. */
+function EUC_DEV610_estEntreprise_(type) { return EUC_DEV610_typeFormation_(type) || /^ENT/.test(EUC_DEV610_n_(type)); }
+/* Recopie des dates d'une ligne vers d'autres (calcul pur) : dans chaque ligne cible, les périodes du même genre
+ * (en entreprise seulement, ou toutes) sont remplacées par celles de la source, marquées placées à la main. */
+function EUC_DEV610_recopier_(periodes, source, cibles, tout) {
+  var garde = function(p) { return tout || EUC_DEV610_estEntreprise_(p.type); }, remplacees = 0, ajoutees = 0, parLigne = {};
+  var modeles = (periodes || []).filter(function(p) { return p.ligne === source && garde(p); });
+  var out = (periodes || []).filter(function(p) { if (cibles.indexOf(p.ligne) >= 0 && p.ligne !== source && garde(p)) { remplacees++; return false; } return true; });
+  cibles.forEach(function(c) { if (c === source) return; parLigne[c] = modeles.length;
+    modeles.forEach(function(m) { var x = { ligne: c, type: m.type, debut: m.debut, fin: m.fin, origine: 'TABLEAU', regle: null }; if (m.complement) x.complement = m.complement; out.push(x); ajoutees++; }); });
+  return { periodes: out.sort(EUC_DEV610_ordrePeriodes_), modeles: modeles.length, remplacees: remplacees, ajoutees: ajoutees, parLigne: parLigne };
+}
 /* Formation complémentaire (ex. partenariat 5 Star du CAP peintre) : heures en plus de la formation, jamais publiées
  * ni comptées dans le quota ; le complément de libellé (« 5 Star ») distingue les totaux. */
 var EUC_DEV610_TYPE_COMPLEMENTAIRE_ = 'Formation complémentaire';
@@ -253,7 +265,7 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_].map(String).join('\n')
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_].map(String).join('\n')
     + '\nvar EUC_DEV610_TYPE_COMPLEMENTAIRE_ = ' + JSON.stringify(EUC_DEV610_TYPE_COMPLEMENTAIRE_) + ';';
 }
 

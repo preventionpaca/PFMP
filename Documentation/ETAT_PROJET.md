@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 octobre 2026 — DEV610 : tableau des périodes par ligne et recopie des dates
+
+- Onglet « Périodes » : toutes les lignes actives du planning apparaissent dans
+  l'ordre du tableau, même sans période (« Aucune période »), avec « Ajouter »
+  par ligne ; les périodes d'une ligne inactive ou retirée sont listées à part.
+  Avant, le tableau ne montrait que les lignes ayant des périodes, triées par
+  code, et semblait s'arrêter à la TRSP.
+- « Recopier ces dates… » sur une ligne : recopie ses périodes vers les classes
+  cochées (par défaut les classes du même groupe et du même calendrier, ex.
+  toutes les 1 BAC PRO hors mixité). Périodes en entreprise seulement (PFMP,
+  P.dif., stages, ENT.) ou toutes ; les périodes de même genre des cibles sont
+  remplacées (nombre affiché avant), les copies sont « placées à la main ».
+  « Annuler la recopie » rétablit l'état précédent. Calcul pur
+  `EUC_DEV610_recopier_`, rien n'est écrit avant « Enregistrer la version ».
+- Tests simulés : 33/33 DEV610, suite complète verte. Page pilotée dans Chromium
+  (copie locale) : toutes les lignes affichées, recopie 1MVA → 7 classes de
+  1 BAC PRO, annulation, filtre d'une ligne. Non vérifié avec le compte réel.
+
 ## Mise à jour du 21 octobre 2026 — DEV610 : bilan de la reprise de Planning_Periodes
 
 - Onglet « Périodes » de la page Plannings : bouton « Contrôler la reprise »

@@ -556,4 +556,21 @@ test('formation complémentaire : complément conservé dans la version, jamais 
   for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', "['4+4','8 h (4 + 4)'],['4+3','7 h (4 + 3)'],['4+0','½ journée matin (4 h)']", '||HSALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
 });
 
+test('recopie des dates d’une classe vers les classes du même niveau : périodes en entreprise remplacées, le reste gardé, placées à la main', () => {
+  const P = (ligne, type, debut, fin, extra) => Object.assign({ ligne, type, debut, fin, origine: 'REGLE', regle: 1 }, extra || {});
+  const per = [P('1BP_MVA', 'PFMP 1ère', '2026-11-23', '2026-12-18'), P('1BP_MVA', 'PFMP 1ère', '2027-03-22', '2027-04-16'), P('1BP_MVA', 'VISITE', '2026-12-14', '2026-12-18'),
+    P('1BP_CAR', 'PFMP 1ère', '2026-11-30', '2026-12-18'), P('1BP_CAR', 'EXAMENS', '2027-06-01', '2027-06-01'), P('TBP_MVA', 'PFMP Tbac', '2026-09-28', '2026-10-16'), P('MIX_1BP', 'ENT.', '2026-10-05', '2026-10-09')];
+  const r = k.EUC_DEV610_recopier_(per, '1BP_MVA', ['1BP_CAR', '1BP_CIEL'], false);
+  assert.deepStrictEqual(J([r.modeles, r.remplacees, r.ajoutees, r.parLigne]), [2, 1, 4, { '1BP_CAR': 2, '1BP_CIEL': 2 }]);
+  const de = l => r.periodes.filter(p => p.ligne === l).map(p => [p.type, p.debut, p.origine]);
+  assert.deepStrictEqual(J(de('1BP_CAR')), [['PFMP 1ère', '2026-11-23', 'TABLEAU'], ['PFMP 1ère', '2027-03-22', 'TABLEAU'], ['EXAMENS', '2027-06-01', 'REGLE']], 'examen gardé, PFMP remplacées');
+  assert.deepStrictEqual(J(de('1BP_CIEL')).length, 2); assert.strictEqual(de('1BP_MVA').length, 3, 'source intacte'); assert.strictEqual(de('TBP_MVA').length, 1); assert.strictEqual(de('MIX_1BP').length, 1);
+  const t = k.EUC_DEV610_recopier_(per, '1BP_MVA', ['1BP_CAR', '1BP_MVA'], true);
+  assert.deepStrictEqual(J(t.periodes.filter(p => p.ligne === '1BP_CAR').map(p => p.type)), ['PFMP 1ère', 'VISITE', 'PFMP 1ère'], 'toutes : visite recopiée, examen remplacé ; la source n’est jamais sa propre cible');
+  assert.ok(k.EUC_DEV610_estEntreprise_('ENT.') && k.EUC_DEV610_estEntreprise_('P.dif.') && !k.EUC_DEV610_estEntreprise_('VISITE'));
+  assert.ok(k.EUC_DEV610_codeClient_().includes('function EUC_DEV610_recopier_'));
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['class="petit pr">Recopier ces dates…', 'id="annulerCopie"', 'Lignes inactives ou retirées', 'tr class="teteLigne"']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');
