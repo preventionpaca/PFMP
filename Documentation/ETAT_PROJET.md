@@ -132,6 +132,9 @@
   Onglet « Années et vacances » : création des années futures, vacances
   officielles ou prévisionnelles saisies dans la page (proposition d'après
   l'année précédente), retrait sans suppression.
+- `fa1f8fa` publié en `@1103` (31/31 routes) : calendrier d'une formation sur le
+  modèle de l'annexe 32a du CFA (charte des couleurs de la légende, D | J | H et
+  H / P, petites vacances en noir, été non noirci, totaux, page A4 paysage).
 - Navigation dans le navigateur et parcours métier sur le vert : non exécutés,
   le navigateur intégré n'est pas connecté au compte Google du lycée (page
   « Connexion administration PFMP »). Aucune table Grist créée à ce stade :
