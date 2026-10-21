@@ -60,6 +60,17 @@ table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120
 table.cal{border-collapse:collapse;font-size:11px;background:#fff;width:100%;table-layout:fixed}table.cal th,table.cal td{border:1px solid #d6e2dc;padding:1px 2px;text-align:center;height:17px;overflow:hidden;white-space:nowrap}
 table.cal th{background:#1b396a;color:#fff;font-size:11px}table.cal td.j{color:#555;width:16px}table.cal td.we{background:#d9d9d9;color:#777}table.cal td.fe{background:#e11d48;color:#fff}table.cal td.va{background:#555;color:#ddd}
 table.cal tr.tot td{background:#f4f8f6;font-weight:700}table.cal td.hors{background:repeating-linear-gradient(45deg,#e5e7eb 0 4px,#f3f4f6 4px 8px);color:#9ca3af}table.cal td.h{width:24px;font-weight:700;color:#0b4f40;background:#f8fbfa}table.cal tr.annuel td{background:#1b396a;color:#fff;font-weight:800;text-align:right;font-size:13px;padding:4px 8px}table.cal td.hj{cursor:pointer}table.cal td .ini{font-size:11px;font-weight:800}table.cal td small{font-size:9px}.chip.comp{background:#F4B183;color:#000;border-radius:4px;padding:0 4px}table.heures input{width:70px}table.heures input.hf{width:80px;text-transform:uppercase}.defile{max-height:60vh;overflow:auto}table.recap td,table.recap th{text-align:right}table.recap td:first-child,table.recap th:first-child{text-align:left}table.cal td .ev{font-size:9px;font-weight:800;background:#fff;color:#111;border-radius:3px;padding:0 2px;margin-left:2px}
+.a32{background:#fff;border:1px solid #111;padding:6px 8px;color:#111;font-family:Arial,sans-serif}
+.a32-tete{display:grid;grid-template-columns:150px 1fr 150px;align-items:center;gap:6px}.a32-tete .rf{font-weight:900;font-size:10px;line-height:1.05;border-left:4px solid #000091;padding-left:5px}.a32-tete .centre{text-align:center}.a32-tete .centre b{display:block;font-size:15px;line-height:1.2}.a32-tete .centre span{display:block;font-size:10px;font-weight:700;margin-top:3px}
+.a32-tete .org{justify-self:end;font-weight:800;font-size:11px;color:#fff;background:linear-gradient(90deg,#e4572e 0 45%,#00a6d6 45%);border-radius:12px;padding:3px 10px}
+table.a32i{width:100%;border-collapse:collapse;margin:5px 0 3px;font-size:12px}table.a32i td{padding:1px 6px}table.a32i td.l{text-align:right;font-weight:700;width:14%}table.a32i td.v{background:#fff2c6;font-weight:800;color:#1b396a;width:28%}table.a32i td.m{text-align:center;font-size:11px;color:#333}
+table.a32c{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}table.a32c th,table.a32c td{border:1px solid #fff;padding:0 1px;height:15px;text-align:center;white-space:nowrap;overflow:hidden}
+table.a32c tr.an th{background:#7f7f7f;color:#fff;font-size:9px}table.a32c tr.mo th{background:#595959;color:#fff}table.a32c tr.co th{background:#262626;color:#fff;font-size:8px}table.a32c tr.co th.hc{background:#e46c0a}
+table.a32c td.n{font-weight:700}table.a32c td.k-we{background:#d9d9d9;color:#555}table.a32c td.k-blanc{background:#fff;color:#777}
+table.a32c tr.tm th{background:#595959;color:#fff}table.a32c tr.tv td{background:#e46c0a;color:#fff;font-weight:800;font-size:10px}
+.a32-note{background:#000;color:#fff;text-align:center;font-size:9px;padding:2px;margin-top:2px}
+.a32-pied{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:3px}.a32-leg{display:grid;grid-template-columns:repeat(4,minmax(90px,150px));gap:2px 6px;font-size:9px;font-weight:800}.a32-leg span{text-align:center;padding:2px 4px}
+.a32-tot{display:flex;align-items:center;gap:0;font-weight:800;font-size:11px}.a32-tot b{background:#595959;color:#fff;padding:3px 18px;margin-left:8px}.a32-bas{display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-top:4px}
 .formations{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.formations a{display:block;background:#fff;border:1px solid var(--bord);border-radius:8px;padding:6px 10px;color:var(--texte);text-decoration:none;font-weight:700}.formations a small{display:block;font-weight:400;color:var(--gris)}
 table.org td{padding:3px 4px}table.org input,table.org select{font-size:12px;max-width:100%}table.org input.lib{width:220px}table.org input.mid{width:120px}
 table.org tr.ln{cursor:grab}table.org tr.ln.glisse{opacity:.4}table.org tr.ln.cible td{box-shadow:inset 0 3px 0 #2563eb}
@@ -141,7 +152,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 
   <section id="pCalendrier" class="panneau">
     <div class="barre noprint"><a class="bouton" id="retourFormations" href="#" target="_top">← Plannings par formation</a><span style="flex:1"></span><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
-    <div class="cadre noprint barre" id="reglageFormation"><label>Début de la formation <input type="date" id="fDebut"></label><label>Fin <input type="date" id="fFin"></label><label style="flex:1">Titre <input id="fTitre" style="width:100%"></label><label style="flex:2">Sous-titre <input id="fSousTitre" style="width:100%"></label><button type="button" class="plein" id="fEnregistrer">Enregistrer</button></div>
+    <div class="cadre noprint barre" id="reglageFormation"><label>Début de la formation <input type="date" id="fDebut"></label><label>Fin <input type="date" id="fFin"></label><label style="flex:1">Formation <input id="fTitre" style="width:100%"></label><label style="flex:1">Classe <input id="fSousTitre" style="width:100%"></label><button type="button" class="plein" id="fEnregistrer">Enregistrer</button></div>
     <div id="titreCalendrier" class="titreImpression" style="display:block"></div>
     <div id="calendrier"></div>
     <div class="legende" id="legendeCalendrier"></div>
@@ -302,14 +313,24 @@ function etatJour(iso,l,pers,fo){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay
   if(wd===0||wd===6)return {c:'we'};if(FERIES[iso])return {c:'fe',t:FERIES[iso]};if(jp&&jp.nature==='NON_TRAVAILLE')return {c:'fe',t:jp.libelle||'Non travaillé'};
   var fond=null,comp=null,ev=[],evp=null;pers.forEach(function(p){if(p.debut<=iso&&p.fin>=iso){var x=evenement(p.type);if(x){if(ev.indexOf(x)<0)ev.push(x);if(!evp)evp=p;}else if(EUC_DEV610_estComplementaire_(p.type)){if(!comp)comp=p;}else if(!fond)fond=p;}});
   var vac=D.vacances.filter(function(v){return v.debut<=iso&&v.fin>=iso;})[0];
-  if(vac)return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true};
+  /* Petites vacances en noir ; l'été n'est pas noirci : la période saisie (entreprise) s'affiche, sinon la case reste blanche. */
+  if(vac&&EUC_DEV610_nomVacances_(vac.nom,vac.debut,vac.fin)!=='ETE')return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true};
+  if(vac&&!fond&&!comp)return {c:'blanc',t:'Vacances '+vac.nom,ev:ev,evp:evp};
   if(comp)return {c:'',p:comp,ev:ev,evp:evp,comp:true};
   if(fond){var cours=EUC_DEV610_n_(fond.type)==='COURS';return {c:'',p:fond,ev:ev,evp:evp,entreprise:!cours,lycee:cours};}
   var hors=fo&&((fo.debut&&iso<fo.debut)||(fo.fin&&iso>fo.fin));
   if(hors)return {c:'hors',t:fo.debut&&iso<fo.debut?'Avant le début de la formation':'Après la fin de la formation',ev:ev,evp:evp};
   return {c:'',lycee:true,ev:ev,evp:evp};}
 function evLeg(pers){var vus={};return pers.filter(function(p){var x=evenement(p.type);if(!x||vus[x])return false;vus[x]=1;return true;}).map(function(p){var c=couleur(p.type);return '<span><i style="background:'+c+'"></i>'+esc(LIB_EV[evenement(p.type)]||p.type)+'</span>';}).join('');}
+/* Charte des couleurs de l'annexe 32a (légende des calendriers d'alternance du CFA). */
+var CHARTE={fe:['#DA9694','#000','Jours fériés'],va:['#262626','#fff','Vacances scolaires'],ufa:['#E46C0A','#fff','Cours UFA'],ex:['#21B36B','#fff','Période d’examens'],cs:['#2342D9','#fff','CONSEIL'],ap:['#7F00FF','#fff','APPEL TEL'],vi:['#00B0F0','#fff','VISITE'],ent:['#92D050','#000','ENT.'],comp:['#F4B183','#000','Formation complémentaire']};
+var ORDRE_CHARTE=['fe','va','ufa','ex','cs','ap','vi','ent','comp'];
+/* Nature d'un jour selon la charte (calcul pur) : férié, week-end, petites vacances (l'été n'est pas noirci), événement, entreprise, cours. */
+function natureJour(e){if(e.c==='fe')return 'fe';if(e.c==='we')return 'we';var x=e.evp?evenement(e.evp.type):'';
+  if(x==='E')return 'ex';if(x==='C')return 'cs';if(x==='A')return 'ap';if(x==='V')return 'vi';if(e.c==='va')return 'va';if(e.comp)return 'comp';if(e.lycee)return 'ufa';if(e.entreprise)return 'ent';return 'blanc';}
 function formationDe(code){return (D.formations||{})[code]||{};}
+function enteteOrganisme(l){var o=(l.organismes||[]).map(EUC_DEV610_n_);if(o.indexOf('GRETA')>=0)return ['GRETA — FORMATION CONTINUE','Lycée Les Eucalyptus'];if(o.indexOf('CFAI')>=0&&o.indexOf('CFARAN')<0)return ['CFAI — FORMATION PAR L’APPRENTISSAGE','Lycée Les Eucalyptus'];return ['CFA RÉGIONAL DE L’ACADÉMIE DE NICE','UFA : Lycée Les Eucalyptus'];}
+function titresDefautA32(l){return {titre:l.formation||l.groupe||etiquette(l),sousTitre:l.niveau||etiquette(l)};}
 function titresDefaut(l){var c=l.calendrier,greta=estGreta(l),nat=c==='MIXITE'?'Mixité — scolaires et apprentis':c==='SCOLAIRE'?'Formation scolaire':greta?'Formation continue':'Formation en alternance';
   return {titre:c==='MIXITE'?'Mixité '+(l.groupe||'')+(etiquette(l)!=='Mixité'?' '+etiquette(l).replace(/^Mixité\s*/,''):''):'Formation '+etiquette(l),sousTitre:nat+(supports(l)?' · '+supports(l):'')};}
 /* Heures et formateurs de la formation affichée : réglages et saisies en cours (enregistrés d'un seul clic). */
@@ -331,26 +352,30 @@ function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(co
   var fo=formationDe(code),etats={},jours=[];mois.forEach(function(x){for(var j=1;j<=31;j++){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)break;var iso=dt.toISOString().slice(0,10),e=etatJour(iso,l,pers,fo);etats[iso]=e;
     if(e.lycee)jours.push({date:iso,nature:'FORMATION'});else if(e.comp)jours.push({date:iso,nature:'COMPLEMENTAIRE',complement:e.p.complement||''});}});
   var B=EUC_DEV610_bilanHeures_(jours,HREG,HSAI),parDate={};B.jours.forEach(function(x){parDate[x.date]=x;});
-  var tot=mois.map(function(){return {lycee:0,ent:0,h:0,hc:0};}),corps='';
-  for(var j=1;j<=31;j++){corps+='<tr>'+mois.map(function(x,mi){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)return '<td class="j"></td><td></td><td class="h"></td>';var iso=dt.toISOString().slice(0,10),e=etats[iso],st='',txt=String(j),titre=e.t||'',h=parDate[iso],att='';
-    if(e.p){var c=couleur(e.p.type);st=' style="background:'+c+';color:'+texteSur(c)+'"';titre=EUC_DEV610_libelleType_(e.p)+(titre?' · '+titre:'');txt+=' '+esc(etiq(e.p));}
-    if(e.evp){var ce=couleur(e.evp.type);st=' style="background:'+ce+';color:'+texteSur(ce)+'"';titre=e.evp.type+(titre?' · '+titre:'');}
-    if(e.lycee)tot[mi].lycee++;if(e.entreprise)tot[mi].ent++;
-    if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;att=' data-date="'+iso+'"';var ini=HREG.formateurs?initialesJour(h):'';if(ini)txt+=' <b class="ini">'+esc(ini)+'</b>';if(h.total!==(Number(HREG.matin)||0)+(Number(HREG.apresMidi)||0))txt+=' <small>'+hfmt(h.total)+'h</small>';titre+=(titre?' · ':'')+hfmt(h.total)+' h'+(h.fm||h.fa?' · matin '+(h.fm||'—')+', après-midi '+(h.fa||'—'):'');}
-    if(e.ev&&e.ev.length)txt+=' <b>'+esc(e.ev.join(''))+'</b>';
-    return '<td class="j '+(e.c==='we'?'we':'')+'">'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td class="'+(e.evp?'':e.c)+(h?' hj':'')+'"'+st+att+(titre?' title="'+esc(titre)+'"':'')+'>'+txt+'</td><td class="h">'+(h&&h.total?hfmt(h.total):'')+'</td>';}).join('')+'</tr>';}
-  var tl=tot.reduce(function(s,x){return s+x.lycee;},0),te=tot.reduce(function(s,x){return s+x.ent;},0);
-  var tete='<tr>'+mois.map(function(x){return '<th colspan="3">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+' '+x.y+'</th>';}).join('')+'</tr>';
-  var pied='<tr class="tot">'+tot.map(function(x){return '<td colspan="3" title="heures de formation du mois'+(x.hc?' + heures de formation complémentaire':'')+'">'+hfmt(x.h)+' h'+(x.hc?' + '+hfmt(x.hc)+' h':'')+'</td>';}).join('')+'</tr>';
-  var annuel='<tr class="annuel"><td colspan="'+(mois.length*3)+'">Total annuel : '+hfmt(B.formation)+' h'+(Number(HREG.quota)?' / quota '+hfmt(Number(HREG.quota))+' h':'')+Object.keys(B.complementaires).map(function(c){return ' · '+esc(c)+' : '+hfmt(B.complementaires[c])+' h';}).join('')+'</td></tr>';
-  $('calendrier').innerHTML='<table class="cal"><thead>'+tete+'</thead><tbody>'+corps+pied+annuel+'</tbody></table>';
-  var comps=Object.keys(B.complementaires),q=Number(HREG.quota)||0,ecart=Math.round((q-B.formation)*100)/100;
-  var quota=q?' / quota '+hfmt(q)+' h ('+(ecart>=0?'reste '+hfmt(ecart)+' h':'<span class="erreur">dépassement de '+hfmt(-ecart)+' h</span>')+')':'';
-  var dd=new Date(),td=titresDefaut(l),titre=fo.titre||td.titre,sous=fo.sousTitre||td.sousTitre;
-  $('titreCalendrier').innerHTML='<p style="margin:0;font-weight:800;color:#1b396a">CALENDRIER '+(D.previsionnel?'PRÉVISIONNEL ':'')+esc(a.code)+(a.zone?' — ZONE '+esc(a.zone):'')+'</p><h2>'+esc(titre)+'</h2><p><b>'+esc(sous)+'</b>'+(fo.debut||fo.fin?' · du '+(fo.debut?dfr(fo.debut):'…')+' au '+(fo.fin?dfr(fo.fin):'…'):'')+' · '+tl+' jours au lycée · <b>'+hfmt(B.formation)+' h de formation</b>'+quota+comps.map(function(c){return ' · <b>'+esc(c)+' : '+hfmt(B.complementaires[c])+' h</b> (en plus, hors quota)';}).join('')+' · généré le '+dfr(dd.toISOString().slice(0,10))+'</p>';
+  /* Mise en page de l'annexe 32a : par mois D | J | H (et P, initiales du formateur, quand ils sont saisis). */
+  var P=!!HREG.formateurs,nc=P?4:3,tot=mois.map(function(){return {h:0,hc:0};}),vus={},corps='';
+  for(var j=1;j<=31;j++){corps+='<tr>'+mois.map(function(x,mi){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)return '<td class="k-blanc" colspan="'+nc+'"></td>';
+    var iso=dt.toISOString().slice(0,10),e=etats[iso],h=parDate[iso],k=natureJour(e),ch=CHARTE[k],st=ch?' style="background:'+ch[0]+';color:'+ch[1]+'"':'',cls=ch?'':' k-'+k,titre=[jourLong(iso)];
+    if(ch)vus[k]=1;if(e.p)titre.push(EUC_DEV610_libelleType_(e.p));if(e.evp)titre.push(e.evp.type);if(e.t)titre.push(e.t);
+    var hh='',pp='';if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;hh=h.total?hfmt(h.total):'';pp=P?initialesJour(h):'';titre.push(hfmt(h.total)+' h'+(h.fm||h.fa?' · matin '+(h.fm||'—')+', après-midi '+(h.fa||'—'):''));}
+    var att=h?' data-date="'+iso+'"':'',t=' title="'+esc(titre.join(' · '))+'"';
+    return '<td class="n'+cls+'"'+st+att+t+'>'+j+'</td><td class="'+cls.trim()+'"'+st+att+t+'>'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td class="'+cls.trim()+'"'+st+att+t+'><b>'+hh+'</b></td>'+(P?'<td class="'+cls.trim()+'"'+st+att+t+'><b>'+esc(pp)+'</b></td>':'');}).join('')+'</tr>';}
+  var parAn={};mois.forEach(function(x){parAn[x.y]=(parAn[x.y]||0)+1;});
+  var tete='<tr class="an">'+Object.keys(parAn).map(function(y){return '<th colspan="'+(parAn[y]*nc)+'">'+y+'</th>';}).join('')+'</tr>'+
+    '<tr class="mo">'+mois.map(function(x){return '<th colspan="'+nc+'">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+'</th>';}).join('')+'</tr>'+
+    '<tr class="co">'+mois.map(function(){return '<th>D</th><th>J</th>'+(P?'<th class="hc" colspan="2">H / P</th>':'<th class="hc">H</th>');}).join('')+'</tr>';
+  var pied='<tr class="tm">'+mois.map(function(x){return '<th colspan="'+nc+'">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+'</th>';}).join('')+'</tr><tr class="tv">'+tot.map(function(x){return '<td colspan="'+nc+'">'+hfmt(x.h)+(x.hc?' + '+hfmt(x.hc):'')+'</td>';}).join('')+'</tr>';
+  var dd=new Date(),td=titresDefautA32(l),ent=enteteOrganisme(l),q=Number(HREG.quota)||0,ecart=Math.round((q-B.formation)*100)/100,nat=titresDefaut(l).sousTitre;
+  var gen=dfr(dd.toISOString().slice(0,10))+' '+String(dd.getHours()).padStart(2,'0')+':'+String(dd.getMinutes()).padStart(2,'0');
+  var leg=ORDRE_CHARTE.filter(function(k){return vus[k]||['fe','va','ufa','ent'].indexOf(k)>=0;}).map(function(k){return '<span style="background:'+CHARTE[k][0]+';color:'+CHARTE[k][1]+'">'+esc(k==='comp'?(Object.keys(B.complementaires)[0]||CHARTE[k][2]):CHARTE[k][2])+'</span>';}).join('');
+  $('calendrier').innerHTML='<div class="a32"><div class="a32-tete"><div class="rf">RÉPUBLIQUE<br>FRANÇAISE</div><div class="centre"><b>'+esc(ent[0])+'</b><b>'+esc(ent[1])+'</b><span>CALENDRIER '+(D.previsionnel?'PRÉVISIONNEL ':'')+esc(a.code)+(a.zone?' — zone '+esc(a.zone):'')+' — généré le '+gen+'</span></div><div class="org">'+esc((l.organismes||[]).join(' · ')||l.etablissement||'')+'</div></div>'+
+    '<table class="a32i"><tr><td class="l">Formation :</td><td class="v">'+esc(fo.titre||td.titre)+'</td><td class="m" rowspan="2">'+esc(nat)+'</td><td class="l">Début des cours :</td><td class="v">'+(fo.debut?dfr(fo.debut):'—')+'</td></tr><tr><td class="l">Classe :</td><td class="v">'+esc(fo.sousTitre||td.sousTitre)+'</td><td class="l">Fin des cours :</td><td class="v">'+(fo.fin?dfr(fo.fin):'—')+'</td></tr></table>'+
+    '<table class="a32c"><thead>'+tete+'</thead><tbody>'+corps+pied+'</tbody></table>'+
+    '<div class="a32-note">Ce calendrier de formation est donné à titre indicatif, il pourrait évoluer pour des raisons pédagogiques et/ou au moment des examens</div>'+
+    '<div class="a32-pied"><div class="a32-leg">'+leg+'</div><div class="a32-tot">Total annuel <b>'+hfmt(B.formation)+'</b>'+(q?'<span style="margin-left:8px;font-size:10px;font-weight:700">quota '+hfmt(q)+' h'+(ecart<0?' — <span class="erreur">dépassement '+hfmt(-ecart)+' h</span>':ecart>0?' — reste '+hfmt(ecart)+' h':'')+'</span>':'')+Object.keys(B.complementaires).map(function(c){return '<span style="margin-left:8px;font-size:10px">'+esc(c)+' : '+hfmt(B.complementaires[c])+' h (en plus)</span>';}).join('')+'</div></div>'+
+    '<div class="a32-bas"><span>'+esc(supports(l))+'</span><span>Annexe 32a — calendrier d’alternance '+esc(a.code)+'</span></div></div>';
+  $('titreCalendrier').innerHTML='';$('legendeCalendrier').innerHTML='';
   if(!garderEditeur){$('fDebut').value=fo.debut||'';$('fFin').value=fo.fin||'';$('fTitre').value=fo.titre||'';$('fTitre').placeholder=td.titre;$('fSousTitre').value=fo.sousTitre||'';$('fSousTitre').placeholder=td.sousTitre;}
-  var vus={},leg=[];pers.forEach(function(p){if(evenement(p.type))return;var k=EUC_DEV610_n_(EUC_DEV610_libelleType_(p));if(!vus[k]){vus[k]=1;leg.push(p);}});
-  $('legendeCalendrier').innerHTML='<span><i style="background:#fff"></i>Au lycée</span>'+leg.map(function(p){return '<span><i style="background:'+couleur(p.type)+'"></i>'+esc(EUC_DEV610_libelleType_(p))+'</span>';}).join('')+evLeg(pers)+'<span><i style="background:#555"></i>Vacances</span><span><i style="background:#e11d48"></i>Férié / non travaillé</span><span><i style="background:#d9d9d9"></i>Week-end</span><span><i style="background:repeating-linear-gradient(45deg,#e5e7eb 0 3px,#f3f4f6 3px 6px)"></i>Hors des dates de la formation</span><span class="note">Heures par défaut : '+hfmt(Number(HREG.matin)||0)+' h le matin, '+hfmt(Number(HREG.apresMidi)||0)+' h l’après-midi ; un nombre dans une case signale un jour ajusté.</span>';
   rendreRecap(l,B);if(!garderEditeur)rendreEditeurHeures(l,B);majHeuresEtat();
   $('retourFormations').href=lienPlannings('&vue=formations');}
 /* Récapitulatif par formateur : total de la formation et total de chaque formation complémentaire, séparés. */
@@ -537,7 +562,7 @@ $('nomsPronote').onclick=function(){var n=0;ORG.forEach(function(l){if(l.calendr
 $('fEnregistrer').onclick=function(){var code=LIGNE_COURANTE;if(!code)return;var q={annee:D.annee.code,ligne:code,debut:$('fDebut').value,fin:$('fFin').value,titre:$('fTitre').value,sousTitre:$('fSousTitre').value};
   if(q.debut&&q.fin&&q.fin<q.debut){message('La fin de la formation doit suivre son début.','erreur');return;}
   occupe(this,'Enregistrement…','EUC_DEV610_enregistrerFormation',q,function(r){D.formations=D.formations||{};D.formations[code]=r.formation;rendreCalendrier(code);message('<span class="ok">Dates et titres enregistrés.</span>');});};
-$('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:6mm}';window.print();$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
+$('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:5mm}';var c=document.querySelector('.a32');if(c){var z=Math.min(1,1080/c.scrollWidth,740/c.scrollHeight);c.style.zoom=String(Math.floor(z*100)/100);}window.print();if(c)c.style.zoom='';$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
 $('ajouterLigne').onclick=function(){ORG.push({id:0,code:'NOUVELLE_'+Date.now(),libelle:'Nouvelle classe',groupe:(ORG[ORG.length-1]||{}).groupe||'À classer',calendrier:'SCOLAIRE',formation:'',niveau:'',classePfmp:'',profil:'',etablissement:'',organismes:[],actif:true});orgAppliquer();rendreOrganisation();};
 $('enregistrerOrganisation').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation',{lignes:ORG},function(r){ORG_SALE=false;charger(D.annee.code);message('<span class="ok">Organisation enregistrée</span> : '+r.modifiees+' ligne(s) mise(s) à jour, '+r.creees+' créée(s)'+(r.desactivees?', '+r.desactivees+' masquée(s)':'')+'.');});};
 

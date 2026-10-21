@@ -388,9 +388,17 @@ test('formations de l’année : dates de début et de fin, titres ; années et 
   assert.strictEqual(g.tables.Annees_Scolaires.find(x => x.fields.Code === '2028-2029').fields.Previsionnelle, false);
   assert.ok(!g.calls.some(c => c.method === 'delete'));
   const h = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", '<td class="h">', 'Total annuel : ', 'Formation en alternance', 'Formation continue']) assert.ok(h.includes(t), t);
+  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", "'<th class=\"hc\" colspan=\"2\">H / P</th>'", 'Total annuel <b>', 'Formation en alternance', 'Formation continue', 'CFA RÉGIONAL DE L’ACADÉMIE DE NICE', 'Ce calendrier de formation est donné à titre indicatif', "ufa:['#E46C0A'", "va:['#262626'", "ent:['#92D050'", "vi:['#00B0F0'", "ap:['#7F00FF'", "cs:['#2342D9'", "fe:['#DA9694'", "!=='ETE')return {c:'va'"]) assert.ok(h.includes(t), t);
   assert.doesNotMatch(h, /if\(fe\[s\.i\]\.ferme\)cls\+=' fe'/, 'plus d’allusion aux fériés dans les cases du planning');
   assert.ok(read('apps-script/Admin_PFMP.html').includes('&amp;onglet=pAnnees">Années et vacances'));
+});
+test('calendrier d’une formation (annexe 32a) : nature de chaque jour selon la charte du CFA', () => {
+  const h = read('apps-script/Plannings_DEV610.html'), c = {};
+  const code = h.match(/function evenement\(.*/)[0] + '\n' + h.match(/function natureJour\(e\)\{[\s\S]*?return 'blanc';\}/)[0];
+  vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_() + '\n' + code, c);
+  const N = e => c.natureJour(e);
+  assert.deepStrictEqual([N({ c: 'fe' }), N({ c: 'we' }), N({ c: 'va' }), N({ c: '', lycee: true }), N({ c: '', entreprise: true, p: { type: 'ENT.' } }), N({ c: '', entreprise: true, evp: { type: 'VISITE' } }), N({ c: '', lycee: true, evp: { type: 'CONSEIL' } }), N({ c: '', evp: { type: 'APPEL TEL' } }), N({ c: '', evp: { type: 'EXAMENS' } }), N({ c: 'hors' }), N({ c: 'blanc' }), N({ c: '', comp: true })],
+    ['fe', 'we', 'va', 'ufa', 'ent', 'vi', 'cs', 'ap', 'ex', 'blanc', 'blanc', 'comp']);
 });
 test('publication : confirmation, refus sur vacances prévisionnelles ou sans rattachement, écriture typée avec classes concernées', () => {
   const g = grist({ periodes: [
