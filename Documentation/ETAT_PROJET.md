@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : planning général, bandes fusionnées et semaines partielles
+
+- Impression : bureau formation entreprise (BFE) et téléphone dans la ligne de
+  titre ; légende sous le tableau ; tableau sur toute la largeur de la page A3 et
+  centré ; réduction calculée sur une géométrie fixe (lignes de 18 px, colonnes de
+  26 px, lignes de légende estimées), identique quel que soit l'écran ; libellés
+  des lignes en 13 px. PDF de la copie locale : une page, rien de coupé.
+- Grille : une suite de semaines entières du même type forme une bande (cases
+  sans séparation, libellé centré, un point sur le bord du bas à chaque
+  semaine pour compter) ; une semaine partielle n'est colorée que sur ses jours
+  en entreprise (CAP peintre du mercredi au vendredi : 3/5 de la case), sans
+  libellé répété ; pendant les vacances, semaines entières en bande. Les cases
+  restent séparées pour la sélection.
+- Tests simulés : 41/41 DEV610, suite complète verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : planning général sur une page, couleurs et pied de page saisis dans l'application
 
 - Impression A3 : titre « PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE –
