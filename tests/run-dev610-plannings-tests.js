@@ -77,6 +77,9 @@ test('vacances : Toussaint = S43-S44, été à partir de S27 ; le pont de l’As
   assert.deepStrictEqual(J([s[idx.TOUSSAINT.premier].numero, s[idx.TOUSSAINT.dernier].numero]), [43, 44]);
   assert.strictEqual(s[idx.ETE.premier].numero, 27); assert.strictEqual(idx.ASCENSION, undefined);
   const asc = s.find(x => x.lundi === '2027-05-03'); assert.strictEqual(asc.vacances, ''); assert.deepStrictEqual(J(asc.jours), [{ nature: 'VACANCES', nom: 'ASCENSION', nb: 2 }]);
+  /* Règle fixe : même saisi sur 3 jours ou plus (mercredi → vendredi), le pont ne fait jamais une semaine de vacances. */
+  const s3 = k.EUC_DEV610_semaines_('2027-04-26', '2027-05-21'), i3 = k.EUC_DEV610_marquerVacances_(s3, [{ nom: 'Pont de l’Ascension', debut: '2027-05-05', fin: '2027-05-09' }]);
+  const w = s3.find(x => x.lundi === '2027-05-03'); assert.strictEqual(w.vacances, ''); assert.deepStrictEqual(J(w.jours), [{ nature: 'VACANCES', nom: 'ASCENSION', nb: 3 }]); assert.strictEqual(i3.ASCENSION, undefined);
 });
 test('vacances nommées autrement : reconnues par leurs dates', () => {
   const t = (n, d, f) => k.EUC_DEV610_nomVacances_(n, d, f);

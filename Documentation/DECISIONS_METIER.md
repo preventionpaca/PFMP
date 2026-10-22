@@ -1,5 +1,12 @@
 # Décisions métier permanentes
 
+- Pont de l'Ascension (22 octobre 2026, règle fixe pour toutes les années) : il
+  ne marque jamais une colonne du planning (ni noir, ni hachure, quel que soit le
+  nombre de jours saisis) ; la case reste blanche ou de la couleur des périodes
+  (stage, entreprise). Il est signalé uniquement par un cadre rouge autour des
+  dates du lundi et du vendredi de la semaine du jeudi de l'Ascension, dans
+  l'en-tête, avec l'infobulle « Pont de l'Ascension ». Il ne sert pas d'ancrage
+  aux règles de placement.
 - Plannings annuels, source unique (21 octobre 2026) : la saisie se fait dans la
   page Plannings ; `Planning_Periodes` est conservée (les conventions et
   affectations y pointent par numéro de ligne) mais n'est plus saisie à la main.

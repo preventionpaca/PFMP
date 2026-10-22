@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension, règle fixe
+
+- Un pont saisi sur 3 jours ouvrés ou plus faisait de la semaine une semaine de
+  vacances (colonne marquée, infobulle « Vacances »). `EUC_DEV610_marquerVacances_`
+  ne classe plus jamais le pont de l'Ascension en semaine de vacances ; décision
+  inscrite dans DECISIONS_METIER. Test complété (pont de 3 jours). Suite verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension, une seule semaine encadrée, lignes intactes
 
 - Retour utilisateur (2027-2028) : deux semaines encadrées et colonnes hachurées

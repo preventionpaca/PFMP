@@ -71,7 +71,11 @@ function EUC_DEV610_marquerVacances_(semaines, vacances) {
     if (!v.debut || !v.fin) return; var nom = EUC_DEV610_nomVacances_(v.nom, v.debut, v.fin);
     semaines.forEach(function(s) {
       var n = 0; for (var k = 0; k < 5; k++) { var j = EUC_DEV610_plus_(s.lundi, k); if (j >= v.debut && j <= v.fin) n++; }
-      if (n >= 3) { s.vacances = nom; s.previsionnel = !!v.previsionnel; var x = index[nom] = index[nom] || { premier: s.i, dernier: s.i }; x.premier = Math.min(x.premier, s.i); x.dernier = Math.max(x.dernier, s.i); }
+      /* Règle fixe (toutes les années) : le pont de l'Ascension ne fait jamais une semaine de vacances ; la colonne reste
+       * libre (blanche ou de la couleur des périodes) et seul l'en-tête des dates le signale. */
+      var pont = nom === 'ASCENSION';
+      if (n >= 3 && !pont) { var x = index[nom] = index[nom] || { premier: s.i, dernier: s.i }; x.premier = Math.min(x.premier, s.i); x.dernier = Math.max(x.dernier, s.i); }
+      if (n >= 3 && !pont) { s.vacances = nom; s.previsionnel = !!v.previsionnel; }
       else if (n > 0) s.jours.push({ nature: 'VACANCES', nom: nom, nb: n });
     });
   });
