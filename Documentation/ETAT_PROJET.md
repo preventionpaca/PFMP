@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : impression, colonne des noms coupée et légende sur deux pages
+
+- Retour utilisateur : un bout de légende sur une page 2, et (aperçu) colonne des
+  noms coupée à gauche. Reproduit avec 63 semaines (planning jusqu'en novembre) :
+  le tableau dépassait de quelques pixels et, centré, était coupé des deux côtés.
+- Corrigé : tableau aligné à gauche (un débordement ne peut plus couper les noms),
+  marge de sécurité, et réajustement au passage effectif en mode impression
+  (`matchMedia('print')`, largeur réelle de la page). Légende raccourcie sur une
+  ligne : « Appel » une seule fois, « Jour férié », « Pont », « VFMP ». Noms des
+  lignes plafonnés à 14 px pour rester entiers.
+- PDF A3 vérifiés dans Chromium avec 63 semaines ; suite complète verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : lisibilité du planning imprimé (propositions A à I)
 
 - Retour d'impression utilisateur (photos) : classes écrites petit, lignes

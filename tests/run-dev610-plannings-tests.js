@@ -731,7 +731,7 @@ test('couleurs par type et pied de page : saisis dans la page, contrôlés, prio
   const prop = k.EUC_DEV610_ligneProposee_({ id: 99, nom: '2BTS CPI', classePfmp: '2BTS CPI', etab: 'LGT', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFAI' }, lignesDefaut());
   assert.deepStrictEqual(J([prop.calendrier, prop.organismes]), ['SCOLAIRE', []], 'ligne scolaire : pas d’organisme de la classe');
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", 'function miseEnPageImpression()', '.misePage{flex-direction:column;align-items:center}', '<span class="bfe">', "cls+=' part'", 'et bande']) assert.ok(pg.includes(x), x);
+  for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", 'function miseEnPageImpression()', '.misePage{flex-direction:column;align-items:stretch}', 'function ajusterImpression()', "'✓':'VFMP'", '<span class="bfe">', "cls+=' part'", 'et bande']) assert.ok(pg.includes(x), x);
 });
 
 test('impression : aucun dégradé transparent dans la grille (rendu noir dans certains lecteurs PDF), appel en « A », repères aux deux bouts des bandes', () => {
