@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : calendrier d'une formation, vacances visibles, saisie des formateurs
+
+- Petites vacances toujours en noir dans le calendrier d'une formation (modèle
+  annexe 32a), même si le jeune est en entreprise (remplace la règle du
+  21 octobre) ; l'été reste non noirci. La grille du planning général est inchangée.
+- Saisie des formateurs : l'après-midi reprend le formateur du matin, sauf case
+  « différent » ; Entrée passe au matin du jour suivant ; plusieurs formateurs sur
+  une demi-journée « F+G » (ou F+G+H) avec heures partagées à parts égales dans le
+  récapitulatif par formateur (`EUC_DEV610_bilanHeures_`).
+- Bureau formation entreprise et téléphone dans l'en-tête du calendrier.
+- Formation complémentaire « 5 Star » : déjà gérée (type « Formation
+  complémentaire », complément « 5 Star », heures à part du quota et du
+  récapitulatif par formateur).
+- Tests : 45/45 DEV610, suite complète verte ; vérifié dans Chromium (CAP peintre).
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : passer du planning annuel au planning d'une formation
 
 - Planning général : liste « Planning d'une formation » (formations de l'année,

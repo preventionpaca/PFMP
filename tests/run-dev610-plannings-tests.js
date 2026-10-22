@@ -431,12 +431,12 @@ test('calendrier d’une formation (annexe 32a) : nature de chaque jour selon la
   const N = e => c.natureJour(e);
   assert.deepStrictEqual([N({ c: 'fe' }), N({ c: 'we' }), N({ c: 'va' }), N({ c: '', lycee: true }), N({ c: '', entreprise: true, p: { type: 'ENT.' } }), N({ c: '', entreprise: true, evp: { type: 'VISITE' } }), N({ c: '', lycee: true, evp: { type: 'CONSEIL' } }), N({ c: '', evp: { type: 'APPEL TEL' } }), N({ c: '', evp: { type: 'EXAMENS' } }), N({ c: 'hors' }), N({ c: 'blanc' }), N({ c: '', comp: true })],
     ['fe', 'we', 'va', 'ufa', 'ent', 'vi', 'cs', 'ap', 'ex', 'blanc', 'blanc', 'comp']);
-  /* Jeune en entreprise pendant les vacances (mixité, alternance) : le jour est « en entreprise », pas noirci. */
+  /* Petites vacances toujours visibles (modèle 32a), même si le jeune est en entreprise ; été : la période s'affiche. */
   vm.runInContext(h.match(/function etatJour\(iso,l,pers,fo\)\{[\s\S]*?return \{c:'',lycee:true,ev:ev,evp:evp\};\}/)[0], c);
   c.D = { jours: [], vacances: [], toutesVacances: [{ nom: 'Noël', debut: '2026-12-19', fin: '2027-01-03' }, { nom: 'Été', debut: '2027-07-03', fin: '2027-08-31' }] }; c.FERIES = {};
   const pers = [{ ligne: 'MIX_1BP', type: 'ENT.', debut: '2026-12-21', fin: '2026-12-24' }, { ligne: 'MIX_1BP', type: 'ENT.', debut: '2027-07-05', fin: '2027-07-30' }];
   const E = iso => N(c.etatJour(iso, { code: 'MIX_1BP' }, pers, {}));
-  assert.deepStrictEqual([E('2026-12-22'), E('2026-12-29'), E('2027-07-07'), E('2027-08-10')], ['ent', 'va', 'ent', 'blanc']);
+  assert.deepStrictEqual([E('2026-12-22'), E('2026-12-29'), E('2027-07-07'), E('2027-08-10')], ['va', 'va', 'ent', 'blanc']);
 });
 test('calendrier d’une formation : intitulé du diplôme, périodes après l’été, logos (porteur à gauche, lycée à droite)', () => {
   const g = grist({ periodes: [
@@ -755,6 +755,14 @@ test('lisibilité du planning imprimé : titre selon les blocs, hauteur et polic
   vm.createContext(c); vm.runInContext(pg.match(/function libBande\(t,n\)\{[^\n]*/)[0], c);
   assert.deepStrictEqual([c.libBande('PFMP 1ère', 6), c.libBande('PFMP Tbac', 3), c.libBande('Stage', 8), c.libBande('ENT.', 1)], ['PFMP 1ère · 6 sem.', 'PFMP Tbac', 'Stage · 8 sem.', 'ENT.']);
   for (const x of ['function titrePlanning()', "t.style.setProperty('--rh',rh+'px')", 'rh=Math.min(36,', "tr class=\"'+(zebre%2?'':'zb')+'\"", "(debutMois(s.i)?' m0':'')", 'class="libD"', 'var PALETTE_FRANCHE=', 'function celluleSupports(l)', 'id="ouvrirFormation"', 'id="retourAnnuel"', 'id="autreFormation"', "a.target=nouvelle?'_blank':'_top'", 'return i===0||SEM[i].mois!==SEM[i-1].mois', 'overflow:visible;border-right:2px solid #cfe3da', 'table.g td.v,table.g tr.zb td.v{background:#8e9894}', '<span class="tel">']) assert.ok(pg.includes(x), x);
+});
+
+test('formateurs : plusieurs sur une demi-journée (F+G) avec heures partagées ; saisie de l’après-midi reprise du matin ; BFE dans l’en-tête du calendrier', () => {
+  const b = k.EUC_DEV610_bilanHeures_([{ date: '2026-09-14', nature: 'FORMATION' }, { date: '2026-09-15', nature: 'FORMATION' }], { matin: 4, apresMidi: 3 }, { '2026-09-14': { fm: 'F', fa: 'F' }, '2026-09-15': { fm: 'F+G', fa: 'F+G+H' } });
+  assert.deepStrictEqual(J(b.formateurs.map(f => [f.initiales, f.total])), [['F', 10], ['G', 3], ['H', 1]]);
+  assert.strictEqual(b.formation, 14);
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['class="hd"', "if(d&&fa&&!d.checked){fa.value=val;s.fa=val;}", "if(e.key!=='Enter')return;", 'function bfeCal()', "'+bfeCal()+'"]) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

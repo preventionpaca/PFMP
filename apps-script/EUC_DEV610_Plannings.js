@@ -217,11 +217,14 @@ function EUC_DEV610_bilanHeures_(jours, reglages, saisies) {
     var s = (saisies || {})[j.date] || {}, comp = j.nature === 'COMPLEMENTAIRE' ? (j.complement || EUC_DEV610_TYPE_COMPLEMENTAIRE_) : null;
     var x = { date: j.date, nature: j.nature, complement: comp, hm: num(s.hm, dm), ha: num(s.ha, da), fm: String(s.fm || '').trim().toUpperCase(), fa: String(s.fa || '').trim().toUpperCase() };
     x.total = r2(x.hm + x.ha); out.jours.push(x); ajouter(out, comp, x.total);
+    /* Plusieurs formateurs sur une demi-journée (« F+G », jusqu'à trois et plus) : heures partagées à parts égales. */
     [[x.fm, x.hm], [x.fa, x.ha]].forEach(function(d) {
       if (!(d[1] > 0)) return;
-      if (!d[0]) { ajouter(out.sansFormateur, comp, d[1]); return; }
-      if (!parF[d[0]]) { parF[d[0]] = { initiales: d[0], formation: 0, complementaires: {}, total: 0 }; ordre.push(d[0]); }
-      ajouter(parF[d[0]], comp, d[1]); parF[d[0]].total = r2(parF[d[0]].total + d[1]);
+      var qui = String(d[0] || '').split(/[+\/,\s]+/).filter(Boolean);
+      if (!qui.length) { ajouter(out.sansFormateur, comp, d[1]); return; }
+      qui.forEach(function(f) { var h = r2(d[1] / qui.length);
+        if (!parF[f]) { parF[f] = { initiales: f, formation: 0, complementaires: {}, total: 0 }; ordre.push(f); }
+        ajouter(parF[f], comp, h); parF[f].total = r2(parF[f].total + h); });
     });
   });
   out.formateurs = ordre.sort().map(function(k) { return parF[k]; });
