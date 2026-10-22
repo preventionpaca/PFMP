@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EPI et étiquettes</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}
+main{max-width:1400px;margin:auto;padding:16px}
+.ariane{margin:0 0 10px;font-size:14px}.ariane a{color:var(--vert);font-weight:700;text-decoration:none}
+.note{color:var(--gris);font-size:13px}.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}.alerte{color:#9a3412}
+.barre{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+select,input,button{font:inherit}
+button{border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer}
+button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}button.petit{padding:2px 7px;font-size:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-1px;animation:tourne .8s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+.onglets{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--bord);margin:12px 0 10px}
+.onglets button{border:1px solid var(--bord);border-bottom:none;border-radius:8px 8px 0 0;background:#eef6f2;color:var(--texte)}
+.onglets button[aria-selected="true"]{background:var(--vert);color:#fff;border-color:var(--vert)}
+.panneau{display:none}.panneau.actif{display:block}
+.cadre{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 12px;margin:8px 0}
+table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bord)}
+table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
+table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
+#qui{position:fixed;inset:0;background:rgba(15,40,30,.55);display:flex;align-items:center;justify-content:center;z-index:50}#qui[hidden]{display:none}
+#qui .boite{background:#fff;border-radius:12px;padding:20px 24px;max-width:420px;width:92%;box-shadow:0 10px 40px #0004}
+#qui input{width:100%;margin:4px 0 10px;padding:6px 8px}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:800;background:#e0f2fe;color:#075985}
+</style>
+</head>
+<body>
+<header><h1>EPI et étiquettes</h1><p>Tenues par classe, essayage, vagues de commande — puis étiquettes fournisseur et fiches de remise.</p></header>
+<main>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <strong>EPI et étiquettes</strong></nav>
+  <div class="barre"><label>Année scolaire <select id="annee" disabled></select></label><span id="quiEtat" class="note"></span><button type="button" id="changerQui" class="petit">Changer de personne</button></div>
+  <div id="etat" class="note" role="status">Chargement…</div>
+  <div id="messages" role="status"></div>
+  <div class="onglets" role="tablist">
+    <button type="button" role="tab" data-p="pEssayage" aria-selected="true">Essayage</button>
+    <button type="button" role="tab" data-p="pVagues" aria-selected="false">Vagues</button>
+    <button type="button" role="tab" data-p="pReglages" aria-selected="false">Réglages</button>
+    <button type="button" role="tab" data-p="pAdmin" aria-selected="false">Administratifs</button>
+  </div>
+
+  <section id="pEssayage" class="panneau actif">
+    <div class="barre"><label>Vague <select id="eVague"></select></label><label>Classe <select id="eClasse"></select></label>
+      <label>Professeur de l’essayage <select id="eProf"><option value=""></option></select></label><button type="button" class="petit" id="profTous" title="Met ce professeur sur toutes les lignes de la classe">Appliquer à toute la classe</button>
+      <span style="flex:1"></span><button type="button" class="plein" id="enregistrerEssayage" disabled>Enregistrer l’essayage</button></div>
+    <p class="note" id="eTenue"></p>
+    <table class="t"><thead id="eTete"></thead><tbody id="eCorps"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterProvisoire" title="Élève dont le dossier n’est pas encore dans Pronote (passerelle, dossier en cours)">Ajouter un élève hors Pronote</button></div>
+    <div id="provisoires"></div>
+  </section>
+
+  <section id="pVagues" class="panneau">
+    <p class="note">Les essayages et les étiquettes fournisseur se font par vague de commande ; une nouvelle vague ne refait pas les précédentes.</p>
+    <table class="t"><thead><tr><th>N°</th><th>Libellé</th><th>Date de commande</th><th>Statut</th><th>Essayages</th><th></th></tr></thead><tbody id="tVagues"></tbody></table>
+    <div class="barre"><button type="button" class="plein" id="nouvelleVague">Nouvelle vague</button></div>
+  </section>
+
+  <section id="pReglages" class="panneau">
+    <h3>Pièces et grilles de tailles</h3>
+    <table class="t"><thead><tr><th>Code</th><th>Libellé</th><th>Tailles (dans l’ordre, séparées par des virgules)</th><th>Active</th></tr></thead><tbody id="tPieces"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterPiece">Ajouter une pièce</button></div>
+    <h3>Tenues</h3>
+    <table class="t"><thead><tr><th>Code</th><th>Libellé</th><th>Pièces</th><th>Active</th></tr></thead><tbody id="tTenues"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterTenue">Ajouter une tenue</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerReglages" disabled>Enregistrer les pièces et tenues</button></div>
+    <h3>Tenue de chaque classe <span class="note" id="rAnnee"></span></h3>
+    <table class="t"><thead><tr><th>Classe</th><th>Tenue</th></tr></thead><tbody id="tLiens"></tbody></table>
+    <div class="barre"><span style="flex:1"></span><button type="button" class="plein" id="enregistrerLiens" disabled>Enregistrer les tenues des classes</button></div>
+  </section>
+
+  <section id="pAdmin" class="panneau">
+    <p class="note">Personnels administratifs (badges et listes d’événement). Une ligne décochée est masquée, jamais supprimée.</p>
+    <table class="t"><thead><tr><th>Nom</th><th>Prénom</th><th>Fonction</th><th>Service</th><th>Courriel</th><th>Téléphone</th><th>Actif</th></tr></thead><tbody id="tAdmin"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterAdmin">Ajouter une personne</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerAdmin" disabled>Enregistrer les administratifs</button></div>
+  </section>
+</main>
+
+<div id="qui" hidden><div class="boite" role="dialog" aria-modal="true" aria-labelledby="quiTitre">
+  <h2 id="quiTitre" style="margin-top:0">Qui saisit l’essayage ?</h2>
+  <p class="note">Votre nom et votre prénom sont écrits sur chaque essayage enregistré, avec la date. Ils sont redemandés si la page est rechargée.</p>
+  <label>Nom <input id="quiNom" autocomplete="off"></label><label>Prénom <input id="quiPrenom" autocomplete="off"></label>
+  <p id="quiErreur" class="erreur"></p><button type="button" class="plein" id="quiOk">Commencer</button></div></div>
+
+<script><?!= codeClient ?></script>
+<script>
+(function(){
+var GARDE={},ADMIN=<?= adminBase ?>,ONGLET=<?= onglet ?>,D=null,QUI='',SAI={},PROV=[],REG=null,REG_SALE=false,LIENS={},LIENS_SALE=false,ADM=null,ADM_SALE=false,ESS_SALE=false;
+function $(id){return document.getElementById(id);}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function message(h,c){$('messages').innerHTML=h?'<p class="'+(c||'note')+'">'+h+'</p>':'';}
+function occupe(btn,lib,fn,arg,ok){var orig=btn.innerHTML,fini=false;btn.disabled=true;btn.innerHTML='<span class="spin" aria-hidden="true"></span>'+esc(lib);
+  function ret(){btn.innerHTML=orig;btn.disabled=false;majBoutons();}
+  var t=setTimeout(function(){if(fini)return;fini=true;ret();message('Délai dépassé : le serveur n’a pas répondu. Rechargez la page avant de réessayer.','erreur');},90000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);ret();ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);ret();message('Erreur : '+esc(e&&e.message||e),'erreur');})[fn](arg);}
+function majBoutons(){$('enregistrerEssayage').disabled=!D||!ESS_SALE;$('enregistrerReglages').disabled=!REG_SALE;$('enregistrerLiens').disabled=!LIENS_SALE;$('enregistrerAdmin').disabled=!ADM_SALE;}
+/* Personne qui saisit : demandée au démarrage, gardée en mémoire tant que la page n'est pas rechargée. */
+function demanderQui(){$('qui').hidden=false;$('quiErreur').textContent='';setTimeout(function(){$('quiNom').focus();},50);}
+$('quiOk').onclick=function(){var n=$('quiNom').value.trim(),p=$('quiPrenom').value.trim();if(!n||!p){$('quiErreur').textContent='Nom et prénom obligatoires.';return;}QUI=n.toUpperCase()+' '+p;$('qui').hidden=true;$('quiEtat').innerHTML='Saisie par <b>'+esc(QUI)+'</b> · '+new Date().toLocaleDateString('fr-FR');};
+$('quiPrenom').addEventListener('keydown',function(e){if(e.key==='Enter')$('quiOk').click();});
+$('changerQui').onclick=demanderQui;
+
+function charger(annee){GARDE={classe:$('eClasse').value,vague:$('eVague').value};$('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement…';$('annee').disabled=true;
+  google.script.run.withSuccessHandler(function(r){D=r;SAI={};PROV=[];REG=null;REG_SALE=false;LIENS=JSON.parse(JSON.stringify(Object.keys(r.liens).reduce(function(o,k){o[k]=r.liens[k].tenue;return o;},{})));LIENS_SALE=false;ADM=null;ADM_SALE=false;ESS_SALE=false;initialiser();})
+    .withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span>';}).EUC_DEV620_charger({annee:annee});}
+function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<option'+(a===D.annee?' selected':'')+'>'+esc(a)+'</option>';}).join('');$('annee').disabled=false;
+  $('etat').innerHTML=esc(D.annee)+' · '+D.classes.length+' classes · '+D.eleves.length+' élèves Pronote · '+D.vagues.length+' vague(s) · '+D.essayages.length+' essayage(s)';
+  $('eVague').innerHTML=D.vagues.length?D.vagues.map(function(v){return '<option value="'+v.numero+'">'+esc(v.libelle||('Vague '+v.numero))+'</option>';}).join(''):'<option value="">Créez d’abord une vague</option>';
+  if(D.vagues.length)$('eVague').value=String(D.vagues[D.vagues.length-1].numero);
+  $('eClasse').innerHTML='<option value="">— classe —</option>'+D.classes.map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+'</option>';}).join('');
+  /* Après un enregistrement : même classe et même vague. */
+  if(GARDE.vague&&D.vagues.some(function(v){return String(v.numero)===GARDE.vague;}))$('eVague').value=GARDE.vague;if(GARDE.classe&&D.classes.some(function(c){return String(c.id)===GARDE.classe;}))$('eClasse').value=GARDE.classe;
+  $('eProf').innerHTML='<option value=""></option>'+D.professeurs.map(function(p){return '<option>'+esc(p)+'</option>';}).join('');
+  rendreEssayage();rendreVagues();rendreReglages();rendreAdmin();majBoutons();}
+$('annee').onchange=function(){if((ESS_SALE||REG_SALE||LIENS_SALE||ADM_SALE)&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee;return;}charger(this.value);};
+
+/* ---------- Essayage ---------- */
+function tenueDe(code){return D.tenues.filter(function(t){return t.code===code;})[0];}
+function piece(code){return D.pieces.filter(function(p){return p.code===code;})[0];}
+function existant(eleveId,vague){return D.essayages.filter(function(x){return x.eleveId===eleveId&&x.vague===vague;})[0];}
+function rendreEssayage(){var cid=Number($('eClasse').value),vague=Number($('eVague').value)||0;
+  if(!cid){$('eTete').innerHTML='';$('eCorps').innerHTML='<tr><td class="note">Choisissez une classe.</td></tr>';$('eTenue').textContent='';rendreProvisoires();return;}
+  var tc=LIENS[cid]||'',tenue=tenueDe(tc),cls=D.classes.filter(function(c){return c.id===cid;})[0]||{};
+  $('eTenue').innerHTML=tenue?'Tenue de la classe : <b>'+esc(tenue.libelle)+'</b> (onglet Réglages pour la changer). Une ligne peut prendre une autre tenue.':'<span class="alerte">Aucune tenue définie pour '+esc(cls.nom)+' : choisissez-la dans l’onglet Réglages, ou par élève ci-dessous.</span>';
+  var eleves=D.eleves.filter(function(e){return e.classeId===cid;}),ps=tenue?tenue.pieces:[];
+  $('eTete').innerHTML='<tr><th>Élève</th><th>Tenue</th>'+ps.map(function(c){return '<th>'+esc((piece(c)||{}).libelle||c)+'</th>';}).join('')+'<th>Professeur</th><th>Dernière saisie</th></tr>';
+  $('eCorps').innerHTML=eleves.length?eleves.map(function(e){var x=existant(e.id,vague)||{},s=SAI[e.id]||{},t=s.tenue||x.tenue||tc,te=tenueDe(t)||tenue,tl=s.tailles||x.tailles||{};
+    return '<tr data-e="'+e.id+'" class="'+(SAI[e.id]?'mod':'')+'"><td><b>'+esc(e.nom)+'</b> '+esc(e.prenom)+'</td><td><select class="et">'+D.tenues.filter(function(z){return z.actif;}).map(function(z){return '<option value="'+esc(z.code)+'"'+(z.code===t?' selected':'')+'>'+esc(z.libelle)+'</option>';}).join('')+'</select></td>'+
+      ps.map(function(c){var p=piece(c);if(!te||te.pieces.indexOf(c)<0||!p)return '<td class="note">—</td>';return '<td><select class="tl" data-p="'+esc(c)+'"><option value=""></option>'+p.tailles.map(function(v){return '<option'+(v===tl[c]?' selected':'')+'>'+esc(v)+'</option>';}).join('')+'</select></td>';}).join('')+
+      '<td><select class="pr"><option value=""></option>'+D.professeurs.map(function(p){var cur=s.professeur!=null?s.professeur:x.professeur;return '<option'+(p===cur?' selected':'')+'>'+esc(p)+'</option>';}).join('')+'</select></td><td class="note">'+(x.saisiPar?esc(x.saisiPar)+' · '+esc(String(x.dateSaisie).slice(0,10)):'')+'</td></tr>';}).join(''):'<tr><td class="note">Aucun élève Pronote dans cette classe pour l’année.</td></tr>';
+  Array.prototype.forEach.call($('eCorps').querySelectorAll('tr[data-e]'),function(tr){var id=Number(tr.dataset.e);
+    function lire(){var x=existant(id,vague)||{},s=SAI[id]=SAI[id]||{tenue:x.tenue||tc,tailles:JSON.parse(JSON.stringify(x.tailles||{})),professeur:x.professeur||''};
+      s.tenue=tr.querySelector('.et').value;Array.prototype.forEach.call(tr.querySelectorAll('.tl'),function(sel){s.tailles[sel.dataset.p]=sel.value;});s.professeur=tr.querySelector('.pr').value;tr.className='mod';ESS_SALE=true;majBoutons();}
+    Array.prototype.forEach.call(tr.querySelectorAll('select'),function(sel){sel.onchange=function(){lire();if(sel.classList.contains('et'))rendreEssayage();};});});
+  rendreProvisoires();}
+function rendreProvisoires(){var vague=Number($('eVague').value)||0,cid=Number($('eClasse').value)||0;
+  var deja=D.essayages.filter(function(x){return x.provisoire&&x.vague===vague&&(!cid||x.classeId===cid);});
+  var h=(deja.length||PROV.length)?'<h3>Élèves hors Pronote</h3><table class="t"><thead><tr><th>Nom</th><th>Prénom</th><th>Classe ou formation</th><th>Tenue</th><th>Tailles</th><th>Rattacher à Pronote</th></tr></thead><tbody>':'';
+  h+=deja.map(function(x){var te=tenueDe(x.tenue);return '<tr class="prov" data-id="'+x.id+'"><td><b>'+esc(x.nom)+'</b></td><td>'+esc(x.prenom)+'</td><td>'+esc(x.classeTexte||((D.classes.filter(function(c){return c.id===x.classeId;})[0]||{}).nom||''))+'</td><td>'+esc(te?te.libelle:x.tenue)+'</td><td>'+esc(Object.keys(x.tailles).map(function(k){return ((piece(k)||{}).libelle||k)+' '+x.tailles[k];}).join(' · '))+'</td><td><select class="ra"><option value="">— élève Pronote —</option>'+D.eleves.filter(function(e){return !cid||e.classeId===cid;}).map(function(e){return '<option value="'+e.id+'">'+esc(e.nom+' '+e.prenom)+'</option>';}).join('')+'</select> <button type="button" class="petit rb">Rattacher</button></td></tr>';}).join('');
+  h+=PROV.map(function(p,i){var te=tenueDe(p.tenue);return '<tr class="prov" data-i="'+i+'"><td><input class="pn" value="'+esc(p.nom)+'" placeholder="NOM"></td><td><input class="pp" value="'+esc(p.prenom)+'" placeholder="Prénom"></td><td><input class="pc" value="'+esc(p.classeTexte)+'" placeholder="Classe ou formation"></td><td><select class="pt">'+D.tenues.filter(function(z){return z.actif;}).map(function(z){return '<option value="'+esc(z.code)+'"'+(z.code===p.tenue?' selected':'')+'>'+esc(z.libelle)+'</option>';}).join('')+'</select></td><td>'+(te?te.pieces.map(function(c){var pc=piece(c);return pc?'<label class="note">'+esc(pc.libelle)+' <select class="ptl" data-p="'+esc(c)+'"><option value=""></option>'+pc.tailles.map(function(v){return '<option'+(v===p.tailles[c]?' selected':'')+'>'+esc(v)+'</option>';}).join('')+'</select></label> ':'';}).join(''):'')+'</td><td class="note">nouveau</td></tr>';}).join('');
+  $('provisoires').innerHTML=h+(h?'</tbody></table>':'');
+  Array.prototype.forEach.call($('provisoires').querySelectorAll('tr[data-i]'),function(tr){var p=PROV[Number(tr.dataset.i)];
+    Array.prototype.forEach.call(tr.querySelectorAll('input,select'),function(el){el.onchange=function(){p.nom=tr.querySelector('.pn').value.trim().toUpperCase();p.prenom=tr.querySelector('.pp').value.trim();p.classeTexte=tr.querySelector('.pc').value.trim();var nt=tr.querySelector('.pt').value;if(nt!==p.tenue){p.tenue=nt;p.tailles={};rendreProvisoires();}else Array.prototype.forEach.call(tr.querySelectorAll('.ptl'),function(s){p.tailles[s.dataset.p]=s.value;});ESS_SALE=true;majBoutons();};});});
+  Array.prototype.forEach.call($('provisoires').querySelectorAll('tr[data-id] .rb'),function(b){b.onclick=function(){var tr=b.closest('tr'),e=Number(tr.querySelector('.ra').value);if(!e){message('Choisissez l’élève Pronote à rattacher.','erreur');return;}
+    occupe(b,'Rattachement…','EUC_DEV620_rattacher',{id:Number(tr.dataset.id),eleveId:e},function(){message('<span class="ok">Élève rattaché à son dossier Pronote.</span>');charger(D.annee);});};});}
+$('eClasse').onchange=$('eVague').onchange=function(){if(ESS_SALE&&!confirm('Les saisies non enregistrées de cette classe seront perdues. Continuer ?'))return;SAI={};PROV=[];ESS_SALE=false;rendreEssayage();majBoutons();};
+$('profTous').onclick=function(){var p=$('eProf').value;if(!p){message('Choisissez d’abord le professeur.','erreur');return;}Array.prototype.forEach.call($('eCorps').querySelectorAll('tr[data-e] .pr'),function(s){s.value=p;s.onchange();});message('Professeur appliqué à toute la classe : enregistrez pour le garder.');};
+$('ajouterProvisoire').onclick=function(){var cid=Number($('eClasse').value)||0,cls=D.classes.filter(function(c){return c.id===cid;})[0];PROV.push({nom:'',prenom:'',classeId:cid,classeTexte:cls?cls.nom:'',tenue:LIENS[cid]||(D.tenues[0]||{}).code||'',tailles:{}});rendreProvisoires();};
+$('enregistrerEssayage').onclick=function(){if(!QUI){demanderQui();return;}var vague=Number($('eVague').value)||0,cid=Number($('eClasse').value)||0;
+  var lignes=Object.keys(SAI).map(function(id){var s=SAI[id],e=D.eleves.filter(function(x){return x.id===Number(id);})[0]||{},x=existant(Number(id),vague)||{};return {id:x.id||0,eleveId:Number(id),nom:e.nom,prenom:e.prenom,classeId:e.classeId,tenue:s.tenue,tailles:s.tailles,professeur:s.professeur};})
+    .concat(PROV.map(function(p){return {eleveId:0,nom:p.nom,prenom:p.prenom,classeId:p.classeId,classeTexte:p.classeTexte,tenue:p.tenue,tailles:p.tailles,professeur:$('eProf').value};}));
+  occupe(this,'Enregistrement…','EUC_DEV620_enregistrerEssayages',{annee:D.annee,vague:vague,saisiPar:QUI,lignes:lignes},function(r){message('<span class="ok">Essayage enregistré</span> : '+r.creees+' créé(s), '+r.modifiees+' mis à jour.');ESS_SALE=false;charger(D.annee);});};
+
+/* ---------- Vagues ---------- */
+function rendreVagues(){$('tVagues').innerHTML=D.vagues.length?D.vagues.map(function(v){var n=D.essayages.filter(function(x){return x.vague===v.numero;}).length;return '<tr data-id="'+v.id+'"><td>'+v.numero+'</td><td><input class="vl" value="'+esc(v.libelle)+'"></td><td><input type="date" class="vd" value="'+esc(v.date)+'"></td><td><select class="vs">'+['OUVERTE','COMMANDEE','LIVREE','CLOSE'].map(function(s){return '<option'+(s===v.statut?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td><td>'+n+'</td><td><button type="button" class="petit ve">Enregistrer</button></td></tr>';}).join(''):'<tr><td colspan="6" class="note">Aucune vague cette année.</td></tr>';
+  Array.prototype.forEach.call($('tVagues').querySelectorAll('.ve'),function(b){b.onclick=function(){var tr=b.closest('tr');occupe(b,'…','EUC_DEV620_enregistrerVague',{annee:D.annee,id:Number(tr.dataset.id),libelle:tr.querySelector('.vl').value,date:tr.querySelector('.vd').value,statut:tr.querySelector('.vs').value},function(){message('<span class="ok">Vague enregistrée.</span>');charger(D.annee);});};});}
+$('nouvelleVague').onclick=function(){occupe(this,'Création…','EUC_DEV620_enregistrerVague',{annee:D.annee},function(r){message('<span class="ok">Vague '+r.numero+' créée.</span>');charger(D.annee);});};
+
+/* ---------- Réglages ---------- */
+function rendreReglages(){if(!REG)REG={pieces:JSON.parse(JSON.stringify(D.pieces)).map(function(p){p.tailles=p.tailles.join(', ');return p;}),tenues:JSON.parse(JSON.stringify(D.tenues))};
+  $('rAnnee').textContent='('+D.annee+')';
+  $('tPieces').innerHTML=REG.pieces.map(function(p,i){return '<tr data-i="'+i+'"><td><input data-k="code" size="14" value="'+esc(p.code)+'"'+(p.id?' readonly':'')+'></td><td><input data-k="libelle" value="'+esc(p.libelle)+'"></td><td><input data-k="tailles" style="width:100%" value="'+esc(p.tailles)+'"></td><td><input type="checkbox" data-k="actif"'+(p.actif!==false?' checked':'')+'></td></tr>';}).join('');
+  $('tTenues').innerHTML=REG.tenues.map(function(t,i){return '<tr data-i="'+i+'"><td><input data-k="code" size="14" value="'+esc(t.code)+'"'+(t.id?' readonly':'')+'></td><td><input data-k="libelle" style="width:100%" value="'+esc(t.libelle)+'"></td><td>'+REG.pieces.map(function(p){return '<label class="note" style="margin-right:6px"><input type="checkbox" class="tp" value="'+esc(p.code)+'"'+((t.pieces||[]).indexOf(p.code)>=0?' checked':'')+'>'+esc(p.libelle)+'</label>';}).join('')+'</td><td><input type="checkbox" data-k="actif"'+(t.actif!==false?' checked':'')+'></td></tr>';}).join('');
+  [['tPieces','pieces'],['tTenues','tenues']].forEach(function(x){Array.prototype.forEach.call($(x[0]).querySelectorAll('tr[data-i]'),function(tr){var o=REG[x[1]][Number(tr.dataset.i)];
+    Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){o[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();REG_SALE=true;majBoutons();};});
+    Array.prototype.forEach.call(tr.querySelectorAll('.tp'),function(cb){cb.onchange=function(){o.pieces=Array.prototype.filter.call(tr.querySelectorAll('.tp'),function(c){return c.checked;}).map(function(c){return c.value;});REG_SALE=true;majBoutons();};});});});
+  $('tLiens').innerHTML=D.classes.map(function(c){return '<tr data-c="'+c.id+'"><td>'+esc(c.nom)+'</td><td><select class="lt"><option value="">— aucune —</option>'+D.tenues.filter(function(t){return t.actif;}).map(function(t){return '<option value="'+esc(t.code)+'"'+(t.code===LIENS[c.id]?' selected':'')+'>'+esc(t.libelle)+'</option>';}).join('')+'</select></td></tr>';}).join('');
+  Array.prototype.forEach.call($('tLiens').querySelectorAll('tr[data-c] .lt'),function(s){s.onchange=function(){LIENS[s.closest('tr').dataset.c]=s.value;LIENS_SALE=true;majBoutons();};});}
+$('ajouterPiece').onclick=function(){REG.pieces.push({code:'',libelle:'',tailles:'',actif:true});REG_SALE=true;rendreReglages();majBoutons();};
+$('ajouterTenue').onclick=function(){REG.tenues.push({code:'',libelle:'',pieces:[],actif:true});REG_SALE=true;rendreReglages();majBoutons();};
+$('enregistrerReglages').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerReglages',{pieces:REG.pieces,tenues:REG.tenues},function(r){message('<span class="ok">Pièces et tenues enregistrées</span> ('+r.pieces+' pièce(s), '+r.tenues+' tenue(s)).');charger(D.annee);});};
+$('enregistrerLiens').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerClassesTenues',{annee:D.annee,liens:LIENS},function(r){message('<span class="ok">Tenues des classes enregistrées</span> ('+r.creees+' ajoutée(s), '+r.modifiees+' modifiée(s)).');charger(D.annee);});};
+
+/* ---------- Administratifs ---------- */
+function rendreAdmin(){if(!ADM)ADM=JSON.parse(JSON.stringify(D.administratifs));
+  $('tAdmin').innerHTML=ADM.length?ADM.map(function(a,i){return '<tr data-i="'+i+'">'+['nom','prenom','fonction','service','email','telephone'].map(function(k){return '<td><input data-k="'+k+'" value="'+esc(a[k]||'')+'"'+(k==='email'?' type="email"':'')+'></td>';}).join('')+'<td><input type="checkbox" data-k="actif"'+(a.actif!==false?' checked':'')+'></td></tr>';}).join(''):'<tr><td colspan="7" class="note">Aucun administratif : ajoutez-les ici une bonne fois pour toutes.</td></tr>';
+  Array.prototype.forEach.call($('tAdmin').querySelectorAll('tr[data-i]'),function(tr){var a=ADM[Number(tr.dataset.i)];Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){a[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();ADM_SALE=true;majBoutons();};});});}
+$('ajouterAdmin').onclick=function(){ADM.push({nom:'',prenom:'',fonction:'',service:'',email:'',telephone:'',actif:true});rendreAdmin();};
+$('enregistrerAdmin').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerAdministratifs',{lignes:ADM},function(r){message('<span class="ok">Administratifs enregistrés</span> ('+r.creees+' ajouté(s), '+r.modifiees+' modifié(s)).');charger(D.annee);});};
+
+/* ---------- Onglets ---------- */
+function ouvrir(id){Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});}
+Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){ouvrir(b.dataset.p);};});
+if(ONGLET&&$(ONGLET))ouvrir(ONGLET);
+window.addEventListener('beforeunload',function(e){if(ESS_SALE||REG_SALE||LIENS_SALE||ADM_SALE){e.preventDefault();e.returnValue='';}});
+demanderQui();charger('');
+})();
+</script>
+</body>
+</html>

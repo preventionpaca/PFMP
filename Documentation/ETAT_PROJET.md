@@ -1,5 +1,29 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV620 : module EPI, lot 1 (réglages, vagues, essayage, élèves hors Pronote, administratifs)
+
+- Autorisation utilisateur : création des tables EPI et d'une table des
+  administratifs. Nouvelles tables créées au premier chargement :
+  `EUC_EPI_PIECES`, `EUC_EPI_TENUES`, `EUC_EPI_CLASSES_TENUES`, `EUC_EPI_VAGUES`,
+  `EUC_EPI_ESSAYAGES`, `EUC_ADMINISTRATIFS` ; pièces et tenues par défaut posées une
+  fois (combinaison 1–4, blouson / pantalon / sans manches S–XXL, blouse 1–5,
+  chaussures 35–48).
+- Page `?page=epi-pfmp` (`EUC_DEV620_Epi.js`, `Epi_DEV620.html`), carte
+  « EPI et étiquettes » de l'Administration, route ajoutée au contrôle de release.
+  Onglets : Essayage (classe, vague, tenue de la classe ou par élève, une taille par
+  pièce, professeur avec « appliquer à toute la classe », élèves hors Pronote puis
+  rattachement), Vagues, Réglages (pièces, tailles, tenues, tenue de chaque classe),
+  Administratifs. Fenêtre « nom et prénom » au démarrage (redemandée au
+  rechargement) : « saisi par » et date écrits sur chaque essayage.
+- Lecture seule de `EUC_ELEVES_PFMP` (élèves de l'année, actifs, non sortis),
+  `Classes` et `EUC_PROFESSEURS_PFMP` ; aucune suppression.
+- Tests : nouvelle suite `tests/run-dev620-epi-tests.js` (6 tests, Grist simulé
+  strict, écriture interdite dans les tables Pronote) ; page pilotée dans Chromium
+  avec des données simulées non nominatives.
+- Reste (lots suivants) : étiquettes fournisseur (ZIP de JPEG 144 dpi par vague,
+  filtre des étiquettes déjà produites), fiche de remise PDF, éditeur de modèles et
+  badges, import Excel mémorisé.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : heures par formateur, toutes formations
 
 - Page « Plannings par formation » : tableau « Heures par formateur — toutes

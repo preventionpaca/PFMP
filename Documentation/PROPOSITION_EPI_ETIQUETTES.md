@@ -1,6 +1,7 @@
 # Proposition — EPI (essayage, étiquettes fournisseur, fiches de remise) et étiquettes / badges d'événement
 
-Statut : **proposition à valider** (23 octobre 2026). Rien n'est construit.
+Statut : validée le 23 octobre 2026 (tables autorisées). Lot 1 livré (DEV620) : réglages, vagues, essayage, élèves hors Pronote, table `EUC_ADMINISTRATIFS`.
+Décisions : identification par nom et prénom saisis à l'ouverture de la page (pas de contrôle d'accès supplémentaire) ; les imports Excel sont mémorisés dans une table ; les étiquettes déjà produites sont filtrables pour ne pas les refaire.
 
 ## Besoins exprimés
 
