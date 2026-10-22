@@ -1,5 +1,14 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Module EPI et étiquettes (proposition du 23 octobre 2026, à valider)
+
+Voir `Documentation/PROPOSITION_EPI_ETIQUETTES.md` : essayage par classe et par
+vague, étiquettes fournisseur (ZIP de JPEG 144 dpi, 9,50 × 4,85 cm), fiches de
+remise PDF, éditeur de modèles et badges d'événement (élèves, partenaires,
+professeurs, administratifs, import Excel). Lots 1 à 4 ; tables `EUC_EPI_*` et
+`EUC_ETQ_*` à créer après accord.
+
+
 ## Plannings annuels — lots B et C (après DEV610, lot A)
 
 - **Réglé le 20 octobre 2026** : 1 BTS MV et 2 BTS MV font tous deux
