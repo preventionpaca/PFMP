@@ -46,7 +46,6 @@ table.g td.c .et.bande{position:absolute;left:0;top:0;bottom:0;display:flex;alig
 table.g td.c.cont::after,table.g td.c .ptf{content:'';display:block;position:absolute;bottom:-2px;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);z-index:3}table.g td.c.cont::after{left:-2px}table.g td.c .ptf{right:-2px;pointer-events:none}table.g td.c.part{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 table.g td.c .et{position:relative;z-index:2;padding-left:2px;pointer-events:none}
 table.g td.v,table.g th.v{background:var(--vac);color:#ccc}
-table.g td.pv{background-image:repeating-linear-gradient(45deg,#ffffff 0 4px,#e2e2e2 4px 6px)}
 table.g td.sel{outline:2px solid #2563eb;outline-offset:-2px;box-shadow:inset 0 0 0 99px rgba(37,99,235,.22)}
 /* Appel de la première semaine : petit « A » discret dans l'angle haut gauche (jamais de dégradé transparent : noir dans certains PDF). */
 table.g td.ap::before{content:'A';position:absolute;left:1px;top:1px;font-size:7px;font-weight:800;line-height:8px;padding:0 1px;border-radius:2px;background:#7F00FF;color:#fff;z-index:4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -486,7 +485,9 @@ function rendreGrille(){
   /* Jour férié : point rouge dans les cases Du et Au ; un clic sur le point liste les jours de la semaine. */
   var point=function(i){return fe[i].liste.length?'<span class="pf" data-fe="'+i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'';};
   /* Pont (jours de vacances dans une semaine de cours, ex. pont de l'Ascension) : cadre rouge autour des dates du lundi et du vendredi. */
-  var pont=function(s){var js=s.vacances?[]:s.jours.filter(function(j){return /ASCENSION|PONT/.test(EUC_DEV610_n_(j.nom));});return js.map(function(j){return 'Pont de l’Ascension ('+j.nb+' j.)';}).join(' · ');};
+  /* Une seule semaine encadrée : celle du jeudi de l'Ascension, quand un pont est saisi dans les vacances de l'année. */
+  var aPont=(D.vacances||[]).some(function(v){return /ASCENSION|PONT/.test(EUC_DEV610_n_(EUC_DEV610_nomVacances_(v.nom,v.debut,v.fin)+' '+v.nom));});
+  var pont=function(s){if(!aPont)return '';for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&/ASCENSION/.test(EUC_DEV610_n_(FERIES[j])))return 'Pont de l’Ascension';}return '';};
   var titrePont=function(s,i){var p=pont(s),f=fe[i].liste.join(' · ');return p||f?' title="'+esc([p,f].filter(Boolean).join(' · '))+'"':'';};
   var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
   var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
@@ -506,7 +507,7 @@ function rendreGrille(){
     Object.keys(occ).map(Number).sort(function(a,b){return a-b;}).forEach(function(si){var o=occ[si],av=occ[si-1];o.suiteBande=!!(av&&av.entiere&&o.entiere&&av.cle===o.cle);});
     Object.keys(occ).map(Number).sort(function(a,b){return b-a;}).forEach(function(si){var o=occ[si],ap=occ[si+1];o.n=o.entiere?(ap&&ap.suiteBande?ap.n+1:1):1;});
     corps+='<tr><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
-      var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':'')+(!s.vacances&&s.jours.length?' pv':''),st='',txt='';
+      var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':''),st='',txt='';
       if(o){var c=couleur(o.p.type);
         if(o.entiere){st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(!o.suiteBande)txt='<span class="et bande" style="width:'+(o.n*26-2)+'px">'+esc(etiq(o.p))+'</span>';cls+=' cont';var ap=occ[s.i+1];if(ap&&ap.suiteBande)cls+=' run';else txt+='<i class="ptf"></i>';}
         else{var g=o.masque.map(function(x,k){return (x===1?c:'#ffffff')+' '+(k*20)+'% '+((k+1)*20)+'%';}).join(',');st=' style="background-image:linear-gradient(to right,'+g+')"';cls+=' part';}
@@ -520,7 +521,7 @@ function rendreGrille(){
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span><span><i style="background-image:repeating-linear-gradient(45deg,#fff 0 4px,#ccc 4px 6px)"></i>Pont / jours de vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #e11d48"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><i style="background:#fff;box-shadow:inset 0 -3px 0 #111"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #e11d48"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();

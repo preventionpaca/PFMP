@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension, une seule semaine encadrée, lignes intactes
+
+- Retour utilisateur (2027-2028) : deux semaines encadrées et colonnes hachurées
+  sur toutes les lignes. Cause : pont prévisionnel saisi du vendredi 26 au lundi
+  29 mai 2028 (débordant sur deux semaines) et hachures « jours de vacances » du
+  corps du tableau, qui masquaient même la couleur d'une période (PFMP 1 CAP).
+- Corrigé : seul l'en-tête de la semaine du jeudi de l'Ascension est encadré
+  (s'il existe un pont dans les vacances de l'année) ; plus aucune hachure dans
+  les lignes ni dans la légende. Test ajouté ; suite complète verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension encadré, bandes continues sur le pont
 
 - Pont de l'Ascension : dates du lundi et du vendredi de la semaine encadrées de
