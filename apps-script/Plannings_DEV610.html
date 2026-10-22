@@ -130,7 +130,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   <section id="pGrille" class="panneau actif">
     <div class="titreImpression" id="titreImpression"></div>
     <p class="note noprint">Glissez sur les cases pour sélectionner des semaines (sur une ou plusieurs lignes ; Ctrl ou ⌘ pour ajouter une autre zone), puis choisissez le type et « Placer ». Une période placée ou retouchée à la main n’est jamais déplacée par « Générer depuis les règles » (son infobulle l’indique). « A » violet dans l’angle : appel la première semaine de chaque période en entreprise. Pont (ex. de l’Ascension) : dates du lundi et du vendredi encadrées de noir. Jour férié : point rouge sur le numéro de semaine (survol ou clic pour la date).</p>
-    <div class="blocs noprint" id="blocs"><span class="note">Afficher :</span>
+    <div class="blocs noprint" id="blocs"><label style="font-weight:400">Planning d’une formation <select id="ouvrirFormation"></select></label><span class="note">Afficher :</span>
       <label><input type="checkbox" data-cal="SCOLAIRE" checked> Scolaire</label>
       <label><input type="checkbox" data-cal="MIXITE" checked> Mixité</label>
       <label><input type="checkbox" data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)</label>
@@ -169,7 +169,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   </section>
 
   <section id="pCalendrier" class="panneau">
-    <div class="barre noprint"><a class="bouton" id="retourFormations" href="#" target="_top">← Plannings par formation</a><span style="flex:1"></span><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
+    <div class="barre noprint"><a class="bouton" id="retourAnnuel" href="#" target="_top">← Planning annuel</a><a class="bouton" id="retourFormations" href="#" target="_top">Plannings par formation</a><label>Autre formation <select id="autreFormation"></select></label><span style="flex:1"></span><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
     <div class="cadre noprint barre" id="reglageFormation"><label>Début de la formation <input type="date" id="fDebut"></label><label>Fin <input type="date" id="fFin"></label><label style="flex:2">Intitulé du diplôme <input id="fIntitule" style="width:100%"></label><label style="flex:1">Formation <input id="fTitre" style="width:100%"></label><label style="flex:1">Classe <input id="fSousTitre" style="width:100%"></label><button type="button" class="plein" id="fEnregistrer">Enregistrer</button></div>
     <div id="titreCalendrier" class="titreImpression" style="display:block"></div>
     <div id="calendrier"></div>
@@ -448,7 +448,14 @@ function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(co
   $('titreCalendrier').innerHTML='';$('legendeCalendrier').innerHTML='';
   if(!garderEditeur){$('fIntitule').value=fo.intitule||'';$('fIntitule').placeholder=(D.diplomes||{})[code]||'Intitulé du diplôme (Diplômes par classe)';$('fDebut').value=fo.debut||'';$('fFin').value=fo.fin||'';$('fTitre').value=fo.titre||'';$('fTitre').placeholder=td.titre;$('fSousTitre').value=fo.sousTitre||'';$('fSousTitre').placeholder=td.sousTitre;}
   rendreRecap(l,B);if(!garderEditeur)rendreEditeurHeures(l,B);majHeuresEtat();
-  $('retourFormations').href=lienPlannings('&vue=formations');}
+  $('retourFormations').href=lienPlannings('&vue=formations');$('retourAnnuel').href=lienPlannings('&onglet=pGrille');
+  $('autreFormation').innerHTML=optionsFormations(code);}
+/* Liste des formations de l'année (ordre du tableau) pour passer d'un planning à l'autre. */
+function optionsFormations(choisie){return '<option value="">'+(choisie?'— changer —':'— choisir —')+'</option>'+lignesActives().slice().sort(function(a,b){return (a.ordre||0)-(b.ordre||0);}).map(function(l){return '<option value="'+esc(l.code)+'"'+(l.code===choisie?' selected':'')+'>'+esc(nomLigne(l))+'</option>';}).join('');}
+/* Navigation dans la fenêtre principale : lien cliqué par programme (le cadre de la page ne peut pas changer l'adresse lui-même). */
+function allerA(url,nouvelle){var a=document.createElement('a');a.href=url;a.target=nouvelle?'_blank':'_top';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();}
+$('ouvrirFormation').onchange=function(){var c=this.value;this.value='';if(c)allerA(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(c)),true);};
+$('autreFormation').onchange=function(){var c=this.value;if(c&&c!==LIGNE_COURANTE)allerA(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(c)),false);};
 /* Récapitulatif par formateur : total de la formation et total de chaque formation complémentaire, séparés. */
 function rendreRecap(l,B){var comps=Object.keys(B.complementaires);B.formateurs.forEach(function(f){Object.keys(f.complementaires).forEach(function(c){if(comps.indexOf(c)<0)comps.push(c);});});
   if(!HREG.formateurs){$('recapFormateurs').innerHTML='';return;}
@@ -481,7 +488,7 @@ function rendreEditeurHeures(l,B){var f=HREG.formateurs,v=function(x){return x==
       HL=null;rendreCalendrier(l.code);message('Heures enregistrées ('+r.jours+' jour(s) modifié(s)).','ok');});};}
 function majHeuresEtat(){if($('hEtat'))$('hEtat').innerHTML=HSALE?'<span class="alerte">Modifications non enregistrées</span>':'';}
 $('calendrier').addEventListener('click',function(ev){var td=ev.target.closest('td[data-date]');if(!td)return;var det=$('heures').querySelector('details');if(det)det.open=true;var tr=$('heures').querySelector('tr[data-date="'+td.dataset.date+'"]');if(tr){tr.scrollIntoView({block:'center'});var i=tr.querySelector('input');if(i)i.focus();}});
-function rendreTout(){ORG=null;VAC=null;COUL=null;COUL_SALE=false;rendreAnnees();rendreLogos();rendreCouleurs();rendreOrganisation();rendreGrille();rendrePeriodes();rendreBilan();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
+function rendreTout(){$('ouvrirFormation').innerHTML=optionsFormations('');ORG=null;VAC=null;COUL=null;COUL_SALE=false;rendreAnnees();rendreLogos();rendreCouleurs();rendreOrganisation();rendreGrille();rendrePeriodes();rendreBilan();rendreRegles();rendreLignes();rendreJours();rendreVersions();majBoutons();}
 function majBoutons(){var pret=!!D;['generer','imprimer'].forEach(function(id){$(id).disabled=!pret;});
   $('enregistrer').disabled=!pret||!PER.length&&!NUM;$('nouvelle').disabled=!pret||!NUM;$('enregistrerRegles').disabled=!pret;$('enregistrerLignes').disabled=!pret;
   var v=NUM&&D?D.versions.filter(function(x){return x.numero===NUM;})[0]:null;

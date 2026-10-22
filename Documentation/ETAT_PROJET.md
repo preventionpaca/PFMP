@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : passer du planning annuel au planning d'une formation
+
+- Planning général : liste « Planning d'une formation » (formations de l'année,
+  ordre du tableau) qui ouvre le calendrier choisi dans un nouvel onglet.
+- Calendrier d'une formation : lien « ← Planning annuel » (même année, onglet
+  Planning général), lien « Plannings par formation » et liste « Autre formation »
+  pour passer directement à une autre formation.
+- Vérifié dans Chromium (copie locale) ; suite complète verte.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : colonne Établissement / organismes, trait de début de septembre
 
 - Colonne Établissement / organismes : établissement en gras et plus grand,
