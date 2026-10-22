@@ -762,7 +762,7 @@ test('formateurs : plusieurs sur une demi-journée (F+G) avec heures partagées 
   assert.deepStrictEqual(J(b.formateurs.map(f => [f.initiales, f.total])), [['F', 10], ['G', 3], ['H', 1]]);
   assert.strictEqual(b.formation, 14);
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ['class="hd"', "if(d&&fa&&!d.checked){fa.value=val;s.fa=val;}", "if(e.key!=='Enter')return;", 'function bfeCal()', "'+bfeCal()+'"]) assert.ok(pg.includes(x), x);
+  for (const x of ['class="hd"', "if(d&&fa&&!d.checked){fa.value=val;s.fa=val;}", "if(e.key!=='Enter')return;", 'function bfeCal()', "'+bfeCal()+'", 'function joursLigne(l)', 'function recapAnnuelFormateurs()', '<div id="recapAnnuel"></div>', "rendreRecapAnnuel();}", 'toutes formations →']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

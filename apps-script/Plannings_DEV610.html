@@ -167,6 +167,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   <section id="pFormations" class="panneau">
     <p class="note">Calendrier annuel d’une formation : jours au lycée, en entreprise, vacances et jours fériés, mois par mois.</p>
     <div id="listeFormations"></div>
+    <div id="recapAnnuel"></div>
   </section>
 
   <section id="pCalendrier" class="panneau">
@@ -362,7 +363,7 @@ function ouvrirPanneau(id){Array.prototype.forEach.call(document.querySelectorAl
 function lienPlannings(params){return ADMIN+'?page=plannings-pfmp&annee='+encodeURIComponent(D.annee.code)+params;}
 function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Formation en alternance et continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
   $('listeFormations').innerHTML=blocs.map(function(b){var ls=D.lignes.filter(function(l){return actifAnnee(l)&&b[1].indexOf(l.calendrier)>=0;}).sort(function(x,y){return x.ordre-y.ordre;});if(!ls.length)return '';
-    return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';}
+    return '<h3>'+esc(b[0])+'</h3><div class="formations">'+ls.map(function(l){var n=PER.filter(function(p){return p.ligne===l.code;}).length;return '<a target="_top" href="'+esc(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(l.code)))+'">'+esc(nomLigne(l))+'<small>'+esc(supports(l)||CALENDRIERS[l.calendrier]||l.calendrier)+' · '+n+' période(s)</small></a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucune ligne active.</p>';rendreRecapAnnuel();}
 /* Calendrier d'une formation (mois en colonnes, jours en lignes). Jours au lycée : jours ouvrés hors vacances, fériés et périodes en entreprise.
  * Une formation complémentaire (ex. 5 Star) l'emporte sur les autres périodes : ses heures sont comptées à part, hors quota. */
 /* État d'un jour pour une formation : week-end, férié, vacances (toujours visibles), période (entreprise, cours, formation
@@ -409,16 +410,34 @@ function hfmt(h){return String(Math.round(h*100)/100).replace('.',',');}
 function initialesJour(x){return x.fm&&x.fa&&x.fm!==x.fa?x.fm+'/'+x.fa:(x.fm||x.fa||'');}
 /* Second argument à true : seule la saisie jour par jour est gardée telle quelle (le curseur reste dans sa case). */
 var LIGNE_COURANTE='';
+/* Jours de formation d'une ligne sur ses vraies dates (calcul partagé par le calendrier et le récapitulatif annuel). */
+function joursLigne(l){var code=l.code,a=D.annee,fo0=formationDe(code),pers=PER.filter(function(p){return p.ligne===code;}).concat((D.suite||[]).filter(function(p){return p.ligne===code&&p.debut>(a.fin||'');})),mois=[];
+  var deb0=fo0.debut||a.debut||a.code.slice(0,4)+'-09-01',fin=fo0.fin||a.fin||(Number(a.code.slice(0,4))+1)+'-08-31',d=new Date(deb0.slice(0,7)+'-01T12:00:00Z');
+  while(d.toISOString().slice(0,7)<=fin.slice(0,7)&&mois.length<15){mois.push({y:d.getUTCFullYear(),m:d.getUTCMonth()});d.setUTCMonth(d.getUTCMonth()+1);}
+  var fo=formationDe(code),etats={},jours=[];mois.forEach(function(x){for(var j=1;j<=31;j++){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)break;var iso=dt.toISOString().slice(0,10),e=etatJour(iso,l,pers,fo);etats[iso]=e;
+    if(e.lycee)jours.push({date:iso,nature:'FORMATION'});else if(e.comp)jours.push({date:iso,nature:'COMPLEMENTAIRE',complement:e.p.complement||''});}});
+  return {mois:mois,fo:fo,etats:etats,jours:jours,pers:pers};}
+/* Récapitulatif annuel par formateur, toutes formations : heures saisies (Grist) de chaque formation où des formateurs
+ * sont renseignés ; les formations complémentaires (5 Star…) restent à part. */
+function recapAnnuelFormateurs(){var cols=[],parF={},tot={};
+  lignesActives().slice().sort(function(a,b){return (a.ordre||0)-(b.ordre||0);}).forEach(function(l){
+    var sai={},a=false;(D.heures||[]).forEach(function(x){if(x.ligne!==l.code)return;sai[x.date]={hm:x.hm,ha:x.ha,fm:x.fm,fa:x.fa};if(x.fm||x.fa)a=true;});
+    if(!a&&l.formateurs!==true)return;
+    var B=EUC_DEV610_bilanHeures_(joursLigne(l).jours,{matin:l.heuresMatin,apresMidi:l.heuresApresMidi},sai),col={code:l.code,nom:etiquette(l),comps:Object.keys(B.complementaires),sans:B.sansFormateur.formation};
+    cols.push(col);B.formateurs.forEach(function(f){var o=parF[f.initiales]=parF[f.initiales]||{par:{},formation:0,comp:0};o.par[l.code]=f;o.formation+=f.formation;Object.keys(f.complementaires).forEach(function(c){o.comp+=f.complementaires[c];});});});
+  return {cols:cols,formateurs:Object.keys(parF).sort().map(function(k){return {initiales:k,o:parF[k]};})};}
+function rendreRecapAnnuel(){var z=$('recapAnnuel');if(!z)return;var R=recapAnnuelFormateurs();
+  if(!R.cols.length){z.innerHTML='<p class="note">Aucune formation avec des formateurs saisis cette année (onglet du calendrier d’une formation, « Saisir les formateurs »).</p>';return;}
+  var cell=function(f){if(!f)return '<td class="note">—</td>';var c=Object.keys(f.complementaires).reduce(function(s,k){return s+f.complementaires[k];},0);return '<td>'+hfmt(f.formation)+' h'+(c?' <small class="note">+ '+hfmt(c)+' h compl.</small>':'')+'</td>';};
+  z.innerHTML='<h3>Heures par formateur — toutes formations '+esc(D.annee.code)+'</h3><div class="defile"><table class="t recap"><thead><tr><th>Formateur</th>'+R.cols.map(function(c){return '<th>'+esc(c.nom)+'</th>';}).join('')+'<th>Total formation</th><th>Formations complémentaires (en plus)</th></tr></thead><tbody>'+
+    R.formateurs.map(function(f){return '<tr><td><b>'+esc(f.initiales)+'</b></td>'+R.cols.map(function(c){return cell(f.o.par[c.code]);}).join('')+'<td><b>'+hfmt(f.o.formation)+' h</b></td><td>'+(f.o.comp?hfmt(f.o.comp)+' h':'—')+'</td></tr>';}).join('')+
+    '<tr class="alerte"><td>Sans formateur</td>'+R.cols.map(function(c){return '<td>'+(c.sans?hfmt(c.sans)+' h':'—')+'</td>';}).join('')+'<td></td><td></td></tr></tbody></table></div><p class="note">D’après les heures enregistrées (bouton « Enregistrer les heures » de chaque calendrier). Les heures de formations complémentaires (5 Star…) sont comptées à part.</p>';}
 function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(code);LIGNE_COURANTE=code;if(!l){$('calendrier').innerHTML='<p class="erreur">Formation introuvable : '+esc(code)+'.</p>';$('heures').innerHTML='';return;}
   preparerHeures(l);
   /* Mois affichés : du mois de début au mois de fin de la formation (Bachelor d'octobre à octobre, TSEC de novembre à
    * octobre, CAP peintre de septembre à septembre) ; à défaut, l'année scolaire. Après le 31 août, les périodes viennent de
    * l'année suivante. */
-  var a=D.annee,fo0=formationDe(code),pers=PER.filter(function(p){return p.ligne===code;}).concat((D.suite||[]).filter(function(p){return p.ligne===code&&p.debut>(a.fin||'');})),mois=[];
-  var deb0=fo0.debut||a.debut||a.code.slice(0,4)+'-09-01',fin=fo0.fin||a.fin||(Number(a.code.slice(0,4))+1)+'-08-31',d=new Date(deb0.slice(0,7)+'-01T12:00:00Z');
-  while(d.toISOString().slice(0,7)<=fin.slice(0,7)&&mois.length<15){mois.push({y:d.getUTCFullYear(),m:d.getUTCMonth()});d.setUTCMonth(d.getUTCMonth()+1);}
-  var fo=formationDe(code),etats={},jours=[];mois.forEach(function(x){for(var j=1;j<=31;j++){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)break;var iso=dt.toISOString().slice(0,10),e=etatJour(iso,l,pers,fo);etats[iso]=e;
-    if(e.lycee)jours.push({date:iso,nature:'FORMATION'});else if(e.comp)jours.push({date:iso,nature:'COMPLEMENTAIRE',complement:e.p.complement||''});}});
+  var a=D.annee,J0=joursLigne(l),mois=J0.mois,fo=J0.fo,etats=J0.etats,jours=J0.jours;
   var B=EUC_DEV610_bilanHeures_(jours,HREG,HSAI),parDate={};B.jours.forEach(function(x){parDate[x.date]=x;});
   /* Mise en page de l'annexe 32a : par mois D | J | H (et P, initiales du formateur, quand ils sont saisis). */
   var P=!!HREG.formateurs,nc=P?4:3,tot=mois.map(function(){return {h:0,hc:0};}),vus={},corps='';
@@ -462,7 +481,7 @@ function rendreRecap(l,B){var comps=Object.keys(B.complementaires);B.formateurs.
   var sf=B.sansFormateur,sfComp=Object.keys(sf.complementaires).some(function(c){return sf.complementaires[c]>0;});
   var lignesR=B.formateurs.map(function(f){return '<tr><td><b>'+esc(f.initiales)+'</b></td><td>'+hfmt(f.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(f.complementaires[c]||0)+' h</td>';}).join('')+'<td><b>'+hfmt(f.total)+' h</b></td></tr>';}).join('');
   if(sf.formation>0||sfComp)lignesR+='<tr class="alerte"><td>Sans formateur</td><td>'+hfmt(sf.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(sf.complementaires[c]||0)+' h</td>';}).join('')+'<td></td></tr>';
-  $('recapFormateurs').innerHTML='<h3>Heures d’intervention par formateur — '+esc(etiquette(l))+' '+esc(D.annee.code)+'</h3>'+(B.formateurs.length||sf.formation||sfComp?'<table class="t recap"><thead><tr><th>Formateur</th><th>'+esc(etiquette(l))+'</th>'+comps.map(function(c){return '<th>'+esc(c)+' (en plus)</th>';}).join('')+'<th>Total</th></tr></thead><tbody>'+lignesR+'<tr class="tot"><td>Total</td><td>'+hfmt(B.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(B.complementaires[c]||0)+' h</td>';}).join('')+'<td></td></tr></tbody></table>':'<p class="note">Aucune heure de formation sur l’année.</p>');}
+  $('recapFormateurs').innerHTML='<h3>Heures d’intervention par formateur — '+esc(etiquette(l))+' '+esc(D.annee.code)+' <a class="noprint" style="font-size:13px;font-weight:400" target="_top" href="'+esc(lienPlannings('&vue=formations'))+'#recapAnnuel">toutes formations →</a></h3>'+(B.formateurs.length||sf.formation||sfComp?'<table class="t recap"><thead><tr><th>Formateur</th><th>'+esc(etiquette(l))+'</th>'+comps.map(function(c){return '<th>'+esc(c)+' (en plus)</th>';}).join('')+'<th>Total</th></tr></thead><tbody>'+lignesR+'<tr class="tot"><td>Total</td><td>'+hfmt(B.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(B.complementaires[c]||0)+' h</td>';}).join('')+'<td></td></tr></tbody></table>':'<p class="note">Aucune heure de formation sur l’année.</p>');}
 /* Saisie jour par jour : heures et formateurs du matin et de l'après-midi (vide = valeur par défaut). */
 function rendreEditeurHeures(l,B){var f=HREG.formateurs,v=function(x){return x==null?'':esc(x);},noms={};
   B.jours.forEach(function(x){if(x.fm)noms[x.fm]=1;if(x.fa)noms[x.fa]=1;});

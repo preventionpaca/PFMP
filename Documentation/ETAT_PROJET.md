@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : heures par formateur, toutes formations
+
+- Page « Plannings par formation » : tableau « Heures par formateur — toutes
+  formations » (une colonne par formation où des formateurs sont saisis, total de
+  formation par formateur, formations complémentaires à part, heures sans
+  formateur par formation), d'après les heures enregistrées. Lien « toutes
+  formations → » depuis le récapitulatif d'un calendrier. Calcul des jours d'une
+  formation mis en commun (`joursLigne`) avec le calendrier.
+- Vérifié dans Chromium avec un jeu d'heures simulé ; suite complète verte.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : calendrier d'une formation, vacances visibles, saisie des formateurs
 
 - Petites vacances toujours en noir dans le calendrier d'une formation (modèle
