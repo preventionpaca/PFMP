@@ -754,7 +754,7 @@ test('lisibilité du planning imprimé : titre selon les blocs, hauteur et polic
   const pg = read('apps-script/Plannings_DEV610.html'), c = {};
   vm.createContext(c); vm.runInContext(pg.match(/function libBande\(t,n\)\{[^\n]*/)[0], c);
   assert.deepStrictEqual([c.libBande('PFMP 1ère', 6), c.libBande('PFMP Tbac', 3), c.libBande('Stage', 8), c.libBande('ENT.', 1)], ['PFMP 1ère · 6 sem.', 'PFMP Tbac', 'Stage · 8 sem.', 'ENT.']);
-  for (const x of ['function titrePlanning()', "t.style.setProperty('--rh',rh+'px')", 'rh=Math.min(36,', "tr class=\"'+(zebre%2?'':'zb')+'\"", "(debutMois(s.i)?' m0':'')", 'class="libD"', 'var PALETTE_FRANCHE=', 'table.g td.v,table.g tr.zb td.v{background:#8e9894}', '<span class="tel">']) assert.ok(pg.includes(x), x);
+  for (const x of ['function titrePlanning()', "t.style.setProperty('--rh',rh+'px')", 'rh=Math.min(36,', "tr class=\"'+(zebre%2?'':'zb')+'\"", "(debutMois(s.i)?' m0':'')", 'class="libD"', 'var PALETTE_FRANCHE=', 'function celluleSupports(l)', 'return i===0||SEM[i].mois!==SEM[i-1].mois', 'overflow:visible;border-right:2px solid #cfe3da', 'table.g td.v,table.g tr.zb td.v{background:#8e9894}', '<span class="tel">']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

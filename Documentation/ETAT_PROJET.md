@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : colonne Établissement / organismes, trait de début de septembre
+
+- Colonne Établissement / organismes : établissement en gras et plus grand,
+  organismes à la suite sur fond de la ligne ; à trois organismes (Bachelor, CQPM,
+  mixités de BTS), le texte déborde sur les premières semaines au lieu d'être
+  coupé ; hauteur de ligne inchangée.
+- Trait de début de mois aussi sur la première semaine (septembre), jusqu'en bas.
+- Suite complète verte ; PDF A3 vérifié dans Chromium.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : impression, colonne des noms coupée et légende sur deux pages
 
 - Retour utilisateur : un bout de légende sur une page 2, et (aperçu) colonne des
