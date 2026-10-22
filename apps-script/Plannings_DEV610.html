@@ -50,7 +50,7 @@ table.g td.sel{outline:2px solid #2563eb;outline-offset:-2px;box-shadow:inset 0 
 /* Appel de la première semaine : petit « A » discret dans l'angle haut gauche (jamais de dégradé transparent : noir dans certains PDF). */
 table.g td.ap::before{content:'A';position:absolute;left:1px;top:1px;font-size:7px;font-weight:800;line-height:8px;padding:0 1px;border-radius:2px;background:#7F00FF;color:#fff;z-index:4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 /* Repère de saisie « placée à la main » : discret à l'écran, jamais imprimé (le document reste propre). */
-table.g td.man{box-shadow:inset 0 -2px 0 rgba(17,17,17,.35)}
+table.g td.man{box-shadow:none}
 table.g th .jp{color:#b45309}
 .action{position:sticky;bottom:0;background:#fffbea;border:1px solid #f0d78c;border-radius:10px;padding:8px 10px;margin-top:8px;display:none;gap:8px;align-items:center;flex-wrap:wrap;z-index:5}
 .action.vis{display:flex}
@@ -58,7 +58,7 @@ table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var
 table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
 table.t tr.teteLigne td{background:#eef6f2;border-top:2px solid var(--bord);padding-top:8px}table.t tr.copie td{background:#fbfdfc}
 table.t input[type=number]{width:62px}table.t input.ref{width:100%;min-width:120px}
-table.g td.c.suite{opacity:.55}table.g th.pontH{box-shadow:inset 0 2px 0 #e11d48,inset 2px 0 0 #e11d48,inset -2px 0 0 #e11d48}table.g th.pontB{box-shadow:inset 0 -2px 0 #e11d48,inset 2px 0 0 #e11d48,inset -2px 0 0 #e11d48}table.g th.pontH,table.g th.pontB{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.g tr.groupe td.lib{overflow:visible;z-index:7;text-overflow:clip}table.g tr.groupe td.lib b{position:relative;white-space:nowrap}
+table.g td.c.suite{opacity:.55}table.g th.pontH{box-shadow:inset 0 2px 0 #111,inset 2px 0 0 #111,inset -2px 0 0 #111}table.g th.pontB{box-shadow:inset 0 -2px 0 #111,inset 2px 0 0 #111,inset -2px 0 0 #111}table.g th.pontH,table.g th.pontB{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.g tr.groupe td.lib{overflow:visible;z-index:7;text-overflow:clip}table.g tr.groupe td.lib b{position:relative;white-space:nowrap}
 .misePage{display:flex;flex-direction:column}.misePage .legende{order:-1}.pied{font-size:12px;color:#334155;margin:6px 0 0}.pied b{color:#0b4f40}
 .legende{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:6px 0}.legende span{display:inline-flex;align-items:center;gap:4px}.legende i{display:inline-block;width:14px;height:12px;border-radius:2px;border:1px solid #0002}
 .puces{display:flex;gap:4px;flex-wrap:wrap}.puce{background:#eef6f2;border:1px solid var(--bord);border-radius:999px;padding:1px 4px 1px 8px;font-size:12px}
@@ -125,7 +125,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 
   <section id="pGrille" class="panneau actif">
     <div class="titreImpression" id="titreImpression"></div>
-    <p class="note noprint">Glissez sur les cases pour sélectionner des semaines (sur une ou plusieurs lignes ; Ctrl ou ⌘ pour ajouter une autre zone), puis choisissez le type et « Placer ». Une période placée ou retouchée à la main (trait noir) n’est jamais déplacée par « Générer depuis les règles ». « A » violet dans l’angle : appel la première semaine de chaque période en entreprise. Pont (ex. de l’Ascension) : dates du lundi et du vendredi encadrées de rouge.</p>
+    <p class="note noprint">Glissez sur les cases pour sélectionner des semaines (sur une ou plusieurs lignes ; Ctrl ou ⌘ pour ajouter une autre zone), puis choisissez le type et « Placer ». Une période placée ou retouchée à la main n’est jamais déplacée par « Générer depuis les règles » (son infobulle l’indique). « A » violet dans l’angle : appel la première semaine de chaque période en entreprise. Pont (ex. de l’Ascension) : dates du lundi et du vendredi encadrées de noir. Jour férié : point rouge sur le numéro de semaine (survol ou clic pour la date).</p>
     <div class="blocs noprint" id="blocs"><span class="note">Afficher :</span>
       <label><input type="checkbox" data-cal="SCOLAIRE" checked> Scolaire</label>
       <label><input type="checkbox" data-cal="MIXITE" checked> Mixité</label>
@@ -251,9 +251,10 @@ var LIB_EV={V:'Visite',A:'Appel',E:'Examens',C:'Conseil','✓':'VFMP (point par 
 /* Jours fériés de l'année scolaire (calcul pur ; Pâques par l'algorithme de Meeus). */
 function paques(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),j=((h+l-7*m+114)%31)+1;return y+'-'+String(mo).padStart(2,'0')+'-'+String(j).padStart(2,'0');}
 function feries(y1){var y2=y1+1,p=paques(y2),out={};[[y1+'-11-01','Toussaint'],[y1+'-11-11','Armistice'],[y1+'-12-25','Noël'],[y2+'-01-01','Jour de l’an'],[EUC_DEV610_plus_(p,1),'Lundi de Pâques'],[y2+'-05-01','Fête du Travail'],[y2+'-05-08','Victoire 1945'],[EUC_DEV610_plus_(p,39),'Ascension'],[EUC_DEV610_plus_(p,50),'Lundi de Pentecôte'],[y2+'-07-14','Fête nationale'],[y2+'-08-15','Assomption']].forEach(function(x){out[x[0]]=x[1];});return out;}
+function jourComplet(iso){var d=new Date(iso+'T12:00:00Z');return jourLong(iso)+' '+d.getUTCFullYear();}
 function jourLong(iso){var d=new Date(iso+'T12:00:00Z'),j=d.getUTCDate();return JOURS[d.getUTCDay()]+' '+(j===1?'1er':j)+' '+MOISL[d.getUTCMonth()];}
 var FERIES={},FE_SEM=[];
-function feriesSemaine(s){var out=[];for(var k=0;k<7;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&k<5)out.push(jourLong(j)+' — '+FERIES[j]);}(D.jours||[]).forEach(function(x){if(x.date>=s.lundi&&x.date<=EUC_DEV610_plus_(s.lundi,6))out.push(jourLong(x.date)+' — '+(x.libelle||x.nature));});return out;}
+function feriesSemaine(s){var out=[];for(var k=0;k<7;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&k<5)out.push(jourComplet(j)+' — '+FERIES[j]);}(D.jours||[]).forEach(function(x){if(x.date>=s.lundi&&x.date<=EUC_DEV610_plus_(s.lundi,6))out.push(jourComplet(x.date)+' — '+(x.libelle||x.nature));});return out;}
 function joursFermes(s){var n=0;for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]||(D.jours||[]).some(function(x){return x.date===j&&x.nature==='NON_TRAVAILLE';}))n++;}return n;}
 function calendriersVisibles(){var v={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.checked)v[c.dataset.cal]=1;});v.FC_ALTERNANCE=v.CLASSE_ENTIERE;return v;}
 /* Formation continue : modalité des classes de la ligne dans le suivi des apprentis (TPMMA), ou ancien calendrier GRETA. */
@@ -485,8 +486,11 @@ function rendreGrille(){
   var jp={};(D.jours||[]).forEach(function(j){SEM.forEach(function(s){if(j.date>=s.lundi&&j.date<=EUC_DEV610_plus_(s.lundi,6))(jp[s.i]=jp[s.i]||[]).push(j);});});
   var h1='<tr><th class="lib" rowspan="4">Ligne \\ semaine</th><th class="lib2" rowspan="4">Établ. / organismes</th>',m=-1,n=0,mois=[];SEM.forEach(function(s){if(s.mois!==m){mois.push({m:s.mois,n:1});m=s.mois;}else mois[mois.length-1].n++;});
   h1+=mois.map(function(x){return '<th colspan="'+x.n+'">'+MOIS[x.m]+'</th>';}).join('')+'</tr>';
-  var h2='<tr>'+SEM.map(function(s){var j=jp[s.i];return '<th class="'+(s.vacances?'v':'')+'" title="'+esc(s.vacances?'Vacances '+s.vacances:'')+(j?esc(j.map(function(x){return ' · '+dfr(x.date)+' '+x.libelle;}).join('')):'')+'">'+s.numero+(j?'<span class="jp">★</span>':'')+'</th>';}).join('')+'</tr>';
   var fe=SEM.map(function(s){var f=feriesSemaine(s);return {liste:f,ferme:joursFermes(s)>0};});
+  /* Jours fériés : un seul point rouge, dans la case du numéro de semaine ; au survol, date complète et nom du jour. */
+  var feriesCompl=function(s){var out=[];for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j])out.push(jourComplet(j)+' — '+FERIES[j]);}return out;};
+  var h2='<tr>'+SEM.map(function(s){var j=jp[s.i],f=feriesCompl(s),t=[s.vacances?'Vacances '+s.vacances:''].concat(f).concat(j?j.map(function(x){return jourComplet(x.date)+' — '+x.libelle;}):[]).filter(Boolean).join(' · ');
+    return '<th class="'+(s.vacances?'v':'')+'"'+(t?' title="'+esc(t)+'"':'')+'>'+s.numero+(f.length?'<span class="pf" data-fe="'+s.i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'')+(j?'<span class="jp">★</span>':'')+'</th>';}).join('')+'</tr>';
   var titreFe=function(i){return fe[i].liste.length?' title="'+esc(fe[i].liste.join(' · '))+'"':'';};
   /* Jour férié : point rouge dans les cases Du et Au ; un clic sur le point liste les jours de la semaine. */
   var point=function(i){return fe[i].liste.length?'<span class="pf" data-fe="'+i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'';};
@@ -494,9 +498,9 @@ function rendreGrille(){
   /* Une seule semaine encadrée : celle du jeudi de l'Ascension, quand un pont est saisi dans les vacances de l'année. */
   var aPont=(D.vacances||[]).some(function(v){return /ASCENSION|PONT/.test(EUC_DEV610_n_(EUC_DEV610_nomVacances_(v.nom,v.debut,v.fin)+' '+v.nom));});
   var pont=function(s){if(!aPont)return '';for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&/ASCENSION/.test(EUC_DEV610_n_(FERIES[j])))return 'Pont de l’Ascension';}return '';};
-  var titrePont=function(s,i){var p=pont(s),f=fe[i].liste.join(' · ');return p||f?' title="'+esc([p,f].filter(Boolean).join(' · '))+'"':'';};
-  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
-  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+point(s.i)+'</th>';}).join('')+'</tr>';
+  var titrePont=function(s,i){var p=pont(s);return p?' title="'+esc(p)+'"':'';};
+  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+'</th>';}).join('')+'</tr>';
+  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+'</th>';}).join('')+'</tr>';
   FE_SEM=fe;
   var corps='',groupe=null;
   lignes.forEach(function(l,li){
@@ -527,7 +531,7 @@ function rendreGrille(){
   var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
   $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span class="ecran"><i style="background:#fff;box-shadow:inset 0 -2px 0 rgba(17,17,17,.35)"></i>Placée à la main</span><span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié dans la semaine<span class="ecran"> (cliquer sur le point)</span></span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #e11d48"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié (point sur le n° de semaine)</span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #111"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();

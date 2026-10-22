@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : plus de trait « placée à la main », fériés sur le numéro de semaine, pont encadré de noir
+
+- Le repère « placée à la main » n'est plus dessiné du tout (écran et
+  impression) ; l'information reste dans l'infobulle de la case (origine
+  « Grille » ou « Tableau ») et la génération ne déplace toujours pas ces périodes.
+- Jours fériés : un seul point rouge, dans la case du numéro de semaine ; survol :
+  date complète (jour, quantième, mois, année) et nom du jour férié ; clic : liste
+  des jours. Plus de points dans les cases Du / Au.
+- Pont de l'Ascension : dates du lundi et du vendredi encadrées de noir.
+- Suite complète verte. Non vérifié dans le navigateur de test (indisponible).
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : repère « placée à la main » non imprimé
 
 - Retour utilisateur : trait noir sous une période retouchée (1BTS MV Mixité,
