@@ -537,7 +537,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
-  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)', 'rowspan="4"', 'PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE – FORMATION CONTINUE', 'id="piedPlanning"', 'aside class="legende" id="legende"', 'data-p="pCouleurs"', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
+  for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)', 'rowspan="4"', 'function titrePlanning()', "if(v.FC)parts.push('FORMATION CONTINUE')", "if(v.SCOLAIRE)parts.push('PFMP','STAGES')", 'id="piedPlanning"', 'aside class="legende" id="legende"', 'data-p="pCouleurs"', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
@@ -748,6 +748,13 @@ test('impression : aucun dégradé transparent dans la grille (rendu noir dans c
 test('page : année et onglet retrouvés après un rechargement, bouton « Actualiser » protégé (spinner, délai, erreur)', () => {
   const pg = read('apps-script/Plannings_DEV610.html');
   for (const x of ['id="actualiser"', "memEcrire('dev610_annee'", "charger(ANNEE_DEMANDEE||memLire('dev610_annee'))", "memEcrire('dev610_onglet',b.dataset.p)", "memLire('dev610_onglet')", 'VERSION_VOULUE=NUM', 'b.disabled=true', "Délai dépassé : le serveur n’a pas répondu (actualisation)", 'if(fini)fini(false)', 'try{return localStorage.getItem(k)']) assert.ok(pg.includes(x), x);
+});
+
+test('lisibilité du planning imprimé : titre selon les blocs, hauteur et polices ajustées à la page, zébrage, mois, nom à droite, semaines dans les bandes', () => {
+  const pg = read('apps-script/Plannings_DEV610.html'), c = {};
+  vm.createContext(c); vm.runInContext(pg.match(/function libBande\(t,n\)\{[^\n]*/)[0], c);
+  assert.deepStrictEqual([c.libBande('PFMP 1ère', 6), c.libBande('PFMP Tbac', 3), c.libBande('Stage', 8), c.libBande('ENT.', 1)], ['PFMP 1ère · 6 sem.', 'PFMP Tbac', 'Stage · 8 sem.', 'ENT.']);
+  for (const x of ['function titrePlanning()', "t.style.setProperty('--rh',rh+'px')", 'rh=Math.min(36,', "tr class=\"'+(zebre%2?'':'zb')+'\"", "(debutMois(s.i)?' m0':'')", 'class="libD"', 'var PALETTE_FRANCHE=', 'table.g td.v,table.g tr.zb td.v{background:#8e9894}', '<span class="tel">']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

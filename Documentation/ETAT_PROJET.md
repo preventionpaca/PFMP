@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : lisibilité du planning imprimé (propositions A à I)
+
+- Retour d'impression utilisateur (photos) : classes écrites petit, lignes
+  difficiles à suivre, vacances noires dominantes, pavés de couleur peu lisibles,
+  place perdue en bas quand des blocs sont décochés.
+- A : à l'impression, hauteur de ligne et polices ajustées à la place disponible
+  (jusqu'à 2 fois ; polices plafonnées pour rester dans les cases).
+- B : quadrillage plus marqué, trait au début de chaque mois, bandeau de groupe
+  renforcé. C : titre selon les blocs cochés (PFMP – STAGES, MIXITÉ, ALTERNANCE,
+  FORMATION CONTINUE), bandeau encadré sur une ligne, année et téléphone du BFE en
+  gros. D : une ligne sur deux grisée (par groupe). E : nombre de semaines dans les
+  bandes selon la place (« PFMP 1ère · 4 sem. », « (4) »). F : vacances en gris
+  moyen dans les lignes (en-tête inchangé). G : nom de la ligne répété à droite.
+  H : colonne Établissement / organismes rétrécie. I : palette de couleurs franches
+  (impression) ajoutée à l'onglet Couleurs et mise en page.
+- Tests simulés : 44/44 DEV610, suite complète verte ; PDF A3 vérifiés dans
+  Chromium (tous blocs, puis scolaire seul : lignes 1,7 fois plus hautes).
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : plus de trait « placée à la main », fériés sur le numéro de semaine, pont encadré de noir
 
 - Le repère « placée à la main » n'est plus dessiné du tout (écran et

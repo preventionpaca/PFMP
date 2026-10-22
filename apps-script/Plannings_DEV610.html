@@ -31,7 +31,11 @@ button.petit{padding:2px 7px;font-size:12px}
 .cadre{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 12px;margin:8px 0}
 .grille{overflow:auto;max-width:100%;border:1px solid var(--bord);border-radius:10px;background:#fff;max-height:75vh}
 table.g{border-collapse:separate;border-spacing:0;font-size:11px;user-select:none;table-layout:fixed}
-table.g th,table.g td{border-right:1px solid #e3eee9;border-bottom:1px solid #e3eee9;padding:0;text-align:center;height:22px}
+table.g th,table.g td{border-right:1px solid #c9d6d1;border-bottom:1px solid #c9d6d1;padding:0;text-align:center;height:22px}
+/* Lecture : une ligne sur deux grisée (par groupe), trait marqué au début de chaque mois, nom répété à droite. */
+table.g tr.zb td.c,table.g tr.zb td.lib,table.g tr.zb td.lib2,table.g tr.zb td.libD{background-color:#e8eeec}table.g .m0{border-left:2px solid #7d8c86}
+table.g .libD{text-align:left;padding:0 6px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid #cfe3da;background:#fff}table.g thead .libD{background:#f4f8f6}
+table.g tr.groupe td{border-top:2px solid #7d8c86}
 table.g thead th{position:sticky;background:#f4f8f6;z-index:9;font-weight:700;color:#334;overflow:hidden}
 table.g thead tr:nth-child(1) th{top:0}table.g thead tr:nth-child(2) th{top:22px}table.g thead tr:nth-child(3) th{top:44px}table.g thead tr:nth-child(4) th{top:66px}
 table.g th .pf{color:#e11d48;font-size:13px;line-height:8px;cursor:pointer;margin-left:1px}#infoFerie{position:fixed;z-index:50;background:#fff;border:1px solid #e11d48;border-radius:8px;padding:6px 10px;box-shadow:0 4px 14px #0003;font-size:12px;max-width:260px}
@@ -40,12 +44,12 @@ table.g td.c .ev{position:relative;z-index:2;float:right;font-size:9px;font-weig
 table.g .lib{position:sticky;left:0;background:#fff;z-index:6;text-align:left;padding:0 8px;min-width:190px;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
 table.g thead .lib{z-index:10;background:#f4f8f6}
 table.g .lib{min-width:150px;max-width:150px}table.g .lib2{position:sticky;left:150px;background:#fff;z-index:6;text-align:left;padding:0 4px;font-size:10px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid #cfe3da}table.g thead .lib2{z-index:10;background:#f4f8f6}table.g tr.groupe td.lib2{background:#e8f3ee}
-table.g tr.groupe td{background:#e8f3ee;font-weight:800;text-align:left;padding:2px 8px;font-size:12px;position:sticky;left:0}
+table.g tr.groupe td{background:#d3e8de;font-weight:800;text-align:left;padding:2px 8px;font-size:12px;position:sticky;left:0}
 table.g td.c{cursor:crosshair;overflow:visible;white-space:nowrap;font-weight:700;font-size:10px;text-align:left;position:relative}
 table.g td.c .et.bande{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;z-index:2}table.g td.c.run{border-right-color:transparent}/* Repères de comptage : un point à chaque angle bas de semaine, aux deux bouts compris (4 semaines = 5 points, 4 intervalles). */
 table.g td.c.cont::after,table.g td.c .ptf{content:'';display:block;position:absolute;bottom:-2px;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);z-index:3}table.g td.c.cont::after{left:-2px}table.g td.c .ptf{right:-2px;pointer-events:none}table.g td.c.part{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 table.g td.c .et{position:relative;z-index:2;padding-left:2px;pointer-events:none}
-table.g td.v,table.g th.v{background:var(--vac);color:#ccc}
+table.g th.v{background:var(--vac);color:#ccc}table.g td.v,table.g tr.zb td.v{background:#8e9894}
 table.g td.sel{outline:2px solid #2563eb;outline-offset:-2px;box-shadow:inset 0 0 0 99px rgba(37,99,235,.22)}
 /* Appel de la première semaine : petit « A » discret dans l'angle haut gauche (jamais de dégradé transparent : noir dans certains PDF). */
 table.g td.ap::before{content:'A';position:absolute;left:1px;top:1px;font-size:7px;font-weight:800;line-height:8px;padding:0 1px;border-radius:2px;background:#7F00FF;color:#fff;z-index:4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -84,7 +88,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
 .poignee{font-size:16px;color:#6b7c76;cursor:grab;user-select:none;padding:0 4px}
 .cal-SCOLAIRE{border-left:4px solid #0b6b4f}.cal-MIXITE{border-left:4px solid #92D050}.cal-CLASSE_ENTIERE{border-left:4px solid #7E57C2}.cal-GRETA{border-left:4px solid #f59e0b}
 .titreImpression{display:none}.titreImpression h2{margin:0;font-size:18px;color:#1b396a}.titreImpression p{margin:2px 0 6px;font-size:13px}
-@media print{.blocs{display:none!important}body{background:#fff}header,.ariane,.barre,.onglets,.action,#etat,#messages,.noprint,.panneau:not(.actif){display:none!important}.grille{max-height:none;overflow:visible;border:none}.titreImpression{display:block;font-size:16px;font-weight:800;margin:0 0 6px}table.g thead th{position:static}table.g .lib{position:static}table.g td,table.g th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.misePage{flex-direction:column;align-items:center}.misePage .grille{width:100%;text-align:center}.misePage .grille table.g{margin:0 auto;text-align:left}.misePage .legende{order:2;justify-content:center;gap:3px 12px;margin:5px 0 0;font-size:10.5px}.legende .ecran{display:none}table.g td.man{box-shadow:none}table.g .lib{font-size:13px;font-weight:600}table.g th,table.g td{height:18px;line-height:16px;box-sizing:border-box}table.g td.lib{line-height:16px;overflow:hidden}#pGrille.actif{display:flex;flex-direction:column;justify-content:center;min-height:1000px}main{max-width:none;padding:0;margin:0}.titreImpression{display:flex!important;align-items:baseline;gap:10px;flex-wrap:wrap}.titreImpression .bfe{margin-left:auto;font-size:13px;font-weight:400}.legende i,.legende b{-webkit-print-color-adjust:exact;print-color-adjust:exact}.titreImpression h2{display:inline;font-size:18px;margin:0}.titreImpression p{display:inline;margin:0;font-size:13px}}
+@media print{.blocs{display:none!important}body{background:#fff}header,.ariane,.barre,.onglets,.action,#etat,#messages,.noprint,.panneau:not(.actif){display:none!important}.grille{max-height:none;overflow:visible;border:none}.titreImpression{display:block;font-size:16px;font-weight:800;margin:0 0 6px}table.g thead th{position:static}table.g .lib{position:static}table.g td,table.g th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.misePage{flex-direction:column;align-items:center}.misePage .grille{width:100%;text-align:center}.misePage .grille table.g{margin:0 auto;text-align:left}.misePage .legende{order:2;justify-content:center;gap:3px 12px;margin:5px 0 0;font-size:10.5px}.legende .ecran{display:none}table.g td.man{box-shadow:none}table.g .lib{font-weight:600}table.g th,table.g td{box-sizing:border-box}table.g td.lib{overflow:hidden}#pGrille.actif{display:flex;flex-direction:column;justify-content:center;min-height:1000px}main{max-width:none;padding:0;margin:0}.titreImpression{display:flex!important;align-items:center;gap:14px;flex-wrap:nowrap;border:2px solid #1b396a;border-radius:6px;padding:4px 12px;margin:0 0 6px}.titreImpression .bfe{margin-left:auto;font-size:13px;font-weight:400;white-space:nowrap}.legende i,.legende b{-webkit-print-color-adjust:exact;print-color-adjust:exact}.titreImpression h2{display:inline;font-size:18px;margin:0;white-space:nowrap}.titreImpression p{display:inline;margin:0;font-size:12px;color:#334155;white-space:nowrap}.titreImpression .an{font-size:24px;font-weight:800;color:#1b396a;white-space:nowrap}.titreImpression .bfe .tel{font-size:19px;font-weight:800;color:#1b396a;margin-left:4px}table.g th,table.g td{height:var(--rh,18px)!important;line-height:calc(var(--rh,18px) - 2px)}table.g{font-size:calc(10px*var(--fs,1))}table.g td.lib{font-size:min(calc(13px*var(--fs,1)),16px)!important}table.g td.libD{font-size:min(calc(12px*var(--fs,1)),13.5px)!important}table.g td.lib2{font-size:min(calc(8.5px*var(--fs,1)),10px)!important}table.g td.c{font-size:min(calc(10px*var(--fs,1)),11px)}table.g td.c .ev{font-size:min(calc(9px*var(--fs,1)),11px);line-height:min(calc(12px*var(--fs,1)),14px)}table.g tr.groupe td{font-size:calc(12px*var(--fs,1))}}
 </style>
 <style id="stylePage">@page{size:A3 landscape;margin:8mm}</style>
 </head>
@@ -208,7 +212,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
   </section>
 
   <section id="pCouleurs" class="panneau">
-    <p class="note">Couleur de chaque type de période dans le planning, les calendriers et la colonne Couleur publiée dans Planning_Periodes. Choisissez une couleur proposée (celles du planning PFMP – stages – mixité, vue hebdomadaire) ou saisissez un code #RRGGBB. Vide : couleur de la table Types_Planning.</p>
+    <p class="note">Couleur de chaque type de période dans le planning, les calendriers et la colonne Couleur publiée dans Planning_Periodes. Choisissez une couleur proposée — première rangée : couleurs franches, bien distinctes à l’impression ; seconde rangée : celles du planning PFMP – stages – mixité, vue hebdomadaire — ou saisissez un code #RRGGBB. Vide : couleur de la table Types_Planning.</p>
     <table class="t"><thead><tr><th>Type</th><th>Aperçu</th><th>Couleur</th><th>Couleurs proposées</th><th></th></tr></thead><tbody id="tCouleurs"></tbody></table>
     <div class="barre"><span id="couleursEtat" class="note"></span><span style="flex:1"></span><button type="button" class="plein" id="enregistrerCouleurs" disabled>Enregistrer les couleurs</button></div>
     <h3>Pied de page du planning</h3>
@@ -282,6 +286,8 @@ function occupe(btn,libelle,fn,arg,ok,delai){
 function couleur(type){var ch=((D&&D.couleurs)||{})[EUC_DEV610_cleType_(type)];if(ch&&ch.couleur)return ch.couleur;var n=EUC_DEV610_n_(type),t=(D.types||[]).filter(function(x){return EUC_DEV610_n_(x.type)===n||(n==='STAGEBTS'&&EUC_DEV610_n_(x.type)==='BTSSTAGE');})[0];var c=t&&t.couleur||'';if(/^[0-9A-Fa-f]{6}$/.test(c))c='#'+c;return /^#[0-9A-Fa-f]{6}$/.test(c)?c:(EUC_DEV610_estComplementaire_(type)?'#F4B183':'#92D050');}
 function texteSur(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16);return 0.299*r+0.587*g+0.114*b>150?'#000':'#fff';}
 /* Étiquette d'une période dans une case : le complément (« 5 Star ») d'une formation complémentaire, sinon le type abrégé. */
+/* Libellé d'une bande avec son nombre de semaines, selon la place : « PFMP 1ère · 4 sem. », sinon « PFMP 1ère (4) ». */
+function libBande(t,n){var place=n*26-6,lg=function(x){return x.length*5.8;};if(n<2)return t;var a=t+' · '+n+' sem.',b=t+' ('+n+')';return lg(a)<=place?a:lg(b)<=place?b:t;}
 function etiq(p){return EUC_DEV610_estComplementaire_(p.type)?(p.complement||'F. compl.'):abrege(p.type);}
 function abrege(type){var n=EUC_DEV610_n_(type);if(n==='PDIF')return 'P.dif.';if(/STAGE/.test(n))return 'Stage';return String(type).replace(/^PFMP\s*/i,'PFMP ');}
 function lignesScolaires(){return D.lignes.filter(function(l){return l.calendrier==='SCOLAIRE'&&actifAnnee(l);});}
@@ -340,10 +346,13 @@ function apresChargement(info){
 }
 /* Pied du planning : coordonnées du bureau formation entreprise (téléphone direct, sans courriel). */
 function majPied(){var p=D.parametres||{};$('piedPlanning').innerHTML=p.PIED_TELEPHONE?'':'<span class="note">Téléphone du bureau formation entreprise à renseigner (onglet « Couleurs et mise en page ») : il s’imprime dans la ligne de titre.</span>';}
+/* Titre selon les blocs cochés : scolaire → PFMP – STAGES, mixité → MIXITÉ, classe entière → ALTERNANCE,
+ * formation continue → FORMATION CONTINUE. Bandeau encadré sur une ligne : titre, année en gros, BFE et téléphone. */
+function titrePlanning(){var v=calendriersVisibles(),parts=[];if(v.SCOLAIRE)parts.push('PFMP','STAGES');if(v.MIXITE)parts.push('MIXITÉ');if(v.CLASSE_ENTIERE)parts.push('ALTERNANCE');if(v.FC)parts.push('FORMATION CONTINUE');return 'PLANNING '+(parts.length?parts.join(' – '):'PFMP');}
 function majTitreImpression(){var a=D.annee,d=new Date(),h=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  $('titreImpression').innerHTML='<h2>PLANNING PFMP – STAGES – MIXITÉ – ALTERNANCE – FORMATION CONTINUE'+(D.previsionnel?' — PRÉVISIONNEL':'')+'</h2><p><b>Année scolaire '+esc(a.code)+(a.zone?' - Zone '+esc(a.zone):'')+'</b> · généré le '+dfr(d.toISOString().slice(0,10))+' à '+h+(NUM?' · version '+NUM:'')+(D.previsionnel?' · dates de vacances non officielles, susceptibles d’évoluer autour des petites vacances':'')+'</p>'+bfe();}
+  $('titreImpression').innerHTML='<h2>'+esc(titrePlanning())+(D.previsionnel?' — PRÉVISIONNEL':'')+'</h2><span class="an">'+esc(a.code)+'</span><p>'+(a.zone?'Zone '+esc(a.zone)+' · ':'')+'généré le '+dfr(d.toISOString().slice(0,10))+' à '+h+(NUM?' · version '+NUM:'')+(D.previsionnel?' · vacances non officielles':'')+'</p>'+bfe();}
 /* Bureau formation entreprise dans la ligne de titre : un numéro direct (les entreprises appellent). */
-function bfe(){var p=D.parametres||{};return '<span class="bfe"><b>'+esc(p.PIED_LIBELLE||'Bureau formation entreprise (BFE)')+'</b>'+(p.PIED_TELEPHONE?' · Tél. '+esc(p.PIED_TELEPHONE):'')+'</span>';}
+function bfe(){var p=D.parametres||{};return '<span class="bfe"><b>'+esc(p.PIED_LIBELLE||'Bureau formation entreprise (BFE)')+'</b>'+(p.PIED_TELEPHONE?' <span class="tel">'+esc(p.PIED_TELEPHONE)+'</span>':'')+'</span>';}
 function ouvrirPanneau(id){Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});}
 function lienPlannings(params){return ADMIN+'?page=plannings-pfmp&annee='+encodeURIComponent(D.annee.code)+params;}
 function rendreFormations(){var blocs=[['Scolaires et mixités',['SCOLAIRE','MIXITE']],['Formation en alternance et continue',['CLASSE_ENTIERE','FC_ALTERNANCE','GRETA']]];
@@ -485,12 +494,14 @@ function rendreGrille(){
   var appels={};EUC_DEV610_appels_(PER,SEM).forEach(function(a){appels[a.ligne+'|'+a.semaine]=1;});
   var jp={};(D.jours||[]).forEach(function(j){SEM.forEach(function(s){if(j.date>=s.lundi&&j.date<=EUC_DEV610_plus_(s.lundi,6))(jp[s.i]=jp[s.i]||[]).push(j);});});
   var h1='<tr><th class="lib" rowspan="4">Ligne \\ semaine</th><th class="lib2" rowspan="4">Établ. / organismes</th>',m=-1,n=0,mois=[];SEM.forEach(function(s){if(s.mois!==m){mois.push({m:s.mois,n:1});m=s.mois;}else mois[mois.length-1].n++;});
-  h1+=mois.map(function(x){return '<th colspan="'+x.n+'">'+MOIS[x.m]+'</th>';}).join('')+'</tr>';
+  h1+=mois.map(function(x){return '<th colspan="'+x.n+'" class="m0">'+MOIS[x.m]+'</th>';}).join('')+'<th class="libD" rowspan="4">Ligne</th></tr>';
+  /* Début de mois : trait plus marqué à gauche de la colonne, dans l'en-tête et les lignes. */
+  var debutMois=function(i){return i>0&&SEM[i].mois!==SEM[i-1].mois;};
   var fe=SEM.map(function(s){var f=feriesSemaine(s);return {liste:f,ferme:joursFermes(s)>0};});
   /* Jours fériés : un seul point rouge, dans la case du numéro de semaine ; au survol, date complète et nom du jour. */
   var feriesCompl=function(s){var out=[];for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j])out.push(jourComplet(j)+' — '+FERIES[j]);}return out;};
   var h2='<tr>'+SEM.map(function(s){var j=jp[s.i],f=feriesCompl(s),t=[s.vacances?'Vacances '+s.vacances:''].concat(f).concat(j?j.map(function(x){return jourComplet(x.date)+' — '+x.libelle;}):[]).filter(Boolean).join(' · ');
-    return '<th class="'+(s.vacances?'v':'')+'"'+(t?' title="'+esc(t)+'"':'')+'>'+s.numero+(f.length?'<span class="pf" data-fe="'+s.i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'')+(j?'<span class="jp">★</span>':'')+'</th>';}).join('')+'</tr>';
+    return '<th class="'+(s.vacances?'v':'')+(debutMois(s.i)?' m0':'')+'"'+(t?' title="'+esc(t)+'"':'')+'>'+s.numero+(f.length?'<span class="pf" data-fe="'+s.i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'')+(j?'<span class="jp">★</span>':'')+'</th>';}).join('')+'</tr>';
   var titreFe=function(i){return fe[i].liste.length?' title="'+esc(fe[i].liste.join(' · '))+'"':'';};
   /* Jour férié : point rouge dans les cases Du et Au ; un clic sur le point liste les jours de la semaine. */
   var point=function(i){return fe[i].liste.length?'<span class="pf" data-fe="'+i+'" role="button" tabindex="0" aria-label="Jours fériés de la semaine">●</span>':'';};
@@ -499,12 +510,13 @@ function rendreGrille(){
   var aPont=(D.vacances||[]).some(function(v){return /ASCENSION|PONT/.test(EUC_DEV610_n_(EUC_DEV610_nomVacances_(v.nom,v.debut,v.fin)+' '+v.nom));});
   var pont=function(s){if(!aPont)return '';for(var k=0;k<5;k++){var j=EUC_DEV610_plus_(s.lundi,k);if(FERIES[j]&&/ASCENSION/.test(EUC_DEV610_n_(FERIES[j])))return 'Pont de l’Ascension';}return '';};
   var titrePont=function(s,i){var p=pont(s);return p?' title="'+esc(p)+'"':'';};
-  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+'</th>';}).join('')+'</tr>';
-  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+'</th>';}).join('')+'</tr>';
+  var h3='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(debutMois(s.i)?' m0':'')+(pont(s)?' pontH':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.lundi.slice(8,10))+'</th>';}).join('')+'</tr>';
+  var h4='<tr>'+SEM.map(function(s){return '<th class="'+(s.vacances?'v':'')+(debutMois(s.i)?' m0':'')+(pont(s)?' pontB':'')+'" style="font-weight:400"'+titrePont(s,s.i)+'>'+Number(s.vendredi.slice(8,10))+'</th>';}).join('')+'</tr>';
   FE_SEM=fe;
   var corps='',groupe=null;
-  lignes.forEach(function(l,li){
-    if(l.groupe!==groupe){groupe=l.groupe;corps+='<tr class="groupe"><td class="lib" colspan="1" title="'+esc(groupe)+'"><b>'+esc(groupe)+'</b></td><td class="lib2"></td><td colspan="'+SEM.length+'"></td></tr>';}
+  var zebre=0;lignes.forEach(function(l,li){
+    if(l.groupe!==groupe){groupe=l.groupe;zebre=0;corps+='<tr class="groupe"><td class="lib" colspan="1" title="'+esc(groupe)+'"><b>'+esc(groupe)+'</b></td><td class="lib2"></td><td colspan="'+SEM.length+'"></td><td class="libD"></td></tr>';}
+    zebre++;
     var occ={},evs={};PER.forEach(function(p){if(p.ligne!==l.code)return;var ev=evenement(p.type);semainesDe(p).forEach(function(si,k){if(ev){var e=evs[si]=evs[si]||[];e.push(p);}else if(!occ[si])occ[si]={p:p};});});
     /* Après le 31 août : périodes de l'année suivante (Bachelor qui finit en septembre…), en clair, non modifiables ici. */
     (D.suite||[]).forEach(function(p){if(p.ligne!==l.code||p.debut<=(D.annee.fin||'')||evenement(p.type))return;semainesDe(p).forEach(function(si){if(!occ[si])occ[si]={p:p,suite:true};});});
@@ -516,22 +528,22 @@ function rendreGrille(){
       o.masque=m;o.entiere=m.indexOf(0)<0;o.cle=EUC_DEV610_cleType_(o.p.type)+'|'+(o.p.complement||'')+'|'+(o.suite?1:0);});
     Object.keys(occ).map(Number).sort(function(a,b){return a-b;}).forEach(function(si){var o=occ[si],av=occ[si-1];o.suiteBande=!!(av&&av.entiere&&o.entiere&&av.cle===o.cle);});
     Object.keys(occ).map(Number).sort(function(a,b){return b-a;}).forEach(function(si){var o=occ[si],ap=occ[si+1];o.n=o.entiere?(ap&&ap.suiteBande?ap.n+1:1):1;});
-    corps+='<tr><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
-      var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':''),st='',txt='';
+    corps+='<tr class="'+(zebre%2?'':'zb')+'"><td class="lib" title="'+esc(l.libelle+' · '+l.classePfmp)+'">'+esc(etiquette(l))+'</td><td class="lib2" title="'+esc(supports(l))+'">'+esc(supports(l))+'</td>'+SEM.map(function(s){
+      var o=occ[s.i],cls='c'+(s.vacances&&!o?' v':'')+(debutMois(s.i)?' m0':''),st='',txt='';
       if(o){var c=couleur(o.p.type);
-        if(o.entiere){st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(!o.suiteBande)txt='<span class="et bande" style="width:'+(o.n*26-2)+'px">'+esc(etiq(o.p))+'</span>';cls+=' cont';var ap=occ[s.i+1];if(ap&&ap.suiteBande)cls+=' run';else txt+='<i class="ptf"></i>';}
+        if(o.entiere){st=' style="background-color:'+c+';color:'+texteSur(c)+'"';if(!o.suiteBande)txt='<span class="et bande" style="width:'+(o.n*26-2)+'px">'+esc(libBande(etiq(o.p),o.n))+'</span>';cls+=' cont';var ap=occ[s.i+1];if(ap&&ap.suiteBande)cls+=' run';else txt+='<i class="ptf"></i>';}
         else{var g=o.masque.map(function(x,k){return (x===1?c:'#ffffff')+' '+(k*20)+'% '+((k+1)*20)+'%';}).join(',');st=' style="background-image:linear-gradient(to right,'+g+')"';cls+=' part';}
         if(o.p.origine==='GRILLE'||o.p.origine==='TABLEAU')cls+=' man';if(o.suite)cls+=' suite';}
       if(appels[l.code+'|'+s.i])cls+=' ap';
       var e=evs[s.i]||[],vusEv={};e.forEach(function(p){var x=evenement(p.type);if(vusEv[x])return;vusEv[x]=1;var c=couleur(p.type);txt='<span class="ev" style="background:'+c+';color:'+texteSur(c)+'">'+esc(x)+'</span>'+txt;});
       var info=[];if(o&&o.suite)info.push('Année '+esc((D.annees.filter(function(x){return x.code>D.annee.code;})[0]||{}).code||'suivante'));if(o)info.push(EUC_DEV610_libelleType_(o.p)+' du '+dfr(o.p.debut)+' au '+dfr(o.p.fin)+' · '+(ORIGINES[o.p.origine]||o.p.origine)+(o.entiere?'':' · '+o.masque.filter(function(x){return x===1;}).length+' j. cette semaine'));else if(s.vacances)info.push('Vacances');
       e.forEach(function(p){info.push(p.type+' du '+dfr(p.debut)+' au '+dfr(p.fin));});if(s.jours.length)info.push(s.jours.map(function(j){return j.nb+' j. de '+j.nom;}).join(', '));
-      return '<td class="'+cls+'" data-l="'+li+'" data-s="'+s.i+'"'+st+' title="'+esc(info.join(' · '))+'">'+txt+'</td>';}).join('')+'</tr>';
+      return '<td class="'+cls+'" data-l="'+li+'" data-s="'+s.i+'"'+st+' title="'+esc(info.join(' · '))+'">'+txt+'</td>';}).join('')+'<td class="libD" title="'+esc(l.libelle)+'">'+esc(etiquette(l))+'</td></tr>';
   });
-  var cols='<colgroup><col style="width:150px"><col style="width:120px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'</colgroup>';
-  $('grille').innerHTML='<table class="g" style="width:'+(270+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
+  var cols='<colgroup><col style="width:150px"><col style="width:90px">'+SEM.map(function(){return '<col style="width:26px">';}).join('')+'<col style="width:110px"></colgroup>';
+  $('grille').innerHTML='<table class="g" style="width:'+(350+26*SEM.length)+'px">'+cols+'<thead>'+h1+h2+h3+h4+'</thead><tbody>'+corps+'</tbody></table>';
   var vus={},leg=[],lev={};PER.forEach(function(p){var x=evenement(p.type);if(x){if(!lev[x])lev[x]=p.type;return;}var k=EUC_DEV610_n_(p.type);if(!vus[k]){vus[k]=1;leg.push(p.type);}});
-  $('legende').innerHTML='<span><i style="background:var(--vac)"></i>Vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié (point sur le n° de semaine)</span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #111"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
+  $('legende').innerHTML='<span><i style="background:#8e9894"></i>Vacances</span>'+leg.map(function(t){return '<span><i style="background:'+couleur(t)+'"></i>'+esc(t)+'</span>';}).join('')+'<span><b style="background:#7F00FF;color:#fff;border-radius:2px;padding:0 2px;font-size:8px">A</b> Appel (1re semaine)</span><span><b style="color:#e11d48">●</b> Jour férié (point sur le n° de semaine)</span><span><i style="background:#fff;box-shadow:inset 0 0 0 2px #111"></i>Pont (dates encadrées)</span>'+Object.keys(lev).map(function(x){var c=couleur(lev[x]);return '<span><b style="background:'+c+';color:'+texteSur(c)+';border-radius:3px;padding:0 3px;font-size:10px">'+esc(x)+'</b>'+esc(LIB_EV[x]||x)+'</span>';}).join('');
   majPied();marquerSelection();
 }
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.pf'),box=$('infoFerie');if(box)box.remove();if(!b)return;e.stopPropagation();
@@ -790,6 +802,8 @@ function reduireImage(fichier,ok,ko){var lec=new FileReader();lec.onerror=functi
   var r=Math.min(1,480/im.width,160/im.height),w=Math.max(1,Math.round(im.width*r)),h=Math.max(1,Math.round(im.height*r)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
   var u=c.toDataURL('image/png');if(u.length>380000){var c2=document.createElement('canvas');c2.width=w;c2.height=h;var x=c2.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);u=c2.toDataURL('image/jpeg',0.85);}ok(u,w,h);};im.src=lec.result;};lec.readAsDataURL(fichier);}
 /* Couleurs proposées : celles du planning PFMP – stages – mixité (vue hebdomadaire), vives et lisibles. */
+/* Couleurs franches, bien distinctes à l'impression (première rangée), puis celles du planning hebdomadaire (seconde). */
+var PALETTE_FRANCHE=['#007A3D','#00A651','#8DC63F','#FFD200','#F7941D','#ED1C24','#B5121B','#E6007E','#92278F','#2E3192','#0072BC','#00AEEF','#00A99D','#8B5E3C','#58595B','#F9ED32'];
 var PALETTE=['#00C853','#00C890','#B9F1FE','#FFD54F','#C00000','#FF00CC','#92D050','#07B7F7','#7F00FF','#18C46B','#213FEA','#00FFEF','#F4B183','#FF9800','#FFEB3B','#E91E63'];
 var COUL=null,COUL_SALE=false;
 function typesCouleurs(){var vus={},out=[];function aj(t){var k=EUC_DEV610_cleType_(t);if(!t||vus[k])return;vus[k]=1;out.push(t);}
@@ -798,7 +812,7 @@ function rendreCouleurs(){if(!COUL){COUL={};Object.keys(D.couleurs||{}).forEach(
   $('tCouleurs').innerHTML=typesCouleurs().map(function(t){var k=EUC_DEV610_cleType_(t),c=(COUL[k]||{}).couleur||'',vue=c||couleur(t);
     return '<tr data-k="'+esc(k)+'" data-t="'+esc(t)+'"><td><b>'+esc(t)+'</b></td><td><span style="display:inline-block;min-width:70px;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:700;background:'+vue+';color:'+texteSur(vue)+'">'+esc(abrege(t))+'</span></td>'+
       '<td style="white-space:nowrap"><input type="color" class="cc1" value="'+esc(vue)+'"> <input class="cc2" size="8" maxlength="7" placeholder="'+esc(couleur(t))+'" value="'+esc(c)+'"></td>'+
-      '<td>'+PALETTE.map(function(x){return '<button type="button" class="petit cp" data-c="'+x+'" title="'+x+'" style="background:'+x+';width:20px;height:18px;padding:0;border:1px solid #0003'+(x===c?';outline:2px solid #111':'')+'"></button>';}).join(' ')+'</td>'+
+      '<td>'+[PALETTE_FRANCHE,PALETTE].map(function(pal,ip){return '<div style="margin:1px 0" title="'+(ip?'Couleurs du planning hebdomadaire':'Couleurs franches (impression)')+'">'+pal.map(function(x){return '<button type="button" class="petit cp" data-c="'+x+'" title="'+x+'" style="background:'+x+';width:20px;height:18px;padding:0;border:1px solid #0003'+(x===c?';outline:2px solid #111':'')+'"></button>';}).join(' ')+'</div>';}).join('')+'</td>'+
       '<td><button type="button" class="petit cr"'+(c?'':' disabled')+'>Par défaut</button></td></tr>';}).join('');
   $('enregistrerCouleurs').disabled=!COUL_SALE;$('couleursEtat').innerHTML=COUL_SALE?'<span class="alerte">Couleurs modifiées, non enregistrées : le planning les montre déjà.</span>':'';
   Array.prototype.forEach.call($('tCouleurs').querySelectorAll('tr[data-k]'),function(tr){var k=tr.dataset.k,t=tr.dataset.t;
@@ -844,14 +858,16 @@ $('imprimer').onclick=function(){document.querySelector('[data-p="pGrille"]').cl
 /* Impression A3 paysage (1527 × 1062 px utiles) : le tableau prend toute la largeur possible, la légende passe dessous,
  * l'ensemble tient sur une page et y est centré verticalement et horizontalement. */
 function miseEnPageImpression(){var t=document.querySelector('table.g');if(!t)return;majTitreImpression();t.style.zoom='';
-  /* Géométrie fixe à l'impression (lignes de 18 px, colonnes de la grille), indépendante de l'écran : même résultat
-   * quel que soit le moment où l'on imprime. Légende : nombre de lignes estimé d'après la longueur de ses libellés. */
-  var W=1515,H=1062,tw=270+26*SEM.length,th=t.querySelectorAll('tr').length*18+4;
+  /* Géométrie fixe à l'impression, indépendante de l'écran. Largeur : toute la page. Hauteur : s'il reste de la place,
+   * les lignes grandissent (jusqu'à 2 fois) et les polices avec elles, pour remplir la feuille et se lire de loin. */
+  var W=1515,H=1062,tw=350+26*SEM.length,nl=t.querySelectorAll('tr').length;
   var lg=Array.prototype.map.call($('legende').children,function(x){return (x.textContent||'').length*6.2+30;}),lignesLeg=1,cur=0;
   lg.forEach(function(w){if(cur+w>W){lignesLeg++;cur=w;}else cur+=w;});
-  var dispo=H-34-lignesLeg*17-24,z=Math.min(1.25,W/tw,dispo/th);t.style.zoom=String(Math.floor(z*100)/100);}
+  var dispo=H-52-lignesLeg*17-24,z=Math.min(1.25,W/tw),rh=dispo/(nl*z);
+  if(rh<18){rh=18;z=Math.min(z,dispo/(nl*18));}rh=Math.min(36,Math.floor(rh*10)/10);
+  t.style.setProperty('--rh',rh+'px');t.style.setProperty('--fs',String(Math.min(1.7,Math.round(rh/18*100)/100)));t.style.zoom=String(Math.floor(z*100)/100);}
 window.addEventListener('beforeprint',miseEnPageImpression);
-window.addEventListener('afterprint',function(){var t=document.querySelector('table.g');if(t)t.style.zoom='';$('pGrille').style.paddingTop='';});
+window.addEventListener('afterprint',function(){var t=document.querySelector('table.g');if(t){t.style.zoom='';t.style.removeProperty('--rh');t.style.removeProperty('--fs');}$('pGrille').style.paddingTop='';});
 try{var mem=JSON.parse(localStorage.getItem('dev610_blocs')||'null');if(mem)Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.dataset.cal in mem)c.checked=!!mem[c.dataset.cal];});}catch(e){}
 Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){c.onchange=function(){var m={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(x){m[x.dataset.cal]=x.checked;});try{localStorage.setItem('dev610_blocs',JSON.stringify(m));}catch(e){}SEL=[];if(D)rendreGrille();};});
 var LIB_ECARTS={type:'type',debut:'début',fin:'fin',classes:'classes',formation:'formation',niveau:'niveau',classePfmp:'classe PFMP',ligneSheet:'ligne',ligneId:'ligne du planning',couleur:'couleur'};
