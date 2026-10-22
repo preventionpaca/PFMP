@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : repère « placée à la main » non imprimé
+
+- Retour utilisateur : trait noir sous une période retouchée (1BTS MV Mixité,
+  été) à l'écran et au PDF. C'est le repère de saisie « placée à la main » :
+  désormais discret à l'écran (gris léger) et jamais imprimé, ni dans la légende
+  imprimée. Test ajouté ; suite complète verte. Non vérifié dans le navigateur de
+  test (indisponible).
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : année et onglet retrouvés, bouton « Actualiser »
 
 - Après un Ctrl+R, la page rouvre la dernière année consultée et le dernier onglet

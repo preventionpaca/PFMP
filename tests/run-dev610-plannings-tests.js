@@ -738,6 +738,7 @@ test('impression : aucun dégradé transparent dans la grille (rendu noir dans c
   const pg = read('apps-script/Plannings_DEV610.html'), css = pg.slice(0, pg.indexOf('</style>'));
   assert.ok(!/table\.g[^{]*\{[^}]*gradient\([^)]*transparent/.test(css), 'aucun dégradé transparent dans les styles de la grille');
   assert.ok(pg.includes("(x===1?c:'#ffffff')"), 'semaines partielles : blanc franc');
+  assert.ok(pg.includes('.legende .ecran{display:none}table.g td.man{box-shadow:none}') && pg.includes('<span class="ecran"><i style="background:#fff;box-shadow:inset 0 -2px 0 rgba(17,17,17,.35)"></i>Placée à la main</span>'), 'repère « placée à la main » jamais imprimé');
   assert.ok(!pg.includes("' pv'") && !pg.includes('Pont / jours de vacances'), 'pont : aucune hachure dans les lignes du tableau');
   assert.ok(pg.includes('/ASCENSION/.test(EUC_DEV610_n_(FERIES[j]))'), 'pont : seule la semaine du jeudi de l’Ascension est encadrée');
   for (const x of ["table.g td.ap::before{content:'A'", '<i class=\"ptf\"></i>', "cls+=' cont'"]) assert.ok(pg.includes(x), x);
