@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 octobre 2026 — DEV610 : année et onglet retrouvés, bouton « Actualiser »
+
+- Après un Ctrl+R, la page rouvre la dernière année consultée et le dernier onglet
+  (mémoire du navigateur, sans effet si elle est indisponible).
+- Bouton « Actualiser » : relit les données de l'année affichée sans recharger la
+  page ; garde l'onglet, la version ouverte et la position dans la grille ;
+  confirmation si des modifications ne sont pas enregistrées ; spinner, délai de
+  90 s, état rétabli en erreur.
+- Tests simulés : test de page ajouté, suite complète verte. Navigateur de test
+  indisponible (Chromium headless ne démarre plus dans l'environnement) : non
+  vérifié à l'écran avant publication.
+
 ## Mise à jour du 22 octobre 2026 — DEV610 : pont de l'Ascension, règle fixe
 
 - Un pont saisi sur 3 jours ouvrés ou plus faisait de la semaine une semaine de

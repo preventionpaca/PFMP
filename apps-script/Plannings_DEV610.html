@@ -100,6 +100,7 @@ table.org tr.gr td{background:#e8f3ee;font-weight:800;padding:4px 8px}table.org 
     <button type="button" id="generer" disabled title="Replace les périodes gouvernées par une règle automatique ; les placements manuels sont conservés">Générer depuis les règles</button>
     <button type="button" id="enregistrer" class="plein" disabled>Enregistrer la version</button>
     <button type="button" id="nouvelle" disabled>Enregistrer comme nouvelle version</button>
+    <button type="button" id="actualiser" title="Relit les données (Grist) de l’année affichée sans recharger la page : même année, même onglet, même version">Actualiser</button>
     <button type="button" id="imprimer" disabled title="Ouvre l’impression : choisissez « Enregistrer au format PDF » pour obtenir le PDF">Imprimer / PDF</button>
   </div>
   <div class="barre"><label style="flex:1">Commentaire de version <input id="commentaire" style="width:100%" placeholder="ex. P.dif. déplacé après la 2e période, dates de vacances prévisionnelles"></label></div>
@@ -289,9 +290,13 @@ function typesFormation(){var vus={},out=[];(D.types||[]).forEach(function(t){if
 function semainesDe(p){var out=[];SEM.forEach(function(s){if(s.lundi<=p.fin&&s.vendredi>=p.debut)out.push(s.i);});return out;}
 
 /* ---------- Chargement ---------- */
-function charger(annee){
+var VERSION_VOULUE=0;
+/* Mémoire de la page (navigateur de l'utilisateur) : année et onglet retrouvés après un Ctrl+R. */
+function memLire(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+function memEcrire(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function charger(annee,fini){
   $('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement de l’année…';$('annee').disabled=true;message('');
-  google.script.run.withSuccessHandler(function(r){D=r;HL=null;BILAN=null;initialiser();}).withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span> <button type="button" class="petit" id="reessayer">Réessayer</button>';$('reessayer').onclick=function(){charger(annee);};}).EUC_DEV610_charger({annee:annee});
+  google.script.run.withSuccessHandler(function(r){D=r;HL=null;BILAN=null;memEcrire('dev610_annee',r.annee&&r.annee.code||'');initialiser();if(fini)fini(true);}).withFailureHandler(function(e){if(fini)fini(false);$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span> <button type="button" class="petit" id="reessayer">Réessayer</button>';$('reessayer').onclick=function(){charger(annee);};}).EUC_DEV610_charger({annee:annee});
 }
 function initialiser(){
   var a=D.annee,y=Number(a.code.slice(0,4));
@@ -306,7 +311,7 @@ function initialiser(){
   if((D.avertissements||[]).length)message('Avertissement (la page reste utilisable) : '+esc(D.avertissements.join(' · ')),'alerte');
   if(!trouvees)message('Aucune vacance trouvée pour '+esc(a.code)+' dans Vacances_Scolaires : les périodes collées aux vacances ne peuvent pas être placées.','erreur');
   $('base').innerHTML=!D.vacances.length?'<span class="chip PREV">Aucune vacance saisie pour cette année</span>':prev?'<span class="chip PREV">Vacances prévisionnelles — planning « Prévisionnel »</span>':'<span class="chip OFF">Vacances officielles</span>';
-  var v=D.versions.slice().reverse(),brouillon=v.filter(function(x){return x.statut==='BROUILLON';})[0],choisie=brouillon||v[0];
+  var v=D.versions.slice().reverse(),brouillon=v.filter(function(x){return x.statut==='BROUILLON';})[0],voulue=VERSION_VOULUE&&v.filter(function(x){return x.numero===VERSION_VOULUE;})[0],choisie=voulue||brouillon||v[0];VERSION_VOULUE=0;
   $('version').innerHTML='<option value="0">Nouvelle version</option>'+D.versions.map(function(x){return '<option value="'+x.numero+'">v'+x.numero+' — '+esc(LIBSTATUT(x.statut))+'</option>';}).join('');
   if(choisie){ouvrirVersion(choisie.numero);}
   else if(D.publiees){NUM=0;PER=[];$('version').value='0';$('commentaire').value='Reprise du calendrier publié';
@@ -863,9 +868,16 @@ $('publier').onclick=function(){if(!APERCU)return;var d=APERCU.diff;if(!(d.creer
   occupe(this,'Publication…','EUC_DEV610_publier',{annee:D.annee.code,numero:NUM,confirmation:'PUBLIER'},function(r){APERCU=null;charger(D.annee.code);message('<span class="ok">Version '+r.numero+' publiée</span> : '+r.creees+' créée(s), '+r.modifiees+' modifiée(s), '+r.desactivees+' désactivée(s), '+r.inchangees+' inchangée(s).');},120000);};
 
 /* ---------- Onglets ---------- */
-Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x===b));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===b.dataset.p);});};});
+Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){memEcrire('dev610_onglet',b.dataset.p);Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x===b));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===b.dataset.p);});};});
 window.addEventListener('beforeunload',function(e){if((SALE&&EDIT)||ORG_SALE||HSALE||COUL_SALE){e.preventDefault();e.returnValue='';}});
-charger(ANNEE_DEMANDEE);
+/* Actualiser : relit Grist pour l'année affichée ; garde l'onglet, la version ouverte et la position dans la grille. */
+$('actualiser').onclick=function(){if(!D)return;if(SALE&&EDIT&&!confirm('Abandonner les modifications non enregistrées et relire les données ?'))return;
+  var b=this,orig=b.innerHTML,g=$('grille'),x=g.scrollLeft,y=g.scrollTop,fait=false;VERSION_VOULUE=NUM;b.disabled=true;b.innerHTML='<span class="spin" aria-hidden="true"></span>Actualisation…';
+  var fin=function(ok){if(fait)return;fait=true;clearTimeout(t);b.innerHTML=orig;b.disabled=false;if(ok){g.scrollLeft=x;g.scrollTop=y;message('<span class="ok">Données relues</span> à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'.');}};
+  var t=setTimeout(function(){fin(false);message('Délai dépassé : le serveur n’a pas répondu (actualisation). Réessayez.','erreur');},90000);
+  charger(D.annee.code,fin);};
+if(!ONGLET&&!VUE){var og=memLire('dev610_onglet');if(og&&document.querySelector('[role=tab][data-p="'+og+'"]'))ONGLET=og;}
+charger(ANNEE_DEMANDEE||memLire('dev610_annee'));
 })();
 </script>
 </body>

@@ -743,4 +743,9 @@ test('impression : aucun dégradé transparent dans la grille (rendu noir dans c
   for (const x of ["table.g td.ap::before{content:'A'", '<i class=\"ptf\"></i>', "cls+=' cont'"]) assert.ok(pg.includes(x), x);
 });
 
+test('page : année et onglet retrouvés après un rechargement, bouton « Actualiser » protégé (spinner, délai, erreur)', () => {
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['id="actualiser"', "memEcrire('dev610_annee'", "charger(ANNEE_DEMANDEE||memLire('dev610_annee'))", "memEcrire('dev610_onglet',b.dataset.p)", "memLire('dev610_onglet')", 'VERSION_VOULUE=NUM', 'b.disabled=true', "Délai dépassé : le serveur n’a pas répondu (actualisation)", 'if(fini)fini(false)', 'try{return localStorage.getItem(k)']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');
