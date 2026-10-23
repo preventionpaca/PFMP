@@ -297,7 +297,9 @@ function etiq(p){return EUC_DEV610_estComplementaire_(p.type)?(p.complement||'F.
 function abrege(type){var n=EUC_DEV610_n_(type);if(n==='PDIF')return 'P.dif.';if(/STAGE/.test(n))return 'Stage';return String(type).replace(/^PFMP\s*/i,'PFMP ');}
 function lignesScolaires(){return D.lignes.filter(function(l){return l.calendrier==='SCOLAIRE'&&actifAnnee(l);});}
 function ligne(code){return D.lignes.filter(function(l){return l.code===code;})[0];}
-function typesTous(){var f=typesFormation(),vus={},out=f.slice();f.forEach(function(t){vus[EUC_DEV610_n_(t)]=1;});(D.types||[]).forEach(function(t){var k=EUC_DEV610_n_(t.type);if(k==='BTSSTAGE'||vus[k])return;vus[k]=1;out.push(t.type);});if(!vus[EUC_DEV610_n_(EUC_DEV610_TYPE_COMPLEMENTAIRE_)])out.push(EUC_DEV610_TYPE_COMPLEMENTAIRE_);return out;}
+function typesTous(){var f=typesFormation(),vus={},out=f.slice();f.forEach(function(t){vus[EUC_DEV610_n_(t)]=1;});(D.types||[]).forEach(function(t){var k=EUC_DEV610_n_(t.type);if(k==='BTSSTAGE'||vus[k])return;vus[k]=1;out.push(t.type);});if(!vus[EUC_DEV610_n_(EUC_DEV610_TYPE_COMPLEMENTAIRE_)])out.push(EUC_DEV610_TYPE_COMPLEMENTAIRE_);
+  /* « Cours » : jour au lycée posé explicitement (ex. un jour de vacances ou une semaine en entreprise). */
+  if(!vus.COURS)out.push('Cours');return out;}
 function typesFormation(){var vus={},out=[];(D.types||[]).forEach(function(t){if(EUC_DEV610_typeFormation_(t.type)||EUC_DEV610_n_(t.type)==='BTSSTAGE'){var v=EUC_DEV610_n_(t.type)==='BTSSTAGE'?'Stage BTS':t.type;if(!vus[EUC_DEV610_n_(v)]){vus[EUC_DEV610_n_(v)]=1;out.push(v);}}});
   D.regles.forEach(function(r){if(r.type&&!vus[EUC_DEV610_n_(r.type)]){vus[EUC_DEV610_n_(r.type)]=1;out.push(r.type);}});return out;}
 function semainesDe(p){var out=[];SEM.forEach(function(s){if(s.lundi<=p.fin&&s.vendredi>=p.debut)out.push(s.i);});return out;}
