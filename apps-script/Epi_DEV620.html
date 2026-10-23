@@ -28,6 +28,7 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bord)}
 table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
 table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
+.planche{display:grid;grid-template-columns:repeat(2,270px);gap:6px 10px;background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px;width:max-content;max-width:100%}.planche figure{margin:0}.planche img{width:270px;height:138px;border:1px solid #cbd5e1;border-radius:6px;display:block}.planche figcaption{font-size:11px;color:var(--gris)}
 #qui{position:fixed;inset:0;background:rgba(15,40,30,.55);display:flex;align-items:center;justify-content:center;z-index:50}#qui[hidden]{display:none}
 #qui .boite{background:#fff;border-radius:12px;padding:20px 24px;max-width:420px;width:92%;box-shadow:0 10px 40px #0004}
 #qui input{width:100%;margin:4px 0 10px;padding:6px 8px}
@@ -43,6 +44,7 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
   <div id="messages" role="status"></div>
   <div class="onglets" role="tablist">
     <button type="button" role="tab" data-p="pEssayage" aria-selected="true">Essayage</button>
+    <button type="button" role="tab" data-p="pEtiquettes" aria-selected="false">Étiquettes fournisseur</button>
     <button type="button" role="tab" data-p="pVagues" aria-selected="false">Vagues</button>
     <button type="button" role="tab" data-p="pReglages" aria-selected="false">Réglages</button>
     <button type="button" role="tab" data-p="pAdmin" aria-selected="false">Administratifs</button>
@@ -56,6 +58,14 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
     <table class="t"><thead id="eTete"></thead><tbody id="eCorps"></tbody></table>
     <div class="barre"><button type="button" id="ajouterProvisoire" title="Élève dont le dossier n’est pas encore dans Pronote (passerelle, dossier en cours)">Ajouter un élève hors Pronote</button></div>
     <div id="provisoires"></div>
+  </section>
+
+  <section id="pEtiquettes" class="panneau">
+    <p class="note">Étiquette de 9,50 × 4,85 cm, imprimée par le fournisseur sur son support au logo du lycée : nom, prénom, formation et promotion (onglet Réglages pour les libellés). Un JPEG 144 dpi par élève, dans un fichier ZIP.</p>
+    <div class="barre"><label>Vague <select id="qVague"></select></label><label><input type="checkbox" id="qNouvelles" checked> Seulement les étiquettes pas encore produites</label><span id="qCompte" class="note"></span></div>
+    <div class="barre" id="qClasses"></div>
+    <div class="barre"><label><input type="checkbox" id="qMarquer" checked> Marquer ces étiquettes comme produites après le téléchargement</label><span style="flex:1"></span><button type="button" class="plein" id="qZip">Télécharger le ZIP (JPEG 144 dpi)</button></div>
+    <div id="qApercu" class="planche"></div>
   </section>
 
   <section id="pVagues" class="panneau">
@@ -72,7 +82,7 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
     <table class="t"><thead><tr><th>Code</th><th>Libellé</th><th>Pièces</th><th>Active</th></tr></thead><tbody id="tTenues"></tbody></table>
     <div class="barre"><button type="button" id="ajouterTenue">Ajouter une tenue</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerReglages" disabled>Enregistrer les pièces et tenues</button></div>
     <h3>Tenue de chaque classe <span class="note" id="rAnnee"></span></h3>
-    <table class="t"><thead><tr><th>Classe</th><th>Tenue</th></tr></thead><tbody id="tLiens"></tbody></table>
+    <table class="t"><thead><tr><th>Classe</th><th>Tenue</th><th>Formation sur l’étiquette (vide : proposée)</th><th>Promotion (vide : calculée)</th></tr></thead><tbody id="tLiens"></tbody></table>
     <div class="barre"><span style="flex:1"></span><button type="button" class="plein" id="enregistrerLiens" disabled>Enregistrer les tenues des classes</button></div>
   </section>
 
@@ -92,7 +102,7 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
 <script><?!= codeClient ?></script>
 <script>
 (function(){
-var GARDE={},ADMIN=<?= adminBase ?>,ONGLET=<?= onglet ?>,D=null,QUI='',SAI={},PROV=[],REG=null,REG_SALE=false,LIENS={},LIENS_SALE=false,ADM=null,ADM_SALE=false,ESS_SALE=false;
+var GARDE={},ADMIN=<?= adminBase ?>,ONGLET=<?= onglet ?>,D=null,QUI='',SAI={},PROV=[],REG=null,REG_SALE=false,LIENS={},ETQ={},LIENS_SALE=false,ADM=null,ADM_SALE=false,ESS_SALE=false;
 function $(id){return document.getElementById(id);}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function message(h,c){$('messages').innerHTML=h?'<p class="'+(c||'note')+'">'+h+'</p>':'';}
@@ -108,7 +118,7 @@ $('quiPrenom').addEventListener('keydown',function(e){if(e.key==='Enter')$('quiO
 $('changerQui').onclick=demanderQui;
 
 function charger(annee){GARDE={classe:$('eClasse').value,vague:$('eVague').value};$('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement…';$('annee').disabled=true;
-  google.script.run.withSuccessHandler(function(r){D=r;SAI={};PROV=[];REG=null;REG_SALE=false;LIENS=JSON.parse(JSON.stringify(Object.keys(r.liens).reduce(function(o,k){o[k]=r.liens[k].tenue;return o;},{})));LIENS_SALE=false;ADM=null;ADM_SALE=false;ESS_SALE=false;initialiser();})
+  google.script.run.withSuccessHandler(function(r){D=r;SAI={};PROV=[];REG=null;REG_SALE=false;LIENS=Object.keys(r.liens).reduce(function(o,k){o[k]=r.liens[k].tenue;return o;},{});ETQ=Object.keys(r.liens).reduce(function(o,k){o[k]={libelle:r.liens[k].libelle||'',promotion:r.liens[k].promotion||''};return o;},{});LIENS_SALE=false;ADM=null;ADM_SALE=false;ESS_SALE=false;initialiser();})
     .withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span>';}).EUC_DEV620_charger({annee:annee});}
 function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<option'+(a===D.annee?' selected':'')+'>'+esc(a)+'</option>';}).join('');$('annee').disabled=false;
   $('etat').innerHTML=esc(D.annee)+' · '+D.classes.length+' classes · '+D.eleves.length+' élèves Pronote · '+D.vagues.length+' vague(s) · '+D.essayages.length+' essayage(s)';
@@ -118,7 +128,7 @@ function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<op
   /* Après un enregistrement : même classe et même vague. */
   if(GARDE.vague&&D.vagues.some(function(v){return String(v.numero)===GARDE.vague;}))$('eVague').value=GARDE.vague;if(GARDE.classe&&D.classes.some(function(c){return String(c.id)===GARDE.classe;}))$('eClasse').value=GARDE.classe;
   $('eProf').innerHTML='<option value=""></option>'+D.professeurs.map(function(p){return '<option>'+esc(p)+'</option>';}).join('');
-  rendreEssayage();rendreVagues();rendreReglages();rendreAdmin();majBoutons();}
+  rendreEssayage();rendreEtiquettes();rendreVagues();rendreReglages();rendreAdmin();majBoutons();}
 $('annee').onchange=function(){if((ESS_SALE||REG_SALE||LIENS_SALE||ADM_SALE)&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee;return;}charger(this.value);};
 
 /* ---------- Essayage ---------- */
@@ -158,6 +168,36 @@ $('enregistrerEssayage').onclick=function(){if(!QUI){demanderQui();return;}var v
     .concat(PROV.map(function(p){return {eleveId:0,nom:p.nom,prenom:p.prenom,classeId:p.classeId,classeTexte:p.classeTexte,tenue:p.tenue,tailles:p.tailles,professeur:$('eProf').value};}));
   occupe(this,'Enregistrement…','EUC_DEV620_enregistrerEssayages',{annee:D.annee,vague:vague,saisiPar:QUI,lignes:lignes},function(r){message('<span class="ok">Essayage enregistré</span> : '+r.creees+' créé(s), '+r.modifiees+' mis à jour.');ESS_SALE=false;charger(D.annee);});};
 
+/* ---------- Étiquettes fournisseur ---------- */
+var QCLS=null;
+/* Classe d'un essayage : celle de Pronote, sinon la classe du même nom que la « classe ou formation » saisie hors Pronote. */
+function cleClasse(x){if(x.classeId)return x.classeId;var c=D.classes.filter(function(z){return EUC_DEV620_n_(z.nom)===EUC_DEV620_n_(x.classeTexte);})[0];return c?c.id:'t:'+x.classeTexte;}
+function classeNom(id){return (D.classes.filter(function(c){return c.id===id;})[0]||{}).nom||'';}
+function etiquettes(){var v=Number($('qVague').value)||0,nouv=$('qNouvelles').checked;
+  return D.essayages.filter(function(x){return x.vague===v&&(!nouv||!x.etiquetteLe)&&(!QCLS||QCLS[cleClasse(x)]!==false);}).map(function(x){var k=cleClasse(x),cn=classeNom(k)||x.classeTexte,e=ETQ[k]||{};
+    return {id:x.id,nom:x.nom,prenom:x.prenom,classe:cn,cle:k,formation:e.libelle||EUC_DEV620_libelleEtiquette_(cn),promotion:e.promotion||EUC_DEV620_promotion_(cn,D.annee),deja:!!x.etiquetteLe};})
+    .sort(function(a,b){return a.classe.localeCompare(b.classe,'fr')||(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr');});}
+/* Dessin d'une étiquette (9,50 × 4,85 cm à 144 dpi = 539 × 275 px) : haut laissé libre pour le logo pré-imprimé. */
+function dessiner(x){var c=document.createElement('canvas');c.width=539;c.height=275;var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.fillStyle='#000';g.textAlign='center';g.textBaseline='middle';
+  [[String(x.nom||'').toUpperCase(),'bold',34,.47],[x.prenom||'','bold',32,.61],[x.formation||'','normal',28,.76],[x.promotion||'','normal',22,.88]].forEach(function(l){var t=l[0];if(!t)return;var f=l[2];do{g.font=l[1]+' '+f+'px Arial, Helvetica, sans-serif';f--;}while(g.measureText(t).width>c.width*.92&&f>10);g.fillText(t,c.width/2,c.height*l[3]);});
+  return c;}
+function rendreEtiquettes(){$('qVague').innerHTML=D.vagues.length?D.vagues.map(function(v){return '<option value="'+v.numero+'">'+esc(v.libelle||('Vague '+v.numero))+'</option>';}).join(''):'<option value="">Aucune vague</option>';
+  if(D.vagues.length&&!$('qVague').dataset.fait){$('qVague').value=String(D.vagues[D.vagues.length-1].numero);}rendreApercu();}
+function rendreApercu(){var v=Number($('qVague').value)||0,tout=D.essayages.filter(function(x){return x.vague===v;}),cles={};
+  tout.forEach(function(x){var k=cleClasse(x);if(!cles[k])cles[k]=classeNom(k)||x.classeTexte||'(sans classe)';});
+  if(!QCLS)QCLS={};$('qClasses').innerHTML=Object.keys(cles).length?'<span class="note">Classes :</span> '+Object.keys(cles).sort(function(a,b){return cles[a].localeCompare(cles[b],'fr');}).map(function(k){return '<label><input type="checkbox" data-k="'+esc(k)+'"'+(QCLS[k]!==false?' checked':'')+'> '+esc(cles[k])+'</label>';}).join(' '):'';
+  Array.prototype.forEach.call($('qClasses').querySelectorAll('input[data-k]'),function(cb){cb.onchange=function(){QCLS[cb.dataset.k]=cb.checked;rendreApercu();};});
+  var l=etiquettes(),deja=tout.filter(function(x){return x.etiquetteLe;}).length;
+  $('qCompte').textContent=l.length+' étiquette(s) à produire'+(deja?' · '+deja+' déjà produite(s) dans cette vague':'');$('qZip').disabled=!l.length;
+  $('qApercu').innerHTML=l.slice(0,10).map(function(x,i){return '<figure><img alt="Étiquette '+esc(x.nom)+'" src="'+dessiner(x).toDataURL('image/jpeg',.92)+'"><figcaption>'+esc(EUC_DEV620_nomFichier_(v,i+1,l.length))+(x.deja?' · déjà produite':'')+'</figcaption></figure>';}).join('')+(l.length>10?'<p class="note">… et '+(l.length-10)+' autre(s) dans le ZIP.</p>':'')||'<p class="note">Aucune étiquette pour ce choix.</p>';}
+$('qVague').onchange=function(){QCLS=null;$('qVague').dataset.fait='1';rendreApercu();};$('qNouvelles').onchange=rendreApercu;
+function octets(dataUrl){var b=atob(dataUrl.split(',')[1]),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o;}
+$('qZip').onclick=function(){var l=etiquettes(),v=Number($('qVague').value)||0,b=this;if(!l.length)return;
+  var zip=EUC_DEV620_zip_(l.map(function(x,i){return {nom:EUC_DEV620_nomFichier_(v,i+1,l.length),data:EUC_DEV620_jfif144_(octets(dessiner(x).toDataURL('image/jpeg',.95)))};}));
+  var url=URL.createObjectURL(new Blob([zip],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download='Etiquettes_EPI_'+D.annee+'_Vague'+v+'.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},4000);
+  if(!$('qMarquer').checked){message('<span class="ok">ZIP téléchargé</span> : '+l.length+' étiquette(s), non marquées.');return;}
+  occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes',{ids:l.map(function(x){return x.id;}),lot:'Vague '+v+' — '+new Date().toLocaleString('fr-FR')},function(r){message('<span class="ok">ZIP téléchargé</span> : '+r.marquees+' étiquette(s) marquées comme produites ; elles ne seront plus proposées (décochez le filtre pour les refaire).');charger(D.annee);});};
+
 /* ---------- Vagues ---------- */
 function rendreVagues(){$('tVagues').innerHTML=D.vagues.length?D.vagues.map(function(v){var n=D.essayages.filter(function(x){return x.vague===v.numero;}).length;return '<tr data-id="'+v.id+'"><td>'+v.numero+'</td><td><input class="vl" value="'+esc(v.libelle)+'"></td><td><input type="date" class="vd" value="'+esc(v.date)+'"></td><td><select class="vs">'+['OUVERTE','COMMANDEE','LIVREE','CLOSE'].map(function(s){return '<option'+(s===v.statut?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td><td>'+n+'</td><td><button type="button" class="petit ve">Enregistrer</button></td></tr>';}).join(''):'<tr><td colspan="6" class="note">Aucune vague cette année.</td></tr>';
   Array.prototype.forEach.call($('tVagues').querySelectorAll('.ve'),function(b){b.onclick=function(){var tr=b.closest('tr');occupe(b,'…','EUC_DEV620_enregistrerVague',{annee:D.annee,id:Number(tr.dataset.id),libelle:tr.querySelector('.vl').value,date:tr.querySelector('.vd').value,statut:tr.querySelector('.vs').value},function(){message('<span class="ok">Vague enregistrée.</span>');charger(D.annee);});};});}
@@ -171,12 +211,13 @@ function rendreReglages(){if(!REG)REG={pieces:JSON.parse(JSON.stringify(D.pieces
   [['tPieces','pieces'],['tTenues','tenues']].forEach(function(x){Array.prototype.forEach.call($(x[0]).querySelectorAll('tr[data-i]'),function(tr){var o=REG[x[1]][Number(tr.dataset.i)];
     Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){o[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();REG_SALE=true;majBoutons();};});
     Array.prototype.forEach.call(tr.querySelectorAll('.tp'),function(cb){cb.onchange=function(){o.pieces=Array.prototype.filter.call(tr.querySelectorAll('.tp'),function(c){return c.checked;}).map(function(c){return c.value;});REG_SALE=true;majBoutons();};});});});
-  $('tLiens').innerHTML=D.classes.map(function(c){return '<tr data-c="'+c.id+'"><td>'+esc(c.nom)+'</td><td><select class="lt"><option value="">— aucune —</option>'+D.tenues.filter(function(t){return t.actif;}).map(function(t){return '<option value="'+esc(t.code)+'"'+(t.code===LIENS[c.id]?' selected':'')+'>'+esc(t.libelle)+'</option>';}).join('')+'</select></td></tr>';}).join('');
-  Array.prototype.forEach.call($('tLiens').querySelectorAll('tr[data-c] .lt'),function(s){s.onchange=function(){LIENS[s.closest('tr').dataset.c]=s.value;LIENS_SALE=true;majBoutons();};});}
+  $('tLiens').innerHTML=D.classes.map(function(c){var e=ETQ[c.id]||{};return '<tr data-c="'+c.id+'"><td>'+esc(c.nom)+'</td><td><select class="lt"><option value="">— aucune —</option>'+D.tenues.filter(function(t){return t.actif;}).map(function(t){return '<option value="'+esc(t.code)+'"'+(t.code===LIENS[c.id]?' selected':'')+'>'+esc(t.libelle)+'</option>';}).join('')+'</select></td>'+
+    '<td><input class="ll" maxlength="40" value="'+esc(e.libelle||'')+'" placeholder="'+esc(EUC_DEV620_libelleEtiquette_(c.nom))+'"></td><td><input class="lp" size="10" maxlength="9" value="'+esc(e.promotion||'')+'" placeholder="'+esc(EUC_DEV620_promotion_(c.nom,D.annee))+'"></td></tr>';}).join('');
+  Array.prototype.forEach.call($('tLiens').querySelectorAll('tr[data-c]'),function(tr){var c=tr.dataset.c;Array.prototype.forEach.call(tr.querySelectorAll('select,input'),function(el){el.onchange=function(){LIENS[c]=tr.querySelector('.lt').value;ETQ[c]={libelle:tr.querySelector('.ll').value.trim(),promotion:tr.querySelector('.lp').value.trim()};LIENS_SALE=true;majBoutons();};});});}
 $('ajouterPiece').onclick=function(){REG.pieces.push({code:'',libelle:'',tailles:'',actif:true});REG_SALE=true;rendreReglages();majBoutons();};
 $('ajouterTenue').onclick=function(){REG.tenues.push({code:'',libelle:'',pieces:[],actif:true});REG_SALE=true;rendreReglages();majBoutons();};
 $('enregistrerReglages').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerReglages',{pieces:REG.pieces,tenues:REG.tenues},function(r){message('<span class="ok">Pièces et tenues enregistrées</span> ('+r.pieces+' pièce(s), '+r.tenues+' tenue(s)).');charger(D.annee);});};
-$('enregistrerLiens').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerClassesTenues',{annee:D.annee,liens:LIENS},function(r){message('<span class="ok">Tenues des classes enregistrées</span> ('+r.creees+' ajoutée(s), '+r.modifiees+' modifiée(s)).');charger(D.annee);});};
+$('enregistrerLiens').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerClassesTenues',{annee:D.annee,liens:Object.keys(Object.assign({},LIENS,ETQ)).reduce(function(o,c){o[c]={tenue:LIENS[c]||'',libelle:(ETQ[c]||{}).libelle||'',promotion:(ETQ[c]||{}).promotion||''};return o;},{})},function(r){message('<span class="ok">Tenues des classes enregistrées</span> ('+r.creees+' ajoutée(s), '+r.modifiees+' modifiée(s)).');charger(D.annee);});};
 
 /* ---------- Administratifs ---------- */
 function rendreAdmin(){if(!ADM)ADM=JSON.parse(JSON.stringify(D.administratifs));

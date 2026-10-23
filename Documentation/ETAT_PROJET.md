@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV620 : EPI, lot 2 (étiquettes fournisseur)
+
+- Onglet « Étiquettes fournisseur » : vague, classes, filtre « seulement les
+  étiquettes pas encore produites » ; aperçu ; téléchargement d'un ZIP d'un JPEG
+  par élève, 9,50 × 4,85 cm à 144 dpi (539 × 275 px, densité JFIF 144 dpi), noms
+  « Vague2_01.jpg »… dans l'ordre classe puis nom ; partie haute laissée libre
+  pour le logo pré-imprimé ; NOM, Prénom, formation, promotion centrés.
+- Les étiquettes téléchargées sont marquées produites (colonnes `Etiquette_le`,
+  `Etiquette_lot` de `EUC_EPI_ESSAYAGES`) et ne sont plus proposées, sauf filtre
+  décoché. Élèves hors Pronote inclus (rangés dans la classe du même nom).
+- Réglages : formation et promotion sur l'étiquette par classe (colonnes
+  `Libelle_etiquette`, `Promotion` de `EUC_EPI_CLASSES_TENUES`), valeurs proposées
+  par défaut (« 1BTS CPRP » → « BTS CPRP », promotion selon le cycle).
+- ZIP construit dans la page sans bibliothèque (`EUC_DEV620_zip_`, CRC32),
+  vérifié par un lecteur ZIP standard dans les tests ; 7/7 DEV620, suite complète
+  verte ; onglet piloté dans Chromium (données simulées).
+
 ## Mise à jour du 23 octobre 2026 — DEV620 : module EPI, lot 1 (réglages, vagues, essayage, élèves hors Pronote, administratifs)
 
 - Autorisation utilisateur : création des tables EPI et d'une table des

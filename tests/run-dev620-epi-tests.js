@@ -123,4 +123,29 @@ test('page : route, carte Administration, fenêtre « nom et prénom » au déma
   const g = grist({ refuser: true }); assert.throws(() => g.k.EUC_DEV620_charger({}));
 });
 
+test('étiquettes fournisseur : libellés par défaut, noms de fichiers, ZIP lisible, JPEG 144 dpi, marquage des étiquettes produites', () => {
+  const g = grist(), k = g.k;
+  assert.deepStrictEqual(['1BTS CPRP', '2BTS MV', 'TCAP CAR', '1MVA'].map(c => k.EUC_DEV620_libelleEtiquette_(c)), ['BTS CPRP', 'BTS MV', 'CAP CAR', '1MVA']);
+  assert.deepStrictEqual([k.EUC_DEV620_nomFichier_(2, 1, 43), k.EUC_DEV620_nomFichier_(2, 7, 120)], ['Vague2_01.jpg', 'Vague2_007.jpg']);
+  assert.strictEqual(k.EUC_DEV620_crc32_(Buffer.from('123456789')), 0xCBF43926, 'CRC32 de référence');
+  const zip = k.EUC_DEV620_zip_([{ nom: 'Vague1_01.jpg', data: new Uint8Array([1, 2, 3]) }, { nom: 'Vague1_02.jpg', data: new Uint8Array(Buffer.from('étiquette')) }]);
+  const tmp = require('os').tmpdir() + '/dev620_test_' + process.pid + '.zip'; fs.writeFileSync(tmp, Buffer.from(zip));
+  const lu = require('child_process').execFileSync('python3', ['-I', '-c', 'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;print("|".join(n+":"+z.read(n).decode("utf-8","replace") for n in z.namelist()))', tmp], { encoding: 'utf8' }).trim();
+  fs.unlinkSync(tmp);
+  assert.strictEqual(lu, 'Vague1_01.jpg:\u0001\u0002\u0003|Vague1_02.jpg:étiquette');
+  const jpeg = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0, 16, 0x4A, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]);
+  k.EUC_DEV620_jfif144_(jpeg); assert.deepStrictEqual(Array.from(jpeg.slice(13, 18)), [1, 0, 144, 0, 144]);
+  k.EUC_DEV620_charger({}); k.EUC_DEV620_enregistrerVague({ annee: '2026-2027' });
+  k.EUC_DEV620_enregistrerClassesTenues({ annee: '2026-2027', liens: { 2: { tenue: 'BLOUSE', libelle: 'BTS CPRP', promotion: '2026-2028' } } });
+  assert.throws(() => k.EUC_DEV620_enregistrerClassesTenues({ annee: '2026-2027', liens: { 2: { tenue: 'BLOUSE', promotion: '2026' } } }), /Promotion/);
+  k.EUC_DEV620_enregistrerEssayages({ annee: '2026-2027', vague: 1, saisiPar: 'MARTIN Sabine', lignes: [{ eleveId: 11, nom: 'VALENZA', prenom: 'Arthur', classeId: 2, tenue: 'BLOUSE', tailles: { BLOUSE: '3' } }] });
+  const id = g.tables.EUC_EPI_ESSAYAGES[0].id;
+  assert.throws(() => k.EUC_DEV620_marquerEtiquettes({ ids: [] }), /Aucune/);
+  k.EUC_DEV620_marquerEtiquettes({ ids: [id], lot: 'Vague 1' });
+  const c = k.EUC_DEV620_charger({});
+  assert.deepStrictEqual(J([c.liens[2].libelle, c.liens[2].promotion, c.essayages[0].etiquetteLot, !!c.essayages[0].etiquetteLe]), ['BTS CPRP', '2026-2028', 'Vague 1', true]);
+  const pg = read('apps-script/Epi_DEV620.html');
+  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV620 EPI réussis');

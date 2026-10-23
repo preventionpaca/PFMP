@@ -52,6 +52,42 @@ function EUC_DEV620_promotion_(classeNom, annee) {
   return debut + '-' + (debut + duree);
 }
 
+/* Formation écrite sur l'étiquette, par défaut : nom de la classe sans le niveau pour les BTS et CAP (« 1BTS CPRP » → « BTS CPRP »). */
+function EUC_DEV620_libelleEtiquette_(classeNom) {
+  var n = EUC_DEV620_t_(classeNom); var m = /^[12T]\s*(BTS|CAP)\b\s*(.*)$/i.exec(n);
+  return m ? (m[1].toUpperCase() + (m[2] ? ' ' + m[2] : '')).trim() : n;
+}
+/* Nom des fichiers remis au fournisseur : « Vague2_01.jpg », « Vague2_02.jpg »… dans l'ordre classe puis nom. */
+function EUC_DEV620_nomFichier_(vague, rang, total) { var w = Math.max(2, String(total).length), r = String(rang); while (r.length < w) r = '0' + r; return 'Vague' + vague + '_' + r + '.jpg'; }
+/* CRC32 et archive ZIP « stockée » (les JPEG sont déjà compressés) : calcul pur, partagé avec la page, sans bibliothèque. */
+function EUC_DEV620_crc32_(bytes) {
+  var c, crc = 0xFFFFFFFF; for (var i = 0; i < bytes.length; i++) { c = (crc ^ bytes[i]) & 0xFF; for (var k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xEDB88320 : c >>> 1; crc = (crc >>> 8) ^ c; }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function EUC_DEV620_zip_(fichiers) {
+  var u16 = function(v) { return [v & 255, (v >>> 8) & 255]; }, u32 = function(v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; };
+  var enc = function(s) { var o = []; s = unescape(encodeURIComponent(s)); for (var i = 0; i < s.length; i++) o.push(s.charCodeAt(i)); return o; };
+  var parts = [], central = [], offset = 0;
+  fichiers.forEach(function(f) {
+    var nom = enc(f.nom), data = f.data, crc = EUC_DEV620_crc32_(data);
+    var loc = [].concat([0x50, 0x4b, 0x03, 0x04], u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(nom.length), u16(0), nom);
+    parts.push(loc, data);
+    central.push([].concat([0x50, 0x4b, 0x01, 0x02], u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(nom.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset), nom));
+    offset += loc.length + data.length;
+  });
+  var tailleC = central.reduce(function(s, x) { return s + x.length; }, 0);
+  var fin = [].concat([0x50, 0x4b, 0x05, 0x06], u16(0), u16(0), u16(fichiers.length), u16(fichiers.length), u32(tailleC), u32(offset), u16(0));
+  var total = offset + tailleC + fin.length, out = new Uint8Array(total), p = 0;
+  parts.concat(central, [fin]).forEach(function(x) { out.set(x, p); p += x.length; });
+  return out;
+}
+
+/* Résolution 144 dpi inscrite dans l'en-tête JFIF du JPEG produit par la page (le fournisseur imprime à la bonne taille). */
+function EUC_DEV620_jfif144_(b) {
+  if (b && b.length > 18 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF && b[3] === 0xE0 && b[6] === 0x4A && b[7] === 0x46 && b[8] === 0x49 && b[9] === 0x46) { b[13] = 1; b[14] = 0; b[15] = 144; b[16] = 0; b[17] = 144; }
+  return b;
+}
+
 /* ===================== Grist ===================== */
 
 function EUC_DEV620_lire_(table) { try { return EUC_ENT_grist('get', '/tables/' + table + '/records').records || []; } catch (e) { return []; } }
@@ -63,15 +99,15 @@ function EUC_DEV620_def_() {
   var c = EUC_DEV441_col_, d = {};
   d[EUC_DEV620_T_.pieces] = [c('Code', 'Code'), c('Libelle', 'Libellé'), c('Tailles', 'Tailles (liste ordonnée)'), c('Ordre', 'Ordre', 'Int'), c('Actif', 'Actif', 'Bool')];
   d[EUC_DEV620_T_.tenues] = [c('Code', 'Code'), c('Libelle', 'Libellé'), c('Pieces', 'Pièces (codes)'), c('Ordre', 'Ordre', 'Int'), c('Actif', 'Actif', 'Bool')];
-  d[EUC_DEV620_T_.classes] = [c('Annee_scolaire', 'Année scolaire'), c('Classe', 'Classe', 'Ref:Classes'), c('Tenue', 'Tenue (code)'), c('Date_modification', 'Date modification')];
+  d[EUC_DEV620_T_.classes] = [c('Annee_scolaire', 'Année scolaire'), c('Classe', 'Classe', 'Ref:Classes'), c('Tenue', 'Tenue (code)'), c('Libelle_etiquette', 'Formation sur l’étiquette'), c('Promotion', 'Promotion sur l’étiquette'), c('Date_modification', 'Date modification')];
   d[EUC_DEV620_T_.vagues] = [c('Annee_scolaire', 'Année scolaire'), c('Numero', 'Numéro', 'Int'), c('Libelle', 'Libellé'), c('Date_commande', 'Date de commande', 'Date'), c('Statut', 'Statut'), c('Actif', 'Actif', 'Bool')];
   d[EUC_DEV620_T_.essayages] = [c('Annee_scolaire', 'Année scolaire'), c('Vague', 'Vague', 'Int'), c('Eleve', 'Élève', 'Ref:EUC_ELEVES_PFMP'), c('Provisoire', 'Hors Pronote', 'Bool'), c('Nom', 'Nom'), c('Prenom', 'Prénom'),
     c('Classe', 'Classe', 'Ref:Classes'), c('Classe_texte', 'Classe ou formation (hors Pronote)'), c('Tenue', 'Tenue (code)'), c('Tailles', 'Tailles (JSON par pièce)'), c('Professeur', 'Professeur de l’essayage'),
-    c('Saisi_par', 'Saisi par'), c('Date_saisie', 'Date de saisie'), c('Remis_le', 'Remis le', 'Date'), c('Statut', 'Statut'), c('Commentaire', 'Commentaire'), c('Actif', 'Actif', 'Bool')];
+    c('Saisi_par', 'Saisi par'), c('Date_saisie', 'Date de saisie'), c('Remis_le', 'Remis le', 'Date'), c('Statut', 'Statut'), c('Commentaire', 'Commentaire'), c('Etiquette_le', 'Étiquette produite le'), c('Etiquette_lot', 'Lot d’étiquettes'), c('Actif', 'Actif', 'Bool')];
   d[EUC_DEV620_T_.administratifs] = [c('Nom', 'Nom'), c('Prenom', 'Prénom'), c('Fonction', 'Fonction'), c('Service', 'Service'), c('Email', 'Courriel'), c('Telephone', 'Téléphone'), c('Actif', 'Actif', 'Bool'), c('Date_modification', 'Date modification')];
   return d;
 }
-var EUC_DEV620_CACHE_ = 'EUC_DEV620_TABLES1';
+var EUC_DEV620_CACHE_ = 'EUC_DEV620_TABLES2';
 function EUC_DEV620_tables_() {
   var cache = CacheService.getScriptCache(); if (cache.get(EUC_DEV620_CACHE_)) return;
   var def = EUC_DEV620_def_(), ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; });
@@ -100,7 +136,7 @@ function EUC_DEV620_essayages_(annee) {
   return EUC_DEV620_lire_(EUC_DEV620_T_.essayages).map(function(r) { var f = r.fields || {}, t = {}; try { t = JSON.parse(f.Tailles || '{}') || {}; } catch (e) {}
     return { id: Number(r.id), annee: EUC_DEV620_t_(f.Annee_scolaire), vague: Number(f.Vague) || 0, eleveId: EUC_DEV620_ref_(f.Eleve), provisoire: f.Provisoire === true, nom: EUC_DEV620_t_(f.Nom), prenom: EUC_DEV620_t_(f.Prenom),
       classeId: EUC_DEV620_ref_(f.Classe), classeTexte: EUC_DEV620_t_(f.Classe_texte), tenue: EUC_DEV620_t_(f.Tenue), tailles: t, professeur: EUC_DEV620_t_(f.Professeur), saisiPar: EUC_DEV620_t_(f.Saisi_par),
-      dateSaisie: EUC_DEV620_t_(f.Date_saisie), remisLe: typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(f.Remis_le) : '', statut: EUC_DEV620_t_(f.Statut) || 'ESSAYE', commentaire: EUC_DEV620_t_(f.Commentaire), actif: f.Actif !== false }; })
+      dateSaisie: EUC_DEV620_t_(f.Date_saisie), remisLe: typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(f.Remis_le) : '', statut: EUC_DEV620_t_(f.Statut) || 'ESSAYE', commentaire: EUC_DEV620_t_(f.Commentaire), etiquetteLe: EUC_DEV620_t_(f.Etiquette_le), etiquetteLot: EUC_DEV620_t_(f.Etiquette_lot), actif: f.Actif !== false }; })
     .filter(function(x) { return x.actif && x.annee === annee; });
 }
 
@@ -111,7 +147,7 @@ function EUC_DEV620_afficher(e) {
   var t = HtmlService.createTemplateFromFile('Epi_DEV620'), prm = (e && e.parameter) || {};
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   t.onglet = EUC_DEV620_t_(prm.onglet).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 30);
-  t.codeClient = [EUC_DEV620_t_, EUC_DEV620_n_, EUC_DEV620_tailles_, EUC_DEV620_taillesValides_, EUC_DEV620_promotion_].map(String).join('\n');
+  t.codeClient = [EUC_DEV620_t_, EUC_DEV620_n_, EUC_DEV620_tailles_, EUC_DEV620_taillesValides_, EUC_DEV620_promotion_, EUC_DEV620_libelleEtiquette_, EUC_DEV620_nomFichier_, EUC_DEV620_crc32_, EUC_DEV620_zip_, EUC_DEV620_jfif144_].map(String).join('\n');
   return t.evaluate().setTitle('EPI et étiquettes').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -127,7 +163,7 @@ function EUC_DEV620_charger(q) {
     var cid = EUC_DEV620_ref_(f.Classe); if (!cid) return;
     eleves.push({ id: Number(r.id), nom: EUC_DEV620_t_(f.Nom), prenom: EUC_DEV620_t_(f.Prenom_usage || f.Prenom), classeId: cid }); });
   eleves.sort(function(a, b) { return (a.nom + ' ' + a.prenom).localeCompare(b.nom + ' ' + b.prenom, 'fr'); });
-  var liens = {}; EUC_DEV620_lire_(EUC_DEV620_T_.classes).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV620_t_(f.Annee_scolaire) !== code) return; var cid = EUC_DEV620_ref_(f.Classe); if (cid) liens[cid] = { id: Number(r.id), tenue: EUC_DEV620_t_(f.Tenue) }; });
+  var liens = {}; EUC_DEV620_lire_(EUC_DEV620_T_.classes).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV620_t_(f.Annee_scolaire) !== code) return; var cid = EUC_DEV620_ref_(f.Classe); if (cid) liens[cid] = { id: Number(r.id), tenue: EUC_DEV620_t_(f.Tenue), libelle: EUC_DEV620_t_(f.Libelle_etiquette), promotion: EUC_DEV620_t_(f.Promotion) }; });
   var vagues = EUC_DEV620_lire_(EUC_DEV620_T_.vagues).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), annee: EUC_DEV620_t_(f.Annee_scolaire), numero: Number(f.Numero) || 0, libelle: EUC_DEV620_t_(f.Libelle), date: typeof EUC_SUIVI2_date_ === 'function' ? EUC_SUIVI2_date_(f.Date_commande) : '', statut: EUC_DEV620_t_(f.Statut) || 'OUVERTE', actif: f.Actif !== false }; })
     .filter(function(v) { return v.actif && v.annee === code; }).sort(function(a, b) { return a.numero - b.numero; });
   var profs = EUC_DEV620_lire_('EUC_PROFESSEURS_PFMP').map(function(r) { var f = r.fields || {}; return f.Actif === false ? '' : [EUC_DEV620_t_(f.Nom), EUC_DEV620_t_(f.Prenom)].filter(Boolean).join(' '); }).filter(Boolean).sort(function(a, b) { return a.localeCompare(b, 'fr'); });
@@ -169,9 +205,11 @@ function EUC_DEV620_enregistrerClassesTenues(q) {
   var codes = {}; EUC_DEV620_tenues_().forEach(function(t) { codes[t.code] = 1; });
   var ex = {}; EUC_DEV620_lire_(EUC_DEV620_T_.classes).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV620_t_(f.Annee_scolaire) === annee) ex[EUC_DEV620_ref_(f.Classe)] = Number(r.id); });
   var creer = [], modifier = [], maintenant = new Date().toISOString();
-  Object.keys(q.liens || {}).forEach(function(cid) { var t = EUC_DEV620_t_(q.liens[cid]); if (t && !codes[t]) throw new Error('Tenue inconnue : ' + t + '.');
-    var f = { Annee_scolaire: annee, Classe: Number(cid), Tenue: t, Date_modification: maintenant };
-    if (ex[Number(cid)]) modifier.push({ id: ex[Number(cid)], fields: f }); else if (t) creer.push({ fields: f }); });
+  Object.keys(q.liens || {}).forEach(function(cid) { var v = q.liens[cid], o = v && typeof v === 'object' ? v : { tenue: v };
+    var t = EUC_DEV620_t_(o.tenue); if (t && !codes[t]) throw new Error('Tenue inconnue : ' + t + '.');
+    var promo = EUC_DEV620_t_(o.promotion); if (promo && !/^\d{4}-\d{4}$/.test(promo)) throw new Error('Promotion au format 2026-2028.');
+    var f = { Annee_scolaire: annee, Classe: Number(cid), Tenue: t, Libelle_etiquette: EUC_DEV620_t_(o.libelle).slice(0, 40), Promotion: promo, Date_modification: maintenant };
+    if (ex[Number(cid)]) modifier.push({ id: ex[Number(cid)], fields: f }); else if (t || f.Libelle_etiquette || promo) creer.push({ fields: f }); });
   if (modifier.length) EUC_DEV620_ecrire_('patch', EUC_DEV620_T_.classes, modifier); if (creer.length) EUC_DEV620_ecrire_('post', EUC_DEV620_T_.classes, creer);
   return { ok: true, creees: creer.length, modifiees: modifier.length };
 }
@@ -243,4 +281,13 @@ function EUC_DEV620_enregistrerAdministratifs(q) {
   });
   if (modifier.length) EUC_DEV620_ecrire_('patch', EUC_DEV620_T_.administratifs, modifier); if (creer.length) EUC_DEV620_ecrire_('post', EUC_DEV620_T_.administratifs, creer);
   return { ok: true, creees: creer.length, modifiees: modifier.length };
+}
+
+/* Étiquettes remises au fournisseur : date et lot écrits sur chaque essayage, pour ne pas les refaire. */
+function EUC_DEV620_marquerEtiquettes(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV620_tables_();
+  var ids = (q.ids || []).map(Number).filter(function(x) { return x > 0; }); if (!ids.length) throw new Error('Aucune étiquette à marquer.');
+  var lot = EUC_DEV620_t_(q.lot).slice(0, 60), quand = new Date().toISOString();
+  EUC_DEV620_ecrire_('patch', EUC_DEV620_T_.essayages, ids.map(function(id) { return { id: id, fields: { Etiquette_le: quand, Etiquette_lot: lot } }; }));
+  return { ok: true, marquees: ids.length, le: quand };
 }
