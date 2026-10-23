@@ -147,7 +147,7 @@ test('étiquettes fournisseur : libellés par défaut, noms de fichiers, ZIP lis
   const c = k.EUC_DEV620_charger({});
   assert.deepStrictEqual(J([c.liens[2].libelle, c.liens[2].promotion, c.essayages[0].etiquetteLot, !!c.essayages[0].etiquetteLe]), ['BTS CPRP', '2026-2028', 'Vague 1', true]);
   const pg = read('apps-script/Epi_DEV620.html');
-  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
+  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="modeleAdmin"', 'id="importAdmin" accept=".xlsx,.xls,.csv"', 'xlsx/0.18.5/xlsx.full.min.js', "Colonne « Nom » introuvable", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV620 EPI réussis');

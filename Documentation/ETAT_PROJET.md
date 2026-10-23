@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV620 : administratifs, modèle Excel et import
+
+- Onglet Administratifs : « Télécharger le modèle Excel » (colonnes Nom, Prénom,
+  Fonction, Service, Courriel, Téléphone) et « Importer un fichier Excel ou CSV »
+  (bibliothèque SheetJS 0.18.5 chargée à la demande depuis cdnjs ; colonnes
+  reconnues par leur titre ; même nom et prénom = mise à jour, sinon ajout ;
+  colonnes inconnues signalées ; rien n'est écrit avant « Enregistrer les
+  administratifs »). Vérifié dans Chromium (modèle, import xlsx) ; suite verte.
+
 ## Mise à jour du 23 octobre 2026 — DEV620 : réglages EPI, retirer une pièce ou une tenue
 
 - Retour utilisateur : une pièce ajoutée par erreur ne pouvait pas être enlevée
