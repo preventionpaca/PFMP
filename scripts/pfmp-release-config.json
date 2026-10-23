@@ -24,6 +24,7 @@
     {"page": "destinataires-envois-pfmp", "scope": "admin", "expected": "Destinataires"},
     {"page": "plannings-pfmp", "scope": "admin", "expected": "Plannings annuels"},
     {"page": "epi-pfmp", "scope": "admin", "expected": "EPI et étiquettes"},
+    {"page": "etiquettes-pfmp", "scope": "admin", "expected": "Étiquettes et badges"},
     {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
     {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},
     {"page": "gestion-pfmp", "scope": "admin", "expected": "Gestion administrative PFMP"},

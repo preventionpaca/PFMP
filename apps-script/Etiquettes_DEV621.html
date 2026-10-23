@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Étiquettes et badges</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}
+main{max-width:1400px;margin:auto;padding:16px}
+.ariane{margin:0 0 10px;font-size:14px}.ariane a{color:var(--vert);font-weight:700;text-decoration:none}
+.note{color:var(--gris);font-size:13px}.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}.alerte{color:#9a3412}
+.barre{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+select,input,button{font:inherit}input[type=number]{width:70px}
+button,.bouton{border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;display:inline-block}
+button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}button.petit{padding:2px 7px;font-size:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-1px;animation:tourne .8s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+.onglets{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--bord);margin:12px 0 10px}
+.onglets button{border:1px solid var(--bord);border-bottom:none;border-radius:8px 8px 0 0;background:#eef6f2;color:var(--texte)}
+.onglets button[aria-selected="true"]{background:var(--vert);color:#fff;border-color:var(--vert)}
+.panneau{display:none}.panneau.actif{display:block}
+table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bord)}
+table.t th,table.t td{padding:4px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
+.cadre{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 12px;margin:8px 0}
+.deux{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:14px}@media(max-width:900px){.deux{grid-template-columns:1fr}}
+.liste{max-height:420px;overflow:auto;border:1px solid var(--bord);border-radius:8px;background:#fff}
+/* Étiquette rendue en millimètres : même rendu à l'écran (agrandi) et à l'impression. */
+.etq{position:relative;overflow:hidden;background:#fff center/100% 100% no-repeat}.etq .z{position:absolute;white-space:nowrap;overflow:visible;line-height:1.15;transform-origin:0 0}
+.vue{display:inline-block;transform-origin:0 0;outline:1px dashed #94a3b8}.vue .z{cursor:move;outline:1px dotted rgba(37,99,235,.5)}.vue .z.choisie{outline:2px solid #2563eb}
+.planche{position:relative;background:#fff;box-shadow:0 2px 10px #0002;transform-origin:0 0}.planche .emp{position:absolute;outline:1px dashed #cbd5e1}
+#impression{display:none}
+@media print{body>*:not(#impression){display:none!important}#impression{display:block}#impression .page{position:relative;overflow:hidden;page-break-after:always;break-after:page}#impression .etq{position:absolute}.etq{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+<style id="stylePage">@page{size:210mm 297mm;margin:0}</style>
+</head>
+<body>
+<header><h1>Étiquettes et badges</h1><p>Formats de planches en stock, modèles composés à la main, impression pour les élèves, professeurs, administratifs, partenaires ou un fichier importé.</p></header>
+<main>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <strong>Étiquettes et badges</strong></nav>
+  <div id="etat" class="note" role="status">Chargement…</div>
+  <div id="messages" role="status"></div>
+  <div class="onglets" role="tablist">
+    <button type="button" role="tab" data-p="pImprimer" aria-selected="true">Imprimer</button>
+    <button type="button" role="tab" data-p="pModeles" aria-selected="false">Modèles</button>
+    <button type="button" role="tab" data-p="pFormats" aria-selected="false">Formats de planche</button>
+    <button type="button" role="tab" data-p="pImports" aria-selected="false">Imports</button>
+    <button type="button" role="tab" data-p="pAdmin" aria-selected="false">Administratifs</button>
+  </div>
+
+  <section id="pImprimer" class="panneau actif">
+    <div class="barre"><label>Modèle <select id="iModele"></select></label><label>Personnes <select id="iSource"><option value="ELEVE">Élèves</option><option value="PROF">Professeurs</option><option value="ADMIN">Administratifs</option><option value="PARTENAIRE">Partenaires</option><option value="IMPORT">Fichier importé</option></select></label>
+      <label id="iFiltreBloc">Filtre <select id="iFiltre"></select></label><input id="iCherche" placeholder="Rechercher un nom" size="16"></div>
+    <div class="barre"><label><input type="checkbox" id="iNouvelles" checked> Seulement celles pas encore imprimées avec ce modèle</label><label>Commencer à l’étiquette n° <input type="number" id="iDepart" min="1" value="1" title="Pour réutiliser une planche entamée"></label>
+      <span id="iCompte" class="note"></span><span style="flex:1"></span><button type="button" class="plein" id="iImprimer">Imprimer / PDF</button></div>
+    <div class="deux"><div><div class="barre"><button type="button" class="petit" id="iTous">Tout cocher</button><button type="button" class="petit" id="iAucun">Tout décocher</button></div><div class="liste"><table class="t"><tbody id="iListe"></tbody></table></div></div>
+      <div><p class="note">Aperçu de la première planche</p><div id="iApercu"></div></div></div>
+  </section>
+
+  <section id="pModeles" class="panneau">
+    <div class="barre"><label>Modèle <select id="mChoix"></select></label><button type="button" id="mNouveau">Nouveau modèle</button><button type="button" id="mCopier">Dupliquer</button></div>
+    <div class="cadre barre"><label>Nom <input id="mNom" size="30"></label><label>Format de planche <select id="mFormat"></select></label>
+      <label class="bouton">Image de fond <input type="file" id="mFond" accept="image/png,image/jpeg" hidden></label><button type="button" class="petit" id="mSansFond">Retirer le fond</button>
+      <label><input type="checkbox" id="mActif" checked> Actif</label><span style="flex:1"></span><button type="button" class="plein" id="mEnregistrer">Enregistrer le modèle</button></div>
+    <div><p class="note">Aperçu (exemple : <span id="mExemple"></span>) — glissez une zone pour la déplacer.</p><div id="mVue"></div></div>
+    <div><div style="overflow-x:auto">
+      <table class="t"><thead><tr><th>Champ</th><th>X</th><th>Y</th><th>Larg.</th><th>Taille</th><th>Style</th><th>Align.</th><th>Couleur</th><th>Rot.</th><th></th></tr></thead><tbody id="mZones"></tbody></table></div>
+      <div class="barre"><button type="button" id="mAjouterZone">Ajouter une zone</button><span class="note">Positions et largeur en millimètres depuis le coin haut gauche de l’étiquette ; taille en points.</span></div></div>
+  </section>
+
+  <section id="pFormats" class="panneau">
+    <p class="note">Planches d’étiquettes ou de pochettes en stock (dimensions en millimètres, comme dans la mise en page de Labeljoy). La planche doit tenir dans la page.</p>
+    <table class="t"><thead><tr><th>Nom</th><th>Page L × H</th><th>Col.</th><th>Rang.</th><th>Marge gauche</th><th>Marge haute</th><th>Espace horiz.</th><th>Espace vert.</th><th>Étiquette L × H</th><th>Actif</th></tr></thead><tbody id="fFormats"></tbody></table>
+    <div class="barre"><button type="button" id="fAjouter">Ajouter un format</button><span id="fEtat" class="note"></span><span style="flex:1"></span><button type="button" class="plein" id="fEnregistrer" disabled>Enregistrer les formats</button></div>
+    <div id="fApercu"></div>
+  </section>
+
+  <section id="pImports" class="panneau">
+    <p class="note">Personnes hors des bases (invités, jurys, partenaires d’un événement) : un classeur Excel ou CSV avec les colonnes Nom ; Prénom ; Organisme ; Fonction ; Rôle ; Classe ; Libre 1 ; Libre 2. Chaque import est mémorisé sous un nom de lot.</p>
+    <div class="barre"><button type="button" id="impModele">Télécharger le modèle Excel</button><label>Nom du lot <input id="impLot" size="24" placeholder="ex. Concours 6 mai"></label><label class="bouton">Importer le fichier <input type="file" id="impFichier" accept=".xlsx,.xls,.csv" hidden></label><span id="impEtat" class="note"></span></div>
+    <table class="t"><thead><tr><th>Lot</th><th>Personnes</th><th>Importé le</th></tr></thead><tbody id="impLots"></tbody></table>
+  </section>
+
+  <section id="pAdmin" class="panneau">
+    <p class="note">Personnels administratifs (badges et listes d’événement). Une ligne décochée est masquée, jamais supprimée.</p>
+    <div class="barre"><button type="button" id="modeleAdmin">Télécharger le modèle Excel</button><label class="bouton">Importer un fichier Excel ou CSV <input type="file" id="importAdmin" accept=".xlsx,.xls,.csv" hidden></label><span id="importEtat" class="note"></span></div>
+    <table class="t"><thead><tr><th>Nom</th><th>Prénom</th><th>Fonction</th><th>Service</th><th>Courriel</th><th>Téléphone</th><th>Actif</th></tr></thead><tbody id="tAdmin"></tbody></table>
+    <div class="barre"><button type="button" id="ajouterAdmin">Ajouter une personne</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerAdmin" disabled>Enregistrer les administratifs</button></div>
+  </section>
+</main>
+<div id="impression"></div>
+
+<script><?!= codeClient ?></script>
+<script>
+(function(){
+var ADMIN=<?= adminBase ?>,ONGLET=<?= onglet ?>,D=null,M=null,ZSEL=-1,FMT=null,FMT_SALE=false,ADM=null,ADM_SALE=false,COCHES={};
+function $(id){return document.getElementById(id);}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function message(h,c){$('messages').innerHTML=h?'<p class="'+(c||'note')+'">'+h+'</p>':'';}
+function occupe(btn,lib,fn,arg,ok){var orig=btn.innerHTML,fini=false;btn.disabled=true;btn.innerHTML='<span class="spin" aria-hidden="true"></span>'+esc(lib);
+  function ret(){btn.innerHTML=orig;btn.disabled=false;majBoutons();}
+  var t=setTimeout(function(){if(fini)return;fini=true;ret();message('Délai dépassé : le serveur n’a pas répondu. Rechargez la page avant de réessayer.','erreur');},90000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);ret();ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);ret();message('Erreur : '+esc(e&&e.message||e),'erreur');})[fn](arg);}
+function majBoutons(){$('fEnregistrer').disabled=!FMT_SALE;$('enregistrerAdmin').disabled=!ADM_SALE;}
+function charger(fini){$('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement…';
+  google.script.run.withSuccessHandler(function(r){D=r;FMT=null;FMT_SALE=false;ADM=null;ADM_SALE=false;initialiser();if(fini)fini();}).withFailureHandler(function(e){$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span>';}).EUC_DEV621_charger({});}
+function format(id){return D.formats.filter(function(f){return f.id===Number(id);})[0];}
+function compte(s){return D.personnes.filter(function(p){return p.source===s;}).length;}
+function initialiser(){$('etat').textContent=D.formats.length+' format(s) · '+D.modeles.length+' modèle(s) · élèves '+compte('ELEVE')+' · professeurs '+compte('PROF')+' · administratifs '+compte('ADMIN')+' · partenaires '+compte('PARTENAIRE')+' · importés '+compte('IMPORT');
+  var mods=D.modeles.filter(function(m){return m.actif;});
+  $('iModele').innerHTML=mods.length?mods.map(function(m){return '<option value="'+m.id+'">'+esc(m.nom)+'</option>';}).join(''):'<option value="">Créez d’abord un modèle (onglet Modèles)</option>';
+  if(!M||!D.modeles.some(function(m){return m.id===M.id;}))M=D.modeles[0]?JSON.parse(JSON.stringify(D.modeles[0])):null;
+  rendreModeles();rendreFormats();rendreImports();rendreAdmin();rendreImprimer();majBoutons();}
+
+/* ---------- Rendu d'une étiquette (millimètres) ---------- */
+function htmlEtiquette(mod,f,p,interactif){var st='width:'+f.largeur+'mm;height:'+f.hauteur+'mm;'+(mod.fond?'background-image:url('+mod.fond+');':'');
+  return '<div class="etq" style="'+st+'">'+(mod.zones||[]).map(function(z,i){var css='left:'+z.x+'mm;top:'+z.y+'mm;width:'+z.l+'mm;font-family:'+esc(z.police||'Arial')+',sans-serif;font-size:'+z.taille+'pt;text-align:'+z.align+';color:'+z.couleur+';'+(z.gras?'font-weight:700;':'font-weight:400;')+(z.italique?'font-style:italic;':'')+(z.souligne?'text-decoration:underline;':'')+(z.rotation?'transform:rotate('+z.rotation+'deg);':'');
+    return '<div class="z'+(interactif&&i===ZSEL?' choisie':'')+'" data-i="'+i+'" style="'+css+'">'+esc(EUC_DEV621_valeurChamp_(z,p)||(interactif?'['+z.champ+']':''))+'</div>';}).join('')+'</div>';}
+var EXEMPLE={nom:'Dupont',prenom:'Marie',organisme:'Entreprise Exemple',fonction:'Responsable atelier',role:'Jury',classe:'1BTS CPRP',libre1:'Libre 1',libre2:'Libre 2'};
+
+/* ---------- Modèles ---------- */
+function rendreModeles(){$('mChoix').innerHTML=(D.modeles.length?D.modeles.map(function(m){return '<option value="'+m.id+'"'+(M&&m.id===M.id?' selected':'')+'>'+esc(m.nom)+(m.actif?'':' (inactif)')+'</option>';}).join(''):'')+(M&&!M.id?'<option value="" selected>(nouveau modèle)</option>':'');
+  $('mFormat').innerHTML=D.formats.filter(function(f){return f.actif;}).map(function(f){return '<option value="'+f.id+'"'+(M&&f.id===M.format?' selected':'')+'>'+esc(f.nom)+'</option>';}).join('');
+  if(!M){$('mZones').innerHTML='<tr><td class="note" colspan="10">Aucun modèle : « Nouveau modèle ».</td></tr>';$('mVue').innerHTML='';return;}
+  $('mNom').value=M.nom||'';$('mActif').checked=M.actif!==false;if(!M.format)M.format=Number($('mFormat').value)||0;
+  var opt=function(liste,v){return liste.map(function(o){return '<option value="'+esc(o[0])+'"'+(String(o[0])===String(v)?' selected':'')+'>'+esc(o[1])+'</option>';}).join('');};
+  $('mZones').innerHTML=(M.zones||[]).map(function(z,i){return '<tr data-i="'+i+'"'+(i===ZSEL?' style="background:#eef6ff"':'')+'><td><select data-k="champ">'+opt(EUC_DEV621_CHAMPS_,z.champ)+'</select>'+(z.champ==='TEXTE'?' <input data-k="texte" size="12" value="'+esc(z.texte)+'">':'')+'</td>'+
+    ['x','y','l'].map(function(k){return '<td><input type="number" step="0.5" data-k="'+k+'" value="'+z[k]+'" style="width:58px"></td>';}).join('')+'<td><input type="number" step="1" data-k="taille" value="'+z.taille+'" style="width:52px"> pt</td>'+
+    '<td style="white-space:nowrap"><label title="Gras"><input type="checkbox" data-k="gras"'+(z.gras?' checked':'')+'><b>G</b></label> <label title="Italique"><input type="checkbox" data-k="italique"'+(z.italique?' checked':'')+'><i>I</i></label> <label title="Souligné"><input type="checkbox" data-k="souligne"'+(z.souligne?' checked':'')+'><u>S</u></label> <select data-k="police">'+opt([['Arial','Arial'],['Georgia','Georgia'],['Verdana','Verdana'],['Trebuchet MS','Trebuchet'],['Courier New','Courier']],z.police||'Arial')+'</select></td>'+
+    '<td><select data-k="align">'+opt([['left','gauche'],['center','centre'],['right','droite']],z.align)+'</select></td><td><input type="color" data-k="couleur" value="'+esc(z.couleur||'#000000')+'"></td><td><select data-k="rotation">'+opt([[0,'0°'],[90,'90°'],[-90,'−90°'],[180,'180°']],z.rotation||0)+'</select></td><td><button type="button" class="petit zr">Retirer</button></td></tr>';}).join('')||'<tr><td class="note" colspan="10">Aucune zone : « Ajouter une zone ».</td></tr>';
+  Array.prototype.forEach.call($('mZones').querySelectorAll('tr[data-i]'),function(tr){var z=M.zones[Number(tr.dataset.i)];tr.onclick=function(){ZSEL=Number(tr.dataset.i);vueModele();};
+    Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){var k=el.dataset.k;z[k]=el.type==='checkbox'?el.checked:(['x','y','l','taille','rotation'].indexOf(k)>=0?Number(el.value):el.value);if(k==='champ')rendreModeles();else vueModele();};});
+    tr.querySelector('.zr').onclick=function(e){e.stopPropagation();M.zones.splice(Number(tr.dataset.i),1);ZSEL=-1;rendreModeles();};});
+  $('mExemple').textContent=EXEMPLE.prenom+' '+EXEMPLE.nom;vueModele();}
+function vueModele(){var f=format(M.format);if(!f){$('mVue').innerHTML='<p class="alerte">Choisissez un format.</p>';return;}var ech=Math.min(3,560/(f.largeur*3.78));
+  $('mVue').innerHTML='<div class="vue" style="transform:scale('+ech+');width:'+f.largeur+'mm;height:'+f.hauteur+'mm;margin-bottom:'+(f.hauteur*3.78*(ech-1))+'px">'+htmlEtiquette(M,f,EXEMPLE,true)+'</div>';
+  /* Glisser une zone : déplacement converti en millimètres (3,78 px par mm à l'échelle 1). */
+  Array.prototype.forEach.call($('mVue').querySelectorAll('.z'),function(el){el.onpointerdown=function(e){e.preventDefault();var i=Number(el.dataset.i),z=M.zones[i],x0=e.clientX,y0=e.clientY,zx=z.x,zy=z.y;ZSEL=i;el.classList.add('choisie');
+    function bouge(ev){z.x=Math.round((zx+(ev.clientX-x0)/(3.78*ech))*2)/2;z.y=Math.round((zy+(ev.clientY-y0)/(3.78*ech))*2)/2;el.style.left=z.x+'mm';el.style.top=z.y+'mm';}
+    function fin(){document.removeEventListener('pointermove',bouge);document.removeEventListener('pointerup',fin);rendreModeles();}
+    document.addEventListener('pointermove',bouge);document.addEventListener('pointerup',fin);};});}
+$('mChoix').onchange=function(){var m=D.modeles.filter(function(x){return x.id===Number($('mChoix').value);})[0];if(m){M=JSON.parse(JSON.stringify(m));ZSEL=-1;rendreModeles();}};
+$('mNouveau').onclick=function(){var f=D.formats.filter(function(x){return x.actif;})[0]||{};M={id:0,nom:'',format:f.id||0,fond:'',actif:true,zones:[{champ:'NOM',x:2,y:(f.hauteur||30)*.4,l:(f.largeur||60)-4,taille:16,gras:true,align:'center',couleur:'#000000',rotation:0},{champ:'PRENOM',x:2,y:(f.hauteur||30)*.6,l:(f.largeur||60)-4,taille:14,gras:true,align:'center',couleur:'#000000',rotation:0}]};ZSEL=-1;rendreModeles();$('mNom').focus();};
+$('mCopier').onclick=function(){if(!M)return;M=JSON.parse(JSON.stringify(M));M.id=0;M.nom=(M.nom||'Modèle')+' (copie)';rendreModeles();};
+$('mNom').onchange=function(){if(M)M.nom=this.value.trim();};$('mActif').onchange=function(){if(M)M.actif=this.checked;};
+$('mFormat').onchange=function(){if(M){M.format=Number(this.value);vueModele();}};
+$('mAjouterZone').onclick=function(){if(!M)return;var f=format(M.format)||{};M.zones.push({champ:'TEXTE',texte:'Texte',x:2,y:2,l:(f.largeur||60)-4,taille:12,gras:false,italique:false,souligne:false,align:'center',couleur:'#000000',rotation:0});ZSEL=M.zones.length-1;rendreModeles();};
+$('mSansFond').onclick=function(){if(M){M.fond='';vueModele();}};
+/* Image de fond réduite dans le navigateur (1 400 px au plus, JPEG) avant l'envoi. */
+$('mFond').onchange=function(){var fi=this.files&&this.files[0],inp=this;if(!fi||!M)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+  var q=.85,u=c.toDataURL('image/jpeg',q);while(u.length>650000&&q>.4){q-=.1;u=c.toDataURL('image/jpeg',q);}M.fond=u;inp.value='';vueModele();message('Fond ajouté ('+Math.round(u.length/1024)+' Ko) : enregistrez le modèle pour le garder.');};im.src=rd.result;};rd.readAsDataURL(fi);};
+$('mEnregistrer').onclick=function(){if(!M)return;M.nom=$('mNom').value.trim();occupe(this,'Enregistrement…','EUC_DEV621_enregistrerModele',M,function(r){message('<span class="ok">Modèle enregistré.</span>');var id=r.id;charger(function(){M=JSON.parse(JSON.stringify(D.modeles.filter(function(x){return x.id===id;})[0]||M));rendreModeles();});});};
+
+/* ---------- Formats ---------- */
+function rendreFormats(){if(!FMT)FMT=JSON.parse(JSON.stringify(D.formats));
+  $('fFormats').innerHTML=FMT.map(function(f,i){var n=function(k,w){return '<input type="number" step="0.1" data-k="'+k+'" value="'+f[k]+'" style="width:'+(w||58)+'px">';};var err=EUC_DEV621_verifierFormat_(f);
+    return '<tr data-i="'+i+'"><td><input data-k="nom" size="28" value="'+esc(f.nom)+'">'+(err.length?'<div class="erreur" style="font-size:12px">'+esc(err.join(' · '))+'</div>':'')+'</td><td>'+n('largeurPage')+' × '+n('hauteurPage')+'</td><td>'+n('colonnes',44)+'</td><td>'+n('rangees',44)+'</td><td>'+n('margeGauche')+'</td><td>'+n('margeHaut')+'</td><td>'+n('espaceH')+'</td><td>'+n('espaceV')+'</td><td>'+n('largeur')+' × '+n('hauteur')+'</td><td><input type="checkbox" data-k="actif"'+(f.actif!==false?' checked':'')+'></td></tr>';}).join('');
+  Array.prototype.forEach.call($('fFormats').querySelectorAll('tr[data-i]'),function(tr){var f=FMT[Number(tr.dataset.i)];tr.onclick=function(){apercuFormat(f);};Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){f[el.dataset.k]=el.type==='checkbox'?el.checked:(el.dataset.k==='nom'?el.value.trim():Number(el.value));FMT_SALE=true;majBoutons();rendreFormats();apercuFormat(f);};});});}
+function htmlPlanche(f,cases,ech){return '<div class="planche" style="width:'+f.largeurPage+'mm;height:'+f.hauteurPage+'mm;transform:scale('+ech+');margin-bottom:'+(f.hauteurPage*3.78*(ech-1))+'px;margin-right:'+(f.largeurPage*3.78*(ech-1))+'px">'+EUC_DEV621_positions_(f).map(function(p,i){return '<div class="emp" style="left:'+p.x+'mm;top:'+p.y+'mm;width:'+f.largeur+'mm;height:'+f.hauteur+'mm">'+(cases&&cases[i]||'')+'</div>';}).join('')+'</div>';}
+function apercuFormat(f){$('fApercu').innerHTML='<p class="note">'+esc(f.nom)+' : '+f.colonnes*f.rangees+' étiquette(s) par page</p>'+htmlPlanche(f,null,.45);}
+$('fAjouter').onclick=function(){FMT.push({id:0,nom:'',largeurPage:210,hauteurPage:297,colonnes:2,rangees:5,margeGauche:10,margeHaut:10,espaceH:0,espaceV:0,largeur:90,hauteur:50,actif:true});FMT_SALE=true;rendreFormats();majBoutons();};
+$('fEnregistrer').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV621_enregistrerFormats',{formats:FMT},function(r){message('<span class="ok">Formats enregistrés</span> ('+r.creees+' ajouté(s), '+r.modifiees+' modifié(s)).');charger();});};
+
+/* ---------- Imprimer ---------- */
+function modeleImp(){return D.modeles.filter(function(m){return m.id===Number($('iModele').value);})[0];}
+function personnesImp(){var s=$('iSource').value,fl=$('iFiltre').value,q=EUC_DEV620_n_($('iCherche').value),m=modeleImp(),deja=(m&&D.imprimees[m.id])||{},nouv=$('iNouvelles').checked;
+  return D.personnes.filter(function(p){return p.source===s&&(!fl||(s==='IMPORT'?p.lot===fl:p.classe===fl))&&(!q||EUC_DEV620_n_(p.nom+p.prenom+p.organisme).indexOf(q)>=0)&&(!nouv||!deja[EUC_DEV621_cle_(p)]);})
+    .sort(function(a,b){return (a.classe||'').localeCompare(b.classe||'','fr')||(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr');});}
+function rendreImprimer(){var s=$('iSource').value,vals={};D.personnes.forEach(function(p){if(p.source!==s)return;var v=s==='IMPORT'?p.lot:p.classe;if(v)vals[v]=1;});
+  var cur=$('iFiltre').value;$('iFiltre').innerHTML='<option value="">'+(s==='IMPORT'?'tous les lots':'toutes')+'</option>'+Object.keys(vals).sort().map(function(v){return '<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>';}).join('');$('iFiltreBloc').hidden=!Object.keys(vals).length;
+  var l=personnesImp(),m=modeleImp(),deja=(m&&D.imprimees[m.id])||{};
+  $('iListe').innerHTML=l.map(function(p){var k=EUC_DEV621_cle_(p);if(COCHES[k]===undefined)COCHES[k]=true;return '<tr><td><label><input type="checkbox" data-k="'+esc(k)+'"'+(COCHES[k]?' checked':'')+'> <b>'+esc(p.nom)+'</b> '+esc(p.prenom)+'</label></td><td class="note">'+esc([p.classe,p.organisme&&p.source!=='ELEVE'?p.organisme:'',p.fonction&&p.source!=='ELEVE'?p.fonction:''].filter(Boolean).join(' · '))+(deja[k]?' · déjà imprimée':'')+'</td></tr>';}).join('')||'<tr><td class="note">Personne pour ce choix.</td></tr>';
+  Array.prototype.forEach.call($('iListe').querySelectorAll('[data-k]'),function(cb){cb.onchange=function(){COCHES[cb.dataset.k]=cb.checked;apercuImp();};});apercuImp();}
+function choisis(){return personnesImp().filter(function(p){return COCHES[EUC_DEV621_cle_(p)]!==false;});}
+function pages(){var m=modeleImp(),f=m&&format(m.format);if(!f)return null;var par=f.colonnes*f.rangees,dep=Math.max(1,Math.min(par,Number($('iDepart').value)||1))-1,l=choisis(),cases=[];for(var i=0;i<dep;i++)cases.push(null);l.forEach(function(p){cases.push(p);});
+  var out=[];for(var j=0;j<cases.length;j+=par)out.push(cases.slice(j,j+par));return {m:m,f:f,pages:out,n:l.length};}
+function apercuImp(){var P=pages();$('iCompte').textContent=P?P.n+' étiquette(s) · '+P.pages.length+' page(s)':'';$('iImprimer').disabled=!P||!P.n;
+  if(!P){$('iApercu').innerHTML='<p class="note">Choisissez un modèle.</p>';return;}var pg=P.pages[0]||[];
+  $('iApercu').innerHTML=htmlPlanche(P.f,pg.map(function(p){return p?htmlEtiquette(P.m,P.f,p):'';}),Math.min(.6,480/(P.f.largeurPage*3.78)));}
+['iModele','iSource','iFiltre','iNouvelles','iDepart'].forEach(function(id){$(id).onchange=function(){if(id==='iSource')$('iFiltre').value='';rendreImprimer();};});$('iCherche').oninput=rendreImprimer;
+$('iTous').onclick=function(){personnesImp().forEach(function(p){COCHES[EUC_DEV621_cle_(p)]=true;});rendreImprimer();};$('iAucun').onclick=function(){personnesImp().forEach(function(p){COCHES[EUC_DEV621_cle_(p)]=false;});rendreImprimer();};
+$('iImprimer').onclick=function(){var P=pages();if(!P||!P.n)return;var b=this;$('stylePage').textContent='@page{size:'+P.f.largeurPage+'mm '+P.f.hauteurPage+'mm;margin:0}';
+  $('impression').innerHTML=P.pages.map(function(pg){var pos=EUC_DEV621_positions_(P.f);return '<div class="page" style="width:'+P.f.largeurPage+'mm;height:'+P.f.hauteurPage+'mm">'+pg.map(function(p,i){return p?'<div style="position:absolute;left:'+pos[i].x+'mm;top:'+pos[i].y+'mm">'+htmlEtiquette(P.m,P.f,p)+'</div>':'';}).join('')+'</div>';}).join('');
+  var cles=choisis().map(EUC_DEV621_cle_);window.print();
+  setTimeout(function(){if(confirm('Les '+cles.length+' étiquette(s) ont-elles été imprimées ? Elles seront marquées pour ne pas être proposées de nouveau avec ce modèle.'))occupe(b,'Marquage…','EUC_DEV621_marquerImprimees',{modele:P.m.id,cles:cles,lot:new Date().toLocaleString('fr-FR')},function(r){message('<span class="ok">'+r.marquees+' étiquette(s) marquées comme imprimées.</span>');charger();});},400);};
+
+/* ---------- Imports ---------- */
+var COLS_IMP=[['nom','Nom'],['prenom','Prénom'],['organisme','Organisme'],['fonction','Fonction'],['role','Rôle'],['classe','Classe'],['libre1','Libre 1'],['libre2','Libre 2']];
+function avecXlsx(fn){if(window.XLSX)return fn();var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=fn;sc.onerror=function(){message('Impossible de charger le lecteur Excel (connexion). Réessayez, ou importez un fichier CSV.','erreur');};document.head.appendChild(sc);}
+function cleCol(t,cols){var n=EUC_DEV620_n_(t);for(var i=0;i<cols.length;i++){if(n===EUC_DEV620_n_(cols[i][1]))return cols[i][0];}
+  if(/^(COURRIEL|EMAIL|MAIL)/.test(n))return 'email';if(/^(TELEPHONE|TEL|PORTABLE)/.test(n))return 'telephone';if(/^(ENTREPRISE|SOCIETE|STRUCTURE)/.test(n))return 'organisme';if(/^LIBRE1$/.test(n))return 'libre1';if(/^LIBRE2$/.test(n))return 'libre2';return '';}
+function lireClasseur(f,cols,ok){avecXlsx(function(){var rd=new FileReader();rd.onload=function(){try{var wb=XLSX.read(new Uint8Array(rd.result),{type:'array'}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});if(!rows.length)throw new Error('Fichier vide.');
+  var tete=rows[0].map(function(x){return String(x==null?'':x);}),cles=tete.map(function(t){return cleCol(t,cols);}),inc=tete.filter(function(t,i){return t.trim()&&!cles[i];});if(cles.indexOf('nom')<0)throw new Error('Colonne « Nom » introuvable dans la première ligne du fichier.');
+  ok(rows.slice(1).map(function(r){var o={};cles.forEach(function(k,i){if(k)o[k]=String(r[i]==null?'':r[i]).trim();});if(o.nom)o.nom=o.nom.toUpperCase();return o;}).filter(function(o){return o.nom||o.prenom;}),inc);}catch(e){message('Import impossible : '+esc(e&&e.message||e),'erreur');}};rd.readAsArrayBuffer(f);});}
+function modeleExcel(cols,nom,exemple){avecXlsx(function(){var ws=XLSX.utils.aoa_to_sheet([cols.map(function(c){return c[1];}),exemple]);ws['!cols']=cols.map(function(){return {wch:22};});var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Liste');XLSX.writeFile(wb,nom);message('Modèle téléchargé : remplacez la ligne d’exemple, puis importez le fichier.');});}
+function rendreImports(){var lots={};D.personnes.forEach(function(p){if(p.source!=='IMPORT')return;var l=lots[p.lot]=lots[p.lot]||{n:0};l.n++;});
+  $('impLots').innerHTML=Object.keys(lots).sort().map(function(k){return '<tr><td><b>'+esc(k)+'</b></td><td>'+lots[k].n+'</td><td class="note"></td></tr>';}).join('')||'<tr><td colspan="3" class="note">Aucun import.</td></tr>';}
+$('impModele').onclick=function(){modeleExcel(COLS_IMP,'modele_liste_etiquettes.xlsx',['DUPONT','Marie','Entreprise Exemple','Responsable atelier','Jury','','','']);};
+$('impFichier').onchange=function(){var f=this.files&&this.files[0],inp=this,lot=$('impLot').value.trim();if(!f)return;if(!lot){message('Donnez d’abord un nom au lot (ex. « Concours 6 mai »).','erreur');inp.value='';return;}
+  $('impEtat').innerHTML='<span class="spin" aria-hidden="true"></span>Lecture…';lireClasseur(f,COLS_IMP,function(lignes,inc){$('impEtat').textContent='';inp.value='';
+    occupe($('impModele'),'Import…','EUC_DEV621_importer',{lot:lot,lignes:lignes},function(r){message('<span class="ok">'+r.importees+' personne(s) importée(s)</span> dans le lot « '+esc(r.lot)+' »'+(inc.length?' · colonnes ignorées : '+esc(inc.join(', ')):'')+'. Onglet Imprimer, « Fichier importé ».');charger();});});};
+
+/* ---------- Administratifs ---------- */
+var COLS_ADM=[['nom','Nom'],['prenom','Prénom'],['fonction','Fonction'],['service','Service'],['email','Courriel'],['telephone','Téléphone']];
+function rendreAdmin(){if(!ADM)ADM=JSON.parse(JSON.stringify(D.administratifs));
+  $('tAdmin').innerHTML=ADM.length?ADM.map(function(a,i){return '<tr data-i="'+i+'">'+COLS_ADM.map(function(c){return '<td><input data-k="'+c[0]+'" value="'+esc(a[c[0]]||'')+'"></td>';}).join('')+'<td><input type="checkbox" data-k="actif"'+(a.actif!==false?' checked':'')+'></td></tr>';}).join(''):'<tr><td colspan="7" class="note">Aucun administratif : ajoutez-les ici ou importez un fichier.</td></tr>';
+  Array.prototype.forEach.call($('tAdmin').querySelectorAll('tr[data-i]'),function(tr){var a=ADM[Number(tr.dataset.i)];Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){a[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();ADM_SALE=true;majBoutons();};});});}
+$('ajouterAdmin').onclick=function(){ADM.push({nom:'',prenom:'',fonction:'',service:'',email:'',telephone:'',actif:true});rendreAdmin();};
+$('modeleAdmin').onclick=function(){modeleExcel(COLS_ADM,'modele_administratifs.xlsx',['DUPONT','Marie','Secrétaire de direction','Direction','marie.dupont@exemple.fr','04 00 00 00 00']);};
+$('importAdmin').onchange=function(){var f=this.files&&this.files[0],inp=this;if(!f)return;lireClasseur(f,COLS_ADM,function(lignes,inc){inp.value='';var aj=0,maj=0,cle=function(a){return EUC_DEV620_n_(a.nom)+'|'+EUC_DEV620_n_(a.prenom);};
+  lignes.forEach(function(l){var ex=ADM.filter(function(a){return cle(a)===cle(l);})[0];if(ex){COLS_ADM.forEach(function(c){if(l[c[0]])ex[c[0]]=l[c[0]];});ex.actif=true;maj++;}else{l.actif=true;ADM.push(l);aj++;}});
+  ADM=ADM.filter(function(a){return a.id||a.nom||a.prenom;});ADM_SALE=aj+maj>0;rendreAdmin();majBoutons();message('<span class="ok">Fichier lu</span> : '+aj+' personne(s) ajoutée(s), '+maj+' mise(s) à jour'+(inc.length?' · colonnes ignorées : '+esc(inc.join(', ')):'')+'. Vérifiez puis cliquez sur « Enregistrer les administratifs ».');});};
+$('enregistrerAdmin').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerAdministratifs',{lignes:ADM},function(r){message('<span class="ok">Administratifs enregistrés</span> ('+r.creees+' ajouté(s), '+r.modifiees+' modifié(s)).');charger();});};
+
+/* ---------- Onglets ---------- */
+function ouvrir(id){Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});}
+Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){ouvrir(b.dataset.p);};});
+if(ONGLET&&$(ONGLET))ouvrir(ONGLET);
+window.addEventListener('beforeunload',function(e){if(FMT_SALE||ADM_SALE){e.preventDefault();e.returnValue='';}});
+charger();
+})();
+</script>
+</body>
+</html>

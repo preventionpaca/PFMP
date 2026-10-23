@@ -47,7 +47,6 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
     <button type="button" role="tab" data-p="pEtiquettes" aria-selected="false">Étiquettes fournisseur</button>
     <button type="button" role="tab" data-p="pVagues" aria-selected="false">Vagues</button>
     <button type="button" role="tab" data-p="pReglages" aria-selected="false">Réglages</button>
-    <button type="button" role="tab" data-p="pAdmin" aria-selected="false">Administratifs</button>
   </div>
 
   <section id="pEssayage" class="panneau actif">
@@ -86,18 +85,13 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
     <div class="barre"><span style="flex:1"></span><button type="button" class="plein" id="enregistrerLiens" disabled>Enregistrer les tenues des classes</button></div>
   </section>
 
-  <section id="pAdmin" class="panneau">
-    <p class="note">Personnels administratifs (badges et listes d’événement). Une ligne décochée est masquée, jamais supprimée.</p>
-    <table class="t"><thead><tr><th>Nom</th><th>Prénom</th><th>Fonction</th><th>Service</th><th>Courriel</th><th>Téléphone</th><th>Actif</th></tr></thead><tbody id="tAdmin"></tbody></table>
-    <div class="barre"><button type="button" id="modeleAdmin" title="Classeur Excel avec les colonnes du tableau, à remplir puis importer">Télécharger le modèle Excel</button><label class="bouton" style="border:1px solid var(--vert);border-radius:8px;padding:6px 10px;font-weight:700;color:var(--vert);cursor:pointer">Importer un fichier Excel ou CSV <input type="file" id="importAdmin" accept=".xlsx,.xls,.csv" hidden></label><span id="importEtat" class="note"></span></div>
-    <div class="barre"><button type="button" id="ajouterAdmin">Ajouter une personne</button><span style="flex:1"></span><button type="button" class="plein" id="enregistrerAdmin" disabled>Enregistrer les administratifs</button></div>
-  </section>
 </main>
 
 <div id="qui" hidden><div class="boite" role="dialog" aria-modal="true" aria-labelledby="quiTitre">
   <h2 id="quiTitre" style="margin-top:0">Qui saisit l’essayage ?</h2>
   <p class="note">Votre nom et votre prénom sont écrits sur chaque essayage enregistré, avec la date. Ils sont redemandés si la page est rechargée.</p>
-  <label>Nom <input id="quiNom" autocomplete="off"></label><label>Prénom <input id="quiPrenom" autocomplete="off"></label>
+  <label>Nom et prénom <input id="quiNom" list="dlQui" autocomplete="off" placeholder="Tapez les premières lettres…"></label><datalist id="dlQui"></datalist>
+  <p class="note" style="margin-top:-6px">Choisissez dans la liste des professeurs et des administratifs, ou tapez votre nom et votre prénom.</p>
   <p id="quiErreur" class="erreur"></p><button type="button" class="plein" id="quiOk">Commencer</button></div></div>
 
 <script><?!= codeClient ?></script>
@@ -111,15 +105,18 @@ function occupe(btn,lib,fn,arg,ok){var orig=btn.innerHTML,fini=false;btn.disable
   function ret(){btn.innerHTML=orig;btn.disabled=false;majBoutons();}
   var t=setTimeout(function(){if(fini)return;fini=true;ret();message('Délai dépassé : le serveur n’a pas répondu. Rechargez la page avant de réessayer.','erreur');},90000);
   google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);ret();ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);ret();message('Erreur : '+esc(e&&e.message||e),'erreur');})[fn](arg);}
-function majBoutons(){$('enregistrerEssayage').disabled=!D||!ESS_SALE;$('enregistrerReglages').disabled=!REG_SALE;$('enregistrerLiens').disabled=!LIENS_SALE;$('enregistrerAdmin').disabled=!ADM_SALE;}
+function majBoutons(){$('enregistrerEssayage').disabled=!D||!ESS_SALE;$('enregistrerReglages').disabled=!REG_SALE;$('enregistrerLiens').disabled=!LIENS_SALE;}
 /* Personne qui saisit : demandée au démarrage, gardée en mémoire tant que la page n'est pas rechargée. */
 function demanderQui(){$('qui').hidden=false;$('quiErreur').textContent='';setTimeout(function(){$('quiNom').focus();},50);}
-$('quiOk').onclick=function(){var n=$('quiNom').value.trim(),p=$('quiPrenom').value.trim();if(!n||!p){$('quiErreur').textContent='Nom et prénom obligatoires.';return;}QUI=n.toUpperCase()+' '+p;$('qui').hidden=true;$('quiEtat').innerHTML='Saisie par <b>'+esc(QUI)+'</b> · '+new Date().toLocaleDateString('fr-FR');};
-$('quiPrenom').addEventListener('keydown',function(e){if(e.key==='Enter')$('quiOk').click();});
+/* Suggestions : professeurs et administratifs (« NOM Prénom ») ; un nom tapé hors liste est accepté s'il a nom et prénom. */
+function remplirQui(){if(!D)return;var vus={},noms=(D.professeurs||[]).concat((D.administratifs||[]).filter(function(a){return a.actif!==false&&a.nom;}).map(function(a){return a.nom.toUpperCase()+' '+(a.prenom||'');}));
+  $('dlQui').innerHTML=noms.map(function(x){return x.trim();}).filter(function(x){if(!x||vus[x])return false;vus[x]=1;return true;}).sort(function(a,b){return a.localeCompare(b,'fr');}).map(function(x){return '<option value="'+esc(x)+'">';}).join('');}
+$('quiOk').onclick=function(){var v=$('quiNom').value.trim().replace(/\s+/g,' ');if(v.split(' ').length<2){$('quiErreur').textContent='Nom et prénom obligatoires.';return;}var m=v.split(' ');QUI=m[0].toUpperCase()+' '+m.slice(1).join(' ');$('qui').hidden=true;$('quiEtat').innerHTML='Saisie par <b>'+esc(QUI)+'</b> · '+new Date().toLocaleDateString('fr-FR');};
+$('quiNom').addEventListener('keydown',function(e){if(e.key==='Enter')$('quiOk').click();});
 $('changerQui').onclick=demanderQui;
 
 function charger(annee){GARDE={classe:$('eClasse').value,vague:$('eVague').value};$('etat').innerHTML='<span class="spin" aria-hidden="true"></span>Chargement…';$('annee').disabled=true;
-  google.script.run.withSuccessHandler(function(r){D=r;SAI={};PROV=[];REG=null;REG_SALE=false;LIENS=Object.keys(r.liens).reduce(function(o,k){o[k]=r.liens[k].tenue;return o;},{});ETQ=Object.keys(r.liens).reduce(function(o,k){o[k]={libelle:r.liens[k].libelle||'',promotion:r.liens[k].promotion||''};return o;},{});LIENS_SALE=false;ADM=null;ADM_SALE=false;ESS_SALE=false;initialiser();})
+  google.script.run.withSuccessHandler(function(r){D=r;SAI={};PROV=[];REG=null;REG_SALE=false;LIENS=Object.keys(r.liens).reduce(function(o,k){o[k]=r.liens[k].tenue;return o;},{});ETQ=Object.keys(r.liens).reduce(function(o,k){o[k]={libelle:r.liens[k].libelle||'',promotion:r.liens[k].promotion||''};return o;},{});LIENS_SALE=false;ESS_SALE=false;initialiser();})
     .withFailureHandler(function(e){$('annee').disabled=false;$('etat').innerHTML='<span class="erreur">Chargement impossible : '+esc(e&&e.message||e)+'</span>';}).EUC_DEV620_charger({annee:annee});}
 function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<option'+(a===D.annee?' selected':'')+'>'+esc(a)+'</option>';}).join('');$('annee').disabled=false;
   $('etat').innerHTML=esc(D.annee)+' · '+D.classes.length+' classes · '+D.eleves.length+' élèves Pronote · '+D.vagues.length+' vague(s) · '+D.essayages.length+' essayage(s)';
@@ -129,8 +126,8 @@ function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<op
   /* Après un enregistrement : même classe et même vague. */
   if(GARDE.vague&&D.vagues.some(function(v){return String(v.numero)===GARDE.vague;}))$('eVague').value=GARDE.vague;if(GARDE.classe&&D.classes.some(function(c){return String(c.id)===GARDE.classe;}))$('eClasse').value=GARDE.classe;
   $('eProf').innerHTML='<option value=""></option>'+D.professeurs.map(function(p){return '<option>'+esc(p)+'</option>';}).join('');
-  rendreEssayage();rendreEtiquettes();rendreVagues();rendreReglages();rendreAdmin();majBoutons();}
-$('annee').onchange=function(){if((ESS_SALE||REG_SALE||LIENS_SALE||ADM_SALE)&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee;return;}charger(this.value);};
+  rendreEssayage();rendreEtiquettes();rendreVagues();rendreReglages();remplirQui();majBoutons();}
+$('annee').onchange=function(){if((ESS_SALE||REG_SALE||LIENS_SALE)&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee;return;}charger(this.value);};
 
 /* ---------- Essayage ---------- */
 function tenueDe(code){return D.tenues.filter(function(t){return t.code===code;})[0];}
@@ -221,35 +218,11 @@ $('ajouterTenue').onclick=function(){REG.tenues.push({code:'',libelle:'',pieces:
 $('enregistrerReglages').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerReglages',{pieces:REG.pieces,tenues:REG.tenues},function(r){message('<span class="ok">Pièces et tenues enregistrées</span> ('+r.pieces+' pièce(s), '+r.tenues+' tenue(s)).');charger(D.annee);});};
 $('enregistrerLiens').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerClassesTenues',{annee:D.annee,liens:Object.keys(Object.assign({},LIENS,ETQ)).reduce(function(o,c){o[c]={tenue:LIENS[c]||'',libelle:(ETQ[c]||{}).libelle||'',promotion:(ETQ[c]||{}).promotion||''};return o;},{})},function(r){message('<span class="ok">Tenues des classes enregistrées</span> ('+r.creees+' ajoutée(s), '+r.modifiees+' modifiée(s)).');charger(D.annee);});};
 
-/* ---------- Administratifs ---------- */
-function rendreAdmin(){if(!ADM)ADM=JSON.parse(JSON.stringify(D.administratifs));
-  $('tAdmin').innerHTML=ADM.length?ADM.map(function(a,i){return '<tr data-i="'+i+'">'+['nom','prenom','fonction','service','email','telephone'].map(function(k){return '<td><input data-k="'+k+'" value="'+esc(a[k]||'')+'"'+(k==='email'?' type="email"':'')+'></td>';}).join('')+'<td><input type="checkbox" data-k="actif"'+(a.actif!==false?' checked':'')+'></td></tr>';}).join(''):'<tr><td colspan="7" class="note">Aucun administratif : ajoutez-les ici une bonne fois pour toutes.</td></tr>';
-  Array.prototype.forEach.call($('tAdmin').querySelectorAll('tr[data-i]'),function(tr){var a=ADM[Number(tr.dataset.i)];Array.prototype.forEach.call(tr.querySelectorAll('[data-k]'),function(el){el.onchange=function(){a[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();ADM_SALE=true;majBoutons();};});});}
-/* Import Excel : bibliothèque SheetJS chargée à la demande ; colonnes reconnues par leur titre (Nom, Prénom, Fonction,
- * Service, Courriel ou Email, Téléphone). Une personne déjà présente (même nom et prénom) est mise à jour, sinon ajoutée ;
- * rien n'est écrit avant « Enregistrer les administratifs ». */
-var COLS_ADM=[['nom','Nom'],['prenom','Prénom'],['fonction','Fonction'],['service','Service'],['email','Courriel'],['telephone','Téléphone']];
-function avecXlsx(fn){if(window.XLSX)return fn();var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=fn;sc.onerror=function(){message('Impossible de charger le lecteur Excel (connexion). Réessayez, ou importez un fichier CSV.','erreur');};document.head.appendChild(sc);}
-function cleCol(t){var n=EUC_DEV620_n_(t);if(/^NOM$/.test(n))return 'nom';if(/^PRENOM/.test(n))return 'prenom';if(/^FONCTION/.test(n))return 'fonction';if(/^SERVICE/.test(n))return 'service';if(/^(COURRIEL|EMAIL|MAIL|ADRESSEMAIL)/.test(n))return 'email';if(/^(TELEPHONE|TEL|PORTABLE)/.test(n))return 'telephone';return '';}
-function lignesClasseur(rows){if(!rows.length)return {lignes:[],inconnues:[]};var tete=rows[0].map(function(x){return String(x==null?'':x);}),cles=tete.map(cleCol),inc=tete.filter(function(t,i){return t.trim()&&!cles[i];});
-  if(cles.indexOf('nom')<0)throw new Error('Colonne « Nom » introuvable dans la première ligne du fichier.');
-  return {inconnues:inc,lignes:rows.slice(1).map(function(r){var o={};cles.forEach(function(k,i){if(k)o[k]=String(r[i]==null?'':r[i]).trim();});if(o.nom)o.nom=o.nom.toUpperCase();return o;}).filter(function(o){return o.nom||o.prenom;})};}
-$('modeleAdmin').onclick=function(){avecXlsx(function(){var ws=XLSX.utils.aoa_to_sheet([COLS_ADM.map(function(c){return c[1];}),['DUPONT','Marie','Secrétaire de direction','Direction','marie.dupont@exemple.fr','04 00 00 00 00']]);ws['!cols']=COLS_ADM.map(function(){return {wch:24};});var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Administratifs');XLSX.writeFile(wb,'modele_administratifs.xlsx');message('Modèle téléchargé : remplacez la ligne d’exemple, puis importez le fichier.');});};
-$('importAdmin').onchange=function(){var f=this.files&&this.files[0],inp=this;if(!f)return;$('importEtat').innerHTML='<span class="spin" aria-hidden="true"></span>Lecture du fichier…';
-  avecXlsx(function(){var rd=new FileReader();rd.onload=function(){try{var wb=XLSX.read(new Uint8Array(rd.result),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],res=lignesClasseur(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));
-      var aj=0,maj=0,cle=function(a){return EUC_DEV620_n_(a.nom)+'|'+EUC_DEV620_n_(a.prenom);};
-      res.lignes.forEach(function(l){var ex=ADM.filter(function(a){return cle(a)===cle(l);})[0];if(ex){COLS_ADM.forEach(function(c){if(l[c[0]])ex[c[0]]=l[c[0]];});ex.actif=true;maj++;}else{l.actif=true;ADM.push(l);aj++;}});
-      ADM=ADM.filter(function(a){return a.id||a.nom||a.prenom;});ADM_SALE=aj+maj>0;rendreAdmin();majBoutons();
-      $('importEtat').textContent='';message('<span class="ok">Fichier lu</span> : '+aj+' personne(s) ajoutée(s), '+maj+' mise(s) à jour'+(res.inconnues.length?' · colonnes ignorées : '+esc(res.inconnues.join(', ')):'')+'. Vérifiez puis cliquez sur « Enregistrer les administratifs ».');}
-    catch(e){$('importEtat').textContent='';message('Import impossible : '+esc(e&&e.message||e),'erreur');}inp.value='';};rd.readAsArrayBuffer(f);});};
-$('ajouterAdmin').onclick=function(){ADM.push({nom:'',prenom:'',fonction:'',service:'',email:'',telephone:'',actif:true});rendreAdmin();};
-$('enregistrerAdmin').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV620_enregistrerAdministratifs',{lignes:ADM},function(r){message('<span class="ok">Administratifs enregistrés</span> ('+r.creees+' ajouté(s), '+r.modifiees+' modifié(s)).');charger(D.annee);});};
-
 /* ---------- Onglets ---------- */
 function ouvrir(id){Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x.dataset.p===id));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===id);});}
 Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){ouvrir(b.dataset.p);};});
 if(ONGLET&&$(ONGLET))ouvrir(ONGLET);
-window.addEventListener('beforeunload',function(e){if(ESS_SALE||REG_SALE||LIENS_SALE||ADM_SALE){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',function(e){if(ESS_SALE||REG_SALE||LIENS_SALE){e.preventDefault();e.returnValue='';}});
 demanderQui();charger('');
 })();
 </script>

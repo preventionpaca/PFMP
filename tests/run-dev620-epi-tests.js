@@ -120,8 +120,10 @@ test('page : route, carte Administration, fenêtre « nom et prénom » au déma
   assert.ok(adm.includes('?page=epi-pfmp">Essayage') && adm.includes('<h2>EPI et étiquettes</h2>'));
   assert.ok(cfg.includes('"page": "epi-pfmp"'));
   assert.ok(pg.includes('href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>'));
-  for (const fn of ['EUC_DEV620_enregistrerEssayages', 'EUC_DEV620_enregistrerVague', 'EUC_DEV620_enregistrerReglages', 'EUC_DEV620_enregistrerClassesTenues', 'EUC_DEV620_enregistrerAdministratifs', 'EUC_DEV620_rattacher']) assert.match(pg, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
+  for (const fn of ['EUC_DEV620_enregistrerEssayages', 'EUC_DEV620_enregistrerVague', 'EUC_DEV620_enregistrerReglages', 'EUC_DEV620_enregistrerClassesTenues', 'EUC_DEV620_rattacher']) assert.match(pg, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   assert.ok(pg.includes('demanderQui();charger(') && pg.includes("if(!QUI){demanderQui();return;}"), 'nom et prénom demandés au démarrage et avant tout enregistrement');
+  assert.ok(pg.includes('list="dlQui"') && pg.includes('function remplirQui()'), 'nom choisi dans les professeurs et administratifs');
+  assert.ok(!pg.includes('data-p="pAdmin"'), 'administratifs hors de la page EPI (pas d’identification pour eux)');
   const g = grist({ refuser: true }); assert.throws(() => g.k.EUC_DEV620_charger({}));
 });
 
@@ -147,7 +149,7 @@ test('étiquettes fournisseur : libellés par défaut, noms de fichiers, ZIP lis
   const c = k.EUC_DEV620_charger({});
   assert.deepStrictEqual(J([c.liens[2].libelle, c.liens[2].promotion, c.essayages[0].etiquetteLot, !!c.essayages[0].etiquetteLe]), ['BTS CPRP', '2026-2028', 'Vague 1', true]);
   const pg = read('apps-script/Epi_DEV620.html');
-  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="modeleAdmin"', 'id="importAdmin" accept=".xlsx,.xls,.csv"', 'xlsx/0.18.5/xlsx.full.min.js', "Colonne « Nom » introuvable", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
+  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV620 EPI réussis');

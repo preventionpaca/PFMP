@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV621 : page « Étiquettes et badges » ; administratifs déplacés ; nom de l'essayage suggéré
+
+- Nouvelle page `?page=etiquettes-pfmp` (`EUC_DEV621_Etiquettes.js`,
+  `Etiquettes_DEV621.html`), carte « Étiquettes et badges » de l'Administration,
+  sans fenêtre d'identification. Onglets : Imprimer (modèle, personnes —
+  élèves, professeurs, administratifs, partenaires `EUC_CONTACTS_ENTREPRISES`,
+  fichier importé —, filtres, « seulement celles pas encore imprimées avec ce
+  modèle », « commencer à l'étiquette n° » pour une planche entamée, aperçu, PDF
+  en millimètres puis marquage), Modèles (zones : champ, X, Y, largeur en mm,
+  taille en pt, gras, italique, souligné, police, alignement, couleur, rotation ;
+  glisser dans l'aperçu ; image de fond réduite dans le navigateur), Formats de
+  planche (stock, contrôle de la planche dans la page ; défauts Avery C2495 2 × 5
+  et badge 2 × 4), Imports (modèle Excel, lot mémorisé), Administratifs (déplacés
+  depuis la page EPI, modèle et import Excel).
+- Tables `EUC_ETQ_FORMATS`, `EUC_ETQ_MODELES`, `EUC_ETQ_IMPORTS`,
+  `EUC_ETQ_IMPRESSIONS` créées au premier chargement.
+- Page EPI : la fenêtre « Qui saisit l'essayage ? » n'a plus qu'un champ, avec
+  suggestions des professeurs et des administratifs dès les premières lettres.
+- Tests : nouvelle suite `tests/run-dev621-etiquettes-tests.js` (5 tests) ;
+  pages pilotées dans Chromium (données simulées) ; suite complète verte.
+
 ## Mise à jour du 23 octobre 2026 — DEV620 : administratifs, modèle Excel et import
 
 - Onglet Administratifs : « Télécharger le modèle Excel » (colonnes Nom, Prénom,
