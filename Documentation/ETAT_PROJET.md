@@ -17,6 +17,13 @@
   « COM 2 h, AT1 2 h, AT2 4 h » au survol. Le récapitulatif par formateur
   compte les heures réelles de chacun. Les horaires (9 h-11 h…) ne sont pas
   stockés : ils relèveront de l'emploi du temps.
+- Case « Afficher les intervenants et leurs heures » sur le calendrier d'une
+  formation. Cochée, la colonne P montre « COM 2 · AT1 2 · AT2 4 ». Décochée,
+  seul le total de chaque journée apparaît, comme dans la commande du CFA, et le
+  récapitulatif par formateur n'est pas imprimé. L'impression suit ce choix, et
+  le choix est retenu sur le poste.
+- Onglet « Plannings par formation » ajouté dans la barre d'onglets de la page
+  des plannings.
 - Fonction pure : `EUC_DEV610_interventions_`. Tests : 47/47 DEV610.
 
 ## Mise à jour du 23 octobre 2026 — DEV610 : calendrier d'une formation, semaines et recopie

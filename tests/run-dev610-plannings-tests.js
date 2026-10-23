@@ -824,6 +824,7 @@ test('heures à la journée : heures du jour (8 h au plus) et interventions « C
   const pg = read('apps-script/Plannings_DEV610.html');
   for (const x of ['Interventions (initiales et heures)', 'function ecartJour(x)', 'jour:l.heuresParJour', "s.hm=null;s.ha=null;s.fm='';s.fa='';"]) assert.ok(pg.includes(x), x);
   assert.ok(!pg.includes('var JOURNEES='), 'plus de demi-journées types');
+  for (const x of ['id="cIntervenants"', "var P=!!HREG.formateurs&&AFF_INTERV", "memEcrire('dev610_intervenants'", "$('recapFormateurs').classList.toggle('noprint',!AFF_INTERV);", 'data-p="pFormations" aria-selected="false">Plannings par formation</button>', "if(b.dataset.p==='pFormations'&&D)rendreFormations();", "if(ONGLET==='pFormations')rendreFormations();"]) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');

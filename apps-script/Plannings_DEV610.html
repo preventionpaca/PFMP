@@ -77,7 +77,7 @@ table.cal tr.tot td{background:#f4f8f6;font-weight:700}table.cal td.hors{backgro
 table.a32i{width:100%;border-collapse:collapse;margin:5px 0 3px;font-size:12px}table.a32i td{padding:1px 6px}table.a32i td.l{text-align:right;font-weight:700;width:14%}table.a32i td.v{background:#fff2c6;font-weight:800;color:#1b396a;width:28%}table.a32i td.m{text-align:center;font-size:11px;color:#333}
 table.a32c{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}table.a32c th,table.a32c td{border:1px solid #fff;padding:0 1px;height:16px;text-align:center;white-space:nowrap;overflow:hidden}table.a32c td{font-size:9.5px}
 table.a32c tr.an th{background:#1b396a;color:#fff;font-size:9px}table.a32c tr.mo th{background:#2b528f;color:#fff}table.a32c tr.co th{background:#262626;color:#fff;font-size:8px}table.a32c tr.co th.hc{background:#e46c0a}
-table.a32c td.n{font-weight:700}table.a32c td.k-we{background:#6b6b6b;color:#fff}table.a32c td.k-blanc{background:#fff;color:#777}
+#lIntervenants[hidden]{display:none}table.a32c td.n{font-weight:700}table.a32c td.pi{white-space:normal;font-size:6px;line-height:6.5px;font-weight:700;text-align:left;padding:0 1px;word-break:break-word}table.a32c td.k-we{background:#6b6b6b;color:#fff}table.a32c td.k-blanc{background:#fff;color:#777}
 table.a32c tr.tm th{background:#2b528f;color:#fff}table.a32c tr.tv td{background:#e46c0a;color:#fff;font-weight:800;font-size:10px}
 .a32-note{background:#000;color:#fff;text-align:center;font-size:9px;padding:2px;margin-top:2px}
 .a32-pied{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:3px}.a32-leg{display:grid;grid-template-columns:repeat(4,minmax(90px,150px));gap:2px 6px;font-size:9px;font-weight:800}.a32-leg span{text-align:center;padding:2px 4px}
@@ -119,6 +119,7 @@ table.heures tr.semH td{background:#e8eef7;border-top:2px solid #2b528f;padding:
   <div id="changements" class="cadre noprint" hidden></div>
   <div class="onglets" role="tablist">
     <button type="button" role="tab" data-p="pGrille" aria-selected="true">Planning général</button>
+    <button type="button" role="tab" data-p="pFormations" aria-selected="false">Plannings par formation</button>
     <button type="button" role="tab" data-p="pPeriodes" aria-selected="false">Périodes</button>
     <button type="button" role="tab" data-p="pRegles" aria-selected="false">Règles et durées</button>
     <button type="button" role="tab" data-p="pOrganisation" aria-selected="false">Organisation du tableau</button>
@@ -173,7 +174,7 @@ table.heures tr.semH td{background:#e8eef7;border-top:2px solid #2b528f;padding:
   </section>
 
   <section id="pCalendrier" class="panneau">
-    <div class="barre noprint"><a class="bouton" id="retourAnnuel" href="#" target="_top">← Planning annuel</a><a class="bouton" id="retourFormations" href="#" target="_top">Plannings par formation</a><label>Autre formation <select id="autreFormation"></select></label><span style="flex:1"></span><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
+    <div class="barre noprint"><a class="bouton" id="retourAnnuel" href="#" target="_top">← Planning annuel</a><a class="bouton" id="retourFormations" href="#" target="_top">Plannings par formation</a><label>Autre formation <select id="autreFormation"></select></label><span style="flex:1"></span><label id="lIntervenants" title="Décoché : seulement le total d’heures de chaque journée (commande du CFA). Le PDF suit ce choix."><input type="checkbox" id="cIntervenants"> Afficher les intervenants et leurs heures</label><button type="button" id="imprimerCalendrier">Imprimer / PDF</button></div>
     <div class="cadre noprint barre" id="reglageFormation"><label>Début de la formation <input type="date" id="fDebut"></label><label>Fin <input type="date" id="fFin"></label><label style="flex:2">Intitulé du diplôme <input id="fIntitule" style="width:100%"></label><label style="flex:1">Formation <input id="fTitre" style="width:100%"></label><label style="flex:1">Classe <input id="fSousTitre" style="width:100%"></label><button type="button" class="plein" id="fEnregistrer">Enregistrer</button></div>
     <div id="titreCalendrier" class="titreImpression" style="display:block"></div>
     <div id="calendrier"></div>
@@ -350,7 +351,7 @@ function apresChargement(info){
   $('fLigne').innerHTML='<option value="">Toutes</option>'+lignesActives().map(function(l){return '<option value="'+esc(l.code)+'">'+esc(nomLigne(l))+'</option>';}).join('');
   $('selType').innerHTML=typesTous().map(function(t){return '<option>'+esc(t)+'</option>';}).join('');
   rendreTout();
-  if(PREMIER){PREMIER=false;if(VUE==='formations'){rendreFormations();ouvrirPanneau('pFormations');}else if(VUE==='ligne'){rendreCalendrier(LIGNE_DEMANDEE);ouvrirPanneau('pCalendrier');}else if(ONGLET&&$(ONGLET))ouvrirPanneau(ONGLET);}
+  if(PREMIER){PREMIER=false;if(VUE==='formations'){rendreFormations();ouvrirPanneau('pFormations');}else if(VUE==='ligne'){rendreCalendrier(LIGNE_DEMANDEE);ouvrirPanneau('pCalendrier');}else if(ONGLET&&$(ONGLET)){if(ONGLET==='pFormations')rendreFormations();ouvrirPanneau(ONGLET);}}
   else if($('pFormations').classList.contains('actif'))rendreFormations();else if($('pCalendrier').classList.contains('actif'))rendreCalendrier(LIGNE_DEMANDEE);
 }
 /* Pied du planning : coordonnées du bureau formation entreprise (téléphone direct, sans courriel). */
@@ -446,13 +447,16 @@ function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(co
   var a=D.annee,J0=joursLigne(l),mois=J0.mois,fo=J0.fo,etats=J0.etats,jours=J0.jours;
   var B=EUC_DEV610_bilanHeures_(jours,HREG,HSAI),parDate={};B.jours.forEach(function(x){parDate[x.date]=x;});
   /* Mise en page de l'annexe 32a : par mois D | J | H (et P, initiales du formateur, quand ils sont saisis). */
-  var P=!!HREG.formateurs,nc=P?4:3,tot=mois.map(function(){return {h:0,hc:0};}),vus={},corps='';
+  /* Colonne P : intervenants et leurs heures, si les formateurs sont saisis et si l'affichage est demandé (sinon, seulement
+   * le total de la journée, comme la commande du CFA). L'impression suit l'écran. */
+  $('lIntervenants').hidden=!HREG.formateurs;$('cIntervenants').checked=AFF_INTERV;
+  var P=!!HREG.formateurs&&AFF_INTERV,nc=P?4:3,tot=mois.map(function(){return {h:0,hc:0};}),vus={},corps='';
   for(var j=1;j<=31;j++){corps+='<tr>'+mois.map(function(x,mi){var dt=new Date(Date.UTC(x.y,x.m,j,12));if(dt.getUTCMonth()!==x.m)return '<td class="k-blanc" colspan="'+nc+'"></td>';
     var iso=dt.toISOString().slice(0,10),e=etats[iso],h=parDate[iso],k=natureJour(e),ch=CHARTE[k],st=ch?' style="background:'+ch[0]+';color:'+ch[1]+'"':'',cls=ch?'':' k-'+k,titre=[jourLong(iso)];
     if(ch)vus[k]=1;if(e.p)titre.push(EUC_DEV610_libelleType_(e.p));if(e.evp)titre.push(e.evp.type);if(e.t)titre.push(e.t);
-    var hh='',pp='';if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;hh=h.total?hfmt(h.total):'';pp=P?initialesJour(h):'';titre.push(hfmt(h.total)+' h'+(h.interventions&&h.interventions.length?' · '+h.interventions.map(function(it){return it.f+' '+hfmt(it.h)+' h';}).join(', '):''));}
+    var hh='',pp='';if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;hh=h.total?hfmt(h.total):'';pp=P?(h.interventions||[]).filter(function(it){return it.h>0;}).map(function(it){return it.f+' '+hfmt(it.h);}).join(' · '):'';titre.push(hfmt(h.total)+' h'+(h.interventions&&h.interventions.length?' · '+h.interventions.map(function(it){return it.f+' '+hfmt(it.h)+' h';}).join(', '):''));}
     var att=h?' data-date="'+iso+'"':'',t=' title="'+esc(titre.join(' · '))+'"';
-    return '<td class="n'+cls+'"'+st+att+t+'>'+j+'</td><td class="'+cls.trim()+'"'+st+att+t+'>'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td'+couleurH(e)+att+t+'><b>'+hh+'</b></td>'+(P?'<td'+couleurH(e)+att+t+'><b>'+esc(pp)+'</b></td>':'');}).join('')+'</tr>';}
+    return '<td class="n'+cls+'"'+st+att+t+'>'+j+'</td><td class="'+cls.trim()+'"'+st+att+t+'>'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td'+couleurH(e)+att+t+'><b>'+hh+'</b></td>'+(P?'<td class="pi"'+couleurH(e)+att+t+'>'+esc(pp)+'</td>':'');}).join('')+'</tr>';}
   var parAn={};mois.forEach(function(x){parAn[x.y]=(parAn[x.y]||0)+1;});
   var tete='<tr class="an">'+Object.keys(parAn).map(function(y){return '<th colspan="'+(parAn[y]*nc)+'">'+y+'</th>';}).join('')+'</tr>'+
     '<tr class="mo">'+mois.map(function(x){return '<th colspan="'+nc+'">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+'</th>';}).join('')+'</tr>'+
@@ -463,7 +467,7 @@ function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(co
   var leg=ORDRE_CHARTE.filter(function(k){return vus[k]||['fe','va','ufa','ent'].indexOf(k)>=0;}).map(function(k){return '<span style="background:'+CHARTE[k][0]+';color:'+CHARTE[k][1]+'">'+esc(k==='comp'?(Object.keys(B.complementaires)[0]||CHARTE[k][2]):CHARTE[k][2])+'</span>';}).join('');
   var lg=logosFormation(l),img=function(o){var x=(D.logos||{})[o];return x&&x.image?'<img src="'+x.image+'" alt="'+esc(o)+'">':'<span class="sans" title="Logo à déposer dans l’onglet Logos">'+esc(o)+'</span>';};
   var intitule=fo.intitule||(D.diplomes||{})[code]||(l.calendrier==='MIXITE'?'Mixité '+(l.groupe||''):(fo.titre||td.titre)+' '+(fo.sousTitre||td.sousTitre));
-  var colg='<colgroup>'+mois.map(function(){return P?'<col style="width:22%"><col style="width:16%"><col style="width:26%"><col style="width:36%">':'<col style="width:30%"><col style="width:26%"><col style="width:44%">';}).join('')+'</colgroup>';
+  var colg='<colgroup>'+mois.map(function(){return P?'<col style="width:15%"><col style="width:11%"><col style="width:20%"><col style="width:54%">':'<col style="width:30%"><col style="width:26%"><col style="width:44%">';}).join('')+'</colgroup>';
   $('calendrier').innerHTML='<div class="a32"><div class="a32-tete"><div class="a32-logos">'+lg.gauche.map(img).join('')+'</div><div class="centre"><div class="cal">CALENDRIER '+(D.previsionnel?'PRÉVISIONNEL ':'')+esc(a.code)+(a.zone?' — ZONE '+esc(a.zone):'')+'</div><div class="dip">'+esc(intitule)+'</div><div class="gen">généré le '+gen+'</div>'+bfeCal()+'</div><div class="a32-logos d">'+img(lg.droite)+'</div></div>'+
     '<table class="a32i"><tr><td class="l">Formation :</td><td class="v">'+esc(fo.titre||td.titre)+'</td><td class="m" rowspan="2">'+esc(nat)+'</td><td class="l">Début des cours :</td><td class="v">'+(fo.debut?dfr(fo.debut):'—')+'</td></tr><tr><td class="l">Classe :</td><td class="v">'+esc(fo.sousTitre||td.sousTitre)+'</td><td class="l">Fin des cours :</td><td class="v">'+(fo.fin?dfr(fo.fin):'—')+'</td></tr></table>'+
     '<table class="a32c">'+colg.replace(/width:(\d+)%/g,function(m,x){return 'width:'+(Number(x)/mois.length).toFixed(3)+'%';})+'<thead>'+tete+'</thead><tbody>'+corps+pied+'</tbody></table>'+
@@ -482,8 +486,11 @@ function allerA(url,nouvelle){var a=document.createElement('a');a.href=url;a.tar
 $('ouvrirFormation').onchange=function(){var c=this.value;this.value='';if(c)allerA(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(c)),true);};
 $('autreFormation').onchange=function(){var c=this.value;if(c&&c!==LIGNE_COURANTE)allerA(lienPlannings('&vue=ligne&ligne='+encodeURIComponent(c)),false);};
 /* Récapitulatif par formateur : total de la formation et total de chaque formation complémentaire, séparés. */
+var AFF_INTERV=memLire('dev610_intervenants')!=='0';
+$('cIntervenants').onchange=function(){AFF_INTERV=this.checked;memEcrire('dev610_intervenants',AFF_INTERV?'1':'0');if(LIGNE_COURANTE)rendreCalendrier(LIGNE_COURANTE,true);};
 function rendreRecap(l,B){var comps=Object.keys(B.complementaires);B.formateurs.forEach(function(f){Object.keys(f.complementaires).forEach(function(c){if(comps.indexOf(c)<0)comps.push(c);});});
   if(!HREG.formateurs){$('recapFormateurs').innerHTML='';return;}
+  $('recapFormateurs').classList.toggle('noprint',!AFF_INTERV);
   var sf=B.sansFormateur,sfComp=Object.keys(sf.complementaires).some(function(c){return sf.complementaires[c]>0;});
   var lignesR=B.formateurs.map(function(f){return '<tr><td><b>'+esc(f.initiales)+'</b></td><td>'+hfmt(f.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(f.complementaires[c]||0)+' h</td>';}).join('')+'<td><b>'+hfmt(f.total)+' h</b></td></tr>';}).join('');
   if(sf.formation>0||sfComp)lignesR+='<tr class="alerte"><td>Sans formateur</td><td>'+hfmt(sf.formation)+' h</td>'+comps.map(function(c){return '<td>'+hfmt(sf.complementaires[c]||0)+' h</td>';}).join('')+'<td></td></tr>';
@@ -967,7 +974,7 @@ $('publier').onclick=function(){if(!APERCU)return;var d=APERCU.diff;if(!(d.creer
   occupe(this,'Publication…','EUC_DEV610_publier',{annee:D.annee.code,numero:NUM,confirmation:'PUBLIER'},function(r){APERCU=null;charger(D.annee.code);message('<span class="ok">Version '+r.numero+' publiée</span> : '+r.creees+' créée(s), '+r.modifiees+' modifiée(s), '+r.desactivees+' désactivée(s), '+r.inchangees+' inchangée(s).');},120000);};
 
 /* ---------- Onglets ---------- */
-Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){memEcrire('dev610_onglet',b.dataset.p);Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x===b));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===b.dataset.p);});};});
+Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(b){b.onclick=function(){memEcrire('dev610_onglet',b.dataset.p);Array.prototype.forEach.call(document.querySelectorAll('[role=tab]'),function(x){x.setAttribute('aria-selected',String(x===b));});Array.prototype.forEach.call(document.querySelectorAll('.panneau'),function(p){p.classList.toggle('actif',p.id===b.dataset.p);});if(b.dataset.p==='pFormations'&&D)rendreFormations();};});
 window.addEventListener('beforeunload',function(e){if((SALE&&EDIT)||ORG_SALE||HSALE||COUL_SALE){e.preventDefault();e.returnValue='';}});
 /* Actualiser : relit Grist pour l'année affichée ; garde l'onglet, la version ouverte et la position dans la grille. */
 $('actualiser').onclick=function(){if(!D)return;if(SALE&&EDIT&&!confirm('Abandonner les modifications non enregistrées et relire les données ?'))return;
