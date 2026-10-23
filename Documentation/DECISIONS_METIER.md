@@ -321,3 +321,13 @@
   authentifié ou à l'administration. Sur la carte, ils sont chargés seulement
   à l'ouverture de l'infobulle afin de ne pas alourdir le chargement des
   marqueurs.
+
+## Heures des calendriers de formation : à la journée (23 octobre 2026)
+
+On ne raisonne plus en demi-journées. Chaque jour de formation a un nombre
+d'heures pour les jeunes, 8 h au plus. Ce nombre est indépendant des horaires :
+le Bachelor peut finir à 13 h après une matinée de 4 h. Quand des formateurs
+sont suivis, on saisit les interventions du jour avec leurs heures
+(`COM 2+AT1 2+AT2 4`). Le total par formateur sert à respecter la quotité
+annuelle. Les horaires précis et les cours à la quinzaine relèvent du futur
+module emploi du temps, qui partira du module EDT existant.

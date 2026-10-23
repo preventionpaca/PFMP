@@ -1,5 +1,24 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : heures à la journée et interventions des formateurs
+
+- La saisie par demi-journée est remplacée par une saisie à la journée :
+  - **heures du jour** pour les jeunes, 8 h au plus. Une valeur par défaut par
+    formation, « Heures par jour par défaut », est stockée dans la colonne
+    `Heures_par_jour` de `EUC_PLAN_LIGNES` ;
+  - **interventions**, par exemple `COM 2+AT1 2+AT2 4`. Un intervenant sans
+    heures prend une part égale du reste. Un écart entre la somme et les heures
+    du jour est signalé, sans être bloquant.
+- Nouvelles colonnes de `EUC_PLAN_HEURES` : `Heures_jour` et `Interventions`.
+  Elles sont créées si elles manquent, avant chaque enregistrement. Les
+  anciennes saisies par demi-journée sont lues sans changement et converties
+  dès qu'on modifie le jour.
+- Le calendrier montre les initiales dans la colonne P, et le détail
+  « COM 2 h, AT1 2 h, AT2 4 h » au survol. Le récapitulatif par formateur
+  compte les heures réelles de chacun. Les horaires (9 h-11 h…) ne sont pas
+  stockés : ils relèveront de l'emploi du temps.
+- Fonction pure : `EUC_DEV610_interventions_`. Tests : 47/47 DEV610.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : calendrier d'une formation, semaines et recopie
 
 - Saisie des heures regroupée par semaine. Chaque semaine a une ligne d'en-tête

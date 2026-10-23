@@ -605,7 +605,7 @@ test('heures : total par semaine et recopie d’une semaine type vers d’autres
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
   assert.deepStrictEqual(J(c.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-14'], {})), J(k.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-14'], {})));
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ['tr class="semH"', 'Recopier cette semaine…', 'id="hSemaine"', 'Toutes les semaines suivantes', "['5+3','8 h (5 + 3)']", "['1+0','Matin 1 h']", 'majSemaines();']) assert.ok(pg.includes(x), x);
+  for (const x of ['tr class="semH"', 'Recopier cette semaine…', 'id="hSemaine"', 'Toutes les semaines suivantes', 'majSemaines();']) assert.ok(pg.includes(x), x);
   const g = grist(); g.k.EUC_DEV610_charger({ annee: '2026-2027' });
   const res = g.k.EUC_DEV610_enregistrerHeures({ annee: '2026-2027', ligne: 'CAP_PEINTRE', reglages: { matin: 4, apresMidi: 4, quota: 450, formateurs: true, semaine: '32' }, jours: [] });
   assert.strictEqual(res.ligne.heuresSemaine, 32);
@@ -618,7 +618,7 @@ test('formation complémentaire : complément conservé dans la version, jamais 
   const d = k.EUC_DEV610_diffPublication_({ periodes: [{ ligne: 'TBP_MVA', type: 'Formation complémentaire', complement: '5 Star', debut: '2027-01-11', fin: '2027-01-15' }] }, lignes, { TBP_MVA: [30, 31] }, [], '2026-2027');
   assert.strictEqual(d.creer.length, 0);
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', "['4+4','8 h (4 + 4)'],['4+3','7 h (4 + 3)'],['4+0','½ journée matin (4 h)']", '||HSALE||COUL_SALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
+  for (const t of ['id="selComplement"', 'id="recapFormateurs"', 'id="heures" class="noprint"', 'id="hJour"', '||HSALE||COUL_SALE)', 'EUC_DEV610_estComplementaire_($(\'selType\').value)', 'complement:p.complement']) assert.ok(pg.includes(t), t);
 });
 
 test('recopie des dates d’une classe vers les classes du même niveau : périodes en entreprise remplacées, le reste gardé, placées à la main', () => {
@@ -794,7 +794,36 @@ test('formateurs : plusieurs sur une demi-journée (F+G) avec heures partagées 
   assert.deepStrictEqual(J(b.formateurs.map(f => [f.initiales, f.total])), [['F', 10], ['G', 3], ['H', 1]]);
   assert.strictEqual(b.formation, 14);
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ['class="hd"', "if(d&&fa&&!d.checked){fa.value=val;s.fa=val;}", "if(e.key!=='Enter')return;", 'function bfeCal()', "'+bfeCal()+'", 'function joursLigne(l)', 'function recapAnnuelFormateurs()', '<div id="recapAnnuel"></div>', "rendreRecapAnnuel();}", 'toutes formations →']) assert.ok(pg.includes(x), x);
+  for (const x of ['class="hi" data-k="iv"', "if(!x0.jour)s={hj:x0.total,iv:texteInterventions(x0)};", "if(e.key!=='Enter')return;", 'function bfeCal()', "'+bfeCal()+'", 'function joursLigne(l)', 'function recapAnnuelFormateurs()', '<div id="recapAnnuel"></div>', "rendreRecapAnnuel();}", 'toutes formations →']) assert.ok(pg.includes(x), x);
+});
+
+test('heures à la journée : heures du jour (8 h au plus) et interventions « COM 2+AT1 2+AT2 4 », partage du reste, écart signalé, anciennes saisies par demi-journée gardées', () => {
+  const I = (t, h) => J(k.EUC_DEV610_interventions_(t, h));
+  assert.deepStrictEqual(I('com 2+at1 2 + AT2 4', 8), { liste: [{ f: 'COM', h: 2 }, { f: 'AT1', h: 2 }, { f: 'AT2', h: 4 }], sans: 0, ecart: 0, texte: 'COM 2+AT1 2+AT2 4', illisibles: [] }, 'jeudi du Bachelor');
+  assert.deepStrictEqual(I('COM 1,5+AT1', 6).liste, [{ f: 'COM', h: 1.5 }, { f: 'AT1', h: 4.5 }], 'sans heures : le reste');
+  assert.deepStrictEqual(I('F+G', 7).liste, [{ f: 'F', h: 3.5 }, { f: 'G', h: 3.5 }], 'partage égal comme avant');
+  assert.deepStrictEqual(I('AB 2+CD 3', 7).ecart, -2); assert.deepStrictEqual(I('AB 5+AB 3+CD', 7).liste, [{ f: 'AB', h: 8 }, { f: 'CD', h: 0 }]);
+  assert.strictEqual(I('AB 5+AB 3+CD', 7).ecart, 1, 'dépassement signalé'); assert.deepStrictEqual(I('', 7), { liste: [], sans: 7, ecart: 0, texte: '', illisibles: [] });
+  assert.deepStrictEqual(I('AB 2h+(x)', 4).illisibles, ['(X)']);
+  const jours = [{ date: '2027-01-14', nature: 'FORMATION' }, { date: '2027-01-15', nature: 'FORMATION' }, { date: '2027-01-18', nature: 'FORMATION' }, { date: '2027-01-19', nature: 'COMPLEMENTAIRE', complement: '5 Star' }];
+  const b = k.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3, jour: 7 }, { '2027-01-14': { hj: 8, iv: 'COM 2+AT1 2+AT2 4' }, '2027-01-15': { hm: 4, ha: 4, fm: 'AT1', fa: 'AT2' }, '2027-01-19': { hj: 5, iv: 'ST' } });
+  assert.deepStrictEqual(J(b.jours.map(x => [x.date, x.total, x.jour || false, x.ecart])), [['2027-01-14', 8, true, 0], ['2027-01-15', 8, false, 0], ['2027-01-18', 7, true, 0], ['2027-01-19', 5, true, 0]]);
+  assert.deepStrictEqual(J(b.formateurs.map(f => [f.initiales, f.formation, f.complementaires])), [['AT1', 6, {}], ['AT2', 8, {}], ['COM', 2, {}], ['ST', 0, { '5 Star': 5 }]]);
+  assert.deepStrictEqual(J([b.formation, b.sansFormateur.formation]), [23, 7], 'jour sans intervention : sans formateur');
+  const g = grist(); g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const sauver = q => g.k.EUC_DEV610_enregistrerHeures(Object.assign({ annee: '2026-2027', ligne: 'CAP_PEINTRE' }, q));
+  assert.throws(() => sauver({ jours: [{ date: '2027-01-14', hj: 9 }] }), /entre 0 et 8/);
+  assert.throws(() => sauver({ jours: [{ date: '2027-01-14', hj: 8, iv: 'COM 2+(x)' }] }), /illisible/);
+  assert.throws(() => sauver({ jours: [{ date: '2027-01-14', iv: 'ABCDEFGHIJKLM 2' }] }), /12 caractères/);
+  const r = sauver({ reglages: { matin: 4, apresMidi: 3, jour: 7, quota: 455, formateurs: true }, jours: [{ date: '2027-01-14', hj: 8, iv: 'com 2+at1 2+at2 4' }, { date: '2027-01-15', hm: 4, ha: 4, fm: 'AT1', fa: 'AT2' }] });
+  assert.deepStrictEqual(J(r.heures.map(x => [x.date, x.hj == null ? null : x.hj, x.iv || '', x.hm, x.fm])), [['2027-01-14', 8, 'COM 2+AT1 2+AT2 4', null, ''], ['2027-01-15', null, '', 4, 'AT1']]);
+  assert.strictEqual(r.ligne.heuresParJour, 7);
+  assert.ok(!g.calls.some(c => c.method === 'delete'));
+  const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
+  assert.deepStrictEqual(J(c.EUC_DEV610_interventions_('COM 2+AT1', 6)), I('COM 2+AT1', 6));
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['Interventions (initiales et heures)', 'function ecartJour(x)', 'jour:l.heuresParJour', "s.hm=null;s.ha=null;s.fm='';s.fa='';"]) assert.ok(pg.includes(x), x);
+  assert.ok(!pg.includes('var JOURNEES='), 'plus de demi-journées types');
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');
