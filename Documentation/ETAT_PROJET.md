@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : calendrier d'une formation, semaines et recopie
+
+- Saisie des heures regroupée par semaine. Chaque semaine a une ligne d'en-tête
+  avec son total, comparé au nouvel objectif « Visé par semaine ». Ce réglage
+  est stocké dans la colonne `Heures_semaine` de `EUC_PLAN_LIGNES`, créée
+  automatiquement. Couleurs : vert si l'objectif est atteint, orange en dessous,
+  rouge au-dessus. Les heures de formation complémentaire sont affichées à part.
+- « Recopier cette semaine… » copie les heures et/ou les formateurs, jour par
+  jour, vers les semaines cochées (ou « toutes les suivantes »). Seuls les jours
+  de formation reçoivent la copie. La recopie est locale : on la vérifie puis
+  on enregistre. Fonctions pures : `EUC_DEV610_semainesHeures_` et
+  `EUC_DEV610_recopierSemaine_`.
+- Journées types ajoutées : 5 + 3, 3 + 4, 4 + 2, 3 + 3, et demi-journées de 1, 2
+  ou 3 h.
+- Restent à faire : la nature par jour (créer une période depuis la saisie) et
+  l'emploi du temps hebdomadaire imprimable (8 h-18 h).
+- Tests : 46/46 DEV610. Vérifié dans Chromium sur maquette uniquement.
+
 ## Mise à jour du 23 octobre 2026 — DEV620 : EPI, lot 3 (fiche de remise par classe)
 
 - Onglet « Fiche de remise » : feuille d'émargement par vague et par classe (A4

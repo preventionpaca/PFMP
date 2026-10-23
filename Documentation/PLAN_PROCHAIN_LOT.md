@@ -11,6 +11,16 @@ professeurs, administratifs, import Excel). Lots 1 à 4 ; tables `EUC_EPI_*` et
 
 ## Plannings annuels — lots B et C (après DEV610, lot A)
 
+- **Calendrier d'une formation — reste à faire (23 octobre 2026)**. La recopie
+  d'une semaine vers d'autres et le total par semaine avec un objectif sont
+  livrés. Restent :
+  - une sélection « Nature » par jour (formation, formation complémentaire,
+    entreprise) qui crée ou modifie les périodes, sans remplacer la saisie
+    dans le tableau ni dans la grille ;
+  - l'emploi du temps hebdomadaire imprimable : du lundi au vendredi, de 8 h à
+    18 h, heures de début, pause méridienne à 12 h ou 13 h, noms des
+    professeurs.
+
 - **Réglé le 20 octobre 2026** : 1 BTS MV et 2 BTS MV font tous deux
   5 semaines. Règle par défaut du 1 BTS MV corrigée (4 → 5). Des règles déjà
   enregistrées dans Grist pour une année gardent leur valeur : à vérifier dans

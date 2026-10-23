@@ -587,6 +587,30 @@ test('heures : réglages proposés (8 h pour le CAP peintre, 7 h ailleurs, quota
   assert.deepStrictEqual(J(g.k.EUC_DEV610_charger({ annee: '2026-2027' }).heures.length), 2);
   assert.ok(!g.calls.some(c => c.method === 'delete'));
 });
+test('heures : total par semaine et recopie d’une semaine type vers d’autres semaines (jours sans cours ignorés, heures ou formateurs seuls)', () => {
+  const jours = [{ date: '2026-09-07', nature: 'FORMATION' }, { date: '2026-09-08', nature: 'FORMATION' }, { date: '2026-09-09', nature: 'COMPLEMENTAIRE', complement: '5 Star' },
+    { date: '2026-09-14', nature: 'FORMATION' }, { date: '2026-09-21', nature: 'FORMATION' }, { date: '2026-09-22', nature: 'FORMATION' }];
+  const sai = { '2026-09-07': { hm: 5, ha: 3, fm: 'AB', fa: 'AB' }, '2026-09-08': { hm: 4, ha: 4, fm: 'CD', fa: 'EF' }, '2026-09-21': { hm: 1, fm: 'ZZ' } };
+  const B = k.EUC_DEV610_bilanHeures_(jours, { matin: 4, apresMidi: 3 }, sai), S = k.EUC_DEV610_semainesHeures_(B.jours);
+  assert.deepStrictEqual(J(S.map(w => [w.lundi, w.jours.length, w.formation, w.complementaire])), [['2026-09-07', 3, 16, 7], ['2026-09-14', 1, 7, 0], ['2026-09-21', 2, 11, 0]], 'formation complémentaire comptée à part');
+  const r = k.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-14', '2026-09-21', '2026-09-07'], {});
+  assert.deepStrictEqual(J(r.dates), ['2026-09-14', '2026-09-21', '2026-09-22']);
+  assert.strictEqual(r.ignores, 3, 'mardi 15, mercredi 16 et 23 sans cours : rien recopié');
+  assert.deepStrictEqual(J([r.saisies['2026-09-14'], r.saisies['2026-09-22']]), [{ hm: 5, ha: 3, fm: 'AB', fa: 'AB' }, { hm: 4, ha: 4, fm: 'CD', fa: 'EF' }]);
+  assert.deepStrictEqual(J(sai['2026-09-21']), { hm: 1, fm: 'ZZ' }, 'saisies d’origine intactes');
+  const h = k.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-21'], { formateurs: false });
+  assert.deepStrictEqual(J(h.saisies['2026-09-21']), { hm: 5, fm: 'ZZ', ha: 3 }, 'heures seules : formateur gardé');
+  const f = k.EUC_DEV610_recopierSemaine_({ '2026-09-14': { hm: 2 } }, jours, '2026-09-14', ['2026-09-21'], { heures: false });
+  assert.deepStrictEqual(J(f.saisies['2026-09-21']), { fm: '', fa: '' }, 'source sans saisie : formateurs remis à vide, heures intactes');
+  const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
+  assert.deepStrictEqual(J(c.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-14'], {})), J(k.EUC_DEV610_recopierSemaine_(sai, jours, '2026-09-07', ['2026-09-14'], {})));
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['tr class="semH"', 'Recopier cette semaine…', 'id="hSemaine"', 'Toutes les semaines suivantes', "['5+3','8 h (5 + 3)']", "['1+0','Matin 1 h']", 'majSemaines();']) assert.ok(pg.includes(x), x);
+  const g = grist(); g.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  const res = g.k.EUC_DEV610_enregistrerHeures({ annee: '2026-2027', ligne: 'CAP_PEINTRE', reglages: { matin: 4, apresMidi: 4, quota: 450, formateurs: true, semaine: '32' }, jours: [] });
+  assert.strictEqual(res.ligne.heuresSemaine, 32);
+  assert.throws(() => g.k.EUC_DEV610_enregistrerHeures({ annee: '2026-2027', ligne: 'CAP_PEINTRE', reglages: { semaine: 61 }, jours: [] }), /entre 0 et 60/);
+});
 test('formation complémentaire : complément conservé dans la version, jamais publié dans Planning_Periodes', () => {
   const lignes = lignesDefaut(), annee = { code: '2026-2027', debut: '2026-09-01', fin: '2027-08-31' };
   const v = k.EUC_DEV610_validerPeriodes_([{ ligne: 'CAP_PEINTRE', type: 'Formation complémentaire', complement: ' 5 Star ', debut: '2027-01-11', fin: '2027-01-15' }, { ligne: 'CAP_PEINTRE', type: 'ENT.', complement: 'x', debut: '2026-11-16', fin: '2026-11-20' }], lignes, annee);
