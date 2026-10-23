@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Référentiels des diplômes</title>
+<style>
+:root{--vert:#0b6b4f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}
+main{max-width:1200px;margin:auto;padding:16px}
+.ariane{margin:0 0 10px;font-size:14px}.ariane a{color:var(--vert);font-weight:700;text-decoration:none}
+.note{color:var(--gris);font-size:13px}.alerte{color:#9a3412}
+.barre{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+input,select,button{font:inherit}
+button{border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer}
+.fiche{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;margin:10px 0}
+.fiche h2{font-size:16px;margin:0 0 4px}.fiche h2 a{color:var(--vert);font-size:13px;font-weight:400;margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}.chip{background:#eef6f2;border:1px solid var(--bord);border-radius:12px;padding:1px 8px;font-size:12px}.chip.ancien{background:#fff7ed;border-color:#fed7aa}
+details.bloc{border-top:1px solid #e3eee9;padding:4px 0}details.bloc summary{cursor:pointer;font-weight:700}details.bloc ul{margin:4px 0 6px 18px;padding:0}details.bloc li{margin:1px 0}
+.opt{background:#1b396a;color:#fff;border-radius:4px;padding:0 5px;font-size:11px;margin-right:4px}
+@media print{.noprint{display:none!important}details.bloc{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><h1>Référentiels des diplômes</h1><p>Blocs de compétences RNCP de la carte de formation, pour le livret de suivi des apprentis.</p></header>
+<main>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <strong>Référentiels des diplômes</strong></nav>
+  <div class="barre noprint"><label>Rechercher <input id="filtre" placeholder="diplôme, classe, bloc…" size="30"></label><button type="button" id="tout">Tout déplier</button><button type="button" id="rien">Tout replier</button><button type="button" id="imprimer">Imprimer / PDF</button><span id="compte" class="note"></span></div>
+  <p class="note" id="source"></p>
+  <div id="liste"></div>
+</main>
+<script>
+var DATA=<?!= donnees ?>;
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function rendre(){var q=$('filtre').value.trim().toLowerCase(),n=0;
+  var html=Object.keys(DATA.referentiels).map(function(k){var f=DATA.referentiels[k],ls=DATA.lignes.filter(function(l){return l[1]===k;});
+    var texte=(k+' '+f.titre+' '+ls.map(function(l){return l[0]+' '+l[3];}).join(' ')+' '+f.blocs.map(function(b){return b.intitule+' '+b.competences.join(' ');}).join(' ')).toLowerCase();
+    if(q&&texte.indexOf(q)<0)return '';n++;
+    return '<section class="fiche"><h2>'+esc(f.titre)+' <a href="https://www.francecompetences.fr/recherche/rncp/'+esc(k.replace('RNCP',''))+'/" target="_blank" rel="noopener">'+esc(k)+' ↗</a></h2>'+
+      (f.actif?'':'<p class="alerte">Fiche inactive (remplacée), gardée pour les promotions qui passent encore l’ancien diplôme.</p>')+
+      '<div class="chips">'+(ls.length?ls.map(function(l){return '<span class="chip'+(/Ancien/.test(l[3])?' ancien':'')+'" title="'+esc(l[3])+'">'+esc(l[0])+(l[2]?' · '+esc(l[2]):'')+(l[3]?' *':'')+'</span>';}).join(''):'<span class="note">Aucune ligne de planning rattachée</span>')+'</div>'+
+      ls.filter(function(l){return l[3];}).map(function(l){return '<div class="note">* '+esc(l[0])+' : '+esc(l[3])+'</div>';}).join('')+
+      f.blocs.map(function(b){return '<details class="bloc"><summary>'+(b.option?'<span class="opt">'+esc(b.option)+'</span>':'')+esc(b.code.replace(/^RNCP\d+/,''))+' — '+esc(b.intitule)+' <span class="note">('+b.competences.length+' compétence(s))</span></summary><ul>'+b.competences.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></details>';}).join('')+
+      (f.generaux.length?'<p class="note">Enseignement général : '+f.generaux.map(esc).join(' · ')+'</p>':'')+'</section>';}).join('');
+  $('liste').innerHTML=html||'<p class="note">Aucun référentiel ne correspond.</p>';$('compte').textContent=n+' fiche(s)';}
+$('source').innerHTML='Relevé le '+esc(DATA.releve.split('-').reverse().join('/'))+' sur les fiches publiques de <a href="https://www.francecompetences.fr/" target="_blank" rel="noopener">France Compétences</a>. Le livret de suivi s’appuie sur les blocs professionnels ; les blocs d’enseignement général sont seulement rappelés.';
+$('filtre').oninput=rendre;
+$('tout').onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('details.bloc'),function(d){d.open=true;});};
+$('rien').onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('details.bloc'),function(d){d.open=false;});};
+$('imprimer').onclick=function(){$('tout').onclick();window.print();};
+rendre();
+</script>
+</body>
+</html>

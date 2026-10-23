@@ -263,7 +263,7 @@ function EUC_DEV610_interventions_(texte, total) {
 }
 /* Périodes d'alternance d'une formation (calcul pur), pour le livret de suivi : une suite de jours au lycée (orange) ou en
  * entreprise (vert) forme une période, quelle que soit sa durée (1 à 6 semaines et plus) ; lycée et entreprise sont
- * numérotés séparément (P1, P2… au lycée ; P1, P2… en entreprise). jours : [{ date, n, h }] dans l'ordre, n vaut
+ * numérotés séparément (S1, S2… au lycée ; P1, P2… en entreprise, comme dans le livret). jours : [{ date, n, h }] dans l'ordre, n vaut
  * 'L' (lycée, formation complémentaire comprise), 'E' (entreprise, vacances passées en entreprise comprises),
  * 'N' (week-end, férié : sans effet), 'V' (vacances sans période) ou 'X' (hors formation : la période s'arrête).
  * opts.vacancesCoupent (vrai par défaut) : des vacances terminent la période en cours. */

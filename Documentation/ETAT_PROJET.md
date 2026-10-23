@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 24 octobre 2026 — DEV630 : référentiels des diplômes ; périodes S / P
+
+- Récapitulatif des périodes : **S1, S2… au lycée et P1, P2… en entreprise**,
+  comme dans le livret de suivi.
+- Fiches RNCP de la carte de formation relevées le 24/10/2026 sur France
+  Compétences (20 fiches) dans `apps-script/EUC_DEV630_Referentiels.js`. Chaque
+  bloc professionnel porte ses compétences ; l'enseignement général est
+  seulement rappelé.
+- Chaque ligne de planning est rattachée à sa fiche, selon la session de la
+  promotion :
+  - 2MVA et 1MVA : nouveau bac pro, RNCP40996 ;
+  - TMVA : ancien bac pro, RNCP40009 ;
+  - 1BTS MV : nouveau BTS, RNCP41864 ;
+  - 2BTS MV : ancien BTS, RNCP38367 ;
+  - RMO et RSP : options du bac pro TRPM, RNCP41015.
+- **À confirmer** : 1MT et TMT (Microtechniques ?), TPMMA (TP Mécanicien de
+  maintenance automobile ?), CQPM ASC (non trouvé), secondes 2REMI et 2MTNE
+  (familles de métiers, sans fiche propre).
+- Nouvelle page admin `referentiels-pfmp`, « Référentiels des diplômes » :
+  recherche, blocs dépliables, lien vers chaque fiche officielle, impression.
+  Tests : 3/3 DEV630.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : récapitulatif des périodes d'alternance (livret)
 
 - Le bouton « Récapitulatif des périodes ↗ » du calendrier d'une formation

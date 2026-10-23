@@ -1,5 +1,34 @@
 # Prochains lots — book entreprises et apprentissage
 
+## Livret de suivi des apprentis : fiches par période S / P (lot suivant, DEV631)
+
+Classes pilotes : Bachelor IP et la mixité 1 MVA (1 MVA 1 et 1 MVA 2). Ce lot
+part du livret DEV599 existant, sans repartir de zéro.
+
+1. **Une fiche créée d'avance par période S ou P**, avec les dates du planning.
+   L'en-tête se remplit depuis le contrat : nom, classe, promotion, entreprise,
+   maître d'apprentissage, référent.
+2. **Pour chaque bloc professionnel du référentiel, et pour « Autres
+   activités »** :
+   - l'objectif de la période, saisi par le référent avant la période ;
+   - ce que l'apprenti a réalisé ;
+   - des photos, des documents et des liens web.
+3. **Brouillon, puis soumission** :
+   - la fiche S est validée par le prof, la fiche P par le tuteur, qui signe ;
+   - la fiche validée est figée, et son PDF est archivé dans le dossier Drive
+     de l'apprenti ;
+   - l'apprenti la consulte en lecture seule.
+4. **Destinataires** : une table de vérité en plus du tuteur, de l'apprenti et
+   du référent (équipe pédagogique, DDFPT, inspecteur), selon le diplôme et le
+   lieu. On part de la table des envois existante. Aucun courriel réel avant
+   l'accord de l'utilisateur ; le premier essai se fait sur sa seule adresse.
+5. **Back-office par classe** : état de chaque fiche (attendue, brouillon,
+   soumise, validée, en retard) et relance.
+6. **Livret annuel pour le jury**, reconstruit depuis les données en un seul
+   PDF : page de garde, périodes, synthèse par bloc, texte sur l'évaluation.
+7. **Accès** : lien personnel signé ou QR code, plus un code personnel court en
+   secours.
+
 ## Module EPI et étiquettes (proposition du 23 octobre 2026, à valider)
 
 Voir `Documentation/PROPOSITION_EPI_ETIQUETTES.md` : essayage par classe et par

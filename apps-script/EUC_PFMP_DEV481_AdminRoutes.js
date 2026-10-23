@@ -43,6 +43,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV620_afficher(e);
     case 'etiquettes-pfmp':
       return EUC_DEV621_afficher(e);
+    case 'referentiels-pfmp':
+      return EUC_DEV630_afficher(e);
     case 'echeancier-apprentis-pfmp':
       return EUC_DEV597_afficher(e);
     case 'bilan-visite-apprenti':

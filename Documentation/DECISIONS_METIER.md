@@ -331,3 +331,14 @@ sont suivis, on saisit les interventions du jour avec leurs heures
 (`COM 2+AT1 2+AT2 4`). Le total par formateur sert à respecter la quotité
 annuelle. Les horaires précis et les cours à la quinzaine relèvent du futur
 module emploi du temps, qui partira du module EDT existant.
+
+## Périodes du livret de suivi (24 octobre 2026)
+
+Les périodes au lycée sont numérotées **S1, S2…** et les périodes en
+entreprise **P1, P2…**, d'après le planning de la formation. Une période dure
+autant de semaines consécutives qu'il le faut. Le livret de suivi s'appuie sur
+les blocs professionnels RNCP du diplôme, plus un bloc « Autres activités »
+pour ce qui sort du référentiel mais reste formateur : site à consulter,
+émission, formation à un logiciel, sujet transversal. Le référent fixe un
+**objectif pour chaque bloc** de la période, ainsi que pour les autres
+activités.

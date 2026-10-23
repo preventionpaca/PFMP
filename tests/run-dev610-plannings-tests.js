@@ -843,7 +843,7 @@ test('périodes d’alternance pour le livret : P1, P2… au lycée et en entrep
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
   assert.deepStrictEqual(J(c.EUC_DEV610_periodesAlternance_(j)), J(P));
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ['<section id="pPeriodesAlt" class="panneau">', "else if(VUE==='periodes'){rendrePeriodesAlt(LIGNE_DEMANDEE);ouvrirPanneau('pPeriodesAlt');}", 'Récapitulatif des périodes ↗', "@page{size:A4 portrait;margin:10mm}", 'function estPont(iso)', "' au lycée':' en entreprise'", 'id="vacCoupent" checked']) assert.ok(pg.includes(x), x);
+  for (const x of ['<section id="pPeriodesAlt" class="panneau">', "else if(VUE==='periodes'){rendrePeriodesAlt(LIGNE_DEMANDEE);ouvrirPanneau('pPeriodesAlt');}", 'Récapitulatif des périodes ↗', "@page{size:A4 portrait;margin:10mm}", 'function estPont(iso)', "' au lycée':' en entreprise'", 'id="vacCoupent" checked', "function libPeriode(p){return (p.nature==='L'?'S':'P')+p.numero;}"]) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV610 plannings annuels réussis');
