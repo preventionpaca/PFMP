@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : couleurs du calendrier d'une formation
+
+- Règle pour tous les calendriers : la colonne H (et P) n'a jamais la couleur d'un
+  événement (visite, conseil, examens, appel) ni des vacances ; elle est orange un
+  jour de cours, verte un jour en entreprise (vacances comprises), couleur de la
+  formation complémentaire, sinon grise (`couleurH`).
+- Vacances en gris (#9A9A9A) au lieu du noir ; week-end en gris plus foncé
+  (#6B6B6B) ; années et mois en bleu marine (#1B396A, #2B528F), en haut comme en
+  bas ; totaux mensuels inchangés (orange).
+- Tests complétés ; suite complète verte ; rendu vérifié dans Chromium (CAP peintre).
+
 ## Mise à jour du 23 octobre 2026 — DEV621 : page « Étiquettes et badges » ; administratifs déplacés ; nom de l'essayage suggéré
 
 - Nouvelle page `?page=etiquettes-pfmp` (`EUC_DEV621_Etiquettes.js`,

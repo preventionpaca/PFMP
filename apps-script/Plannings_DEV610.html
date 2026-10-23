@@ -76,9 +76,9 @@ table.cal tr.tot td{background:#f4f8f6;font-weight:700}table.cal td.hors{backgro
 .a32-tete{display:grid;grid-template-columns:minmax(120px,28%) 1fr minmax(120px,22%);align-items:center;gap:8px;min-height:64px}.a32-logos{display:flex;gap:10px;align-items:center}.a32-logos img{max-height:58px;max-width:170px;object-fit:contain}.a32-logos.d{justify-content:flex-end}.a32-logos .sans{border:1px dashed #999;border-radius:6px;padding:8px 10px;font-size:10px;font-weight:800;color:#555}.a32-tete .centre .cal{font-size:19px;font-weight:900;color:#1b396a;letter-spacing:.02em}.a32-tete .centre .dip{font-size:16px;font-weight:800;margin-top:3px}.a32-tete .centre .gen{font-size:10px;font-weight:600;color:#444}.a32-tete .rf{font-weight:900;font-size:10px;line-height:1.05;border-left:4px solid #000091;padding-left:5px}.a32-tete .centre{text-align:center}.a32-tete .centre b{display:block;font-size:15px;line-height:1.2}.a32-tete .centre span{display:block;font-size:10px;font-weight:700;margin-top:3px}
 table.a32i{width:100%;border-collapse:collapse;margin:5px 0 3px;font-size:12px}table.a32i td{padding:1px 6px}table.a32i td.l{text-align:right;font-weight:700;width:14%}table.a32i td.v{background:#fff2c6;font-weight:800;color:#1b396a;width:28%}table.a32i td.m{text-align:center;font-size:11px;color:#333}
 table.a32c{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}table.a32c th,table.a32c td{border:1px solid #fff;padding:0 1px;height:16px;text-align:center;white-space:nowrap;overflow:hidden}table.a32c td{font-size:9.5px}
-table.a32c tr.an th{background:#7f7f7f;color:#fff;font-size:9px}table.a32c tr.mo th{background:#595959;color:#fff}table.a32c tr.co th{background:#262626;color:#fff;font-size:8px}table.a32c tr.co th.hc{background:#e46c0a}
-table.a32c td.n{font-weight:700}table.a32c td.k-we{background:#d9d9d9;color:#555}table.a32c td.k-blanc{background:#fff;color:#777}
-table.a32c tr.tm th{background:#595959;color:#fff}table.a32c tr.tv td{background:#e46c0a;color:#fff;font-weight:800;font-size:10px}
+table.a32c tr.an th{background:#1b396a;color:#fff;font-size:9px}table.a32c tr.mo th{background:#2b528f;color:#fff}table.a32c tr.co th{background:#262626;color:#fff;font-size:8px}table.a32c tr.co th.hc{background:#e46c0a}
+table.a32c td.n{font-weight:700}table.a32c td.k-we{background:#6b6b6b;color:#fff}table.a32c td.k-blanc{background:#fff;color:#777}
+table.a32c tr.tm th{background:#2b528f;color:#fff}table.a32c tr.tv td{background:#e46c0a;color:#fff;font-weight:800;font-size:10px}
 .a32-note{background:#000;color:#fff;text-align:center;font-size:9px;padding:2px;margin-top:2px}
 .a32-pied{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:3px}.a32-leg{display:grid;grid-template-columns:repeat(4,minmax(90px,150px));gap:2px 6px;font-size:9px;font-weight:800}.a32-leg span{text-align:center;padding:2px 4px}
 .a32-tot{display:flex;align-items:center;gap:0;font-weight:800;font-size:11px}.a32-tot b{background:#595959;color:#fff;padding:3px 18px;margin-left:8px}.a32-bas{display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-top:4px}
@@ -375,7 +375,7 @@ function etatJour(iso,l,pers,fo){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay
   var fond=null,comp=null,ev=[],evp=null;pers.forEach(function(p){if(p.debut<=iso&&p.fin>=iso){var x=evenement(p.type);if(x){if(ev.indexOf(x)<0)ev.push(x);if(!evp)evp=p;}else if(EUC_DEV610_estComplementaire_(p.type)){if(!comp)comp=p;}else if(!fond)fond=p;}});
   var vac=(D.toutesVacances||D.vacances).filter(function(v){return v.debut<=iso&&v.fin>=iso;})[0];
   /* Petites vacances toujours visibles en noir (modèle de l'annexe 32a), même si le jeune est en entreprise ; l'été n'est pas noirci. */
-  if(vac&&EUC_DEV610_nomVacances_(vac.nom,vac.debut,vac.fin)!=='ETE')return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true};
+  if(vac&&EUC_DEV610_nomVacances_(vac.nom,vac.debut,vac.fin)!=='ETE')return {c:'va',t:'Vacances '+vac.nom+(fond?' · '+fond.type:''),ev:ev,evp:evp,vac:true,p:fond||comp||undefined,entreprise:!!(fond&&EUC_DEV610_n_(fond.type)!=='COURS'),cours:!!(fond&&EUC_DEV610_n_(fond.type)==='COURS')};
   if(vac&&!fond&&!comp)return {c:'blanc',t:'Vacances '+vac.nom,ev:ev,evp:evp};
   if(comp)return {c:'',p:comp,ev:ev,evp:evp,comp:true};
   if(fond){var cours=EUC_DEV610_n_(fond.type)==='COURS';return {c:'',p:fond,ev:ev,evp:evp,entreprise:!cours,lycee:cours};}
@@ -384,11 +384,15 @@ function etatJour(iso,l,pers,fo){var d=new Date(iso+'T12:00:00Z'),wd=d.getUTCDay
   return {c:'',lycee:true,ev:ev,evp:evp};}
 function evLeg(pers){var vus={};return pers.filter(function(p){var x=evenement(p.type);if(!x||vus[x])return false;vus[x]=1;return true;}).map(function(p){var c=couleur(p.type);return '<span><i style="background:'+c+'"></i>'+esc(LIB_EV[evenement(p.type)]||p.type)+'</span>';}).join('');}
 /* Charte des couleurs de l'annexe 32a (légende des calendriers d'alternance du CFA). */
-var CHARTE={fe:['#DA9694','#000','Jours fériés'],va:['#262626','#fff','Vacances scolaires'],ufa:['#E46C0A','#fff','Cours UFA'],ex:['#21B36B','#fff','Période d’examens'],cs:['#2342D9','#fff','CONSEIL'],ap:['#7F00FF','#fff','APPEL TEL'],vi:['#00B0F0','#fff','VISITE'],ent:['#92D050','#000','ENT.'],comp:['#F4B183','#000','Formation complémentaire']};
+var CHARTE={fe:['#DA9694','#000','Jours fériés'],va:['#9a9a9a','#fff','Vacances scolaires'],ufa:['#E46C0A','#fff','Cours UFA'],ex:['#21B36B','#fff','Période d’examens'],cs:['#2342D9','#fff','CONSEIL'],ap:['#7F00FF','#fff','APPEL TEL'],vi:['#00B0F0','#fff','VISITE'],ent:['#92D050','#000','ENT.'],comp:['#F4B183','#000','Formation complémentaire']};
 var ORDRE_CHARTE=['fe','va','ufa','ex','cs','ap','vi','ent','comp'];
 /* Nature d'un jour selon la charte (calcul pur) : férié, week-end, petites vacances (l'été n'est pas noirci), événement, entreprise, cours. */
 function natureJour(e){if(e.c==='fe')return 'fe';if(e.c==='we')return 'we';var x=e.evp?evenement(e.evp.type):'';
   if(x==='E')return 'ex';if(x==='C')return 'cs';if(x==='A')return 'ap';if(x==='V')return 'vi';if(e.c==='va')return 'va';if(e.comp)return 'comp';if(e.lycee)return 'ufa';if(e.entreprise)return 'ent';return 'blanc';}
+/* Colonne H (heures) : orange un jour de cours, vert un jour en entreprise (vacances comprises), couleur de la formation
+ * complémentaire, sinon gris (gris foncé le week-end) ; jamais la couleur d'un événement ni des vacances. */
+function couleurH(e){if(e.c==='we')return ' style="background:#6b6b6b;color:#fff"';if(e.c==='fe')return ' style="background:#bfbfbf;color:#333"';if(e.comp)return ' style="background:'+CHARTE.comp[0]+';color:'+CHARTE.comp[1]+'"';
+  if(e.entreprise)return ' style="background:'+CHARTE.ent[0]+';color:'+CHARTE.ent[1]+'"';if(e.lycee||e.cours)return ' style="background:'+CHARTE.ufa[0]+';color:'+CHARTE.ufa[1]+'"';return ' style="background:#bfbfbf;color:#333"';}
 function formationDe(code){return (D.formations||{})[code]||{};}
 /* Logos : à gauche le porteur (GRETA, sinon CFA RAN) puis les organismes associés (CFAI, Ducretet) ; à droite, toujours le lycée. */
 function logosFormation(l){var t=(typeof D!=='undefined'&&D&&D.organismesLignes||{})[l.code];
@@ -446,7 +450,7 @@ function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(co
     if(ch)vus[k]=1;if(e.p)titre.push(EUC_DEV610_libelleType_(e.p));if(e.evp)titre.push(e.evp.type);if(e.t)titre.push(e.t);
     var hh='',pp='';if(h){if(h.complement)tot[mi].hc+=h.total;else tot[mi].h+=h.total;hh=h.total?hfmt(h.total):'';pp=P?initialesJour(h):'';titre.push(hfmt(h.total)+' h'+(h.fm||h.fa?' · matin '+(h.fm||'—')+', après-midi '+(h.fa||'—'):''));}
     var att=h?' data-date="'+iso+'"':'',t=' title="'+esc(titre.join(' · '))+'"';
-    return '<td class="n'+cls+'"'+st+att+t+'>'+j+'</td><td class="'+cls.trim()+'"'+st+att+t+'>'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td class="'+cls.trim()+'"'+st+att+t+'><b>'+hh+'</b></td>'+(P?'<td class="'+cls.trim()+'"'+st+att+t+'><b>'+esc(pp)+'</b></td>':'');}).join('')+'</tr>';}
+    return '<td class="n'+cls+'"'+st+att+t+'>'+j+'</td><td class="'+cls.trim()+'"'+st+att+t+'>'+JOURS[dt.getUTCDay()].charAt(0)+'</td><td'+couleurH(e)+att+t+'><b>'+hh+'</b></td>'+(P?'<td'+couleurH(e)+att+t+'><b>'+esc(pp)+'</b></td>':'');}).join('')+'</tr>';}
   var parAn={};mois.forEach(function(x){parAn[x.y]=(parAn[x.y]||0)+1;});
   var tete='<tr class="an">'+Object.keys(parAn).map(function(y){return '<th colspan="'+(parAn[y]*nc)+'">'+y+'</th>';}).join('')+'</tr>'+
     '<tr class="mo">'+mois.map(function(x){return '<th colspan="'+nc+'">'+MOISL[x.m].charAt(0).toUpperCase()+MOISL[x.m].slice(1)+'</th>';}).join('')+'</tr>'+

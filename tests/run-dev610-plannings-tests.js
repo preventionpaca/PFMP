@@ -420,7 +420,7 @@ test('formations de l’année : dates de début et de fin, titres ; années et 
   assert.strictEqual(g.tables.Annees_Scolaires.find(x => x.fields.Code === '2028-2029').fields.Previsionnelle, false);
   assert.ok(!g.calls.some(c => c.method === 'delete'));
   const h = read('apps-script/Plannings_DEV610.html');
-  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", "'<th class=\"hc\" colspan=\"2\">H / P</th>'", 'Total annuel <b>', 'Formation en alternance', 'Formation continue', 'Ce calendrier de formation est donné à titre indicatif', "ufa:['#E46C0A'", "va:['#262626'", "ent:['#92D050'", "vi:['#00B0F0'", "ap:['#7F00FF'", "cs:['#2342D9'", "fe:['#DA9694'", "!=='ETE')return {c:'va'"]) assert.ok(h.includes(t), t);
+  for (const t of ['data-p="pAnnees"', "'EUC_DEV610_enregistrerVacances'", "'EUC_DEV610_enregistrerAnnee'", "'EUC_DEV610_enregistrerFormation'", 'Proposer d’après l’année précédente', 'class="pf" data-fe=', "c:'hors'", "'<th class=\"hc\" colspan=\"2\">H / P</th>'", 'Total annuel <b>', 'Formation en alternance', 'Formation continue', 'Ce calendrier de formation est donné à titre indicatif', "ufa:['#E46C0A'", "va:['#9a9a9a'", 'function couleurH(e)', "<td'+couleurH(e)+att+t+'>", 'table.a32c td.k-we{background:#6b6b6b', 'tr.an th{background:#1b396a', "ent:['#92D050'", "vi:['#00B0F0'", "ap:['#7F00FF'", "cs:['#2342D9'", "fe:['#DA9694'", "!=='ETE')return {c:'va'"]) assert.ok(h.includes(t), t);
   assert.doesNotMatch(h, /if\(fe\[s\.i\]\.ferme\)cls\+=' fe'/, 'plus d’allusion aux fériés dans les cases du planning');
   assert.ok(read('apps-script/Admin_PFMP.html').includes('&amp;onglet=pAnnees">Années et vacances'));
 });
@@ -437,6 +437,14 @@ test('calendrier d’une formation (annexe 32a) : nature de chaque jour selon la
   const pers = [{ ligne: 'MIX_1BP', type: 'ENT.', debut: '2026-12-21', fin: '2026-12-24' }, { ligne: 'MIX_1BP', type: 'ENT.', debut: '2027-07-05', fin: '2027-07-30' }];
   const E = iso => N(c.etatJour(iso, { code: 'MIX_1BP' }, pers, {}));
   assert.deepStrictEqual([E('2026-12-22'), E('2026-12-29'), E('2027-07-07'), E('2027-08-10')], ['va', 'va', 'ent', 'blanc']);
+  /* Colonne H : jamais la couleur des vacances ni d'un événement ; vert en entreprise (vacances comprises), orange en cours, gris sinon. */
+  vm.runInContext(h.match(/var CHARTE=\{[^\n]*\};/)[0], c);
+  vm.runInContext(h.match(/function couleurH\(e\)\{[\s\S]*?return ' style="background:#bfbfbf;color:#333"';\}/)[0], c);
+  const H = iso => c.couleurH(c.etatJour(iso, { code: 'MIX_1BP' }, pers, {}));
+  assert.ok(/#92D050/.test(H('2026-12-22')), 'vacances en entreprise : H vert');
+  assert.ok(/#bfbfbf/.test(H('2026-12-29')), 'vacances sans période : H gris');
+  assert.ok(/#6b6b6b/.test(H('2026-12-26')), 'week-end : gris foncé');
+  assert.ok(/#E46C0A/.test(c.couleurH({ c: '', lycee: true, evp: { type: 'VISITE' } })), 'jour de cours avec visite : H orange, pas la couleur de la visite');
 });
 test('calendrier d’une formation : intitulé du diplôme, périodes après l’été, logos (porteur à gauche, lycée à droite)', () => {
   const g = grist({ periodes: [
