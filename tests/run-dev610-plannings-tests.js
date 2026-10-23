@@ -827,4 +827,23 @@ test('heures à la journée : heures du jour (8 h au plus) et interventions « C
   for (const x of ['id="cIntervenants"', "var P=!!HREG.formateurs&&AFF_INTERV", "memEcrire('dev610_intervenants'", "$('recapFormateurs').classList.toggle('noprint',!AFF_INTERV);", 'data-p="pFormations" aria-selected="false">Plannings par formation</button>', "if(b.dataset.p==='pFormations'&&D)rendreFormations();", "if(ONGLET==='pFormations')rendreFormations();"]) assert.ok(pg.includes(x), x);
 });
 
+test('périodes d’alternance pour le livret : P1, P2… au lycée et en entreprise numérotées à part, durée libre, week-ends et fériés neutres, vacances qui coupent (option)', () => {
+  const j = [];
+  const ajout = (debut, nb, n, h) => { for (let i = 0; i < nb; i++) { const d = k.EUC_DEV610_plus_(debut, i), wd = new Date(d + 'T12:00:00Z').getUTCDay(); j.push({ date: d, n: wd === 0 || wd === 6 ? 'N' : n, h: wd === 0 || wd === 6 ? 0 : h }); } };
+  ajout('2027-09-06', 5, 'L', 7); ajout('2027-09-11', 2, 'N', 0); ajout('2027-09-13', 19, 'E', 0); ajout('2027-10-04', 12, 'L', 7);
+  j[j.length - 3].n = 'N'; // férié dans la période au lycée
+  ajout('2027-10-16', 9, 'V', 0); ajout('2027-10-25', 5, 'L', 8); ajout('2027-10-30', 2, 'X', 0); ajout('2027-11-01', 5, 'E', 0);
+  const P = k.EUC_DEV610_periodesAlternance_(j);
+  assert.deepStrictEqual(J(P.map(p => [p.nature + p.numero, p.debut, p.fin, p.semaines, p.jours, p.heures])), [
+    ['L1', '2027-09-06', '2027-09-10', 1, 5, 35], ['E1', '2027-09-13', '2027-10-01', 3, 15, 0], ['L2', '2027-10-04', '2027-10-15', 2, 9, 63],
+    ['L3', '2027-10-25', '2027-10-29', 1, 5, 40], ['E2', '2027-11-01', '2027-11-05', 1, 5, 0]], 'durée libre, vacances et hors formation coupent');
+  const Q = k.EUC_DEV610_periodesAlternance_(j, { vacancesCoupent: false });
+  assert.deepStrictEqual(J(Q.map(p => p.nature + p.numero + ':' + p.jours)), ['L1:5', 'E1:15', 'L2:14', 'E2:5'], 'sans coupure par les vacances');
+  assert.deepStrictEqual(J(k.EUC_DEV610_periodesAlternance_([])), []);
+  const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
+  assert.deepStrictEqual(J(c.EUC_DEV610_periodesAlternance_(j)), J(P));
+  const pg = read('apps-script/Plannings_DEV610.html');
+  for (const x of ['<section id="pPeriodesAlt" class="panneau">', "else if(VUE==='periodes'){rendrePeriodesAlt(LIGNE_DEMANDEE);ouvrirPanneau('pPeriodesAlt');}", 'Récapitulatif des périodes ↗', "@page{size:A4 portrait;margin:10mm}", 'function estPont(iso)', "' au lycée':' en entreprise'", 'id="vacCoupent" checked']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV610 plannings annuels réussis');

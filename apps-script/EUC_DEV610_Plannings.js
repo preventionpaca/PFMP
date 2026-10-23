@@ -261,6 +261,26 @@ function EUC_DEV610_interventions_(texte, total) {
   var reparti = reg.reduce(function(a, it) { return r2(a + it.h); }, 0);
   return { liste: reg, sans: reg.length ? 0 : total, ecart: reg.length ? r2(reparti - total) : 0, texte: morceaux.join('+'), illisibles: illisibles };
 }
+/* Périodes d'alternance d'une formation (calcul pur), pour le livret de suivi : une suite de jours au lycée (orange) ou en
+ * entreprise (vert) forme une période, quelle que soit sa durée (1 à 6 semaines et plus) ; lycée et entreprise sont
+ * numérotés séparément (P1, P2… au lycée ; P1, P2… en entreprise). jours : [{ date, n, h }] dans l'ordre, n vaut
+ * 'L' (lycée, formation complémentaire comprise), 'E' (entreprise, vacances passées en entreprise comprises),
+ * 'N' (week-end, férié : sans effet), 'V' (vacances sans période) ou 'X' (hors formation : la période s'arrête).
+ * opts.vacancesCoupent (vrai par défaut) : des vacances terminent la période en cours. */
+function EUC_DEV610_periodesAlternance_(jours, opts) {
+  var coupe = !opts || opts.vacancesCoupent !== false, out = [], num = { L: 0, E: 0 }, cur = null, r2 = function(x) { return Math.round(x * 100) / 100; };
+  var fermer = function() { if (cur) { cur.semaines = Object.keys(cur.sem).length; delete cur.sem; out.push(cur); } cur = null; };
+  (jours || []).forEach(function(j) {
+    if (j.n === 'N') return;
+    if (j.n === 'X' || j.n === 'V') { if (j.n === 'X' || coupe) fermer(); return; }
+    if (j.n !== 'L' && j.n !== 'E') return;
+    if (!cur || cur.nature !== j.n) { fermer(); num[j.n]++; cur = { nature: j.n, numero: num[j.n], debut: j.date, fin: j.date, jours: 0, heures: 0, sem: {} }; }
+    var d = new Date(j.date + 'T12:00:00Z'); cur.sem[EUC_DEV610_plus_(j.date, -((d.getUTCDay() + 6) % 7))] = 1;
+    cur.fin = j.date; cur.jours++; cur.heures = r2(cur.heures + (Number(j.h) || 0));
+  });
+  fermer();
+  return out;
+}
 /* Heures d'une formation regroupées par semaine (lundi ISO) : total de la formation, total des formations
  * complémentaires (comptées à part) et nombre de jours, pour comparer à l'objectif hebdomadaire (30, 32, 35 h…). */
 function EUC_DEV610_semainesHeures_(joursBilan) {
@@ -392,7 +412,7 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_, EUC_DEV610_regrouper_, EUC_DEV610_semainesHeures_, EUC_DEV610_recopierSemaine_, EUC_DEV610_interventions_].map(String).join('\n')
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_, EUC_DEV610_regrouper_, EUC_DEV610_semainesHeures_, EUC_DEV610_recopierSemaine_, EUC_DEV610_interventions_, EUC_DEV610_periodesAlternance_].map(String).join('\n')
     + '\nvar EUC_DEV610_TYPE_COMPLEMENTAIRE_ = ' + JSON.stringify(EUC_DEV610_TYPE_COMPLEMENTAIRE_) + ';';
 }
 

@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV610 : récapitulatif des périodes d'alternance (livret)
+
+- Le bouton « Récapitulatif des périodes ↗ » du calendrier d'une formation
+  ouvre une nouvelle page (`vue=periodes`) qui s'imprime sur une page A4.
+- Le tableau liste P1, P2… au lycée en orange et P1, P2… en entreprise en
+  vert, dans l'ordre des dates. Pour chaque période : dates du… au…, semaines,
+  jours et heures au lycée, avec les totaux.
+- Une période est une suite de jours au même endroit, quelle que soit sa durée.
+  Les week-ends, les jours fériés et le pont de l'Ascension ne la coupent pas.
+  Des vacances passées en entreprise prolongent la période verte. Des vacances
+  sans période terminent la période en cours ; une case permet de changer ce
+  comportement.
+- Au survol, le calendrier indique « P3 au lycée » ou « P2 en entreprise ».
+- Fonction pure : `EUC_DEV610_periodesAlternance_`. Tests : 48/48 DEV610.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : heures à la journée et interventions des formateurs
 
 - La saisie par demi-journée est remplacée par une saisie à la journée :
