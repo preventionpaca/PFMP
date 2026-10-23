@@ -152,4 +152,15 @@ test('étiquettes fournisseur : libellés par défaut, noms de fichiers, ZIP lis
   for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
 });
 
+test('fiche de remise : émargement par classe, élèves marqués servis avec la date de remise', () => {
+  const g = grist(), k = g.k; k.EUC_DEV620_charger({}); k.EUC_DEV620_enregistrerVague({ annee: '2026-2027' });
+  k.EUC_DEV620_enregistrerEssayages({ annee: '2026-2027', vague: 1, saisiPar: 'MARTIN Sabine', lignes: [{ eleveId: 11, nom: 'VALENZA', prenom: 'Arthur', classeId: 2, tenue: 'BLOUSE', tailles: { BLOUSE: '3', CHAUSSURES: '42' } }] });
+  const id = g.tables.EUC_EPI_ESSAYAGES[0].id;
+  assert.throws(() => k.EUC_DEV620_marquerRemis({ ids: [id], date: '23/10/2026' }), /Date de remise/);
+  k.EUC_DEV620_marquerRemis({ ids: [id], date: '2026-10-23' });
+  const c = k.EUC_DEV620_charger({}).essayages[0]; assert.deepStrictEqual(J([c.statut, c.remisLe]), ['REMIS', '2026-10-23']);
+  const pg = read('apps-script/Epi_DEV620.html');
+  for (const x of ['data-p="pRemise"', 'Signature de l’élève', 'Équipements remis (tailles)', "occupe(this,'Marquage…','EUC_DEV620_marquerRemis'", '@page{size:A4 landscape;margin:10mm}', 'id="rNonRemis" checked']) assert.ok(pg.includes(x), x);
+});
+
 console.log(n + ' tests DEV620 EPI réussis');

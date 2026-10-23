@@ -293,3 +293,13 @@ function EUC_DEV620_marquerEtiquettes(q) {
   EUC_DEV620_ecrire_('patch', EUC_DEV620_T_.essayages, ids.map(function(id) { return { id: id, fields: { Etiquette_le: quand, Etiquette_lot: lot } }; }));
   return { ok: true, marquees: ids.length, le: quand };
 }
+
+/* Remise des tenues : date de remise et statut « REMIS » écrits sur les essayages de la fiche (signée par les élèves). */
+function EUC_DEV620_marquerRemis(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {}; EUC_DEV620_tables_();
+  var ids = (q.ids || []).map(Number).filter(function(x) { return x > 0; }); if (!ids.length) throw new Error('Aucun élève à marquer.');
+  var date = EUC_DEV620_t_(q.date); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Date de remise invalide.');
+  var sec = Math.round(Date.parse(date + 'T00:00:00Z') / 1000);
+  EUC_DEV620_ecrire_('patch', EUC_DEV620_T_.essayages, ids.map(function(id) { return { id: id, fields: { Remis_le: sec, Statut: 'REMIS' } }; }));
+  return { ok: true, remis: ids.length, date: date };
+}

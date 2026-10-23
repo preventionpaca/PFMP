@@ -29,6 +29,9 @@ table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var
 table.t th,table.t td{padding:5px 6px;border-bottom:1px solid #e3eee9;text-align:left;vertical-align:middle;font-size:13px}table.t th{font-size:12px;color:var(--gris);background:#f4f8f6}
 table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
 .planche{display:grid;grid-template-columns:repeat(2,270px);gap:6px 10px;background:#fff;border:1px solid var(--bord);border-radius:10px;padding:10px;width:max-content;max-width:100%}.planche figure{margin:0}.planche img{width:270px;height:138px;border:1px solid #cbd5e1;border-radius:6px;display:block}.planche figcaption{font-size:11px;color:var(--gris)}
+.fiche{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px}.fiche h2{margin:0 0 2px;font-size:18px}.fiche table{width:100%;border-collapse:collapse}.fiche th,.fiche td{border:1px solid #64748b;padding:6px 6px;font-size:12px;text-align:left;vertical-align:middle}.fiche th{background:#e2e8f0}.fiche td.sig{width:30%;height:34px}.fiche td.n{width:28px;text-align:center}
+@media print{body{background:#fff}header,.ariane,.barre,.onglets,#etat,#messages,.noprint,.panneau:not(.actif),#qui{display:none!important}main{max-width:none;padding:0}.fiche{border:none;padding:0}.fiche tr{break-inside:avoid}.fiche thead{display:table-header-group}}
+@page{size:A4 landscape;margin:10mm}
 #qui{position:fixed;inset:0;background:rgba(15,40,30,.55);display:flex;align-items:center;justify-content:center;z-index:50}#qui[hidden]{display:none}
 #qui .boite{background:#fff;border-radius:12px;padding:20px 24px;max-width:420px;width:92%;box-shadow:0 10px 40px #0004}
 #qui input{width:100%;margin:4px 0 10px;padding:6px 8px}
@@ -45,6 +48,7 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
   <div class="onglets" role="tablist">
     <button type="button" role="tab" data-p="pEssayage" aria-selected="true">Essayage</button>
     <button type="button" role="tab" data-p="pEtiquettes" aria-selected="false">Étiquettes fournisseur</button>
+    <button type="button" role="tab" data-p="pRemise" aria-selected="false">Fiche de remise</button>
     <button type="button" role="tab" data-p="pVagues" aria-selected="false">Vagues</button>
     <button type="button" role="tab" data-p="pReglages" aria-selected="false">Réglages</button>
   </div>
@@ -65,6 +69,14 @@ table.t tr.prov td{background:#fffbea}table.t tr.mod td{background:#eef7ff}
     <div class="barre" id="qClasses"></div>
     <div class="barre"><label><input type="checkbox" id="qMarquer" checked> Marquer ces étiquettes comme produites après le téléchargement</label><span style="flex:1"></span><button type="button" class="plein" id="qZip">Télécharger le ZIP (JPEG 144 dpi)</button></div>
     <div id="qApercu" class="planche"></div>
+  </section>
+
+  <section id="pRemise" class="panneau">
+    <p class="note noprint">Feuille d’émargement par classe : chaque élève signe en face de son nom, de sa classe et de ce qui lui est remis.</p>
+    <div class="barre noprint"><label>Vague <select id="rVague"></select></label><label>Classe <select id="rClasse"></select></label><label>Date de remise <input type="date" id="rDate"></label>
+      <label><input type="checkbox" id="rNonRemis" checked> Seulement les élèves pas encore servis</label><span id="rCompte" class="note"></span><span style="flex:1"></span>
+      <button type="button" id="rImprimer">Imprimer / PDF</button><button type="button" class="plein" id="rMarquer" disabled>Marquer la classe comme servie</button></div>
+    <div id="rFiche" class="fiche"></div>
   </section>
 
   <section id="pVagues" class="panneau">
@@ -126,7 +138,7 @@ function initialiser(){$('annee').innerHTML=D.annees.map(function(a){return '<op
   /* Après un enregistrement : même classe et même vague. */
   if(GARDE.vague&&D.vagues.some(function(v){return String(v.numero)===GARDE.vague;}))$('eVague').value=GARDE.vague;if(GARDE.classe&&D.classes.some(function(c){return String(c.id)===GARDE.classe;}))$('eClasse').value=GARDE.classe;
   $('eProf').innerHTML='<option value=""></option>'+D.professeurs.map(function(p){return '<option>'+esc(p)+'</option>';}).join('');
-  rendreEssayage();rendreEtiquettes();rendreVagues();rendreReglages();remplirQui();majBoutons();}
+  rendreEssayage();rendreEtiquettes();rendreRemise();rendreVagues();rendreReglages();remplirQui();majBoutons();}
 $('annee').onchange=function(){if((ESS_SALE||REG_SALE||LIENS_SALE)&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee;return;}charger(this.value);};
 
 /* ---------- Essayage ---------- */
@@ -195,6 +207,24 @@ $('qZip').onclick=function(){var l=etiquettes(),v=Number($('qVague').value)||0,b
   var url=URL.createObjectURL(new Blob([zip],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download='Etiquettes_EPI_'+D.annee+'_Vague'+v+'.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},4000);
   if(!$('qMarquer').checked){message('<span class="ok">ZIP téléchargé</span> : '+l.length+' étiquette(s), non marquées.');return;}
   occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes',{ids:l.map(function(x){return x.id;}),lot:'Vague '+v+' — '+new Date().toLocaleString('fr-FR')},function(r){message('<span class="ok">ZIP téléchargé</span> : '+r.marquees+' étiquette(s) marquées comme produites ; elles ne seront plus proposées (décochez le filtre pour les refaire).');charger(D.annee);});};
+
+/* ---------- Fiche de remise (émargement par classe) ---------- */
+function lignesRemise(){var v=Number($('rVague').value)||0,c=$('rClasse').value,nr=$('rNonRemis').checked;
+  return D.essayages.filter(function(x){return x.vague===v&&String(cleClasse(x))===c&&(!nr||x.statut!=='REMIS');}).sort(function(a,b){return (a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr');});}
+function rendreRemise(){var v0=$('rVague').value,c0=$('rClasse').value;
+  $('rVague').innerHTML=D.vagues.map(function(v){return '<option value="'+v.numero+'">'+esc(v.libelle||('Vague '+v.numero))+'</option>';}).join('')||'<option value="">Aucune vague</option>';if(v0)$('rVague').value=v0;else if(D.vagues.length)$('rVague').value=String(D.vagues[D.vagues.length-1].numero);
+  var v=Number($('rVague').value)||0,cles={};D.essayages.forEach(function(x){if(x.vague!==v)return;var k=cleClasse(x);cles[k]=classeNom(k)||x.classeTexte||'(sans classe)';});
+  $('rClasse').innerHTML=Object.keys(cles).sort(function(a,b){return cles[a].localeCompare(cles[b],'fr');}).map(function(k){return '<option value="'+esc(k)+'">'+esc(cles[k])+'</option>';}).join('')||'<option value="">Aucun essayage dans cette vague</option>';if(c0&&cles[c0])$('rClasse').value=c0;
+  if(!$('rDate').value)$('rDate').value=new Date().toISOString().slice(0,10);
+  var l=lignesRemise(),nomC=cles[$('rClasse').value]||'',dt=$('rDate').value;$('rCompte').textContent=l.length+' élève(s)';$('rMarquer').disabled=!l.length;$('rImprimer').disabled=!l.length;
+  var tailles=function(x){var te=tenueDe(x.tenue);return (te?te.pieces:Object.keys(x.tailles)).map(function(p){var pc=piece(p);return (pc?pc.libelle:p)+(x.tailles[p]?' : '+x.tailles[p]:'');}).join(' · ');};
+  $('rFiche').innerHTML=l.length?'<h2>Remise des équipements de protection — '+esc(nomC)+'</h2><p class="note">Lycée Les Eucalyptus · année scolaire '+esc(D.annee)+' · '+esc((D.vagues.filter(function(x){return x.numero===v;})[0]||{}).libelle||'')+' · remise du '+esc(dt?dt.split('-').reverse().join('/'):'')+'</p>'+
+    '<table><thead><tr><th class="n">N°</th><th>Nom</th><th>Prénom</th><th>Classe</th><th>Année</th><th>Équipements remis (tailles)</th><th>Date de remise</th><th>Signature de l’élève</th></tr></thead><tbody>'+
+    l.map(function(x,i){return '<tr><td class="n">'+(i+1)+'</td><td><b>'+esc(x.nom)+'</b></td><td>'+esc(x.prenom)+'</td><td>'+esc(classeNom(cleClasse(x))||x.classeTexte)+'</td><td>'+esc(D.annee)+'</td><td>'+esc(tailles(x))+'</td><td>'+esc(dt?dt.split('-').reverse().join('/'):'')+'</td><td class="sig"></td></tr>';}).join('')+'</tbody></table>':'<p class="note">Aucun élève pour ce choix.</p>';}
+$('rVague').onchange=$('rClasse').onchange=$('rDate').onchange=$('rNonRemis').onchange=rendreRemise;
+$('rImprimer').onclick=function(){window.print();};
+$('rMarquer').onclick=function(){var l=lignesRemise();if(!l.length)return;if(!confirm('Marquer les '+l.length+' élève(s) de la fiche comme servis le '+$('rDate').value.split('-').reverse().join('/')+' ?'))return;
+  occupe(this,'Marquage…','EUC_DEV620_marquerRemis',{ids:l.map(function(x){return x.id;}),date:$('rDate').value},function(r){var dr=(r.date||$('rDate').value).split('-').reverse().join('/');message('<span class="ok">'+(r.remis||l.length)+' élève(s) marqué(s) comme servis</span> le '+dr+'.');charger(D.annee);});};
 
 /* ---------- Vagues ---------- */
 function rendreVagues(){$('tVagues').innerHTML=D.vagues.length?D.vagues.map(function(v){var n=D.essayages.filter(function(x){return x.vague===v.numero;}).length;return '<tr data-id="'+v.id+'"><td>'+v.numero+'</td><td><input class="vl" value="'+esc(v.libelle)+'"></td><td><input type="date" class="vd" value="'+esc(v.date)+'"></td><td><select class="vs">'+['OUVERTE','COMMANDEE','LIVREE','CLOSE'].map(function(s){return '<option'+(s===v.statut?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td><td>'+n+'</td><td><button type="button" class="petit ve">Enregistrer</button></td></tr>';}).join(''):'<tr><td colspan="6" class="note">Aucune vague cette année.</td></tr>';

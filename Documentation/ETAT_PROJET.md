@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV620 : EPI, lot 3 (fiche de remise par classe)
+
+- Onglet « Fiche de remise » : feuille d'émargement par vague et par classe (A4
+  paysage) — N°, nom, prénom, classe, année, équipements remis avec les tailles,
+  date de remise, signature de l'élève ; filtre « seulement les élèves pas encore
+  servis » ; « Marquer la classe comme servie » écrit `Remis_le` et le statut
+  `REMIS` (`EUC_DEV620_marquerRemis`). Type « Cours » toujours proposé dans les
+  périodes des plannings. Tests : 8/8 DEV620 ; PDF vérifié dans Chromium.
+
 ## Mise à jour du 23 octobre 2026 — DEV610 : couleurs du calendrier d'une formation
 
 - Règle pour tous les calendriers : la colonne H (et P) n'a jamais la couleur d'un
