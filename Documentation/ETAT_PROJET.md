@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 octobre 2026 — DEV620 : réglages EPI, retirer une pièce ou une tenue
+
+- Retour utilisateur : une pièce ajoutée par erreur ne pouvait pas être enlevée
+  et bloquait l'enregistrement (« Pièce n°8 : code et libellé obligatoires »).
+- Corrigé : bouton « Retirer » par pièce et par tenue (ligne non enregistrée :
+  enlevée ; ligne enregistrée : désactivée, jamais supprimée) ; lignes laissées
+  vides ignorées à l'enregistrement ; pièces vides ou retirées absentes des cases
+  des tenues. Test complété ; suite complète verte.
+
 ## Mise à jour du 23 octobre 2026 — DEV620 : EPI, lot 2 (étiquettes fournisseur)
 
 - Onglet « Étiquettes fournisseur » : vague, classes, filtre « seulement les

@@ -179,13 +179,15 @@ function EUC_DEV620_enregistrerReglages(q) {
   pieces.forEach(function(p) { pc[p.code] = p; }); tenues.forEach(function(t) { tc[t.code] = t; });
   var code = function(v) { return EUC_DEV620_t_(v).toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 30); };
   var cp = [], mp = [], ct = [], mt = [];
-  (q.pieces || []).forEach(function(p, i) {
+  /* Ligne ajoutée puis laissée vide : ignorée. */
+  var vide = function(x, pieces) { return !EUC_DEV620_t_(x.code) && !EUC_DEV620_t_(x.libelle) && (pieces ? !(x.pieces || []).length : !EUC_DEV620_t_(Array.isArray(x.tailles) ? x.tailles.join('') : x.tailles)); };
+  (q.pieces || []).filter(function(p) { return !vide(p, false); }).forEach(function(p, i) {
     var c = code(p.code || p.libelle), lib = EUC_DEV620_t_(p.libelle); if (!c || !lib) throw new Error('Pièce n°' + (i + 1) + ' : code et libellé obligatoires.');
     var tl = EUC_DEV620_tailles_(p.tailles); if (!tl.length) throw new Error('Pièce « ' + lib + ' » : au moins une taille.');
     codesP[c] = 1; var f = { Code: c, Libelle: lib.slice(0, 80), Tailles: tl.join(', '), Ordre: (i + 1) * 10, Actif: p.actif !== false };
     if (pc[c]) mp.push({ id: pc[c].id, fields: f }); else cp.push({ fields: f });
   });
-  (q.tenues || []).forEach(function(t, i) {
+  (q.tenues || []).filter(function(t) { return !vide(t, true); }).forEach(function(t, i) {
     var c = code(t.code || t.libelle), lib = EUC_DEV620_t_(t.libelle); if (!c || !lib) throw new Error('Tenue n°' + (i + 1) + ' : code et libellé obligatoires.');
     var ps = (Array.isArray(t.pieces) ? t.pieces : EUC_DEV620_t_(t.pieces).split(/\s*,\s*/)).map(code).filter(Boolean);
     var inconnues = ps.filter(function(x) { return !codesP[x] && !pc[x]; }); if (inconnues.length) throw new Error('Tenue « ' + lib + ' » : pièce inconnue ' + inconnues.join(', ') + '.');

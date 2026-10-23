@@ -99,6 +99,8 @@ test('réglages : pièce et tenue ajoutées, pièce inconnue refusée, rien supp
   const pieces = J(r.pieces).map(p => Object.assign(p, { tailles: p.tailles.join(', ') })).concat([{ code: '', libelle: 'Gants', tailles: '7, 8, 9, 10' }]);
   assert.throws(() => g.k.EUC_DEV620_enregistrerReglages({ pieces, tenues: [{ libelle: 'Atelier', pieces: ['GANTS', 'CASQUE'] }] }), /pièce inconnue CASQUE/);
   g.k.EUC_DEV620_enregistrerReglages({ pieces, tenues: J(r.tenues).concat([{ libelle: 'Atelier', pieces: ['GANTS', 'CHAUSSURES'] }]) });
+  /* Ligne ajoutée puis laissée vide : ignorée, jamais bloquante. */
+  assert.ok(g.k.EUC_DEV620_enregistrerReglages({ pieces: pieces.concat([{ code: '', libelle: '', tailles: '' }]), tenues: J(r.tenues).concat([{ code: '', libelle: '', pieces: [] }]) }).ok);
   const c = g.k.EUC_DEV620_charger({});
   assert.deepStrictEqual(J([c.pieces.find(p => p.code === 'GANTS').tailles, c.tenues.find(t => t.code === 'ATELIER').pieces, c.pieces.length]), [['7', '8', '9', '10'], ['GANTS', 'CHAUSSURES'], 7]);
   assert.throws(() => g.k.EUC_DEV620_enregistrerAdministratifs({ lignes: [{ nom: 'BLANC', email: 'pas-un-courriel' }] }), /Courriel invalide/);
@@ -145,7 +147,7 @@ test('étiquettes fournisseur : libellés par défaut, noms de fichiers, ZIP lis
   const c = k.EUC_DEV620_charger({});
   assert.deepStrictEqual(J([c.liens[2].libelle, c.liens[2].promotion, c.essayages[0].etiquetteLot, !!c.essayages[0].etiquetteLe]), ['BTS CPRP', '2026-2028', 'Vague 1', true]);
   const pg = read('apps-script/Epi_DEV620.html');
-  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
+  for (const x of ['data-p="pEtiquettes"', 'function dessiner(x)', 'c.width=539;c.height=275', "EUC_DEV620_jfif144_(octets(", "occupe(b,'Marquage…','EUC_DEV620_marquerEtiquettes'", "tr.querySelector('.rx').onclick", 'id="qNouvelles" checked']) assert.ok(pg.includes(x), x);
 });
 
 console.log(n + ' tests DEV620 EPI réussis');
