@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 24 octobre 2026 — DEV610 : colonne P du calendrier plus lisible
+
+- Un seul intervenant dans la journée : la colonne P montre ses initiales
+  seules (« F », « IM »), dans la taille et la graisse du nombre d'heures.
+- Plusieurs intervenants : le détail avec les heures (« COM 2 · AT1 2 »), passé
+  de 6 px à 8 px.
+
 ## Mise à jour du 24 octobre 2026 — DEV631 : livret par période, objectifs communs ; heures indicatives en entreprise
 
 - Table `EUC_LIVRET_OBJECTIFS`, créée avec l'accord de l'utilisateur du
