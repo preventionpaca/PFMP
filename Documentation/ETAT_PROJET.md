@@ -1,5 +1,39 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 24 octobre 2026 — DEV631 : livret par période, objectifs communs ; heures indicatives en entreprise
+
+- Table `EUC_LIVRET_OBJECTIFS`, créée avec l'accord de l'utilisateur du
+  24/10/2026. Elle contient les périodes du livret (S1, P1… avec leurs dates)
+  et les objectifs communs à la classe, par bloc RNCP ou « Autres activités ».
+  Une ligne retirée est désactivée, jamais supprimée. Colonnes ajoutées à
+  `EUC_LIVRET_APPRENTIS` : `Periode`, `Ligne`, `Objectifs_decoches`.
+- **Saisie des objectifs** : dans le récapitulatif des périodes d'une
+  formation, bouton « Objectifs… » par période, une ligne par objectif. On peut
+  les recopier vers toutes les périodes S (ou P). Le bouton « Enregistrer les
+  périodes et les objectifs du livret » a un spinner et gère délai et erreur.
+  Les objectifs s'impriment avec le récapitulatif.
+- **Livret de l'apprenti** :
+  - quand sa formation a des périodes enregistrées, il choisit la période ; le
+    lieu et les dates viennent du planning ;
+  - il voit les objectifs de chaque bloc et décrit ce qu'il a fait ; s'y
+    ajoutent « Autres activités », « Ce que j'en retiens », jusqu'à 10 liens web
+    (https) et les photos ;
+  - il enregistre un brouillon puis demande la validation ;
+  - le prof ou le tuteur voit les objectifs en validant, et le compte rendu les
+    reprend ;
+  - sans périodes enregistrées, l'ancienne saisie (lieu et dates libres) reste.
+- **Récapitulatif des périodes** : heures en entreprise en total indicatif,
+  base de 35 h par semaine soit 7 h par jour ouvré, jours fériés décomptés.
+- **Correctif** : à la création d'une colonne numérique, Grist met 0 dans les
+  lignes existantes.
+  - « Heures par jour par défaut » à 0 vaut désormais « non réglé ». C'était la
+    cause des 0 h au lycée depuis @1142.
+  - Les saisies à la journée sont marquées par la colonne `Saisie_jour`, pour
+    que les anciennes saisies par demi-journée restent lues comme telles.
+- Reste à faire : décocher des objectifs pour un jeune, PDF archivé de chaque
+  fiche, back-office par classe, livret annuel pour le jury.
+- Tests : 5/5 DEV631, 48/48 DEV610. Vérifié sur maquette dans Chromium.
+
 ## Mise à jour du 24 octobre 2026 — DEV630 : référentiels des diplômes ; périodes S / P
 
 - Récapitulatif des périodes : **S1, S2… au lycée et P1, P2… en entreprise**,

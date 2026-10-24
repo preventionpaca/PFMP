@@ -38,6 +38,7 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 .erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
 #qr{display:inline-block;background:#fff;padding:10px;border:1px solid var(--bord);border-radius:10px}
 .lu p{white-space:pre-wrap;margin:2px 0 8px}
+ul.obj{margin:2px 0 6px 18px;padding:0;color:#1b396a}.dates.lien input.lu_url{flex:2;min-width:180px}
 </style>
 </head>
 <body>
@@ -66,12 +67,13 @@ function brouillon(){if(!F||F.statut==='VALIDE')return;try{localStorage.setItem(
 function oublier(){try{localStorage.removeItem(CLE);}catch(e){}}
 
 function liste(){
-  $('fiches').innerHTML=D.fiches.length?D.fiches.map(function(f){return '<button type="button" class="carte'+(F&&F.id===f.id?' on':'')+'" data-id="'+f.id+'"><span><b>'+(f.lieu==='LYCEE'?'🏫 Au lycée':'🔧 En entreprise')+'</b><br><span class="note">du '+dfr(f.du)+' au '+dfr(f.au)+'</span></span><span class="chip '+f.statut+'">'+ST[f.statut]+'</span></button>';}).join(''):'<p class="note">Aucune fiche pour l’instant. Créez la première pour votre séquence en cours.</p>';
+  $('fiches').innerHTML=D.fiches.length?D.fiches.map(function(f){return '<button type="button" class="carte'+(F&&F.id===f.id?' on':'')+'" data-id="'+f.id+'"><span><b>'+(f.periode?esc(f.periode)+' · ':'')+(f.lieu==='LYCEE'?'🏫 Au lycée':'🔧 En entreprise')+'</b><br><span class="note">du '+dfr(f.du)+' au '+dfr(f.au)+'</span></span><span class="chip '+f.statut+'">'+ST[f.statut]+'</span></button>';}).join(''):'<p class="note">Aucune fiche pour l’instant. Créez la première pour votre séquence en cours.</p>';
   Array.prototype.forEach.call($('fiches').querySelectorAll('.carte'),function(b){b.onclick=function(){ouvrir(D.fiches.filter(function(x){return x.id===Number(b.dataset.id);})[0]);};});
 }
 function ouvrir(f){F=f;liste();var z=$('editeur');z.hidden=false;
   if(f.statut==='VALIDE'){lecture(f);z.scrollIntoView({behavior:'smooth'});return;}
   var m=D.modele,c=f.contenu||{},bloc='';
+  if(D.livret){ouvrirPeriode(f);return;}
   z.innerHTML='<h2>'+(f.id?'Fiche du '+dfr(f.du):'Nouvelle fiche')+'</h2>'+
     '<div class="choix" id="lieu"><label><input type="radio" name="lieu" value="LYCEE"> 🏫 Au lycée</label><label><input type="radio" name="lieu" value="ENTREPRISE"> 🔧 En entreprise</label></div>'+
     '<div class="dates"><label>Du <input type="date" id="du" value="'+esc(f.du||'')+'"></label><label>Au <input type="date" id="au" value="'+esc(f.au||'')+'"></label></div>'+
@@ -91,7 +93,38 @@ function ouvrir(f){F=f;liste();var z=$('editeur');z.hidden=false;
   if($('photo'))$('photo').onchange=ajouterPhoto;
   z.scrollIntoView({behavior:'smooth'});
 }
-function lire(){var m=D.modele,c={activites:{}},l=document.querySelector('input[name="lieu"]:checked');
+/* Livret par période (S1, S2… au lycée ; P1, P2… en entreprise) : dates et objectifs viennent du planning. */
+function periodeDe(lab){return (D.livret.periodes||[]).filter(function(p){return p.label===lab;})[0]||null;}
+function objectifsDe(f,p,bloc){return (p&&p.objectifs[bloc]||[]);}
+function lienLigne(x){return '<div class="dates lien"><input type="url" class="lu_url" placeholder="https://…" value="'+esc(x.url||'')+'"><input class="lu_titre" placeholder="Titre (facultatif)" value="'+esc(x.titre||'')+'"><button type="button" class="retirerLien" aria-label="Retirer le lien">✕</button></div>';}
+function ouvrirPeriode(f){var z=$('editeur'),c=f.contenu||{},P=D.livret.periodes||[];
+  var deja={};D.fiches.forEach(function(x){if(x.periode&&x.id!==f.id)deja[x.periode]=1;});
+  z.innerHTML='<h2>'+(f.id?'Fiche '+esc(f.periode||'du '+dfr(f.du)):'Nouvelle fiche')+'</h2>'+
+    (f.id&&f.periode?'':'<label>Période <select id="periode"><option value="">— choisir —</option>'+P.map(function(x){return '<option value="'+esc(x.label)+'"'+(x.label===f.periode?' selected':'')+'>'+esc(x.label)+' · '+(x.lieu==='LYCEE'?'au lycée':'en entreprise')+' du '+dfr(x.du)+' au '+dfr(x.au)+(deja[x.label]?' (fiche déjà créée)':'')+'</option>';}).join('')+'</select></label>')+
+    '<div id="corps"></div>';
+  var corps=function(){var p=periodeDe(f.periode||($('periode')?$('periode').value:''));
+    if(!p){$('corps').innerHTML='<p class="note">Choisissez la période : ses dates et ses objectifs s’affichent.</p>';return;}
+    var aut=objectifsDe(f,p,'AUTRES');
+    $('corps').innerHTML='<p class="note">'+(p.lieu==='LYCEE'?'🏫 Au lycée':'🔧 En entreprise')+' du <b>'+dfr(p.du)+'</b> au <b>'+dfr(p.au)+'</b> — '+esc(D.livret.diplome||'')+'</p>'+
+      D.livret.blocs.map(function(b,i){var o=objectifsDe(f,p,b.code);return '<div class="act"><h3>'+esc(b.intitule)+'</h3>'+(o.length?'<p class="note"><b>Objectifs de la période :</b></p><ul class="obj">'+o.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+
+        '<textarea id="b_'+i+'" placeholder="Ce que j’ai fait dans ce bloc (tâches, pièces, outils, difficultés, résultats…)">'+esc((c.blocs||{})[b.code]||'')+'</textarea></div>';}).join('')+
+      '<div class="act"><h3>Autres activités</h3><p class="note">Activités hors référentiel mais formatrices : visite, site ou émission conseillés, formation à un logiciel, sujet transversal…</p>'+(aut.length?'<ul class="obj">'+aut.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+'<textarea id="autres">'+esc(c.autres||'')+'</textarea></div>'+
+      '<h3>Ce que j’en retiens</h3><textarea id="ressenti">'+esc(c.ressenti||'')+'</textarea>'+
+      '<h3>Liens</h3><p class="note">Pages web en lien avec la période (site d’un fabricant, vidéo, document en ligne…).</p><div id="liens">'+(c.liens||[]).map(lienLigne).join('')+'</div><button type="button" id="ajouterLien">+ Ajouter un lien</button>'+
+      '<h3>Photos</h3><div class="photos" id="photos"></div>'+(f.id?'<label class="note">Ajouter une photo (4 au plus) <input type="file" id="photo" accept="image/*"></label>':'<p class="note">Enregistrez la fiche pour pouvoir ajouter des photos.</p>')+
+      '<div id="validation"></div>'+
+      '<div class="barre"><button type="button" class="plein" id="enregistrer">Enregistrer le brouillon</button>'+(f.id?'<button type="button" id="demander">Demander la validation</button>':'')+'<span id="msg" role="status"></span></div>';
+    var lierRetrait=function(){Array.prototype.forEach.call(z.querySelectorAll('.retirerLien'),function(b){b.onclick=function(){b.parentNode.remove();brouillon();};});};lierRetrait();
+    $('ajouterLien').onclick=function(){$('liens').insertAdjacentHTML('beforeend',lienLigne({}));lierRetrait();};
+    photos(f);validation(f);$('enregistrer').onclick=enregistrer;if($('demander'))$('demander').onclick=demander;if($('photo'))$('photo').onchange=ajouterPhoto;};
+  if($('periode'))$('periode').onchange=function(){corps();brouillon();};
+  corps();z.oninput=brouillon;z.scrollIntoView({behavior:'smooth'});}
+function lirePeriode(){var lab=F&&F.id&&F.periode?F.periode:($('periode')?$('periode').value:''),c={activites:{},blocs:{},liens:[]};
+  D.livret.blocs.forEach(function(b,i){var t=$('b_'+i);if(t&&t.value.trim())c.blocs[b.code]=t.value;});
+  c.autres=$('autres')?$('autres').value:'';c.ressenti=$('ressenti')?$('ressenti').value:'';
+  Array.prototype.forEach.call(document.querySelectorAll('#liens .lien'),function(d){var u=d.querySelector('.lu_url').value.trim();if(u)c.liens.push({url:u,titre:d.querySelector('.lu_titre').value.trim()});});
+  var p=periodeDe(lab);return {l:L,ficheId:F&&F.id||0,periode:lab,lieu:p?p.lieu:'',du:p?p.du:'',au:p?p.au:'',contenu:c};}
+function lire(){if(D.livret)return lirePeriode();var m=D.modele,c={activites:{}},l=document.querySelector('input[name="lieu"]:checked');
   m.activites.forEach(function(a){var n=document.querySelector('input[name="n_'+a.id+'"]:checked'),t=$('t_'+a.id).value;if(n||t.trim())c.activites[a.id]={niveau:n?n.value:'',texte:t};});
   c.autres=$('autres').value;c.ressenti=$('ressenti').value;
   return {l:L,ficheId:F&&F.id||0,lieu:l?l.value:'',du:$('du').value,au:$('au').value,contenu:c};}
@@ -122,8 +155,10 @@ function ajouterPhoto(){var inp=$('photo'),fic=inp.files&&inp.files[0];if(!fic)r
     appel('EUC_DEV599_ajouterPhoto',{l:L,ficheId:F.id,nom:fic.name,data:cv.toDataURL('image/jpeg',0.75)},function(r){inp.disabled=false;inp.value='';maj(r.fiche);photos(r.fiche);$('msg').innerHTML='<span class="ok">Photo ajoutée.</span>';},
       function(e){inp.disabled=false;inp.value='';$('msg').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';},120000);};
   img.onerror=function(){inp.disabled=false;$('msg').innerHTML='<span class="erreur">Image illisible.</span>';};img.src=url;}
-function lecture(f){var m=D.modele,c=f.contenu||{},z=$('editeur'),bloc='';
-  z.innerHTML='<h2>'+(f.lieu==='LYCEE'?'🏫 Au lycée':'🔧 En entreprise')+' — du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><div class="lu">'+
+function lecture(f){var m=D.modele,c=f.contenu||{},z=$('editeur'),bloc='',p=D.livret&&f.periode?periodeDe(f.periode):null;
+  z.innerHTML='<h2>'+(f.periode?esc(f.periode)+' · ':'')+(f.lieu==='LYCEE'?'🏫 Au lycée':'🔧 En entreprise')+' — du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><div class="lu">'+
+    (D.livret?D.livret.blocs.filter(function(b){return (c.blocs||{})[b.code]||(p&&(p.objectifs[b.code]||[]).length);}).map(function(b){var o=p?objectifsDe(f,p,b.code):[];return '<h3>'+esc(b.intitule)+'</h3>'+(o.length?'<ul class="obj">'+o.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+'<p>'+esc((c.blocs||{})[b.code]||'—')+'</p>';}).join(''):'')+
+    ((c.liens||[]).length?'<h3>Liens</h3>'+c.liens.map(function(x){return '<p><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.titre||x.url)+'</a></p>';}).join(''):'')+
     m.activites.filter(function(a){return (c.activites||{})[a.id];}).map(function(a){var h='',x=c.activites[a.id];if(a.bloc&&a.bloc!==bloc){bloc=a.bloc;h='<h3>'+esc(a.bloc)+'</h3>';}return h+'<b>'+esc(a.libelle)+'</b>'+(x.niveau?' <span class="chip VALIDE">'+NIV[x.niveau]+'</span>':'')+'<p>'+esc(x.texte)+'</p>';}).join('')+
     (c.autres?'<h3>Autres activités et remarques</h3><p>'+esc(c.autres)+'</p>':'')+(c.ressenti?'<h3>Ce que j’en retiens</h3><p>'+esc(c.ressenti)+'</p>':'')+'</div><div class="photos" id="photos"></div>'+
     '<p class="ok">Validée par '+esc(f.valideur)+(f.valideurFonction?' ('+esc(f.valideurFonction)+')':'')+' le '+dfr(f.valideLe.slice(0,10))+'.</p>'+(f.commentaire?'<p><b>Commentaire :</b> '+esc(f.commentaire)+'</p>':'')+
@@ -134,7 +169,7 @@ if(!L){$('etat').innerHTML='<span class="erreur">Lien incomplet : ouvrez votre l
 appel('EUC_DEV599_ouvrir',{l:L},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;
   $('sousTitre').textContent=r.apprenti+' — '+r.classe+(r.entreprise?' · '+r.entreprise:'');liste();
   var br=null;try{br=JSON.parse(localStorage.getItem(CLE)||'null');}catch(e){}
-  if(br&&br.q){var f=r.fiches.filter(function(x){return x.id===br.id;})[0]||{id:0,statut:'BROUILLON',photos:[]};if(f.statut!=='VALIDE'){f=JSON.parse(JSON.stringify(f));f.lieu=br.q.lieu;f.du=br.q.du;f.au=br.q.au;f.contenu=br.q.contenu;ouvrir(f);$('msg').innerHTML='<span class="note">Brouillon non enregistré restauré.</span>';}}},
+  if(br&&br.q){var f=r.fiches.filter(function(x){return x.id===br.id;})[0]||{id:0,statut:'BROUILLON',photos:[]};if(f.statut!=='VALIDE'){f=JSON.parse(JSON.stringify(f));f.lieu=br.q.lieu;f.du=br.q.du;f.au=br.q.au;f.contenu=br.q.contenu;if(br.q.periode)f.periode=br.q.periode;ouvrir(f);$('msg').innerHTML='<span class="note">Brouillon non enregistré restauré.</span>';}}},
   function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';$('sousTitre').textContent='';});
 })();
 </script>

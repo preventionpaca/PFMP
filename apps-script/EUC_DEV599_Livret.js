@@ -40,22 +40,36 @@ function EUC_DEV599_lienApprenti_(eleveId) { return EUC_DEV598_base_() + '?page=
 function EUC_DEV599_lienValidation_(ficheId) { return EUC_DEV598_base_() + '?page=validation-livret&v=' + EUC_DEV599_jetonValidation_(ficheId, EUC_SUIVI2_aujourdhui_().replace(/-/g, '')); }
 
 /* ---------- Calculs purs ---------- */
-function EUC_DEV599_nettoyer_(q, modele) {
+function EUC_DEV599_nettoyer_(q, modele, livret) {
   q = q || {}; var c = q.contenu || {}, out = { activites: {}, autres: '', ressenti: '' };
   (modele.activites || []).forEach(function(a) {
     var x = (c.activites || {})[a.id] || {}, texte = EUC_DEV599_t_(x.texte).slice(0, 2000), niv = EUC_DEV598_NIVEAUX_.indexOf(String(x.niveau)) >= 0 ? String(x.niveau) : '';
     if (texte || niv) out.activites[a.id] = { texte: texte, niveau: niv };
   });
   out.autres = EUC_DEV599_t_(c.autres).slice(0, 4000); out.ressenti = EUC_DEV599_t_(c.ressenti).slice(0, 2000);
+  /* Livret par période (DEV631) : ce que l'apprenti a fait dans chaque bloc RNCP de son diplôme, liens web. */
+  var blocs = {}; ((livret && livret.blocs) || []).forEach(function(b) { var t = EUC_DEV599_t_((c.blocs || {})[b.code]).slice(0, 4000); if (t) blocs[b.code] = t; });
+  if (Object.keys(blocs).length) out.blocs = blocs;
+  var liens = (Array.isArray(c.liens) ? c.liens : []).map(function(x) { return { url: EUC_DEV599_t_(x && x.url).slice(0, 500), titre: EUC_DEV599_t_(x && x.titre).slice(0, 120) }; }).filter(function(x) { return x.url; });
+  liens.forEach(function(x) { if (!/^https?:\/\/[^\s<>"]+$/i.test(x.url)) throw new Error('Lien invalide : « ' + x.url + ' » (il doit commencer par https://).'); });
+  if (liens.length > 10) throw new Error('Pas plus de 10 liens par fiche.');
+  if (liens.length) out.liens = liens;
   var f = { lieu: EUC_DEV599_t_(q.lieu).toUpperCase(), du: EUC_DEV599_t_(q.du), au: EUC_DEV599_t_(q.au), contenu: out };
+  /* Période choisie dans le livret : lieu et dates viennent du planning, jamais de la saisie. */
+  var per = EUC_DEV599_t_(q.periode).toUpperCase();
+  if (per) {
+    var p = ((livret && livret.periodes) || []).filter(function(x) { return x.label === per; })[0];
+    if (!p) throw new Error('Période inconnue : ' + per + '.');
+    f.periode = per; f.lieu = p.lieu; f.du = p.du; f.au = p.au;
+  }
   if (['LYCEE', 'ENTREPRISE'].indexOf(f.lieu) < 0) throw new Error('Choisissez : au lycée ou en entreprise.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(f.du) || !/^\d{4}-\d{2}-\d{2}$/.test(f.au)) throw new Error('Indiquez les dates de la séquence (du … au …).');
   if (f.au < f.du) throw new Error('La date de fin est avant la date de début.');
   return f;
 }
-function EUC_DEV599_vide_(f) { return !Object.keys(f.contenu.activites).length && !f.contenu.autres && !f.contenu.ressenti; }
+function EUC_DEV599_vide_(f) { var c = f.contenu; return !Object.keys(c.activites || {}).length && !Object.keys(c.blocs || {}).length && !(c.liens || []).length && !c.autres && !c.ressenti; }
 function EUC_DEV599_empreinte_(f, photos) {
-  return EUC_DEV598_hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, JSON.stringify([f.lieu, f.du, f.au, f.contenu, photos || []]), Utilities.Charset.UTF_8)).slice(0, 24);
+  return EUC_DEV598_hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, JSON.stringify([f.lieu, f.du, f.au, f.contenu, photos || []].concat(f.periode ? [f.periode] : [])), Utilities.Charset.UTF_8)).slice(0, 24);
 }
 /* Mineur à une date (naissance ISO). */
 function EUC_DEV599_mineur_(naissance, date) {
@@ -80,17 +94,25 @@ function EUC_DEV599_destinatairesTable_(lignes, scope, organismes) {
   }).map(function(r) { return EUC_DEV599_t_(r.Email); });
 }
 /* Compte rendu texte d'une fiche validée (calcul pur). */
-function EUC_DEV599_compteRendu_(ctx, modele, f, v) {
+function EUC_DEV599_compteRendu_(ctx, modele, f, v, livret) {
   var c = f.contenu || {}, L = [], lieu = f.lieu === 'LYCEE' ? 'au lycée' : 'en entreprise';
   L.push('Livret d’apprentissage — ' + ctx.apprenti + ' (' + ctx.classe + ')');
-  L.push('Séquence ' + lieu + ' du ' + EUC_DEV597_dfr_(f.du) + ' au ' + EUC_DEV597_dfr_(f.au) + (f.lieu === 'ENTREPRISE' && ctx.entreprise ? ' — ' + ctx.entreprise : ''), '');
+  L.push((f.periode ? f.periode + ' — séquence ' : 'Séquence ') + lieu + ' du ' + EUC_DEV597_dfr_(f.du) + ' au ' + EUC_DEV597_dfr_(f.au) + (f.lieu === 'ENTREPRISE' && ctx.entreprise ? ' — ' + ctx.entreprise : ''), '');
   var bloc = '';
   (modele.activites || []).forEach(function(a) {
     var x = (c.activites || {})[a.id]; if (!x) return;
     if (a.bloc && a.bloc !== bloc) { bloc = a.bloc; L.push(bloc); }
     L.push('• ' + a.libelle + (x.niveau ? ' [' + ({ NON_ABORDE: 'non abordé', OBSERVE: 'observé', AVEC_AIDE: 'avec aide', AUTONOME: 'autonome' })[x.niveau] + ']' : '') + (x.texte ? ' : ' + x.texte : ''));
   });
+  /* Livret par période : objectifs de la période et réalisations, bloc par bloc. */
+  var per = f.periode && livret ? (livret.periodes || []).filter(function(p) { return p.label === f.periode; })[0] : null, obj = per ? per.objectifs : {};
+  ((livret && livret.blocs) || []).forEach(function(b) {
+    var o = obj[b.code] || [], t = (c.blocs || {})[b.code]; if (!o.length && !t) return;
+    L.push('', b.intitule); o.forEach(function(x) { L.push('  Objectif : ' + x); }); if (t) L.push(t);
+  });
+  if ((obj.AUTRES || []).length) { L.push('', 'Autres activités — objectifs :'); obj.AUTRES.forEach(function(x) { L.push('  • ' + x); }); }
   if (c.autres) L.push('', 'Autres activités et remarques :', c.autres);
+  if ((c.liens || []).length) { L.push('', 'Liens :'); c.liens.forEach(function(x) { L.push('  ' + (x.titre ? x.titre + ' : ' : '') + x.url); }); }
   if (c.ressenti) L.push('', 'Ce que j’en retiens :', c.ressenti);
   L.push('', 'Validé le ' + EUC_DEV597_dfr_(v.jour || v.date.slice(0, 10)) + ' par ' + v.qui + (v.fonction ? ' (' + v.fonction + ')' : '') + '.');
   if (v.commentaire) L.push('Commentaire : ' + v.commentaire);
@@ -137,11 +159,17 @@ function EUC_DEV599_contexte_(eleveId) {
     tuteur: { nom: EUC_DEV599_t_(f.Tuteur_nom || f.Tuteur), prenom: EUC_DEV599_t_(f.Tuteur_prenom), fonction: EUC_DEV599_t_(f.Tuteur_fonction), email: EUC_DEV599_t_(f.Tuteur_courriel) },
     referent: ref ? { id: Number(ref.Professeur) || 0, nom: EUC_DEV599_t_(ref.Professeur_nom) } : null };
 }
+/* Périodes et objectifs du livret (DEV631) ; null si la formation n'en a pas encore, ou en cas d'erreur de lecture. */
+function EUC_DEV599_livret_(ctx) {
+  if (typeof EUC_DEV631_pourApprenti_ !== 'function') return null;
+  try { EUC_DEV631_tables_(); return EUC_DEV631_pourApprenti_(ctx); } catch (e) { console.log('DEV631 livret indisponible : ' + (e && e.message || e)); return null; }
+}
 function EUC_DEV599_photos_(f) { try { return JSON.parse(EUC_DEV599_t_(f.Photos) || '[]'); } catch (e) { return []; } }
 function EUC_DEV599_vue_(r, avecLien) {
   var f = r.fields || {}, contenu = {}; try { contenu = JSON.parse(f.Contenu || '{}'); } catch (e) {}
   var valide = EUC_DEV599_t_(f.Statut) === 'VALIDE';
-  return { id: Number(r.id), lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), contenu: contenu, photos: EUC_DEV599_photos_(f).map(function(p) { return { id: p.id, nom: p.nom }; }),
+  var decoches = []; try { decoches = JSON.parse(EUC_DEV599_t_(f.Objectifs_decoches) || '[]'); } catch (e) {}
+  return { id: Number(r.id), lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), periode: EUC_DEV599_t_(f.Periode), decoches: decoches, contenu: contenu, photos: EUC_DEV599_photos_(f).map(function(p) { return { id: p.id, nom: p.nom }; }),
     statut: EUC_DEV599_t_(f.Statut) || 'BROUILLON', empreinte: EUC_DEV599_t_(f.Empreinte),
     valideur: valide ? [EUC_DEV599_t_(f.Signataire_prenom), EUC_DEV599_t_(f.Signataire_nom)].filter(Boolean).join(' ') : '', valideurFonction: valide ? EUC_DEV599_t_(f.Signataire_fonction) : '',
     commentaire: valide ? EUC_DEV599_t_(f.Commentaire_valideur) : '', valideLe: valide ? EUC_DEV599_t_(f.Valide_le) : '', diffuseLe: EUC_DEV599_t_(f.Diffuse_le),
@@ -154,6 +182,7 @@ function EUC_DEV599_ouvrir(q) {
   EUC_DEV599_tables_(); EUC_DEV598_tables_();
   var ctx = EUC_DEV599_contexte_(eid);
   ctx.modele = EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_));
+  ctx.livret = EUC_DEV599_livret_(ctx);
   ctx.fiches = EUC_DEV599_lire_(EUC_DEV599_FICHES_, { Eleve: [eid] }).map(function(r) { return EUC_DEV599_vue_(r, true); }).sort(function(a, b) { return b.du.localeCompare(a.du) || b.id - a.id; });
   ctx.aujourdhui = EUC_SUIVI2_aujourdhui_(); ctx.photosMax = EUC_DEV599_PHOTOS_MAX_; ctx.tuteur = { nom: ctx.tuteur.nom, prenom: ctx.tuteur.prenom, email: ctx.tuteur.email };
   ctx.ok = true; return ctx;
@@ -161,15 +190,17 @@ function EUC_DEV599_ouvrir(q) {
 function EUC_DEV599_enregistrer(q) {
   q = q || {}; var eid = EUC_DEV599_lireJetonApprenti_(q.l);
   EUC_DEV599_tables_();
-  var ctx = EUC_DEV599_contexte_(eid), modele = EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_)), f = EUC_DEV599_nettoyer_(q, modele), maintenant = new Date().toISOString();
+  var ctx = EUC_DEV599_contexte_(eid), modele = EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_)), livret = EUC_DEV599_livret_(ctx), f = EUC_DEV599_nettoyer_(q, modele, livret), maintenant = new Date().toISOString();
   var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) throw new Error('Une autre opération est en cours. Réessayez dans un instant.');
   var id;
   try {
     var champs = { Lieu: f.lieu, Du: f.du, Au: f.au, Contenu: JSON.stringify(f.contenu), Date_modification: maintenant };
+    if (f.periode) { champs.Periode = f.periode; champs.Ligne = livret.ligne; }
     if (Number(q.ficheId)) {
       var ex = EUC_DEV599_fiche_(q.ficheId), ef = ex.fields || {};
       if (Number(ef.Eleve) !== eid) throw new Error('Cette fiche ne vous appartient pas.');
       if (EUC_DEV599_t_(ef.Statut) === 'VALIDE') throw new Error('Cette fiche est déjà validée : elle n’est plus modifiable. Créez une nouvelle fiche.');
+      if (EUC_DEV599_t_(ef.Periode) && !f.periode) { f.periode = EUC_DEV599_t_(ef.Periode); }
       id = Number(ex.id); champs.Empreinte = EUC_DEV599_empreinte_(f, EUC_DEV599_photos_(ef).map(function(p) { return p.id; }));
       EUC_ENT_grist('patch', '/tables/' + EUC_DEV599_FICHES_ + '/records', { records: [{ id: id, fields: champs }] });
     } else {
@@ -191,7 +222,7 @@ function EUC_DEV599_ficheModifiable_(q) {
 }
 function EUC_DEV599_majPhotos_(r, photos) {
   var f = r.fields || {}, contenu = {}; try { contenu = JSON.parse(f.Contenu || '{}'); } catch (e) {}
-  var emp = EUC_DEV599_empreinte_({ lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), contenu: contenu }, photos.map(function(p) { return p.id; }));
+  var emp = EUC_DEV599_empreinte_({ lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), periode: EUC_DEV599_t_(f.Periode), contenu: contenu }, photos.map(function(p) { return p.id; }));
   EUC_ENT_grist('patch', '/tables/' + EUC_DEV599_FICHES_ + '/records', { records: [{ id: Number(r.id), fields: { Photos: JSON.stringify(photos), Empreinte: emp, Date_modification: new Date().toISOString() } }] });
 }
 function EUC_DEV599_ajouterPhoto(q) {
@@ -227,7 +258,7 @@ function EUC_DEV599_demanderValidation(q) {
   if (Number(f.Eleve) !== eid) throw new Error('Cette fiche ne vous appartient pas.');
   if (EUC_DEV599_t_(f.Statut) === 'VALIDE') throw new Error('Cette fiche est déjà validée.');
   var contenu = {}; try { contenu = JSON.parse(f.Contenu || '{}'); } catch (e) {}
-  if (EUC_DEV599_vide_({ contenu: { activites: contenu.activites || {}, autres: contenu.autres, ressenti: contenu.ressenti } })) throw new Error('La fiche est vide : décrivez au moins une activité.');
+  if (EUC_DEV599_vide_({ contenu: contenu })) throw new Error('La fiche est vide : décrivez au moins une activité.');
   var ctx = EUC_DEV599_contexte_(eid), lien = EUC_DEV599_lienValidation_(r.id), champs = { Statut: 'A_VALIDER' }, envoyeA = '';
   var periode = 'du ' + EUC_DEV597_dfr_(EUC_DEV599_t_(f.Du)) + ' au ' + EUC_DEV597_dfr_(EUC_DEV599_t_(f.Au));
   if (EUC_DEV599_t_(f.Lieu) === 'LYCEE') {
@@ -255,7 +286,7 @@ function EUC_DEV599_demanderValidation(q) {
 function EUC_DEV599_lireValidation(q) {
   var id = EUC_DEV599_lireJetonValidation_(q && q.v, EUC_SUIVI2_aujourdhui_()), r = EUC_DEV599_fiche_(id), f = r.fields || {};
   var ctx = EUC_DEV599_contexte_(Number(f.Eleve)), v = EUC_DEV599_vue_(r, false);
-  return { ok: true, apprenti: ctx.apprenti, classe: ctx.classe, entreprise: ctx.entreprise, modele: EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_)),
+  return { ok: true, apprenti: ctx.apprenti, classe: ctx.classe, entreprise: ctx.entreprise, modele: EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_)), livret: v.periode ? EUC_DEV599_livret_(ctx) : null,
     role: v.lieu === 'LYCEE' ? 'REFERENT' : 'TUTEUR', proposition: v.lieu === 'LYCEE' ? { nom: ctx.referent ? ctx.referent.nom : '' } : { prenom: ctx.tuteur.prenom, nom: ctx.tuteur.nom, fonction: ctx.tuteur.fonction },
     fiche: v };
 }
@@ -321,7 +352,7 @@ function EUC_DEV599_destinataires_(r, ctx) {
 function EUC_DEV599_diffuser_(r, ctx, v) {
   var f = r.fields || {}, contenu = {}; try { contenu = JSON.parse(f.Contenu || '{}'); } catch (e) {}
   var modele = EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_));
-  var texte = EUC_DEV599_compteRendu_(ctx, modele, { lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), contenu: contenu }, v);
+  var texte = EUC_DEV599_compteRendu_(ctx, modele, { lieu: EUC_DEV599_t_(f.Lieu), du: EUC_DEV599_t_(f.Du), au: EUC_DEV599_t_(f.Au), periode: EUC_DEV599_t_(f.Periode), contenu: contenu }, v, EUC_DEV599_t_(f.Periode) ? EUC_DEV599_livret_(ctx) : null);
   var dest = EUC_DEV599_destinataires_(r, ctx), copie = EUC_DEV598_copie_();
   if (!dest.length && copie) dest = [copie];
   if (!dest.length) return [];

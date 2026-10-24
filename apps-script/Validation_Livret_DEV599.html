@@ -27,6 +27,7 @@ canvas{width:100%;height:180px;border:2px dashed var(--bord);border-radius:10px;
 .chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:800;background:#e7f5ef}
 .photos{display:flex;flex-wrap:wrap;gap:8px}.photos img{width:140px;height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--bord)}
 .erreur{color:#991b1b;font-weight:700}.fini{background:#ecfdf5;border-color:#86efac}
+ul.obj{margin:2px 0 6px 18px;padding:0;color:#1b396a}
 </style>
 </head>
 <body>
@@ -47,11 +48,13 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return
 function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';}
 function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
   google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
-function afficher(r){var f=r.fiche,c=f.contenu||{},m=r.modele,bloc='';
+function afficher(r){var f=r.fiche,c=f.contenu||{},m=r.modele,bloc='',lv=r.livret,p=lv&&f.periode?(lv.periodes||[]).filter(function(x){return x.label===f.periode;})[0]:null;
+  var liste=function(o){return o&&o.length?'<ul class="obj">'+o.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';};
   $('sousTitre').textContent=r.apprenti+' — '+r.classe+(f.lieu==='ENTREPRISE'&&r.entreprise?' · '+r.entreprise:'');
-  $('fiche').innerHTML='<h2>'+(f.lieu==='LYCEE'?'Séquence au lycée':'Séquence en entreprise')+' du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><p class="note">Fiche rédigée par l’apprenti.</p><div class="lu">'+
+  $('fiche').innerHTML='<h2>'+(f.periode?esc(f.periode)+' — ':'')+(f.lieu==='LYCEE'?'Séquence au lycée':'Séquence en entreprise')+' du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><p class="note">Fiche rédigée par l’apprenti'+(p?' ; en bleu, les objectifs fixés pour la période':'')+'.</p><div class="lu">'+
+    (lv?lv.blocs.filter(function(b){return (c.blocs||{})[b.code]||(p&&(p.objectifs[b.code]||[]).length);}).map(function(b){return '<h3>'+esc(b.intitule)+'</h3>'+liste(p&&p.objectifs[b.code])+'<p>'+esc((c.blocs||{})[b.code]||'—')+'</p>';}).join('')+(p&&(p.objectifs.AUTRES||[]).length?'<h3>Autres activités — objectifs</h3>'+liste(p.objectifs.AUTRES):''):'')+
     m.activites.filter(function(a){return (c.activites||{})[a.id];}).map(function(a){var h='',x=c.activites[a.id];if(a.bloc&&a.bloc!==bloc){bloc=a.bloc;h='<h3>'+esc(a.bloc)+'</h3>';}return h+'<b>'+esc(a.libelle)+'</b>'+(x.niveau?' <span class="chip">'+NIV[x.niveau]+'</span>':'')+'<p>'+esc(x.texte)+'</p>';}).join('')+
-    (c.autres?'<h3>Autres activités et remarques</h3><p>'+esc(c.autres)+'</p>':'')+(c.ressenti?'<h3>Ce que l’apprenti en retient</h3><p>'+esc(c.ressenti)+'</p>':'')+'</div>'+
+    (c.autres?'<h3>Autres activités et remarques</h3><p>'+esc(c.autres)+'</p>':'')+(c.ressenti?'<h3>Ce que l’apprenti en retient</h3><p>'+esc(c.ressenti)+'</p>':'')+((c.liens||[]).length?'<h3>Liens</h3>'+c.liens.map(function(x){return '<p><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.titre||x.url)+'</a></p>';}).join(''):'')+'</div>'+
     (f.photos.length?'<h3>Photos</h3><div class="photos" id="photos">'+f.photos.map(function(p){return '<img data-id="'+esc(p.id)+'" alt="'+esc(p.nom)+'">';}).join('')+'</div>':'');
   Array.prototype.forEach.call(document.querySelectorAll('#photos img'),function(img){appel('EUC_DEV599_photo',{v:V,photoId:img.dataset.id},function(src){img.src=src;},function(){});});
   var z=$('formulaire');

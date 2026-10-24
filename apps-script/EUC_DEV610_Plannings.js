@@ -576,7 +576,7 @@ function EUC_DEV610_tables_() {
   def[EUC_DEV610_T_.regles] = [col('Annee_scolaire', 'Année scolaire'), col('Profil', 'Profil'), col('Numero', 'Numéro', 'Int'), col('Type', 'Type'), col('Duree_semaines', 'Durée (semaines)', 'Numeric'), col('Placement', 'Placement'), col('Ancrage', 'Ancrage'), col('Regle_ancrage', 'Période d’ancrage', 'Int'), col('Position', 'Position'), col('Ecart_semaines', 'Écart (semaines)', 'Int'), col('Reference_texte', 'Texte de référence'), col('Actif', 'Actif', 'Bool')];
   def[EUC_DEV610_T_.versions] = [col('Annee_scolaire', 'Année scolaire'), col('Numero', 'Numéro', 'Int'), col('Statut', 'Statut'), col('Base_dates', 'Base des dates'), col('Commentaire', 'Commentaire'), col('Periodes_json', 'Périodes (JSON)'), col('Auteur', 'Auteur'), col('Date_creation', 'Date de création'), col('Date_publication', 'Date de publication')];
   def[EUC_DEV610_T_.jours] = [col('Annee_scolaire', 'Année scolaire'), col('Date', 'Date', 'Date'), col('Nature', 'Nature'), col('Libelle', 'Libellé'), col('Heures', 'Heures', 'Numeric'), col('Actif', 'Actif', 'Bool')];
-  def[EUC_DEV610_T_.heures] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Date', 'Date', 'Date'), col('Heures_matin', 'Heures du matin', 'Numeric'), col('Heures_apres_midi', 'Heures de l’après-midi', 'Numeric'), col('Formateur_matin', 'Formateur du matin'), col('Formateur_apres_midi', 'Formateur de l’après-midi'), col('Heures_jour', 'Heures du jour', 'Numeric'), col('Interventions', 'Interventions (formateur et heures)'), col('Date_modification', 'Date modification')];
+  def[EUC_DEV610_T_.heures] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Date', 'Date', 'Date'), col('Heures_matin', 'Heures du matin', 'Numeric'), col('Heures_apres_midi', 'Heures de l’après-midi', 'Numeric'), col('Formateur_matin', 'Formateur du matin'), col('Formateur_apres_midi', 'Formateur de l’après-midi'), col('Heures_jour', 'Heures du jour', 'Numeric'), col('Interventions', 'Interventions (formateur et heures)'), col('Saisie_jour', 'Saisie à la journée', 'Bool'), col('Date_modification', 'Date modification')];
   def[EUC_DEV610_T_.formations] = [col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne (code)'), col('Debut_formation', 'Début de la formation', 'Date'), col('Fin_formation', 'Fin de la formation', 'Date'), col('Titre', 'Titre du calendrier'), col('Sous_titre', 'Sous-titre du calendrier'), col('Intitule', 'Intitulé du diplôme affiché'), col('Date_modification', 'Date modification')];
   def[EUC_DEV610_T_.couleurs] = [col('Type', 'Type de période'), col('Couleur', 'Couleur (#RRGGBB)'), col('Date_modification', 'Date modification')];
   def[EUC_DEV610_T_.parametres] = [col('Cle', 'Clé'), col('Valeur', 'Valeur'), col('Date_modification', 'Date modification')];
@@ -676,7 +676,7 @@ function EUC_DEV610_reglagesHeures_(l) {
   return l;
 }
 function EUC_DEV610_lignes_() {
-  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), etablissement: EUC_DEV610_t_(f.Etablissement), organismes: EUC_DEV610_t_(f.Organismes).split(/\s*,\s*/).filter(Boolean), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false, heuresMatin: f.Heures_matin == null ? null : Number(f.Heures_matin), heuresApresMidi: f.Heures_apres_midi == null ? null : Number(f.Heures_apres_midi), quota: f.Quota_heures == null ? null : Number(f.Quota_heures), formateurs: f.Formateurs == null ? null : f.Formateurs === true, heuresSemaine: f.Heures_semaine == null ? null : Number(f.Heures_semaine), heuresParJour: f.Heures_par_jour == null ? null : Number(f.Heures_par_jour), anneeDebut: EUC_DEV610_t_(f.Annee_debut), anneeFin: EUC_DEV610_t_(f.Annee_fin), sections: EUC_DEV610_t_(f.Sections).split(/\s*,\s*/).filter(Boolean) }; })
+  return EUC_DEV610_lire_(EUC_DEV610_T_.lignes).map(function(r) { var f = r.fields || {}; return { id: Number(r.id), code: EUC_DEV610_t_(f.Code), libelle: EUC_DEV610_t_(f.Libelle) || EUC_DEV610_t_(f.Code), calendrier: EUC_DEV610_t_(f.Calendrier) || 'SCOLAIRE', groupe: EUC_DEV610_t_(f.Groupe), profil: EUC_DEV610_t_(f.Profil) || EUC_DEV610_t_(f.Code), classePfmp: EUC_DEV610_t_(f.Classe_PFMP), formation: EUC_DEV610_t_(f.Formation), niveau: EUC_DEV610_t_(f.Niveau), etablissement: EUC_DEV610_t_(f.Etablissement), organismes: EUC_DEV610_t_(f.Organismes).split(/\s*,\s*/).filter(Boolean), ordre: Number(f.Ordre) || 0, ligneSheet: Number(f.Ligne_sheet) || 0, actif: f.Actif !== false, heuresMatin: f.Heures_matin == null ? null : Number(f.Heures_matin), heuresApresMidi: f.Heures_apres_midi == null ? null : Number(f.Heures_apres_midi), quota: f.Quota_heures == null ? null : Number(f.Quota_heures), formateurs: f.Formateurs == null ? null : f.Formateurs === true, heuresSemaine: f.Heures_semaine == null ? null : Number(f.Heures_semaine), heuresParJour: f.Heures_par_jour == null || Number(f.Heures_par_jour) === 0 ? null : Number(f.Heures_par_jour), anneeDebut: EUC_DEV610_t_(f.Annee_debut), anneeFin: EUC_DEV610_t_(f.Annee_fin), sections: EUC_DEV610_t_(f.Sections).split(/\s*,\s*/).filter(Boolean) }; })
     .map(EUC_DEV610_reglagesHeures_)
     .filter(function(l) { return l.code; }).sort(function(a, b) { return a.ordre - b.ordre || a.code.localeCompare(b.code); });
 }
@@ -731,6 +731,9 @@ function EUC_DEV610_afficher(e) {
   t.annee = EUC_DEV610_t_(prm.annee).replace(/[^0-9-]/g, '').slice(0, 9);
   t.onglet = propre(prm.onglet); t.vue = propre(prm.vue); t.ligne = propre(prm.ligne);
   t.codeClient = EUC_DEV610_codeClient_();
+  /* Blocs RNCP de chaque ligne (DEV630), pour les objectifs du livret de suivi. */
+  var ref = {}; if (typeof EUC_DEV630_LIGNES_ !== 'undefined') EUC_DEV630_LIGNES_.forEach(function(l) { var r = EUC_DEV630_referentielLigne_(l[0]); if (r) ref[l[0]] = { titre: r.titre, blocs: r.blocs.map(function(b) { return { code: b.code, intitule: b.intitule }; }) }; });
+  t.referentiels = JSON.stringify(ref).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('Plannings annuels').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -969,7 +972,7 @@ function EUC_DEV610_enregistrerJour(q) {
 /* Colonnes de la saisie à la journée ajoutées à EUC_PLAN_HEURES si absentes (jamais d'écriture sur une colonne inconnue). */
 function EUC_DEV610_colonnesHeures_() {
   var t = EUC_DEV610_T_.heures, col = EUC_DEV441_col_, cols = (EUC_ENT_grist('get', '/tables/' + t + '/columns').columns || []).map(function(c) { return c.id; });
-  var ajout = [col('Heures_jour', 'Heures du jour', 'Numeric'), col('Interventions', 'Interventions (formateur et heures)')].filter(function(c) { return cols.indexOf(c.id) < 0; });
+  var ajout = [col('Heures_jour', 'Heures du jour', 'Numeric'), col('Interventions', 'Interventions (formateur et heures)'), col('Saisie_jour', 'Saisie à la journée', 'Bool')].filter(function(c) { return cols.indexOf(c.id) < 0; });
   if (ajout.length) EUC_ENT_grist('post', '/tables/' + t + '/columns', { columns: ajout });
 }
 /* Heures et formateurs saisis dans le calendrier d'une formation, pour une année. */
@@ -977,7 +980,9 @@ function EUC_DEV610_heures_(annee) {
   var out = [], vus = {};
   EUC_DEV610_lire_(EUC_DEV610_T_.heures).forEach(function(r) { var f = r.fields || {}; if (EUC_DEV610_t_(f.Annee_scolaire) !== annee) return;
     var x = { id: Number(r.id), ligne: EUC_DEV610_t_(f.Ligne), date: EUC_DEV610_date_(f.Date), hm: f.Heures_matin == null ? null : Number(f.Heures_matin), ha: f.Heures_apres_midi == null ? null : Number(f.Heures_apres_midi), fm: EUC_DEV610_t_(f.Formateur_matin), fa: EUC_DEV610_t_(f.Formateur_apres_midi) };
-    if (f.Heures_jour != null) x.hj = Number(f.Heures_jour); if (EUC_DEV610_t_(f.Interventions)) x.iv = EUC_DEV610_t_(f.Interventions);
+    /* Saisie à la journée seulement si la ligne est marquée comme telle : à la création d'une colonne numérique, Grist
+     * met 0 dans les lignes existantes (anciennes saisies par demi-journée), qui ne doivent pas devenir des journées à 0 h. */
+    if (f.Saisie_jour === true) { if (f.Heures_jour != null) x.hj = Number(f.Heures_jour); if (EUC_DEV610_t_(f.Interventions)) x.iv = EUC_DEV610_t_(f.Interventions); }
     if (!x.ligne || !x.date) return; var k = x.ligne + '|' + x.date; if (vus[k] && vus[k].id > x.id) return; if (vus[k]) out.splice(out.indexOf(vus[k]), 1); vus[k] = x; out.push(x); });
   return out;
 }
@@ -1011,8 +1016,8 @@ function EUC_DEV610_enregistrerHeures(q) {
     if (vus[date]) throw new Error('Jour en double : ' + date + '.'); vus[date] = 1;
     /* Saisie à la journée (hj, iv) : les anciennes colonnes par demi-journée sont vidées. Sinon, ancienne saisie gardée. */
     var jour = 'hj' in j || 'iv' in j, f = { Annee_scolaire: code, Ligne: l.code, Date: Math.round(Date.parse(date + 'T00:00:00Z') / 1000), Date_modification: maintenant };
-    if (jour) { f.Heures_matin = null; f.Heures_apres_midi = null; f.Formateur_matin = ''; f.Formateur_apres_midi = ''; f.Heures_jour = heures(j.hj, date, 8); f.Interventions = interventions(j.iv, date); }
-    else { f.Heures_matin = heures(j.hm, date + ' matin', 8); f.Heures_apres_midi = heures(j.ha, date + ' après-midi', 8); f.Formateur_matin = initiales(j.fm); f.Formateur_apres_midi = initiales(j.fa); f.Heures_jour = null; f.Interventions = ''; }
+    if (jour) { f.Heures_matin = null; f.Heures_apres_midi = null; f.Formateur_matin = ''; f.Formateur_apres_midi = ''; f.Heures_jour = heures(j.hj, date, 8); f.Interventions = interventions(j.iv, date); f.Saisie_jour = true; }
+    else { f.Heures_matin = heures(j.hm, date + ' matin', 8); f.Heures_apres_midi = heures(j.ha, date + ' après-midi', 8); f.Formateur_matin = initiales(j.fm); f.Formateur_apres_midi = initiales(j.fa); f.Heures_jour = null; f.Interventions = ''; f.Saisie_jour = false; }
     if (existants[date]) modifier.push({ id: existants[date], fields: f }); else creer.push({ fields: f });
   });
   if (modifier.length) EUC_DEV610_ecrire_('patch', EUC_DEV610_T_.heures, modifier);

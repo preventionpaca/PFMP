@@ -541,7 +541,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fini=true;clearTimeout\(t\);retablir\(\)/);
   for (const fn of ['EUC_DEV610_enregistrerCouleurs', 'EUC_DEV610_enregistrerParametres', 'EUC_DEV610_enregistrerLogo', 'EUC_DEV610_enregistrerVacances', 'EUC_DEV610_enregistrerAnnee', 'EUC_DEV610_enregistrerFormation', 'EUC_DEV610_enregistrerOrganisation', 'EUC_DEV610_calibrer', 'EUC_DEV610_reprendreExistant', 'EUC_DEV610_enregistrerRegles', 'EUC_DEV610_enregistrerRattachements', 'EUC_DEV610_enregistrerVersion', 'EUC_DEV610_apercuPublication', 'EUC_DEV610_publier', 'EUC_DEV610_enregistrerJour', 'EUC_DEV610_enregistrerHeures']) assert.match(h, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
-  const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 3, 'seuls occupe(), le chargement et la reprise appellent le serveur directement');
+  const directs = (h.match(/google\.script\.run/g) || []).length; assert.strictEqual(directs, 4, 'seuls occupe(), le chargement, la reprise et la lecture des objectifs du livret appellent le serveur directement');
+  assert.match(h, /google\.script\.run\.withSuccessHandler\(function\(r\)\{if\(fini\)return;fini=true;clearTimeout\(t\);OBJ=[\s\S]{0,900}\.EUC_DEV631_lireObjectifs\(/, 'lecture des objectifs : délai et erreur gérés, aucune écriture');
   assert.match(h, /confirmation:'PUBLIER'/); assert.match(h, /if\(!confirm\('Publier la version/);
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
@@ -824,6 +825,14 @@ test('heures à la journée : heures du jour (8 h au plus) et interventions « C
   const pg = read('apps-script/Plannings_DEV610.html');
   for (const x of ['Interventions (initiales et heures)', 'function ecartJour(x)', 'jour:l.heuresParJour', "s.hm=null;s.ha=null;s.fm='';s.fa='';"]) assert.ok(pg.includes(x), x);
   assert.ok(!pg.includes('var JOURNEES='), 'plus de demi-journées types');
+  /* Colonnes numériques créées après coup : Grist met 0 dans les lignes existantes, jamais lu comme un réglage ou une journée à 0 h. */
+  const g2 = grist(); g2.k.EUC_DEV610_charger({ annee: '2026-2027' });
+  g2.tables.EUC_PLAN_LIGNES.forEach(r => { r.fields.Heures_par_jour = 0; });
+  assert.ok(g2.k.EUC_DEV610_lignes_().every(l => l.heuresParJour === l.heuresMatin + l.heuresApresMidi), 'Heures_par_jour à 0 = non réglé');
+  g2.k.EUC_DEV610_enregistrerHeures({ annee: '2026-2027', ligne: 'CAP_PEINTRE', jours: [{ date: '2027-01-15', hm: 4, ha: 3, fm: 'AB', fa: 'AB' }, { date: '2027-01-14', hj: 0, iv: '' }] });
+  g2.tables.EUC_PLAN_HEURES.forEach(r => { if (r.fields.Saisie_jour === false) { r.fields.Heures_jour = 0; delete r.fields.Saisie_jour; } });
+  const h2 = g2.k.EUC_DEV610_heures_('2026-2027');
+  assert.deepStrictEqual(J(h2.map(x => [x.date, x.hm, 'hj' in x ? x.hj : 'ancien'])), [['2027-01-15', 4, 'ancien'], ['2027-01-14', null, 0]], 'ancienne saisie gardée ; vraie journée à 0 h gardée');
   for (const x of ['id="cIntervenants"', "var P=!!HREG.formateurs&&AFF_INTERV", "memEcrire('dev610_intervenants'", "$('recapFormateurs').classList.toggle('noprint',!AFF_INTERV);", 'data-p="pFormations" aria-selected="false">Plannings par formation</button>', "if(b.dataset.p==='pFormations'&&D)rendreFormations();", "if(ONGLET==='pFormations')rendreFormations();"]) assert.ok(pg.includes(x), x);
 });
 
