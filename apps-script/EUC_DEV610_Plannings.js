@@ -279,7 +279,22 @@ function EUC_DEV610_periodesAlternance_(jours, opts) {
     cur.fin = j.date; cur.jours++; cur.heures = r2(cur.heures + (Number(j.h) || 0));
   });
   fermer();
+  /* Durée lisible : une semaine est « entière » pour une période quand tous ses jours ouvrés (hors week-ends, fériés,
+   * pont) sont dans cette période ; les autres jours comptent en jours (alternance 2 j / 3 j du CAP peintre…). */
+  var parSem = {}, lundi = function(iso) { var d = new Date(iso + 'T12:00:00Z'); return EUC_DEV610_plus_(iso, -((d.getUTCDay() + 6) % 7)); };
+  (jours || []).forEach(function(j) { if (j.n !== 'N') { var k = lundi(j.date); (parSem[k] = parSem[k] || []).push(j.date); } });
+  out.forEach(function(p) {
+    var dans = function(d) { return d >= p.debut && d <= p.fin; }, sem = {};
+    (jours || []).forEach(function(j) { if ((j.n === p.nature) && dans(j.date)) { var k = lundi(j.date); sem[k] = (sem[k] || 0) + 1; } });
+    p.semainesEntieres = 0; p.joursIsoles = 0;
+    Object.keys(sem).forEach(function(k) { if (sem[k] === parSem[k].length && parSem[k].every(dans)) p.semainesEntieres++; else p.joursIsoles += sem[k]; });
+  });
   return out;
+}
+/* Durée d'une période en semaines entières et jours (calcul pur) : « 3 sem. », « 2 j », « 1 sem. + 2 j ». */
+function EUC_DEV610_dureePeriode_(p) {
+  var s = Number(p && p.semainesEntieres) || 0, j = Number(p && p.joursIsoles) || 0;
+  return [s ? s + ' sem.' : '', j ? j + ' j' : ''].filter(Boolean).join(' + ') || '—';
 }
 /* Heures d'une formation regroupées par semaine (lundi ISO) : total de la formation, total des formations
  * complémentaires (comptées à part) et nombre de jours, pour comparer à l'objectif hebdomadaire (30, 32, 35 h…). */
@@ -412,7 +427,7 @@ function EUC_DEV610_diffPublication_(version, lignes, rattachements, existantes,
 
 /* Code des fonctions pures injecté dans la page (la matrice se calcule sans aller-retour serveur). */
 function EUC_DEV610_codeClient_() {
-  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_, EUC_DEV610_regrouper_, EUC_DEV610_semainesHeures_, EUC_DEV610_recopierSemaine_, EUC_DEV610_interventions_, EUC_DEV610_periodesAlternance_].map(String).join('\n')
+  return [EUC_DEV610_n_, EUC_DEV610_iso_, EUC_DEV610_plus_, EUC_DEV610_semaineIso_, EUC_DEV610_nomVacances_, EUC_DEV610_semaines_, EUC_DEV610_marquerVacances_, EUC_DEV610_placer_, EUC_DEV610_generer_, EUC_DEV610_nomLigne_, EUC_DEV610_ordrePeriodes_, EUC_DEV610_typeFormation_, EUC_DEV610_cleType_, EUC_DEV610_appels_, EUC_DEV610_proposerClasses_, EUC_DEV610_estComplementaire_, EUC_DEV610_libelleType_, EUC_DEV610_bilanHeures_, EUC_DEV610_estEntreprise_, EUC_DEV610_recopier_, EUC_DEV610_libelleMixite_, EUC_DEV610_ligneDeLAnnee_, EUC_DEV610_couvertureMixites_, EUC_DEV610_nomMixite_, EUC_DEV610_regrouper_, EUC_DEV610_semainesHeures_, EUC_DEV610_recopierSemaine_, EUC_DEV610_interventions_, EUC_DEV610_periodesAlternance_, EUC_DEV610_dureePeriode_].map(String).join('\n')
     + '\nvar EUC_DEV610_TYPE_COMPLEMENTAIRE_ = ' + JSON.stringify(EUC_DEV610_TYPE_COMPLEMENTAIRE_) + ';';
 }
 

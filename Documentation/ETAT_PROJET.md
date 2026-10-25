@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV610 : durée des périodes, recto / verso
+
+- **Récapitulatif des périodes** : la colonne « Durée » remplace « Semaines ».
+  Elle affiche des semaines entières et des jours, par exemple « 3 sem. »,
+  « 2 j » ou « 1 sem. + 2 j ».
+  - Une semaine est entière quand tous ses jours ouvrés sont dans la période,
+    fériés et pont exclus.
+  - La règle vaut pour tout rythme : 2 j / 3 j au CAP peintre, 3 j / 2 j…
+- **Colonne P du calendrier** : un même prof le matin et l'après-midi compte
+  une seule fois (initiales seules).
+- **Impression du calendrier** : le calendrier et sa légende au recto, le
+  décompte des heures des profs au verso.
+
 ## Mise à jour du 24 octobre 2026 — DEV610 : colonne P du calendrier plus lisible
 
 - Un seul intervenant dans la journée : la colonne P montre ses initiales

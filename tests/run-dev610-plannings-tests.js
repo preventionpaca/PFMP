@@ -853,6 +853,11 @@ test('périodes d’alternance pour le livret : P1, P2… au lycée et en entrep
   const Q = k.EUC_DEV610_periodesAlternance_(j, { vacancesCoupent: false });
   assert.deepStrictEqual(J(Q.map(p => p.nature + p.numero + ':' + p.jours)), ['L1:5', 'E1:15', 'L2:14', 'E2:5'], 'sans coupure par les vacances');
   assert.deepStrictEqual(J(k.EUC_DEV610_periodesAlternance_([])), []);
+  assert.deepStrictEqual(J(P.map(p => k.EUC_DEV610_dureePeriode_(p))), ['1 sem.', '3 sem.', '2 sem.', '1 sem.', '1 sem.'], 'semaines entières, férié compris (L2 : 2 semaines dont un jour férié)');
+  const alt = []; ['2027-09-13', '2027-09-20'].forEach(l => { for (let i = 0; i < 7; i++) { const d = k.EUC_DEV610_plus_(l, i), wd = new Date(d + 'T12:00:00Z').getUTCDay(); alt.push({ date: d, n: wd === 0 || wd === 6 ? 'N' : wd <= 2 ? 'L' : 'E', h: 7 }); } });
+  const A = k.EUC_DEV610_periodesAlternance_(alt);
+  assert.deepStrictEqual(J(A.map(p => p.nature + p.numero + ' ' + k.EUC_DEV610_dureePeriode_(p))), ['L1 2 j', 'E1 3 j', 'L2 2 j', 'E2 3 j'], 'CAP peintre : 2 j au lycée, 3 j en entreprise');
+  assert.ok(read('apps-script/Plannings_DEV610.html').includes('#recapFormateurs:not(.noprint){break-before:page'), 'décompte des profs au verso');
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
   assert.deepStrictEqual(J(c.EUC_DEV610_periodesAlternance_(j)), J(P));
   const pg = read('apps-script/Plannings_DEV610.html');
