@@ -30,6 +30,26 @@ test('référentiels : chaque ligne rattachée existe dans les plannings ; optio
   assert.strictEqual(k.EUC_DEV630_referentielLigne_('INCONNUE'), null);
 });
 
+test('référentiel d’une ligne réelle : par code, par classe PFMP (ligne créée à la main), mixité d’après ses filières (un seul diplôme)', () => {
+  const c = { console, JSON, String, Number, Object, Array, RegExp, Math, Date }; vm.createContext(c);
+  vm.runInContext(read('apps-script/EUC_DEV610_Plannings.js') + '\n' + read('apps-script/EUC_DEV630_Referentiels.js'), c);
+  const L = c.EUC_DEV610_LIGNES_DEFAUT_.map(l => ({ code: l[0], libelle: l[1], calendrier: l[2], groupe: l[3], classePfmp: l[5], sections: [] }));
+  const g = L.find(l => l.code === '1BP_MVA').groupe;
+  const mixMva = { code: 'MIX_1BP_MVA2', calendrier: 'MIXITE', groupe: g, classePfmp: '', sections: ['1BP_MVA'] };
+  const lignes = L.concat([mixMva, { code: 'NOUVELLE', calendrier: 'CLASSE_ENTIERE', groupe: 'X', classePfmp: 'TSEC', sections: [] }]);
+  assert.strictEqual(c.EUC_DEV630_referentielPour_(L.find(l => l.code === 'BACHELOR_IP'), lignes).rncp, 'RNCP39617', 'par code');
+  const m = c.EUC_DEV630_referentielPour_(mixMva, lignes);
+  assert.deepStrictEqual(J([m.rncp, m.ligne, /filières couvertes \(1BP_MVA\)/.test(m.remarque)]), ['RNCP40996', 'MIX_1BP_MVA2', true], 'mixité 1 MVA : bac pro Maintenance des véhicules');
+  assert.strictEqual(c.EUC_DEV630_referentielPour_(lignes.find(l => l.code === 'NOUVELLE'), lignes).rncp, 'RNCP37263', 'ligne créée à la main : sa classe PFMP');
+  const pq = {}, tout = Object.assign({}, L.find(l => l.code === 'MIX_1BP'), { sections: L.filter(l => l.groupe === g && l.calendrier === 'SCOLAIRE').map(l => l.code) });
+  assert.strictEqual(c.EUC_DEV630_referentielPour_(tout, lignes.filter(l => l.code !== 'MIX_1BP').concat([tout]), pq), null);
+  assert.match(pq.raison, /plusieurs diplômes/);
+  const R = c.EUC_DEV630_referentielsLignes_(lignes);
+  assert.ok(R.MIX_1BP_MVA2.blocs.length === 3 && R.TSEC.blocs.length === 3);
+  const alternance = L.filter(l => l.calendrier === 'CLASSE_ENTIERE' && !R[l.code].blocs).map(l => l.code);
+  assert.deepStrictEqual(J(alternance), ['CQPM_ASC'], 'classes entières : seul le CQPM ASC reste sans référentiel');
+});
+
 test('page « Référentiels des diplômes » : route admin, carte de l’administration, contrôle de release, Accueil PFMP', () => {
   const routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json'), adm = read('apps-script/Admin_PFMP.html'), pg = read('apps-script/Referentiels_DEV630.html');
   assert.ok(routes.includes("case 'referentiels-pfmp':\n      return EUC_DEV630_afficher(e);") && cfg.includes('"page": "referentiels-pfmp", "scope": "admin", "expected": "Référentiels des diplômes"'));

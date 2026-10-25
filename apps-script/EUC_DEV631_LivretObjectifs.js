@@ -94,7 +94,13 @@ function EUC_DEV631_tables_() {
   c.put('EUC_DEV631_TABLES1', '1', 21600);
 }
 function EUC_DEV631_lire_() { try { return EUC_ENT_grist('get', '/tables/' + EUC_DEV631_TABLE_ + '/records').records || []; } catch (e) { return []; } }
-function EUC_DEV631_blocs_(ligne) { var r = typeof EUC_DEV630_referentielLigne_ === 'function' ? EUC_DEV630_referentielLigne_(ligne) : null; return r ? r.blocs : []; }
+/* Référentiel d'une ligne réelle du planning (code, classe PFMP, filières couvertes par une mixité : DEV630). */
+function EUC_DEV631_referentiel_(ligne) {
+  if (typeof EUC_DEV630_referentielPour_ !== 'function') return null;
+  var ls = []; try { ls = typeof EUC_DEV610_lignes_ === 'function' ? EUC_DEV610_lignes_() : []; } catch (e) {}
+  return EUC_DEV630_referentielPour_(ls.filter(function(l) { return l.code === ligne; })[0] || { code: ligne }, ls);
+}
+function EUC_DEV631_blocs_(ligne) { var r = EUC_DEV631_referentiel_(ligne); return r ? r.blocs : []; }
 function EUC_DEV631_ecrire_(methode, lignes) { for (var i = 0; i < lignes.length; i += 200) EUC_ENT_grist(methode, '/tables/' + EUC_DEV631_TABLE_ + '/records', { records: lignes.slice(i, i + 200) }); }
 
 /* ---------- Services du référent (administration) ---------- */
@@ -135,7 +141,7 @@ function EUC_DEV631_pourApprenti_(ctx, decoches) {
   var rows = EUC_DEV631_lire_(), lignes = EUC_DEV631_lignesClasse_(ctx.annee, ctx.classeId);
   for (var i = 0; i < lignes.length; i++) {
     var lu = EUC_DEV631_lireLignes_(rows, ctx.annee, lignes[i]); if (!lu.periodes.length) continue;
-    var ref = typeof EUC_DEV630_referentielLigne_ === 'function' ? EUC_DEV630_referentielLigne_(lignes[i]) : null;
+    var ref = EUC_DEV631_referentiel_(lignes[i]);
     return { ligne: lignes[i], diplome: ref ? ref.titre : '', blocs: (ref ? ref.blocs : []).map(function(b) { return { code: b.code, intitule: b.intitule }; }),
       periodes: EUC_DEV631_periodesLivret_(lu, ref ? ref.blocs : [], decoches) };
   }

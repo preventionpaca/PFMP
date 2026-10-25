@@ -1,5 +1,19 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV630 : référentiel des mixités et des lignes créées à la main
+
+- Le référentiel d'une ligne se cherche d'abord par son code, puis par sa classe
+  PFMP (ligne créée à la main). Pour une mixité, il se déduit des filières
+  couvertes, à condition qu'elles mènent toutes au même diplôme
+  (`EUC_DEV630_referentielPour_`). Il est transmis à la page des plannings par
+  `EUC_DEV610_charger`, et le livret s'en sert aussi.
+- Formations en alternance : toutes ont leurs blocs, sauf le **CQPM ASC**
+  (intitulé à fournir).
+- Les mixités `MIX_1BP` et `MIX_TBP`, qui couvrent toutes les filières du bac
+  pro, n'ont pas de référentiel unique : il faut une mixité par filière, ou une
+  seule filière cochée (par exemple 1 MVA). La raison s'affiche à la place de
+  l'éditeur d'objectifs.
+
 ## Mise à jour du 25 octobre 2026 — DEV610 / DEV631 : durée en semaines décimales, regroupement de périodes
 
 - **Durée** d'une période : jours ouvrés ÷ 5, au dixième (14 j = 2,8 sem. ;

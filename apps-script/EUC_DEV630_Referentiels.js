@@ -1119,6 +1119,32 @@ function EUC_DEV630_referentielLigne_(code) {
   return { ligne: x[0], rncp: x[1], option: x[2], remarque: x[3], titre: f.titre, actif: f.actif, generaux: f.generaux.slice(),
     blocs: f.blocs.filter(function(b) { return !x[2] || !b.option || b.option === x[2]; }).map(function(b) { return { code: b.code, intitule: b.intitule, option: b.option, competences: b.competences.slice() }; }) };
 }
+/* Référentiel d'une ligne réelle (calcul pur) : par son code ; sinon par sa classe PFMP (ligne créée à la main, même
+ * classe qu'une ligne connue) ; pour une mixité, d'après les filières couvertes (couverture des mixités du planning),
+ * à condition qu'elles mènent toutes au même diplôme. Rend null, avec la raison dans « pourquoi » si on la donne. */
+function EUC_DEV630_referentielPour_(l, lignes, pourquoi) {
+  if (!l) return null;
+  var r = EUC_DEV630_referentielLigne_(l.code); if (r) return r;
+  var n = function(v) { return EUC_DEV630_t_(v).toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+  var defaut = typeof EUC_DEV610_LIGNES_DEFAUT_ !== 'undefined' ? EUC_DEV610_LIGNES_DEFAUT_ : [];
+  var cp = n(l.classePfmp), pareil = cp ? defaut.filter(function(d) { return n(d[5]) === cp && EUC_DEV630_referentielLigne_(d[0]); })[0] : null;
+  if (pareil) { r = EUC_DEV630_referentielLigne_(pareil[0]); r.ligne = l.code; r.remarque = 'd’après la classe PFMP ' + l.classePfmp; return r; }
+  if (l.calendrier === 'MIXITE' && typeof EUC_DEV610_couvertureMixites_ === 'function') {
+    var cov = (EUC_DEV610_couvertureMixites_(lignes || []).parLigne || {})[l.code], refs = {};
+    ((cov && cov.sections) || []).forEach(function(c) { var x = EUC_DEV630_referentielPour_((lignes || []).filter(function(y) { return y.code === c; })[0] || { code: c }, [], null); if (x) refs[x.rncp + '|' + x.option] = x; });
+    var k = Object.keys(refs);
+    if (k.length === 1) { r = refs[k[0]]; r.ligne = l.code; r.remarque = 'd’après les filières couvertes (' + cov.sections.join(', ') + ')'; return r; }
+    if (pourquoi) pourquoi.raison = k.length ? 'mixité couvrant plusieurs diplômes (' + cov.sections.join(', ') + ') : créez une mixité par filière ou cochez une seule filière' : 'mixité sans filière rattachée à un référentiel';
+  }
+  return null;
+}
+/* Blocs de chaque ligne du planning (code, titre, blocs ; raison si aucun référentiel). */
+function EUC_DEV630_referentielsLignes_(lignes) {
+  var out = {};
+  (lignes || []).forEach(function(l) { var pq = {}, r = EUC_DEV630_referentielPour_(l, lignes, pq);
+    out[l.code] = r ? { titre: r.titre, rncp: r.rncp, remarque: r.remarque || '', blocs: r.blocs.map(function(b) { return { code: b.code, intitule: b.intitule }; }) } : { raison: pq.raison || '' }; });
+  return out;
+}
 /* Page de consultation : fiches relevées, blocs et compétences, lignes de planning rattachées. */
 function EUC_DEV630_afficher(e) {
   EUC_SUIVI2_exigerAdmin_();

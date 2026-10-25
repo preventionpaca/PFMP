@@ -519,12 +519,12 @@ function rendrePeriodesAlt(code){var l=ligne(code);LIGNE_COURANTE=code;$('autreP
 /* Heures en entreprise : total indicatif, 35 h par semaine soit 7 h par jour ouvré (jours fériés déjà exclus des jours). */
 var H_ENT_JOUR=7;
 var PER_BRUT=[],PER_ALT=[],OBJ=null,OBJ_SALE=false,OBJ_OUVERT='';
-function chargerObjectifs(code){var z=$('objectifsLivret'),ref=REF630[code];
-  if(!ref){z.innerHTML='<p class="note noprint">Livret de suivi : aucun référentiel RNCP rattaché à cette formation (page « Référentiels des diplômes »).</p>';OBJ=null;return;}
+function chargerObjectifs(code){var z=$('objectifsLivret'),rd=(D.referentiels||{})[code],ref=rd&&rd.blocs?rd:REF630[code];
+  if(!ref){z.innerHTML='<p class="note noprint">Livret de suivi : aucun référentiel RNCP pour cette formation'+(rd&&rd.raison?' — '+esc(rd.raison):'')+' (page « Référentiels des diplômes »).</p>';OBJ=null;return;}
   if(OBJ&&OBJ.ligne===code&&OBJ.annee===D.annee.code){rendreObjectifs();return;}
   z.innerHTML='<p class="note"><span class="spin" aria-hidden="true"></span>Chargement des objectifs du livret…</p>';
   var fini=false,t=setTimeout(function(){if(fini)return;fini=true;z.innerHTML='<p class="erreur">Objectifs du livret : le serveur n’a pas répondu. Rechargez la page.</p>';},60000);
-  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);OBJ={ligne:code,annee:D.annee.code,blocs:r.blocs.length?r.blocs:ref.blocs,lu:r.lu,par:{},fusion:(r.lu.fusion||[]).slice()};
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);OBJ={ligne:code,annee:D.annee.code,titre:ref.titre+(ref.remarque?' — '+ref.remarque:''),blocs:r.blocs.length?r.blocs:ref.blocs,lu:r.lu,par:{},fusion:(r.lu.fusion||[]).slice()};
       r.lu.objectifs.forEach(function(o){var x=OBJ.par[o.periode]=OBJ.par[o.periode]||{};(x[o.bloc]=x[o.bloc]||[]).push(o.texte);});OBJ_SALE=false;if(OBJ.fusion.length)rendrePeriodesAlt(code);else rendreObjectifs();})
     .withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);z.innerHTML='<p class="erreur">Objectifs du livret : '+esc(e&&e.message||e)+'</p>';}).EUC_DEV631_lireObjectifs({annee:D.annee.code,ligne:code});}
 function nbObjectifs(lab){var x=OBJ.par[lab]||{};return Object.keys(x).reduce(function(a,k){return a+x[k].length;},0);}
@@ -537,7 +537,7 @@ function rendreObjectifs(){var z=$('objectifsLivret'),blocs=OBJ.blocs.concat([{c
     '<table class="t rp"><thead><tr><th>Période calculée</th><th>Lieu</th><th>Du</th><th>Au</th><th>Jours</th><th>Rattacher à la précédente</th></tr></thead><tbody>'+PER_BRUT.map(function(p){var lab=libPeriode(p),premier=!vuN[p.nature];vuN[p.nature]=1;
       return '<tr><td>'+lab+'</td><td>'+(p.nature==='L'?'Au lycée':'En entreprise')+'</td><td>'+dfr(p.debut)+'</td><td>'+dfr(p.fin)+'</td><td>'+p.jours+'</td><td>'+(premier?'<span class="note">—</span>':'<label><input type="checkbox" class="objFus" value="'+lab+'"'+(fus[lab]?' checked':'')+'> avec la précédente '+(p.nature==='L'?'au lycée':'en entreprise')+'</label>')+'</td></tr>';}).join('')+'</tbody></table>'+
     '<div class="barre"><button type="button" class="petit" id="objFusAucun">Aucun regroupement</button></div></details>';
-  z.innerHTML=reglage+'<h3>Objectifs du livret de suivi <small class="note">communs à la classe · '+esc(REF630[OBJ.ligne].titre)+'</small></h3>'+
+  z.innerHTML=reglage+'<h3>Objectifs du livret de suivi <small class="note">communs à la classe · '+esc(OBJ.titre)+'</small></h3>'+
     '<p class="note noprint">Une ligne par objectif. Le jeune voit dans son livret les objectifs de sa période, bloc par bloc ; il décrit ensuite ce qu’il a fait. '+(OBJ.lu.periodes.length?'':'<b>Les périodes ne sont pas encore enregistrées pour le livret.</b> ')+(ecart&&OBJ.lu.periodes.length?'<span class="alerte">Les périodes enregistrées diffèrent du planning : enregistrez pour les mettre à jour.</span>':'')+'</p>'+
     '<table class="t rp noprint"><thead><tr><th>Période</th><th>Du</th><th>Au</th><th>Objectifs</th><th></th></tr></thead><tbody>'+PER_ALT.map(function(p){var lab=libPeriode(p);return '<tr><td><b>'+lab+'</b></td><td>'+dfr(p.debut)+'</td><td>'+dfr(p.fin)+'</td><td>'+(nbObjectifs(lab)||'—')+'</td><td><button type="button" class="petit objOuvrir" data-p="'+lab+'">'+(OBJ_OUVERT===lab?'Fermer':'Objectifs…')+'</button></td></tr>'+
       (OBJ_OUVERT===lab?'<tr><td colspan="5"><div class="cadre">'+blocs.map(function(b,i){return '<label style="display:block;margin:6px 0"><b>'+esc(b.intitule)+'</b><textarea class="objT" data-b="'+esc(b.code)+'" rows="3" style="width:100%" placeholder="Un objectif par ligne">'+esc(((OBJ.par[lab]||{})[b.code]||[]).join('\n'))+'</textarea></label>';}).join('')+
