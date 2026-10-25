@@ -146,6 +146,22 @@ test('DEV631 : livret de l’apprenti — période choisie (dates du planning), 
   assert.deepStrictEqual(J([lv.fiche.periode, lv.livret.periodes[1].objectifs[BC1].length]), ['P1', 2], 'le tuteur voit les objectifs');
 });
 
+test('DEV631 : mixité multi-filières — une seule alternance, objectifs par diplôme ; l’apprenti de 1MVA ne voit que ceux de son bac pro', () => {
+  const k = contexte(base());
+  k.EUC_DEV610_lignes_ = () => [{ code: '1BP_MVA', calendrier: 'SCOLAIRE', groupe: '1 BAC PRO', classePfmp: '1MVA', sections: [] }, { code: '1BP_CIEL', calendrier: 'SCOLAIRE', groupe: '1 BAC PRO', classePfmp: '1CIEL', sections: [] }, { code: 'MIX_1BP', calendrier: 'MIXITE', groupe: '1 BAC PRO', classePfmp: '', sections: [] }];
+  k.EUC_DEV610_couvertureMixites_ = () => ({ parLigne: { MIX_1BP: { sections: ['1BP_MVA', '1BP_CIEL'] } }, alertes: [] });
+  const multi = k.EUC_DEV630_diplomesMixite_(k.EUC_DEV610_lignes_()[2], k.EUC_DEV610_lignes_());
+  assert.deepStrictEqual(J(multi.map(m => [m.rncp, m.sections])), [['RNCP40996', ['1BP_MVA']], ['RNCP37489', ['1BP_CIEL']]]);
+  k.__tables.EUC_PLAN_LIGNES_CLASSES = [{ id: 1, fields: { Annee_scolaire: '2026-2027', Ligne: '1BP_MVA', Classes: ['L', 30] } }];
+  const r = k.EUC_DEV631_enregistrerObjectifs({ annee: '2026-2027', ligne: 'MIX_1BP', periodes, objectifs: [
+    { periode: 'P1', bloc: 'RNCP40996BC01', texte: 'Réaliser une vidange complète' }, { periode: 'P1', bloc: 'RNCP37489BC02', texte: 'Câbler une baie réseau' }, { periode: 'P1', bloc: 'AUTRES', texte: 'Visiter le salon de l’auto' }] });
+  assert.strictEqual(r.objectifs, 3, 'blocs des deux diplômes acceptés sur la même ligne');
+  assert.throws(() => k.EUC_DEV631_enregistrerObjectifs({ annee: '2026-2027', ligne: 'MIX_1BP', periodes, objectifs: [{ periode: 'P1', bloc: 'RNCP39617BC01', texte: 'x' }] }), /Bloc inconnu/);
+  const o = k.EUC_DEV599_ouvrir({ l: k.EUC_DEV599_jetonApprenti_(7) });
+  assert.deepStrictEqual(J([o.livret.ligne, o.livret.blocs.map(b => b.code)]), ['MIX_1BP', ['RNCP40996BC01', 'RNCP40996BC02', 'RNCP40996BC03']], 'périodes de la mixité, blocs de son diplôme');
+  assert.deepStrictEqual(J(o.livret.periodes[1].objectifs), { RNCP40996BC01: ['Réaliser une vidange complète'], AUTRES: ['Visiter le salon de l’auto'] }, 'jamais les objectifs CIEL');
+});
+
 test('DEV631 : sans périodes enregistrées, le livret garde l’ancienne saisie (lieu et dates libres)', () => {
   const k = contexte(base());
   const o = k.EUC_DEV599_ouvrir({ l: k.EUC_DEV599_jetonApprenti_(7) });
@@ -156,7 +172,7 @@ test('DEV631 : sans périodes enregistrées, le livret garde l’ancienne saisie
 
 test('DEV631 : pages — éditeur des objectifs (récapitulatif des périodes), livret par période, validation avec objectifs', () => {
   const pl = read('apps-script/Plannings_DEV610.html'), lv = read('apps-script/Livret_Apprenti_DEV599.html'), va = read('apps-script/Validation_Livret_DEV599.html'), js = read('apps-script/EUC_DEV610_Plannings.js');
-  for (const x of ["var REF630=<?!= referentiels ?>;", '<div id="objectifsLivret"></div>', "occupe(this,'Enregistrement du livret…','EUC_DEV631_enregistrerObjectifs'", 'Recopier vers toutes les périodes', 'Regrouper des périodes', 'fusion:OBJ.fusion}', 'EUC_DEV610_regrouperPeriodes_(BRUT,', 'var H_ENT_JOUR=7;', '* Total indicatif en entreprise', "≈ '+hfmt(tot.E.j*H_ENT_JOUR)+' h*", '||OBJ_SALE||HSALE||COUL_SALE){', "Chargement des objectifs du livret…"]) assert.ok(pl.includes(x), x);
+  for (const x of ["var REF630=<?!= referentiels ?>;", '<div id="objectifsLivret"></div>', "occupe(this,'Enregistrement du livret…','EUC_DEV631_enregistrerObjectifs'", 'Recopier vers toutes les périodes', 'Regrouper des périodes', '<b>Diplôme</b> <select id="objDip">', '— communes à toutes les filières', 'fusion:OBJ.fusion}', 'EUC_DEV610_regrouperPeriodes_(BRUT,', 'var H_ENT_JOUR=7;', '* Total indicatif en entreprise', "≈ '+hfmt(tot.E.j*H_ENT_JOUR)+' h*", '||OBJ_SALE||HSALE||COUL_SALE){', "Chargement des objectifs du livret…"]) assert.ok(pl.includes(x), x);
   assert.ok(js.includes('t.referentiels = JSON.stringify(ref)'));
   for (const x of ['function ouvrirPeriode(f)', 'Objectifs de la période :', '+ Ajouter un lien', 'Enregistrer le brouillon', 'if(D.livret)return lirePeriode();', 'rel="noopener noreferrer"']) assert.ok(lv.includes(x), x);
   for (const x of ['lv.blocs.filter', 'objectifs fixés pour la période', 'rel="noopener noreferrer"']) assert.ok(va.includes(x), x);

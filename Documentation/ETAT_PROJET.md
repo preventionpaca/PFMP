@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV631 : mixité multi-filières, une alternance, des objectifs par diplôme
+
+- Une mixité qui couvre plusieurs filières, comme « 1 BAC PRO Mixité », garde
+  une seule ligne et une seule alternance. Ses diplômes sont déduits des
+  filières couvertes (`EUC_DEV630_diplomesMixite_`).
+- L'éditeur d'objectifs affiche un sélecteur « Diplôme » (MVA, CIEL, MELEC…)
+  qui montre les blocs du diplôme choisi. « Autres activités » est commun à
+  toutes les filières. Les objectifs de tous les diplômes sont enregistrés sur
+  la même ligne.
+- Le livret de l'apprenti en mixité retrouve son diplôme par sa classe (1MVA
+  vers la ligne 1BP_MVA, donc RNCP40996). Les périodes viennent de la mixité
+  qui couvre sa filière. Il ne reçoit que les objectifs de son diplôme et les
+  autres activités.
+- Tests : 7/7 DEV631.
+
 ## Mise à jour du 25 octobre 2026 — DEV610 : documents imprimés pleine page
 
 - **Cause de la bande blanche** (photo d'une impression jet d'encre en A4) : la

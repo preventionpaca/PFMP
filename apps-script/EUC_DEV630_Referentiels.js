@@ -1138,11 +1138,25 @@ function EUC_DEV630_referentielPour_(l, lignes, pourquoi) {
   }
   return null;
 }
-/* Blocs de chaque ligne du planning (code, titre, blocs ; raison si aucun référentiel). */
+/* Diplômes d'une mixité qui couvre plusieurs filières (calcul pur) : même alternance pour toutes, objectifs propres à
+ * chaque diplôme. Une entrée par fiche RNCP (et option), avec les filières (lignes scolaires) qui y mènent. */
+function EUC_DEV630_diplomesMixite_(l, lignes) {
+  if (!l || l.calendrier !== 'MIXITE' || typeof EUC_DEV610_couvertureMixites_ !== 'function') return [];
+  var cov = (EUC_DEV610_couvertureMixites_(lignes || []).parLigne || {})[l.code], par = {}, ordre = [];
+  ((cov && cov.sections) || []).forEach(function(c) {
+    var x = EUC_DEV630_referentielPour_((lignes || []).filter(function(y) { return y.code === c; })[0] || { code: c }, [], null); if (!x) return;
+    var k = x.rncp + '|' + x.option; if (!par[k]) { par[k] = { rncp: x.rncp, option: x.option, titre: x.titre, sections: [], blocs: x.blocs.map(function(b) { return { code: b.code, intitule: b.intitule }; }) }; ordre.push(k); }
+    par[k].sections.push(c);
+  });
+  return ordre.map(function(k) { return par[k]; });
+}
+/* Blocs de chaque ligne du planning (code, titre, blocs ; plusieurs diplômes pour une mixité multi-filières ; raison si
+ * aucun référentiel). */
 function EUC_DEV630_referentielsLignes_(lignes) {
   var out = {};
-  (lignes || []).forEach(function(l) { var pq = {}, r = EUC_DEV630_referentielPour_(l, lignes, pq);
-    out[l.code] = r ? { titre: r.titre, rncp: r.rncp, remarque: r.remarque || '', blocs: r.blocs.map(function(b) { return { code: b.code, intitule: b.intitule }; }) } : { raison: pq.raison || '' }; });
+  (lignes || []).forEach(function(l) { var pq = {}, r = EUC_DEV630_referentielPour_(l, lignes, pq), multi = r ? [] : EUC_DEV630_diplomesMixite_(l, lignes);
+    out[l.code] = r ? { titre: r.titre, rncp: r.rncp, remarque: r.remarque || '', blocs: r.blocs.map(function(b) { return { code: b.code, intitule: b.intitule }; }) }
+      : multi.length > 1 ? { titre: 'Plusieurs diplômes', multi: multi, blocs: [].concat.apply([], multi.map(function(m) { return m.blocs; })) } : { raison: pq.raison || '' }; });
   return out;
 }
 /* Page de consultation : fiches relevées, blocs et compétences, lignes de planning rattachées. */

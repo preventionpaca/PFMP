@@ -71,10 +71,13 @@ function EUC_DEV631_ecritures_(existants, annee, ligne, propre, maintenant) {
 /* Livret d'un apprenti (calcul pur) : périodes de sa formation avec les objectifs de chaque période, rangés par bloc,
  * sans les objectifs décochés pour lui (« S1|BLOC|2 » : période, bloc, rang). */
 function EUC_DEV631_periodesLivret_(lu, blocs, decoches) {
-  var off = {}; (decoches || []).forEach(function(k) { off[k] = 1; });
+  var off = {}, permis = null; (decoches || []).forEach(function(k) { off[k] = 1; });
+  /* Seuls les blocs du diplôme de l'apprenti (et les autres activités, communes) : une mixité multi-filières garde les
+   * objectifs de chaque diplôme sur la même ligne. */
+  if ((blocs || []).length) { permis = { AUTRES: 1 }; blocs.forEach(function(b) { permis[b.code] = 1; }); }
   return lu.periodes.map(function(p) {
     var parBloc = {};
-    lu.objectifs.filter(function(o) { return o.periode === p.label; }).forEach(function(o) { if (!off[o.periode + '|' + o.bloc + '|' + o.ordre]) (parBloc[o.bloc] = parBloc[o.bloc] || []).push(o.texte); });
+    lu.objectifs.filter(function(o) { return o.periode === p.label; }).forEach(function(o) { if (!off[o.periode + '|' + o.bloc + '|' + o.ordre] && (!permis || permis[o.bloc])) (parBloc[o.bloc] = parBloc[o.bloc] || []).push(o.texte); });
     return { label: p.label, nature: p.nature, lieu: p.nature === 'L' ? 'LYCEE' : 'ENTREPRISE', du: p.du, au: p.au, objectifs: parBloc };
   });
 }
@@ -95,12 +98,18 @@ function EUC_DEV631_tables_() {
 }
 function EUC_DEV631_lire_() { try { return EUC_ENT_grist('get', '/tables/' + EUC_DEV631_TABLE_ + '/records').records || []; } catch (e) { return []; } }
 /* Référentiel d'une ligne réelle du planning (code, classe PFMP, filières couvertes par une mixité : DEV630). */
-function EUC_DEV631_referentiel_(ligne) {
+function EUC_DEV631_lignesPlanning_() { try { return typeof EUC_DEV610_lignes_ === 'function' ? EUC_DEV610_lignes_() : []; } catch (e) { return []; } }
+function EUC_DEV631_referentiel_(ligne, ls) {
   if (typeof EUC_DEV630_referentielPour_ !== 'function') return null;
-  var ls = []; try { ls = typeof EUC_DEV610_lignes_ === 'function' ? EUC_DEV610_lignes_() : []; } catch (e) {}
+  ls = ls || EUC_DEV631_lignesPlanning_();
   return EUC_DEV630_referentielPour_(ls.filter(function(l) { return l.code === ligne; })[0] || { code: ligne }, ls);
 }
-function EUC_DEV631_blocs_(ligne) { var r = EUC_DEV631_referentiel_(ligne); return r ? r.blocs : []; }
+/* Blocs autorisés pour une ligne : ceux de son diplôme, ou de tous les diplômes d'une mixité multi-filières. */
+function EUC_DEV631_blocs_(ligne) {
+  var ls = EUC_DEV631_lignesPlanning_(), r = EUC_DEV631_referentiel_(ligne, ls); if (r) return r.blocs;
+  var l = ls.filter(function(x) { return x.code === ligne; })[0], multi = typeof EUC_DEV630_diplomesMixite_ === 'function' ? EUC_DEV630_diplomesMixite_(l, ls) : [];
+  return [].concat.apply([], multi.map(function(m) { return m.blocs; }));
+}
 function EUC_DEV631_ecrire_(methode, lignes) { for (var i = 0; i < lignes.length; i += 200) EUC_ENT_grist(methode, '/tables/' + EUC_DEV631_TABLE_ + '/records', { records: lignes.slice(i, i + 200) }); }
 
 /* ---------- Services du référent (administration) ---------- */
@@ -138,12 +147,22 @@ function EUC_DEV631_lignesClasse_(annee, classeId) {
 /* Ce que voit l'apprenti : sa formation, les blocs de son référentiel et les périodes avec leurs objectifs.
  * La première ligne rattachée qui a des périodes enregistrées l'emporte (classe entière ou section scolaire). */
 function EUC_DEV631_pourApprenti_(ctx, decoches) {
-  var rows = EUC_DEV631_lire_(), lignes = EUC_DEV631_lignesClasse_(ctx.annee, ctx.classeId);
+  var rows = EUC_DEV631_lire_(), lignes = EUC_DEV631_lignesClasse_(ctx.annee, ctx.classeId), ls = EUC_DEV631_lignesPlanning_();
+  var livret = function(lignePeriodes, ref, lu) { return { ligne: lignePeriodes, diplome: ref ? ref.titre : '', blocs: (ref ? ref.blocs : []).map(function(b) { return { code: b.code, intitule: b.intitule }; }),
+    periodes: EUC_DEV631_periodesLivret_(lu, ref ? ref.blocs : [], decoches) }; };
   for (var i = 0; i < lignes.length; i++) {
     var lu = EUC_DEV631_lireLignes_(rows, ctx.annee, lignes[i]); if (!lu.periodes.length) continue;
-    var ref = EUC_DEV631_referentiel_(lignes[i]);
-    return { ligne: lignes[i], diplome: ref ? ref.titre : '', blocs: (ref ? ref.blocs : []).map(function(b) { return { code: b.code, intitule: b.intitule }; }),
-      periodes: EUC_DEV631_periodesLivret_(lu, ref ? ref.blocs : [], decoches) };
+    return livret(lignes[i], EUC_DEV631_referentiel_(lignes[i], ls), lu);
+  }
+  /* Apprenti en mixité : sa classe est rattachée à la ligne scolaire de sa filière (1MVA → 1BP_MVA), qui donne son diplôme ;
+   * les périodes viennent de la mixité qui couvre cette filière (même alternance pour toutes les filières). */
+  var cov = typeof EUC_DEV610_couvertureMixites_ === 'function' ? (EUC_DEV610_couvertureMixites_(ls).parLigne || {}) : {};
+  for (var j = 0; j < lignes.length; j++) {
+    var mix = Object.keys(cov).filter(function(m) { return (cov[m].sections || []).indexOf(lignes[j]) >= 0; });
+    for (var k = 0; k < mix.length; k++) {
+      var lum = EUC_DEV631_lireLignes_(rows, ctx.annee, mix[k]); if (!lum.periodes.length) continue;
+      return livret(mix[k], EUC_DEV631_referentiel_(lignes[j], ls), lum);
+    }
   }
   return null;
 }
