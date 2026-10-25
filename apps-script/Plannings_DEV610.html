@@ -109,6 +109,7 @@ table.heures tr.semH td{background:#e8eef7;border-top:2px solid #2b528f;padding:
     <button type="button" id="enregistrer" class="plein" disabled>Enregistrer la version</button>
     <button type="button" id="nouvelle" disabled>Enregistrer comme nouvelle version</button>
     <button type="button" id="actualiser" title="Relit les données (Grist) de l’année affichée sans recharger la page : même année, même onglet, même version">Actualiser</button>
+    <label title="A4 pour une imprimante de bureau sans A3 ; le planning est alors réduit pour tenir sur la feuille">Format <select id="formatImpr"><option value="A3">A3 paysage</option><option value="A4">A4 paysage</option></select></label>
     <button type="button" id="imprimer" disabled title="Ouvre l’impression : choisissez « Enregistrer au format PDF » pour obtenir le PDF">Imprimer / PDF</button>
   </div>
   <div class="barre"><label style="flex:1">Commentaire de version <input id="commentaire" style="width:100%" placeholder="ex. P.dif. déplacé après la 2e période, dates de vacances prévisionnelles"></label></div>
@@ -556,7 +557,7 @@ $('voirPeriodes').onclick=function(){if(LIGNE_COURANTE)allerA(lienPlannings('&vu
 $('autrePeriodes').onchange=function(){var c=this.value;if(c&&c!==LIGNE_COURANTE)allerA(lienPlannings('&vue=periodes&ligne='+encodeURIComponent(c)),false);};
 $('vacCoupent').onchange=function(){memEcrire('dev610_vacCoupent',this.checked?'1':'0');if(LIGNE_COURANTE){if($('pPeriodesAlt').classList.contains('actif'))rendrePeriodesAlt(LIGNE_COURANTE);else rendreCalendrier(LIGNE_COURANTE,true);}};
 $('vacCoupent').checked=memLire('dev610_vacCoupent')!=='0';
-$('imprimerPeriodes').onclick=function(){$('stylePage').textContent='@page{size:A4 portrait;margin:10mm}';window.print();$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
+$('imprimerPeriodes').onclick=function(){$('stylePage').textContent='@page{size:A4 portrait;margin:10mm}';window.print();$('stylePage').textContent=formatPage().css;};
 /* Liste des formations de l'année (ordre du tableau) pour passer d'un planning à l'autre. */
 function optionsFormations(choisie){return '<option value="">'+(choisie?'— changer —':'— choisir —')+'</option>'+lignesActives().slice().sort(function(a,b){return (a.ordre||0)-(b.ordre||0);}).map(function(l){return '<option value="'+esc(l.code)+'"'+(l.code===choisie?' selected':'')+'>'+esc(nomLigne(l))+'</option>';}).join('');}
 /* Navigation dans la fenêtre principale : lien cliqué par programme (le cadre de la page ne peut pas changer l'adresse lui-même). */
@@ -904,7 +905,7 @@ $('nomsPronote').onclick=function(){var n=0;ORG.forEach(function(l){var v=l.cale
 $('fEnregistrer').onclick=function(){var code=LIGNE_COURANTE;if(!code)return;var q={annee:D.annee.code,ligne:code,debut:$('fDebut').value,fin:$('fFin').value,titre:$('fTitre').value,sousTitre:$('fSousTitre').value,intitule:$('fIntitule').value};
   if(q.debut&&q.fin&&q.fin<q.debut){message('La fin de la formation doit suivre son début.','erreur');return;}
   occupe(this,'Enregistrement…','EUC_DEV610_enregistrerFormation',q,function(r){D.formations=D.formations||{};D.formations[code]=r.formation;rendreCalendrier(code);message('<span class="ok">Dates et titres enregistrés.</span>');});};
-$('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:5mm}';var c=document.querySelector('.a32');if(c){var z=Math.min(1,1080/c.scrollWidth,740/c.scrollHeight);c.style.zoom=String(Math.floor(z*100)/100);}window.print();if(c)c.style.zoom='';$('stylePage').textContent='@page{size:A3 landscape;margin:8mm}';};
+$('imprimerCalendrier').onclick=function(){$('stylePage').textContent='@page{size:A4 landscape;margin:5mm}';var c=document.querySelector('.a32');if(c){var z=Math.min(1,1080/c.scrollWidth,740/c.scrollHeight);c.style.zoom=String(Math.floor(z*100)/100);}window.print();if(c)c.style.zoom='';$('stylePage').textContent=formatPage().css;};
 $('ajouterLigne').onclick=function(){ORG.push({id:0,anneeDebut:D.annee.code,anneeFin:'',sections:[],code:'NOUVELLE_'+Date.now(),libelle:'Nouvelle classe',groupe:(ORG[ORG.length-1]||{}).groupe||'À classer',calendrier:'SCOLAIRE',formation:'',niveau:'',classePfmp:'',profil:'',etablissement:'',organismes:[],actif:true});orgAppliquer();rendreOrganisation();};
 $('enregistrerOrganisation').onclick=function(){occupe(this,'Enregistrement…','EUC_DEV610_enregistrerOrganisation',{lignes:ORG.filter(function(l){return (D.retirees||[]).indexOf(l.code)<0;})},function(r){ORG_SALE=false;charger(D.annee.code);message('<span class="ok">Organisation enregistrée</span> : '+r.modifiees+' ligne(s) mise(s) à jour, '+r.creees+' créée(s)'+(r.desactivees?', '+r.desactivees+' masquée(s)':'')+'.');});};
 
@@ -1017,18 +1018,24 @@ $('imprimer').onclick=function(){document.querySelector('[data-p="pGrille"]').cl
 /* Impression : le planning tient sur une page A3 paysage (réduction calculée). */
 /* Impression A3 paysage (1527 × 1062 px utiles) : le tableau prend toute la largeur possible, la légende passe dessous,
  * l'ensemble tient sur une page et y est centré verticalement et horizontalement. */
+/* Format choisi pour le planning annuel : A3 paysage (défaut) ou A4 paysage (imprimante sans A3), retenu sur le poste. */
+function formatPage(){return $('formatImpr').value==='A4'?{css:'@page{size:A4 landscape;margin:6mm}',W:1050,H:735}:{css:'@page{size:A3 landscape;margin:8mm}',W:1490,H:1062};}
+$('formatImpr').value=memLire('dev610_format')==='A4'?'A4':'A3';$('stylePage').textContent=formatPage().css;
+$('formatImpr').onchange=function(){memEcrire('dev610_format',this.value);$('stylePage').textContent=formatPage().css;};
 function miseEnPageImpression(){var t=document.querySelector('table.g');if(!t)return;majTitreImpression();t.style.zoom='';
   /* Géométrie fixe à l'impression, indépendante de l'écran. Largeur : toute la page. Hauteur : s'il reste de la place,
    * les lignes grandissent (jusqu'à 2 fois) et les polices avec elles, pour remplir la feuille et se lire de loin. */
-  var W=1490,H=1062,tw=350+26*SEM.length,nl=t.querySelectorAll('tr').length;
+  var F=formatPage(),W=F.W,H=F.H,tw=350+26*SEM.length,nl=t.querySelectorAll('tr').length;
   var lg=Array.prototype.map.call($('legende').children,function(x){return (x.textContent||'').length*6.2+30;}),lignesLeg=1,cur=0;
   lg.forEach(function(w){if(cur+w>W){lignesLeg++;cur=w;}else cur+=w;});
   var dispo=H-52-lignesLeg*17-24,z=Math.min(1.25,W/tw),rh=dispo/(nl*z);
   if(rh<18){rh=18;z=Math.min(z,dispo/(nl*18));}rh=Math.min(36,Math.floor(rh*10)/10);
-  t.style.setProperty('--rh',rh+'px');t.style.setProperty('--fs',String(Math.min(1.7,Math.round(rh/18*100)/100)));t.style.zoom=String(Math.floor(z*100)/100);}
+  t.style.setProperty('--rh',rh+'px');t.style.setProperty('--fs',String(Math.min(1.7,Math.round(rh/18*100)/100)));t.style.zoom=String(Math.floor(z*100)/100);t.dataset.zbase=t.style.zoom;}
 window.addEventListener('beforeprint',miseEnPageImpression);
 /* Une fois la page passée en mode impression, la largeur réelle est connue : le tableau est réduit encore s'il dépasse. */
-function ajusterImpression(){var t=document.querySelector('table.g');if(!t)return;var dispo=document.documentElement.clientWidth-4,l=t.getBoundingClientRect().width,z=Number(t.style.zoom)||1;if(dispo>0&&l>dispo)t.style.zoom=String(Math.floor(z*dispo/l*100)/100);}
+/* Calcul repris depuis la réduction de départ (jamais cumulé) : Chrome recalcule l'aperçu à chaque changement
+ * d'imprimante ou de papier, et l'ajustement ne doit pas réduire le tableau un peu plus à chaque fois. */
+function ajusterImpression(){var t=document.querySelector('table.g');if(!t)return;var dispo=document.documentElement.clientWidth-4,z=Number(t.style.zoom)||1,base=Number(t.dataset.zbase)||z,l=t.getBoundingClientRect().width/z;if(dispo>0&&l>0){var n=Math.min(base,Math.floor(dispo/l*100)/100);if(String(n)!==t.style.zoom)t.style.zoom=String(n);}}
 try{var mqImp=window.matchMedia('print');(mqImp.addEventListener?mqImp.addEventListener.bind(mqImp,'change'):mqImp.addListener.bind(mqImp))(function(e){if(e.matches)ajusterImpression();});}catch(e){}
 window.addEventListener('afterprint',function(){var t=document.querySelector('table.g');if(t){t.style.zoom='';t.style.removeProperty('--rh');t.style.removeProperty('--fs');}$('pGrille').style.paddingTop='';});
 try{var mem=JSON.parse(localStorage.getItem('dev610_blocs')||'null');if(mem)Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.dataset.cal in mem)c.checked=!!mem[c.dataset.cal];});}catch(e){}

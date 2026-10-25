@@ -547,7 +547,9 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.match(h, /D\.previsionnel=prev;afficherAlertes\(\[\]\);\$\('changements'\)\.hidden=true;/, 'les alertes d’une autre année sont effacées au changement d’année');
   assert.match(h, /Aucune vacance trouvée pour/);
   for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)', 'rowspan="4"', 'function titrePlanning()', "if(v.FC)parts.push('FORMATION CONTINUE')", "if(v.SCOLAIRE)parts.push('PFMP','STAGES')", 'id="piedPlanning"', 'aside class="legende" id="legende"', 'data-p="pCouleurs"', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
-  assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
+  assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/);
+  assert.ok(h.includes('<option value="A4">A4 paysage</option>') && h.includes("css:'@page{size:A4 landscape;margin:6mm}',W:1050,H:735") && h.includes('var F=formatPage(),W=F.W,H=F.H') && h.includes("memEcrire('dev610_format'"), 'format A3 ou A4 retenu sur le poste');
+  assert.ok(h.includes('base=Number(t.dataset.zbase)||z') && !h.includes('t.style.zoom=String(Math.floor(z*dispo/l*100)/100)'), 'ajustement non cumulé quand Chrome recalcule l’aperçu'); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
 

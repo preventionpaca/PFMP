@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV610 : impression sur une imprimante de bureau
+
+- Un choix « Format » (A3 paysage par défaut, ou A4 paysage) est ajouté à côté
+  de « Imprimer / PDF » sur le planning annuel. Il est retenu sur le poste. En
+  A4, la géométrie d'impression est réduite pour tenir sur la feuille.
+  Signalement : l'impression vers une imprimante sans A3 bloquait, alors que
+  l'enregistrement en PDF marchait.
+- Ajustement de la largeur à l'impression repris depuis la réduction de départ,
+  sans cumul : Chrome recalcule l'aperçu à chaque changement d'imprimante.
+
 ## Mise à jour du 25 octobre 2026 — DEV630 : référentiel des mixités et des lignes créées à la main
 
 - Le référentiel d'une ligne se cherche d'abord par son code, puis par sa classe
