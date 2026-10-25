@@ -446,8 +446,9 @@ function rendreRecapAnnuel(){var z=$('recapAnnuel');if(!z)return;var R=recapAnnu
   z.innerHTML='<h3>Heures par formateur — toutes formations '+esc(D.annee.code)+'</h3><div class="defile"><table class="t recap"><thead><tr><th>Formateur</th>'+R.cols.map(function(c){return '<th>'+esc(c.nom)+'</th>';}).join('')+'<th>Total formation</th><th>Formations complémentaires (en plus)</th></tr></thead><tbody>'+
     R.formateurs.map(function(f){return '<tr><td><b>'+esc(f.initiales)+'</b></td>'+R.cols.map(function(c){return cell(f.o.par[c.code]);}).join('')+'<td><b>'+hfmt(f.o.formation)+' h</b></td><td>'+(f.o.comp?hfmt(f.o.comp)+' h':'—')+'</td></tr>';}).join('')+
     '<tr class="alerte"><td>Sans formateur</td>'+R.cols.map(function(c){return '<td>'+(c.sans?hfmt(c.sans)+' h':'—')+'</td>';}).join('')+'<td></td><td></td></tr></tbody></table></div><p class="note">D’après les heures enregistrées (bouton « Enregistrer les heures » de chaque calendrier). Les heures de formations complémentaires (5 Star…) sont comptées à part.</p>';}
-/* Colonne P : un seul intervenant → ses initiales seules (taille des heures) ; plusieurs → le détail avec les heures. */
-function texteP(h){var l=(h.interventions||[]).filter(function(it){return it.h>0;});return l.length===1?l[0].f:l.map(function(it){return it.f+' '+hfmt(it.h);}).join(' · ');}
+/* Colonne P : un seul intervenant → ses initiales seules (taille des heures) ; plusieurs → le détail avec les heures.
+ * Un même intervenant le matin et l'après-midi (anciennes saisies par demi-journée) compte une seule fois. */
+function texteP(h){var l=[],par={};(h.interventions||[]).forEach(function(it){if(!(it.h>0))return;if(par[it.f])par[it.f].h+=it.h;else{par[it.f]={f:it.f,h:it.h};l.push(par[it.f]);}});return l.length===1?l[0].f:l.map(function(it){return it.f+' '+hfmt(it.h);}).join(' · ');}
 function rendreCalendrier(code){var garderEditeur=arguments[1]===true,l=ligne(code);LIGNE_COURANTE=code;if(!l){$('calendrier').innerHTML='<p class="erreur">Formation introuvable : '+esc(code)+'.</p>';$('heures').innerHTML='';return;}
   preparerHeures(l);
   /* Mois affichés : du mois de début au mois de fin de la formation (Bachelor d'octobre à octobre, TSEC de novembre à

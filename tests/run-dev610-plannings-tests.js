@@ -827,6 +827,7 @@ test('heures à la journée : heures du jour (8 h au plus) et interventions « C
   assert.ok(!pg.includes('var JOURNEES='), 'plus de demi-journées types');
   const cc = {}; vm.createContext(cc); vm.runInContext(k.EUC_DEV610_codeClient_() + '\n' + /function texteP\(h\)\{[^\n]*\}/.exec(pg)[0] + '\nfunction hfmt(h){return String(Math.round(h*100)/100).replace(".",",");}', cc);
   assert.deepStrictEqual([cc.texteP({ interventions: [{ f: 'F', h: 8 }] }), cc.texteP({ interventions: [{ f: 'COM', h: 2 }, { f: 'AT1', h: 2 }, { f: 'AT2', h: 0 }] })], ['F', 'COM 2 · AT1 2'], 'un seul intervenant : initiales seules ; plusieurs : détail');
+  assert.deepStrictEqual([cc.texteP({ interventions: [{ f: 'IM', h: 4 }, { f: 'IM', h: 4 }] }), cc.texteP({ interventions: [{ f: 'F', h: 4 }, { f: 'G', h: 2 }, { f: 'F', h: 2 }] })], ['IM', 'F 6 · G 2'], 'même prof matin et après-midi : une seule fois');
   assert.ok(pg.includes('table.a32c td.pi1{font-size:9.5px}') && pg.includes('table.a32c td.pi{white-space:normal;font-size:8px;'));
   /* Colonnes numériques créées après coup : Grist met 0 dans les lignes existantes, jamais lu comme un réglage ou une journée à 0 h. */
   const g2 = grist(); g2.k.EUC_DEV610_charger({ annee: '2026-2027' });
