@@ -117,6 +117,16 @@ test('DEV631 : nouvel enregistrement — lignes réutilisées, surplus désactiv
   assert.ok(!k.__appels.some(a => a.method === 'delete'));
 });
 
+test('DEV631 : regroupements de périodes enregistrés avec le livret (réglage de la formation), relus, retirables', () => {
+  const k = contexte(base()); livretBachelor(k);
+  assert.throws(() => k.EUC_DEV631_enregistrerObjectifs({ annee: '2026-2027', ligne: 'BACHELOR_IP', periodes, fusion: ['Z9'] }), /Regroupement invalide/);
+  let r = k.EUC_DEV631_enregistrerObjectifs({ annee: '2026-2027', ligne: 'BACHELOR_IP', periodes, objectifs: [], fusion: ['S2', 's3', 'S2'] });
+  assert.deepStrictEqual(J(r.lu.fusion), ['S2', 'S3']);
+  r = k.EUC_DEV631_enregistrerObjectifs({ annee: '2026-2027', ligne: 'BACHELOR_IP', periodes, objectifs: [] });
+  assert.deepStrictEqual(J(r.lu.fusion), [], 'aucun regroupement : réglage désactivé');
+  assert.ok(k.__tables.EUC_LIVRET_OBJECTIFS.some(x => x.fields.Type === 'REGLAGE' && x.fields.Actif === false));
+});
+
 test('DEV631 : livret de l’apprenti — période choisie (dates du planning), objectifs par bloc, réalisations et liens, compte rendu', () => {
   const k = contexte(base()); livretBachelor(k);
   const o = k.EUC_DEV599_ouvrir({ l: k.EUC_DEV599_jetonApprenti_(7) });
@@ -146,7 +156,7 @@ test('DEV631 : sans périodes enregistrées, le livret garde l’ancienne saisie
 
 test('DEV631 : pages — éditeur des objectifs (récapitulatif des périodes), livret par période, validation avec objectifs', () => {
   const pl = read('apps-script/Plannings_DEV610.html'), lv = read('apps-script/Livret_Apprenti_DEV599.html'), va = read('apps-script/Validation_Livret_DEV599.html'), js = read('apps-script/EUC_DEV610_Plannings.js');
-  for (const x of ["var REF630=<?!= referentiels ?>;", '<div id="objectifsLivret"></div>', "occupe(this,'Enregistrement du livret…','EUC_DEV631_enregistrerObjectifs'", 'Recopier vers toutes les périodes', 'var H_ENT_JOUR=7;', '* Total indicatif en entreprise', "≈ '+hfmt(tot.E.j*H_ENT_JOUR)+' h*", '||OBJ_SALE||HSALE||COUL_SALE){', "Chargement des objectifs du livret…"]) assert.ok(pl.includes(x), x);
+  for (const x of ["var REF630=<?!= referentiels ?>;", '<div id="objectifsLivret"></div>', "occupe(this,'Enregistrement du livret…','EUC_DEV631_enregistrerObjectifs'", 'Recopier vers toutes les périodes', 'Regrouper des périodes', 'fusion:OBJ.fusion}', 'EUC_DEV610_regrouperPeriodes_(BRUT,', 'var H_ENT_JOUR=7;', '* Total indicatif en entreprise', "≈ '+hfmt(tot.E.j*H_ENT_JOUR)+' h*", '||OBJ_SALE||HSALE||COUL_SALE){', "Chargement des objectifs du livret…"]) assert.ok(pl.includes(x), x);
   assert.ok(js.includes('t.referentiels = JSON.stringify(ref)'));
   for (const x of ['function ouvrirPeriode(f)', 'Objectifs de la période :', '+ Ajouter un lien', 'Enregistrer le brouillon', 'if(D.livret)return lirePeriode();', 'rel="noopener noreferrer"']) assert.ok(lv.includes(x), x);
   for (const x of ['lv.blocs.filter', 'objectifs fixés pour la période', 'rel="noopener noreferrer"']) assert.ok(va.includes(x), x);

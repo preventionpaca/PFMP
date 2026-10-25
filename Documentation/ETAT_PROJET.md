@@ -1,5 +1,20 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV610 / DEV631 : durée en semaines décimales, regroupement de périodes
+
+- **Durée** d'une période : jours ouvrés ÷ 5, au dixième (14 j = 2,8 sem. ;
+  4 j = 0,8 sem. ; 2 j = 0,4 sem.). Les « semaines entières » sont abandonnées
+  à la demande de l'utilisateur.
+- **Tableau de réglage « Regrouper des périodes »** dans le récapitulatif.
+  - Par défaut, chaque période calculée reste seule.
+  - Une case par période permet de la rattacher à la précédente au même lieu ;
+    la numérotation S / P se refait.
+  - Le réglage est enregistré avec les objectifs du livret (ligne
+    `Type = REGLAGE` de `EUC_LIVRET_OBJECTIFS`), et le livret de l'apprenti
+    reprend les périodes regroupées. Pensé pour le CAP peintre (2 j / 3 j),
+    valable pour toute formation.
+- Tests : 48/48 DEV610, 6/6 DEV631.
+
 ## Mise à jour du 25 octobre 2026 — DEV610 : durée des périodes, recto / verso
 
 - **Récapitulatif des périodes** : la colonne « Durée » remplace « Semaines ».

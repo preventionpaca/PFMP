@@ -853,10 +853,14 @@ test('périodes d’alternance pour le livret : P1, P2… au lycée et en entrep
   const Q = k.EUC_DEV610_periodesAlternance_(j, { vacancesCoupent: false });
   assert.deepStrictEqual(J(Q.map(p => p.nature + p.numero + ':' + p.jours)), ['L1:5', 'E1:15', 'L2:14', 'E2:5'], 'sans coupure par les vacances');
   assert.deepStrictEqual(J(k.EUC_DEV610_periodesAlternance_([])), []);
-  assert.deepStrictEqual(J(P.map(p => k.EUC_DEV610_dureePeriode_(p))), ['1 sem.', '3 sem.', '2 sem.', '1 sem.', '1 sem.'], 'semaines entières, férié compris (L2 : 2 semaines dont un jour férié)');
+  assert.deepStrictEqual(J(P.map(p => k.EUC_DEV610_dureePeriode_(p))), ['1 sem.', '3 sem.', '1,8 sem.', '1 sem.', '1 sem.'], 'jours ouvrés ÷ 5 : 9 jours (un férié) = 1,8 sem.');
+  assert.deepStrictEqual([k.EUC_DEV610_dureePeriode_({ jours: 14 }), k.EUC_DEV610_dureePeriode_({ jours: 4 }), k.EUC_DEV610_dureePeriode_({ jours: 19 })], ['2,8 sem.', '0,8 sem.', '3,8 sem.']);
   const alt = []; ['2027-09-13', '2027-09-20'].forEach(l => { for (let i = 0; i < 7; i++) { const d = k.EUC_DEV610_plus_(l, i), wd = new Date(d + 'T12:00:00Z').getUTCDay(); alt.push({ date: d, n: wd === 0 || wd === 6 ? 'N' : wd <= 2 ? 'L' : 'E', h: 7 }); } });
   const A = k.EUC_DEV610_periodesAlternance_(alt);
-  assert.deepStrictEqual(J(A.map(p => p.nature + p.numero + ' ' + k.EUC_DEV610_dureePeriode_(p))), ['L1 2 j', 'E1 3 j', 'L2 2 j', 'E2 3 j'], 'CAP peintre : 2 j au lycée, 3 j en entreprise');
+  assert.deepStrictEqual(J(A.map(p => p.nature + p.numero + ' ' + k.EUC_DEV610_dureePeriode_(p))), ['L1 0,4 sem.', 'E1 0,6 sem.', 'L2 0,4 sem.', 'E2 0,6 sem.'], 'CAP peintre : 2 j au lycée, 3 j en entreprise');
+  const R = k.EUC_DEV610_regrouperPeriodes_(A, ['S2', 'P2']);
+  assert.deepStrictEqual(J(R.map(p => [p.nature + p.numero, p.debut, p.fin, p.jours, p.heures, p.regroupe])), [['L1', '2027-09-13', '2027-09-21', 4, 28, ['S1', 'S2']], ['E1', '2027-09-15', '2027-09-24', 6, 42, ['P1', 'P2']]], 'séquences regroupées au même lieu, numérotation refaite');
+  assert.deepStrictEqual(J(k.EUC_DEV610_regrouperPeriodes_(A, []).map(p => p.nature + p.numero)), ['L1', 'E1', 'L2', 'E2'], 'par défaut : périodes calculées');
   assert.ok(read('apps-script/Plannings_DEV610.html').includes('#recapFormateurs:not(.noprint){break-before:page'), 'décompte des profs au verso');
   const c = {}; vm.createContext(c); vm.runInContext(k.EUC_DEV610_codeClient_(), c);
   assert.deepStrictEqual(J(c.EUC_DEV610_periodesAlternance_(j)), J(P));

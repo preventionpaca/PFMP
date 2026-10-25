@@ -36,14 +36,17 @@ function EUC_DEV631_normaliser_(q, blocs) {
     if (compte[k] > EUC_DEV631_MAX_) throw new Error('Pas plus de ' + EUC_DEV631_MAX_ + ' objectifs par bloc pour la période ' + lib + '.');
     objectifs.push({ periode: lib, bloc: bloc, texte: texte, ordre: compte[k] });
   });
-  return { periodes: periodes, objectifs: objectifs };
+  /* Regroupements choisis dans le récapitulatif (numéros calculés rattachés à la période précédente au même lieu). */
+  var fusion = []; (q.fusion || []).forEach(function(x) { x = EUC_DEV631_t_(x).toUpperCase(); if (!/^[SP]\d{1,3}$/.test(x)) throw new Error('Regroupement invalide : ' + x + '.'); if (fusion.indexOf(x) < 0) fusion.push(x); });
+  return { periodes: periodes, objectifs: objectifs, fusion: fusion };
 }
 /* Lignes Grist d'une formation lues en { periodes, objectifs } (calcul pur, lignes actives seulement). */
 function EUC_DEV631_lireLignes_(rows, annee, ligne) {
-  var out = { periodes: [], objectifs: [] };
+  var out = { periodes: [], objectifs: [], fusion: [] };
   (rows || []).map(function(r) { return r.fields || r; }).filter(function(f) { return f.Actif !== false && EUC_DEV631_t_(f.Annee_scolaire) === annee && EUC_DEV631_t_(f.Ligne) === ligne; })
     .forEach(function(f) {
-      if (EUC_DEV631_t_(f.Type) === 'PERIODE') out.periodes.push({ label: EUC_DEV631_t_(f.Periode), nature: EUC_DEV631_t_(f.Nature), du: EUC_DEV631_t_(f.Du), au: EUC_DEV631_t_(f.Au) });
+      if (EUC_DEV631_t_(f.Type) === 'REGLAGE') { try { out.fusion = JSON.parse(EUC_DEV631_t_(f.Texte) || '[]'); } catch (e) {} }
+      else if (EUC_DEV631_t_(f.Type) === 'PERIODE') out.periodes.push({ label: EUC_DEV631_t_(f.Periode), nature: EUC_DEV631_t_(f.Nature), du: EUC_DEV631_t_(f.Du), au: EUC_DEV631_t_(f.Au) });
       else out.objectifs.push({ periode: EUC_DEV631_t_(f.Periode), bloc: EUC_DEV631_t_(f.Bloc), texte: EUC_DEV631_t_(f.Texte), ordre: Number(f.Ordre) || 0 });
     });
   out.periodes.sort(function(a, b) { return a.du.localeCompare(b.du) || a.label.localeCompare(b.label); });
@@ -60,6 +63,7 @@ function EUC_DEV631_ecritures_(existants, annee, ligne, propre, maintenant) {
   var champs = function(type, p, bloc, texte, ordre, nat, du, au) { return { Annee_scolaire: annee, Ligne: ligne, Type: type, Periode: p, Nature: nat || '', Du: du || '', Au: au || '', Bloc: bloc || '', Texte: texte || '', Ordre: ordre || 0, Actif: true, Date_modification: maintenant }; };
   var placer = function(k, f) { var id = (dispo[k] || []).shift(); if (id) modifier.push({ id: id, fields: f }); else creer.push({ fields: f }); };
   propre.periodes.forEach(function(p) { placer('PERIODE|' + p.label + '|', champs('PERIODE', p.label, '', '', 0, p.nature, p.du, p.au)); });
+  if ((propre.fusion || []).length) placer('REGLAGE||', champs('REGLAGE', '', '', JSON.stringify(propre.fusion), 0));
   propre.objectifs.forEach(function(o) { placer('OBJECTIF|' + o.periode + '|' + o.bloc, champs('OBJECTIF', o.periode, o.bloc, o.texte, o.ordre)); });
   var desactiver = []; Object.keys(dispo).forEach(function(k) { dispo[k].forEach(function(id) { desactiver.push({ id: id, fields: { Actif: false, Date_modification: maintenant } }); }); });
   return { creer: creer, modifier: modifier, desactiver: desactiver };
@@ -80,7 +84,7 @@ function EUC_DEV631_tables_() {
   var c = CacheService.getScriptCache(); if (c.get('EUC_DEV631_TABLES1')) return;
   var col = EUC_DEV441_col_, ids = (EUC_ENT_grist('get', '/tables').tables || []).map(function(t) { return t.id; });
   if (ids.indexOf(EUC_DEV631_TABLE_) < 0) EUC_ENT_grist('post', '/tables', { tables: [{ id: EUC_DEV631_TABLE_, columns: [
-    col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne de planning (code)'), col('Type', 'Type (PERIODE / OBJECTIF)'), col('Periode', 'Période (S1, P1…)'), col('Nature', 'Nature (L lycée / E entreprise)'),
+    col('Annee_scolaire', 'Année scolaire'), col('Ligne', 'Ligne de planning (code)'), col('Type', 'Type (PERIODE / OBJECTIF / REGLAGE)'), col('Periode', 'Période (S1, P1…)'), col('Nature', 'Nature (L lycée / E entreprise)'),
     col('Du', 'Du'), col('Au', 'Au'), col('Bloc', 'Bloc RNCP (ou AUTRES)'), col('Texte', 'Objectif'), col('Ordre', 'Ordre', 'Int'), col('Actif', 'Actif', 'Bool'), col('Date_modification', 'Modifié le')] }] });
   /* Fiches du livret (DEV599) : période, ligne de planning et objectifs décochés pour l'apprenti. */
   if (typeof EUC_DEV599_tables_ === 'function') EUC_DEV599_tables_();
