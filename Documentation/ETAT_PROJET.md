@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 octobre 2026 — DEV610 : documents imprimés pleine page
+
+- **Cause de la bande blanche** (photo d'une impression jet d'encre en A4) : la
+  ligne de titre du planning, sur une seule ligne, dépassait la largeur de la
+  feuille (1 731 px pour 1 062). Chrome réduisait alors toute la page à environ
+  61 %.
+- **Correctifs** :
+  - le titre et la légende sont réduits à la largeur de la feuille ;
+  - le centrage vertical suit le format choisi (700 px en A4, 1 000 px en A3),
+    au lieu des 1 000 px fixes de l'A3 ;
+  - la réserve en hauteur est ajustée.
+- **Mesures sur maquette dans Chromium**, une seule page dans chaque format :
+  - A4 : tableau de 1 002 × 678 px sur une feuille de 1 077 × 748 ;
+  - A3 : tableau de 1 486 × 983 px sur 1 527 × 1 062.
+- **Calendrier d'une formation** : toute la largeur, et les lignes des jours
+  grandissent pour remplir la hauteur de la feuille A4 (746 px sur 756). Le
+  décompte des profs reste au verso.
+
 ## Mise à jour du 25 octobre 2026 — DEV610 : impression sur une imprimante de bureau
 
 - Un choix « Format » (A3 paysage par défaut, ou A4 paysage) est ajouté à côté
