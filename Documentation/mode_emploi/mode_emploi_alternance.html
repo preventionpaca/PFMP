@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mode d'emploi — alternance.loucodi.fr</title>
+<style>
+@page{size:A4;margin:16mm 15mm 18mm 15mm}
+:root{--bleu:#1b396a;--vert:#0b6b4f;--orange:#e46c0a;--gris:#5b6b66;--fond:#f4f8f6;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{font:10.4pt/1.5 "Helvetica Neue",Arial,sans-serif;color:#16302a;margin:0}
+h1{font-size:22pt;color:var(--bleu);margin:0 0 6mm;break-after:avoid}
+h2{font-size:15pt;color:var(--vert);border-bottom:2px solid var(--vert);padding-bottom:2mm;margin:9mm 0 4mm;break-after:avoid}
+h3{font-size:12pt;color:var(--bleu);margin:6mm 0 2mm;break-after:avoid}
+h4{font-size:10.6pt;margin:4mm 0 1mm;color:#0b4f40;break-after:avoid}
+p{margin:0 0 2.6mm}
+ul,ol{margin:0 0 3mm 5mm;padding-left:4mm}li{margin:0 0 1.2mm}
+.chapitre{break-before:page}
+.couv{height:250mm;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.couv .sur{font-size:12pt;letter-spacing:.2em;color:var(--gris);text-transform:uppercase}
+.couv h1{font-size:30pt;margin:8mm 0 4mm}
+.couv .sous{font-size:14pt;color:var(--vert);font-weight:700}
+.couv .bas{margin-top:30mm;color:var(--gris);font-size:10pt}
+.encadre{background:var(--fond);border-left:4px solid var(--vert);padding:3mm 4mm;margin:3mm 0 4mm;break-inside:avoid}
+.exemple{background:#fff7ed;border-left:4px solid var(--orange);padding:2.5mm 4mm;margin:2mm 0 4mm;break-inside:avoid}
+.exemple::before{content:"Exemple concret — ";font-weight:800;color:var(--orange)}
+.attention{background:#fef2f2;border-left:4px solid #b42318;padding:2.5mm 4mm;margin:2mm 0 4mm;break-inside:avoid}
+table{width:100%;border-collapse:collapse;margin:2mm 0 4mm;font-size:9.4pt;break-inside:auto}
+th,td{border:1px solid var(--bord);padding:1.6mm 2mm;vertical-align:top;text-align:left}
+th{background:var(--bleu);color:#fff;font-weight:700}
+tr{break-inside:avoid}
+td.b{font-weight:700;white-space:nowrap;width:30%}
+.vignette{border:1.5px solid var(--vert);border-radius:3mm;padding:3mm 4mm;margin:3mm 0;break-inside:avoid}
+.vignette .t{font-weight:800;color:var(--vert)}
+.chem{font-family:Menlo,Consolas,monospace;font-size:8.8pt;background:#eef3f8;padding:.3mm 1.5mm;border-radius:1mm;color:#1b396a}
+.sommaire li{margin:0 0 1mm}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+.schema{border:1.5px solid var(--bleu);border-radius:3mm;padding:3mm;margin:3mm 0;break-inside:avoid;font-size:9.6pt}
+.schema .ligne{display:flex;gap:2mm;align-items:stretch;margin:1.5mm 0}
+.schema .boite{flex:1;border:1px solid var(--bord);border-radius:2mm;padding:2mm;background:#fff;text-align:center}
+.schema .boite b{display:block;color:var(--bleu)}
+.schema .fl{align-self:center;color:var(--gris);font-weight:800}
+.petit{font-size:9pt;color:var(--gris)}
+</style>
+</head>
+<body>
+
+<section class="couv">
+  <div class="sur">Lycée Les Eucalyptus · Bureau formation entreprise</div>
+  <h1>Mode d'emploi de l'application<br>alternance.loucodi.fr</h1>
+  <div class="sous">PFMP, stages, mixité, apprentissage et formation continue :<br>une seule base, un seul point d'entrée</div>
+  <div class="bas">Édition du 25 octobre 2026 · version en ligne @1153<br>Pronote reste le progiciel officiel : l'application ne le remplace pas, elle le complète.</div>
+</section>
+
+<section class="chapitre">
+<h1>Sommaire</h1>
+<ol class="sommaire">
+  <li>Le problème de départ</li>
+  <li>La philosophie générale</li>
+  <li>Comment l'application est construite</li>
+  <li>Le point d'entrée et l'accueil d'administration</li>
+  <li>Vignette 1 — Entreprises</li>
+  <li>Vignette 2 — Apprentis</li>
+  <li>Vignette 3 — Scolaires</li>
+  <li>Vignette 4 — Plannings</li>
+  <li>Vignette 5 — EPI et étiquettes</li>
+  <li>Vignette 6 — Étiquettes et badges</li>
+  <li>Vignette 7 — Listes et documents</li>
+  <li>Vignette 8 — Paramétrage global</li>
+  <li>Vignette 9 — Liens hors mode administrateur</li>
+  <li>Vignette 10 — Développement</li>
+  <li>Les pages ouvertes aux élèves, aux tuteurs et aux professeurs</li>
+  <li>Parcours types, de bout en bout</li>
+  <li>Règles de sécurité et bonnes pratiques</li>
+  <li>Ce qui reste à construire</li>
+  <li>Glossaire</li>
+</ol>
+</section>
+
+<section class="chapitre">
+<h2>1. Le problème de départ</h2>
+<p>Le lycée Les Eucalyptus forme des jeunes sous plusieurs statuts : scolaires en PFMP, apprentis en classe entière (CFA RAN, CFAI, GRETA, Ducretet), apprentis en <b>mixité</b> dans des classes scolaires, stagiaires de la formation continue. Chaque statut vient avec ses propres outils :</p>
+<ul>
+  <li><b>Deux Pronote</b> (lycée professionnel et lycée général et technologique), chacun avec sa propre base d'entreprises ;</li>
+  <li><b>Deux à trois Yparéo</b> côté CFA, eux aussi avec leur base d'entreprises ;</li>
+  <li>des jeunes suivis par une <b>structure extérieure</b> (GRETA, Ducretet…) ;</li>
+  <li>des formulaires JotForm, des tableurs partagés, des calendriers dessinés à la main.</li>
+</ul>
+<p>Résultat : aucune information n'est concentrée au même endroit. On ne dispose pas d'une base d'entreprises fiable pour organiser les visites, répartir les professeurs, suivre les apprentis de façon qualitative, ni répondre aux demandes des corps d'inspection qui attendent un vrai suivi en entreprise.</p>
+<p>Le bureau formation entreprise (BFE) est en outre sollicité pour organiser des événements (remises de diplômes, forums d'orientation, campagnes de promotion d'une formation ou de l'apprentissage) et a besoin, pour cela, d'un <b>catalogue de contacts</b> qui englobe toutes les modalités de formation du lycée et ses partenaires : entreprises d'accueil, fournisseurs, anciens élèves.</p>
+<div class="encadre"><b>Objectif de l'application :</b> réunir dans une seule base (Grist) ce qui est éparpillé, sans ressaisie, avec des écrans simples organisés par métier, pour que chacun — BFE, direction, professeurs, élèves, tuteurs — trouve la bonne information et fasse la bonne action, au bon moment.</div>
+
+<h2>2. La philosophie générale</h2>
+<h3>Une seule base, alimentée par les outils officiels</h3>
+<p>Les données de référence restent dans les outils officiels. L'application les <b>importe</b> (Pronote pour les élèves, les responsables, les professeurs et les classes ; Yparéo pour les apprentis ; formulaires pour les entreprises), les <b>rapproche</b> (un élève, une entreprise, un SIRET, un tuteur) et les <b>réutilise</b> partout : conventions, suivi, cartes, plannings, listes, étiquettes, livret.</p>
+<h3>Un écran par métier, une vignette par famille de tâches</h3>
+<p>L'accueil d'administration est découpé en <b>10 vignettes</b>. Chacune regroupe tout ce qu'il faut pour un domaine : les trois parcours (entreprises, apprentis, scolaires), les outils transversaux (plannings, EPI, étiquettes, listes), le paramétrage commun, les liens destinés aux autres publics et la maintenance. On n'a jamais à chercher une fonction dans un menu : on va dans la vignette du sujet.</p>
+<h3>Lire largement, écrire prudemment</h3>
+<ul>
+  <li>Toute écriture importante passe par un <b>aperçu</b> ou une <b>simulation</b> avant confirmation (« Simuler l'import », « Aperçu de la publication », « Vérifier (aucune écriture) »).</li>
+  <li><b>Aucune suppression physique</b> : une ligne retirée est désactivée et reste traçable.</li>
+  <li>Les pages publiques sont en <b>lecture seule</b> et sans données nominatives quand elles s'adressent aux familles.</li>
+  <li>Chaque bouton qui travaille longtemps affiche un indicateur et ne peut pas être cliqué deux fois.</li>
+</ul>
+<h3>Chaque public a sa porte</h3>
+<p>L'administration (BFE, direction) passe par l'accueil d'administration. Les professeurs entrent par Atrium, avec un lien qui ne leur montre que leurs classes. Les élèves, les apprentis et les tuteurs reçoivent un <b>lien personnel signé</b> ou un <b>QR code</b> : pas de compte à créer, pas de mot de passe à retenir.</p>
+
+<h2>3. Comment l'application est construite</h2>
+<div class="schema">
+  <div class="ligne"><div class="boite"><b>Sources officielles</b>Pronote LP · Pronote LGT · Yparéo · formulaires (QR, secours, JotForm)</div><div class="fl">→</div><div class="boite"><b>Base unique Grist</b>élèves, classes, professeurs, entreprises, contacts, conventions, contrats, plannings, livrets</div><div class="fl">→</div><div class="boite"><b>Application (Google Apps Script)</b>deux adresses web : administration et public</div></div>
+  <div class="ligne"><div class="boite"><b>Administration</b>alternance.loucodi.fr → 10 vignettes</div><div class="boite"><b>Professeurs</b>Atrium → suivi des PFMP, suivi des apprentis, espace référent</div><div class="boite"><b>Élèves, apprentis, tuteurs</b>QR code, lien personnel : déclaration d'entreprise, livret, validation</div><div class="boite"><b>Public</b>book des entreprises, suivi en lecture seule</div></div>
+</div>
+<p>Le code est versionné (Git) et publié en <b>versions immuables</b> : chaque mise à jour est testée (plus de 1 100 tests automatiques), puis contrôlée sur les 34 pages principales ; en cas de problème, l'application revient automatiquement à la version précédente.</p>
+</section>
+
+<section class="chapitre">
+<h2>4. Le point d'entrée et l'accueil d'administration</h2>
+<p><span class="chem">alternance.loucodi.fr</span> est l'adresse à retenir. Elle affiche « Administration de l'alternance » et redirige vers l'accueil d'administration (bouton « Continuer vers l'administration »). Sur toutes les pages, le lien <b>Accueil PFMP</b> du fil d'Ariane ramène à cette adresse.</p>
+<h3>La carte « Effectifs »</h3>
+<p>En haut de l'accueil, une carte calcule pour l'année en cours le nombre d'élèves et d'apprentis, et signale les alertes de l'échéancier des apprentis (contacts d'entrée en retard ou à faire, apprentis sans référent). Un clic sur l'alerte ouvre directement l'échéancier.</p>
+<h3>Les 10 vignettes</h3>
+<table>
+<tr><th>#</th><th>Vignette</th><th>À quoi elle sert</th><th>Entrées</th></tr>
+<tr><td>1</td><td><b>Entreprises</b></td><td>Accueils, contacts, base d'entreprises fiable, cartographie</td><td>4</td></tr>
+<tr><td>2</td><td><b>Apprentis</b></td><td>Contrats, contact d'entrée, référentiels, dossier de demande, carte, quotas</td><td>6</td></tr>
+<tr><td>3</td><td><b>Scolaires</b></td><td>Conventions de PFMP, suivi par classe, attestations, ordres de mission</td><td>9</td></tr>
+<tr><td>4</td><td><b>Plannings</b></td><td>Calendriers de l'année : PFMP, stages, mixité, alternance</td><td>9</td></tr>
+<tr><td>5</td><td><b>EPI et étiquettes</b></td><td>Tenues, essayage, commandes fournisseur, fiches de remise</td><td>3</td></tr>
+<tr><td>6</td><td><b>Étiquettes et badges</b></td><td>Planches, modèles, impressions d'événements</td><td>5</td></tr>
+<tr><td>7</td><td><b>Listes et documents</b></td><td>Feuilles d'émargement et listes rapides</td><td>3</td></tr>
+<tr><td>8</td><td><b>Paramétrage global</b></td><td>Imports Pronote, Yparéo, formulaires ; destinataires des courriels</td><td>7</td></tr>
+<tr><td>9</td><td><b>Liens hors mode administrateur</b></td><td>Ce que voient les professeurs et le public</td><td>6</td></tr>
+<tr><td>10</td><td><b>Développement</b></td><td>Jeu de test, contrôles, maintenance</td><td>5</td></tr>
+</table>
+<div class="encadre"><b>Pourquoi ce découpage atteint les objectifs.</b> Les trois premières vignettes suivent les trois <b>parcours</b> (l'entreprise, l'apprenti, le scolaire) : c'est là que se fait le suivi quotidien. Les vignettes 4 à 7 sont des <b>outils transversaux</b> qui puisent dans la même base (un planning ou une liste d'émargement vaut pour tous les statuts). La vignette 8 regroupe <b>tout ce qui alimente la base</b> : on sait où aller à la rentrée. La vignette 9 montre <b>ce que voient les autres publics</b>, pour vérifier avant de diffuser. La vignette 10 isole <b>la technique</b>, pour qu'elle ne gêne pas le travail courant.</div>
+</section>
+
+<section class="chapitre">
+<h2>5. Vignette 1 — Entreprises</h2>
+<p>Le cœur du projet : une base d'entreprises unique, nourrie par toutes les conventions et tous les contrats, quel que soit le Pronote ou le Yparéo d'origine.</p>
+
+<h3>Book des entreprises</h3>
+<p>Le catalogue de toutes les entreprises qui ont accueilli un jeune, avec l'historique des accueils.</p>
+<table>
+<tr><td class="b">Appliquer les filtres / Réinitialiser</td><td>Combine les filtres (formation, domaine d'activité, commune, année, type d'accueil…) ; « Réinitialiser » revient à la liste complète.</td></tr>
+<tr><td class="b">Afficher la carte</td><td>Place les entreprises filtrées sur une carte.</td></tr>
+<tr><td class="b">Exporter Excel (CSV) · Imprimer · Télécharger le PDF</td><td>Sort la liste filtrée pour un tableur ou un document papier.</td></tr>
+<tr><td class="b">Fiche d'une entreprise</td><td>Photo et logo, site web, appellation officielle (« Rattacher cette appellation »), actions menées avec l'entreprise (« Ajouter l'action »), correction des coordonnées (« Enregistrer la correction »), « Voir sur la carte ».</td></tr>
+<tr><td class="b">Régler la diffusion des actions</td><td>Choisit ce que voient l'administration, les professeurs, les élèves et les familles.</td></tr>
+<tr><td class="b">Domaines d'activité (Grist)</td><td>Ouvre la liste des domaines pour la compléter.</td></tr>
+</table>
+<div class="exemple">Un professeur de carrosserie cherche des entreprises pour la PFMP de juin : filtre « Carrosserie » + commune « Nice », carte affichée, export PDF remis aux élèves.</div>
+
+<h3>Répertoire entreprises et contacts</h3>
+<p>Le même book, ouvert sur l'outil « contacts » : corriger les noms des responsables et tuteurs, rechercher un contact, « Exporter les contacts (CSV) » ou « Imprimer / PDF ». C'est la base du futur catalogue de campagnes.</p>
+<h3>Diffusion des actions entreprises</h3>
+<p>Le book ouvert sur l'outil « portées » : pour chaque type d'action (visite, partenariat, don, intervention…), qui la voit — administration, professeurs, élèves, familles. Bouton « Enregistrer le paramétrage ».</p>
+<h3>Entreprises et cartographie</h3>
+<table>
+<tr><td class="b">Analyser</td><td>Compte les entreprises sans coordonnées géographiques.</td></tr>
+<tr><td class="b">Géocoder les adresses françaises</td><td>Calcule les positions par la base nationale des adresses.</td></tr>
+<tr><td class="b">Géocoder les adresses de Monaco</td><td>Traitement à part, avec validation manuelle (Monaco et étranger).</td></tr>
+</table>
+<div class="exemple">Après l'import de 40 nouvelles conventions, « Analyser » en trouve 12 sans position ; « Géocoder les adresses françaises » les place, deux adresses monégasques sont validées à la main.</div>
+</section>
+
+<section class="chapitre">
+<h2>6. Vignette 2 — Apprentis</h2>
+<p>Tout le suivi de l'apprentissage, quel que soit le CFA ou l'organisme gestionnaire.</p>
+
+<h3>Gestion des apprentis</h3>
+<table>
+<tr><td class="b">Bilan des apprentis par diplôme et classe</td><td>Tableau des apprentis, contrats en cours, entreprises ; « Actualiser le bilan » le recalcule.</td></tr>
+<tr><td class="b">Rechercher · Historique</td><td>Retrouve un apprenti et affiche l'historique de ses contrats (ruptures, nouveaux contrats).</td></tr>
+<tr><td class="b">Enregistrer</td><td>Corrige une donnée de contrat (dates, tuteur, entreprise).</td></tr>
+<tr><td class="b">Audit SIRET</td><td>Liste les contrats dont le SIRET est absent ou incohérent.</td></tr>
+</table>
+
+<h3>Échéancier des apprentis</h3>
+<p>Le contact d'entrée doit avoir lieu dans les 45 jours qui suivent le début du contrat. L'échéancier classe chaque apprenti : à faire, rappel, alerte, retard, fait.</p>
+<table>
+<tr><td class="b">Affecter</td><td>Désigne le professeur référent d'un apprenti.</td></tr>
+<tr><td class="b">Prévenir les référents</td><td>Envoie à chaque référent la liste de ses apprentis et le lien de son espace.</td></tr>
+<tr><td class="b">Envoyer le lien du livret</td><td>Envoie à chaque apprenti coché son lien personnel vers le livret (aperçu d'abord, puis confirmation).</td></tr>
+<tr><td class="b">Imprimer les QR des livrets</td><td>Planche de QR codes à distribuer en classe.</td></tr>
+<tr><td class="b">Enregistrer · Enregistrer le lien</td><td>Note un contact (date, nature) ou un lien utile.</td></tr>
+</table>
+<div class="exemple">Un apprenti de 1 BTS MV signe le 15 septembre ; le 20 octobre il passe en « alerte ». Le BFE l'affecte à un référent, qui reçoit le lien de son espace, prend rendez-vous et remplit le bilan de visite.</div>
+
+<h3>Bilan de visite (depuis l'espace référent ou l'échéancier)</h3>
+<p>Fiche d'entretien en entreprise : comportement, aptitudes, premier bilan pédagogique, observations. « Enregistrer et faire valider par le tuteur » ; le tuteur signe sur son téléphone (QR) ou par lien reçu (« Envoyer le lien »). « Actualiser l'état de la validation » montre si c'est signé. « Imprimer / PDF » sort le bilan.</p>
+
+<h3>Référentiels des diplômes</h3>
+<p>Les blocs de compétences RNCP de chaque formation, relevés sur France Compétences : recherche, « Tout déplier / Tout replier », lien vers la fiche officielle, « Imprimer / PDF ». Ils servent de rubriques au livret de suivi.</p>
+<div class="exemple">La 1 MVA (2026-2027) suit le nouveau bac pro Maintenance des véhicules (RNCP40996, première session 2028) ; la TMVA suit encore l'ancien (RNCP40009, dernière session 2027).</div>
+
+<h3>Dossier de demande d'apprentissage</h3>
+<ol><li><b>Choisir l'élève</b> ;</li><li><b>vérifier et compléter</b> les informations (formation demandée) ;</li><li><b>choisir le modèle</b> et « Générer le PDF prérempli » (8 pages).</li></ol>
+<p>« Ajouter le PDF » enregistre un nouveau modèle ; « Enregistrer cette liste » mémorise les modèles ; « Confirmer la distribution » trace la remise au jeune (historique des distributions).</p>
+
+<h3>Cartographie des apprentis</h3>
+<p>Carte des entreprises d'accueil des apprentis avec le détail administratif ; « Afficher », « Imprimer », « Exporter PDF ».</p>
+<h3>Quotas et relances</h3>
+<p>Capacités par classe, pourcentage d'apprentis, relances à J+14 des jeunes encore sans contrat.</p>
+</section>
+
+<section class="chapitre">
+<h2>7. Vignette 3 — Scolaires</h2>
+<p>Le parcours des conventions de PFMP, de la déclaration de l'entreprise à l'attestation de stage.</p>
+
+<h3>Générer les conventions</h3>
+<p>Choix de la classe et de la période, contrôle des informations (entreprise, responsable, tuteur), génération des conventions au format du modèle installé, avec leur numéro et leur QR code.</p>
+<h3>Parcours différencié (fin de Terminale)</h3>
+<p>Suivi des élèves de Terminale en parcours différencié (poursuite d'études ou insertion) sur les dernières semaines.</p>
+<h3>Suivi des PFMP par classe</h3>
+<p>Le tableau de bord par classe et par période : conventions reçues, manquantes, affectations des professeurs pour les visites, envoi du tableau aux professeurs. Filtres « Conventions manquantes », « Élèves sortis », « Anomalies », « Soumissions non rapprochées » ; « Changer de classe », « Changer de période ».</p>
+<div class="exemple">TCAR, PFMP n°1 : 19 élèves, 16 conventions, 3 apprentis. Le BFE affecte un professeur à chaque élève, puis envoie le tableau ; chaque professeur voit ses visites dans Atrium.</div>
+
+<h3>Administration des conventions</h3>
+<table>
+<tr><td class="b">Rechercher · Ouvrir le dossier</td><td>Retrouve une convention (élève, numéro, entreprise) et affiche son parcours administratif et son historique.</td></tr>
+<tr><td class="b">Enregistrer les corrections</td><td>Corrige dates, horaires, tuteur…</td></tr>
+<tr><td class="b">Annuler avant démarrage</td><td>« Enregistrer l'annulation » : la PFMP n'a pas commencé.</td></tr>
+<tr><td class="b">Interrompre une PFMP commencée</td><td>« Enregistrer l'interruption » (rupture en cours de stage).</td></tr>
+<tr><td class="b">Créer la nouvelle convention après rupture</td><td>Crée la convention de remplacement et son QR.</td></tr>
+<tr><td class="b">Supprimer la convention</td><td>Suppression administrative (tracée), avec confirmation.</td></tr>
+</table>
+<h3>Attestations de stage</h3>
+<p>« Afficher les élèves » d'une classe et d'une période, « Tout sélectionner », « Générer le PDF » des attestations ; « Personnaliser le courriel » puis « Préparer les courriels » et « Confirmer et envoyer » aux entreprises. Réservé aux scolaires.</p>
+<h3>Élèves sans convention</h3>
+<p>Filtres classe et période, « Afficher », « Exporter PDF » ; les situations administratives autorisées (avis, dispense…) se gèrent dans le référentiel de la page.</p>
+<h3>Ordres de mission — visites PFMP</h3>
+<p>Transport par élève visité. « PDF prévisionnel », « PDF définitif », « Envoyer le prévisionnel », « Envoyer le définitif » au professeur ; modèles de textes modifiables (« Enregistrer les modèles », « Rétablir les textes par défaut »). Un envoi demande toujours « Confirmer l'envoi ».</p>
+<h3>Accès professeurs principaux</h3>
+<p>Codes temporaires limités à une classe et une période : « Afficher les accès », « Générer un nouveau code », « Préparer le lot de cette période ».</p>
+<h3>Paramètres de la convention</h3>
+<p>Lignes imprimées, placement précis sur le PDF, modèle Word ou PDF maître (« Installer ce modèle »), aperçu, et notifications par courriel.</p>
+</section>
+
+<section class="chapitre">
+<h2>8. Vignette 4 — Plannings</h2>
+<p>Une seule page, <b>Plannings annuels</b>, avec onze onglets. L'application est la seule source des plannings : elle écrit proprement dans la table <span class="chem">Planning_Periodes</span> que lit le suivi des PFMP.</p>
+<h3>Barre du haut</h3>
+<table>
+<tr><td class="b">Année scolaire · Version</td><td>Choix de l'année et de la version de travail (brouillon, publiée).</td></tr>
+<tr><td class="b">Générer depuis les règles</td><td>Place automatiquement les périodes d'après les règles et durées de chaque formation.</td></tr>
+<tr><td class="b">Enregistrer la version · comme nouvelle version</td><td>Sauvegarde le travail ; une version publiée n'est jamais écrasée.</td></tr>
+<tr><td class="b">Actualiser</td><td>Relit la base en gardant l'onglet et la position.</td></tr>
+<tr><td class="b">Format A3 / A4 · Imprimer / PDF</td><td>Le planning tient sur une page, pleine largeur, dans le format choisi.</td></tr>
+</table>
+<h3>Les onglets</h3>
+<h4>Planning général</h4>
+<p>Toutes les formations, semaine par semaine : bandes de couleur par type de période (PFMP, ENT., stage BTS…), points rouges des jours fériés, « A » des appels, vacances en gris, pont de l'Ascension encadré. On sélectionne des cases à la souris puis « Placer la période », « Effacer ces semaines » ou « Annuler la sélection ». Cases à cocher : Scolaire, Mixité, Alternance (classe entière), Formation continue. La liste « ouvrir une formation » ouvre son calendrier.</p>
+<h4>Plannings par formation</h4>
+<p>Une vignette par formation. Le calendrier d'une formation (annexe 32a) montre mois par mois les jours au lycée (orange), en entreprise (vert), vacances, fériés ; colonne H des heures, colonne P des intervenants.</p>
+<ul>
+  <li><b>Heures et formateurs</b> : heures du jour (8 h au plus) et interventions « COM 2+AT1 2+AT2 4 » ; contrôle des écarts ; total par semaine comparé à l'objectif « visé par semaine » ; « Recopier cette semaine… » vers d'autres semaines ; « Enregistrer les heures ».</li>
+  <li><b>Afficher les intervenants et leurs heures</b> : avec ou sans la colonne P (sans = commande du CFA) ; l'impression suit, le décompte des profs est au verso.</li>
+  <li><b>Récapitulatif des périodes ↗</b> : S1, S2… au lycée, P1, P2… en entreprise, durée en semaines (jours ÷ 5), heures, total indicatif en entreprise (7 h par jour ouvré) ; tableau « Regrouper des périodes » ; objectifs du livret par bloc RNCP.</li>
+</ul>
+<div class="exemple">Bachelor IP, jeudi : « COM 2+AT1 2+AT2 4 » donne 8 h pour les jeunes, 2 h à COM, 2 h à AT1, 4 h à AT2 ; le récapitulatif annuel par formateur additionne ces heures pour respecter la quotité de chacun.</div>
+<h4>Périodes</h4>
+<p>Le tableau de toutes les périodes, ligne par ligne : « Ajouter une période », « Tout déplier / Tout replier », « Recopier ces dates… » vers les classes du même niveau, « Reprendre le calendrier publié », « Contrôler la reprise » (chaque ligne de Planning_Periodes placée, oubliée, en double…).</p>
+<h4>Règles et durées</h4>
+<p>Pour chaque profil de formation et chaque année : numéro, type, durée en semaines, ancrage sur des vacances, écart. « Ajouter une règle », « Enregistrer les règles ».</p>
+<h4>Organisation du tableau</h4>
+<p>Ordre des lignes, groupes, établissement et organismes, années de validité, filières couvertes par une mixité. « Ajouter une classe à la main » (formation qui ouvre), « Appliquer les noms Pronote », « Enregistrer l'organisation ».</p>
+<h4>Lignes et classes</h4>
+<p>Rattachement de chaque ligne aux classes Pronote : c'est ce lien qui permet au suivi des PFMP et au livret de retrouver les élèves. « Aperçu du calibrage », « Appliquer le calibrage », « Enregistrer le rattachement ».</p>
+<h4>Années et vacances · Jours particuliers · Logos · Couleurs et mise en page</h4>
+<p>« Créer l'année suivante », « Ajouter des vacances », « Proposer d'après l'année précédente » ; samedis travaillés et jours banalisés ; logos des organismes réduits automatiquement ; couleur de chaque type de période et pied de page (Bureau formation entreprise et téléphone).</p>
+<h4>Publication</h4>
+<p>Historique des versions, « Aperçu de la publication » (créations, corrections, lignes désactivées, dossiers rattachés) puis « Publier dans Planning_Periodes ».</p>
+<div class="exemple">Préparer 2027-2028 : « Créer l'année suivante », « Proposer d'après l'année précédente » pour les vacances, « Générer depuis les règles », ajustements à la souris, impression A3 pour le conseil pédagogique, puis publication.</div>
+</section>
+
+<section class="chapitre">
+<h2>9. Vignette 5 — EPI et étiquettes</h2>
+<p>Les équipements de protection individuelle (tenues de travail) : de l'essayage à la remise signée.</p>
+<table>
+<tr><th>Onglet</th><th>Rôle des boutons</th></tr>
+<tr><td class="b">Qui saisit ?</td><td>À l'ouverture, la personne tape les premières lettres de son nom (professeurs et administratifs proposés) puis « Commencer » ; « Changer de personne » plus tard.</td></tr>
+<tr><td class="b">Essayage</td><td>Classe et vague, une taille par pièce et par élève ; « Appliquer à toute la classe » le professeur de l'essayage ; « Ajouter un élève hors Pronote » (puis « Rattacher » quand il arrive dans Pronote) ; « Enregistrer l'essayage ».</td></tr>
+<tr><td class="b">Étiquettes fournisseur</td><td>« Télécharger le ZIP (JPEG 144 dpi) » : une image 9,50 × 4,85 cm par élève, pour la machine du fournisseur.</td></tr>
+<tr><td class="b">Fiche de remise</td><td>Feuille d'émargement par classe (nom, prénom, classe, année, équipements et tailles, date, signature) ; « Imprimer / PDF » ; « Marquer la classe comme servie ».</td></tr>
+<tr><td class="b">Vagues</td><td>« Nouvelle vague » : une vague par commande au fournisseur.</td></tr>
+<tr><td class="b">Réglages</td><td>Pièces et grilles de tailles, tenues, tenue de chaque classe : « Ajouter une pièce », « Ajouter une tenue », « Enregistrer… ».</td></tr>
+</table>
+<div class="exemple">Vague 2 pour les 1BTS CPRP : essayage en salle par deux professeurs, ZIP envoyé au fournisseur, puis à la livraison la fiche de remise signée par chaque élève et la classe marquée servie.</div>
+
+<h2>10. Vignette 6 — Étiquettes et badges</h2>
+<table>
+<tr><td class="b">Imprimer</td><td>Choix du modèle, de la source (élèves par classe, professeurs, administratifs, partenaires, import Excel), « Tout cocher / Tout décocher », case de départ sur la planche ; les étiquettes déjà imprimées sont écartées ; « Imprimer / PDF ».</td></tr>
+<tr><td class="b">Modèles</td><td>« Nouveau modèle », « Dupliquer », zones placées à la souris (« Ajouter une zone » : nom, prénom, organisme, fonction, texte libre…), police, gras, italique, souligné, image de fond (« Retirer le fond ») ; « Enregistrer le modèle ».</td></tr>
+<tr><td class="b">Formats de planche</td><td>Dimensions, marges et espaces des planches ou pochettes en stock ; « Ajouter un format », « Enregistrer les formats ».</td></tr>
+<tr><td class="b">Imports</td><td>Listes Excel d'invités, de jurys, de partenaires ; « Télécharger le modèle Excel » ; les imports sont mémorisés par lot.</td></tr>
+<tr><td class="b">Administratifs</td><td>Liste des personnels administratifs, modèle Excel et import, « Ajouter une personne ».</td></tr>
+</table>
+<div class="exemple">Remise des diplômes : import Excel des invités, modèle « badge 2 × 4 » avec fond au logo du lycée, impression ; les retardataires ajoutés ensuite sortent seuls, sans réimprimer les autres.</div>
+
+<h2>11. Vignette 7 — Listes et documents</h2>
+<table>
+<tr><td class="b">Élèves par classe</td><td>Scolaires, apprentis repérés « A », autres formations ; colonnes téléphone, courriel, signature ; « ★ Mémoriser » une sélection, « Imprimer », « Exporter PDF ».</td></tr>
+<tr><td class="b">Professeurs — réunions</td><td>Par discipline, par fonction (PP, coordonnateurs…), puis nominativement ; feuille d'émargement de réunion.</td></tr>
+<tr><td class="b">Élèves mineurs</td><td>Âge, date de majorité et délai, par classe (autorisations, sorties).</td></tr>
+</table>
+</section>
+
+<section class="chapitre">
+<h2>12. Vignette 8 — Paramétrage global</h2>
+<p>Tout ce qui alimente la base. À la rentrée, on passe ici dans l'ordre.</p>
+<table>
+<tr><th>Entrée</th><th>Rôle des boutons</th></tr>
+<tr><td class="b">Importer les élèves Pronote</td><td>« Analyser sans importer », choix des classes à intégrer (correspondances, exclusions), « Mémoriser ces choix dans Grist », « Simuler l'import », puis « Importer réellement dans Grist ».</td></tr>
+<tr><td class="b">Synchroniser professeurs &amp; classes</td><td>« Importer / synchroniser les professeurs », puis « les classes » et les professeurs principaux.</td></tr>
+<tr><td class="b">Diplômes par classe</td><td>Intitulé exact du diplôme de chaque classe (conventions, calendriers) ; « Enregistrer les diplômes ».</td></tr>
+<tr><td class="b">Importer les apprentis Yparéo</td><td>Fichier CSV, XLS ou XLSX ; « Enregistrer les correspondances » de groupes ; « Analyser le fichier » ; doublons et erreurs de rattachement ; « Vérifier (aucune écriture) » ; « Importer les lignes validées » ; « Désactiver ces fiches » pour les sortants.</td></tr>
+<tr><td class="b">Soumissions reçues</td><td>Les déclarations d'entreprise (formulaire de secours, ancien JotForm) : contrôle du SIRET, de l'élève et de la classe, puis validation ; la convention et son numéro sont créés et l'élève est prévenu.</td></tr>
+<tr><td class="b">Formulaire « Déclarer mon entreprise »</td><td>Le lien public à mettre dans Atrium (voir chapitre 15).</td></tr>
+<tr><td class="b">Destinataires &amp; envois</td><td>Qui reçoit quoi : tableaux de suivi, dépôts et numéros de convention, validations des tuteurs, livret des apprentis ; périmètre par établissement, filière ou organisme ; « + Ajouter un destinataire » (inspecteur, coordonnateur), « Enregistrer ».</td></tr>
+</table>
+<div class="exemple">Rentrée : import Pronote LP puis LGT (simulation d'abord), synchronisation des professeurs et classes, import Yparéo du CFA RAN puis du CFAI, contrôle des diplômes par classe. La base est prête pour les conventions et les plannings.</div>
+
+<h2>13. Vignette 9 — Liens hors mode administrateur</h2>
+<table>
+<tr><td class="b">Liens d'accès Atrium</td><td>Les adresses à publier pour les enseignants ; « Générer une nouvelle clé » (en cas de fuite), « Exiger la clé », « Revenir en transition », journal des accès des six dernières heures, « Copier ».</td></tr>
+<tr><td class="b">Suivi des PFMP — vue enseignants</td><td>Ce que voit un professeur : ses classes, ses élèves, ses visites.</td></tr>
+<tr><td class="b">Suivi des apprentis — vue enseignants</td><td>Idem pour les apprentis suivis.</td></tr>
+<tr><td class="b">Suivi des PFMP (public)</td><td>Point sur les stages, lecture seule.</td></tr>
+<tr><td class="b">Consultation apprentis (public)</td><td>Lecture seule.</td></tr>
+<tr><td class="b">Book des entreprises — élèves et familles</td><td>Le catalogue sans données nominatives, pour chercher un lieu de stage.</td></tr>
+</table>
+
+<h2>14. Vignette 10 — Développement</h2>
+<table>
+<tr><td class="b">Activer le mode essai (24 h)</td><td>Le formulaire de secours accepte un élève fictif « ESSAI » ; son dépôt ne peut jamais être validé.</td></tr>
+<tr><td class="b">Classe et élève de test</td><td>Crée sans doublon une classe « TEST PFMP » (hors effectifs, carte et books), une période, un élève de test à votre adresse et un professeur principal de test ; « Aperçu » puis confirmation.</td></tr>
+<tr><td class="b">Vérifier les chiffres du suivi</td><td>Comparer, diagnostiquer une classe, mesurer les temps, codes postaux sans 0, élèves en double, nettoyage de la table Classes (préparer puis confirmer).</td></tr>
+<tr><td class="b">Maintenance Snapshot PFMP</td><td>Synchroniser ou contrôler les instantanés du suivi.</td></tr>
+<tr><td class="b">Ancien suivi des PFMP</td><td>Fiches de classe complètes, en attendant la bascule.</td></tr>
+</table>
+</section>
+
+<section class="chapitre">
+<h2>15. Les pages ouvertes aux élèves, aux tuteurs et aux professeurs</h2>
+<h3>Déclarer mon entreprise (élèves)</h3>
+<ol>
+  <li><b>Qui es-tu ?</b> classe, nom, prénom, date de naissance, code de sécurité dessiné (« Nouveau code » s'il est illisible) ; ou « Utiliser mon code » imprimé sous le QR de la convention.</li>
+  <li><b>Période de stage</b> de sa classe.</li>
+  <li><b>Entreprise</b> : « Vérifier le SIRET » ; sinon « Mon SIRET ne fonctionne pas, ou mon entreprise est à Monaco / à l'étranger » puis « Envoyer au bureau des entreprises ».</li>
+  <li><b>Responsable et tuteur</b>, puis « Envoyer ma déclaration » : numéro d'enregistrement affiché et envoyé par courriel.</li>
+</ol>
+<h3>Mon livret d'apprentissage (apprentis)</h3>
+<p>« + Nouvelle fiche », choix de la <b>période</b> (S1 au lycée, P1 en entreprise…) : dates et objectifs viennent du planning. Pour chaque bloc RNCP, le jeune décrit ce qu'il a fait ; « Autres activités » pour ce qui sort du référentiel mais reste formateur ; « Ce que j'en retiens » ; liens web ; photos. « Enregistrer le brouillon », puis « Demander la validation ».</p>
+<h3>Validation du livret et du bilan (tuteurs, référents)</h3>
+<p>Au lycée, le professeur référent reçoit un lien, relit, commente, « Je valide cette fiche ». En entreprise, le tuteur scanne le QR présenté par l'apprenti (ou reçoit le lien), indique son identité et un contact, signe au doigt (« Effacer la signature » pour recommencer) et valide. La fiche validée est figée ; le compte rendu part au tuteur, au référent, à l'apprenti, aux responsables légaux s'il est mineur, et aux destinataires paramétrés.</p>
+<h3>Espace professeur référent</h3>
+<p>« Recevoir mon lien » : le professeur reçoit par courriel l'accès à la liste de ses apprentis et à leurs bilans de visite.</p>
+
+<h2>16. Parcours types, de bout en bout</h2>
+<h3>A. Une convention de PFMP, de la déclaration à l'attestation</h3>
+<ol>
+  <li>L'élève scanne le QR (ou ouvre « Déclarer mon entreprise ») et déclare son entreprise ; il reçoit son numéro d'enregistrement.</li>
+  <li>Le BFE ouvre <b>Paramétrage global › Soumissions reçues</b>, contrôle et valide : la convention est créée avec son numéro.</li>
+  <li><b>Scolaires › Suivi des PFMP par classe</b> : affectation d'un professeur pour la visite, envoi du tableau.</li>
+  <li><b>Scolaires › Ordres de mission</b> : prévisionnel puis définitif.</li>
+  <li>Fin de stage : <b>Scolaires › Attestations de stage</b>, PDF et courriels aux entreprises.</li>
+</ol>
+<h3>B. Le suivi d'un apprenti</h3>
+<ol>
+  <li><b>Paramétrage global › Importer les apprentis Yparéo</b>.</li>
+  <li><b>Apprentis › Échéancier</b> : affectation du référent, envoi du lien du livret.</li>
+  <li>Contact d'entrée sous 45 jours : bilan de visite signé par le tuteur.</li>
+  <li>À chaque période S ou P : fiche du livret, validée par le professeur ou le tuteur.</li>
+</ol>
+<h3>C. Préparer les calendriers de l'année prochaine</h3>
+<ol>
+  <li><b>Plannings › Années et vacances</b> : créer l'année, vacances proposées.</li>
+  <li><b>Organisation du tableau</b> : nouvelles formations, années de validité.</li>
+  <li><b>Générer depuis les règles</b>, ajustements, calendriers par formation avec les heures commandées par le CFA.</li>
+  <li><b>Récapitulatif des périodes</b> : regroupements, objectifs du livret.</li>
+  <li><b>Publication</b> dans Planning_Periodes.</li>
+</ol>
+<h3>D. Organiser un événement</h3>
+<ol>
+  <li>Constituer la liste : élèves d'une classe, professeurs, partenaires du book, import Excel.</li>
+  <li><b>Étiquettes et badges</b> : modèle, impression.</li>
+  <li><b>Listes et documents</b> : feuille d'émargement le jour J.</li>
+</ol>
+</section>
+
+<section class="chapitre">
+<h2>17. Règles de sécurité et bonnes pratiques</h2>
+<ul>
+  <li>Toujours lancer la <b>simulation</b> ou l'<b>aperçu</b> avant un import ou une publication.</li>
+  <li>Les envois de courriels demandent une confirmation explicite ; vérifier la liste des destinataires affichée.</li>
+  <li>Ne jamais diffuser un lien personnel d'élève à un autre élève : il l'identifie.</li>
+  <li>En cas de fuite d'un lien enseignant : <b>Liens d'accès Atrium › Générer une nouvelle clé</b>.</li>
+  <li>Une ligne supprimée n'est jamais effacée : elle est désactivée et peut être retrouvée.</li>
+  <li>Pour essayer sans risque : <b>Développement › Classe et élève de test</b> ou <b>mode essai</b>.</li>
+</ul>
+
+<h2>18. Ce qui reste à construire</h2>
+<ul>
+  <li><b>Catalogue partenaires et campagnes</b> : une base de contacts unique (entreprises d'accueil, fournisseurs, lieux de stage, anciens élèves, partenaires institutionnels) avec des <b>étiquettes</b> (apprentissage, remise de diplômes, forum d'orientation, promotion d'une formation) pour lancer une campagne ou préparer un événement sur toutes les modalités de formation du lycée.</li>
+  <li><b>Livret de suivi</b> : objectifs décochés pour un jeune, PDF archivé de chaque fiche, back-office par classe, livret annuel pour le jury.</li>
+  <li><b>Emploi du temps</b> : à partir du module EDT existant, placement des cours (semaine, quinzaine, plusieurs formateurs, salles) à partir des jours en centre et des heures commandées.</li>
+</ul>
+
+<h2>19. Glossaire</h2>
+<table>
+<tr><td class="b">PFMP</td><td>Période de formation en milieu professionnel (scolaires).</td></tr>
+<tr><td class="b">Mixité</td><td>Apprentis intégrés à une classe scolaire.</td></tr>
+<tr><td class="b">Classe entière</td><td>Classe d'apprentis ou de formation continue (CFA RAN, CFAI, GRETA…).</td></tr>
+<tr><td class="b">S1, P1…</td><td>Périodes du livret : S au lycée, P en entreprise.</td></tr>
+<tr><td class="b">RNCP · bloc de compétences</td><td>Répertoire national des certifications professionnelles ; chaque diplôme y est découpé en blocs.</td></tr>
+<tr><td class="b">Grist</td><td>La base de données unique de l'application.</td></tr>
+<tr><td class="b">Planning_Periodes</td><td>Table publiée des périodes, lue par le suivi des PFMP.</td></tr>
+<tr><td class="b">BFE</td><td>Bureau formation entreprise.</td></tr>
+<tr><td class="b">Atrium</td><td>L'ENT par lequel les professeurs ouvrent leurs liens.</td></tr>
+</table>
+<p class="petit">Document établi à partir du code de l'application (version @1153). Les exemples sont fictifs.</p>
+</section>
+</body>
+</html>
