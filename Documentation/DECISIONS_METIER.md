@@ -342,3 +342,14 @@ pour ce qui sort du référentiel mais reste formateur : site à consulter,
 émission, formation à un logiciel, sujet transversal. Le référent fixe un
 **objectif pour chaque bloc** de la période, ainsi que pour les autres
 activités.
+
+## DEV634 — Mixités créées depuis Yparéo, arbitrage des doublons (27 octobre 2026)
+
+- Par défaut, une mixité absente de « Gestion des apprentis » reste ignorée. Sur option
+  explicite, son dossier est créé avec ce circuit conventionnel, demandé par
+  l'administrateur : distribué 2 semaines avant le début du contrat, remis 1 semaine
+  avant, transmis au CFA le jour de la remise.
+- Un import ne modifie jamais le circuit d'un dossier existant.
+- Pour un élève en double, de préférence garder la fiche Pronote, que le prochain import
+  Pronote retrouvera. Deux INE différents = deux personnes : jamais réunies.
+

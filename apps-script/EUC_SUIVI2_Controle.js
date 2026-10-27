@@ -17,6 +17,7 @@ function EUC_SUIVI2_afficherControle(e) {
   var t = HtmlService.createTemplateFromFile('Controle_Chiffres_DEV575');
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   t.annee = EUC_SUIVI2_t_(e && e.parameter && e.parameter.annee);
+  t.section = EUC_SUIVI2_t_(e && e.parameter && e.parameter.section);
   return t.evaluate().setTitle('Vérifier les chiffres — PFMP').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 

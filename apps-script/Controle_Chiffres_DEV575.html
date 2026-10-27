@@ -30,6 +30,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .diff{font-size:12px;color:var(--alerte)}.diff b{color:var(--texte)}
 .famille{font-size:16px;margin:18px 0 6px}
 .message{font-weight:700}.message.erreur{color:var(--alerte)}
+  .spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:dblr .7s linear infinite;vertical-align:-2px;margin-right:6px}.busy .spin{display:inline-block}@keyframes dblr{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -68,7 +69,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   </section>
   <section id="dblSection">
     <h2 style="margin-top:0">Élèves en double</h2>
-    <p class="note">Deux fiches actives de l’année avec le même INE, les mêmes nom, prénom et date de naissance, ou les mêmes nom et prénom dans la même classe. On garde la fiche qui porte des conventions, apprentissage ou affectations ; les autres sont désactivées, jamais supprimées. Un groupe où plusieurs fiches portent des liens est seulement signalé, à arbitrer dans Grist.</p>
+    <p class="note">Deux fiches actives de l’année avec le même INE, les mêmes nom, prénom et date de naissance, ou les mêmes nom et prénom dans la même classe. On garde la fiche qui porte des conventions, apprentissage ou affectations ; les autres sont désactivées, jamais supprimées. Un groupe où plusieurs fiches portent des liens est « à arbitrer » : cliquez « Garder cette fiche » sur la bonne (de préférence la fiche Pronote, que le prochain import Pronote retrouvera) ; les conventions, dossiers d’apprentissage, affectations et parcours des autres fiches lui sont rattachés, puis ces fiches sont désactivées.</p>
     <p><button type="button" id="dblAnalyser">Analyser</button> <button type="button" id="dblDesactiver" disabled>Désactiver les doublons sans lien</button></p>
     <div id="dblResultat"></div>
   </section>
@@ -150,14 +151,21 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 (function(){var e=function(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});},R=document.getElementById('dblResultat'),A=document.getElementById('dblAnalyser'),D=document.getElementById('dblDesactiver');
   function an(){var y=document.getElementById('annee');return y&&y.value||'';}
   function liens(x){var l=x.liens||{};return [l.conventions&&l.conventions+' conv.',l.apprentissage&&l.apprentissage+' appr.',l.affectations&&l.affectations+' affect.',l.parcours&&l.parcours+' parc.'].filter(Boolean).join(', ')||'aucun lien';}
-  function ligne(x,role){return '<tr><td>'+role+'</td><td>'+e(x.nom)+'</td><td>'+e(x.classe)+'</td><td>'+x.id+'</td><td>'+e(x.source)+'</td><td>'+e(x.entree)+'</td><td>'+e(liens(x))+'</td></tr>';}
+  function ligne(x,role,g){var b=g&&g.arbitrer&&!g.inesDifferents?' <button type="button" class="dblGarder" data-id="'+x.id+'"><span class="spin"></span><span>Garder cette fiche</span></button>':'';return '<tr><td>'+role+'</td><td>'+e(x.nom)+'</td><td>'+e(x.classe)+'</td><td>'+x.id+'</td><td>'+e(/YPAREO/i.test(x.source)?'Yparéo':x.source)+'</td><td>'+e(x.entree)+'</td><td>'+e(liens(x))+b+'</td></tr>';}
   function afficher(r){if(!r.groupes.length){R.innerHTML='<p>Aucun élève en double pour '+e(r.annee)+'.</p>';D.disabled=true;return;}
     R.innerHTML='<p><b>'+r.groupes.length+'</b> élève(s) en double — <b>'+r.aDesactiver+'</b> fiche(s) à désactiver'+(r.aArbitrer?', <b>'+r.aArbitrer+'</b> groupe(s) à arbitrer (plusieurs fiches portent des liens)':'')+(r.desactives?' — <b>'+r.desactives+' désactivée(s)</b>':'')+'.</p>'+
-      '<table><thead><tr><th></th><th>Élève</th><th>Classe</th><th>Fiche</th><th>Source</th><th>Entrée</th><th>Liens</th></tr></thead><tbody>'+r.groupes.map(function(g){return ligne(g.garde,'garder')+g.autres.map(function(x){return ligne(x,g.arbitrer?'<b style="color:#b45309">à arbitrer'+(g.inesDifferents?' (INE différents : homonymes ?)':'')+'</b>':'désactiver');}).join('');}).join('<tr><td colspan="7" style="background:#f4f8f6;height:4px;padding:0"></td></tr>')+'</tbody></table>';
-    D.disabled=!(r.apercu&&r.aDesactiver);}
+      '<table><thead><tr><th></th><th>Élève</th><th>Classe</th><th>Fiche</th><th>Source</th><th>Entrée</th><th>Liens</th></tr></thead><tbody>'+r.groupes.map(function(g){return ligne(g.garde,g.arbitrer?'<b style="color:#b45309">à arbitrer</b>':'garder',g)+g.autres.map(function(x){return ligne(x,g.arbitrer?'<b style="color:#b45309">à arbitrer'+(g.inesDifferents?' (INE différents : homonymes ?)':'')+'</b>':'désactiver',g);}).join('');}).join('<tr><td colspan="7" style="background:#f4f8f6;height:4px;padding:0"></td></tr>')+'</tbody></table>';
+    D.disabled=!(r.apercu&&r.aDesactiver);
+    Array.prototype.forEach.call(R.querySelectorAll('.dblGarder'),function(b){b.onclick=function(){garder(b);};});}
+  /* DEV634 : arbitrage — aperçu des liens déplacés, confirmation, puis nouvelle analyse. */
+  function occupe(b,on,t){var s=b.lastElementChild;if(on){b.dataset.t=s.textContent;s.textContent=t;b.disabled=true;b.classList.add('busy');}else{s.textContent=b.dataset.t||s.textContent;b.disabled=false;b.classList.remove('busy');}}
+  function appel(nom,q,b,t){return new Promise(function(ok,ko){var fini=false,minuteur=setTimeout(function(){if(fini)return;fini=true;occupe(b,false);ko(new Error('Délai dépassé. Relancez l’analyse avant de réessayer.'));},120000);occupe(b,true,t);google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minuteur);occupe(b,false);ok(r);}).withFailureHandler(function(err){if(fini)return;fini=true;clearTimeout(minuteur);occupe(b,false);ko(new Error(err&&err.message||err));})[nom](q);});}
+  function garder(b){var id=Number(b.dataset.id);appel('EUC_DEV578_garderFiche',{annee:an(),garder:id},b,'Vérification…').then(function(p){var l=p.liens.map(function(x){return x.nombre+' '+x.lien;}).join(', ')||'aucun lien';if(!confirm('Garder la fiche n° '+id+' ?\n\nLiens rattachés à cette fiche : '+l+'.\nFiche(s) désactivée(s) (rien n’est supprimé) : n° '+p.retirer.join(', n° ')+'.'))return null;return appel('EUC_DEV578_garderFiche',{annee:an(),garder:id,confirmation:'GARDER'},b,'Arbitrage…');}).then(function(r){if(!r)return;R.insertAdjacentHTML('afterbegin','<p style="color:#087f70"><b>Fiche n° '+r.garder+' gardée, '+r.retirer.length+' fiche(s) désactivée(s).</b> Nouvelle analyse…</p>');lancer(false);}).catch(function(err){R.insertAdjacentHTML('afterbegin','<p style="color:#b42318">Erreur : '+e(err.message)+'</p>');});}
   function lancer(confirmer){var b=confirmer?D:A,t=b.textContent;b.disabled=true;b.textContent=confirmer?'Désactivation…':'Analyse…';
     google.script.run.withSuccessHandler(function(r){b.textContent=t;A.disabled=false;afficher(r);}).withFailureHandler(function(err){b.textContent=t;b.disabled=false;R.textContent='Erreur : '+(err&&err.message||err);}).EUC_DEV578_doublonsEleves({annee:an(),confirmation:confirmer?'DESACTIVER':''});}
   A.onclick=function(){lancer(false);};
+  /* Arrivée depuis l'import Yparéo (?section=doublons) : section affichée et analysée d'office. */
+  if(<?!= JSON.stringify(section || '') ?>==='doublons'){document.getElementById('dblSection').scrollIntoView();lancer(false);}
   D.onclick=function(){if(confirm('Désactiver les fiches en double qui ne portent aucun lien ? (Actif = faux, rien n’est supprimé.)'))lancer(true);};
 })();
 

@@ -91,3 +91,43 @@ function EUC_DEV578_doublonsEleves(q) {
   res.desactives = cibles.length;
   return res;
 }
+
+/* DEV634 — Arbitrage d'un groupe « à arbitrer » : l'administrateur choisit la fiche à garder.
+ * Les liens des autres fiches (conventions, apprentissage, affectations, parcours) sont
+ * rattachés à la fiche gardée, puis ces fiches sont désactivées (Actif = faux, rien n'est
+ * supprimé). Refusé si les INE diffèrent (homonymes : deux personnes). Sans confirmation
+ * 'GARDER' : aperçu seul. */
+function EUC_DEV578_garderFiche(q) {
+  EUC_SUIVI2_exigerAdmin_(); q = q || {};
+  var garder = Number(q.garder) || 0; if (!garder) throw new Error('Fiche à garder invalide.');
+  var d = EUC_DEV578_doublonsCalcul_(q.annee);
+  var g = d.groupes.filter(function(x) { return [x.garde].concat(x.autres).some(function(f) { return f.id === garder; }); })[0];
+  if (!g) throw new Error('Cette fiche ne fait plus partie d’un groupe en double : relancez l’analyse.');
+  if (g.inesDifferents) throw new Error('INE différents : ce sont probablement deux élèves distincts (homonymes). Rien n’est modifié.');
+  var retirer = [g.garde].concat(g.autres).map(function(f) { return f.id; }).filter(function(id) { return id !== garder; }), ret = {};
+  retirer.forEach(function(id) { ret[id] = true; });
+  var moves = [], bloques = [];
+  EUC_DEV578_LIENS_ELEVE_.forEach(function(t) {
+    var rows = []; try { rows = EUC_DEV538_records_(t[0], {}) || []; } catch (e) { rows = []; }
+    var patches = [];
+    rows.forEach(function(r) {
+      var f = EUC_DEV538_fields_(r); if (f.Actif === false) return;
+      var p = { id: Number(r.id), fields: {} }, vise = false;
+      ['Eleve', 'Eleve_id', 'Eleve_match_id'].forEach(function(c) { if (ret[EUC_DEV578_refEleve_(f[c])]) { vise = true; if (typeof f[c] === 'number') p.fields[c] = garder; } });
+      if (Object.keys(p.fields).length) patches.push(p); else if (vise) bloques.push(t[1] + ' n° ' + r.id);
+    });
+    if (patches.length) moves.push({ table: t[0], lien: t[1], patches: patches });
+  });
+  /* Un lien qu'on ne sait pas déplacer serait perdu : rien n'est modifié. */
+  if (bloques.length) throw new Error('Liens à reprendre dans Grist avant arbitrage : ' + bloques.slice(0, 5).join(', ') + '.');
+  var res = { ok: true, garder: garder, retirer: retirer, liens: moves.map(function(m) { return { lien: m.lien, nombre: m.patches.length }; }), apercu: q.confirmation !== 'GARDER' };
+  if (res.apercu) return res;
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(25000)) throw new Error('Une autre opération est en cours. Réessayez dans un instant.');
+  try {
+    moves.forEach(function(m) { for (var i = 0; i < m.patches.length; i += 100) EUC_ENT_grist('patch', '/tables/' + m.table + '/records', { records: m.patches.slice(i, i + 100) }); });
+    EUC_ENT_grist('patch', '/tables/EUC_ELEVES_PFMP/records', { records: retirer.map(function(id) { return { id: id, fields: { Actif: false } }; }) });
+  } finally { lock.releaseLock(); }
+  try { if (typeof EUC_DEV462_invalidateApprenticeViews_ === 'function') EUC_DEV462_invalidateApprenticeViews_({}); } catch (e2) {}
+  return res;
+}

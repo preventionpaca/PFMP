@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 27 octobre 2026 — DEV634 : import Yparéo, mixités et élèves en double
+
+- **Bouton « Importer » absent** : il n'apparaît qu'en mode LIVE. En DRY_RUN, la
+  prévisualisation affiche désormais un encadré avec le bouton « Activer l'import réel ».
+- **Défaut corrigé — circuit du dossier effacé** : l'import réécrivait les dossiers mis à
+  jour sans « distribué / remis / transmis au CFA » (cases décochées, dates vidées). Le
+  circuit existant est maintenant relu puis réécrit tel quel. Les dossiers déjà mis à jour
+  par un import antérieur ne peuvent pas être restaurés par l'application.
+- **Défaut corrigé — dossiers de futurs apprentis invisibles** : un dossier de futur
+  apprenti a `Actif = faux` ; l'import l'ignorait et annonçait « aucun dossier déclaré ».
+  Il est maintenant pris en compte.
+- **Mixités non déclarées** : option « Créer les dossiers de mixité manquants ». Elle
+  s'applique à une mixité sous contrat dans Yparéo (SIRET et dates) retrouvée sur une
+  seule fiche élève. Le dossier est créé avec le contrat et un circuit daté : distribué au
+  début du contrat moins 14 jours, remis et transmis au CFA moins 7 jours. Elle ne touche
+  ni la classe de l'élève ni les mixités sans contrat.
+- **« Élève existant ambigu »** : le motif nomme les fiches en concurrence (numéro,
+  classe, Pronote ou créée par Yparéo). Un lien ouvre « Contrôle des chiffres › Élèves en
+  double » (`section=doublons`), analysé d'office.
+- **Arbitrage des doublons** : dans un groupe « à arbitrer », « Garder cette fiche »
+  rattache à la fiche gardée les conventions, dossiers d'apprentissage, affectations et
+  parcours des autres fiches, puis désactive ces fiches (rien n'est supprimé).
+  - Refusé quand les INE diffèrent (homonymes).
+  - Refusé, sans aucune écriture, si un lien ne peut pas être déplacé.
+- **Filtre** « lignes à traiter » dans la prévisualisation.
+
 ## Mise à jour du 27 octobre 2026 — DEV633 : banc d'essai avant ouverture
 
 - Nouvelle page admin `banc-essai-pfmp` (vignette Développement, « Banc
