@@ -28,6 +28,16 @@
   - Pages de redirection à déposer chez l'hébergeur, sur le modèle
     d'alternance.loucodi.fr : `Documentation/sous_domaines/livretek/index.html`
     et `Documentation/sous_domaines/suiviek/index.html`.
+  - **Mis en service le 27/10/2026**, avec l'accord de l'utilisateur, sur le
+    même modèle que les autres sous-domaines :
+    - dépôts GitHub Pages publics `preventionpaca/livretek-public` et
+      `preventionpaca/suiviek-public` (page de redirection, CNAME, README ;
+      ni donnée personnelle, ni secret) ;
+    - CNAME `livretek` et `suiviek` vers `preventionpaca.github.io.` dans la
+      zone DNS OVH de loucodi.fr ;
+    - certificats GitHub approuvés, HTTPS imposé (HTTP redirigé en 301). Les
+      deux adresses répondent en 200 et mènent à `acces-apprentis` et
+      `acces-professeurs`.
 
 ## Mise à jour du 25 octobre 2026 — DEV631 : mixité multi-filières, une alternance, des objectifs par diplôme
 
