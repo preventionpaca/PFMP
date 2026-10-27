@@ -137,12 +137,14 @@ function EUC_DEV631_enregistrerObjectifs(q) {
 /* ---------- Livret de l'apprenti ---------- */
 /* Lignes de planning rattachées à une classe pour l'année (EUC_PLAN_LIGNES_CLASSES). */
 function EUC_DEV631_lignesClasse_(annee, classeId) {
+  /* Classe TEST du banc d'essai (DEV633) : formation choisie dans les propriétés du script, jamais dans le planning. */
+  var test = typeof EUC_DEV633_lignesTest_ === 'function' ? (EUC_DEV633_lignesTest_()[String(Number(classeId))] || []) : [];
   var rows = []; try { rows = EUC_ENT_grist('get', '/tables/EUC_PLAN_LIGNES_CLASSES/records').records || []; } catch (e) {}
-  return rows.map(function(r) { return r.fields || {}; }).filter(function(f) {
+  return test.concat(rows.map(function(r) { return r.fields || {}; }).filter(function(f) {
     if (EUC_DEV631_t_(f.Annee_scolaire) !== annee) return false;
     var cl = Array.isArray(f.Classes) ? f.Classes.filter(function(x) { return typeof x === 'number'; }) : [];
     return cl.indexOf(Number(classeId)) >= 0;
-  }).map(function(f) { return EUC_DEV631_t_(f.Ligne); });
+  }).map(function(f) { return EUC_DEV631_t_(f.Ligne); }));
 }
 /* Ce que voit l'apprenti : sa formation, les blocs de son référentiel et les périodes avec leurs objectifs.
  * La première ligne rattachée qui a des périodes enregistrées l'emporte (classe entière ou section scolaire). */

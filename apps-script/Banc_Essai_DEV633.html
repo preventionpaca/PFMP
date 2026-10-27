@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banc d’essai</title>
+<style>
+:root{--vert:#0b6b4f;--bleu:#1b396a;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9}
+main{max-width:1200px;margin:auto;padding:16px}
+.ariane{margin:0 0 10px}.ariane a{color:var(--vert);font-weight:700;text-decoration:none}
+.note{color:var(--gris);font-size:13px}.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
+section.cadre{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:12px 16px;margin:12px 0}
+section.cadre h2{margin:0 0 6px;font-size:17px;color:var(--bleu)}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 12px;margin:8px 0}
+.grille label{display:flex;flex-direction:column;font-size:13px;color:var(--gris)}
+input,select{font:inherit;padding:5px 7px;border:1px solid var(--bord);border-radius:6px;color:var(--texte)}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.deux{grid-template-columns:1fr}}
+button,a.bouton{border:1px solid var(--vert);background:#fff;color:var(--vert);border-radius:8px;padding:6px 11px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;margin:3px 6px 3px 0}
+button.plein,a.bouton.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;cursor:default}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-1px;animation:t .8s linear infinite}@keyframes t{to{transform:rotate(360deg)}}
+.acces{border-left:4px solid var(--vert);padding:6px 10px;margin:8px 0;background:#f4f8f6}
+code{background:#eef3f8;padding:1px 5px;border-radius:4px;font-size:13px;letter-spacing:.04em}
+ol.ctrl li{margin:4px 0}ol.ctrl label{cursor:pointer}
+.res{margin-top:6px}
+</style>
+</head>
+<body>
+<header><h1>Banc d’essai</h1><p>Tester tous les parcours avec des identités de test avant l’ouverture aux professeurs et aux élèves.</p></header>
+<main>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Développement</span> › <strong>Banc d’essai</strong></nav>
+  <p class="note">Toutes les identités de test sont rangées dans des classes « TEST … » : hors effectifs, carte et books. Leur courriel est le vôtre : vous recevez les vrais messages (liens, demandes de validation, comptes rendus). Chaque création passe par un aperçu ; rien n’est jamais créé en double.</p>
+  <div id="etat" class="note" role="status"><span class="spin"></span>Chargement…</div>
+
+  <section class="cadre" id="sScolaire" hidden>
+    <h2>1. Élève scolaire de test — convention de PFMP par le nouveau formulaire</h2>
+    <p class="note">Classe « TEST PFMP », une période PFMP de l’année et un élève à votre adresse. Ensuite : déclarer l’entreprise comme un élève, puis valider la déclaration dans « Soumissions reçues ».</p>
+    <div class="grille">
+      <label>Prénom<input id="sPrenom" value="Élève"></label><label>Nom<input id="sNom" value="TEST"></label>
+      <label>Courriel<input id="sEmail" type="email"></label><label>Né(e) le<input id="sNaissance" type="date" value="2008-05-01"></label>
+      <label>Période — du<input id="sDebut" type="date"></label><label>au<input id="sFin" type="date"></label>
+    </div>
+    <button type="button" id="sApercu">Aperçu</button><button type="button" class="plein" id="sCreer" disabled>Créer / mettre à jour</button>
+    <div id="sRes" class="res" role="status"></div>
+    <div class="acces" id="sAcces"></div>
+  </section>
+
+  <section class="cadre" id="sApprentis" hidden>
+    <h2>2. Apprentis de test — livret de suivi, bilan de visite, espace référent</h2>
+    <p class="note">Un apprenti en classe entière et un apprenti en mixité, chacun avec un contrat dans une entreprise de test, vous comme tuteur, et le professeur référent de votre choix (vous-même pour voir l’espace référent). Le livret reprend les périodes et les objectifs de la formation choisie : enregistrez d’abord ses périodes et ses objectifs dans <a id="lPlannings" target="_top">Plannings par formation › Récapitulatif des périodes</a>.</p>
+    <div class="deux" id="formsApprentis"></div>
+  </section>
+
+  <section class="cadre" id="sAccesGen" hidden>
+    <h2>3. Les portes d’entrée, comme les verront les utilisateurs</h2>
+    <div id="accesGen"></div>
+  </section>
+
+  <section class="cadre" id="sControle" hidden>
+    <h2>4. Liste de contrôle avant ouverture</h2>
+    <p class="note">Cochez au fur et à mesure (mémorisé sur ce poste). Un parcours n’est réussi que si le résultat final est vérifié dans l’écran suivant.</p>
+    <ol class="ctrl" id="controle"></ol>
+    <button type="button" id="ctrlRaz">Tout décocher</button>
+  </section>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},D=null;
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
+function jour(d){return new Date(Date.now()+d*86400000).toISOString().slice(0,10);}
+/* Appel au serveur : bouton désactivé avec indicateur, rétabli en succès, erreur ou délai dépassé. */
+function appel(b,lib,fn,arg,ok,ko){var orig=b?b.innerHTML:'',fini=false;if(b){b.disabled=true;b.innerHTML='<span class="spin"></span>'+esc(lib);}
+  var fin=function(){if(b){b.disabled=false;b.innerHTML=orig;}},t=setTimeout(function(){if(fini)return;fini=true;fin();ko(new Error('Le serveur ne répond pas (délai dépassé). Rechargez la page.'));},120000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);fin();ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);fin();ko(e);})[fn](arg);}
+function lien(u,t,plein){return u?'<a class="bouton'+(plein?' plein':'')+'" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(t)+' ↗</a>':'';}
+
+function charger(){appel(null,'','EUC_DEV633_etat',null,function(r){D=r;$('etat').hidden=true;['sScolaire','sApprentis','sAccesGen','sControle'].forEach(function(id){$(id).hidden=false;});rendre();},function(e){$('etat').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});}
+function rendre(){
+  $('lPlannings').href=D.liens.plannings;
+  if(!$('sEmail').value)$('sEmail').value=D.moi;if(!$('sDebut').value){$('sDebut').value=jour(7);$('sFin').value=jour(25);}
+  $('sAcces').innerHTML=(D.scolaire.existe?'<span class="ok">Classe TEST PFMP présente.</span> ':'<span class="note">Pas encore créée.</span> ')+lien(D.liens.formulaire,'Formulaire « Déclarer mon entreprise » (comme l’élève)',true)+lien(D.liens.soumissions,'Soumissions reçues (valider la déclaration)');
+  $('formsApprentis').innerHTML=D.apprentis.map(function(a){var e=a.eleves[0]||{},def=a.type==='CE'?'BACHELOR_IP':'1BP_MVA';
+    var opts=D.lignes.map(function(l){return '<option value="'+esc(l.code)+'"'+(l.code===(a.ligne||def)?' selected':'')+'>'+esc(l.nom)+'</option>';}).join('');
+    var profs='<option value="0">— aucun (à affecter dans l’échéancier) —</option>'+D.profs.map(function(p){return '<option value="'+p.id+'"'+(p.id===(e.referentId||D.moiProf)?' selected':'')+'>'+esc(p.nom)+'</option>';}).join('');
+    var x='p'+a.type;
+    return '<div class="acces" style="background:#fff"><h3 style="margin:2px 0 6px">'+esc(a.libelle)+' <small class="note">('+esc(a.classe)+')</small></h3><div class="grille">'+
+      '<label>Prénom<input id="'+x+'Prenom" value="'+esc(e.nom?e.nom.split(' ')[0]:'Apprenti')+'"></label><label>Nom<input id="'+x+'Nom" value="'+esc(e.nom?e.nom.split(' ').slice(1).join(' '):(a.type==='CE'?'TEST CE':'TEST MIX'))+'"></label>'+
+      '<label>Courriel<input id="'+x+'Email" type="email" value="'+esc(e.email||D.moi)+'"></label><label>Né(e) le<input id="'+x+'Naissance" type="date" value="2004-03-01"></label>'+
+      '<label>Entreprise<input id="'+x+'Entreprise" value="'+esc(e.entreprise||'ENTREPRISE TEST')+'"></label><label>Début du contrat<input id="'+x+'Debut" type="date" value="'+jour(-10)+'"></label>'+
+      '<label>Tuteur — prénom<input id="'+x+'TPrenom" value="Tuteur"></label><label>Tuteur — nom<input id="'+x+'TNom" value="TEST"></label><label>Tuteur — courriel<input id="'+x+'TEmail" type="email" value="'+esc(D.moi)+'"></label>'+
+      '<label>Formation du livret<select id="'+x+'Ligne">'+opts+'</select></label><label>Professeur référent<select id="'+x+'Prof">'+profs+'</select></label></div>'+
+      '<button type="button" class="ap" data-t="'+a.type+'">Aperçu</button><button type="button" class="plein cr" data-t="'+a.type+'" disabled>Créer / mettre à jour</button><div class="res" id="'+x+'Res" role="status"></div>'+
+      (a.eleves.length?a.eleves.map(function(e){return '<div class="acces"><b>'+esc(e.nom)+'</b> — '+esc(e.entreprise||'sans contrat')+(e.referent?' · référent : '+esc(e.referent):' · <span class="erreur">sans référent</span>')+'<br>Code personnel : <code>'+esc(e.code)+'</code><br>'+
+        lien(e.lienLivret,'Livret (comme l’apprenti)',true)+lien(e.lienEspace,'Espace référent (comme le professeur)')+lien(e.lienBilan,'Bilan de visite')+'</div>';}).join(''):'<p class="note">Pas encore créé.</p>')+'</div>';}).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('button.ap,button.cr'),function(b){b.onclick=function(){creer(b,b.dataset.t,b.classList.contains('cr'));};});
+  $('accesGen').innerHTML='<div class="acces"><b>Jeunes</b> — '+lien(D.liens.livretek,'livretek.loucodi.fr',true)+' <span class="note">tapez le code personnel d’un apprenti de test ci-dessus.</span></div>'+
+    '<div class="acces"><b>Professeurs</b> — '+lien(D.liens.suiviek,'suiviek.loucodi.fr',true)+' <span class="note">tapez votre adresse : le lien de votre espace référent vous est envoyé.</span></div>'+
+    '<div class="acces"><b>Administration</b> — '+lien(D.liens.echeancier,'Échéancier des apprentis')+lien(D.liens.soumissions,'Soumissions reçues')+lien(D.liens.plannings,'Plannings par formation')+'</div>';
+  controle();}
+function q(t,confirmation){var x='p'+t;return {type:t,prenom:$(x+'Prenom').value,nom:$(x+'Nom').value,email:$(x+'Email').value,naissance:$(x+'Naissance').value,entreprise:$(x+'Entreprise').value,debut:$(x+'Debut').value,
+  tuteurPrenom:$(x+'TPrenom').value,tuteurNom:$(x+'TNom').value,tuteurEmail:$(x+'TEmail').value,ligne:$(x+'Ligne').value,profId:Number($(x+'Prof').value)||0,confirmation:confirmation};}
+function creer(b,t,vraiment){var res=$('p'+t+'Res');res.innerHTML='';
+  if(vraiment&&!confirm('Créer ou mettre à jour l’apprenti de test dans Grist (classe TEST, élève, contrat, référent) ?'))return;
+  appel(b,vraiment?'Création…':'Aperçu…','EUC_DEV633_creerApprenti',q(t,vraiment?'CREER':''),function(r){
+    if(r.apercu){res.innerHTML='<span class="note">Aperçu : classe '+esc(r.classe.nom)+' ('+esc(r.classe.modalite)+(r.classe.existe?', existe':', à créer')+'), apprenti '+esc(r.eleve.prenom+' '+r.eleve.nom)+(r.eleve.existe?' (existe)':' (à créer)')+', contrat '+esc(r.contrat.entreprise)+' du '+esc(r.contrat.debut)+(r.contrat.existe?' (mis à jour)':' (à créer)')+', référent '+esc(r.referent||'aucun')+', livret '+esc(r.ligne)+'.</span>';
+      b.parentNode.querySelector('button.cr').disabled=false;return;}
+    res.innerHTML='<span class="ok">Apprenti de test enregistré.</span>';charger();},function(e){res.innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});}
+$('sApercu').onclick=function(){scolaire(this,false);};$('sCreer').onclick=function(){scolaire(this,true);};
+function scolaire(b,vraiment){var r0=$('sRes');r0.innerHTML='';if(vraiment&&!confirm('Créer ou mettre à jour la classe TEST PFMP, sa période et l’élève de test ?'))return;
+  appel(b,vraiment?'Création…':'Aperçu…','EUC_DEV604_jeuTest',{prenom:$('sPrenom').value,nom:$('sNom').value,email:$('sEmail').value,naissance:$('sNaissance').value,classe:'TEST PFMP',libelle:'PFMP test',debut:$('sDebut').value,fin:$('sFin').value,confirmation:vraiment?'CREER':''},function(r){
+    var dg=r.diagnostic||{};r0.innerHTML=(r.apercu?'<span class="note">Aperçu : classe '+(r.classe.existe?'existante':'à créer')+', période '+(r.periode.existe?'existante':'à créer')+', élève '+(r.eleve.existe?'existant':'à créer')+'.</span>':'<span class="ok">Élève de test enregistré.</span>')+(dg.raison?' <span class="erreur">'+esc(dg.raison)+'</span>':dg.visible?' <span class="ok">Visible par le formulaire.</span>':'');
+    if(r.apercu)$('sCreer').disabled=false;else charger();},function(e){r0.innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});}
+/* Liste de contrôle : un parcours n'est réussi que si le résultat est vérifié dans l'écran suivant. */
+var CTRL=['Élève scolaire : déclarer l’entreprise par le formulaire (SIRET réel, responsable, tuteur) et recevoir le numéro par courriel',
+  'Administration : valider la déclaration dans « Soumissions reçues » ; la convention et son numéro apparaissent dans le suivi des PFMP',
+  'Plannings : enregistrer les périodes et quelques objectifs du livret pour la formation de l’apprenti en classe entière (et pour la mixité)',
+  'Apprenti (classe entière) : ouvrir livretek.loucodi.fr, taper son code, créer la fiche d’une période P, voir les objectifs, enregistrer le brouillon, ajouter une photo et un lien',
+  'Apprenti : demander la validation ; tuteur : ouvrir le QR ou le lien reçu, signer ; l’apprenti voit la fiche validée en lecture seule',
+  'Apprenti : fiche d’une période S au lycée, demande de validation au professeur référent ; le référent valide depuis le courriel',
+  'Apprenti en mixité : ne voit que les blocs de son diplôme et les autres activités communes',
+  'Professeur : suiviek.loucodi.fr, recevoir son lien, ouvrir l’espace référent, lire les fiches de ses apprentis',
+  'Professeur : remplir un bilan de visite, le faire valider par le tuteur ; le contact d’entrée passe à « fait » dans l’échéancier',
+  'Courriels : vérifier les destinataires réels (copie cachée) et l’absence de courriel aux familles pour un apprenti majeur'];
+function controle(){var fait={};try{fait=JSON.parse(localStorage.getItem('dev633_controle')||'{}');}catch(e){}
+  $('controle').innerHTML=CTRL.map(function(t,i){return '<li><label><input type="checkbox" data-i="'+i+'"'+(fait[i]?' checked':'')+'> '+esc(t)+'</label></li>';}).join('');
+  Array.prototype.forEach.call($('controle').querySelectorAll('input'),function(c){c.onchange=function(){fait[c.dataset.i]=c.checked;try{localStorage.setItem('dev633_controle',JSON.stringify(fait));}catch(e){}};});}
+$('ctrlRaz').onclick=function(){try{localStorage.removeItem('dev633_controle');}catch(e){}controle();};
+charger();
+})();
+</script>
+</body>
+</html>

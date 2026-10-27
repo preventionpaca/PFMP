@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert'), crypto = require('crypto');
 const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV599_Livret.js', 'EUC_SUIVI_PFMP_DestinatairesV158.gs', 'EUC_DEV630_Referentiels.js', 'EUC_DEV631_LivretObjectifs.js', 'EUC_DEV600_EspaceReferent.js', 'EUC_DEV632_Acces.js'].map(f => read('apps-script/' + f)).join('\n');
+const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV599_Livret.js', 'EUC_SUIVI_PFMP_DestinatairesV158.gs', 'EUC_DEV630_Referentiels.js', 'EUC_DEV631_LivretObjectifs.js', 'EUC_DEV600_EspaceReferent.js', 'EUC_DEV632_Acces.js', 'EUC_DEV602_Identites.js', 'EUC_DEV604_JeuTest.js', 'EUC_DEV633_BancEssai.js'].map(f => read('apps-script/' + f)).join('\n');
 let n = 0;
 function test(name, fn) { try { fn(); n++; console.log('✓', name); } catch (e) { console.error('✗', name); throw e; } }
 const J = x => JSON.parse(JSON.stringify(x));
@@ -211,6 +211,29 @@ test('DEV632 : page d’accès des apprentis (code) et des professeurs (lien), p
   assert.ok(routes.includes("case 'acces-apprentis':\n      return EUC_DEV632_afficher(e, 'APPRENTI');") && routes.includes("case 'acces-professeurs':\n      return EUC_DEV632_afficher(e, 'PROFESSEUR');") && cfg.includes('"page": "acces-apprentis", "scope": "public", "expected": "Accès apprentis"') && cfg.includes('"page": "acces-professeurs", "scope": "public", "expected": "Accès professeurs"'), 'deux pages séparées : apprentis (livretek), professeurs (suiviek)');
   assert.ok(pg.includes("<? if (porte !== 'PROFESSEUR') { ?><section class=\"porte\">") && pg.includes("<? if (porte !== 'APPRENTI') { ?><section class=\"porte\">"), 'chaque page ne montre que sa porte');
   assert.ok(routes.includes("case 'acces-alternance':\n      return EUC_DEV632_afficher(e);") && cfg.includes('"page": "acces-alternance", "scope": "public"') && gen.includes("'Acces_Alternance_DEV632',"));
+});
+
+test('DEV633 : banc d’essai — apprenti de test (classe TEST, contrat, référent) créé après aperçu, sans doublon ; son livret reprend une vraie formation sans toucher au planning', () => {
+  const k = contexte(base()), props = k.__props;
+  Object.assign(k.__tables, { Classes: [], EUC_PLAN_LIGNES_CLASSES: [] });
+  Object.assign(k.__colonnes, { Classes: ['Nom', 'Actif', 'Etab', 'Code_import', 'Classe_PFMP', 'Modalite_apprentissage', 'Organisme_gestionnaire'], EUC_ELEVES_PFMP: ['Nom', 'Prenom', 'Date_naissance', 'Email_eleve', 'Classe', 'Actif'],
+    EUC_APPRENTISSAGE_PFMP: ['Eleve', 'Nom_entreprise', 'Date_debut', 'Tuteur_prenom', 'Tuteur_nom', 'Tuteur_fonction', 'Tuteur_courriel', 'Actif'], EUC_REFERENTS_APPRENTIS_PFMP: ['Eleve', 'Annee_scolaire', 'Professeur', 'Professeur_nom', 'Actif'] });
+  k.EUC_SUIVI2_anneeCourante_ = () => '2026-2027';
+  const q = { type: 'CE', prenom: 'Apprenti', nom: 'test ce', email: 'admin@example.org', naissance: '2004-03-01', debut: '2026-10-12', ligne: 'BACHELOR_IP', profId: 5 };
+  assert.throws(() => k.EUC_DEV633_creerApprenti(Object.assign({}, q, { type: 'X' })), /Type d’apprenti de test inconnu/);
+  const ap = k.EUC_DEV633_creerApprenti(q);
+  assert.ok(ap.apercu && !ap.classe.existe && k.__tables.Classes.length === 0, 'aperçu : rien n’est écrit');
+  k.EUC_DEV633_creerApprenti(Object.assign({ confirmation: 'CREER' }, q)); k.EUC_DEV633_creerApprenti(Object.assign({ confirmation: 'CREER' }, q));
+  const cl = k.__tables.Classes, el = k.__tables.EUC_ELEVES_PFMP.filter(r => r.fields.Nom === 'TEST CE'), ct = k.__tables.EUC_APPRENTISSAGE_PFMP.filter(r => r.fields.Nom_entreprise === 'ENTREPRISE TEST');
+  assert.deepStrictEqual(J([cl.length, cl[0].fields.Nom, cl[0].fields.Modalite_apprentissage, el.length, ct.length, ct[0].fields.Tuteur_courriel]), [1, 'TEST APPRENTIS CE', 'Classe entière', 1, 1, 'admin@example.org'], 'aucun doublon');
+  assert.strictEqual(k.__tables.EUC_REFERENTS_APPRENTIS_PFMP.filter(r => Number(r.fields.Eleve) === el[0].id && Number(r.fields.Professeur) === 5).length, 1, 'un seul référent, même après deux créations');
+  assert.deepStrictEqual(J(JSON.parse(props.EUC_DEV633_LIGNES_TEST)), { [cl[0].id]: ['BACHELOR_IP'] });
+  assert.deepStrictEqual(J(k.EUC_DEV631_lignesClasse_('2026-2027', cl[0].id)), ['BACHELOR_IP'], 'livret : formation de test lue dans les propriétés');
+  assert.strictEqual(k.__tables.EUC_PLAN_LIGNES_CLASSES.length, 0, 'jamais de rattachement dans le planning (rien de publié)');
+  assert.throws(() => k.EUC_DEV633_choisirLigne({ classeId: 999, ligne: 'BACHELOR_IP' }), /classe TEST/);
+  const pg = read('apps-script/Banc_Essai_DEV633.html'), adm = read('apps-script/Admin_PFMP.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json');
+  assert.ok(pg.includes("'EUC_DEV633_creerApprenti',q(t,vraiment?'CREER':'')") && pg.includes("'EUC_DEV604_jeuTest',") && pg.includes('Liste de contrôle avant ouverture') && pg.includes('<a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>'));
+  assert.ok(adm.includes('?page=banc-essai-pfmp">Banc d’essai') && routes.includes("case 'banc-essai-pfmp':\n      return EUC_DEV633_afficher(e);") && cfg.includes('"page": "banc-essai-pfmp", "scope": "admin", "expected": "Banc d’essai"'));
 });
 
 console.log(n + ' tests DEV631 livret par période réussis');

@@ -1,5 +1,27 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 27 octobre 2026 — DEV633 : banc d'essai avant ouverture
+
+- Nouvelle page admin `banc-essai-pfmp` (vignette Développement, « Banc
+  d'essai »).
+  1. **Élève scolaire de test** (outil DEV604) : classe TEST PFMP, période,
+     élève à l'adresse de l'administrateur ; puis liens vers le formulaire de
+     secours et « Soumissions reçues ».
+  2. **Deux apprentis de test**, après aperçu et sans doublon :
+     - classes `TEST APPRENTIS CE` (modalité Classe entière) et
+       `TEST APPRENTIS MIX` (Mixité) ;
+     - contrat dans une « ENTREPRISE TEST », tuteur = l'administrateur,
+       professeur référent choisi (lui-même par défaut).
+     Le livret reprend les périodes et les objectifs d'une vraie formation
+     choisie (par défaut Bachelor IP et 1 BAC PRO MVA). La correspondance est
+     gardée dans les propriétés du script (`EUC_DEV633_LIGNES_TEST`, lue par
+     `EUC_DEV631_lignesClasse_`) : jamais de rattachement dans le planning,
+     donc rien de publié dans Planning_Periodes.
+  3. Tous les accès : livret et code de chaque apprenti de test, espace
+     référent, bilan de visite, livretek / suiviek, échéancier.
+  4. Liste de contrôle des parcours (10 étapes), retenue sur le poste.
+- Tests : 11/11 DEV631-633.
+
 ## Mise à jour du 27 octobre 2026 — DEV632 : accès apprentis et professeurs, code du livret, lecture des fiches
 
 - **Code personnel du livret**, par exemple `L7-3A9C2B7E` : l'identifiant en
