@@ -165,7 +165,10 @@ function lecture(f){var m=D.modele,c=f.contenu||{},z=$('editeur'),bloc='',p=D.li
     (f.diffuseLe?'<p class="note">Compte rendu envoyé le '+dfr(f.diffuseLe.slice(0,10))+'.</p>':'');
   photos(f);}
 $('nouvelle').onclick=function(){ouvrir({id:0,lieu:'',du:D.aujourdhui,au:D.aujourdhui,contenu:{},photos:[],statut:'BROUILLON'});};
-if(!L){$('etat').innerHTML='<span class="erreur">Lien incomplet : ouvrez votre livret depuis le lien reçu par courriel ou le QR code donné par le lycée.</span>';$('sousTitre').textContent='';return;}
+/* Sans lien : le code personnel (imprimé sous le QR code) redonne le lien du livret. */
+if(!L){$('sousTitre').textContent='';$('etat').innerHTML='<p>Tapez votre <b>code personnel</b>, imprimé sous votre QR code (par exemple L1F-3A9C2B7E) :</p><p><input id="monCode" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;font-weight:700;letter-spacing:.08em"> <button type="button" class="plein" id="codeOk">Ouvrir mon livret</button></p><p id="msgCode" role="status"></p>';
+  $('codeOk').onclick=function(){var b=this,c=$('monCode').value.trim();if(!c)return;occupe(b,'Vérification…');appel('EUC_DEV599_ouvrirParCode',{code:c},function(r){var a=document.createElement('a');a.href=r.lien;a.target='_top';document.body.appendChild(a);a.click();},function(e){libre(b);$('msgCode').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
+  $('monCode').addEventListener('keydown',function(e){if(e.key==='Enter')$('codeOk').click();});return;}
 appel('EUC_DEV599_ouvrir',{l:L},function(r){D=r;$('etat').hidden=true;$('contenu').hidden=false;
   $('sousTitre').textContent=r.apprenti+' — '+r.classe+(r.entreprise?' · '+r.entreprise:'');liste();
   var br=null;try{br=JSON.parse(localStorage.getItem(CLE)||'null');}catch(e){}

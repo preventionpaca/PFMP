@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert'), crypto = require('crypto');
 const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV599_Livret.js', 'EUC_SUIVI_PFMP_DestinatairesV158.gs', 'EUC_DEV630_Referentiels.js', 'EUC_DEV631_LivretObjectifs.js'].map(f => read('apps-script/' + f)).join('\n');
+const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV599_Livret.js', 'EUC_SUIVI_PFMP_DestinatairesV158.gs', 'EUC_DEV630_Referentiels.js', 'EUC_DEV631_LivretObjectifs.js', 'EUC_DEV600_EspaceReferent.js', 'EUC_DEV632_Acces.js'].map(f => read('apps-script/' + f)).join('\n');
 let n = 0;
 function test(name, fn) { try { fn(); n++; console.log('✓', name); } catch (e) { console.error('✗', name); throw e; } }
 const J = x => JSON.parse(JSON.stringify(x));
@@ -176,6 +176,39 @@ test('DEV631 : pages — éditeur des objectifs (récapitulatif des périodes), 
   assert.ok(js.includes('t.referentiels = JSON.stringify(ref)'));
   for (const x of ['function ouvrirPeriode(f)', 'Objectifs de la période :', '+ Ajouter un lien', 'Enregistrer le brouillon', 'if(D.livret)return lirePeriode();', 'rel="noopener noreferrer"']) assert.ok(lv.includes(x), x);
   for (const x of ['lv.blocs.filter', 'objectifs fixés pour la période', 'rel="noopener noreferrer"']) assert.ok(va.includes(x), x);
+});
+
+test('DEV632 : code personnel du livret (imprimé sous le QR) — ouvre le livret, faux code refusé, essais limités', () => {
+  const k = contexte(base()), code = k.EUC_DEV599_codeApprenti_(7);
+  assert.match(code, /^L7-[0-9A-F]{8}$/);
+  assert.strictEqual(k.EUC_DEV599_lireCode_(code.toLowerCase().replace('-', ' ')), 7, 'minuscules et espaces tolérés');
+  assert.strictEqual(k.EUC_DEV599_lireCode_('L7-00000000'), 0); assert.strictEqual(k.EUC_DEV599_lireCode_('L8' + code.slice(2)), 0, 'code d’un autre apprenti refusé');
+  const cache = {}; k.CacheService = { getScriptCache: () => ({ get: x => cache[x] || null, put: (x, v) => { cache[x] = v; } }) };
+  assert.ok(k.EUC_DEV599_ouvrirParCode({ code }).lien.includes('page=livret-apprenti&l=' + k.EUC_DEV599_jetonApprenti_(7)));
+  for (let i = 0; i < 8; i++) assert.throws(() => k.EUC_DEV599_ouvrirParCode({ code: 'L7-0000000' + i }), /Code inconnu/);
+  assert.throws(() => k.EUC_DEV599_ouvrirParCode({ code }), /Trop d’essais/, 'bloqué après 8 essais faux');
+  const ech = read('apps-script/Echeancier_Apprentis_DEV597.html'), liv = read('apps-script/Livret_Apprenti_DEV599.html');
+  assert.ok(ech.includes("Code personnel : <b style=\"letter-spacing:.06em\">'+esc(x.codeLivret||'')+'</b>") && read('apps-script/EUC_DEV597_Echeancier.js').includes('l.codeLivret = EUC_DEV599_codeApprenti_(l.eleveId)'));
+  assert.ok(liv.includes("appel('EUC_DEV599_ouvrirParCode',{code:c}") && !liv.includes('Lien incomplet : ouvrez votre livret'), 'livret sans lien : saisie du code');
+  assert.ok(read('apps-script/EUC_DEV599_Livret.js').includes("'Si tu perds ce lien, ton code personnel est : ' + EUC_DEV599_codeApprenti_(e.eleveId)"));
+});
+
+test('DEV632 : le professeur référent lit les fiches de ses apprentis (lecture seule), jamais celles des autres', () => {
+  const k = contexte(base()); livretBachelor(k);
+  const r = k.EUC_DEV599_enregistrer({ l: k.EUC_DEV599_jetonApprenti_(7), periode: 'P1', contenu: { blocs: { [BC1]: 'Revue de la gamme' } } });
+  const esp = k.EUC_DEV600_espace({ m: k.EUC_DEV600_jeton_(5) });
+  assert.deepStrictEqual(J(esp.lignes[0].livret.fiches.map(f => [f.periode, f.statut])), [['P1', 'BROUILLON']]);
+  const lu = k.EUC_DEV600_lireFiche({ m: k.EUC_DEV600_jeton_(5), ficheId: r.fiche.id });
+  assert.deepStrictEqual(J([lu.apprenti, lu.fiche.contenu.blocs[BC1], lu.livret.periodes[1].objectifs[BC1].length]), ['DUPONT Léa', 'Revue de la gamme', 2]);
+  assert.throws(() => k.EUC_DEV600_lireFiche({ m: k.EUC_DEV600_jeton_(6), ficheId: r.fiche.id }), /pas celle d’un de vos apprentis/);
+  const pg = read('apps-script/Espace_Referent_DEV600.html');
+  assert.ok(pg.includes("appel('EUC_DEV600_lireFiche',{m:M,ficheId:id}") && pg.includes('Lire les fiches du livret (') && pg.includes('<section id="lecture" hidden'));
+});
+
+test('DEV632 : page d’accès des apprentis (code) et des professeurs (lien), publique, route et contrôle de release', () => {
+  const pg = read('apps-script/Acces_Alternance_DEV632.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json'), gen = read('scripts/generate-acces-liste.js');
+  for (const x of ["'EUC_DEV599_ouvrirParCode',{code:c}", "'EUC_DEV600_demanderLien',{email:", 'Je suis apprenti(e)', 'Je suis professeur', '<title>Accès apprentis et professeurs</title>', 'b.disabled=true']) assert.ok(pg.includes(x), x);
+  assert.ok(routes.includes("case 'acces-alternance':\n      return EUC_DEV632_afficher(e);") && cfg.includes('"page": "acces-alternance", "scope": "public"') && gen.includes("'Acces_Alternance_DEV632',"));
 });
 
 console.log(n + ' tests DEV631 livret par période réussis');

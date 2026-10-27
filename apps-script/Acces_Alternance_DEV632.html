@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accès apprentis et professeurs</title>
+<style>
+:root{--vert:#08745f;--bleu:#1b396a;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 Arial,sans-serif;color:var(--texte);background:#f4f6f9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:18px 20px;text-align:center}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;font-size:14px}
+main{max-width:900px;margin:auto;padding:16px}
+.portes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:10px}
+.porte{background:#fff;border:1px solid var(--bord);border-radius:14px;padding:16px 18px}
+.porte h2{margin:0 0 6px;font-size:19px;color:var(--bleu)}
+.note{color:var(--gris);font-size:14px}
+input{font:inherit;padding:10px 12px;border:1px solid var(--bord);border-radius:8px;width:100%;margin:8px 0}
+input.code{text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+button{border:1px solid var(--vert);background:var(--vert);color:#fff;border-radius:8px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer;width:100%}
+button:disabled{opacity:.6;cursor:default}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
+</style>
+</head>
+<body>
+<header><h1>Lycée Les Eucalyptus — Alternance</h1><p>Livret d’apprentissage et suivi des apprentis</p></header>
+<main>
+  <div class="portes">
+    <section class="porte">
+      <h2>Je suis apprenti(e)</h2>
+      <p class="note">Tapez le code personnel imprimé sous votre QR code (par exemple L1F-3A9C2B7E) : vous arrivez dans votre livret et retrouvez tout ce que vous avez déjà saisi.</p>
+      <label for="code">Mon code personnel</label>
+      <input id="code" class="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="L…-………">
+      <button type="button" id="ouvrir">Ouvrir mon livret</button>
+      <p id="msgCode" role="status"></p>
+    </section>
+    <section class="porte">
+      <h2>Je suis professeur</h2>
+      <p class="note">Indiquez votre adresse professionnelle : si elle figure dans la liste des professeurs du lycée, le lien de votre espace référent (vos apprentis, leurs bilans de visite et leurs livrets) vous y est envoyé.</p>
+      <label for="email">Mon adresse du lycée</label>
+      <input id="email" type="email" autocomplete="email" placeholder="prenom.nom@ac-nice.fr">
+      <button type="button" id="demander">Recevoir mon lien</button>
+      <p id="msgProf" role="status"></p>
+    </section>
+  </div>
+  <p class="note" style="margin-top:16px">Tuteurs en entreprise : vous n’avez rien à saisir ici. Vous validez les fiches de votre apprenti en scannant le QR code qu’il vous présente, ou avec le lien reçu par courriel.</p>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);};
+function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^(?:Exception|Error):\s*/,'');}
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+/* Appel au serveur : bouton désactivé avec indicateur, rétabli en succès, erreur ou délai dépassé. */
+function appel(b,lib,fn,arg,ok,ko){var orig=b.innerHTML,fini=false;b.disabled=true;b.innerHTML='<span class="spin"></span>'+esc(lib);
+  var fin=function(){b.disabled=false;b.innerHTML=orig;},t=setTimeout(function(){if(fini)return;fini=true;fin();ko(new Error('Le serveur ne répond pas. Vérifiez la connexion puis réessayez.'));},60000);
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);fin();ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);fin();ko(e);})[fn](arg);}
+function aller(url){var a=document.createElement('a');a.href=url;a.target='_top';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();}
+$('ouvrir').onclick=function(){var c=$('code').value.trim();if(!c){$('msgCode').innerHTML='<span class="erreur">Tapez votre code.</span>';return;}
+  appel(this,'Vérification…','EUC_DEV599_ouvrirParCode',{code:c},function(r){$('msgCode').innerHTML='<span class="ok">Ouverture de votre livret…</span>';aller(r.lien);},function(e){$('msgCode').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
+$('code').addEventListener('keydown',function(e){if(e.key==='Enter')$('ouvrir').click();});
+$('demander').onclick=function(){appel(this,'Envoi…','EUC_DEV600_demanderLien',{email:$('email').value},function(r){$('msgProf').innerHTML='<span class="ok">'+esc(r.message)+'</span>';},function(e){$('msgProf').innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';});};
+})();
+</script>
+</body>
+</html>

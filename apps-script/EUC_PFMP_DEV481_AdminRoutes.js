@@ -55,6 +55,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV599_afficherLivret(e);
     case 'validation-livret':
       return EUC_DEV599_afficherValidation(e);
+    case 'acces-alternance':
+      return EUC_DEV632_afficher(e);
     case 'espace-referent':
       return EUC_DEV600_afficher(e);
     case 'declaration-entreprise':

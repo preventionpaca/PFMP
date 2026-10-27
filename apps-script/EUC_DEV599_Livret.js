@@ -36,6 +36,24 @@ function EUC_DEV599_lireJetonValidation_(t, aujourdhui) {
   if (EUC_DEV597_jours_(emis, aujourdhui) > EUC_DEV599_LIEN_JOURS_) throw new Error('Ce lien de validation a expiré. Demandez à l’apprenti de vous le renvoyer.');
   return Number(m[1]);
 }
+/* Code personnel court (imprimé sous le QR) : « L » + identifiant en base 36 + 8 caractères de signature. Il ouvre le
+ * même livret que le lien ; un code faux ne donne rien, et les essais sont limités. */
+function EUC_DEV599_codeApprenti_(eleveId) { return 'L' + Number(eleveId).toString(36).toUpperCase() + '-' + EUC_DEV598_sig_('C|' + Number(eleveId)).slice(0, 8).toUpperCase(); }
+function EUC_DEV599_lireCode_(code) {
+  var c = EUC_DEV599_t_(code).toUpperCase().replace(/[\s.]/g, '').replace(/^L?([0-9A-Z]+)-?([0-9A-F]{8})$/, 'L$1-$2'), m = /^L([0-9A-Z]+)-([0-9A-F]{8})$/.exec(c);
+  if (!m) return 0; var id = parseInt(m[1], 36); if (!(id > 0)) return 0;
+  return EUC_DEV598_egal_(m[2].toLowerCase(), EUC_DEV598_sig_('C|' + id).slice(0, 8)) ? id : 0;
+}
+/* Page d'accès ou livret sans lien : le code donne le lien personnel. 8 essais faux par quart d'heure et par apprenti,
+ * 60 pour tout le lycée ; la réponse ne dit jamais si l'apprenti existe. */
+function EUC_DEV599_ouvrirParCode(q) {
+  var cache = CacheService.getScriptCache(), code = EUC_DEV599_t_(q && q.code).toUpperCase(), cle = 'EUC_DEV599_ESSAIS_', n = Number(cache.get(cle + 'TOUS') || 0);
+  var ref = (/^L?([0-9A-Z]+)/.exec(code.replace(/\s/g, '')) || [])[1] || '?', np = Number(cache.get(cle + ref) || 0);
+  if (n >= 60 || np >= 8) throw new Error('Trop d’essais : patientez un quart d’heure, ou demandez votre lien au bureau des entreprises.');
+  var id = EUC_DEV599_lireCode_(code);
+  if (!id) { cache.put(cle + 'TOUS', String(n + 1), 900); cache.put(cle + ref, String(np + 1), 900); throw new Error('Code inconnu. Vérifiez-le (il est imprimé sous votre QR code, par exemple L1F-3A9C2B7E).'); }
+  return { ok: true, lien: EUC_DEV599_lienApprenti_(id) };
+}
 function EUC_DEV599_lienApprenti_(eleveId) { return EUC_DEV598_base_() + '?page=livret-apprenti&l=' + EUC_DEV599_jetonApprenti_(eleveId); }
 function EUC_DEV599_lienValidation_(ficheId) { return EUC_DEV598_base_() + '?page=validation-livret&v=' + EUC_DEV599_jetonValidation_(ficheId, EUC_SUIVI2_aujourdhui_().replace(/-/g, '')); }
 
@@ -382,6 +400,7 @@ function EUC_DEV599_envoyerLiens(q) {
   envois.forEach(function(e) {
     MailApp.sendEmail({ to: e.email, replyTo: EUC_DEV599_t_(ctx && ctx.email) || undefined, name: 'Lycée Les Eucalyptus — Livret des apprentis', subject: 'Ton livret d’apprentissage en ligne',
       body: ['Bonjour ' + e.nom + ',', '', 'Voici ton lien personnel vers ton livret d’apprentissage. Garde-le : c’est lui qui t’identifie.', '', EUC_DEV599_lienApprenti_(e.eleveId), '',
+        'Si tu perds ce lien, ton code personnel est : ' + EUC_DEV599_codeApprenti_(e.eleveId) + ' (à saisir sur la page du livret).', '',
         'À chaque séquence (au lycée ou en entreprise), décris ce que tu as fait, bloc par bloc, ajoute des photos si tu veux, puis demande la validation :',
         '• au lycée : ton professeur référent la reçoit par courriel ;', '• en entreprise : ton tuteur scanne le QR code affiché sur ton téléphone et signe.', '',
         'Le compte rendu validé est ensuite envoyé à ton tuteur, à ton professeur référent et aux personnes qui suivent ta formation.', '', 'Le bureau des entreprises — Lycée Les Eucalyptus'].join('\n') });

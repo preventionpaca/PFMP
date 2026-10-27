@@ -96,7 +96,7 @@ function EUC_DEV597_donnees_(annee) {
     d.compteurs.bilansAlerte = 0; d.compteurs.vigilance = 0; d.compteurs.aValider = 0;
     d.lignes.forEach(function(l) {
       l.lienFiche = EUC_DEV598_lienProf_(l.contratId);
-      if (typeof EUC_DEV599_lienApprenti_ === 'function') l.lienLivret = EUC_DEV599_lienApprenti_(l.eleveId);
+      if (typeof EUC_DEV599_lienApprenti_ === 'function') { l.lienLivret = EUC_DEV599_lienApprenti_(l.eleveId); l.codeLivret = EUC_DEV599_codeApprenti_(l.eleveId); }
       l.bilans = (parContrat[l.contratId] || []).sort(function(a, b) { return b.date.localeCompare(a.date) || b.id - a.id; });
       var dernier = l.bilans[0]; if (!dernier) return;
       if (dernier.bilan === 'ALERTE') d.compteurs.bilansAlerte++;

@@ -139,7 +139,7 @@ $('liensLivret').onclick=function(){liensLivret(false);};
 $('qrLivret').onclick=function(){var ids=cibles(),l=D.lignes.filter(function(x){return ids.indexOf(x.eleveId)>=0&&x.lienLivret;}),vus={};
   l=l.filter(function(x){if(vus[x.eleveId])return false;vus[x.eleveId]=1;return true;});
   if(!l.length){$('apercu').innerHTML='<p class="note">Aucun apprenti à imprimer.</p>';return;}
-  $('planche').innerHTML=l.map(function(x,i){return '<div><b>'+esc(x.nom)+'</b><br>'+esc(x.classe)+'<div id="q'+i+'"></div>Mon livret d’apprentissage<br><small>Lien personnel : ne pas le partager</small></div>';}).join('');
+  $('planche').innerHTML=l.map(function(x,i){return '<div><b>'+esc(x.nom)+'</b><br>'+esc(x.classe)+'<div id="q'+i+'"></div>Mon livret d’apprentissage<br><small>Code personnel : <b style="letter-spacing:.06em">'+esc(x.codeLivret||'')+'</b></small><br><small>Lien et code personnels : ne pas les partager</small></div>';}).join('');
   l.forEach(function(x,i){try{new QRCode($('q'+i),{text:x.lienLivret,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});}catch(e){$('q'+i).textContent=x.lienLivret;}});
   setTimeout(function(){window.print();},300);};
 $('copieOk').onclick=function(){var b=this;b.disabled=true;b.textContent='Enregistrement…';appel('EUC_DEV598_reglerCopie',{email:$('copie').value},function(){b.disabled=false;b.textContent='Enregistré ✓';setTimeout(function(){b.textContent='Enregistrer';},1500);});};

@@ -24,12 +24,13 @@ function EUC_DEV600_prof_(profId) {
 /* Lignes de l'espace (calcul pur) : apprentis du professeur, livret résumé. */
 function EUC_DEV600_lignes_(d, profId, fiches, lienValidation) {
   var parEleve = {};
-  (fiches || []).forEach(function(r) { var f = r.fields || {}, k = Number(f.Eleve); var x = parEleve[k] = parEleve[k] || { validees: 0, aValider: 0, brouillons: 0, aValiderLycee: [] };
+  (fiches || []).forEach(function(r) { var f = r.fields || {}, k = Number(f.Eleve); var x = parEleve[k] = parEleve[k] || { validees: 0, aValider: 0, brouillons: 0, aValiderLycee: [], fiches: [] };
+    x.fiches.push({ id: Number(r.id), periode: EUC_DEV600_t_(f.Periode), lieu: EUC_DEV600_t_(f.Lieu), du: EUC_DEV600_t_(f.Du), au: EUC_DEV600_t_(f.Au), statut: EUC_DEV600_t_(f.Statut) || 'BROUILLON' });
     var st = EUC_DEV600_t_(f.Statut) || 'BROUILLON';
     if (st === 'VALIDE') x.validees++; else if (st === 'A_VALIDER') { x.aValider++; if (EUC_DEV600_t_(f.Lieu) === 'LYCEE') x.aValiderLycee.push({ du: EUC_DEV600_t_(f.Du), au: EUC_DEV600_t_(f.Au), lien: lienValidation(r.id) }); } else x.brouillons++; });
   return d.lignes.filter(function(l) { return l.referent && Number(l.referent.professeurId) === Number(profId); }).map(function(l) {
     return { nom: l.nom, classe: l.classe, entreprise: l.entreprise, tuteur: l.tuteur, debut: l.debut, echeance: l.echeance, jours: l.jours, statut: l.statut, contact: l.contact,
-      bilan: (l.bilans || [])[0] || null, lienFiche: l.lienFiche || '', livret: parEleve[l.eleveId] || { validees: 0, aValider: 0, brouillons: 0, aValiderLycee: [] } };
+      bilan: (l.bilans || [])[0] || null, lienFiche: l.lienFiche || '', livret: parEleve[l.eleveId] || { validees: 0, aValider: 0, brouillons: 0, aValiderLycee: [], fiches: [] } };
   });
 }
 
@@ -41,6 +42,15 @@ function EUC_DEV600_espace(q) {
   return { ok: true, professeur: prof.nom, annee: d.annee, aujourdhui: d.aujourdhui, seuils: d.seuils, lignes: lignes, compteurs: EUC_DEV597_compter_(lignes.map(function(l) { return { statut: l.statut, referent: true }; })) };
 }
 
+/* Lecture d'une fiche du livret par le professeur référent de l'apprenti (lecture seule, toutes les fiches, validées
+ * comprises). Refus si l'apprenti n'est pas attribué à ce professeur. */
+function EUC_DEV600_lireFiche(q) {
+  var profId = EUC_DEV600_lireJeton_(q && q.m), r = EUC_DEV599_fiche_(q && q.ficheId), f = r.fields || {}, eid = Number(f.Eleve);
+  var d = EUC_DEV597_donnees_(''), a = d.lignes.filter(function(l) { return Number(l.eleveId) === eid && l.referent && Number(l.referent.professeurId) === Number(profId); })[0];
+  if (!a) throw new Error('Cette fiche n’est pas celle d’un de vos apprentis.');
+  var ctx = EUC_DEV599_contexte_(eid), v = EUC_DEV599_vue_(r, false);
+  return { ok: true, apprenti: ctx.apprenti, classe: ctx.classe, entreprise: ctx.entreprise, modele: EUC_DEV598_modele_(ctx.classe, EUC_DEV597_lire_(EUC_DEV598_ACTIVITES_)), livret: v.periode ? EUC_DEV599_livret_(ctx) : null, fiche: v };
+}
 /* Lien perdu : renvoyé seulement à une adresse connue ; la réponse ne dit pas si l'adresse existe. */
 function EUC_DEV600_demanderLien(q) {
   var email = EUC_DEV600_t_(q && q.email).toLowerCase();

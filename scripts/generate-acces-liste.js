@@ -35,6 +35,8 @@ const PAGES_PUBLIQUES = [
   'Espace_Referent_DEV600',
   /* DEV603 : formulaire public de secours (identité par date de naissance, captcha). */
   'Declaration_Entreprise_DEV603',
+  /* DEV632 : page d'accès des apprentis (code personnel) et des professeurs (demande de lien). */
+  'Acces_Alternance_DEV632',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

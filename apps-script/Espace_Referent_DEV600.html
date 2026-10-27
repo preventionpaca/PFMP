@@ -29,6 +29,8 @@ a.bouton.plein,button.plein{background:var(--vert);color:#fff}button:disabled{op
 input{font:inherit;padding:8px 10px;border:1px solid var(--bord);border-radius:8px;width:min(100%,340px)}
 .erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
 .filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+details.fiches{margin-top:6px}details.fiches summary{cursor:pointer;font-weight:700;color:var(--vert)}details.fiches button{display:block;width:100%;text-align:left;font-weight:400}
+.pre{white-space:pre-wrap}#lecture h3{font-size:15px;margin:10px 0 2px;color:#1b396a}#lecture ul{margin:2px 0 6px 18px;padding:0;color:#1b396a}
 </style>
 </head>
 <body>
@@ -40,6 +42,7 @@ input{font:inherit;padding:8px 10px;border:1px solid var(--bord);border-radius:8
     <div class="tuiles" id="tuiles"></div>
     <div class="filtres"><label>Rechercher <input id="recherche" type="search" placeholder="Apprenti, classe ou entreprise"></label></div>
     <div class="cartes" id="cartes"></div>
+    <section id="lecture" hidden style="margin-top:14px"></section>
   </div>
   <section id="perdu" hidden>
     <h2>Recevoir mon lien</h2>
@@ -67,7 +70,23 @@ function rendre(){var q=$('recherche').value.trim().toLowerCase(),c=D.compteurs;
       '<div class="ligne">Bilan de visite : '+(b?dfr(b.date)+' — '+(b.statut==='VALIDE'?'<span class="ok">validé par '+esc(b.signataire)+'</span>':'en attente du tuteur'):'aucun')+'</div>'+
       '<div class="ligne">Livret : '+lv.validees+' fiche(s) validée(s)'+(lv.aValider?' · <b>'+lv.aValider+' en attente</b>':'')+(lv.brouillons?' · '+lv.brouillons+' brouillon(s)':'')+'</div>'+
       (x.lienFiche?'<a class="bouton plein" target="_blank" rel="noopener" href="'+esc(x.lienFiche)+'">Bilan de visite</a>':'')+
-      lv.aValiderLycee.map(function(f){return '<a class="bouton" target="_blank" rel="noopener" href="'+esc(f.lien)+'">Valider la fiche lycée du '+dfr(f.du)+'</a>';}).join('')+'</div>';}).join('')||'<p class="note">Aucun apprenti pour cette recherche.</p>';}
+      lv.aValiderLycee.map(function(f){return '<a class="bouton" target="_blank" rel="noopener" href="'+esc(f.lien)+'">Valider la fiche lycée du '+dfr(f.du)+'</a>';}).join('')+
+      ((lv.fiches||[]).length?'<details class="fiches"><summary>Lire les fiches du livret ('+lv.fiches.length+')</summary>'+lv.fiches.slice().sort(function(a,b){return a.du.localeCompare(b.du);}).map(function(f){return '<button type="button" class="lire" data-id="'+f.id+'">'+(f.periode?esc(f.periode)+' · ':'')+(f.lieu==='LYCEE'?'Lycée':'Entreprise')+' du '+dfr(f.du)+' — '+(ST[f.statut]||f.statut)+'</button>';}).join('')+'</details>':'')+'</div>';}).join('')||'<p class="note">Aucun apprenti pour cette recherche.</p>';
+  Array.prototype.forEach.call(document.querySelectorAll('button.lire'),function(b){b.onclick=function(){lire(b,Number(b.dataset.id));};});}
+var ST={BROUILLON:'brouillon',A_VALIDER:'en attente de validation',VALIDE:'validée'};
+/* Lecture seule d'une fiche du livret (toutes les fiches de ses apprentis, validées comprises). */
+function lire(b,id){var orig=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span>Ouverture…';
+  appel('EUC_DEV600_lireFiche',{m:M,ficheId:id},function(r){b.disabled=false;b.innerHTML=orig;var f=r.fiche,c=f.contenu||{},lv=r.livret,p=lv&&f.periode?(lv.periodes||[]).filter(function(x){return x.label===f.periode;})[0]:null,m=r.modele||{activites:[]};
+      var ul=function(o){return o&&o.length?'<ul>'+o.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';};
+      $('lecture').innerHTML='<div class="carte"><button type="button" id="fermerLecture" style="float:right">Fermer</button><h2>'+esc(r.apprenti)+' — '+(f.periode?esc(f.periode)+' · ':'')+(f.lieu==='LYCEE'?'au lycée':'en entreprise')+' du '+dfr(f.du)+' au '+dfr(f.au)+'</h2><p class="note">'+esc(r.classe)+(r.entreprise?' · '+esc(r.entreprise):'')+' · fiche '+(ST[f.statut]||f.statut)+'</p>'+
+        (lv?lv.blocs.filter(function(x){return (c.blocs||{})[x.code]||(p&&(p.objectifs[x.code]||[]).length);}).map(function(x){return '<h3>'+esc(x.intitule)+'</h3>'+(p&&(p.objectifs[x.code]||[]).length?'<p class="note">Objectifs :</p>'+ul(p.objectifs[x.code]):'')+'<p class="pre">'+esc((c.blocs||{})[x.code]||'—')+'</p>';}).join(''):'')+
+        (m.activites||[]).filter(function(a){return (c.activites||{})[a.id];}).map(function(a){var x=c.activites[a.id];return '<p><b>'+esc(a.libelle)+'</b><br><span class="pre">'+esc(x.texte||'')+'</span></p>';}).join('')+
+        (p&&(p.objectifs.AUTRES||[]).length?'<h3>Autres activités — objectifs</h3>'+ul(p.objectifs.AUTRES):'')+(c.autres?'<h3>Autres activités et remarques</h3><p class="pre">'+esc(c.autres)+'</p>':'')+(c.ressenti?'<h3>Ce que l’apprenti en retient</h3><p class="pre">'+esc(c.ressenti)+'</p>':'')+
+        ((c.liens||[]).length?'<h3>Liens</h3>'+c.liens.map(function(x){return '<p><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.titre||x.url)+'</a></p>';}).join(''):'')+
+        ((f.photos||[]).length?'<p class="note">'+f.photos.length+' photo(s) jointe(s) au compte rendu.</p>':'')+
+        (f.statut==='VALIDE'?'<p class="ok">Validée par '+esc(f.valideur)+(f.valideurFonction?' ('+esc(f.valideurFonction)+')':'')+' le '+dfr((f.valideLe||'').slice(0,10))+'.</p>'+(f.commentaire?'<p><b>Commentaire :</b> '+esc(f.commentaire)+'</p>':''):'')+'</div>';
+      $('lecture').hidden=false;$('lecture').scrollIntoView({behavior:'smooth'});$('fermerLecture').onclick=function(){$('lecture').hidden=true;$('lecture').innerHTML='';};},
+    function(e){b.disabled=false;b.innerHTML=orig;alert(msgErr(e));});}
 $('recherche').oninput=function(){if(D)rendre();};
 $('demander').onclick=function(){var b=this;b.disabled=true;b.innerHTML='<span class="spin"></span>Envoi…';
   appel('EUC_DEV600_demanderLien',{email:$('email').value},function(r){b.disabled=false;b.textContent='Recevoir mon lien';$('msgPerdu').innerHTML='<span class="ok">'+esc(r.message)+'</span>';},

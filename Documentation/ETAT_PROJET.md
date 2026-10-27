@@ -1,5 +1,26 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 27 octobre 2026 — DEV632 : accès apprentis et professeurs, code du livret, lecture des fiches
+
+- **Code personnel du livret**, par exemple `L7-3A9C2B7E` : l'identifiant en
+  base 36 et 8 caractères de signature. Il est imprimé sous chaque QR de la
+  planche (échéancier, « Imprimer les QR des livrets ») et rappelé dans le
+  courriel du lien. Sur la page du livret ouverte sans lien, ou sur la page
+  d'accès, il redonne le lien personnel (`EUC_DEV599_ouvrirParCode`). Les essais
+  faux sont limités : 8 par quart d'heure et par apprenti, 60 pour tout le
+  lycée.
+- **Espace professeur référent** : « Lire les fiches du livret » sur chaque
+  apprenti, en lecture seule et validées comprises, avec les objectifs, les
+  réalisations par bloc et les liens (`EUC_DEV600_lireFiche`). L'accès est
+  refusé si l'apprenti n'est pas attribué à ce professeur.
+- **Page publique `acces-alternance`** (« Accès apprentis et professeurs ») :
+  - l'apprenti tape son code et arrive dans son livret ;
+  - le professeur tape son adresse et reçoit le lien de son espace ;
+  - elle est prévue pour être placée derrière un sous-domaine, comme
+    alternance.loucodi.fr pour l'administration.
+- **Import Yparéo** : les lignes prêtes s'importent même s'il reste des lignes
+  bloquées.
+
 ## Mise à jour du 25 octobre 2026 — DEV631 : mixité multi-filières, une alternance, des objectifs par diplôme
 
 - Une mixité qui couvre plusieurs filières, comme « 1 BAC PRO Mixité », garde
