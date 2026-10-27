@@ -20,6 +20,14 @@
     alternance.loucodi.fr pour l'administration.
 - **Import Yparéo** : les lignes prêtes s'importent même s'il reste des lignes
   bloquées.
+- **Deux pages d'accès séparées** :
+  - `acces-apprentis` (code du livret seulement), derrière le sous-domaine
+    **livretek.loucodi.fr** ;
+  - `acces-professeurs` (demande du lien de l'espace référent seulement),
+    derrière **suiviek.loucodi.fr**.
+  - Pages de redirection à déposer chez l'hébergeur, sur le modèle
+    d'alternance.loucodi.fr : `Documentation/sous_domaines/livretek/index.html`
+    et `Documentation/sous_domaines/suiviek/index.html`.
 
 ## Mise à jour du 25 octobre 2026 — DEV631 : mixité multi-filières, une alternance, des objectifs par diplôme
 

@@ -50,6 +50,8 @@
     {"page": "cartographie-apprentis-public-pfmp", "scope": "public", "expected": "Cartographie des apprentis"},
     {"page": "book-entreprises-eleves-pfmp", "scope": "public", "expected": "Book des entreprises — élèves et familles"},
     {"page": "suivi-conventions-public", "scope": "public", "expected": "Point sur les stages"},
-    {"page": "acces-alternance", "scope": "public", "expected": "Accès apprentis et professeurs"}
+    {"page": "acces-alternance", "scope": "public", "expected": "Accès apprentis et professeurs"},
+    {"page": "acces-apprentis", "scope": "public", "expected": "Accès apprentis"},
+    {"page": "acces-professeurs", "scope": "public", "expected": "Accès professeurs"}
   ]
 }

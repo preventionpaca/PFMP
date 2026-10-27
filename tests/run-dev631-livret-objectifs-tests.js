@@ -207,7 +207,9 @@ test('DEV632 : le professeur référent lit les fiches de ses apprentis (lecture
 
 test('DEV632 : page d’accès des apprentis (code) et des professeurs (lien), publique, route et contrôle de release', () => {
   const pg = read('apps-script/Acces_Alternance_DEV632.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json'), gen = read('scripts/generate-acces-liste.js');
-  for (const x of ["'EUC_DEV599_ouvrirParCode',{code:c}", "'EUC_DEV600_demanderLien',{email:", 'Je suis apprenti(e)', 'Je suis professeur', '<title>Accès apprentis et professeurs</title>', 'b.disabled=true']) assert.ok(pg.includes(x), x);
+  for (const x of ["'EUC_DEV599_ouvrirParCode',{code:c}", "'EUC_DEV600_demanderLien',{email:", 'Je suis apprenti(e)', 'Je suis professeur', 'b.disabled=true']) assert.ok(pg.includes(x), x);
+  assert.ok(routes.includes("case 'acces-apprentis':\n      return EUC_DEV632_afficher(e, 'APPRENTI');") && routes.includes("case 'acces-professeurs':\n      return EUC_DEV632_afficher(e, 'PROFESSEUR');") && cfg.includes('"page": "acces-apprentis", "scope": "public", "expected": "Accès apprentis"') && cfg.includes('"page": "acces-professeurs", "scope": "public", "expected": "Accès professeurs"'), 'deux pages séparées : apprentis (livretek), professeurs (suiviek)');
+  assert.ok(pg.includes("<? if (porte !== 'PROFESSEUR') { ?><section class=\"porte\">") && pg.includes("<? if (porte !== 'APPRENTI') { ?><section class=\"porte\">"), 'chaque page ne montre que sa porte');
   assert.ok(routes.includes("case 'acces-alternance':\n      return EUC_DEV632_afficher(e);") && cfg.includes('"page": "acces-alternance", "scope": "public"') && gen.includes("'Acces_Alternance_DEV632',"));
 });
 

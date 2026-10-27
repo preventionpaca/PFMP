@@ -57,6 +57,10 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV599_afficherValidation(e);
     case 'acces-alternance':
       return EUC_DEV632_afficher(e);
+    case 'acces-apprentis':
+      return EUC_DEV632_afficher(e, 'APPRENTI');
+    case 'acces-professeurs':
+      return EUC_DEV632_afficher(e, 'PROFESSEUR');
     case 'espace-referent':
       return EUC_DEV600_afficher(e);
     case 'declaration-entreprise':
