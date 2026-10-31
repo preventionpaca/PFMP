@@ -1,0 +1,33 @@
+<style>
+.a635 table{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:6px}
+.a635 th,.a635 td{padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+.a635 th{font-size:.74rem;text-transform:uppercase;color:#64748b}
+.a635 .pastille{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.18)}
+.a635 .sans{color:#9a3412;font-style:italic}
+.a635 .tag{display:inline-block;font-size:.7rem;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px;background:#fff;border:1px solid rgba(0,0,0,.15)}
+.a635 .legende{font-size:.78rem;color:#475569;margin:6px 0 0}
+@media(max-width:640px){.a635 table{display:block;overflow-x:auto}}
+</style>
+<script>
+/* DEV635 — Apprentis d'une classe entière : entreprise et tuteur du contrat en cours.
+ * Une même couleur = une même entreprise (SIRET, sinon nom) accueillant au moins deux
+ * apprentis, toutes classes entières confondues ; on voit aussi combien de tuteurs elle mobilise. */
+window.EUC635=(function(){
+  var PALETTE=['#fde68a','#bfdbfe','#bbf7d0','#fecaca','#ddd6fe','#fed7aa','#a5f3fc','#fbcfe8','#d9f99d','#e9d5ff','#fcd34d','#99f6e4'];
+  function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function norm(v){return String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\b(SAS|SARL|SA|EURL|SASU|SNC)\b/g,'').trim();}
+  function cle(j){return j.entreprise?(j.siret&&j.siret.length===14?'S'+j.siret:'N'+norm(j.entreprise)):'';}
+  /* Entreprises de toutes les classes données (une classe co-gérée, présente dans deux organismes, comptée une fois) : apprentis, classes, tuteurs, couleur si ≥ 2 apprentis. */
+  function entreprises(classes){var m={},vues={};(classes||[]).forEach(function(c){if(vues[c.id])return;vues[c.id]=true;(c.liste||[]).forEach(function(j){var k=cle(j);if(!k)return;var e=m[k]=m[k]||{cle:k,nom:j.entreprise,apprentis:[],classes:{},tuteurs:{}};e.apprentis.push(j.nom);e.classes[c.nom]=true;if(j.tuteur)e.tuteurs[norm(j.tuteur)]=j.tuteur;});});
+    var l=Object.keys(m).map(function(k){var e=m[k];e.classes=Object.keys(e.classes);e.tuteurs=Object.keys(e.tuteurs).map(function(t){return e.tuteurs[t];});return e;}).filter(function(e){return e.apprentis.length>1;});
+    l.sort(function(a,b){return b.apprentis.length-a.apprentis.length||a.nom.localeCompare(b.nom,'fr');});l.forEach(function(e,i){e.couleur=PALETTE[i%PALETTE.length];m[e.cle].couleur=e.couleur;});
+    return{parCle:m,multiples:l};}
+  function statut(j){return j.statut==='FUTUR_APPRENTI'?'Futur apprenti — contrat pas encore commencé':'Sans contrat en cours enregistré';}
+  function tableau(c,ents){var l=c.liste||[];if(!l.length)return '<p class="legende">Aucun élève dans cette classe.</p>';
+    return '<table><thead><tr><th>Apprenti</th><th>Entreprise</th><th>Tuteur</th><th>Contrat</th></tr></thead><tbody>'+l.map(function(j){var e=ents.parCle[cle(j)]||{},fond=e.couleur?' style="background:'+e.couleur+'"':'';
+      var tag=e.couleur?'<span class="tag" title="'+esc(e.apprentis.join(', '))+'">'+e.apprentis.length+' apprentis · '+(e.tuteurs.length||'?')+' tuteur(s)</span>':'';
+      return '<tr'+fond+'><td>'+esc(j.nom)+'</td><td>'+(j.entreprise?esc(j.entreprise)+tag:'<span class="sans">'+statut(j)+'</span>')+'</td><td>'+esc(j.tuteur||'—')+'</td><td>'+(j.debut?esc(j.debut.split('-').reverse().join('/'))+' → '+esc(String(j.fin||'').split('-').reverse().join('/')):'—')+'</td></tr>';}).join('')+'</tbody></table>';}
+  var LEGENDE='<p class="legende">Même couleur = même entreprise, qui accueille au moins deux apprentis (toutes classes entières confondues) ; l’étiquette indique combien de tuteurs différents elle mobilise.</p>';
+  return{esc:esc,entreprises:entreprises,tableau:tableau,LEGENDE:LEGENDE};
+})();
+</script>

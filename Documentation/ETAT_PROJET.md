@@ -1,5 +1,23 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 31 octobre 2026 — DEV635 : apprentis par classe entière
+
+- Accueil administration, bloc Effectifs : après le choix d'un organisme, une vignette de
+  classe entière (ou de formation continue) se déplie au clic. Elle montre les jeunes avec
+  l'entreprise, le tuteur et les dates du contrat en cours ; un futur apprenti est signalé.
+- Nouvelle page admin `apprentis-classes-pfmp` (« Apprentis par classe entière », vignette
+  Apprentis), avec un filtre par organisme, une impression et le tableau « Entreprises qui
+  accueillent plusieurs apprentis » (nombre d'apprentis, tuteurs, classes).
+- Une même couleur désigne une même entreprise (SIRET, sinon nom) qui accueille au moins
+  deux apprentis, toutes classes entières confondues. L'étiquette indique combien de
+  tuteurs différents elle mobilise. Une classe co-gérée n'est comptée qu'une fois.
+- Les données viennent du modèle du suivi (`EUC_SUIVI2`, passé en version dev.635 : SIRET
+  et tuteur du contrat en cours) via `EUC_DEV592_effectifs`. Il n'y a aucune nouvelle
+  lecture Grist.
+- Limite : le modèle du suivi ignore les fiches d'apprentissage `Actif = faux`. Un futur
+  apprenti dont le dossier n'est que distribué apparaît donc « sans contrat en cours
+  enregistré ».
+
 ## Mise à jour du 27 octobre 2026 — DEV634 : import Yparéo, mixités et élèves en double
 
 - **Bouton « Importer » absent** : il n'apparaît qu'en mode LIVE. En DRY_RUN, la

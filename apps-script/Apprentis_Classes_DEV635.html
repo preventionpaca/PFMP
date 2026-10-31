@@ -1,0 +1,30 @@
+<!doctype html><html lang="fr"><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apprentis par classe entière</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#1e293b;font-family:Arial,sans-serif}main{max-width:1180px;margin:auto;padding:18px 16px}nav a{color:#0f766e;font-weight:700}h1{margin:.4em 0 .2em}
+.carte{background:#fff;border:1px solid #dce3ea;border-radius:12px;padding:14px 16px;margin:12px 0}.carte h2{margin:0;font-size:1.1rem}.badge{font-size:.7rem;font-weight:800;border-radius:6px;padding:1px 6px;background:#eef2f6;color:#475569;margin-left:6px}
+.filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center}select,button{font:inherit;padding:7px 10px;border:1px solid #94a3b8;border-radius:8px;background:#fff}button{background:#0f766e;color:#fff;border-color:#0f766e;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}.spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:r .7s linear infinite;vertical-align:-2px;margin-right:6px}.busy .spin{display:inline-block}@keyframes r{to{transform:rotate(360deg)}}
+.etat{color:#475569}.etat.erreur{color:#b42318}@media print{nav,.filtres{display:none}.carte{break-inside:avoid}}</style>
+<?!= EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu'); ?></head>
+<body><main class="a635">
+<nav><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › Apprentis par classe entière</nav>
+<h1>Apprentis par classe entière</h1>
+<p class="etat">Pour chaque classe entière (et formation continue) : les jeunes, l’entreprise et le tuteur du contrat en cours.</p>
+<div class="filtres"><label>Organisme <select id="org"><option value="">Tous</option></select></label><button type="button" id="recharger"><span class="spin"></span><span>Actualiser</span></button><button type="button" id="imprimer" onclick="window.print()">Imprimer</button></div>
+<p id="etat" class="etat" role="status">Chargement…</p>
+<section id="multi" class="carte" hidden></section>
+<div id="classes"></div>
+</main>
+<script>
+(function(){var $=function(i){return document.getElementById(i);},E=window.EUC635,D=null;
+  function classesCE(){var vu={},l=[];(D.groupes||[]).forEach(function(g){g.classes.forEach(function(c){if(!c.liste||vu[c.id])return;vu[c.id]=true;l.push(c);});});return l.sort(function(a,b){return a.nom.localeCompare(b.nom,'fr');});}
+  function rendre(){var org=$('org').value,toutes=classesCE(),ents=E.entreprises(toutes),l=toutes.filter(function(c){return!org||c.organismes.indexOf(org)>=0;});
+    $('etat').className='etat';$('etat').textContent=l.length?l.length+' classe(s), '+l.reduce(function(s,c){return s+c.liste.length;},0)+' jeune(s).':'Aucune classe entière pour '+(org||'cette année')+'.';
+    $('multi').hidden=!ents.multiples.length;$('multi').innerHTML='<h2>Entreprises qui accueillent plusieurs apprentis</h2><table><thead><tr><th>Entreprise</th><th>Apprentis</th><th>Tuteurs</th><th>Classes</th></tr></thead><tbody>'+ents.multiples.map(function(e){return '<tr style="background:'+e.couleur+'"><td>'+E.esc(e.nom)+'</td><td>'+e.apprentis.length+' — '+E.esc(e.apprentis.join(', '))+'</td><td>'+(e.tuteurs.length?e.tuteurs.length+' — '+E.esc(e.tuteurs.join(', ')):'non renseigné')+'</td><td>'+E.esc(e.classes.join(', '))+'</td></tr>';}).join('')+'</tbody></table>'+E.LEGENDE;
+    $('classes').innerHTML=l.map(function(c){return '<section class="carte"><h2>'+E.esc(c.nom)+'<span class="badge">'+(c.mode==='FORMATION_CONTINUE'?'Formation continue':'Classe entière')+(c.organismes.length?' · '+E.esc(c.organismes.join(' + ')):'')+'</span></h2><p class="etat">'+c.liste.length+' jeune(s) · '+c.entreprises+' entreprise(s)</p>'+E.tableau(c,ents)+'</section>';}).join('');}
+  function charger(){var b=$('recharger'),t=b.lastElementChild,fini=false;b.disabled=true;b.classList.add('busy');t.textContent='Chargement…';
+    var stop=function(){fini=true;b.disabled=false;b.classList.remove('busy');t.textContent='Actualiser';},minuteur=setTimeout(function(){if(fini)return;stop();$('etat').className='etat erreur';$('etat').textContent='Délai dépassé. Cliquez sur « Actualiser ».';},90000);
+    google.script.run.withSuccessHandler(function(r){if(fini)return;clearTimeout(minuteur);stop();D=r;var orgs={};classesCE().forEach(function(c){c.organismes.forEach(function(o){orgs[o]=1;});});var v=$('org').value;$('org').innerHTML='<option value="">Tous</option>'+Object.keys(orgs).sort().map(function(o){return '<option>'+E.esc(o)+'</option>';}).join('');$('org').value=v;rendre();})
+      .withFailureHandler(function(e){if(fini)return;clearTimeout(minuteur);stop();$('etat').className='etat erreur';$('etat').textContent='Liste indisponible : '+(e&&e.message||e);}).EUC_DEV592_effectifs('');}
+  $('org').onchange=function(){if(D)rendre();};$('recharger').onclick=charger;charger();
+})();
+</script></body></html>

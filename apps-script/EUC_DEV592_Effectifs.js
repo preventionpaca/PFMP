@@ -29,6 +29,9 @@ function EUC_DEV592_calcul_(m) {
     var apprentis = fc ? 0 : ce ? effectif : (c.eleves || []).filter(function(e) { return e.apprentissage && e.apprentissage.code === 'APPRENTI'; }).length;
     var x = { id: c.id, nom: c.nom, famille: c.famille, mode: c.modeApprentissage || 'MIXITE', effectif: effectif, scolaires: ce ? 0 : effectif - apprentis, apprentis: apprentis, stagiaires: fc ? effectif : 0, entreprises: Object.keys(ents).length,
       organismes: [c.gestionnaire, c.donneur].filter(function(v, i, a) { return v && a.indexOf(v) === i; }) };
+    /* DEV635 : classe entière / formation continue — liste des jeunes avec entreprise et tuteur du contrat en cours. */
+    if (ce) x.liste = (c.eleves || []).map(function(e) { var a = e.apprentissage || {}; return { nom: e.libelle || [e.nom, e.prenom].filter(Boolean).join(' '), statut: a.code || 'SCOLAIRE', entreprise: a.code === 'APPRENTI' ? a.entreprise || '' : '', siret: a.siret || '', tuteur: a.tuteur || '', debut: a.debut || '', fin: a.fin || '' }; })
+      .sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     var noms = ce ? x.organismes.slice() : [c.etab === 'LGT' ? 'LGT' : c.etab === 'LP' ? 'LP' : (c.etab || 'Autres')];
     if (ce && !noms.length) noms = ['Organisme à renseigner'];
     noms.forEach(function(g) { var G = groupe(g); G.classes.push(x); Object.keys(ents).forEach(function(k) { G.entreprises[k] = true; }); });
@@ -53,4 +56,10 @@ function EUC_DEV592_effectifs(annee) {
   /* DEV597 : alertes de l'échéancier des contacts d'entrée, affichées sur l'accueil. */
   try { if (typeof EUC_DEV597_compteurs_ === 'function') r.echeancier = EUC_DEV597_compteurs_(annee); } catch (e) {}
   return r;
+}
+
+/* DEV635 — Page « Apprentis par classe entière » (mêmes données que le bloc Effectifs). */
+function EUC_DEV635_afficher(e) {
+  EUC_SUIVI2_exigerAdmin_();
+  return HtmlService.createTemplateFromFile('Apprentis_Classes_DEV635').evaluate().setTitle('Apprentis par classe entière').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

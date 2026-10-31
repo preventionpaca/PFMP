@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.607';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.635';
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -278,7 +278,9 @@ function EUC_SUIVI2_statutApprenti_(eps, aujourdhui) {
     if (complet && ep.debut <= aujourdhui && ep.fin >= aujourdhui) { if (!apprenti || ep.id > apprenti.id) apprenti = ep; return; }
     if (ep.cfa || (complet && ep.debut > aujourdhui)) futur = true;
   });
-  if (apprenti) return { code: 'APPRENTI', entreprise: apprenti.entreprise, debut: apprenti.debut, fin: apprenti.fin };
+  /* DEV635 : SIRET et tuteur du contrat en cours (liste des apprentis par classe entière). */
+  if (apprenti) { var b = apprenti.brut || {}; return { code: 'APPRENTI', entreprise: apprenti.entreprise, debut: apprenti.debut, fin: apprenti.fin,
+    siret: EUC_SUIVI2_t_(b.SIRET || b.Entreprise_siret).replace(/\D/g, ''), tuteur: [EUC_SUIVI2_t_(b.Tuteur_prenom), EUC_SUIVI2_t_(b.Tuteur_nom || b.Tuteur)].filter(Boolean).join(' ') }; }
   return { code: futur ? 'FUTUR_APPRENTI' : 'SCOLAIRE' };
 }
 /* R16 bis : statut d'apprenti PAR PÉRIODE, selon les dates du contrat.

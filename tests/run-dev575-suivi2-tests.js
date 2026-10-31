@@ -464,3 +464,25 @@ test('DEV597 : courriel au référent — un message par professeur, mission, é
   const page = read('apps-script/Echeancier_Apprentis_DEV597.html');
   for (const t of ["EUC_DEV597_prevenirReferents", "confirmation:confirmer?'ENVOYER':''", 'value="VISIO"', 'prévenu le ']) assert.ok(page.includes(t), t);
 });
+test('DEV635 : classes entières — liste des jeunes (entreprise, tuteur, contrat), même couleur pour une même entreprise toutes classes confondues, co-gestion comptée une fois', () => {
+  const k = { String, Number, Array, Object, JSON };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV592_Effectifs.js'), k);
+  const ap = (ent, siret, tut) => ({ code: 'APPRENTI', entreprise: ent, siret, tuteur: tut, debut: '2026-09-01', fin: '2028-08-31' });
+  const m = { classes: [
+    { id: 3, nom: '2BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', donneur: 'CFAI', periodes: [], eleves: [{ id: 5, libelle: 'ZOE A', apprentissage: ap('ENEDIS', '11111111111111', 'M. Un') }, { id: 6, libelle: 'ALI B', apprentissage: { code: 'FUTUR_APPRENTI' } }, { id: 7, libelle: 'BOB C', apprentissage: ap('Enedis SA', '11111111111111', 'Mme Deux') }] },
+    { id: 4, nom: '1BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', periodes: [], eleves: [{ id: 8, libelle: 'EVE D', apprentissage: ap('ENEDIS', '11111111111111', 'M. Un') }, { id: 9, libelle: 'LEO E', apprentissage: ap('GARAGE', '', '') }] },
+    { id: 1, nom: 'TCAR', etab: 'LP', modeApprentissage: 'MIXITE', periodes: [], eleves: [{ id: 1, libelle: 'X', apprentissage: ap('ENEDIS', '11111111111111', '') }] }] };
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV592_calcul_(m))), cfa = r.groupes.find(g => g.nom === 'CFA RAN'), c2 = cfa.classes.find(c => c.id === 3);
+  assert.deepEqual(c2.liste.map(j => [j.nom, j.statut, j.entreprise, j.tuteur]), [['ALI B', 'FUTUR_APPRENTI', '', ''], ['BOB C', 'APPRENTI', 'Enedis SA', 'Mme Deux'], ['ZOE A', 'APPRENTI', 'ENEDIS', 'M. Un']], 'tri alphabétique, futur sans entreprise');
+  assert.equal(r.groupes.find(g => g.nom === 'LP').classes[0].liste, undefined, 'mixité : pas de liste');
+  const html = read('apps-script/Apprentis_Classes_DEV635_Rendu.html'), w = { String, Object, Array }; w.window = w; vm.createContext(w);
+  vm.runInContext(html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>')), w);
+  const toutes = [].concat(...r.groupes.map(g => g.classes)), ents = w.EUC635.entreprises(toutes);
+  assert.equal(ents.multiples.length, 1, 'GARAGE seul : pas de couleur'); const e = ents.multiples[0];
+  assert.deepEqual([e.apprentis.length, e.tuteurs.length, e.classes.length], [3, 2, 2], 'même SIRET réuni, classe co-gérée comptée une fois, 2 tuteurs');
+  const t = w.EUC635.tableau(c2, ents); assert.equal((t.match(new RegExp('background:' + e.couleur, 'g')) || []).length, 2); assert.match(t, /3 apprentis · 2 tuteur\(s\)/); assert.match(t, /Futur apprenti/);
+  const admin = read('apps-script/Admin_PFMP.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json');
+  assert.ok(admin.includes("EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu')") && admin.includes('?page=apprentis-classes-pfmp">Apprentis par classe entière') && admin.includes('Voir les jeunes et leurs entreprises'));
+  assert.ok(routes.includes("case 'apprentis-classes-pfmp':\n      return EUC_DEV635_afficher(e);") && cfg.includes('"page": "apprentis-classes-pfmp"'));
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /siret: EUC_SUIVI2_t_\(b\.SIRET \|\| b\.Entreprise_siret\)/);
+});

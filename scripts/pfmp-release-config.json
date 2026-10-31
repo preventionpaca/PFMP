@@ -27,6 +27,7 @@
     {"page": "etiquettes-pfmp", "scope": "admin", "expected": "Étiquettes et badges"},
     {"page": "referentiels-pfmp", "scope": "admin", "expected": "Référentiels des diplômes"},
     {"page": "banc-essai-pfmp", "scope": "admin", "expected": "Banc d’essai"},
+    {"page": "apprentis-classes-pfmp", "scope": "admin", "expected": "Apprentis par classe entière"},
     {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
     {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},
     {"page": "gestion-pfmp", "scope": "admin", "expected": "Gestion administrative PFMP"},
