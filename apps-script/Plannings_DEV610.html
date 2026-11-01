@@ -1035,9 +1035,9 @@ function remettreEcran(){var l=A_REMETTRE;A_REMETTRE=[];l.forEach(function(f){tr
 function imprimerFenetre(){var w=null;try{w=window.open('','_blank');}catch(e){}if(!w)return false;
   try{var d=w.document,corps=document.body.cloneNode(true);Array.prototype.forEach.call(corps.querySelectorAll('script'),function(x){x.parentNode.removeChild(x);});
     var styles=Array.prototype.map.call(document.querySelectorAll('head style,head link[rel="stylesheet"]'),function(x){return x.outerHTML;}).join('');
-    d.open();d.write('<!doctype html><html lang="fr" style="'+esc(document.documentElement.getAttribute('style')||'')+'"><head><meta charset="utf-8"><title>'+esc(document.title)+'</title>'+styles+
-      '<style>.fenImpr{position:sticky;top:0;z-index:99;background:#1b396a;color:#fff;padding:8px 14px;font:14px system-ui,sans-serif}@media print{.fenImpr{display:none!important}}</style></head><body class="'+esc(document.body.className)+'">'+
-      '<div class="fenImpr">Fenêtre d’impression : vous pouvez la fermer une fois l’impression lancée.</div>'+corps.innerHTML+'</body></html>');d.close();
+    d.open();var B='<',F='</';d.write(B+'!doctype html>'+B+'html lang="fr" style="'+esc(document.documentElement.getAttribute('style')||'')+'">'+B+'head>'+B+'meta charset="utf-8">'+B+'title>'+esc(document.title)+F+'title>'+styles+
+      B+'style>.fenImpr{position:sticky;top:0;z-index:99;background:#1b396a;color:#fff;padding:8px 14px;font:14px system-ui,sans-serif}@media print{.fenImpr{display:none!important}}'+F+'style>'+F+'head>'+B+'body class="'+esc(document.body.className)+'">'+
+      '<div class="fenImpr">Fenêtre d’impression : vous pouvez la fermer une fois l’impression lancée.</div>'+corps.innerHTML+F+'body>'+F+'html>');d.close();
     try{var mq=w.matchMedia('print');(mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(e){if(e.matches)ajusterImpression(d);});}catch(e){}
     /* Logos chargés avant l'impression (3 s au plus). */
     var t0=Date.now(),go=function(){var ok=Array.prototype.every.call(d.images,function(im){return im.complete;});if(!ok&&Date.now()-t0<3000){setTimeout(go,100);return;}w.focus();w.print();};setTimeout(go,50);
