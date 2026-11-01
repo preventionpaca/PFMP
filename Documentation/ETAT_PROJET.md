@@ -5,6 +5,7 @@
 - DEV636 n'a pas suffi : l'impression directe échouait toujours, alors que la même imprimante imprime Wikipédia avec la boîte de dialogue du système. La cause est donc l'impression depuis le cadre (iframe) de la Web App Apps Script.
 - Correction : `imprimerFenetre()` recopie la page prête à imprimer (styles, format de page, réduction calculée, classe `imprGrille`), sans aucun script, dans une fenêtre à part, attend les logos (3 s au plus) puis l'imprime comme une page ordinaire. L'écran est remis en état aussitôt. `ajusterImpression(doc)` s'applique aussi dans cette fenêtre.
 - Repli si la fenêtre est bloquée : impression dans la page comme avant, remise en état différée (DEV636).
+- Retour utilisateur : la fenêtre s'ouvre bien mais l'impression directe échoue encore ; la cause n'est donc pas le cadre Apps Script. Piste suivante : le format imposé `@page size` (A3/A4) refusé par l'imprimante via la boîte de dialogue du système. La fenêtre d'impression propose « Imprimer » (relancer) et « Imprimer sans format imposé » (marges seules, papier et orientation choisis dans la boîte).
 - Non vérifiable ici : l'impression réelle sur l'imprimante du lycée.
 
 ## Mise à jour du 1er novembre 2026 — DEV636 : impression directe des plannings

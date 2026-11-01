@@ -569,7 +569,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.ok(fenCode.length > 200 && !/<\/?(html|head|body|style|title|!doctype)\b/i.test(fenCode), 'aucune balise de document écrite telle quelle dans le script (HtmlService refuse la page, retour automatique en DEV637)');
   // DEV637 : impression dans une fenêtre à part (page ordinaire, sans script), écran remis en état aussitôt.
   const ecrit = []; let imprime = 0; const remis = [];
-  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {} } };
+  const els = { stylePage: { textContent: '@page{size:A4 portrait;margin:10mm}' }, fenRelancer: {}, fenSansFormat: {} };
+  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {}, getElementById: id => els[id] } };
   const corps = { className: 'imprGrille', cloneNode: () => ({ querySelectorAll: () => [{ parentNode: { removeChild() {} } }], innerHTML: '<main>PLANNING</main>' }) };
   const sb2 = { pr: [], setTimeout: f => f(), Date, esc: v => String(v).replace(/"/g, '&quot;'), ajusterImpression() {}, formatPage: () => ({ css: 'A3' }), styles: { stylePage: { textContent: 'A3' } },
     document: { addEventListener() {}, body: corps, title: 'Plannings annuels', documentElement: { getAttribute: () => '--hpage:1000px' }, querySelectorAll: () => [{ outerHTML: '<style id="stylePage">@page{size:A4 portrait;margin:10mm}</style>' }] },
@@ -578,6 +579,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   vm.runInContext("imprimerPage('@page{size:A4 portrait;margin:10mm}',function(){remis.push(1);})", sb2);
   assert.strictEqual(imprime, 1, 'la fenêtre à part est imprimée'); assert.deepStrictEqual(sb2.pr, [], 'pas d’impression dans le cadre Apps Script');
   assert.ok(ecrit[0].includes('<main>PLANNING</main>') && ecrit[0].includes('@page{size:A4 portrait') && ecrit[0].includes('class="imprGrille"') && ecrit[0].includes('style="--hpage:1000px"') && !/<script/i.test(ecrit[0]), 'copie fidèle, sans script');
+  els.fenSansFormat.onclick(); assert.strictEqual(els.stylePage.textContent, '@page{margin:10mm}', 'sans format imposé : marges seules'); assert.strictEqual(imprime, 2);
+  els.fenRelancer.onclick(); assert.strictEqual(imprime, 3);
   assert.deepStrictEqual(remis, [1]); assert.strictEqual(sb2.styles.stylePage.textContent, 'A3', 'écran remis en état aussitôt');
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
