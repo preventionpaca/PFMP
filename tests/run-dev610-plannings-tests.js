@@ -549,13 +549,13 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   for (const t of ['data-cal="SCOLAIRE"', 'data-cal="MIXITE"', 'data-cal="CLASSE_ENTIERE"', 'data-cal="FC" checked> Formation continue', 'data-cal="CLASSE_ENTIERE" checked> Alternance (classe entière)', 'rowspan="4"', 'function titrePlanning()', "if(v.FC)parts.push('FORMATION CONTINUE')", "if(v.SCOLAIRE)parts.push('PFMP','STAGES')", 'id="piedPlanning"', 'aside class="legende" id="legende"', 'data-p="pCouleurs"', "'Lundi de Pentecôte'", "'Ascension'", 'Imprimer / PDF', "addEventListener('beforeprint'"]) assert.ok(h.includes(t), t);
   assert.match(h, /<style id="stylePage">@page\{size:A3 landscape;margin:8mm\}<\/style>/);
   assert.ok(h.includes('<option value="A4">A4 paysage</option>') && h.includes("css:'@page{size:A4 landscape;margin:6mm}',W:1050,H:735") && h.includes('var F=formatPage(),W=F.W,H=F.H') && h.includes("memEcrire('dev610_format'"), 'format A3 ou A4 retenu sur le poste');
-  assert.ok(h.includes("['titreImpression','legende'].forEach(function(id){var e=$(id);if(!e)return;e.style.zoom='';var w=e.scrollWidth;") && h.includes('min-height:var(--hpage,1000px)') && h.includes("setProperty('--hpage',F.centre+'px')"), 'rien ne dépasse la feuille (sinon Chrome réduit toute la page) ; centrage à la hauteur du format');
+  assert.ok(h.includes("['titreImpression','legende'].forEach(function(id){var e=doc.getElementById(id);if(!e)return;e.style.zoom='';var w=e.scrollWidth;") && h.includes('min-height:var(--hpage,1000px)') && h.includes("setProperty('--hpage',F.centre+'px')"), 'rien ne dépasse la feuille (sinon Chrome réduit toute la page) ; centrage à la hauteur du format');
   assert.ok(h.includes("c.style.setProperty('--rh32'") && h.includes('height:var(--rh32,16px)'), 'calendrier : lignes agrandies pour remplir la feuille');
   assert.ok(h.includes('base=Number(t.dataset.zbase)||z') && !h.includes('t.style.zoom=String(Math.floor(z*dispo/l*100)/100)'), 'ajustement non cumulé quand Chrome recalcule l’aperçu'); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
   // DEV636 : impression directe sur imprimante (boîte de dialogue du système) — rien n'est remis en état juste après window.print().
   assert.ok(!/window\.print\(\);[^}]*stylePage/.test(h) && !/window\.print\(\);if\(c\)/.test(h), 'aucune remise en état immédiate après window.print()');
   assert.strictEqual((h.match(/window\.print\(\)/g) || []).length, 1, 'un seul point d’impression : imprimerPage()');
-  for (const t of ["['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,remettreEcran,true);});", "window.addEventListener('afterprint',function(){apresImpression(function(){", "$('imprimerPeriodes').onclick=function(){imprimerPage('@page{size:A4 portrait;margin:10mm}');};", "document.body.classList.add('imprGrille')", 'body.imprGrille .panneau:not(#pGrille){display:none!important}', 'Imprimer / PDF — planning général']) assert.ok(h.includes(t), t);
+  for (const t of ["['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,remettreEcran,true);});", "window.addEventListener('afterprint',function(){apresImpression(remettreGrille);});", "$('imprimerPeriodes').onclick=function(){imprimerPage('@page{size:A4 portrait;margin:10mm}');};", "document.body.classList.add('imprGrille')", 'body.imprGrille .panneau:not(#pGrille){display:none!important}', 'Imprimer / PDF — planning général']) assert.ok(h.includes(t), t);
   assert.ok(!h.includes(`document.querySelector('[data-p="pGrille"]').click();majTitreImpression();window.print()`), 'le planning général s’imprime sans quitter l’écran affiché');
   const ctx = { A: [], el: {}, ev: {} }; const pr = [];
   const code = h.slice(h.indexOf('var A_REMETTRE=[];'), h.indexOf("/* Le planning général s'imprime"));
@@ -565,6 +565,18 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.deepStrictEqual(pr, ['@page{size:A4 portrait;margin:10mm}']);
   assert.strictEqual(sb.styles.stylePage.textContent, '@page{size:A4 portrait;margin:10mm}', 'format conservé tant que l’utilisateur n’est pas revenu sur la page');
   sb.ev.pointerdown(); assert.strictEqual(sb.styles.stylePage.textContent, 'A3', 'remis en état au premier clic');
+  // DEV637 : impression dans une fenêtre à part (page ordinaire, sans script), écran remis en état aussitôt.
+  const ecrit = []; let imprime = 0; const remis = [];
+  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {} } };
+  const corps = { className: 'imprGrille', cloneNode: () => ({ querySelectorAll: () => [{ parentNode: { removeChild() {} } }], innerHTML: '<main>PLANNING</main>' }) };
+  const sb2 = { pr: [], setTimeout: f => f(), Date, esc: v => String(v).replace(/"/g, '&quot;'), ajusterImpression() {}, formatPage: () => ({ css: 'A3' }), styles: { stylePage: { textContent: 'A3' } },
+    document: { addEventListener() {}, body: corps, title: 'Plannings annuels', documentElement: { getAttribute: () => '--hpage:1000px' }, querySelectorAll: () => [{ outerHTML: '<style id="stylePage">@page{size:A4 portrait;margin:10mm}</style>' }] },
+    window: { open: () => fen, print: () => sb2.pr.push('page') } };
+  sb2.$ = id => sb2.styles[id]; vm.createContext(sb2); vm.runInContext(code, sb2); sb2.remis = remis;
+  vm.runInContext("imprimerPage('@page{size:A4 portrait;margin:10mm}',function(){remis.push(1);})", sb2);
+  assert.strictEqual(imprime, 1, 'la fenêtre à part est imprimée'); assert.deepStrictEqual(sb2.pr, [], 'pas d’impression dans le cadre Apps Script');
+  assert.ok(ecrit[0].includes('<main>PLANNING</main>') && ecrit[0].includes('@page{size:A4 portrait') && ecrit[0].includes('class="imprGrille"') && ecrit[0].includes('style="--hpage:1000px"') && !/<script/i.test(ecrit[0]), 'copie fidèle, sans script');
+  assert.deepStrictEqual(remis, [1]); assert.strictEqual(sb2.styles.stylePage.textContent, 'A3', 'écran remis en état aussitôt');
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
 
@@ -781,7 +793,7 @@ test('couleurs par type et pied de page : saisis dans la page, contrôlés, prio
   const prop = k.EUC_DEV610_ligneProposee_({ id: 99, nom: '2BTS CPI', classePfmp: '2BTS CPI', etab: 'LGT', modalite: 'Mixité', gestionnaire: 'CFA RAN', donneur: 'CFAI' }, lignesDefaut());
   assert.deepStrictEqual(J([prop.calendrier, prop.organismes]), ['SCOLAIRE', []], 'ligne scolaire : pas d’organisme de la classe');
   const pg = read('apps-script/Plannings_DEV610.html');
-  for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", 'function miseEnPageImpression()', '.misePage{flex-direction:column;align-items:stretch}', 'function ajusterImpression()', "'✓':'VFMP'", '<span class="bfe">', "cls+=' part'", 'et bande']) assert.ok(pg.includes(x), x);
+  for (const x of ["l.calendrier==='SCOLAIRE'?[]:(l.organismes||[])", 'finMax=EUC_DEV610_plus_(finA,92)', "if(o.suite)cls+=' suite'", 'function miseEnPageImpression()', '.misePage{flex-direction:column;align-items:stretch}', 'function ajusterImpression(doc)', "'✓':'VFMP'", '<span class="bfe">', "cls+=' part'", 'et bande']) assert.ok(pg.includes(x), x);
 });
 
 test('impression : aucun dégradé transparent dans la grille (rendu noir dans certains lecteurs PDF), appel en « A », repères aux deux bouts des bandes', () => {

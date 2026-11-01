@@ -1023,18 +1023,30 @@ $('nouvelle').onclick=function(){enregistrer(this,true);};
 $('version').onchange=function(){var n=Number(this.value);if(SALE&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=String(NUM);return;}
   if(n){ouvrirVersion(n);}else{NUM=0;SALE=true;$('commentaire').value='';}APERCU=null;$('resultatPublication').innerHTML='';apresChargement('');};
 $('annee').onchange=function(){if(SALE&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee.code;return;}APERCU=null;$('resultatPublication').innerHTML='';charger(this.value);};
-/* Impression directe sur une imprimante (« Imprimer avec la boîte de dialogue du système ») : Chrome remet le document
- * en page après la fermeture de l'aperçu. S'il a changé entre-temps (format de page, réduction, onglet), le nombre de
- * pages ne correspond plus et l'impression échoue (« Échec de l'impression »), alors que le PDF passe. L'écran n'est
- * donc remis en état qu'au retour de l'utilisateur sur la page (clic, touche, molette) ou à l'impression suivante. */
+/* Impression directe sur une imprimante (« Imprimer avec la boîte de dialogue du système ») : depuis le cadre de la
+ * Web App (iframe Apps Script), Chrome échoue (« Échec de l'impression ») alors que le PDF passe et que la même
+ * imprimante imprime les autres sites. La page prête à imprimer est donc recopiée, sans script, dans une fenêtre à
+ * part, imprimée comme une page ordinaire ; l'écran est remis en état aussitôt. Sans fenêtre (bloquée), impression
+ * dans la page comme avant, l'écran n'étant remis en état qu'au retour de l'utilisateur (clic, touche, molette). */
 var A_REMETTRE=[];
 function apresImpression(f){A_REMETTRE.push(f);}
 function remettreEcran(){var l=A_REMETTRE;A_REMETTRE=[];l.forEach(function(f){try{f();}catch(e){}});}
 ['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,remettreEcran,true);});
+function imprimerFenetre(){var w=null;try{w=window.open('','_blank');}catch(e){}if(!w)return false;
+  try{var d=w.document,corps=document.body.cloneNode(true);Array.prototype.forEach.call(corps.querySelectorAll('script'),function(x){x.parentNode.removeChild(x);});
+    var styles=Array.prototype.map.call(document.querySelectorAll('head style,head link[rel="stylesheet"]'),function(x){return x.outerHTML;}).join('');
+    d.open();d.write('<!doctype html><html lang="fr" style="'+esc(document.documentElement.getAttribute('style')||'')+'"><head><meta charset="utf-8"><title>'+esc(document.title)+'</title>'+styles+
+      '<style>.fenImpr{position:sticky;top:0;z-index:99;background:#1b396a;color:#fff;padding:8px 14px;font:14px system-ui,sans-serif}@media print{.fenImpr{display:none!important}}</style></head><body class="'+esc(document.body.className)+'">'+
+      '<div class="fenImpr">Fenêtre d’impression : vous pouvez la fermer une fois l’impression lancée.</div>'+corps.innerHTML+'</body></html>');d.close();
+    try{var mq=w.matchMedia('print');(mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(e){if(e.matches)ajusterImpression(d);});}catch(e){}
+    /* Logos chargés avant l'impression (3 s au plus). */
+    var t0=Date.now(),go=function(){var ok=Array.prototype.every.call(d.images,function(im){return im.complete;});if(!ok&&Date.now()-t0<3000){setTimeout(go,100);return;}w.focus();w.print();};setTimeout(go,50);
+    return true;}catch(e){try{w.close();}catch(x){}return false;}}
 function imprimerPage(css,remettre){if(css!==null){remettreEcran();$('stylePage').textContent=css;}
-  apresImpression(function(){if(remettre)remettre();$('stylePage').textContent=formatPage().css;});window.print();}
+  var fini=function(){if(remettre)remettre();$('stylePage').textContent=formatPage().css;};
+  if(imprimerFenetre()){fini();return;}apresImpression(fini);window.print();}
 /* Le planning général s'imprime depuis n'importe quel écran (calendrier d'une formation compris) sans le quitter. */
-$('imprimer').onclick=function(){remettreEcran();document.body.classList.add('imprGrille');majTitreImpression();imprimerPage(null,function(){document.body.classList.remove('imprGrille');});};
+$('imprimer').onclick=function(){remettreEcran();document.body.classList.add('imprGrille');miseEnPageImpression();imprimerPage(null,function(){document.body.classList.remove('imprGrille');remettreGrille();});};
 /* Impression : le planning tient sur une page A3 paysage (réduction calculée). */
 /* Impression A3 paysage (1527 × 1062 px utiles) : le tableau prend toute la largeur possible, la légende passe dessous,
  * l'ensemble tient sur une page et y est centré verticalement et horizontalement. */
@@ -1055,13 +1067,14 @@ window.addEventListener('beforeprint',miseEnPageImpression);
 /* Une fois la page passée en mode impression, la largeur réelle est connue : le tableau est réduit encore s'il dépasse. */
 /* Calcul repris depuis la réduction de départ (jamais cumulé) : Chrome recalcule l'aperçu à chaque changement
  * d'imprimante ou de papier, et l'ajustement ne doit pas réduire le tableau un peu plus à chaque fois. */
-function ajusterImpression(){var t=document.querySelector('table.g');if(!t)return;var dispo=document.documentElement.clientWidth-4;
+function ajusterImpression(doc){doc=doc&&doc.querySelector?doc:document;var t=doc.querySelector('table.g');if(!t)return;var dispo=doc.documentElement.clientWidth-4;
   /* Rien ne doit dépasser la largeur de la feuille : sinon Chrome réduit toute la page (bande blanche, tableau resserré).
    * Le titre et la légende, sur une ligne, sont réduits à la largeur de la feuille. */
-  ['titreImpression','legende'].forEach(function(id){var e=$(id);if(!e)return;e.style.zoom='';var w=e.scrollWidth;if(dispo>0&&w>dispo)e.style.zoom=String(Math.floor(dispo/w*100)/100);});
+  ['titreImpression','legende'].forEach(function(id){var e=doc.getElementById(id);if(!e)return;e.style.zoom='';var w=e.scrollWidth;if(dispo>0&&w>dispo)e.style.zoom=String(Math.floor(dispo/w*100)/100);});
   var z=Number(t.style.zoom)||1,base=Number(t.dataset.zbase)||z,l=t.getBoundingClientRect().width/z;if(dispo>0&&l>0){var n=Math.min(base,Math.floor(dispo/l*100)/100);if(String(n)!==t.style.zoom)t.style.zoom=String(n);}}
-try{var mqImp=window.matchMedia('print');(mqImp.addEventListener?mqImp.addEventListener.bind(mqImp,'change'):mqImp.addListener.bind(mqImp))(function(e){if(e.matches)ajusterImpression();});}catch(e){}
-window.addEventListener('afterprint',function(){apresImpression(function(){['titreImpression','legende'].forEach(function(id){if($(id))$(id).style.zoom='';});var t=document.querySelector('table.g');if(t){t.style.zoom='';t.style.removeProperty('--rh');t.style.removeProperty('--fs');}$('pGrille').style.paddingTop='';});});
+try{var mqImp=window.matchMedia('print');(mqImp.addEventListener?mqImp.addEventListener.bind(mqImp,'change'):mqImp.addListener.bind(mqImp))(function(e){if(e.matches)ajusterImpression(document);});}catch(e){}
+function remettreGrille(){['titreImpression','legende'].forEach(function(id){if($(id))$(id).style.zoom='';});var t=document.querySelector('table.g');if(t){t.style.zoom='';t.style.removeProperty('--rh');t.style.removeProperty('--fs');}$('pGrille').style.paddingTop='';}
+window.addEventListener('afterprint',function(){apresImpression(remettreGrille);});
 try{var mem=JSON.parse(localStorage.getItem('dev610_blocs')||'null');if(mem)Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){if(c.dataset.cal in mem)c.checked=!!mem[c.dataset.cal];});}catch(e){}
 Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(c){c.onchange=function(){var m={};Array.prototype.forEach.call(document.querySelectorAll('#blocs [data-cal]'),function(x){m[x.dataset.cal]=x.checked;});try{localStorage.setItem('dev610_blocs',JSON.stringify(m));}catch(e){}SEL=[];if(D)rendreGrille();};});
 var LIB_ECARTS={type:'type',debut:'début',fin:'fin',classes:'classes',formation:'formation',niveau:'niveau',classePfmp:'classe PFMP',ligneSheet:'ligne',ligneId:'ligne du planning',couleur:'couleur'};
