@@ -565,6 +565,8 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.deepStrictEqual(pr, ['@page{size:A4 portrait;margin:10mm}']);
   assert.strictEqual(sb.styles.stylePage.textContent, '@page{size:A4 portrait;margin:10mm}', 'format conservé tant que l’utilisateur n’est pas revenu sur la page');
   sb.ev.pointerdown(); assert.strictEqual(sb.styles.stylePage.textContent, 'A3', 'remis en état au premier clic');
+  const fenCode = h.slice(h.indexOf('function imprimerFenetre(){'), h.indexOf('function imprimerPage('));
+  assert.ok(fenCode.length > 200 && !/<\/?(html|head|body|style|title|!doctype)\b/i.test(fenCode), 'aucune balise de document écrite telle quelle dans le script (HtmlService refuse la page, retour automatique en DEV637)');
   // DEV637 : impression dans une fenêtre à part (page ordinaire, sans script), écran remis en état aussitôt.
   const ecrit = []; let imprime = 0; const remis = [];
   const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {} } };
