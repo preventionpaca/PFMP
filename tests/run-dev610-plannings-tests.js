@@ -570,7 +570,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   // DEV637 : impression dans une fenêtre à part (page ordinaire, sans script), écran remis en état aussitôt.
   const ecrit = []; let imprime = 0; const remis = [];
   const els = { stylePage: { textContent: '@page{size:A4 portrait;margin:10mm}' }, fenRelancer: {}, fenSansFormat: {} };
-  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {}, getElementById: id => els[id] } };
+  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {}, getElementById: id => els[id], querySelectorAll: () => [] } };
   const corps = { className: 'imprGrille', cloneNode: () => ({ querySelectorAll: () => [{ parentNode: { removeChild() {} } }], innerHTML: '<main>PLANNING</main>' }) };
   const sb2 = { pr: [], setTimeout: f => f(), Date, esc: v => String(v).replace(/"/g, '&quot;'), ajusterImpression() {}, formatPage: () => ({ css: 'A3' }), styles: { stylePage: { textContent: 'A3' } },
     document: { addEventListener() {}, body: corps, title: 'Plannings annuels', documentElement: { getAttribute: () => '--hpage:1000px' }, querySelectorAll: () => [{ outerHTML: '<style id="stylePage">@page{size:A4 portrait;margin:10mm}</style>' }] },
