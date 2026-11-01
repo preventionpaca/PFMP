@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 1er novembre 2026 — DEV636 : impression directe des plannings
+
+- Constat : depuis les Plannings annuels, « Enregistrer au format PDF » fonctionnait mais l'impression directe sur l'imprimante (« Imprimer avec la boîte de dialogue du système ») échouait (« Échec de l'impression »), pour le planning général comme pour les calendriers et le récapitulatif des périodes.
+- Cause retenue : la page remettait l'écran en état (format de page, réduction, onglet) juste après `window.print()`. Chrome remet le document en page après la fermeture de l'aperçu pour la boîte de dialogue du système : le document avait changé et le nombre de pages ne correspondait plus.
+- Correction : un seul point d'impression `imprimerPage()` ; la remise en état est différée au retour de l'utilisateur sur la page (clic, touche, molette) ou à l'impression suivante, y compris celle de `afterprint`.
+- Le bouton du haut s'appelle « Imprimer / PDF — planning général » : il imprime le planning général depuis n'importe quel écran sans le quitter (classe `imprGrille` en impression), le calendrier d'une formation reste affiché.
+- Non vérifiable ici : l'impression réelle sur l'imprimante du lycée (à confirmer par l'utilisateur).
+
 ## Mise à jour du 31 octobre 2026 — DEV635 : apprentis par classe entière
 
 - Accueil administration, bloc Effectifs : après le choix d'un organisme, une vignette de

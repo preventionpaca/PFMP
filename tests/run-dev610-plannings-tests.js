@@ -552,6 +552,19 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.ok(h.includes("['titreImpression','legende'].forEach(function(id){var e=$(id);if(!e)return;e.style.zoom='';var w=e.scrollWidth;") && h.includes('min-height:var(--hpage,1000px)') && h.includes("setProperty('--hpage',F.centre+'px')"), 'rien ne dépasse la feuille (sinon Chrome réduit toute la page) ; centrage à la hauteur du format');
   assert.ok(h.includes("c.style.setProperty('--rh32'") && h.includes('height:var(--rh32,16px)'), 'calendrier : lignes agrandies pour remplir la feuille');
   assert.ok(h.includes('base=Number(t.dataset.zbase)||z') && !h.includes('t.style.zoom=String(Math.floor(z*dispo/l*100)/100)'), 'ajustement non cumulé quand Chrome recalcule l’aperçu'); assert.match(h, /\.panneau:not\(\.actif\)\{display:none!important\}/);
+  // DEV636 : impression directe sur imprimante (boîte de dialogue du système) — rien n'est remis en état juste après window.print().
+  assert.ok(!/window\.print\(\);[^}]*stylePage/.test(h) && !/window\.print\(\);if\(c\)/.test(h), 'aucune remise en état immédiate après window.print()');
+  assert.strictEqual((h.match(/window\.print\(\)/g) || []).length, 1, 'un seul point d’impression : imprimerPage()');
+  for (const t of ["['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,remettreEcran,true);});", "window.addEventListener('afterprint',function(){apresImpression(function(){", "$('imprimerPeriodes').onclick=function(){imprimerPage('@page{size:A4 portrait;margin:10mm}');};", "document.body.classList.add('imprGrille')", 'body.imprGrille .panneau:not(#pGrille){display:none!important}', 'Imprimer / PDF — planning général']) assert.ok(h.includes(t), t);
+  assert.ok(!h.includes(`document.querySelector('[data-p="pGrille"]').click();majTitreImpression();window.print()`), 'le planning général s’imprime sans quitter l’écran affiché');
+  const ctx = { A: [], el: {}, ev: {} }; const pr = [];
+  const code = h.slice(h.indexOf('var A_REMETTRE=[];'), h.indexOf("/* Le planning général s'imprime"));
+  const sb = { document: { addEventListener: (e, f) => { sb.ev[e] = f; } }, window: { print: () => pr.push(sb.$('stylePage').textContent) }, ev: {}, styles: { stylePage: { textContent: 'A3' } }, $: id => sb.styles[id], formatPage: () => ({ css: 'A3' }) };
+  vm.createContext(sb); vm.runInContext(code, sb);
+  vm.runInContext("imprimerPage('@page{size:A4 portrait;margin:10mm}')", sb);
+  assert.deepStrictEqual(pr, ['@page{size:A4 portrait;margin:10mm}']);
+  assert.strictEqual(sb.styles.stylePage.textContent, '@page{size:A4 portrait;margin:10mm}', 'format conservé tant que l’utilisateur n’est pas revenu sur la page');
+  sb.ev.pointerdown(); assert.strictEqual(sb.styles.stylePage.textContent, 'A3', 'remis en état au premier clic');
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
 
