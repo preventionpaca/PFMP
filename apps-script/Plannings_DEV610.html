@@ -1023,41 +1023,18 @@ $('nouvelle').onclick=function(){enregistrer(this,true);};
 $('version').onchange=function(){var n=Number(this.value);if(SALE&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=String(NUM);return;}
   if(n){ouvrirVersion(n);}else{NUM=0;SALE=true;$('commentaire').value='';}APERCU=null;$('resultatPublication').innerHTML='';apresChargement('');};
 $('annee').onchange=function(){if(SALE&&!confirm('Les modifications non enregistrées seront perdues. Continuer ?')){this.value=D.annee.code;return;}APERCU=null;$('resultatPublication').innerHTML='';charger(this.value);};
-/* Impression directe sur une imprimante (« Imprimer avec la boîte de dialogue du système ») : depuis le cadre de la
- * Web App (iframe Apps Script), Chrome échoue (« Échec de l'impression ») alors que le PDF passe et que la même
- * imprimante imprime les autres sites. La page prête à imprimer est donc recopiée, sans script, dans une fenêtre à
- * part, imprimée comme une page ordinaire ; l'écran est remis en état aussitôt. Sans fenêtre (bloquée), impression
- * dans la page comme avant, l'écran n'étant remis en état qu'au retour de l'utilisateur (clic, touche, molette). */
+/* Après une impression, l'écran n'est remis en état (format de page, réduction, onglet) qu'au retour de
+ * l'utilisateur sur la page (clic, touche, molette) ou à l'impression suivante : Chrome peut remettre le document
+ * en page après la fermeture de l'aperçu (boîte de dialogue du système) et il ne doit pas avoir changé entre-temps. */
 var A_REMETTRE=[];
 function apresImpression(f){A_REMETTRE.push(f);}
 function remettreEcran(){var l=A_REMETTRE;A_REMETTRE=[];l.forEach(function(f){try{f();}catch(e){}});}
 ['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,remettreEcran,true);});
-function imprimerFenetre(){var w=null;try{w=window.open('','_blank');}catch(e){}if(!w)return false;
-  try{var d=w.document,corps=document.body.cloneNode(true);Array.prototype.forEach.call(corps.querySelectorAll('script'),function(x){x.parentNode.removeChild(x);});
-    var styles=Array.prototype.map.call(document.querySelectorAll('head style,head link[rel="stylesheet"]'),function(x){return x.outerHTML;}).join('');
-    d.open();var B='<',F='</';d.write(B+'!doctype html>'+B+'html lang="fr" style="'+esc(document.documentElement.getAttribute('style')||'')+'">'+B+'head>'+B+'meta charset="utf-8">'+B+'title>'+esc(document.title)+F+'title>'+styles+
-      B+'style>.fenImpr{position:sticky;top:0;z-index:99;background:#1b396a;color:#fff;padding:8px 14px;font:14px system-ui,sans-serif}.fenImpr button{margin-left:8px;font:inherit;padding:3px 10px;border-radius:4px;border:1px solid #fff;background:#fff;color:#1b396a;cursor:pointer}@media print{.fenImpr{display:none!important}}'+F+'style>'+F+'head>'+B+'body class="'+esc(document.body.className)+'">'+
-      '<div class="fenImpr">Fenêtre d’impression : vous pouvez la fermer une fois l’impression lancée. <button type="button" id="fenRelancer">Imprimer</button> <button type="button" id="fenSansFormat" title="Si l’imprimante refuse le format imposé par la page : choisissez vous-même le papier et l’orientation (paysage) dans la boîte d’impression">Imprimer sans format imposé</button> <span id="fenDiag">Diagnostic, essais cumulés : <button type="button" data-d="1">1. sans logos</button><button type="button" data-d="2">2. + sans couleurs de fond</button><button type="button" data-d="3">3. + sans réduction</button><button type="button" data-d="4">4. + sans format imposé</button><button type="button" id="fenTest" title="Remplace la fenêtre par une ligne de texte : si elle ne s’imprime pas non plus, le contenu du planning n’est pas en cause">5. page de test (texte seul)</button></span></div>'+corps.innerHTML+F+'body>'+F+'html>');d.close();
-    try{var mq=w.matchMedia('print');(mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(e){if(e.matches)ajusterImpression(d);});}catch(e){}
-    /* Format imposé (@page size) refusé par certaines imprimantes avec la boîte de dialogue du système : on garde
-     * seulement les marges, le papier et l'orientation se choisissent dans la boîte. */
-    var sp=d.getElementById('stylePage');d.getElementById('fenRelancer').onclick=function(){w.print();};
-    d.getElementById('fenSansFormat').onclick=function(){if(sp)sp.textContent=sp.textContent.replace(/size:[^;}]*;?/,'');w.print();};
-    /* Diagnostic de l'échec d'impression sur une imprimante (le PDF passe) : chaque essai ajoute une simplification. */
-    var diag=[function(){Array.prototype.forEach.call(d.images,function(im){im.style.display='none';});},
-      function(){var st=d.createElement('style');st.textContent='*{-webkit-print-color-adjust:economy!important;print-color-adjust:economy!important;background-image:none!important}';d.head.appendChild(st);},
-      function(){Array.prototype.forEach.call(d.querySelectorAll('[style*="zoom"]'),function(x){x.style.zoom='';});var st=d.createElement('style');st.textContent='@media print{*{zoom:1!important}}';d.head.appendChild(st);},
-      function(){if(sp)sp.textContent=sp.textContent.replace(/size:[^;}]*;?/,'');}];
-    var bt=d.getElementById('fenTest');if(bt)bt.onclick=function(){Array.prototype.forEach.call(d.querySelectorAll('style,link'),function(x){x.parentNode.removeChild(x);});d.body.className='';d.body.innerHTML='<p>Test d’impression Eucalyptus PFMP</p>';w.print();};
-    Array.prototype.forEach.call(d.querySelectorAll('#fenDiag [data-d]'),function(b){b.onclick=function(){var n=Number(b.dataset.d);for(var k=0;k<n;k++)diag[k]();w.print();};});
-    /* Logos chargés avant l'impression (3 s au plus). */
-    var t0=Date.now(),go=function(){var ok=Array.prototype.every.call(d.images,function(im){return im.complete;});if(!ok&&Date.now()-t0<3000){setTimeout(go,100);return;}w.focus();w.print();};setTimeout(go,50);
-    return true;}catch(e){try{w.close();}catch(x){}return false;}}
 function imprimerPage(css,remettre){if(css!==null){remettreEcran();$('stylePage').textContent=css;}
   var fini=function(){if(remettre)remettre();$('stylePage').textContent=formatPage().css;};
-  if(imprimerFenetre()){fini();return;}apresImpression(fini);window.print();}
+  apresImpression(fini);window.print();}
 /* Le planning général s'imprime depuis n'importe quel écran (calendrier d'une formation compris) sans le quitter. */
-$('imprimer').onclick=function(){remettreEcran();document.body.classList.add('imprGrille');miseEnPageImpression();imprimerPage(null,function(){document.body.classList.remove('imprGrille');remettreGrille();});};
+$('imprimer').onclick=function(){remettreEcran();document.body.classList.add('imprGrille');majTitreImpression();imprimerPage(null,function(){document.body.classList.remove('imprGrille');remettreGrille();});};
 /* Impression : le planning tient sur une page A3 paysage (réduction calculée). */
 /* Impression A3 paysage (1527 × 1062 px utiles) : le tableau prend toute la largeur possible, la légende passe dessous,
  * l'ensemble tient sur une page et y est centré verticalement et horizontalement. */

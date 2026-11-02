@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 3 novembre 2026 — DEV638 : cause trouvée, retour à l'impression dans la page
+
+- Cause réelle de « Échec de l'impression » : le navigateur de l'utilisateur, Ungoogled Chromium en Flatpak. Journal : « Failure enumerating local printers via service », puis « client registration failure; service or renderer likely has terminated » ; aucune requête n'arrive à CUPS. Correction côté poste : `chrome://flags/#enable-oop-print-drivers` sur Disabled (confirmé par l'utilisateur), ou Google Chrome.
+- La fenêtre d'impression à part (DEV637) est retirée : elle perdait les couleurs des cellules et figeait la page après « Annuler ». Impression de nouveau dans la page ; on garde la remise en état différée (DEV636) et le bouton « Imprimer / PDF — planning général » qui n'oblige pas à quitter l'écran.
+
 ## Mise à jour du 2 novembre 2026 — DEV637 : impression dans une fenêtre à part
 
 - DEV636 n'a pas suffi : l'impression directe échouait toujours, alors que la même imprimante imprime Wikipédia avec la boîte de dialogue du système. La cause est donc l'impression depuis le cadre (iframe) de la Web App Apps Script.

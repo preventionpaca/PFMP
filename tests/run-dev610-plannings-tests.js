@@ -565,23 +565,9 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.deepStrictEqual(pr, ['@page{size:A4 portrait;margin:10mm}']);
   assert.strictEqual(sb.styles.stylePage.textContent, '@page{size:A4 portrait;margin:10mm}', 'format conservé tant que l’utilisateur n’est pas revenu sur la page');
   sb.ev.pointerdown(); assert.strictEqual(sb.styles.stylePage.textContent, 'A3', 'remis en état au premier clic');
-  const fenCode = h.slice(h.indexOf('function imprimerFenetre(){'), h.indexOf('function imprimerPage('));
-  assert.ok(fenCode.length > 200 && !/<\/?(html|head|body|style|title|!doctype)\b/i.test(fenCode), 'aucune balise de document écrite telle quelle dans le script (HtmlService refuse la page, retour automatique en DEV637)');
-  // DEV637 : impression dans une fenêtre à part (page ordinaire, sans script), écran remis en état aussitôt.
-  const ecrit = []; let imprime = 0; const remis = [];
-  const els = { stylePage: { textContent: '@page{size:A4 portrait;margin:10mm}' }, fenRelancer: {}, fenSansFormat: {} };
-  const fen = { focus() {}, print() { imprime++; }, close() {}, matchMedia: () => ({ addListener() {} }), document: { images: [{ complete: true }], open() {}, write: x => ecrit.push(x), close() {}, getElementById: id => els[id], querySelectorAll: () => [] } };
-  const corps = { className: 'imprGrille', cloneNode: () => ({ querySelectorAll: () => [{ parentNode: { removeChild() {} } }], innerHTML: '<main>PLANNING</main>' }) };
-  const sb2 = { pr: [], setTimeout: f => f(), Date, esc: v => String(v).replace(/"/g, '&quot;'), ajusterImpression() {}, formatPage: () => ({ css: 'A3' }), styles: { stylePage: { textContent: 'A3' } },
-    document: { addEventListener() {}, body: corps, title: 'Plannings annuels', documentElement: { getAttribute: () => '--hpage:1000px' }, querySelectorAll: () => [{ outerHTML: '<style id="stylePage">@page{size:A4 portrait;margin:10mm}</style>' }] },
-    window: { open: () => fen, print: () => sb2.pr.push('page') } };
-  sb2.$ = id => sb2.styles[id]; vm.createContext(sb2); vm.runInContext(code, sb2); sb2.remis = remis;
-  vm.runInContext("imprimerPage('@page{size:A4 portrait;margin:10mm}',function(){remis.push(1);})", sb2);
-  assert.strictEqual(imprime, 1, 'la fenêtre à part est imprimée'); assert.deepStrictEqual(sb2.pr, [], 'pas d’impression dans le cadre Apps Script');
-  assert.ok(ecrit[0].includes('<main>PLANNING</main>') && ecrit[0].includes('@page{size:A4 portrait') && ecrit[0].includes('class="imprGrille"') && ecrit[0].includes('style="--hpage:1000px"') && !/<script/i.test(ecrit[0]), 'copie fidèle, sans script');
-  els.fenSansFormat.onclick(); assert.strictEqual(els.stylePage.textContent, '@page{margin:10mm}', 'sans format imposé : marges seules'); assert.strictEqual(imprime, 2);
-  els.fenRelancer.onclick(); assert.strictEqual(imprime, 3);
-  assert.deepStrictEqual(remis, [1]); assert.strictEqual(sb2.styles.stylePage.textContent, 'A3', 'écran remis en état aussitôt');
+  // DEV638 : la fenêtre d'impression à part (DEV637) est retirée : couleurs perdues et page figée après « Annuler ».
+  // L'échec d'impression venait du navigateur (Ungoogled Chromium en Flatpak, service d'impression arrêté).
+  assert.ok(!h.includes('window.open(') && !h.includes('fenImpr') && !h.includes('imprimerFenetre'), 'impression dans la page, sans fenêtre à part');
   for (const t of ['var VUE=<?= vue ?>,ONGLET=<?= onglet ?>,LIGNE_DEMANDEE=<?= ligne ?>', 'function rendreCalendrier(code)', 'function rendreFormations()', "id=\"nomsPronote\"", 'Ajouter une classe à la main']) assert.ok(h.includes(t), t); assert.match(h, /PRÉVISIONNEL/);
 });
 
