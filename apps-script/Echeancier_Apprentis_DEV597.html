@@ -41,7 +41,7 @@ a.bouton{display:inline-block;border:1px solid var(--vert);background:var(--vert
 <body>
 <header><h1>Échéancier des apprentis — contact d’entrée</h1><p>Un contact (appel ou visite) avec l’entreprise dans les 45 jours suivant le début du contrat. Rappel à 30 jours, alerte à 45, retard à 60.</p></header>
 <main>
-  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Apprentis</span> › <strong>Échéancier des apprentis</strong></nav>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Apprentis</span> › <strong>Échéancier des apprentis</strong></nav>
   <details class="reglage" id="reglage"><summary>Classes affichées <span id="nbMasquees" class="note"></span></summary>
     <p class="note">Décochez les classes qui ne relèvent pas encore de ce suivi (GRETA, BTS…) : elles disparaissent de l’échéancier, des compteurs de l’accueil, des courriels aux référents et de l’espace des professeurs. Rien n’est supprimé.</p>
     <div id="listeClasses" class="classes"></div><button type="button" class="plein" id="classesOk">Enregistrer</button> <span id="msgClasses" role="status"></span></details>

@@ -232,7 +232,7 @@ test('DEV633 : banc d’essai — apprenti de test (classe TEST, contrat, réfé
   assert.strictEqual(k.__tables.EUC_PLAN_LIGNES_CLASSES.length, 0, 'jamais de rattachement dans le planning (rien de publié)');
   assert.throws(() => k.EUC_DEV633_choisirLigne({ classeId: 999, ligne: 'BACHELOR_IP' }), /classe TEST/);
   const pg = read('apps-script/Banc_Essai_DEV633.html'), adm = read('apps-script/Admin_PFMP.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json');
-  assert.ok(pg.includes("'EUC_DEV633_creerApprenti',q(t,vraiment?'CREER':'')") && pg.includes("'EUC_DEV604_jeuTest',") && pg.includes('Liste de contrôle avant ouverture') && pg.includes('<a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>'));
+  assert.ok(pg.includes("'EUC_DEV633_creerApprenti',q(t,vraiment?'CREER':'')") && pg.includes("'EUC_DEV604_jeuTest',") && pg.includes('Liste de contrôle avant ouverture') && pg.includes('<a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a>'));
   assert.ok(adm.includes('?page=banc-essai-pfmp">Banc d’essai') && routes.includes("case 'banc-essai-pfmp':\n      return EUC_DEV633_afficher(e);") && cfg.includes('"page": "banc-essai-pfmp", "scope": "admin", "expected": "Banc d’essai"'));
 });
 

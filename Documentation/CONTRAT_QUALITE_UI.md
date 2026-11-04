@@ -34,7 +34,10 @@ l’ensemble de ces routes :
 - les états sans donnée et avec erreur.
 
 Sur le vert, `Accueil PFMP` vise exactement
-`https://alternance.loucodi.fr/`. Une page Apps Script en erreur, une page
+`https://alternance.lycee-les-eucalyptus.org/`, valeur issue de la table unique
+`EUC_LIENS_table_()` (`apps-script/EUC_DEV640_Liens.js`) : aucune adresse
+publique de l'application n'est écrite en dur dans une page ou un fichier
+serveur ; une page utilise `__LIEN_<CLE>__`, le serveur `EUC_LIEN_('cle')`. Une page Apps Script en erreur, une page
 blanche, une connexion inattendue ou un lien vers un autre déploiement bloque
 la livraison.
 

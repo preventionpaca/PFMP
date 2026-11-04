@@ -54,7 +54,7 @@ test('page « Référentiels des diplômes » : route admin, carte de l’admini
   const routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json'), adm = read('apps-script/Admin_PFMP.html'), pg = read('apps-script/Referentiels_DEV630.html');
   assert.ok(routes.includes("case 'referentiels-pfmp':\n      return EUC_DEV630_afficher(e);") && cfg.includes('"page": "referentiels-pfmp", "scope": "admin", "expected": "Référentiels des diplômes"'));
   assert.ok(adm.includes('?page=referentiels-pfmp">Référentiels des diplômes'));
-  assert.ok(pg.includes('<a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>') && pg.includes('var DATA=<?!= donnees ?>;') && pg.includes('<title>Référentiels des diplômes</title>'));
+  assert.ok(pg.includes('<a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a>') && pg.includes('var DATA=<?!= donnees ?>;') && pg.includes('<title>Référentiels des diplômes</title>'));
   assert.ok(read('apps-script/EUC_DEV630_Referentiels.js').includes("EUC_SUIVI2_exigerAdmin_();"));
 });
 

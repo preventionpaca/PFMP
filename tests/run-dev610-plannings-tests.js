@@ -535,7 +535,7 @@ test('page : route administrateur, lien d’accueil, fil d’Ariane canonique, b
   assert.ok(adm.indexOf('card plannings') < adm.indexOf('card global'), 'la vignette Plannings ouvre le bloc transversal');
   assert.ok(JSON.parse(read('scripts/pfmp-release-config.json')).routes.some(r => r.page === 'plannings-pfmp' && r.expected === 'Plannings annuels'));
   const h = read('apps-script/Plannings_DEV610.html');
-  assert.match(h, /<nav class="ariane"[^>]*><a href="https:\/\/alternance\.loucodi\.fr\/" target="_top">Accueil PFMP<\/a> › <a href="<\?= adminBase \?>\?page=admin-pfmp" target="_top">Administration PFMP<\/a>/);
+  assert.match(h, /<nav class="ariane"[^>]*><a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP<\/a> › <a href="<\?= adminBase \?>\?page=admin-pfmp" target="_top">Administration PFMP<\/a>/);
   assert.match(h, /<script><\?!= codeClient \?><\/script>/);
   assert.match(h, /function occupe\(btn,libelle,fn,arg,ok,delai\)\{\s*var orig=btn\.innerHTML,fini=false;btn\.disabled=true;btn\.innerHTML='<span class="spin"/);
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;fini=true;retablir\(\);message\('Délai dépassé : le serveur n’a pas répondu/);

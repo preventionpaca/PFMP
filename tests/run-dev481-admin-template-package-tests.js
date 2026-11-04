@@ -6,7 +6,7 @@ const childProcess = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const appDir = path.join(root, 'apps-script');
-const homeUrl = 'https://alternance.loucodi.fr/';
+const homeUrl = '__LIEN_ACCUEIL__';
 let passed = 0;
 
 function test(name, fn) {
@@ -57,7 +57,7 @@ test('les deux écrans administratifs reviennent à l’accueil canonique', () =
   for (const file of ['Sans_Convention_PFMP_V368.html', 'Acces_PP_Admin_DEV441.html']) {
     const source = read(file);
     assert.ok(source.includes(homeUrl), file + ' ne contient pas le sous-domaine canonique');
-    assert.match(source, /href="https:\/\/alternance\.loucodi\.fr\/"[^>]*target="_top"/);
+    assert.match(source, /href="__LIEN_ACCUEIL__"[^>]*target="_top"/);
   }
 });
 
@@ -221,7 +221,7 @@ test('le constructeur de paquet part de la récupération complète et évite to
 test('le suivi et la maintenance réécrivent Accueil PFMP vers le domaine canonique', () => {
   const source = read('EUC_PFMP_DEV481_AdminRoutes.js');
   assert.match(source, /template\.baseUrl = ScriptApp\.getService\(\)\.getUrl\(\)/);
-  assert.ok(source.includes("'https://alternance.loucodi.fr/'"));
+  assert.ok(source.includes("EUC_LIEN_('accueil')"));
   assert.match(source, /page=admin-pfmp\/g/);
 });
 

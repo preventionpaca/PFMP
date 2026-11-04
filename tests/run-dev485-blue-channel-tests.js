@@ -2,7 +2,7 @@ const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
 
-const release = fs.readFileSync('apps-script/EUC_PFMP_ReleaseChannel.js', 'utf8');
+const release = fs.readFileSync('apps-script/EUC_DEV640_Liens.js', 'utf8') + '\n' + fs.readFileSync('apps-script/EUC_PFMP_ReleaseChannel.js', 'utf8');
 const adminAuth = fs.readFileSync('apps-script/EUC_PFMP_AdminAuth.gs', 'utf8');
 const suivi = fs.readFileSync('apps-script/EUC_SUIVI_PFMP_WebApp.gs', 'utf8');
 const tools = fs.readFileSync('apps-script/EUC_PFMP_DEV370_AdminTools.js', 'utf8');
@@ -62,6 +62,9 @@ test('les liens verts sont réécrits vers le même /dev dans le bleu', () => {
   assert.match(html, /BLUE\/dev\?page=admin-pfmp/);
   assert.match(html, /BLUE\/dev\?page=dossier-apprentissage-pfmp/);
   assert.doesNotMatch(html, /alternance\.loucodi|AKfycbwQoKZOD/);
+  /* DEV640 : le jeton de la table unique et la nouvelle adresse d'accueil suivent le même chemin. */
+  const jeton = ctx.EUC_RELEASE_blueNavigation_('<a href="__LIEN_ACCUEIL__">A</a><a href="https://alternance.lycee-les-eucalyptus.org/">B</a>');
+  assert.equal((jeton.match(/BLUE\/dev\?page=admin-pfmp/g) || []).length, 2);
 });
 
 test("l'alias Apps Script refusé est normalisé vers l'URL Workspace partageable", () => {

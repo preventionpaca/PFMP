@@ -61,7 +61,7 @@ function EUC_DEV633_etat() {
   return { ok: true, annee: annee, moi: moi, moiProf: (profs.filter(function(p) { return p.email === moi; })[0] || {}).id || 0, profs: profs, lignes: lignes, apprentis: apprentis,
     scolaire: { classe: 'TEST PFMP', existe: classes.some(function(r) { return EUC_DEV604_n_((r.fields || {}).Nom) === 'testpfmp'; }) },
     liens: { formulaire: base + '?page=declaration-entreprise', soumissions: base + '?page=migration-jotform-pfmp', echeancier: base + '?page=echeancier-apprentis-pfmp', plannings: base + '?page=plannings-pfmp&vue=formations',
-      livretek: 'https://livretek.loucodi.fr/', suiviek: 'https://suiviek.loucodi.fr/', admin: base + '?page=admin-pfmp' } };
+      livretek: EUC_LIEN_('livretek'), suiviek: EUC_LIEN_('suiviek'), admin: base + '?page=admin-pfmp' } };
 }
 
 /* Création (ou mise à jour) d'un apprenti de test : aperçu sans confirmation, écriture avec confirmation 'CREER'. */

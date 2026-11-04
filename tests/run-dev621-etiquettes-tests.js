@@ -92,7 +92,7 @@ test('page : route, carte Administration, administratifs déplacés ici sans ide
   assert.ok(adm.includes('<h2>Étiquettes et badges</h2>') && adm.includes('?page=etiquettes-pfmp&amp;onglet=pAdmin">Administratifs'));
   assert.ok(pg.includes('data-p="pAdmin"') && !pg.includes('Qui saisit'), 'administratifs sans fenêtre d’identification');
   for (const fn of ['EUC_DEV621_enregistrerModele', 'EUC_DEV621_enregistrerFormats', 'EUC_DEV621_importer', 'EUC_DEV621_marquerImprimees', 'EUC_DEV620_enregistrerAdministratifs']) assert.match(pg, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
-  for (const x of ["@page{size:'+P.f.largeurPage+'mm '+P.f.hauteurPage+'mm;margin:0}", 'id="iDepart"', 'id="iNouvelles" checked', 'el.onpointerdown', 'href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>']) assert.ok(pg.includes(x), x);
+  for (const x of ["@page{size:'+P.f.largeurPage+'mm '+P.f.hauteurPage+'mm;margin:0}", 'id="iDepart"', 'id="iNouvelles" checked', 'el.onpointerdown', 'href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a>']) assert.ok(pg.includes(x), x);
   const g = grist({ refuser: true }); assert.throws(() => g.k.EUC_DEV621_charger({}));
 });
 

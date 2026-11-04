@@ -143,7 +143,8 @@ test('le contrat permanent autorise la publication verte sans nouvelle confirmat
 
 test('le contrat permanent protège accueil, navigation et boutons asynchrones', () => {
   for (const contents of [agents, qualityContract]) {
-    assert.ok(contents.includes('https://alternance.loucodi.fr/'));
+    assert.ok(contents.includes('https://alternance.lycee-les-eucalyptus.org/'));
+    assert.ok(contents.includes('EUC_LIENS_table_()'));
     assert.match(contents, /liens et boutons|liens, carte ou bouton/i);
     assert.match(contents, /spinner/i);
     assert.match(contents, /double clic/i);

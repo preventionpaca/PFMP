@@ -2027,7 +2027,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
            * le wrapper public, cette mise à jour reste limitée à l'iframe. */
           try{history.replaceState({eucPfmpDetail:true},'',u.toString());}catch(eHistory){}
 
-          /* Le wrapper conserve l'URL publique pfmp.loucodi.fr. L'iframe
+          /* Le wrapper conserve l'URL publique __HOTE_PFMP__. L'iframe
            * googleusercontent ne peut pas pousser une URL Apps Script d'une
            * autre origine dans son propre historique. */
           updateBreadcrumb();
@@ -2300,7 +2300,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
 
     var f=fam(), fl=label(f);
-    var accueil='https://alternance.loucodi.fr/';
+    var accueil='__LIEN_ACCUEIL__';
     var suivi=make('suivi-conventions',{});
     var famille=make('suivi-conventions-famille',{famille:f});
 

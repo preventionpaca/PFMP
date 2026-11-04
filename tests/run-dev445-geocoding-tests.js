@@ -1,7 +1,7 @@
 const fs=require('fs');
 const vm=require('vm');
 const assert=require('assert');
-const code=fs.readFileSync('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js','utf8');
+const code=fs.readFileSync('apps-script/EUC_DEV640_Liens.js','utf8')+'\n'+fs.readFileSync('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js','utf8');
 const geoHtml=fs.readFileSync('apps-script/Geocodage_PFMP_DEV441.html','utf8');
 const mapHtml=fs.readFileSync('apps-script/Cartographie_PFMP_DEV441.html','utf8');
 let reads=0,writes=[];

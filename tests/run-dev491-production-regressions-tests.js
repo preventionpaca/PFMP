@@ -31,7 +31,7 @@ test('le générateur expose un fil d Ariane administratif complet', () => {
 
 test('le générateur propose un bouton explicite de retour à l accueil', () => {
   assert.match(generator, /id="homeButton"[\s\S]*← Retour à l’accueil PFMP/);
-  assert.match(generator, /href="https:\/\/alternance\.loucodi\.fr\/"/);
+  assert.match(generator, /href="__LIEN_ACCUEIL__"/);
   assert.match(generator, /target="_top"/);
 });
 

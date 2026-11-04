@@ -1,5 +1,5 @@
 /**
- * DEV576 — Page des enseignants (pfmp.loucodi.fr) sur le nouveau moteur.
+ * DEV576 — Page des enseignants (adresse pfmp) sur le nouveau moteur.
  *
  * Une seule requête : la page reçoit toute l'année (familles, classes,
  * périodes, élèves, entreprises, suivis) déjà calculée par EUC_SUIVI2_modele_,

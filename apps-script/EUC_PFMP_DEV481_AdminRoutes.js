@@ -214,7 +214,7 @@ function EUC_DEV481_accueilCanonique_(output) {
   var html = output.getContent();
   html = html.replace(
     /https:\/\/script\.google\.com\/a\/macros\/lycee-les-eucalyptus\.org\/s\/[A-Za-z0-9_-]+\/exec\?page=admin-pfmp/g,
-    'https://alternance.loucodi.fr/'
+    EUC_LIEN_('accueil')
   );
   return HtmlService.createHtmlOutput(html);
 }

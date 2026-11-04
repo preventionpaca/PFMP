@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert'), crypto = require('crypto'), os = require('os');
 const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const verrou = read('apps-script/ZZ_EUC_ACCES_Verrou.js'), page = read('apps-script/Liens_Acces_DEV571.html'),
+const verrou = read('apps-script/EUC_DEV640_Liens.js') + '\n' + read('apps-script/ZZ_EUC_ACCES_Verrou.js'), page = read('apps-script/Liens_Acces_DEV571.html'),
   release = read('apps-script/EUC_PFMP_ReleaseChannel.js'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'),
   admin = read('apps-script/Admin_PFMP.html'), build = read('scripts/build-pfmp-apps-script-package.sh');
 const generateur = require(path.join(root, 'scripts/generate-acces-liste.js'));
@@ -98,7 +98,7 @@ test('la clé générée n’est conservée que sous forme d’empreinte et donn
   assert.equal(cle.length, 64);
   assert.equal(JSON.stringify(props).includes(cle), false);
   assert.equal(props.EUC_ACCES_ENS_CLE_SHA256, crypto.createHash('sha256').update(cle).digest('hex'));
-  assert.deepEqual(liens.map(l => new URL(l.url).hostname), ['pfmp.loucodi.fr', 'pfmp.loucodi.fr', 'apprentis.loucodi.fr', 'book-entreprise.loucodi.fr']);
+  assert.deepEqual(liens.map(l => new URL(l.url).hostname), ['pfmp.lycee-les-eucalyptus.org', 'pfmp.lycee-les-eucalyptus.org', 'apprentis.lycee-les-eucalyptus.org', 'book-entreprise.lycee-les-eucalyptus.org']);
   assert.equal(new URL(liens[3].url).searchParams.has('acces'), false);
 });
 
@@ -195,7 +195,7 @@ test('les pages servies avec une session reçoivent le script du jeton', () => {
   assert.equal(anonyme.EUC_ACCES_decorer_(brut).getContent(), '<html><head></head></html>');
 });
 
-test('les liens vers pfmp.loucodi.fr et apprentis.loucodi.fr emportent le jeton de l’enseignant', () => {
+test('les liens vers pfmp et apprentis (nouvelles et anciennes adresses) emportent le jeton de l’enseignant', () => {
   const { props, cle } = cleGeneree();
   const c = contexte({ props, cache: new Map() }).c;
   c.EUC_ACCES_controlerRoute_({ parameter: { page: 'suivi-conventions-public', acces: cle } });
@@ -207,11 +207,14 @@ test('les liens vers pfmp.loucodi.fr et apprentis.loucodi.fr emportent le jeton 
     document: { addEventListener: (t, fn) => { clic = fn; } }, window: {} };
   vm.createContext(page); vm.runInContext(script, page);
   const cliquer = a => { clic({ target: { closest: () => a } }); return new URL(a.href); };
+  assert.ok(cliquer(lien('https://pfmp.lycee-les-eucalyptus.org/')).searchParams.get('jeton'));
+  assert.ok(cliquer(lien('https://apprentis.lycee-les-eucalyptus.org/')).searchParams.get('jeton'));
   assert.ok(cliquer(lien('https://pfmp.loucodi.fr/')).searchParams.get('jeton'));
   assert.ok(cliquer(lien('https://apprentis.loucodi.fr/?page=apprentissage-public-pfmp')).searchParams.get('jeton'));
   assert.ok(cliquer(lien('https://script.google.com/macros/s/X/exec?page=suivi-pfmp-classe-public')).searchParams.get('jeton'));
   assert.equal(cliquer(lien('https://www.google.com/maps/dir/?api=1')).searchParams.get('jeton'), null);
   assert.equal(cliquer(lien('https://book-entreprise.loucodi.fr/')).searchParams.get('jeton'), null);
+  assert.equal(cliquer(lien('https://book-entreprise.lycee-les-eucalyptus.org/')).searchParams.get('jeton'), null);
 });
 
 test('le point d’entrée contrôle la route avant le rendu et décore ensuite la page', () => {
@@ -266,7 +269,7 @@ test('lien de secours : seuls les professeurs autorisés reçoivent un lien pers
   assert.equal(c.EUC_ACCES_demanderLienSecours(' LEA.MARTIN@lycee-les-eucalyptus.org ', 'suivi-apprentis-enseignants'), generique);
   assert.equal(envois.length, 1); assert.equal(envois[0].to, 'lea.martin@lycee-les-eucalyptus.org');
   const lien = envois[0].body.match(/https:\/\/\S+/)[0];
-  assert.match(lien, /^https:\/\/apprentis\.loucodi\.fr\/\?page=suivi-apprentis-enseignants&jeton=/);
+  assert.match(lien, /^https:\/\/apprentis\.lycee-les-eucalyptus\.org\/\?page=suivi-apprentis-enseignants&jeton=/);
   const jeton = decodeURIComponent(lien.split('jeton=')[1]);
   assert.equal(jeton.split('.').length, 3); assert.equal(jeton.split('.')[1], '7');
   assert.equal(c.EUC_ACCES_jetonValide_(jeton), true);

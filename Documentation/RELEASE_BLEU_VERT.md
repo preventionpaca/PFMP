@@ -79,8 +79,10 @@ donnée personnelle ne doivent être placés dans Git ou dans les journaux.
 - ne jamais diminuer la version Apps Script ni déplacer un tag Git publié ;
 - ne jamais créer une troisième Web App pour contourner un échec ;
 - préserver les URL, `DOMAIN`, `ANYONE_ANONYMOUS` et `USER_DEPLOYING` ;
-- conserver `https://alternance.loucodi.fr/` comme destination exacte de tout
-  lien ou bouton vert libellé `Accueil PFMP` ;
+- conserver `https://alternance.lycee-les-eucalyptus.org/` (table unique
+  `EUC_LIENS_table_()`) comme destination exacte de tout lien ou bouton vert
+  libellé `Accueil PFMP` ; les anciennes adresses loucodi.fr restent des
+  redirections actives ;
 - refuser toute page Apps Script en erreur, page blanche, authentification
   inattendue ou lien vers l'ancien canal bleu ;
 - protéger chaque bouton de traitement asynchrone contre le double clic,

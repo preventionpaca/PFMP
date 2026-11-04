@@ -43,7 +43,7 @@ var EUC_ACCES_ENTREES_ = {
   EUC_ACCES_demanderLienSecours: 1
 };
 
-/* Routes des liens enseignants (pfmp.loucodi.fr, apprentis.loucodi.fr). */
+/* Routes des liens enseignants (adresses pfmp et apprentis de EUC_LIENS_table_). */
 var EUC_ACCES_ROUTES_ENSEIGNANTS_ = {
   'suivi-conventions-public': 1,
   'suivi-conventions-public-famille': 1,
@@ -307,7 +307,7 @@ function EUC_ACCES_pageRefus_(page) {
     EUC_ACCES_formSecours_(page) +
     '</body></html>'
   ).setTitle('Lien d’accès requis').addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    /* DEV578 : affichable dans les coquilles pfmp/apprentis.loucodi.fr (sinon « script.google.com est bloqué »). */
+    /* DEV578 : affichable dans les coquilles pfmp/apprentis (EUC_LIENS_table_) (sinon « script.google.com est bloqué »). */
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -327,7 +327,7 @@ function EUC_ACCES_controlerRoute_(e) {
   var enseignant = !!EUC_ACCES_ROUTES_ENSEIGNANTS_[page];
   var technique = EUC_ACCES_ROUTES_TECHNIQUES_.test(page);
   /* DEV578 — observation : origine du clic transmise par les coquilles
-   * pfmp.loucodi.fr / apprentis.loucodi.fr à la première ouverture d'un onglet. */
+   * pfmp / apprentis (EUC_LIENS_table_) à la première ouverture d'un onglet. */
   if (enseignant && p.orig != null) EUC_ACCES_noter_('origine', page + ' ← ' + (String(p.orig).replace(/[^a-z0-9.\-]/gi, '').slice(0, 60) || 'ouverture directe (sans origine)'));
   if (!enseignant && !technique) return null;
   if (EUC_ACCES_etat_.enseignant || EUC_ACCES_sessionOuverte_()) return null;
@@ -357,7 +357,7 @@ function EUC_ACCES_scriptPage_() {
       'if(d&&d.get&&d.configurable)Object.defineProperty(g,"run",{configurable:true,get:function(){return wrap(d.get.call(g))}});' +
       'else if(!d||d.writable)g.run=wrap(g.run)}}catch(e){}' +
     'function lien(a){try{var h=a.getAttribute("href");if(!h||/[?&]' + EUC_ACCES_PARAM_JETON_ + '=/.test(h))return;' +
-      'var u=new URL(h,location.href),sd=/^(pfmp|apprentis)\\.loucodi\\.fr$/.test(u.hostname);' +
+      'var u=new URL(h,location.href),sd=' + JSON.stringify(EUC_LIENS_hotes_(['pfmp', 'apprentis'])) + '.indexOf(u.hostname)>=0;' +
       'if(!sd&&!/[?&]page=/.test(h))return;' +
       'if(!sd&&!/script\\.google(usercontent)?\\.com$/.test(u.hostname)&&u.origin!==location.origin)return;' +
       'u.searchParams.set("' + EUC_ACCES_PARAM_JETON_ + '",T);a.setAttribute("href",u.toString())}catch(e){}}' +
@@ -398,10 +398,10 @@ function EUC_ACCES_afficherLiens(e) {
 function EUC_ACCES_liens_(cle) {
   var q = encodeURIComponent(cle);
   return [
-    { libelle: 'Suivi des PFMP — enseignants', url: 'https://pfmp.loucodi.fr/?' + EUC_ACCES_PARAM_ + '=' + q },
-    { libelle: 'Book des entreprises — professeurs', url: 'https://pfmp.loucodi.fr/?page=book-entreprises-public-pfmp&' + EUC_ACCES_PARAM_ + '=' + q },
-    { libelle: 'Suivi des apprentis — enseignants', url: 'https://apprentis.loucodi.fr/?' + EUC_ACCES_PARAM_ + '=' + q },
-    { libelle: 'Book des entreprises — élèves et familles (sans clé)', url: 'https://book-entreprise.loucodi.fr/' }
+    { libelle: 'Suivi des PFMP — enseignants', url: EUC_LIEN_('pfmp') + '?' + EUC_ACCES_PARAM_ + '=' + q },
+    { libelle: 'Book des entreprises — professeurs', url: EUC_LIEN_('pfmp') + '?page=book-entreprises-public-pfmp&' + EUC_ACCES_PARAM_ + '=' + q },
+    { libelle: 'Suivi des apprentis — enseignants', url: EUC_LIEN_('apprentis') + '?' + EUC_ACCES_PARAM_ + '=' + q },
+    { libelle: 'Book des entreprises — élèves et familles (sans clé)', url: EUC_LIEN_('book') }
   ];
 }
 
@@ -424,7 +424,7 @@ function EUC_ACCES_etatLiens() {
     mode: EUC_ACCES_mode_(),
     sessionNavigateurDisponible: !!(function() { try { return Session.getTemporaryActiveUserKey(); } catch (e) { return ''; } })(),
     journal: EUC_ACCES_lireJournal_(),
-    familles: 'https://book-entreprise.loucodi.fr/'
+    familles: EUC_LIEN_('book')
   };
 }
 
@@ -588,7 +588,7 @@ function EUC_ACCES_demanderLienSecours(courriel, page) {
   var exp = String(Date.now() + EUC_ACCES_SECOURS_TTL_MS_), pid = String(prof.id);
   var jeton = exp + '.' + pid + '.' + EUC_ACCES_hmac_('SEC|' + exp + '|' + pid, c.secret);
   var pg = String(page || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
-  var base = /apprenti/.test(pg) ? 'https://apprentis.loucodi.fr/' : 'https://pfmp.loucodi.fr/';
+  var base = /apprenti/.test(pg) ? EUC_LIEN_('apprentis') : EUC_LIEN_('pfmp');
   var lien = base + '?' + (pg && EUC_ACCES_ROUTES_ENSEIGNANTS_[pg] ? 'page=' + pg + '&' : '') + EUC_ACCES_PARAM_JETON_ + '=' + encodeURIComponent(jeton);
   try { cache.put('EUC_ACCES_SEC_' + pid, mel, EUC_ACCES_SESSION_TTL_); } catch (e) {}
   MailApp.sendEmail({

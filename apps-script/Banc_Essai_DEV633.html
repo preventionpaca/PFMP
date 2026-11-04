@@ -32,7 +32,7 @@ ol.ctrl li{margin:4px 0}ol.ctrl label{cursor:pointer}
 <body>
 <header><h1>Banc d’essai</h1><p>Tester tous les parcours avec des identités de test avant l’ouverture aux professeurs et aux élèves.</p></header>
 <main>
-  <nav class="ariane" aria-label="Fil d’Ariane"><a href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Développement</span> › <strong>Banc d’essai</strong></nav>
+  <nav class="ariane" aria-label="Fil d’Ariane"><a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › <span>Développement</span> › <strong>Banc d’essai</strong></nav>
   <p class="note">Toutes les identités de test sont rangées dans des classes « TEST … » : hors effectifs, carte et books. Leur courriel est le vôtre : vous recevez les vrais messages (liens, demandes de validation, comptes rendus). Chaque création passe par un aperçu ; rien n’est jamais créé en double.</p>
   <div id="etat" class="note" role="status"><span class="spin"></span>Chargement…</div>
 
@@ -98,8 +98,8 @@ function rendre(){
       (a.eleves.length?a.eleves.map(function(e){return '<div class="acces"><b>'+esc(e.nom)+'</b> — '+esc(e.entreprise||'sans contrat')+(e.referent?' · référent : '+esc(e.referent):' · <span class="erreur">sans référent</span>')+'<br>Code personnel : <code>'+esc(e.code)+'</code><br>'+
         lien(e.lienLivret,'Livret (comme l’apprenti)',true)+lien(e.lienEspace,'Espace référent (comme le professeur)')+lien(e.lienBilan,'Bilan de visite')+'</div>';}).join(''):'<p class="note">Pas encore créé.</p>')+'</div>';}).join('');
   Array.prototype.forEach.call(document.querySelectorAll('button.ap,button.cr'),function(b){b.onclick=function(){creer(b,b.dataset.t,b.classList.contains('cr'));};});
-  $('accesGen').innerHTML='<div class="acces"><b>Jeunes</b> — '+lien(D.liens.livretek,'livretek.loucodi.fr',true)+' <span class="note">tapez le code personnel d’un apprenti de test ci-dessus.</span></div>'+
-    '<div class="acces"><b>Professeurs</b> — '+lien(D.liens.suiviek,'suiviek.loucodi.fr',true)+' <span class="note">tapez votre adresse : le lien de votre espace référent vous est envoyé.</span></div>'+
+  $('accesGen').innerHTML='<div class="acces"><b>Jeunes</b> — '+lien(D.liens.livretek,'__HOTE_LIVRETEK__',true)+' <span class="note">tapez le code personnel d’un apprenti de test ci-dessus.</span></div>'+
+    '<div class="acces"><b>Professeurs</b> — '+lien(D.liens.suiviek,'__HOTE_SUIVIEK__',true)+' <span class="note">tapez votre adresse : le lien de votre espace référent vous est envoyé.</span></div>'+
     '<div class="acces"><b>Administration</b> — '+lien(D.liens.echeancier,'Échéancier des apprentis')+lien(D.liens.soumissions,'Soumissions reçues')+lien(D.liens.plannings,'Plannings par formation')+'</div>';
   controle();}
 function q(t,confirmation){var x='p'+t;return {type:t,prenom:$(x+'Prenom').value,nom:$(x+'Nom').value,email:$(x+'Email').value,naissance:$(x+'Naissance').value,entreprise:$(x+'Entreprise').value,debut:$(x+'Debut').value,
@@ -119,11 +119,11 @@ function scolaire(b,vraiment){var r0=$('sRes');r0.innerHTML='';if(vraiment&&!con
 var CTRL=['Élève scolaire : déclarer l’entreprise par le formulaire (SIRET réel, responsable, tuteur) et recevoir le numéro par courriel',
   'Administration : valider la déclaration dans « Soumissions reçues » ; la convention et son numéro apparaissent dans le suivi des PFMP',
   'Plannings : enregistrer les périodes et quelques objectifs du livret pour la formation de l’apprenti en classe entière (et pour la mixité)',
-  'Apprenti (classe entière) : ouvrir livretek.loucodi.fr, taper son code, créer la fiche d’une période P, voir les objectifs, enregistrer le brouillon, ajouter une photo et un lien',
+  'Apprenti (classe entière) : ouvrir __HOTE_LIVRETEK__, taper son code, créer la fiche d’une période P, voir les objectifs, enregistrer le brouillon, ajouter une photo et un lien',
   'Apprenti : demander la validation ; tuteur : ouvrir le QR ou le lien reçu, signer ; l’apprenti voit la fiche validée en lecture seule',
   'Apprenti : fiche d’une période S au lycée, demande de validation au professeur référent ; le référent valide depuis le courriel',
   'Apprenti en mixité : ne voit que les blocs de son diplôme et les autres activités communes',
-  'Professeur : suiviek.loucodi.fr, recevoir son lien, ouvrir l’espace référent, lire les fiches de ses apprentis',
+  'Professeur : __HOTE_SUIVIEK__, recevoir son lien, ouvrir l’espace référent, lire les fiches de ses apprentis',
   'Professeur : remplir un bilan de visite, le faire valider par le tuteur ; le contact d’entrée passe à « fait » dans l’échéancier',
   'Courriels : vérifier les destinataires réels (copie cachée) et l’absence de courriel aux familles pour un apprenti majeur'];
 function controle(){var fait={};try{fait=JSON.parse(localStorage.getItem('dev633_controle')||'{}');}catch(e){}

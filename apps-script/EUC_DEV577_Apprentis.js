@@ -1,5 +1,5 @@
 /**
- * DEV577 — Consultation des apprentis (apprentis.loucodi.fr) sur le modèle du
+ * DEV577 — Consultation des apprentis (adresse apprentis) sur le modèle du
  * nouveau suivi : une seule requête, tout le bilan de l'année calculé une fois
  * et mis en cache par témoin de modification Grist (et par réglages de quotas,
  * classes actives et modes classe entière / mixité, rangés dans les propriétés

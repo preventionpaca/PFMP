@@ -85,7 +85,7 @@ test('DEV600 : pages — route et page publique de l’espace, fil d’Ariane de
   const esp = read('apps-script/Espace_Referent_DEV600.html');
   for (const t of ['EUC_DEV600_espace', 'EUC_DEV600_demanderLien', 'Recevoir mon lien', 'class="spin"', 'b.disabled=true', 'M=<?= jeton ?>']) assert.ok(esp.includes(t), t);
   const ech = read('apps-script/Echeancier_Apprentis_DEV597.html');
-  assert.match(ech, /<nav class="ariane"[^>]*><a href="https:\/\/alternance\.loucodi\.fr\/" target="_top">Accueil PFMP<\/a> › <a href="<\?= adminBase \?>\?page=admin-pfmp" target="_top">Administration PFMP<\/a>/);
+  assert.match(ech, /<nav class="ariane"[^>]*><a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP<\/a> › <a href="<\?= adminBase \?>\?page=admin-pfmp" target="_top">Administration PFMP<\/a>/);
   for (const t of ['EUC_DEV597_reglerClasses', 'Classes affichées', 'class="cl"']) assert.ok(ech.includes(t), t);
   for (const f of fs.readdirSync(path.join(root, 'apps-script')).filter(f => f.endsWith('.html'))) {
     const s = read('apps-script/' + f);

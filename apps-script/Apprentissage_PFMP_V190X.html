@@ -1441,7 +1441,7 @@ const BOOT=<?!= bootJson ?>;
   }
 
 
-  homeLink.href='https://alternance.loucodi.fr/';
+  homeLink.href='__LIEN_ACCUEIL__';
 
   homeLink.target='_top';
 
@@ -5292,7 +5292,7 @@ body.dev252-readonly .dev259-maint-hidden{
   }
   function apply(){
     var ro=readonly(),home=document.getElementById('homeLink'),maint=document.getElementById('maintLink');
-    if(home){home.href=ro?'https://pfmp.loucodi.fr/':'https://alternance.loucodi.fr/';home.target='_top';}
+    if(home){home.href=ro?'__LIEN_PFMP__':'__LIEN_ACCUEIL__';home.target='_top';}
     if(maint){maint.href=ADMIN+'?page=snapshot-pfmp-admin';maint.target='_top';}
     ['dev252PublicLink','dev253PublicLink'].forEach(function(id){var link=document.getElementById(id);if(link){link.href=PUBLIC+'?page=apprentissage-public-pfmp';link.target='_top';}});
   }

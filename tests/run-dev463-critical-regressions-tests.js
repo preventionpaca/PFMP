@@ -52,7 +52,7 @@ test('les dates disposent de largeur et réservent la place du calendrier',()=>{
 
 test('les liens Apprentis séparent administration et consultation publique',()=>{
   assert(form.includes('DEV463_APPRENTIS_ROUTES_EXPLICITES'),'surcharge absente');
-  assert(form.includes("'https://alternance.loucodi.fr/'"),'accueil admin canonique absent');
+  assert(form.includes("'__LIEN_ACCUEIL__'"),'accueil admin canonique absent');
   assert(form.includes("PUBLIC+'?page=apprentissage-public-pfmp'"),'consultation publique absente');
   assert(form.includes("ADMIN+'?page=snapshot-pfmp-admin'"),'maintenance admin absente');
 });

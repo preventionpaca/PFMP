@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 4 novembre 2026 — DEV640 : domaines lycee-les-eucalyptus.org et table unique des liens
+
+- DNS GoDaddy (`lycee-les-eucalyptus.org`) : 6 CNAME `alternance`, `pfmp`, `apprentis`, `book-entreprise`, `livretek`, `suiviek` → `preventionpaca.github.io.` ; aucun autre enregistrement modifié (MX Google intacts).
+- GitHub Pages : 6 nouveaux dépôts `preventionpaca/<nom>-eucalyptus`, copies exactes des redirections/coquilles loucodi avec le nouveau CNAME. Les dépôts et le DNS loucodi.fr (OVH) restent actifs : QR codes imprimés, courriels envoyés, liens Atrium et favoris continuent de fonctionner.
+- Code : plus aucune adresse publique écrite en dur. Table unique `EUC_LIENS_table_()` (`apps-script/EUC_DEV640_Liens.js`) ; pages `.html` → jetons `__LIEN_<CLE>__` / `__HOTE_<CLE>__` remplacés par `EUC_RELEASE_decorateOutput_` ; serveur → `EUC_LIEN_('cle')`. Les coquilles enseignants reconnaissent anciens et nouveaux hôtes (`EUC_LIENS_hotes_`).
+- Garde : `tests/run-dev640-liens-tests.js` refuse toute adresse publique en dur hors de la table ; règle ajoutée à `AGENTS.md`, au contrat qualité et au workflow de release.
+- `alternance.*` reste une redirection vers l'URL Apps Script (comme `alternance.loucodi.fr`) : l'adresse affichée devient celle de Google. `pfmp.*`, `apprentis.*` et `book-entreprise.*` sont des coquilles qui gardent le domaine affiché.
+
 ## Mise à jour du 4 novembre 2026 — DEV639 : adresse des entreprises dans les ordres de mission
 
 - Constat : dans les ordres de mission (ex. TMVA2, PFMP n°1), plusieurs entreprises affichaient « — » au lieu de l'adresse.

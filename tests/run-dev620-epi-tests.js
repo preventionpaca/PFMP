@@ -119,7 +119,7 @@ test('page : route, carte Administration, fenêtre « nom et prénom » au déma
   assert.ok(routes.includes("case 'epi-pfmp':\n      return EUC_DEV620_afficher(e);"));
   assert.ok(adm.includes('?page=epi-pfmp">Essayage') && adm.includes('<h2>EPI et étiquettes</h2>'));
   assert.ok(cfg.includes('"page": "epi-pfmp"'));
-  assert.ok(pg.includes('href="https://alternance.loucodi.fr/" target="_top">Accueil PFMP</a>'));
+  assert.ok(pg.includes('href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a>'));
   for (const fn of ['EUC_DEV620_enregistrerEssayages', 'EUC_DEV620_enregistrerVague', 'EUC_DEV620_enregistrerReglages', 'EUC_DEV620_enregistrerClassesTenues', 'EUC_DEV620_rattacher']) assert.match(pg, new RegExp("occupe\\([^;]*'" + fn + "'"), fn);
   assert.ok(pg.includes('demanderQui();charger(') && pg.includes("if(!QUI){demanderQui();return;}"), 'nom et prénom demandés au démarrage et avant tout enregistrement');
   assert.ok(pg.includes('list="dlQui"') && pg.includes('function remplirQui()'), 'nom choisi dans les professeurs et administratifs');

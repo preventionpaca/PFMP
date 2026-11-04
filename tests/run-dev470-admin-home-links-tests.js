@@ -4,7 +4,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const appDir = path.join(root, 'apps-script');
-const homeUrl = 'https://alternance.loucodi.fr/';
+const homeUrl = '__LIEN_ACCUEIL__';
 let passed = 0;
 
 function test(name, fn) {
@@ -30,13 +30,14 @@ const labelledFiles = fs.readdirSync(appDir)
 test('tous les fichiers affichant Accueil PFMP connaissent le sous-domaine canonique', () => {
   assert.ok(labelledFiles.length >= 10, 'inventaire Accueil PFMP anormalement incomplet');
   for (const file of labelledFiles) {
-    assert.ok(read(file).includes(homeUrl), file + ' ne contient pas la destination canonique');
+    /* DEV640 : pages → jeton de la table unique ; serveur → EUC_LIEN_('accueil'). */
+    assert.ok(read(file).includes(/\.html$/.test(file) ? homeUrl : "EUC_LIEN_('accueil')"), file + ' ne contient pas la destination canonique');
   }
 });
 
 test('le détail de classe envoie Accueil PFMP vers le sous-domaine', () => {
   const source = read('Suivi_PFMP_Classe_Detail_V156.html');
-  assert.match(source, /var accueil='https:\/\/alternance\.loucodi\.fr\/'/);
+  assert.match(source, /var accueil='__LIEN_ACCUEIL__'/);
   assert.match(source, /data-d183="accueil" target="_top" href="'\+accueil\+'"/);
   assert.match(source, /window\.top\.location\.href=url/);
   assert.doesNotMatch(source, /var accueil=make\('admin-pfmp'/);
@@ -48,7 +49,7 @@ test('les vues canoniques de synthèse et de famille utilisent le sous-domaine',
     'Suivi_Conventions_Famille_DEV459.html',
     'EUC_PFMP_DEV459_CanonicalViews.js'
   ]) {
-    assert.ok(read(file).includes(homeUrl), file);
+    assert.ok(read(file).includes(/\.html$/.test(file) ? homeUrl : "EUC_LIEN_('accueil')"), file);
   }
 });
 
@@ -66,7 +67,7 @@ test('les modules administratifs secondaires utilisent le sous-domaine', () => {
 
 test('le parcours différencié ouvre directement l’accueil canonique', () => {
   const source = read('Parcours_Differencie_PFMP_V190X.html');
-  assert.match(source, /id="back" class="back" href="https:\/\/alternance\.loucodi\.fr\/" target="_top"/);
+  assert.match(source, /id="back" class="back" href="__LIEN_ACCUEIL__" target="_top"/);
   assert.doesNotMatch(source, /BOOT\.webappUrl\|\|''\).*admin-pfmp/);
 });
 
@@ -82,13 +83,13 @@ test('l’enregistrement du parcours différencié protège le double clic et le
 
 test('les ordres de mission ouvrent directement l’accueil canonique dans la fenêtre haute', () => {
   const source = read('Ordres_Mission_PFMP_V368.html');
-  assert.match(source, /id="back" href="https:\/\/alternance\.loucodi\.fr\/" target="_top"/);
+  assert.match(source, /id="back" href="__LIEN_ACCUEIL__" target="_top"/);
   assert.doesNotMatch(source, /back\.href=B\.baseUrl\+'\?page=admin-pfmp'/);
 });
 
 test('la consultation publique des apprentis conserve sa route publique', () => {
   const source = read('Apprentissage_PFMP_V190X.html');
-  assert.match(source, /ro\?'https:\/\/pfmp\.loucodi\.fr\/':'https:\/\/alternance\.loucodi\.fr\/'/);
+  assert.match(source, /ro\?'__LIEN_PFMP__':'__LIEN_ACCUEIL__'/);
   assert.match(source, /EUC_APPRENTIS_WRAPPER_NAVIGATE/);
 });
 

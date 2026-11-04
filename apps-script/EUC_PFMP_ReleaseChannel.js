@@ -68,7 +68,13 @@ function EUC_RELEASE_blueNavigation_(content) {
   /* Les anciens ecrans contiennent encore les deux deploiements verts ou le
    * sous-domaine canonique. Dans le projet bleu uniquement, les ramener vers
    * le meme /dev evite de quitter la recette au milieu d'un parcours. */
-  content = content.replace(/https:\/\/alternance\.loucodi\.fr\//g, home);
+  /* DEV640 : jeton de la table unique et adresses d'accueil (actuelle et anciennes). */
+  content = content.split('__LIEN_ACCUEIL__').join(home);
+  if (typeof EUC_LIEN_ === 'function') {
+    [EUC_LIEN_('accueil')].concat(EUC_LIENS_anciens_().accueil).forEach(function (u) {
+      content = content.split(u).join(home);
+    });
+  }
   content = content.replace(
     /https:\/\/script\.google\.com\/(?:a\/macros\/lycee-les-eucalyptus\.org\/)?s\/(?:AKfycby6ykCxTxhUjq8FeKoBzgEMj6xzdrjXnBFgOt-1pAw1GfkaAigWMH7jj0EIg_BWpEkmxg|AKfycbwQoKZOD2LeDyGqBRIVl6_uAPe6z3iGEW-w60ybCMu2Z3Rf4HAy-8ap_9FwFcKuHo7-qA)\/exec/g,
     base
@@ -122,6 +128,8 @@ function EUC_RELEASE_decorateOutput_(output) {
       + 'MODE DÉVELOPPEMENT — SITE BLEU — RECETTE SÉPARÉE</div>'
     : '';
   var content = EUC_RELEASE_blueNavigation_(output.getContent());
+  /* DEV640 : jetons __LIEN_<CLE>__ / __HOTE_<CLE>__ remplacés par la table unique des adresses. */
+  if (typeof EUC_LIENS_appliquer_ === 'function') content = EUC_LIENS_appliquer_(content);
   if (blue && content.indexOf('data-pfmp-release-channel=') >= 0) return output;
   var busyStyle='<style data-pfmp-busy-style="1">'+
     'button.pfmp-auto-busy::before{content:"";display:inline-block;width:13px;height:13px;'+
