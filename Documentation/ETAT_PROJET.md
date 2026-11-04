@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 4 novembre 2026 — DEV639 : adresse des entreprises dans les ordres de mission
+
+- Constat : dans les ordres de mission (ex. TMVA2, PFMP n°1), plusieurs entreprises affichaient « — » au lieu de l'adresse.
+- Cause trouvée dans le code : une convention qui ne garde que le lien vers la fiche `EUC_ENTREPRISES` (ou son SIRET) recevait le téléphone, le courriel et le responsable de la fiche (DEV519), mais pas l'adresse.
+- Correction : `EUC_DEV638_fillAddress_` reprend l'adresse, le complément, le code postal, la commune et le pays de la fiche entreprise, seulement quand la convention n'a aucune adresse ; l'adresse signée reste prioritaire.
+- À confirmer sur le vert : que les lignes sans adresse sont bien celles de ce cas (fiche entreprise renseignée). Une convention sans adresse et dont la fiche entreprise n'en a pas non plus reste « — ». Les détails de classe en cache peuvent garder l'ancienne valeur jusqu'à leur renouvellement.
+
 ## Mise à jour du 3 novembre 2026 — DEV638 : cause trouvée, retour à l'impression dans la page
 
 - Cause réelle de « Échec de l'impression » : le navigateur de l'utilisateur, Ungoogled Chromium en Flatpak. Journal : « Failure enumerating local printers via service », puis « client registration failure; service or renderer likely has terminated » ; aucune requête n'arrive à CUPS. Correction côté poste : `chrome://flags/#enable-oop-print-drivers` sur Disabled (confirmé par l'utilisateur), ou Google Chrome.

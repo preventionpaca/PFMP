@@ -36,6 +36,14 @@ test('les coordonnées PFMP sont enrichies en une lecture groupée des fiches li
   assert.deepEqual(c.__reads.map(x=>x.table),['EUC_ENTREPRISES','EUC_CONTACTS_ENTREPRISES']);
 });
 
+test('DEV638 : sans adresse dans la convention, celle de la fiche entreprise est reprise ; une adresse signée reste prioritaire',()=>{
+  const c=context({EUC_ENTREPRISES:[{id:13,fields:{SIRET:'12345678900013',Adresse:'12 rue des Essais',Code_postal:'06000',Commune:'NICE',Telephone:'04',Courriel:'a@example.test'}}]});
+  const out=c.EUC_DEV519_enrichAccessCompanyContacts_([{id:5,Entreprise:[13],Entreprise_telephone:'04',Entreprise_courriel:'a@example.test',Responsable_nom:'R',Responsable_telephone:'0',Responsable_courriel:'r@example.test'},
+    {id:6,Entreprise:[13],Entreprise_adresse:'1 place Signée',Entreprise_code_postal:'06100',Entreprise_commune:'NICE'}]);
+  assert.deepEqual([out[0].Entreprise_adresse,out[0].Entreprise_code_postal,out[0].Entreprise_commune],['12 rue des Essais','06000','NICE'],'adresse reprise de la fiche, même quand téléphone et courriel sont déjà là');
+  assert.deepEqual([out[1].Entreprise_adresse,out[1].Entreprise_code_postal],['1 place Signée','06100'],'adresse de la convention conservée');
+});
+
 test('une entreprise sans référence directe est retrouvée par son SIRET sans choix ambigu de contact',()=>{
   const c=context({
     EUC_ENTREPRISES:[{id:12,fields:{SIRET:'123 456 789 00012',Telephone:'04 93 12 12 12',Courriel:'societe@example.test'}}],
@@ -114,7 +122,7 @@ test('les instantanés de la convention restent prioritaires et évitent les lec
   const c=context({});
   const out=c.EUC_DEV519_enrichAccessCompanyContacts_([{
     id:2,Entreprise:11,Contact_entreprise:21,
-    Entreprise_telephone_snapshot:'04 93 22 22 22',Entreprise_courriel_snapshot:'historique@example.test',
+    Entreprise_telephone_snapshot:'04 93 22 22 22',Entreprise_courriel_snapshot:'historique@example.test',Entreprise_adresse_snapshot:'2 rue Signée',
     Responsable_nom:'Nom signé',Responsable_prenom:'Prénom signé',
     Responsable_telephone:'06 22 22 22 22',Responsable_courriel:'signe@example.test'
   }]);

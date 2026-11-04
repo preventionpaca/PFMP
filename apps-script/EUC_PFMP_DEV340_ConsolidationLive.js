@@ -92,6 +92,24 @@ function EUC_DEV533_companySubmissionComplete_(row){
  * plus une lecture des entreprises et une lecture des contacts pour toute la
  * famille, jamais une requête Grist par élève. Les instantanés portés par la
  * convention restent prioritaires afin de préserver l'historique signé. */
+/* DEV638 — une convention qui ne garde que le lien vers la fiche entreprise
+ * (ou son SIRET) n'avait pas d'adresse dans les ordres de mission : le
+ * téléphone, le courriel et le responsable étaient repris de la fiche, pas
+ * l'adresse. Elle l'est désormais, seulement quand la convention n'en porte
+ * aucune (l'adresse signée reste prioritaire). */
+function EUC_DEV638_hasAddress_(a){
+  return !!EUC_DEV520_firstText_(a.Entreprise_adresse,a.Entreprise_adresse_snapshot,a.Adresse_entreprise,a.Adresse,
+    a.Entreprise_code_postal,a.Entreprise_code_postal_snapshot,a.CP_entreprise,a.Entreprise_commune,a.Entreprise_commune_snapshot,a.Ville_entreprise);
+}
+function EUC_DEV638_fillAddress_(a,company){
+  if(!company||EUC_DEV638_hasAddress_(a))return a;
+  var rue=EUC_DEV520_firstText_(company.Adresse,company.Adresse_complete);
+  if(!rue&&!EUC_DEV340_txt_(company.Code_postal)&&!EUC_DEV340_txt_(company.Commune))return a;
+  a.Entreprise_adresse=rue;a.Entreprise_complement=EUC_DEV340_txt_(a.Entreprise_complement)||EUC_DEV340_txt_(company.Complement_adresse);
+  a.Entreprise_code_postal=EUC_DEV340_txt_(company.Code_postal);a.Entreprise_commune=EUC_DEV340_txt_(company.Commune);
+  a.Entreprise_pays=EUC_DEV340_txt_(a.Entreprise_pays)||EUC_DEV340_txt_(company.Pays);
+  return a;
+}
 function EUC_DEV519_enrichAccessCompanyContacts_(rows){
   rows=(rows||[]).map(function(row){return EUC_DEV520_normalizeResponsible_(EUC_DEV519_flatRecord_(row));});
   var needsCompanies=false,needsContacts=false;
@@ -100,7 +118,8 @@ function EUC_DEV519_enrichAccessCompanyContacts_(rows){
     var siret=EUC_DEV340_txt_(a.Entreprise_siret||a.Entreprise_siret_snapshot).replace(/\D/g,'');
     if((companyId||siret)&&(
       !(EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot))||
-      !(EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot))
+      !(EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot))||
+      !EUC_DEV638_hasAddress_(a)
     ))needsCompanies=true;
     if((contactId||companyId||siret)&&(
       !(EUC_DEV340_txt_(a.Responsable_nom)||EUC_DEV340_txt_(a.Responsable_prenom))||
@@ -127,6 +146,7 @@ function EUC_DEV519_enrichAccessCompanyContacts_(rows){
       if(responsibleContacts.length===1)contact=responsibleContacts[0];
       else if(!responsibleContacts.length&&companyContacts.length===1)contact=companyContacts[0];
     }
+    EUC_DEV638_fillAddress_(a,company);
     a.Entreprise_telephone=EUC_DEV340_txt_(a.Entreprise_telephone)||EUC_DEV340_txt_(a.Entreprise_telephone_snapshot)||EUC_DEV340_txt_(company.Telephone)||EUC_DEV340_txt_(company.Telephone_2);
     a.Entreprise_courriel=EUC_DEV340_txt_(a.Entreprise_courriel)||EUC_DEV340_txt_(a.Entreprise_courriel_snapshot)||EUC_DEV340_txt_(company.Courriel);
     a.Responsable_nom=EUC_DEV520_firstText_(a.Responsable_nom,contact.Nom,company.Responsable_nom,company.Responsable,company.Nom_responsable_entreprise);
