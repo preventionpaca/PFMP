@@ -56,8 +56,8 @@ test('la table vise les domaines du lycée et garde les anciennes adresses recon
 
 test('les jetons sont remplacés et un jeton inconnu reste visible', () => {
   const c = ctxLiens();
-  assert.equal(c.EUC_LIENS_appliquer_('<a href="__LIEN_ACCUEIL__">Accueil PFMP</a> __HOTE_LIVRETEK__ __LIEN_ZZ__'),
-    '<a href="https://alternance.lycee-les-eucalyptus.org/">Accueil PFMP</a> livretek.lycee-les-eucalyptus.org __LIEN_ZZ__');
+  assert.equal(c.EUC_LIENS_appliquer_('<a href="__LIEN_ACCUEIL__">Accueil PFMP</a> __HOTE_SUIVIEK__ __LIEN_ZZ__'),
+    '<a href="https://alternance.lycee-les-eucalyptus.org/">Accueil PFMP</a> suiviek.lycee-les-eucalyptus.org __LIEN_ZZ__');
 });
 
 test('la décoration verte de chaque page remplace les jetons', () => {
