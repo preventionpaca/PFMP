@@ -30,6 +30,13 @@ function EUC_ENT_controlerAccesUtilisateur_() {
   if(!courriel || !courriel.endsWith('@'+domaine)) throw new Error('Accès Entreprises non autorisé.');
   return true;
 }
+/* DEV641 : la recherche SIRET sert aux élèves sans compte du lycée (QR code,
+ * formulaire de secours). Sur le vert elle reste ouverte : elle ne rend que
+ * l'identité publique d'une entreprise. Le bleu garde son contrôle de recette. */
+function EUC_ENT_controlerRechercheSiret_() {
+  if(EUC_ENT_canalProjet_()==='GREEN') return true;
+  return EUC_ENT_controlerAccesUtilisateur_();
+}
 function EUC_ENT_controlerConfiguration() {
   var c = EUC_ENT_lireConfiguration(); var etat = {};
   EUC_ENT_CLES_CONFIG.forEach(function(k){ etat[k] = c[k] ? 'présente' : 'absente'; });

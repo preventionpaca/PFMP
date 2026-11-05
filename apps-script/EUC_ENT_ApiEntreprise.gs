@@ -1,6 +1,6 @@
 /** Eucalyptus Entreprises SIRET — v1.0.0-dev.8 */
 function EUC_ENT_rechercherSiret(valeur) {
-  EUC_ENT_controlerAccesUtilisateur_();
+  EUC_ENT_controlerRechercheSiret_();
   var v=EUC_ENT_validerSiret(valeur); if(!v.valide) throw new Error(v.message);
   var existante=EUC_ENT_verifierDoublonGrist(v.siret),locale=existante?EUC_ENT_mapperEntrepriseGrist_(existante):null;
   /* Une ancienne fiche locale partielle ne doit jamais masquer les données
@@ -12,7 +12,7 @@ function EUC_ENT_rechercherSiret(valeur) {
   return {source:'api_navigateur',siret:v.siret,url:base+'?q='+encodeURIComponent(v.siret)+'&page=1&per_page=1',gristIncomplet:!!existante};
 }
 function EUC_ENT_traiterReponseApiNavigateur(json,valeur) {
-  EUC_ENT_controlerAccesUtilisateur_();
+  EUC_ENT_controlerRechercheSiret_();
   var v=EUC_ENT_validerSiret(valeur); if(!v.valide) throw new Error(v.message);
   if(!json||!Array.isArray(json.results)||!json.results.length) return {source:'api',introuvable:true};
   return {source:'api',entreprise:EUC_ENT_mapperReponseApi(json.results[0],v.siret)};

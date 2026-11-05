@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 5 novembre 2026 — DEV641/DEV642 : SIRET du QR et convention de rattrapage
+
+- DEV641 : `EUC_ENT_rechercherSiret` et `EUC_ENT_traiterReponseApiNavigateur` exigeaient un compte du lycée (`EUC_ENT_controlerAccesUtilisateur_`). Un élève non connecté recevait une erreur, affichée comme le message « passer au bureau G205 ». Sur le vert, ces deux lectures passent désormais par `EUC_ENT_controlerRechercheSiret_` (ouvert, identité publique seulement) ; le bleu et les écritures gardent leur contrôle. Cause établie par lecture du code et simulation : le parcours réel sur téléphone reste à confirmer.
+- DEV642 : case « Convention supplémentaire de rattrapage » dans les dates individuelles du générateur. Elle crée une convention distincte (`Type_sequence` `RATTRAPAGE`, `Numero_sequence` suivant, `Convention_origine`) sans toucher à celles déjà éditées ; même dates relancées = pas de doublon. Le contexte du QR retrouve aussi sa période par `Periode` quand la date de début diffère.
+- Domaine : `livretek.lycee-les-eucalyptus.org` reste bloqué à `authorization_created` chez GitHub (dépôts `livretek-eucalyptus` puis `livretek-lycee`), DNS identique à `suiviek`, sans CAA ni DNSSEC. Blocage signalé par d'autres utilisateurs de GitHub Pages. En attendant, la table garde `https://livretek.loucodi.fr/` : à rebasculer dès que https répond (une ligne + exception du test DEV640 à retirer).
+
 ## Mise à jour du 4 novembre 2026 — DEV640 : domaines lycee-les-eucalyptus.org et table unique des liens
 
 - DNS GoDaddy (`lycee-les-eucalyptus.org`) : 6 CNAME `alternance`, `pfmp`, `apprentis`, `book-entreprise`, `livretek`, `suiviek` → `preventionpaca.github.io.` ; aucun autre enregistrement modifié (MX Google intacts).

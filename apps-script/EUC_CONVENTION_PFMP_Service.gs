@@ -142,6 +142,9 @@ function EUC_CONVENTION_preparerAcces(payload){
   var eleves=EUC_CONVENTION_lireElevesAdmin(),eleve=eleves.filter(function(e){return e.id===eleveId;})[0];if(!eleve)throw new Error('Élève introuvable.');var meta=EUC_CONVENTION_lireClassesEtPeriodesAdmin(),cl=meta.classes.filter(function(c){return c.id===classeId;})[0],p=meta.periodes.filter(function(x){return x.id===periodeId;})[0],pdif=pdifId?meta.periodes.filter(function(x){return x.id===pdifId;})[0]:null;if(!cl||!p)throw new Error('Classe ou période introuvable.');EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,periodeId,'Période officielle');if(pdif)EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,pdifId,'Période PDIF');
   var scenario=String(payload.scenarioDates||'DATES_OFFICIELLES').trim().toUpperCase();
   if(['DATES_OFFICIELLES','DEBUT_RETARDE','DATES_INDIVIDUELLES'].indexOf(scenario)<0)throw new Error('Situation de dates inconnue.');
+  /* DEV642 : rattrapage = convention supplémentaire, la convention déjà éditée reste valable. */
+  var rattrapage=payload.conventionRattrapage===true;
+  if(rattrapage&&scenario!=='DATES_INDIVIDUELLES')throw new Error('Une convention de rattrapage exige la situation « Dates individuelles / rattrapage ».');
   var requestId=EUC_CONVENTION_requestIdV513_(payload.requestId),existing=null,a,requestLock=requestId?LockService.getScriptLock():null;
   if(requestLock&&!requestLock.tryLock(10000))throw new Error('Une génération identique est déjà en cours. Patientez quelques secondes puis relancez.');
   try{
@@ -153,10 +156,16 @@ function EUC_CONVENTION_preparerAcces(payload){
     }else{
       a=EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,{pdif:pdif,pdifMode:pdifMode,scenarioDates:scenario,dateDeclareeDebut:payload.dateDeclareeDebut,dateDeclareeFin:payload.dateDeclareeFin,motifEcartDates:payload.motifEcartDates,requestId:requestId});
       var actifs=EUC_CONVENTION_accesActifsV525_(eleveId,periodeId,annee);
-      if(actifs.length>1)throw new Error('Plusieurs conventions actives existent déjà pour cet élève et cette période. Ouvrez « Administration des conventions » avant toute nouvelle génération.');
-      if(actifs.length===1){
-        var ex=actifs[0],exDebut=EUC_IMPORT_dateExistanteISO_(ex.Date_debut),exFin=EUC_IMPORT_dateExistanteISO_(ex.Date_fin);
-        if(exDebut!==a.dateDebut||exFin!==a.dateFin)throw new Error('Une convention existe déjà pour cet élève et cette période, avec les dates '+exDebut+' au '+exFin+'. Corrigez-la ou créez son remplacement depuis « Administration des conventions » : aucune nouvelle convention n’a été créée.');
+      var memeRattrapage=rattrapage?actifs.filter(function(x){return String(x.Type_sequence||'').toUpperCase()==='RATTRAPAGE'&&EUC_IMPORT_dateExistanteISO_(x.Date_debut)===a.dateDebut&&EUC_IMPORT_dateExistanteISO_(x.Date_fin)===a.dateFin;})[0]:null;
+      if(rattrapage&&actifs.length&&!memeRattrapage){
+        a.record.fields.Type_sequence='RATTRAPAGE';
+        a.record.fields.Numero_sequence=1+Math.max.apply(null,actifs.map(function(x){return Number(x.Numero_sequence)||1;}));
+        a.record.fields.Convention_origine=Math.min.apply(null,actifs.map(function(x){return Number(x.id)||0;}));
+      }
+      if(!rattrapage&&actifs.length>1)throw new Error('Plusieurs conventions actives existent déjà pour cet élève et cette période. Ouvrez « Administration des conventions » avant toute nouvelle génération. Pour un rattrapage, cochez « Convention supplémentaire de rattrapage » dans les dates individuelles.');
+      if(memeRattrapage||(!rattrapage&&actifs.length===1)){
+        var ex=memeRattrapage||actifs[0],exDebut=EUC_IMPORT_dateExistanteISO_(ex.Date_debut),exFin=EUC_IMPORT_dateExistanteISO_(ex.Date_fin);
+        if(exDebut!==a.dateDebut||exFin!==a.dateFin)throw new Error('Une convention existe déjà pour cet élève et cette période, avec les dates '+exDebut+' au '+exFin+'. Corrigez-la ou créez son remplacement depuis « Administration des conventions », ou cochez « Convention supplémentaire de rattrapage » dans les dates individuelles : aucune nouvelle convention n’a été créée.');
         existing=ex;a={id:Number(ex.id)||0,token:'',reference:String(ex.Reference_convention||''),dateDebut:exDebut,dateFin:exFin};
       }else{
         var created=EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:[a.record]})||{};
@@ -192,7 +201,7 @@ function EUC_CONVENTION_donneesImpressionLot(lot){
 
 function EUC_CONVENTION_trouverAccesParToken_(token){var hash=EUC_CONVENTION_hash_(token),rows=EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_),r=rows.filter(function(x){return x.Token_hash===hash&&x.Revoked!==true;})[0];if(!r)throw new Error('Lien de convention invalide ou révoqué.');return r;}
 function EUC_CONVENTION_contextFormulaire_(a,e){
-  var catalogue=EUC_PFMP_chargerReferentiel(),annee=catalogue.annees.filter(function(x){return String(x.code)===String(a.Annee_scolaire||'');})[0],classeId=EUC_PFMP_ref_(a.Classe_convention),offre=catalogue.offres.filter(function(o){return o.classeId===classeId&&(!annee||o.anneeId===annee.id);})[0],periodeId=0;if(offre){var d=EUC_IMPORT_dateExistanteISO_(a.Date_debut),p=(offre.periodes||[]).filter(function(x){return x.debut===d;})[0];if(p)periodeId=p.id;}
+  var catalogue=EUC_PFMP_chargerReferentiel(),annee=catalogue.annees.filter(function(x){return String(x.code)===String(a.Annee_scolaire||'');})[0],classeId=EUC_PFMP_ref_(a.Classe_convention),offre=catalogue.offres.filter(function(o){return o.classeId===classeId&&(!annee||o.anneeId===annee.id);})[0],periodeId=0;if(offre){var d=EUC_IMPORT_dateExistanteISO_(a.Date_debut),p=(offre.periodes||[]).filter(function(x){return x.debut===d;})[0]||(offre.periodes||[]).filter(function(x){return Number(x.id)===Number(EUC_PFMP_ref_(a.Periode));})[0];if(p)periodeId=p.id;}
   return {eleveId:e.id,numeroNational:e.Numero_national||'',nom:e.Nom||'',prenom:e.Prenom_usage||e.Prenom||'',dateNaissance:EUC_IMPORT_dateExistanteISO_(e.Date_naissance),anneeId:annee?annee.id:0,offreId:offre?offre.id:0,periodeId:periodeId,classeConvention:a.Classe_convention_nom||'',anneeConvention:a.Annee_scolaire||'',dateDebut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),dateFin:EUC_IMPORT_dateExistanteISO_(a.Date_fin)};
 }
 function EUC_CONVENTION_verifierIdentite(token,jour,mois){

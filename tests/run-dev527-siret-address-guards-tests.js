@@ -16,7 +16,7 @@ const qrHtml=read('PFMP_Acces_QR_V116.html');
 let n=0;
 function test(name,fn){try{fn();console.log('✓',name);n++;}catch(e){console.error('✗',name,e.stack||e.message);process.exitCode=1;}}
 function apiContext(local){
-  const ctx={encodeURIComponent,EUC_ENT_controlerAccesUtilisateur_:()=>true,EUC_ENT_verifierDoublonGrist:()=>local,EUC_ENT_lireConfiguration:()=>({EUC_ENT_API_RECHERCHE_URL:'https://recherche-entreprises.api.gouv.fr/search'})};
+  const ctx={encodeURIComponent,EUC_ENT_controlerAccesUtilisateur_:()=>true,EUC_ENT_controlerRechercheSiret_:()=>true,EUC_ENT_verifierDoublonGrist:()=>local,EUC_ENT_lireConfiguration:()=>({EUC_ENT_API_RECHERCHE_URL:'https://recherche-entreprises.api.gouv.fr/search'})};
   vm.createContext(ctx);vm.runInContext(validation,ctx);vm.runInContext(api,ctx);return ctx;
 }
 function webSafe(value){return Buffer.from(value).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}

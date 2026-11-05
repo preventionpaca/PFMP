@@ -44,7 +44,10 @@ test('les jetons des pages désignent tous une clé de la table', () => {
 test('la table vise les domaines du lycée et garde les anciennes adresses reconnues', () => {
   const c = ctxLiens();
   assert.equal(c.EUC_LIEN_('accueil'), 'https://alternance.lycee-les-eucalyptus.org/');
-  for (const u of Object.values(c.EUC_LIENS_table_())) assert.match(u, /^https:\/\/[a-z-]+\.lycee-les-eucalyptus\.org\/$/);
+  /* Seule exception, nommée : le certificat de livretek reste bloqué chez GitHub. */
+  const t = c.EUC_LIENS_table_();
+  assert.equal(t.livretek, 'https://livretek.loucodi.fr/');
+  for (const k of Object.keys(t).filter(x => x !== 'livretek')) assert.match(t[k], /^https:\/\/[a-z-]+\.lycee-les-eucalyptus\.org\/$/);
   assert.deepEqual(Object.keys(c.EUC_LIENS_anciens_()).sort(), Object.keys(c.EUC_LIENS_table_()).sort());
   assert.deepEqual(Array.from(c.EUC_LIENS_hotes_(['pfmp', 'apprentis'])),
     ['pfmp.lycee-les-eucalyptus.org', 'pfmp.loucodi.fr', 'apprentis.lycee-les-eucalyptus.org', 'apprentis.loucodi.fr']);
