@@ -37,6 +37,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_ACCES_afficherLiens(e);
     case 'controle-chiffres-pfmp':
       return EUC_SUIVI2_afficherControle(e);
+    case 'saisies-conventions-pfmp':
+      return EUC_DEV643_afficher(e);
     case 'plannings-pfmp':
       return EUC_DEV610_afficher(e);
     case 'epi-pfmp':

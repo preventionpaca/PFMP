@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contrôle des saisies — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed;--orange:#92610a;--orange-fond:#fdf6e3}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1200px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+.ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,select{font:700 14px Arial,sans-serif;border-radius:7px;padding:8px 12px}
+button{border:0;background:var(--vert);color:#fff;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+select{border:1px solid var(--bord);background:#fff;font-weight:400}
+label{font-weight:700}
+.note{color:var(--gris);font-size:13px}
+.message{font-weight:700}.message.erreur{color:var(--alerte)}
+.etat{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;background:var(--vert-clair);color:var(--vert)}
+.etat.NON_AFFICHE,.etat.NON_SAISI{background:var(--alerte-fond);color:var(--alerte)}
+.etat.NON_COMPTEE{background:var(--orange-fond);color:var(--orange)}
+.etat.AUCUNE,.etat.AUTRE{background:#eef1f0;color:var(--gris)}
+h2{font-size:16px;margin:0 0 6px}
+.periode{margin:6px 0;padding:6px 0;border-top:1px solid var(--bord)}
+.table{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bord);vertical-align:top}
+th{color:var(--gris)}
+.manque{color:var(--alerte);font-weight:700}
+.spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
+.busy .spin{display:inline-block}
+@keyframes tour{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Contrôle des saisies</h1>
+  <p>Ce qui a vraiment été saisi pour chaque élève, comparé à ce que le suivi affiche. Lecture seule : rien n’est modifié.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Contrôle des saisies</nav>
+<main>
+  <section>
+    <div class="ligne">
+      <label for="annee">Année</label><select id="annee"></select>
+      <label for="classe">Classe</label><select id="classe" disabled><option value="">Chargement…</option></select>
+      <label><input type="checkbox" id="problemes"> Seulement les problèmes</label>
+      <button id="lancer" type="button" disabled><span class="spin"></span><span id="lancerTexte">Afficher</span></button>
+      <span id="message" class="message" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+  <section id="resume" hidden></section>
+  <div id="resultat"></div>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},DONNEES=null,ANNEE=<?!= JSON.stringify(annee || '') ?>,CLASSE=<?!= JSON.stringify(classe || 0) ?>,DELAI=120000;
+  var LIBELLES={OK:'Complet',NON_AFFICHE:'Saisi mais non affiché',NON_SAISI:'Jamais saisi',NON_COMPTEE:'Saisie non comptée',AUCUNE:'Rien de saisi',AUTRE:'Apprenti'};
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function dfr(d){return d?String(d).split('-').reverse().join('/'):'';}
+  function message(t,err){$('message').textContent=t||'';$('message').className='message'+(err?' erreur':'');}
+  /* Appel serveur avec délai maximal : succès, erreur et dépassement rendent la main de la même façon. */
+  function appel(nom,args,ok,ko){
+    var fini=false,timer=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Pas de réponse après 2 minutes : réessayez.'));},DELAI);
+    var run=google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);});
+    run[nom].apply(run,args);
+  }
+  function occupe(on){$('lancer').disabled=on||!$('classe').value;$('lancer').classList.toggle('busy',on);$('lancerTexte').textContent=on?'Lecture des saisies…':'Afficher';$('annee').disabled=on;$('classe').disabled=on;}
+  function chargerClasses(){
+    $('classe').disabled=true;$('lancer').disabled=true;$('classe').innerHTML='<option value="">Chargement…</option>';message('');
+    appel('EUC_DEV643_classes',[$('annee').value],function(r){
+      $('classe').innerHTML=r.classes.length?'<option value="">Choisir…</option>'+r.classes.map(function(c){return '<option value="'+c.id+'">'+esc(c.nom)+'</option>';}).join(''):'<option value="">Aucune classe</option>';
+      if(CLASSE){$('classe').value=String(CLASSE);CLASSE=0;}
+      $('classe').disabled=!r.classes.length;$('lancer').disabled=!$('classe').value;
+      if($('classe').value)lancer();
+    },function(e){$('classe').innerHTML='<option value="">Indisponible</option>';message(e&&e.message||'Lecture impossible.',true);});
+  }
+  function personne(p){
+    var n=[p.civilite,p.prenom,p.nom].filter(Boolean).join(' ');
+    return '<b>'+esc(n||'—')+'</b>'+(p.fonction?'<br>'+esc(p.fonction):'')+(p.tel?'<br>'+esc(p.tel):'')+(p.mail?'<br>'+esc(p.mail):'');
+  }
+  function saisies(l){
+    if(!l.length)return '<p class="note">Aucune saisie enregistrée pour cet élève.</p>';
+    return '<div class="table"><table><thead><tr><th>Origine</th><th>Statut</th><th>Entreprise</th><th>Responsable</th><th>Tuteur</th><th>Champs vides</th></tr></thead><tbody>'+l.map(function(s){
+      return '<tr><td><b>'+esc(s.origine)+'</b><br><span class="note">'+esc(s.table)+' · ligne '+esc(s.ligne)+(s.date?'<br>'+dfr(s.date):'')+(s.numero?'<br>'+esc(s.numero):'')+'</span></td><td>'+esc(s.statut)+'</td><td>'+esc(s.entreprise||'—')+(s.siret?'<br><span class="note">'+esc(s.siret)+'</span>':'')+'</td><td>'+personne(s.responsable)+'</td><td>'+(s.tuteurEstResponsable?'<span class="note">Le tuteur est le responsable</span><br>':'')+personne(s.tuteur)+'</td><td>'+(s.manques.length?'<span class="manque">'+esc(s.manques.join(', '))+'</span>':'Aucun')+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+  }
+  function periode(p){
+    var f=p.affiche,aff=f?'Affiché : responsable '+esc([(f.contact||{}).nom,(f.contact||{}).tel,(f.contact||{}).mail].filter(Boolean).join(' · ')||'vide')+' ; tuteur '+esc([(f.tuteur||{}).nom,(f.tuteur||{}).tel,(f.tuteur||{}).mail].filter(Boolean).join(' · ')||'vide'):'';
+    return '<div class="periode"><span class="etat '+esc(p.etat.code)+'">'+esc(LIBELLES[p.etat.code]||p.etat.code)+'</span> <b>'+esc(p.libelle)+'</b> <span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+(p.source?' · source du suivi : '+esc(p.source):'')+'</span><br>'+esc(p.etat.texte)+(aff?'<br><span class="note">'+aff+'</span>':'')+'</div>';
+  }
+  function probleme(e){return e.periodes.some(function(p){return ['NON_AFFICHE','NON_SAISI','NON_COMPTEE'].indexOf(p.etat.code)>=0;})||e.saisies.some(function(s){return s.manques.length;});}
+  function afficher(){
+    var r=DONNEES;if(!r)return;
+    var c=r.resume;$('resume').hidden=false;
+    $('resume').innerHTML='<div class="ligne"><b>'+esc(r.classe.nom)+'</b>'+Object.keys(LIBELLES).filter(function(k){return c[k];}).map(function(k){return '<span class="etat '+k+'">'+c[k]+' · '+esc(LIBELLES[k])+'</span>';}).join('')+'</div><p class="note">Compté par élève et par période.</p>';
+    var l=$('problemes').checked?r.eleves.filter(probleme):r.eleves;
+    $('resultat').innerHTML=l.length?l.map(function(e){return '<section><h2>'+esc(e.libelle)+'</h2>'+e.periodes.map(periode).join('')+saisies(e.saisies)+'</section>';}).join(''):'<section class="note">Aucun élève à afficher.</section>';
+  }
+  function lancer(){
+    if(!$('classe').value)return;
+    occupe(true);message('');DONNEES=null;$('resume').hidden=true;$('resultat').innerHTML='';
+    appel('EUC_DEV643_saisies',[$('annee').value,Number($('classe').value)],function(r){occupe(false);DONNEES=r;afficher();},function(e){occupe(false);message(e&&e.message||'Lecture impossible.',true);});
+  }
+  var now=new Date(),d=now.getMonth()>=7?now.getFullYear():now.getFullYear()-1;
+  [d+1,d,d-1].forEach(function(y){var o=document.createElement('option');o.value=y+'-'+(y+1);o.textContent=o.value;$('annee').appendChild(o);});
+  $('annee').value=ANNEE||(d+'-'+(d+1));
+  $('annee').onchange=chargerClasses;
+  $('classe').onchange=function(){$('lancer').disabled=!this.value;};
+  $('lancer').onclick=lancer;
+  $('problemes').onchange=afficher;
+  chargerClasses();
+})();
+</script>
+</body>
+</html>

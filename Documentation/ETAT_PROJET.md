@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 6 novembre 2026 — DEV643 : coordonnées du formulaire de secours et contrôle des saisies
+
+- Adresse du livret : `https://livret.lycee-les-eucalyptus.org/` (clé `livretek` de la table, dépôt `preventionpaca/livretek-eucalyptus`). Le nom `livretek.lycee-les-eucalyptus.org` reste bloqué à `authorization_created` sans cause visible, alors que `livret` a obtenu son certificat en quelques minutes sur le même compte, domaine et DNS. `livretek.loucodi.fr` reste actif.
+- Cause trouvée dans le code : les lignes de `EUC_MIGRATION_JOTFORM_PFMP` portent `Nom_tuteur`, `Telephone_tuteur`, `Email_tuteur`, `Nom_responsable` et le détail dans `Raw_JSON`, mais le moteur lisait `Tuteur_nom`, `Tuteur_telephone`, `Tuteur_courriel` et laissait le responsable vide. Une déclaration comptée comme convention s'affichait donc sans contacts. `EUC_SUIVI2_contactsTampon_` et `EUC_SUIVI2_ficheTampon_` lisent les bonnes colonnes ; `EUC_SUIVI2_completerFiche_` complète un dossier sans contacts à partir d'une saisie de même SIRET.
+- Nouvelle page admin `saisies-conventions-pfmp` (« Contrôle des saisies », lecture seule) : par classe, saisies réelles (QR, secours, JotForm, dossier du bureau) comparées à l'affichage, avec les états complet, saisi mais non affiché, jamais saisi, saisie non comptée, rien de saisi.
+- Saisie obligatoire : nom, prénom, fonction, téléphone et courriel du responsable et du tuteur sont exigés par le QR code (navigateur et serveur) et par le formulaire de secours. Les anciennes lignes JotForm et les dossiers du bureau n'ont pas ce contrôle.
+
 ## Mise à jour du 5 novembre 2026 — DEV641/DEV642 : SIRET du QR et convention de rattrapage
 
 - DEV641 : `EUC_ENT_rechercherSiret` et `EUC_ENT_traiterReponseApiNavigateur` exigeaient un compte du lycée (`EUC_ENT_controlerAccesUtilisateur_`). Un élève non connecté recevait une erreur, affichée comme le message « passer au bureau G205 ». Sur le vert, ces deux lectures passent désormais par `EUC_ENT_controlerRechercheSiret_` (ouvert, identité publique seulement) ; le bleu et les écritures gardent leur contrôle. Cause établie par lecture du code et simulation : le parcours réel sur téléphone reste à confirmer.
@@ -8,7 +15,7 @@
 
 ## Mise à jour du 4 novembre 2026 — DEV640 : domaines lycee-les-eucalyptus.org et table unique des liens
 
-- DNS GoDaddy (`lycee-les-eucalyptus.org`) : 6 CNAME `alternance`, `pfmp`, `apprentis`, `book-entreprise`, `livretek`, `suiviek` → `preventionpaca.github.io.` ; aucun autre enregistrement modifié (MX Google intacts).
+- DNS GoDaddy (`lycee-les-eucalyptus.org`, état du 4 novembre, voir DEV643 pour le livret) : 6 CNAME `alternance`, `pfmp`, `apprentis`, `book-entreprise`, `livretek`, `suiviek` → `preventionpaca.github.io.` ; aucun autre enregistrement modifié (MX Google intacts).
 - GitHub Pages : 6 nouveaux dépôts `preventionpaca/<nom>-eucalyptus`, copies exactes des redirections/coquilles loucodi avec le nouveau CNAME. Les dépôts et le DNS loucodi.fr (OVH) restent actifs : QR codes imprimés, courriels envoyés, liens Atrium et favoris continuent de fonctionner.
 - Code : plus aucune adresse publique écrite en dur. Table unique `EUC_LIENS_table_()` (`apps-script/EUC_DEV640_Liens.js`) ; pages `.html` → jetons `__LIEN_<CLE>__` / `__HOTE_<CLE>__` remplacés par `EUC_RELEASE_decorateOutput_` ; serveur → `EUC_LIEN_('cle')`. Les coquilles enseignants reconnaissent anciens et nouveaux hôtes (`EUC_LIENS_hotes_`).
 - Garde : `tests/run-dev640-liens-tests.js` refuse toute adresse publique en dur hors de la table ; règle ajoutée à `AGENTS.md`, au contrat qualité et au workflow de release.

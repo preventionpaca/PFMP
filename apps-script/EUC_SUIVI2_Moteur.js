@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.635';
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.643';
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -212,6 +212,48 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   };
 }
 function EUC_SUIVI2_nomEntreprise_(f) { return EUC_SUIVI2_premier_(f && f.Raison_sociale, f && f.Raison_sociale_officielle, f && f.Nom, f && f.Nom_entreprise, f && f.Entreprise); }
+/* Réponse brute JotForm : premier champ dont le libellé correspond. */
+function EUC_SUIVI2_brut_(j, libelles) {
+  var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
+  try { raw = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return ''; }
+  var cles = Object.keys(raw || {});
+  for (var i = 0; i < libelles.length; i++) {
+    var cible = EUC_SUIVI2_norm_(libelles[i]);
+    for (var k = 0; k < cles.length; k++) {
+      var v = raw[cles[k]], nom = EUC_SUIVI2_norm_(v && typeof v === 'object' && v.text ? v.text : cles[k]);
+      if (nom === cible || nom.indexOf(cible) === 0) return v && typeof v === 'object' && 'answer' in v ? v.answer : v;
+    }
+  }
+  return '';
+}
+/* DEV643 : responsable et tuteur d'une ligne de la table d'attente (formulaire de secours, JotForm).
+ * Le dépôt écrit Nom_tuteur, Telephone_tuteur, Email_tuteur, Nom_responsable ; le reste est dans Raw_JSON. */
+function EUC_SUIVI2_contactsTampon_(j) {
+  var P = EUC_SUIVI2_premier_, B = function(l) { var v = EUC_SUIVI2_brut_(j, l); return v && typeof v === 'object' ? '' : EUC_SUIVI2_t_(v); };
+  return {
+    responsable: { civilite: B(['Civilité du responsable']), prenom: P(j.Responsable_prenom, B(['Prénom du responsable'])), nom: P(j.Responsable_nom, j.Nom_responsable, B(['Nom du responsable', "Nom du responsable de l'entreprise", 'Responsable entreprise'])),
+      fonction: P(j.Responsable_fonction, B(['Fonction du responsable'])), tel: P(j.Responsable_telephone, B(['Téléphone du responsable']), j.Telephone_entreprise, B(['Téléphone entreprise'])),
+      mail: P(j.Responsable_courriel, B(['E-mail du responsable']), j.Email_entreprise, B(["Adresse e-mail de l'entreprise"])) },
+    tuteur: { civilite: B(['Civilité du tuteur']), prenom: P(j.Tuteur_prenom, B(['Prénom du tuteur'])), nom: P(j.Tuteur_nom, j.Nom_tuteur, B(['Nom du tuteur'])),
+      fonction: P(j.Tuteur_fonction, j.Fonction_tuteur, B(['Fonction du tuteur'])), tel: P(j.Tuteur_telephone, j.Telephone_tuteur, B(['Téléphone du tuteur'])),
+      mail: P(j.Tuteur_courriel, j.Email_tuteur, B(['Adresse e-mail du tuteur', 'E-mail du tuteur'])) }
+  };
+}
+/* Fiche d'affichage d'une ligne de la table d'attente, même forme que EUC_SUIVI2_ficheDossier_. */
+function EUC_SUIVI2_ficheTampon_(j, siret) {
+  var P = EUC_SUIVI2_premier_, c = EUC_SUIVI2_contactsTampon_(j), n = function(x) { return [x.prenom, x.nom].filter(Boolean).join(' '); };
+  var depot = EUC_SUIVI2_t_(j.Submission_ID), secours = /^SECOURS-/.test(depot);
+  return { entreprise: P(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
+    adresse: P([EUC_SUIVI2_t_(j.Adresse_officielle), [EUC_SUIVI2_t_(j.CP_officiel), EUC_SUIVI2_t_(j.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', '), j.Adresse_entreprise),
+    contact: { nom: n(c.responsable) || n(c.tuteur), tel: c.responsable.tel || c.tuteur.tel, mail: c.responsable.mail || c.tuteur.mail },
+    tuteur: { nom: n(c.tuteur), tel: c.tuteur.tel, mail: c.tuteur.mail },
+    numero: secours ? depot.replace(/^SECOURS-/, '') : '', siret: siret || '', enregistreLe: secours ? EUC_SUIVI2_date_(j.Date_import) : '' };
+}
+/* Complète une fiche de dossier sans écraser ce qu'elle porte déjà. */
+function EUC_SUIVI2_completerFiche_(f, t) {
+  if (!f || !t || (f.siret && t.siret && f.siret !== t.siret)) return;
+  ['contact', 'tuteur'].forEach(function(g) { f[g] = f[g] || {}; ['nom', 'tel', 'mail'].forEach(function(k) { if (!f[g][k]) f[g][k] = (t[g] || {})[k] || ''; }); });
+}
 /* Fiche d'un apprenti : fiche d'apprentissage (Yparéo / gestion des apprentis), complétée par la fiche entreprise du SIRET. */
 function EUC_SUIVI2_ficheApprenti_(ap, entreprises) {
   var r = ap.brut || {}, P = EUC_SUIVI2_premier_, sr = P(r.SIRET, r.Entreprise_siret, r.SIRET_entreprise).replace(/\D/g, '');
@@ -418,20 +460,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
    * Elle est rattachée à une période par l'élève et le chevauchement des dates. */
   var jotform = {}, jotformNonValide = {};
   var gardeFou = { dossiersOrphelins: [], dossiersRattaches: [], jotformSansEleve: [], jotformSansPeriode: [], conflits: [], monacoSansNis: [] };
-  /* Réponse brute JotForm : premier champ dont le libellé correspond. */
-  function brut(j, libelles) {
-    var raw = j.Raw_JSON || j.Raw_json || j.Donnees_brutes; if (!raw) return '';
-    try { raw = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return ''; }
-    var cles = Object.keys(raw || {});
-    for (var i = 0; i < libelles.length; i++) {
-      var cible = EUC_SUIVI2_norm_(libelles[i]);
-      for (var k = 0; k < cles.length; k++) {
-        var v = raw[cles[k]], nom = EUC_SUIVI2_norm_(v && typeof v === 'object' && v.text ? v.text : cles[k]);
-        if (nom === cible || nom.indexOf(cible) === 0) return v && typeof v === 'object' && 'answer' in v ? v.answer : v;
-      }
-    }
-    return '';
-  }
+  var brut = EUC_SUIVI2_brut_;
   (src.jotform || []).map(EUC_SUIVI2_champs_).forEach(function(j) {
     var eid = EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id);
     if (!eid || !eleves[eid]) {
@@ -459,9 +488,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     if (datesFausses) { debut = ''; fin = ''; }
     var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, siretNum: siret, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
     if (monacoNis) ligne.siret = true;
-    ligne.fiche = { entreprise: EUC_SUIVI2_premier_(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
-      adresse: EUC_SUIVI2_premier_([EUC_SUIVI2_t_(j.Adresse_officielle), [EUC_SUIVI2_t_(j.CP_officiel), EUC_SUIVI2_t_(j.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', '), j.Adresse_entreprise),
-      contact: { nom: '', tel: '', mail: '' }, tuteur: { nom: EUC_SUIVI2_t_(j.Tuteur_nom), tel: EUC_SUIVI2_t_(j.Tuteur_telephone), mail: EUC_SUIVI2_t_(j.Tuteur_courriel) }, numero: '' };
+    ligne.fiche = EUC_SUIVI2_ficheTampon_(j, siret);
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
@@ -549,13 +576,15 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           if (EUC_SUIVI2_identifiantEntreprise_(valant[0], entreprises) === 'MONACO_SANS_NIS') gardeFou.monacoSansNis.push({ eleveId: e.id, eleve: e.libelle, classe: c.nom, periode: p.libelle, dossier: Number(valant[0].id), entreprise: EUC_SUIVI2_t_(valant[0].Entreprise_raison_sociale || valant[0].Entreprise_enseigne) });
           /* Garde-fou : le dossier du bureau prime ; une saisie JotForm qui le contredit est signalée. */
           var sDossier = EUC_SUIVI2_t_(valant[0].Entreprise_siret || valant[0].Entreprise_siret_snapshot).replace(/\D/g, '');
+          var memeSaisie = jotformSur((jotform[e.id] || []).filter(function(l) { return l.siretNum === sDossier; }), p);
+          if (memeSaisie) EUC_SUIVI2_completerFiche_(r.fiches[e.id], memeSaisie.fiche);
           (jotform[e.id] || []).forEach(function(l) {
             if (sDossier && l.siretNum && l.siretNum !== sDossier && jotformSur([l], p)) gardeFou.conflits.push({ eleveId: e.id, eleve: e.libelle, classe: c.nom, periode: p.libelle, ligne: l.id, siretJotform: l.siretNum, siretDossier: sDossier, entrepriseDossier: EUC_SUIVI2_t_(valant[0].Entreprise_raison_sociale || valant[0].Entreprise_enseigne) });
           });
           return;
         }
         var jf = (!d || !(statut === 'ANNULEE' || statut === 'INTERROMPUE')) ? jotformSur(jotform[e.id], p) : null;
-        if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; r.statuts[e.id] = 'AVEC'; if (!r.fiches[e.id] || !r.fiches[e.id].entreprise) r.fiches[e.id] = jf.fiche; return; }
+        if (jf) { r.avec.push(e.id); r.sources[e.id] = 'JOTFORM'; r.statuts[e.id] = 'AVEC'; if (!r.fiches[e.id] || !r.fiches[e.id].entreprise) r.fiches[e.id] = jf.fiche; else EUC_SUIVI2_completerFiche_(r.fiches[e.id], jf.fiche); return; }
         r.sans.push(e.id);
         if (statut === 'ANNULEE' || statut === 'INTERROMPUE') r.annulees.push(e.id);
         /* Motif, pour l'écran de contrôle et l'affichage « sans convention ». */

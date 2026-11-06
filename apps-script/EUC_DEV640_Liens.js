@@ -16,8 +16,7 @@ function EUC_LIENS_table_() { return {
   pfmp:      'https://pfmp.lycee-les-eucalyptus.org/',
   apprentis: 'https://apprentis.lycee-les-eucalyptus.org/',
   book:      'https://book-entreprise.lycee-les-eucalyptus.org/',
-  /* Temporaire : GitHub n'émet pas le certificat de livretek.lycee-les-eucalyptus.org (bloqué côté GitHub, DNS correct). À basculer dès que https répond. */
-  livretek:  'https://livretek.loucodi.fr/',
+  livretek:  'https://livret.lycee-les-eucalyptus.org/',
   suiviek:   'https://suiviek.lycee-les-eucalyptus.org/'
 }; }
 
