@@ -25,6 +25,12 @@ function EUC_DEV643_saisies(annee, classeId) {
   return EUC_DEV643_lignes_(EUC_SUIVI2_modele_(annee), EUC_SUIVI2_lireSources_(), Number(classeId));
 }
 
+/* Toutes les saisies de l'année, sans filtre de classe ni de période, la plus récente d'abord. */
+function EUC_DEV643_journal(annee) {
+  EUC_SUIVI2_exigerAdmin_();
+  return EUC_DEV643_journal_(EUC_SUIVI2_t_(annee) || EUC_SUIVI2_anneeCourante_(EUC_SUIVI2_aujourdhui_()), EUC_SUIVI2_lireSources_());
+}
+
 function EUC_DEV643_manques_(personne, prefixe) {
   return EUC_DEV643_REQUIS_.filter(function(c) { return !personne[c[0]]; }).map(function(c) { return c[1] + ' ' + prefixe; });
 }
@@ -34,16 +40,28 @@ function EUC_DEV643_completer_(s) {
 }
 function EUC_DEV643_saisieDossier_(a) {
   var P = EUC_SUIVI2_premier_, T = EUC_SUIVI2_t_, personne = function(x) { return { civilite: T(a[x + '_civilite']), prenom: T(a[x + '_prenom']), nom: T(a[x + '_nom']), fonction: T(a[x + '_fonction']), tel: T(a[x + '_telephone']), mail: T(a[x + '_courriel']) }; };
-  var saisieLe = EUC_SUIVI2_date_(a.Date_saisie_entreprise);
+  var saisieLe = EUC_SUIVI2_date_(a.Date_saisie_entreprise), quand = a.Date_saisie_entreprise || a.Date_enregistrement || a.Date_creation;
   return EUC_DEV643_completer_({ origine: saisieLe ? 'QR code' : 'Dossier du bureau', table: 'Dossier', ligne: Number(a.id), statut: T(a.Statut_administratif || a.Statut) || 'sans statut',
-    date: saisieLe || EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_creation), numero: P(a.Numero_enregistrement, a.Reference_convention), entreprise: P(a.Entreprise_raison_sociale, a.Entreprise_enseigne),
+    date: saisieLe || EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_creation), ms: EUC_DEV643_ms_(quand), periode: EUC_SUIVI2_ref_(a.Periode), debut: EUC_SUIVI2_date_(a.Date_debut), fin: EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin), numero: P(a.Numero_enregistrement, a.Reference_convention), entreprise: P(a.Entreprise_raison_sociale, a.Entreprise_enseigne),
     siret: T(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, ''), tuteurEstResponsable: a.Tuteur_est_responsable === true, responsable: personne('Responsable'), tuteur: personne('Tuteur') });
 }
 function EUC_DEV643_saisieTampon_(j) {
+  var D = function(col, libelles) { return EUC_SUIVI2_date_(j[col]) || EUC_SUIVI2_date_(EUC_SUIVI2_brut_(j, libelles)); };
   var T = EUC_SUIVI2_t_, c = EUC_SUIVI2_contactsTampon_(j), depot = T(j.Submission_ID), secours = /^SECOURS-/.test(depot);
   return EUC_DEV643_completer_({ origine: secours ? 'Formulaire de secours' : 'JotForm', table: 'Table d’attente', ligne: Number(j.id), statut: T(j.Decision) || 'sans décision',
-    date: EUC_SUIVI2_date_(j.Date_import), numero: secours ? depot.replace(/^SECOURS-/, '') : depot, entreprise: EUC_SUIVI2_premier_(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
+    date: EUC_SUIVI2_date_(j.Date_import), ms: EUC_DEV643_ms_(j.Date_import), periode: 0, debut: D('Date_debut_brut', ['Date de début', 'Date debut']), fin: D('Date_fin_brut', ['Date de fin', 'Date fin']), numero: secours ? depot.replace(/^SECOURS-/, '') : depot, entreprise: EUC_SUIVI2_premier_(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
     siret: T(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, ''), tuteurEstResponsable: false, responsable: c.responsable, tuteur: c.tuteur });
+}
+/* Horodatage pour le tri : secondes Grist, millisecondes ou date écrite. */
+function EUC_DEV643_ms_(v) {
+  if (typeof v === 'number') return v < 1e11 ? v * 1000 : v;
+  return Date.parse(EUC_SUIVI2_t_(v)) || 0;
+}
+/* Une saisie concerne une période par son lien direct ou par ses dates ; sans date, elle reste visible partout. */
+function EUC_DEV643_concerne_(s, p) {
+  if (s.periode && s.periode === Number(p.id)) return true;
+  if (s.debut && s.fin) return s.debut <= p.fin && s.fin >= p.debut;
+  return !s.periode;
 }
 /* Un dossier préparé à la génération de la convention, sans rien de saisi, n'est pas une saisie. */
 function EUC_DEV643_vide_(s) { return !s.entreprise && !s.siret && !s.responsable.nom && !s.tuteur.nom; }
@@ -66,6 +84,26 @@ function EUC_DEV643_etat_(statut, fiche, saisies) {
   return { code: 'OK', texte: 'Coordonnées complètes.' };
 }
 
+/* Calcul pur : journal de toutes les saisies, y compris celles dont l'élève n'est pas reconnu. */
+function EUC_DEV643_journal_(annee, src) {
+  var F = EUC_SUIVI2_champs_, T = EUC_SUIVI2_t_, annees = {}, classes = {}, eleves = {};
+  (src.annees || []).map(F).forEach(function(a) { annees[String(a.id)] = T(a.Code || a.Libelle); });
+  (src.classes || []).map(F).forEach(function(c) { classes[c.id] = T(c.Nom || c.Libelle); });
+  (src.eleves || []).map(F).forEach(function(e) { eleves[e.id] = e; });
+  var deLAnnee = function(x) { return [annee, ''].indexOf(EUC_SUIVI2_annee_(x.Annee_scolaire, annees)) >= 0; }, lignes = [];
+  var ajouter = function(s, eid, nom, classe) {
+    if (EUC_DEV643_vide_(s)) return;
+    var e = eleves[eid];
+    s.eleve = e ? [T(e.Nom), T(e.Prenom_usage || e.Prenom)].join(' ') : nom || 'Élève non reconnu';
+    s.classe = (e && classes[EUC_SUIVI2_ref_(e.Classe)]) || classe || '';
+    lignes.push(s);
+  };
+  (src.dossiers || []).map(F).filter(deLAnnee).forEach(function(a) { ajouter(EUC_DEV643_saisieDossier_(a), EUC_SUIVI2_ref_(a.Eleve), '', classes[EUC_SUIVI2_ref_(a.Classe_convention)]); });
+  (src.jotform || []).map(F).filter(deLAnnee).forEach(function(j) { ajouter(EUC_DEV643_saisieTampon_(j), EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id), [T(j.Nom_eleve), T(j.Prenom_eleve)].filter(Boolean).join(' '), T(j.Classe_saisie)); });
+  lignes.sort(function(a, b) { return b.ms - a.ms || b.ligne - a.ligne; });
+  return { annee: annee, saisies: lignes };
+}
+
 /* Calcul pur : m = modèle du suivi, src = tables brutes. */
 function EUC_DEV643_lignes_(m, src, classeId) {
   var c = (m.classes || []).filter(function(x) { return Number(x.id) === classeId; })[0];
@@ -80,7 +118,7 @@ function EUC_DEV643_lignes_(m, src, classeId) {
   var eleves = c.eleves.map(function(e) {
     var saisies = parEleve[e.id] || [];
     var periodes = c.periodes.filter(function(p) { return p.resume && !p.pdif; }).map(function(p) {
-      var r = p.resume, statut = (r.statuts || {})[e.id] || '', fiche = (r.fiches || {})[e.id] || null, etat = EUC_DEV643_etat_(statut, fiche, saisies);
+      var r = p.resume, statut = (r.statuts || {})[e.id] || '', fiche = (r.fiches || {})[e.id] || null, etat = EUC_DEV643_etat_(statut, fiche, saisies.filter(function(s) { return EUC_DEV643_concerne_(s, p); }));
       resume[etat.code]++;
       return { id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, source: (r.sources || {})[e.id] || '', affiche: fiche, etat: etat };
     });

@@ -85,10 +85,34 @@ test('un dossier préparé sans rien de saisi n’est pas une saisie ; un champ 
   assert.ok(b.manques.includes('téléphone du tuteur') && b.manques.includes('nom du responsable'));
 });
 
+test('une saisie ne compte que pour sa période : pas de fausse alerte sur la période suivante', () => {
+  const s = sources([], [ligneSecours(800, 1)]);
+  s.periodes.push(R(101, { Annee_scolaire: 1, Classes_concernees: ['L', 10], Date_debut: '2027-03-22', Date_fin: '2027-04-16', Libelle: 'PFMP 2' }));
+  const e = c.EUC_DEV643_lignes_(modele(s), s, 10).eleves.find(x => x.id === 1);
+  assert.deepEqual(J(e.periodes.map(p => p.etat.code)), ['OK', 'AUCUNE']);
+  const d = { periode: 0, debut: '', fin: '' }, p = { id: 101, debut: '2027-03-22', fin: '2027-04-16' };
+  assert.equal(c.EUC_DEV643_concerne_(d, p), true);
+  assert.equal(c.EUC_DEV643_concerne_({ periode: 100, debut: '', fin: '' }, p), false);
+  assert.equal(c.EUC_DEV643_concerne_({ periode: 101, debut: '', fin: '' }, p), true);
+});
+
+test('le journal liste tout, la saisie la plus récente d’abord, même un élève non reconnu, sans dossier vide', () => {
+  const inconnu = R(802, { Annee_scolaire: '2026-2027', Submission_ID: '6200', Nom_eleve: 'OMEGA', Prenom_eleve: 'Oli', Classe_saisie: '1X', Entreprise_saisie: 'AUTRE', Date_import: '2026-11-05T08:00:00.000Z' });
+  const horsAnnee = R(803, { Annee_scolaire: '2025-2026', Entreprise_saisie: 'ANCIENNE', Date_import: '2025-11-05T08:00:00.000Z' });
+  const s = sources([R(500, { Eleve: 2, Periode: 100, Statut_administratif: 'INFORMATIONS_ENREGISTREES', Entreprise_siret: SIRET, Entreprise_raison_sociale: 'ATELIER', Date_saisie_entreprise: 1793986000 }),
+    R(501, { Eleve: 1, Periode: 100, Statut_administratif: 'A_COMPLETER_ENTREPRISE' })], [ligneSecours(800, 1), inconnu, horsAnnee]);
+  s.annees.push(R(2, { Code: '2025-2026' }));
+  const r = c.EUC_DEV643_journal_('2026-2027', s);
+  assert.deepEqual(J(r.saisies.map(x => x.ligne)), [500, 802, 800]);
+  assert.equal(r.saisies[0].eleve, 'BETA Bob'); assert.equal(r.saisies[0].classe, '1TEST'); assert.equal(r.saisies[0].origine, 'QR code');
+  assert.equal(r.saisies[1].eleve, 'OMEGA Oli'); assert.equal(r.saisies[1].classe, '1X'); assert.equal(r.saisies[1].origine, 'JotForm');
+  assert.equal(r.saisies[2].debut, '2026-11-23'); assert.equal(r.saisies[2].fin, '2026-12-18');
+});
+
 test('une classe inconnue est refusée et les fonctions restent réservées à l’administration', () => {
   const s = sources(); assert.throws(() => c.EUC_DEV643_lignes_(modele(s), s, 999), /Classe introuvable/);
   const code = read('apps-script/EUC_DEV643_Saisies.js');
-  for (const f of ['EUC_DEV643_afficher(e)', 'EUC_DEV643_classes(annee)', 'EUC_DEV643_saisies(annee, classeId)'])
+  for (const f of ['EUC_DEV643_afficher(e)', 'EUC_DEV643_classes(annee)', 'EUC_DEV643_saisies(annee, classeId)', 'EUC_DEV643_journal(annee)'])
     assert.ok(code.slice(code.indexOf('function ' + f)).split('\n')[1].includes('EUC_SUIVI2_exigerAdmin_()'), f);
   assert.doesNotMatch(code, /'(?:post|patch|put|delete)'/i);
 });
@@ -98,6 +122,7 @@ test('la page est branchée et respecte le contrat du bouton', () => {
   assert.ok(read('scripts/pfmp-release-config.json').includes('"page": "saisies-conventions-pfmp"'));
   assert.ok(read('apps-script/Admin_PFMP.html').includes('?page=saisies-conventions-pfmp">Contrôle des saisies'));
   assert.ok(page.includes("$('lancer').disabled=on") && page.includes('class="spin"') && page.includes('Lecture des saisies…'));
+  assert.ok(page.includes('Toutes les saisies par date') && page.includes("$('journal').disabled=on") && page.includes("occupe(false,'journal')") && page.includes('Aucune saisie à afficher'));
   assert.ok(page.includes('withFailureHandler') && page.includes('Pas de réponse après 2 minutes'));
   assert.ok(page.includes('Aucune saisie enregistrée') && page.includes('Aucun élève à afficher'));
 });

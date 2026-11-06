@@ -50,15 +50,17 @@ th{color:var(--gris)}
       <label for="classe">Classe</label><select id="classe" disabled><option value="">Chargement…</option></select>
       <label><input type="checkbox" id="problemes"> Seulement les problèmes</label>
       <button id="lancer" type="button" disabled><span class="spin"></span><span id="lancerTexte">Afficher</span></button>
+      <button id="journal" type="button"><span class="spin"></span><span id="journalTexte">Toutes les saisies par date</span></button>
       <span id="message" class="message" role="status" aria-live="polite"></span>
     </div>
   </section>
+  <section id="filtreJournal" hidden><div class="ligne"><label for="cherche">Rechercher</label><input id="cherche" type="search" placeholder="Élève, classe, entreprise, tuteur…" style="font:14px Arial;padding:7px 10px;border:1px solid var(--bord);border-radius:7px;min-width:260px"><span id="compte" class="note"></span></div></section>
   <section id="resume" hidden></section>
   <div id="resultat"></div>
 </main>
 <script>
 (function(){
-  var $=function(id){return document.getElementById(id);},DONNEES=null,ANNEE=<?!= JSON.stringify(annee || '') ?>,CLASSE=<?!= JSON.stringify(classe || 0) ?>,DELAI=120000;
+  var $=function(id){return document.getElementById(id);},DONNEES=null,JOURNAL=null,ANNEE=<?!= JSON.stringify(annee || '') ?>,CLASSE=<?!= JSON.stringify(classe || 0) ?>,DELAI=120000;
   var LIBELLES={OK:'Complet',NON_AFFICHE:'Saisi mais non affiché',NON_SAISI:'Jamais saisi',NON_COMPTEE:'Saisie non comptée',AUCUNE:'Rien de saisi',AUTRE:'Apprenti'};
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function dfr(d){return d?String(d).split('-').reverse().join('/'):'';}
@@ -69,7 +71,7 @@ th{color:var(--gris)}
     var run=google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);});
     run[nom].apply(run,args);
   }
-  function occupe(on){$('lancer').disabled=on||!$('classe').value;$('lancer').classList.toggle('busy',on);$('lancerTexte').textContent=on?'Lecture des saisies…':'Afficher';$('annee').disabled=on;$('classe').disabled=on;}
+  function occupe(on,id){id=id||'lancer';$('lancer').disabled=on||!$('classe').value;$('journal').disabled=on;$(id).classList.toggle('busy',on);$('lancerTexte').textContent=on&&id==='lancer'?'Lecture des saisies…':'Afficher';$('journalTexte').textContent=on&&id==='journal'?'Lecture des saisies…':'Toutes les saisies par date';$('annee').disabled=on;$('classe').disabled=on;}
   function chargerClasses(){
     $('classe').disabled=true;$('lancer').disabled=true;$('classe').innerHTML='<option value="">Chargement…</option>';message('');
     appel('EUC_DEV643_classes',[$('annee').value],function(r){
@@ -101,9 +103,21 @@ th{color:var(--gris)}
     var l=$('problemes').checked?r.eleves.filter(probleme):r.eleves;
     $('resultat').innerHTML=l.length?l.map(function(e){return '<section><h2>'+esc(e.libelle)+'</h2>'+e.periodes.map(periode).join('')+saisies(e.saisies)+'</section>';}).join(''):'<section class="note">Aucun élève à afficher.</section>';
   }
+  function heure(ms){return ms?new Date(ms).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'date inconnue';}
+  function afficherJournal(){
+    var q=$('cherche').value.trim().toLowerCase(),l=(JOURNAL||[]).filter(function(s){return !q||JSON.stringify(s).toLowerCase().indexOf(q)>=0;});
+    $('compte').textContent=l.length+' saisie(s) sur '+JOURNAL.length+', la plus récente d’abord.';
+    $('resultat').innerHTML=l.length?'<section><div class="table"><table><thead><tr><th>Date</th><th>Élève</th><th>Origine et statut</th><th>Stage</th><th>Entreprise</th><th>Responsable</th><th>Tuteur</th><th>Champs vides</th></tr></thead><tbody>'+l.map(function(s){
+      return '<tr><td>'+esc(heure(s.ms))+'</td><td><b>'+esc(s.eleve)+'</b><br><span class="note">'+esc(s.classe)+'</span></td><td><b>'+esc(s.origine)+'</b><br><span class="note">'+esc(s.statut)+'<br>'+esc(s.table)+' · ligne '+esc(s.ligne)+(s.numero?'<br>'+esc(s.numero):'')+'</span></td><td>'+dfr(s.debut)+(s.fin?' → '+dfr(s.fin):'')+'</td><td>'+esc(s.entreprise||'—')+(s.siret?'<br><span class="note">'+esc(s.siret)+'</span>':'')+'</td><td>'+personne(s.responsable)+'</td><td>'+(s.tuteurEstResponsable?'<span class="note">Le tuteur est le responsable</span><br>':'')+personne(s.tuteur)+'</td><td>'+(s.manques.length?'<span class="manque">'+esc(s.manques.join(', '))+'</span>':'Aucun')+'</td></tr>';
+    }).join('')+'</tbody></table></div></section>':'<section class="note">Aucune saisie à afficher.</section>';
+  }
+  function journal(){
+    occupe(true,'journal');message('');DONNEES=null;JOURNAL=null;$('resume').hidden=true;$('filtreJournal').hidden=true;$('resultat').innerHTML='';
+    appel('EUC_DEV643_journal',[$('annee').value],function(r){occupe(false,'journal');JOURNAL=r.saisies;$('filtreJournal').hidden=false;afficherJournal();},function(e){occupe(false,'journal');message(e&&e.message||'Lecture impossible.',true);});
+  }
   function lancer(){
     if(!$('classe').value)return;
-    occupe(true);message('');DONNEES=null;$('resume').hidden=true;$('resultat').innerHTML='';
+    occupe(true);message('');DONNEES=null;JOURNAL=null;$('filtreJournal').hidden=true;$('resume').hidden=true;$('resultat').innerHTML='';
     appel('EUC_DEV643_saisies',[$('annee').value,Number($('classe').value)],function(r){occupe(false);DONNEES=r;afficher();},function(e){occupe(false);message(e&&e.message||'Lecture impossible.',true);});
   }
   var now=new Date(),d=now.getMonth()>=7?now.getFullYear():now.getFullYear()-1;
@@ -112,6 +126,8 @@ th{color:var(--gris)}
   $('annee').onchange=chargerClasses;
   $('classe').onchange=function(){$('lancer').disabled=!this.value;};
   $('lancer').onclick=lancer;
+  $('journal').onclick=journal;
+  $('cherche').oninput=afficherJournal;
   $('problemes').onchange=afficher;
   chargerClasses();
 })();
