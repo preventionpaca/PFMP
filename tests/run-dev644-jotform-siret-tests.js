@@ -22,6 +22,16 @@ test('l’ancien formulaire « N° SIRET » reste lu ; une entreprise de Monaco 
   assert.equal(mc.SIRET_normalise, '');
 });
 
+test('les dates françaises de JotForm deviennent AAAA-MM-JJ, sans décalage d’un jour', () => {
+  const d = c.EUC_V160_dateIso_;
+  assert.equal(d('nov. 23, 2026'), '2026-11-23'); assert.equal(d('déc. 18, 2026'), '2026-12-18'); assert.equal(d('janv. 4, 2027'), '2027-01-04');
+  assert.equal(d('févr. 19, 2027'), '2027-02-19'); assert.equal(d('juil. 7, 2027'), '2027-07-07'); assert.equal(d('août 30, 2027'), '2027-08-30');
+  assert.equal(d('Nov. 2, 2026'), '2026-11-02'); assert.equal(d('23 novembre 2026'), '2026-11-23'); assert.equal(d('23/11/2026'), '2026-11-23');
+  assert.equal(d('2026-11-23'), '2026-11-23'); assert.equal(d(''), ''); assert.equal(d('bientôt'), 'bientôt');
+  const row = c.EUC_V160_mapCsv_(ligne({}));
+  assert.equal(row.Date_debut_brut, '2026-11-23'); assert.equal(row.Date_fin_brut, '2026-12-18');
+});
+
 test('le mapping n’envoie que des colonnes déjà présentes dans le tampon', () => {
   const keys = Object.keys(c.EUC_V160_mapCsv_(ligne({}))).sort();
   assert.ok(!keys.some(k => /NIS|Pays/.test(k)), keys.join(','));

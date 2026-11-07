@@ -220,6 +220,23 @@ function EUC_V160_csvRows_(csvText){
  * rapprochement DEV331 qui le recopiait après coup. */
 var EUC_V160_COLONNES_SIRET_=['N° SIRET','N° SIRET (France)','SIRET France','SIRET'];
 
+/* DEV644 : JotForm exporte les dates en français (« nov. 23, 2026 », « déc. 18, 2026 »),
+ * que new Date ne lit pas toujours et décale d'un jour (minuit local en UTC).
+ * Conversion directe en AAAA-MM-JJ ; une date non reconnue reste telle quelle. */
+var EUC_V160_MOIS_={JAN:1,JANV:1,JANVIER:1,JANUARY:1,FEB:2,FEV:2,FEVR:2,FEVRIER:2,FEBRUARY:2,MAR:3,MARS:3,MARCH:3,APR:4,AVR:4,AVRIL:4,APRIL:4,
+  MAI:5,MAY:5,JUN:6,JUIN:6,JUNE:6,JUL:7,JUIL:7,JUILLET:7,JULY:7,AUG:8,AOU:8,AOUT:8,AUGUST:8,SEP:9,SEPT:9,SEPTEMBRE:9,SEPTEMBER:9,
+  OCT:10,OCTOBRE:10,OCTOBER:10,NOV:11,NOVEMBRE:11,NOVEMBER:11,DEC:12,DECEMBRE:12,DECEMBER:12};
+function EUC_V160_dateIso_(v){
+  var s=EUC_V160_txt_(v),m,p=function(n){return ('0'+n).slice(-2);};
+  if(!s)return '';
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return m[1]+'-'+m[2]+'-'+m[3];
+  if((m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)))return m[3]+'-'+p(m[2])+'-'+p(m[1]);
+  var t=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\./g,' ').replace(/,/g,' ').replace(/\s+/g,' ').trim();
+  if((m=t.match(/^([A-Z]+) (\d{1,2}) (\d{4})$/))&&EUC_V160_MOIS_[m[1]])return m[3]+'-'+p(EUC_V160_MOIS_[m[1]])+'-'+p(m[2]);
+  if((m=t.match(/^(\d{1,2}) ([A-Z]+) (\d{4})$/))&&EUC_V160_MOIS_[m[2]])return m[3]+'-'+p(EUC_V160_MOIS_[m[2]])+'-'+p(m[1]);
+  return s;
+}
+
 function EUC_V160_mapCsv_(r){
   var siretSaisi=EUC_V160_get_(r,EUC_V160_COLONNES_SIRET_);
   var classe=EUC_V160_txt_(r['Classe BAC PRO']||r['Classe CAP']||r['Classe BTS']);
@@ -228,8 +245,8 @@ function EUC_V160_mapCsv_(r){
     Annee_scolaire:EUC_V160_txt_(r['Année scolaire']),
     Numero_convention_JotForm:EUC_V160_txt_(r['n° de convention']),
     Periode_numero:EUC_V160_txt_(r['Période n°']),
-    Date_debut_brut:EUC_V160_txt_(r['Date de début']),
-    Date_fin_brut:EUC_V160_txt_(r['Date de fin']),
+    Date_debut_brut:EUC_V160_dateIso_(r['Date de début']),
+    Date_fin_brut:EUC_V160_dateIso_(r['Date de fin']),
     Classe_saisie:classe,
     Diplome:EUC_V160_txt_(r['Diplôme']),
     Nom_eleve:EUC_V160_txt_(r['Nom']),

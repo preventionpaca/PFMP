@@ -3,6 +3,7 @@
 ## Mise à jour du 7 novembre 2026 — DEV644 : SIRET de l'import JotForm
 
 - Le formulaire JotForm nomme la colonne « N° SIRET (France) » depuis l'ajout de Monaco. `EUC_V160_mapCsv_` ne lisait que « N° SIRET » : chaque import écrivait un SIRET vide. Seul l'adaptateur DEV331 du socle (`EUC_DEV331_patchNewJotForm_`, rapprochement après coup) le recopiait. Sur le vert, il ne l'a pas fait pour l'export du 6 novembre (ligne GALBI, sans doublon, numéro de soumission intact, sans SIRET). La cause exacte de son échec n'est pas vue. Correction : le SIRET est lu directement (`EUC_V160_COLONNES_SIRET_`), sans dépendre de DEV331.
+- Dates : l'export JotForm est passé en français (« nov. 23, 2026 », « déc. 18, 2026 »). `EUC_DEV307_dateISO_` du socle s'en remettait à `new Date` : « déc. » illisible, et « nov. 23 » lu au 22 (minuit local en UTC). Le précontrôle d'import bloquait donc tout le lot (« Dates PFMP absentes ou illisibles »). `EUC_V160_dateIso_` écrit désormais `Date_debut_brut` / `Date_fin_brut` en AAAA-MM-JJ dès l'analyse du fichier ; le texte d'origine reste dans `Raw_JSON`.
 - Point connu, non modifié : réimporter un CSV recalcule `Decision` des lignes existantes (`A_VALIDER` / `A_CONTROLER`).
 
 ## Mise à jour du 6 novembre 2026 — DEV643 : coordonnées du formulaire de secours et contrôle des saisies
