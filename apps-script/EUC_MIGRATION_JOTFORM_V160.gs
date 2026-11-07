@@ -215,7 +215,13 @@ function EUC_V160_csvRows_(csvText){
   });
 }
 
+/* DEV644 : le formulaire JotForm nomme la colonne « N° SIRET (France) » depuis
+ * l'ajout de Monaco. Le SIRET est lu ici directement, sans dépendre du
+ * rapprochement DEV331 qui le recopiait après coup. */
+var EUC_V160_COLONNES_SIRET_=['N° SIRET','N° SIRET (France)','SIRET France','SIRET'];
+
 function EUC_V160_mapCsv_(r){
+  var siretSaisi=EUC_V160_get_(r,EUC_V160_COLONNES_SIRET_);
   var classe=EUC_V160_txt_(r['Classe BAC PRO']||r['Classe CAP']||r['Classe BTS']);
   return {
     Submission_ID:EUC_V160_txt_(r['Submission ID']),
@@ -231,8 +237,8 @@ function EUC_V160_mapCsv_(r){
     Date_naissance:EUC_V160_txt_(r['Date de naissance']),
     Email_eleve:EUC_V160_txt_(r['Email']),
     Entreprise_saisie:EUC_V160_txt_(r['Nom entreprise']),
-    SIRET_brut:EUC_V160_txt_(r['N° SIRET']),
-    SIRET_normalise:EUC_V160_digits_(r['N° SIRET']),
+    SIRET_brut:EUC_V160_txt_(siretSaisi),
+    SIRET_normalise:EUC_V160_digits_(siretSaisi),
     Adresse_entreprise:EUC_V160_txt_(r['Adresse entreprise']),
     Complement_adresse_entreprise:EUC_V160_txt_(r['Complément adresse entreprise']),
     CP_entreprise:EUC_V160_txt_(r['Code postal entreprise']),

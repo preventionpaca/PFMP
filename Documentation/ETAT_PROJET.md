@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 7 novembre 2026 — DEV644 : SIRET de l'import JotForm
+
+- Le formulaire JotForm nomme la colonne « N° SIRET (France) » depuis l'ajout de Monaco. `EUC_V160_mapCsv_` ne lisait que « N° SIRET » : chaque import écrivait un SIRET vide. Seul l'adaptateur DEV331 du socle (`EUC_DEV331_patchNewJotForm_`, rapprochement après coup) le recopiait. Sur le vert, il ne l'a pas fait pour l'export du 6 novembre (ligne GALBI, sans doublon, numéro de soumission intact, sans SIRET). La cause exacte de son échec n'est pas vue. Correction : le SIRET est lu directement (`EUC_V160_COLONNES_SIRET_`), sans dépendre de DEV331.
+- Point connu, non modifié : réimporter un CSV recalcule `Decision` des lignes existantes (`A_VALIDER` / `A_CONTROLER`).
+
 ## Mise à jour du 6 novembre 2026 — DEV643 : coordonnées du formulaire de secours et contrôle des saisies
 
 - Adresse du livret : `https://livret.lycee-les-eucalyptus.org/` (clé `livretek` de la table, dépôt `preventionpaca/livret-eucalyptus`, renommé depuis `livretek-eucalyptus`). Le nom `livretek.lycee-les-eucalyptus.org` reste bloqué à `authorization_created` sans cause visible, alors que `livret` a obtenu son certificat en quelques minutes sur le même compte, domaine et DNS. `livretek.loucodi.fr` reste actif.
