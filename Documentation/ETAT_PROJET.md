@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 novembre 2026 — DEV648 : import JotForm, lignes bloquées
+
+- Le précontrôle de `EUC_DEV466_importSelection` reste tout ou rien (aucune écriture si une ligne est bloquée), mais le message liste désormais toutes les lignes bloquées (et plus seulement 5) avec un marqueur `[[BLOQUEES:id,…]]` masqué à l'affichage.
+- La page Migration JotForm propose alors, après confirmation, de retirer ces lignes de la sélection et de relancer l'import des autres (nouveau précontrôle complet, nouvelle confirmation). Les lignes retirées restent dans le tableau.
+- Tests : `tests/run-dev648-import-bloquees-tests.js` (3).
+
 ## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp
 
 - Dépôt GitHub Pages `preventionpaca/enregistrer-pfmp-eucalyptus` (hors de ce dépôt) : https://enregistrer-pfmp.lycee-les-eucalyptus.org affiche dans un cadre, sans le bandeau Google Apps Script, les pages élèves de la Web App publique verte. Sans paramètre : formulaire « Enregistrer ma PFMP ». `?page=pfmp&rid=…` (ou `token`, `resume`, `q`, `k`, `aid`, `eid`, `sig`) : page du QR code. Toute autre page ouvre le formulaire (liste fermée). Lien direct proposé après 15 s de chargement.

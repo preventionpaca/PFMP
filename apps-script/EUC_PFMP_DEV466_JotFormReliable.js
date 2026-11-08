@@ -290,9 +290,16 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
     }catch(e){errors.push({id:Number(row.id)||0,eleve:label,erreur:EUC_DEV466_txt_(e&&e.message||e)});}
   });
   if(errors.length){
-    throw new Error('PRÉCONTRÔLE BLOQUÉ — aucune écriture effectuée. '+errors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
+    throw new Error(EUC_DEV648_messageBlocage_(errors,selected.length));
   }
   return {items:items,accessesBefore:accesses.length};
+}
+/* DEV648 : toutes les lignes bloquées (et plus seulement 5), avec leurs identifiants pour que la page
+ * propose de les retirer de la sélection et d'importer les autres. L'import reste tout ou rien. */
+function EUC_DEV648_messageBlocage_(errors,total){
+  return 'PRÉCONTRÔLE BLOQUÉ — aucune écriture effectuée. '+errors.length+' ligne(s) bloquée(s) sur '+total+' :\n'+
+    errors.map(function(e){return '• '+e.eleve+' : '+e.erreur;}).join('\n')+
+    '\n[[BLOQUEES:'+errors.map(function(e){return Number(e.id)||0;}).filter(Boolean).join(',')+']]';
 }
 function EUC_DEV466_readback_(items){
   var rows=EUC_DEV307_flatRecords_(EUC_DEV307_ACCESS_TABLE_),byKey={};

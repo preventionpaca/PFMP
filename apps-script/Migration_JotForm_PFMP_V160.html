@@ -4061,9 +4061,18 @@ refresh();
           clearInterval(importTicker);
           btn.disabled=false;
           btn.innerHTML=previous;
-          var message='Erreur import après '+Math.round((Date.now()-importStarted)/1000)+' s : '+String(e&&e.message||e);
+          var brut=String(e&&e.message||e),m=/\[\[BLOQUEES:([\d,]*)\]\]/.exec(brut);
+          var message='Erreur import après '+Math.round((Date.now()-importStarted)/1000)+' s : '+brut.replace(/\s*\[\[BLOQUEES:[\d,]*\]\]/,'');
           if(typeof show==='function')show(message,'err');
-          alert(message);
+          /* DEV648 : proposer d'écarter les lignes bloquées et d'importer les autres (nouveau précontrôle complet). */
+          var bloquees=m?m[1].split(',').map(Number).filter(Boolean):[],restantes=ids.filter(function(id){return bloquees.indexOf(Number(id))<0;});
+          if(bloquees.length&&restantes.length&&confirm(message+'\n\nRetirer ces '+bloquees.length+' ligne(s) de la sélection et importer les '+restantes.length+' autre(s) ?\nLes lignes retirées restent dans le tableau, à corriger puis importer plus tard.')){
+            bloquees.forEach(function(id){chosen.delete(id);chosen.delete(String(id));});
+            if(typeof refresh==='function')refresh();
+            setTimeout(function(){btn.click();},30);
+          }else{
+            alert(message);
+          }
         })
         .EUC_DEV466_importSelection({
           manualSelection:true,
