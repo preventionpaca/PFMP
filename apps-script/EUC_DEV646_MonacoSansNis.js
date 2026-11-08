@@ -22,7 +22,7 @@ function EUC_DEV646_monaco_(r) {
 }
 function EUC_DEV646_fiche_(r) {
   return { id: Number(r.id) || 0, nis: EUC_DEV646_t_(r.NIS), interne: EUC_DEV646_interne_(r.NIS), nom: EUC_DEV646_t_(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: EUC_DEV646_t_(r.Enseigne),
-    adresse: EUC_DEV646_t_(r.Adresse || r.Adresse_complete), cp: EUC_DEV646_t_(r.Code_postal), ville: EUC_DEV646_t_(r.Commune) || 'Monaco', telephone: EUC_DEV646_t_(r.Telephone), email: EUC_DEV646_t_(r.Email) };
+    adresse: EUC_DEV646_t_(r.Numero_voie || r.Adresse || r.Adresse_complete), cp: EUC_DEV646_t_(r.Code_postal), ville: EUC_DEV646_t_(r.Commune) || 'Monaco', telephone: EUC_DEV646_t_(r.Telephone), email: EUC_DEV646_t_(r.Courriel || r.Email) };
 }
 
 /* Calcul pur : entreprises de Monaco ayant un NIS (réel ou interne) dont le nom contient tous les mots cherchés. */
@@ -77,8 +77,17 @@ function EUC_DEV646_preparer_(rows, d, numeroInterne) {
     if (nis && EUC_DEV646_nis_(r.NIS) === EUC_DEV646_nis_(nis)) throw new Error('Ce NIS existe déjà : ' + EUC_DEV646_t_(r.Raison_sociale) + '.');
     if (EUC_DEV646_n_(r.Raison_sociale || r.Nom) === EUC_DEV646_n_(nom)) throw new Error('Une entreprise de Monaco porte déjà ce nom (' + (EUC_DEV646_t_(r.NIS) || 'sans NIS') + ') : donnez-lui un numéro interne depuis la liste.');
   });
-  return { NIS: nis || numeroInterne, Raison_sociale: nom, Enseigne: EUC_DEV646_t_(d.enseigne), Adresse: adresse, Code_postal: EUC_DEV646_t_(d.cp) || '98000', Commune: ville, Pays: 'Monaco',
-    Telephone: EUC_DEV646_t_(d.telephone), Email: EUC_DEV646_t_(d.email).toLowerCase(), Statut_validation: 'VALIDEE', Source_creation: nis ? 'ADMIN_DEV646' : 'ADMIN_DEV646_NUMERO_INTERNE' };
+  var cp = EUC_DEV646_t_(d.cp) || '98000';
+  return Object.assign({ NIS: nis || numeroInterne, Raison_sociale: nom, Enseigne: EUC_DEV646_t_(d.enseigne), Pays: 'Monaco', Statut_validation: 'VALIDEE', Source_creation: nis ? 'ADMIN_DEV646' : 'ADMIN_DEV646_NUMERO_INTERNE' },
+    EUC_DEV646_coordonnees_({ adresse: adresse, cp: cp, ville: ville, telephone: d.telephone, email: d.email }));
+}
+
+/* Calcul pur : coordonnées dans les colonnes réelles de EUC_ENTREPRISES (Numero_voie, Adresse_complete, Courriel). */
+function EUC_DEV646_coordonnees_(d) {
+  var adresse = EUC_DEV646_t_(d.adresse), cp = EUC_DEV646_t_(d.cp) || '98000', ville = EUC_DEV646_t_(d.ville) || 'Monaco', email = EUC_DEV646_t_(d.email).toLowerCase();
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Courriel invalide.');
+  return { Numero_voie: adresse, Code_postal: cp, Commune: ville, Adresse_complete: [adresse, [cp, ville].join(' ')].filter(Boolean).join(', '),
+    Telephone: EUC_DEV646_t_(d.telephone), Courriel: email };
 }
 
 function EUC_DEV646_colonnes_() {
@@ -94,6 +103,22 @@ function EUC_DEV646_creerMonaco(d) {
     var c = EUC_DEV646_colonnes_(), rows = EUC_IMPORT_lireRecords_(c.table), f = c.garder(EUC_DEV646_preparer_(rows, d, EUC_DEV646_numeroSuivant_(rows)));
     var r = EUC_ENT_grist('post', '/tables/' + encodeURIComponent(c.table) + '/records', { records: [{ fields: f }] });
     return { ok: true, id: Number(r && r.records && r.records[0] && r.records[0].id) || 0, nis: f.NIS, nom: f.Raison_sociale };
+  } finally { lock.releaseLock(); }
+}
+
+/* Compléter ou corriger l'adresse, le téléphone et le courriel d'une entreprise de Monaco existante. */
+function EUC_DEV646_modifierCoordonnees(d) {
+  EUC_IMPORT_exigerAdminTexte_();
+  d = d || {}; var id = Number(d.id); if (!id) throw new Error('Entreprise introuvable.');
+  if (!EUC_DEV646_t_(d.adresse)) throw new Error('L’adresse est obligatoire.');
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Une autre modification est en cours : réessayez dans un instant.');
+  try {
+    var c = EUC_DEV646_colonnes_(), r = EUC_IMPORT_lireRecords_(c.table).filter(function(x) { return Number(x.id) === id; })[0];
+    if (!r || !EUC_DEV646_monaco_(r)) throw new Error('Entreprise de Monaco introuvable.');
+    var f = EUC_DEV646_coordonnees_(d), garde = c.garder(f);
+    ['Telephone', 'Courriel'].forEach(function(k) { if (!f[k] && EUC_DEV646_t_(r[k]) && Object.prototype.hasOwnProperty.call(r, k)) garde[k] = ''; });
+    EUC_ENT_grist('patch', '/tables/' + encodeURIComponent(c.table) + '/records', { records: [{ id: id, fields: garde }] });
+    return { ok: true, id: id };
   } finally { lock.releaseLock(); }
 }
 

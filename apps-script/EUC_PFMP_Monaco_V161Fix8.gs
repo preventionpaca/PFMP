@@ -35,7 +35,7 @@ function EUC_V161_rechercherEntrepriseMonaco(nis){
     rci:String(hit.RCI||'').trim(),
     nom:String(hit.Raison_sociale||hit.Nom||hit.Entreprise||'').trim(),
     enseigne:String(hit.Enseigne||'').trim(),
-    adresse:String(hit.Adresse||hit.Adresse_complete||'').trim(),
+    adresse:String(hit.Numero_voie||hit.Adresse||hit.Adresse_complete||'').trim(),
     complement:String(hit.Complement_adresse||hit.Complement||'').trim(),
     cp:String(hit.Code_postal||'').trim(),
     ville:String(hit.Commune||'Monaco').trim(),
@@ -51,7 +51,7 @@ function EUC_V161_enregistrerEntrepriseMonacoSiNouvelle_(d){
   var table=EUC_V161F8_assurerColonnesMonaco_();
   var cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(table)+'/columns').columns||[];var have={};cols.forEach(function(c){have[c.id]=true;});
   var fields={};function put(k,v){if(have[k]&&v!==undefined&&v!==null)fields[k]=v;}
-  put('NIS',nis);put('RCI',EUC_V161F8_txt_(d.entrepriseRci));put('Raison_sociale',EUC_V161F8_txt_(d.entrepriseRaisonSociale));put('Enseigne',EUC_V161F8_txt_(d.entrepriseEnseigne));put('Adresse',EUC_V161F8_txt_(d.entrepriseAdresse));put('Complement_adresse',EUC_V161F8_txt_(d.entrepriseComplement));put('Code_postal',EUC_V161F8_txt_(d.entrepriseCodePostal));put('Commune',EUC_V161F8_txt_(d.entrepriseCommune)||'Monaco');put('Pays','Monaco');put('Statut_validation','A_VALIDER');put('Source_creation','QR_PFMP');
+  put('NIS',nis);put('RCI',EUC_V161F8_txt_(d.entrepriseRci));put('Raison_sociale',EUC_V161F8_txt_(d.entrepriseRaisonSociale));put('Enseigne',EUC_V161F8_txt_(d.entrepriseEnseigne));put('Adresse',EUC_V161F8_txt_(d.entrepriseAdresse));put('Numero_voie',EUC_V161F8_txt_(d.entrepriseAdresse));put('Adresse_complete',[EUC_V161F8_txt_(d.entrepriseAdresse),[EUC_V161F8_txt_(d.entrepriseCodePostal),EUC_V161F8_txt_(d.entrepriseCommune)||'Monaco'].join(' ').trim()].filter(Boolean).join(', '));put('Complement_adresse',EUC_V161F8_txt_(d.entrepriseComplement));put('Code_postal',EUC_V161F8_txt_(d.entrepriseCodePostal));put('Commune',EUC_V161F8_txt_(d.entrepriseCommune)||'Monaco');put('Pays','Monaco');put('Statut_validation','A_VALIDER');put('Source_creation','QR_PFMP');
   var r=EUC_ENT_grist('post','/tables/'+encodeURIComponent(table)+'/records',{records:[{fields:fields}]});
   var id=0;try{id=Number(r.records&&r.records[0]&&r.records[0].id)||0;}catch(e){}
   return {created:true,id:id};

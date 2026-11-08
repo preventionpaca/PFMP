@@ -160,4 +160,33 @@ test('branchement : route, lien d’administration, contrôle de release', () =>
   assert.match(page, /Aucune entreprise de Monaco à afficher/);
 });
 
+test('coordonnées écrites dans les colonnes réelles de EUC_ENTREPRISES (Numero_voie, Adresse_complete, Courriel)', () => {
+  const f = J(m.EUC_DEV646_preparer_(ENT, { nom: 'Café de Paris', adresse: 'Place du Casino', telephone: '+377 98 06 76 23', email: 'Contact@Exemple.mc' }, 'EUC-MC-0002'));
+  assert.equal(f.Numero_voie, 'Place du Casino'); assert.equal(f.Adresse_complete, 'Place du Casino, 98000 Monaco'); assert.equal(f.Courriel, 'contact@exemple.mc'); assert.equal(f.Telephone, '+377 98 06 76 23');
+  assert.ok(!('Adresse' in f) && !('Email' in f), 'colonnes inexistantes');
+  assert.throws(() => m.EUC_DEV646_coordonnees_({ adresse: 'X', email: 'pas-un-courriel' }), /Courriel invalide/);
+  assert.equal(m.EUC_DEV646_fiche_({ id: 9, Numero_voie: '12 avenue des Spélugues', Courriel: 'a@b.mc', NIS: 'EUC-MC-0001' }).adresse, '12 avenue des Spélugues');
+  assert.equal(m.EUC_DEV646_fiche_({ id: 9, Courriel: 'a@b.mc' }).email, 'a@b.mc');
+  const v = read('apps-script/EUC_PFMP_Monaco_V161Fix8.gs');
+  assert.match(v, /put\('Numero_voie',EUC_V161F8_txt_\(d\.entrepriseAdresse\)\)/); assert.match(v, /put\('Adresse_complete',/);
+});
+
+test('modifier les coordonnées : réservé à l’administration, adresse obligatoire, bouton bloqué avec délai', () => {
+  const s = read('apps-script/EUC_DEV646_MonacoSansNis.js'), page = read('apps-script/Entreprises_Monaco_DEV646.html');
+  assert.match(s, /function EUC_DEV646_modifierCoordonnees\(d\) \{\n  EUC_IMPORT_exigerAdminTexte_\(\);/);
+  const calls = [], k = Object.assign({}, m);
+  vm.createContext(k); vm.runInContext(s, k);
+  k.EUC_IMPORT_exigerAdminTexte_ = () => ({}); k.LockService = { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) };
+  k.EUC_V161F8_assurerColonnesMonaco_ = () => 'EUC_ENTREPRISES';
+  k.EUC_IMPORT_lireRecords_ = () => [{ id: 7, Raison_sociale: 'Fairmont Monte Carlo', Pays: 'Monaco', NIS: 'EUC-MC-0001', Telephone: '01', Courriel: '' }, { id: 8, Raison_sociale: 'X', Pays: 'France' }];
+  k.EUC_ENT_grist = (meth, path, body) => { if (/columns$/.test(path)) return { columns: ['Numero_voie', 'Code_postal', 'Commune', 'Adresse_complete', 'Telephone', 'Courriel'].map(id => ({ id })) }; calls.push(J(body)); return {}; };
+  assert.throws(() => k.EUC_DEV646_modifierCoordonnees({ id: 7, adresse: '' }), /adresse est obligatoire/);
+  assert.throws(() => k.EUC_DEV646_modifierCoordonnees({ id: 8, adresse: 'Y' }), /Monaco introuvable/);
+  k.EUC_DEV646_modifierCoordonnees({ id: 7, adresse: '12 avenue des Spélugues', email: 'resa@fairmont.mc' });
+  assert.deepEqual(calls[0], { records: [{ id: 7, fields: { Numero_voie: '12 avenue des Spélugues', Code_postal: '98000', Commune: 'Monaco', Adresse_complete: '12 avenue des Spélugues, 98000 Monaco', Courriel: 'resa@fairmont.mc', Telephone: '' } }] });
+  assert.match(page, /appel\('EUC_DEV646_modifierCoordonnees'/); assert.match(page, /occupe\(mb,true,'Enregistrement…'\)/);
+  assert.equal((page.match(/occupe\(mb,false\)/g) || []).length, 2, 'succès et erreur rendent la main (délai : appel)');
+  assert.match(page, /adresse à compléter/);
+});
+
 console.log(n + ' tests DEV646 génération et Monaco réussis');

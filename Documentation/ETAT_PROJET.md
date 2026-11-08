@@ -9,6 +9,8 @@
 - Choix 2 du formulaire : « Ma convention n’a pas de QR code, ou pas de code écrit sous le QR code » (premières conventions imprimées sans code sous le QR).
 - En-tête du formulaire : courriel du bureau assemblé à l'affichage (absent du code de la page, contre les robots) ; ligne « Pour toute question, passe au bureau des formations et des entreprises, en G205. »
 - Tests : `tests/run-dev647-enveloppe-eleves-tests.js` (4).
+- Entreprises de Monaco : l'adresse était écrite dans une colonne `Adresse` absente de `EUC_ENTREPRISES` (donc perdue), le courriel dans `Email`. Désormais `Numero_voie`, `Adresse_complete`, `Courriel` (page DEV646 et création depuis le QR V161F8). Bouton « Modifier les coordonnées » (EUC_DEV646_modifierCoordonnees, admin) pour compléter les fiches existantes.
+- 8 novembre : Fairmont Monte Carlo créée à la demande de l'utilisateur (EUC-MC-0001, 12 avenue des Spélugues, 98000 Monaco).
 
 ## Mise à jour du 8 novembre 2026 — DEV646 : génération de classe sans doublon, Monaco sans NIS, renvoi vers le formulaire en ligne
 
