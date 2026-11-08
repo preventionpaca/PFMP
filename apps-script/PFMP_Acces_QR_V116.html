@@ -2037,6 +2037,10 @@ window.EUC_DEV649_nonDiffusible=function(){
   if(!box){box=document.createElement('div');box.id='ndNoteDev649';box.className='nd-note';box.setAttribute('role','status');
     var s=document.getElementById('search');if(s&&s.parentNode)s.parentNode.insertAdjacentElement('afterend',box);}
   box.textContent='SIRET trouvé, mais cette entreprise est « non diffusible » : son nom et son adresse ne sont pas publics. Recopie-les depuis un document de l’entreprise (ou demande-les à ton tuteur). Le bureau G205 vérifiera.';
+  /* DEV650 : le registre de l'INPI publie nom et adresse : lien direct vers la fiche (SIREN = 9 premiers chiffres). */
+  var sir=document.getElementById('siret'),siren=String(sir&&sir.value||'').replace(/\D/g,'').slice(0,9);
+  if(siren.length===9){var pI=document.createElement('p');pI.style.margin='6px 0 0';pI.appendChild(document.createTextNode('Astuce : le nom et l’adresse figurent souvent sur le registre officiel de l’INPI. '));
+    var aI=document.createElement('a');aI.id='ndInpiDev650';aI.href='https://data.inpi.fr/entreprises/'+siren;aI.target='_blank';aI.rel='noopener';aI.textContent='Ouvrir la fiche de l’entreprise sur data.inpi.fr';pI.appendChild(aI);box.appendChild(pI);}
   var st=document.getElementById('siretState');if(st)st.textContent='SIRET trouvé — entreprise non diffusible';
   var f=document.querySelector('[name="entrepriseRaisonSociale"]');if(f)try{f.focus();}catch(e){}
 };

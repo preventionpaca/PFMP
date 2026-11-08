@@ -28,6 +28,13 @@ function EUC_DEV649_lieuTexte_(a) {
 /* Adresse à visiter (calcul pur) : le lieu de stage s'il existe, sinon le siège. */
 function EUC_DEV649_adresseVisite_(lieu, siege) { return EUC_DEV649_t_(lieu) || EUC_DEV649_t_(siege); }
 
+/* DEV650 : entreprise non diffusible : l'annuaire data.gouv (INSEE) masque nom et adresse, mais le registre
+ * national des entreprises (INPI, data.inpi.fr) les publie, sans compte. Le site INPI est protégé contre les robots :
+ * pas d'interrogation automatique, un lien direct vers la fiche (SIREN = 9 premiers chiffres du SIRET). */
+function EUC_DEV649_lienInpi_(id) {
+  var n = String(id == null ? '' : id).replace(/\D/g, '');
+  return n.length === 9 || n.length === 14 ? 'https://data.inpi.fr/entreprises/' + n.slice(0, 9) : '';
+}
 function EUC_DEV649_dateFr_(v) {
   var s = EUC_DEV649_t_(v), m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
   return m ? m[3] + '/' + m[2] + '/' + m[1] : s;
@@ -54,7 +61,8 @@ function EUC_DEV649_recap_(info) {
     ['Responsable dans l’entreprise', [['Nom', resp.nom], ['Fonction', resp.fonction], ['Téléphone', resp.tel], ['Courriel', resp.mail]]],
     ['Tuteur' + (info.tuteurEstResponsable ? ' (le responsable)' : ''), [['Nom', tut.nom], ['Fonction', tut.fonction], ['Téléphone', tut.tel], ['Courriel', tut.mail]]]
   ];
-  var nd = ent.nonDiffusible ? 'Entreprise « non diffusible » à l’INSEE : nom et adresse saisis par l’élève, à vérifier par le bureau.' : '';
+  var nd = ent.nonDiffusible ? 'Entreprise « non diffusible » sur l’annuaire data.gouv (INSEE) : nom et adresse saisis par l’élève, à vérifier sur le registre de l’INPI.' : '';
+  var inpi = ent.nonDiffusible ? EUC_DEV649_lienInpi_(ent.identifiant) : '';
   var g205 = g.requis ? 'À FAIRE : passer au bureau G205 (bureau des formations et des entreprises) pour finaliser la convention' + (T(g.motif) ? ' — ' + T(g.motif) : '') + '.' : '';
   var suite = 'L’original papier de la convention doit être déposé au bureau G205 pour la signature de Monsieur le Proviseur. La PFMP ne peut débuter qu’une fois la convention signée par toutes les parties.';
   /* Texte brut */
@@ -63,7 +71,7 @@ function EUC_DEV649_recap_(info) {
   lignes.push('Numéro d’enregistrement : ' + T(info.numero) + (T(info.source) ? ' (' + T(info.source) + ')' : ''), '');
   if (g205) lignes.push('!!! ' + g205, '');
   if (lieu) lignes.push('!!! LIEU DU STAGE DIFFÉRENT DU SIÈGE — les visites se font à cette adresse : ' + lieu, '');
-  if (nd) lignes.push('!!! ' + nd, '');
+  if (nd) { lignes.push('!!! ' + nd); if (inpi) lignes.push('Fiche INPI : ' + inpi); lignes.push(''); }
   blocs.forEach(function(b) {
     lignes.push('— ' + b[0] + ' —');
     b[1].forEach(function(l) { if (T(l[1])) lignes.push(l[0] + ' : ' + T(l[1])); });
@@ -80,7 +88,7 @@ function EUC_DEV649_recap_(info) {
   html.push('<p style="font-size:16px">Numéro d’enregistrement : <b>' + H(info.numero) + '</b>' + (T(info.source) ? ' <span style="color:#5b6b66">(' + H(info.source) + ')</span>' : '') + '</p>');
   if (g205) html.push(alerte('⚠ ' + g205, '#fde8e8', '#b42318'));
   if (lieu) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px"><div style="font-weight:bold;color:#92400e;text-transform:uppercase">⚠ Lieu du stage différent du siège</div><div style="font-size:16px;font-weight:bold;margin-top:4px">' + H(lieu) + '</div><div style="color:#92400e;margin-top:4px">Les visites du professeur se font à cette adresse. Prendre rendez-vous par téléphone avec le tuteur.</div></div>');
-  if (nd) html.push(alerte('⚠ ' + nd, '#fff7d6', '#d97706'));
+  if (nd) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px;font-weight:bold;color:#3b0d0c">' + H('⚠ ' + nd) + (inpi ? '<div style="margin-top:6px"><a href="' + H(inpi) + '" style="color:#0b5cad">Ouvrir la fiche de l’entreprise sur data.inpi.fr</a></div>' : '') + '</div>');
   blocs.forEach(function(b) {
     var rows = b[1].filter(function(l) { return T(l[1]); }).map(function(l) { return '<tr><td style="padding:4px 10px 4px 0;color:#5b6b66;vertical-align:top;white-space:nowrap">' + H(l[0]) + '</td><td style="padding:4px 0">' + H(l[1]) + '</td></tr>'; });
     if (b[0].indexOf('Entreprise') === 0 && lieu) rows.push('<tr><td style="padding:4px 10px 4px 0;color:#92400e;font-weight:bold;white-space:nowrap">Lieu du stage</td><td style="padding:4px 0;font-weight:bold;color:#92400e">' + H(lieu) + '</td></tr>');
@@ -149,7 +157,7 @@ function EUC_DEV649_ligneTampon_(ligne, ent) {
   if (ent.nonDiffusible) {
     ligne.Entreprise_non_diffusible = true; ligne.Raison_sociale_officielle = ''; ligne.Adresse_officielle = ''; ligne.Entreprise_saisie = ent.enseigne || ent.raisonSociale;
     ligne.Niveau_controle = 'ORANGE'; ligne.Decision = 'A_CONTROLER';
-    ligne.Alertes = [EUC_DEV649_t_(ligne.Alertes), 'Entreprise non diffusible à l’INSEE : nom et adresse saisis par l’élève, à vérifier (justificatif au bureau G205)'].filter(Boolean).join(' · ');
+    ligne.Alertes = [EUC_DEV649_t_(ligne.Alertes), 'Entreprise non diffusible à l’INSEE : nom et adresse saisis par l’élève, à vérifier sur l’INPI' + (EUC_DEV649_lienInpi_(ent.siret) ? ' (' + EUC_DEV649_lienInpi_(ent.siret) + ')' : '') + ' (justificatif au bureau G205)'].filter(Boolean).join(' · ');
   }
   if (ligne.Lieu_stage_adresse || ligne.Entreprise_non_diffusible) try { EUC_DEV649_assurerColonnesTampon_(); } catch (e) {}
   return ligne;

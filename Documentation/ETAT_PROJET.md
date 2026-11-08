@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 novembre 2026 — DEV650 : entreprise non diffusible, vérification sur l'INPI
+
+- Ordre de vérification d'un SIRET : annuaire data.gouv (Recherche d'entreprises, données INSEE) d'abord. S'il répond « non diffusible » (nom et adresse masqués), le registre national des entreprises de l'INPI (data.inpi.fr) publie ces informations, sans compte.
+- data.inpi.fr est protégé contre les robots (Cloudflare, captcha) : pas d'interrogation automatique. `EUC_DEV649_lienInpi_` construit le lien direct `https://data.inpi.fr/entreprises/<SIREN>` (9 premiers chiffres).
+- Lien affiché à l'élève dans les deux entrées (page QR `ndInpiDev650`, formulaire en ligne `ndInpi`), dans le récapitulatif des dépôts (texte et HTML) et dans les alertes de la table d'attente. L'élève saisit toujours le nom et l'adresse ; le bureau les contrôle sur la fiche INPI.
+- Courriels de dépôt : inchangés (envoi par le compte propriétaire du script, copie directe à la ligne « Dépôts » de « Destinataires & envois », adresses dédoublonnées).
+
 ## Mise à jour du 8 novembre 2026 — DEV648 : import JotForm, lignes bloquées
 
 - Le précontrôle de `EUC_DEV466_importSelection` reste tout ou rien (aucune écriture si une ligne est bloquée), mais le message liste désormais toutes les lignes bloquées (et plus seulement 5) avec un marqueur `[[BLOQUEES:id,…]]` masqué à l'affichage.

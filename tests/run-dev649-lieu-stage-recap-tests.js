@@ -134,4 +134,18 @@ test('page QR : bloc lieu de stage facultatif et saisie débloquée pour une ent
   assert.match(q, /window\.EUC_DEV649_nonDiffusible=function\(\)\{[^]*el\.readOnly=false;/);
   assert.ok(q.indexOf('window.EUC_DEV649_nonDiffusible=') < q.indexOf("createHtmlOutputFromFile('Identites_Contacts_DEV602')"));
 });
+test('DEV650 : entreprise non diffusible → lien direct vers la fiche INPI (courriel, import, deux formulaires)', () => {
+  assert.equal(k.EUC_DEV649_lienInpi_('123 456 789 00017'), 'https://data.inpi.fr/entreprises/123456789');
+  assert.equal(k.EUC_DEV649_lienInpi_('123456789'), 'https://data.inpi.fr/entreprises/123456789');
+  assert.equal(k.EUC_DEV649_lienInpi_('MC-1234'), ''); assert.equal(k.EUC_DEV649_lienInpi_(''), '');
+  const r = k.EUC_DEV649_recap_(INFO);
+  assert.match(r.texte, /!!! Entreprise « non diffusible »[^\n]*INPI\.\nFiche INPI : https:\/\/data\.inpi\.fr\/entreprises\/123456789\n/);
+  assert.match(r.html, /<a href="https:\/\/data\.inpi\.fr\/entreprises\/123456789"[^>]*>Ouvrir la fiche de l’entreprise sur data\.inpi\.fr<\/a>/);
+  assert.ok(!k.EUC_DEV649_recap_(Object.assign({}, INFO, { entreprise: { nom: 'X', identifiant: '12345678900017' } })).texte.includes('inpi'), 'pas de lien INPI pour une entreprise diffusible');
+  const l = J(k.EUC_DEV649_ligneTampon_({ Alertes: '' }, { nonDiffusible: true, siret: '12345678900017', raisonSociale: 'G' }));
+  assert.match(l.Alertes, /https:\/\/data\.inpi\.fr\/entreprises\/123456789/);
+  const f = read('apps-script/Declaration_Entreprise_DEV603.html'), q = read('apps-script/PFMP_Acces_QR_V116.html');
+  assert.match(f, /<a id="ndInpi" href="#" target="_blank" rel="noopener">/); assert.match(f, /\$\('ndInpi'\)\.href='https:\/\/data\.inpi\.fr\/entreprises\/'\+s\.slice\(0,9\);/);
+  assert.match(q, /aI\.href='https:\/\/data\.inpi\.fr\/entreprises\/'\+siren;aI\.target='_blank';aI\.rel='noopener';/);
+});
 console.log(n + ' tests DEV649 réussis.');

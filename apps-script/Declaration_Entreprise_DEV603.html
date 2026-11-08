@@ -95,6 +95,7 @@ select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
     <div id="officiel"></div>
     <div id="ndBloc" hidden class="nd-note">
       <p style="margin:0 0 6px">SIRET trouvé, mais cette entreprise est « non diffusible » : son nom et son adresse ne sont pas publics. Recopie-les depuis un document de l’entreprise (ou demande-les à ton tuteur). Le bureau G205 vérifiera.</p>
+      <p style="margin:0 0 6px">Astuce : le nom et l’adresse figurent souvent sur le registre officiel de l’INPI. <a id="ndInpi" href="#" target="_blank" rel="noopener">Ouvrir la fiche de l’entreprise sur data.inpi.fr</a></p>
       <label for="ndNom">Nom de l’entreprise</label><input id="ndNom" autocomplete="off">
       <label for="ndAdr">Adresse du siège</label><input id="ndAdr" autocomplete="off">
       <div class="deux"><div><label for="ndCp">Code postal</label><input id="ndCp" autocomplete="off"></div><div><label for="ndVille">Ville</label><input id="ndVille" autocomplete="off"></div></div>
@@ -210,7 +211,7 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
     function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
       /* DEV649 : entreprise non diffusible : nom et adresse à saisir. */
       ND=e.nonDiffusible===true;$('ndBloc').hidden=!ND;
-      if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
+      if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});$('ndInpi').href='https://data.inpi.fr/entreprises/'+s.slice(0,9);if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
         $('officiel').innerHTML='<div class="officiel"><b>SIRET '+esc(s)+' trouvé</b>'+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'</div>';$('b3').disabled=false;try{$('ndNom').focus();}catch(eF){}return;}
       $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
       if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
