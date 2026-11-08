@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 novembre 2026 — DEV645 : liste des conventions générées
+
+- Nouvelle page admin `conventions-generees-pfmp` (« Conventions générées », lecture seule) : conventions de `EUC_ACCES_FORMULAIRES_PFMP` d'une année, par niveau (BAC PRO Seconde, Première, Terminale, CAP, BTS, autres) puis par classe et par période.
+- Chargement en deux temps : la structure (effectifs par niveau, classe et période, sans aucun nom) s'affiche d'abord. La liste nominative n'est lue que pour ce qui est demandé : toute l'année, un niveau, une classe, une période d'une classe, ou une période pour tous (sélecteur « Période »).
+- Option « Montrer aussi les élèves sans convention générée » : liste les élèves inscrits sans convention active pour une période. Une convention annulée, interrompue ou révoquée ne compte pas comme faite ; une convention supprimée est ignorée.
+- Élèves dont la convention a été distribuée sans QR code (avant le système) : le formulaire de secours (`declaration-entreprise`) ne demande aucune convention générée. Il retrouve l'élève par classe, nom, prénom et date de naissance. Générer une convention n'est utile que pour remettre une convention imprimée avec QR code.
+
 ## Mise à jour du 7 novembre 2026 — DEV644 : SIRET de l'import JotForm
 
 - Le formulaire JotForm nomme la colonne « N° SIRET (France) » depuis l'ajout de Monaco. `EUC_V160_mapCsv_` ne lisait que « N° SIRET » : chaque import écrivait un SIRET vide. Seul l'adaptateur DEV331 du socle (`EUC_DEV331_patchNewJotForm_`, rapprochement après coup) le recopiait. Sur le vert, il ne l'a pas fait pour l'export du 6 novembre (ligne GALBI, sans doublon, numéro de soumission intact, sans SIRET). La cause exacte de son échec n'est pas vue. Correction : le SIRET est lu directement (`EUC_V160_COLONNES_SIRET_`), sans dépendre de DEV331.

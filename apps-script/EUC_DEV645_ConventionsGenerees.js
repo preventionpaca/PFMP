@@ -1,0 +1,112 @@
+/**
+ * DEV645 — « Conventions générées » : toutes les conventions créées par le générateur
+ * (table EUC_ACCES_FORMULAIRES_PFMP) pour une année, rangées par niveau puis par classe.
+ * La page charge d'abord la structure (niveaux, classes, périodes et effectifs, sans nom),
+ * puis seulement la liste demandée : tout, un niveau, une classe ou une période.
+ * Réservé à l'administration. Lecture seule.
+ */
+var EUC_DEV645_ORDRE_ = ['BACPRO|Seconde', 'BACPRO|Première', 'BACPRO|Terminale', 'BACPRO|Autres', 'CAP|1CAP', 'CAP|TCAP', 'BTS|1re année', 'BTS|2e année', 'AUTRES|Autres'];
+var EUC_DEV645_FAMILLES_ = { BACPRO: 'BAC PRO', CAP: 'CAP', BTS: 'BTS', AUTRES: 'Autres formations' };
+var EUC_DEV645_STATUTS_ = { ENREGISTREE: 'Générée', A_COMPLETER_ENTREPRISE: 'À compléter par l’entreprise', AUTORISEE: 'PFMP autorisée', ANNULEE: 'Annulée', INTERROMPUE: 'Interrompue' };
+
+function EUC_DEV645_afficher(e) {
+  EUC_SUIVI2_exigerAdmin_();
+  var t = HtmlService.createTemplateFromFile('Conventions_Generees_DEV645');
+  t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
+  t.annee = EUC_SUIVI2_t_(e && e.parameter && e.parameter.annee);
+  return t.evaluate().setTitle('Conventions générées — PFMP').addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/* Structure seule : aucun nom d'élève. */
+function EUC_DEV645_structure(annee) {
+  EUC_SUIVI2_exigerAdmin_();
+  return EUC_DEV645_structure_(EUC_DEV645_index_(EUC_SUIVI2_modele_(annee), EUC_SUIVI2_lireSources_()));
+}
+
+/* q = { niveau, classeId, periode, sansConvention } ; tous facultatifs (rien = toute l'année). */
+function EUC_DEV645_lister(annee, q) {
+  EUC_SUIVI2_exigerAdmin_();
+  return EUC_DEV645_lister_(EUC_DEV645_index_(EUC_SUIVI2_modele_(annee), EUC_SUIVI2_lireSources_()), q || {});
+}
+
+function EUC_DEV645_cleNiveau_(c) { return c.famille + '|' + c.niveau; }
+function EUC_DEV645_libelleNiveau_(cle) {
+  var p = cle.split('|'), f = EUC_DEV645_FAMILLES_[p[0]] || p[0];
+  return p[0] === 'AUTRES' ? f : f + ' — ' + p[1];
+}
+function EUC_DEV645_rangNiveau_(cle) { var i = EUC_DEV645_ORDRE_.indexOf(cle); return i < 0 ? 99 : i; }
+/* « PFMP n°2 » et « Stage n°2 » sont la même période d'une année à l'autre de formation. */
+function EUC_DEV645_clePeriode_(libelle) { return EUC_SUIVI2_t_(libelle); }
+
+/* Calcul pur : m = modèle du suivi, src = tables brutes. */
+function EUC_DEV645_index_(m, src) {
+  var F = EUC_SUIVI2_champs_, T = EUC_SUIVI2_t_, D = EUC_SUIVI2_date_, annees = {}, classes = {}, eleves = {};
+  (src.annees || []).map(F).forEach(function(a) { annees[String(a.id)] = T(a.Code || a.Libelle); });
+  (m.classes || []).forEach(function(c) {
+    classes[c.id] = c;
+    (c.eleves || []).forEach(function(e) { eleves[e.id] = { id: e.id, libelle: e.libelle, classeId: c.id }; });
+  });
+  var deLAnnee = function(x) { return [m.annee, ''].indexOf(EUC_SUIVI2_annee_(x.Annee_scolaire, annees)) >= 0; };
+  var lignes = [], avec = {};
+  (src.dossiers || []).map(F).filter(deLAnnee).forEach(function(a) {
+    var code = EUC_SUIVI2_statut_(a);
+    if (code === 'SUPPRIMEE') return;
+    var eid = EUC_SUIVI2_ref_(a.Eleve), e = eleves[eid], cid = e ? e.classeId : EUC_SUIVI2_ref_(a.Classe_convention), c = classes[cid];
+    if (!c) return;
+    var periodes = (c.periodes || []).filter(function(p) { return !p.suivi; }), pid = EUC_SUIVI2_ref_(a.Periode);
+    var debut = D(a.Date_debut), fin = D(a.Date_fin_reelle || a.Date_fin);
+    var p = periodes.filter(function(x) { return x.id === pid; })[0] || (debut && fin ? EUC_SUIVI2_meilleurePeriode_(periodes, debut, fin) : null);
+    var annulee = code === 'ANNULEE' || code === 'INTERROMPUE' || a.Revoked === true;
+    var l = { id: Number(a.id), eleveId: eid || 0, eleve: e ? e.libelle : (T(a.Eleve_nom) || 'Élève non inscrit cette année'), classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c),
+      periodeId: p ? p.id : 0, periode: p ? p.libelle : 'Hors période', debut: debut || (p ? p.debut : ''), fin: fin || (p ? p.fin : ''),
+      numero: EUC_SUIVI2_premier_(a.Numero_enregistrement, a.Reference_convention), statut: a.Revoked === true && !annulee ? 'Révoquée' : (EUC_DEV645_STATUTS_[code] || code), annulee: annulee,
+      rattrapage: /RATTRAPAGE/i.test(T(a.Type_sequence)), remplacement: /REMPLACEMENT/i.test(T(a.Type_sequence)),
+      generee: D(a.Date_creation || a.Date_enregistrement), ms: EUC_DEV643_ms_(a.Date_creation || a.Date_enregistrement), lot: T(a.Lot_generation),
+      saisieEntreprise: D(a.Date_saisie_entreprise), entreprise: EUC_SUIVI2_premier_(a.Entreprise_raison_sociale, a.Entreprise_enseigne) };
+    lignes.push(l);
+    if (eid && !annulee) avec[eid + '|' + l.periodeId] = true;
+  });
+  return { annee: m.annee, classes: classes, lignes: lignes, avec: avec };
+}
+
+function EUC_DEV645_structure_(ix) {
+  var niveaux = {}, periodes = {};
+  Object.keys(ix.classes).forEach(function(k) {
+    var c = ix.classes[k], cle = EUC_DEV645_cleNiveau_(c);
+    var n = niveaux[cle] = niveaux[cle] || { cle: cle, libelle: EUC_DEV645_libelleNiveau_(cle), rang: EUC_DEV645_rangNiveau_(cle), total: 0, classes: [] };
+    var ps = (c.periodes || []).filter(function(p) { return !p.suivi; });
+    var x = { id: c.id, nom: c.nom, eleves: (c.eleves || []).length, total: 0, periodes: ps.map(function(p) {
+      var pc = EUC_DEV645_clePeriode_(p.libelle); periodes[pc] = true;
+      return { id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, total: 0, sans: (c.eleves || []).filter(function(e) { return !ix.avec[e.id + '|' + p.id]; }).length };
+    }), horsPeriode: 0 };
+    ix.lignes.forEach(function(l) {
+      if (l.classeId !== c.id) return;
+      x.total++;
+      var p = x.periodes.filter(function(y) { return y.id === l.periodeId; })[0];
+      if (p) p.total++; else x.horsPeriode++;
+    });
+    n.total += x.total; n.classes.push(x);
+  });
+  var l = Object.keys(niveaux).map(function(k) { var n = niveaux[k]; n.classes.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }); return n; })
+    .sort(function(a, b) { return a.rang - b.rang || a.libelle.localeCompare(b.libelle, 'fr'); });
+  return { annee: ix.annee, total: ix.lignes.length, niveaux: l, periodes: Object.keys(periodes).sort(function(a, b) { return a.localeCompare(b, 'fr', { numeric: true }); }) };
+}
+
+function EUC_DEV645_lister_(ix, q) {
+  var cid = Number(q.classeId) || 0, niveau = EUC_SUIVI2_t_(q.niveau), periode = EUC_DEV645_clePeriode_(q.periode);
+  var garder = function(c) { return (!cid || c.id === cid) && (!niveau || EUC_DEV645_cleNiveau_(c) === niveau); };
+  var lignes = ix.lignes.filter(function(l) { var c = ix.classes[l.classeId]; return garder(c) && (!periode || EUC_DEV645_clePeriode_(l.periode) === periode); });
+  var sans = [];
+  if (q.sansConvention) Object.keys(ix.classes).forEach(function(k) {
+    var c = ix.classes[k]; if (!garder(c)) return;
+    (c.periodes || []).filter(function(p) { return !p.suivi && (!periode || EUC_DEV645_clePeriode_(p.libelle) === periode); }).forEach(function(p) {
+      (c.eleves || []).forEach(function(e) {
+        if (!ix.avec[e.id + '|' + p.id]) sans.push({ id: 0, eleveId: e.id, eleve: e.libelle, classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c), periodeId: p.id, periode: p.libelle, debut: p.debut, fin: p.fin, sansConvention: true });
+      });
+    });
+  });
+  var tout = lignes.concat(sans), rang = function(l) { return EUC_DEV645_rangNiveau_(l.niveau); };
+  tout.sort(function(a, b) { return rang(a) - rang(b) || a.classe.localeCompare(b.classe, 'fr') || String(a.debut).localeCompare(String(b.debut)) || a.eleve.localeCompare(b.eleve, 'fr') || (a.sansConvention ? 1 : 0) - (b.sansConvention ? 1 : 0) || a.id - b.id; });
+  tout.forEach(function(l) { l.niveauLibelle = EUC_DEV645_libelleNiveau_(l.niveau); });
+  return { annee: ix.annee, conventions: lignes.length, sansConvention: sans.length, lignes: tout };
+}
