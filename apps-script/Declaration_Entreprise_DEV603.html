@@ -109,7 +109,8 @@ function appel(fn,arg,ok,ko){var fini=false,minu=setTimeout(function(){if(fini)r
   google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(minu);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(minu);ko(e);})[fn](arg);}
 function occupe(b,t){b.disabled=true;b.dataset.lib=b.dataset.lib||b.textContent;b.innerHTML='<span class="spin"></span>'+esc(t);}
 function libre(b){b.disabled=false;b.textContent=b.dataset.lib||b.textContent;}
-function erreur(id,e){$(id).innerHTML='<span class="erreur">'+esc(msgErr(e))+'</span>';}
+/* DEV646 : dernier recours si le formulaire en ligne ne fonctionne pas (venu du QR code ou non). */
+function erreur(id,e){var t=msgErr(e);$(id).innerHTML='<span class="erreur">'+esc(t)+'</span>'+(/G205/.test(t)?'':'<br><span class="note">Si tu restes bloqué, passe au bureau G205 — bureau des formations et des entreprises.</span>');}
 function etape(n){$('s3b').hidden=n!=='3b';[1,2,3,4,5].forEach(function(i){$('s'+i).hidden=i!==n;if($('e'+i))$('e'+i).className=i<=n?'on':'';});window.scrollTo(0,0);}
 function prenom(v){return String(v||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr-FR').replace(/(^|[\s'-])([a-zà-öø-ÿ])/g,function(_,s,l){return s+l.toLocaleUpperCase('fr-FR');});}
 function nom(v){return String(v||'').trim().replace(/\s+/g,' ').replace(/[œŒ]/g,'OE').replace(/[æÆ]/g,'AE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}

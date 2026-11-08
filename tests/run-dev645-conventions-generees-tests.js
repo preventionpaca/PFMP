@@ -129,7 +129,7 @@ test('boutons : désactivés et spinner pendant la lecture, rendus en succès, e
   assert.match(page, /withSuccessHandler\(function\(r\)\{if\(fini\)return;fini=true;clearTimeout\(timer\);ok\(r\);\}\)\.withFailureHandler/);
   const appelsListe = page.match(/appel\('EUC_DEV645_lister'.*\n/)[0];
   assert.equal((appelsListe.match(/occupe\(null\)/g) || []).length, 2, 'succès et échec rendent la main');
-  assert.match(page, /Aucune convention à afficher/); assert.match(page, /Aucune classe pour cette année/);
+  assert.match(page, /Aucune convention à afficher/); assert.match(page, /Aucune période de stage au planning/); assert.match(page, /Comment lire ce tableau/); assert.match(page, /Aucune classe pour cette année/);
 });
 
 test('branchement : route, lien d’administration et contrôle de release', () => {

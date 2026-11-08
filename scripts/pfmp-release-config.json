@@ -29,6 +29,7 @@
     {"page": "banc-essai-pfmp", "scope": "admin", "expected": "Banc d’essai"},
     {"page": "saisies-conventions-pfmp", "scope": "admin", "expected": "Contrôle des saisies"},
     {"page": "conventions-generees-pfmp", "scope": "admin", "expected": "Conventions générées"},
+    {"page": "entreprises-monaco-pfmp", "scope": "admin", "expected": "Entreprises de Monaco"},
     {"page": "apprentis-classes-pfmp", "scope": "admin", "expected": "Apprentis par classe entière"},
     {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
     {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},

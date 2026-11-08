@@ -18,6 +18,6 @@ function EUC_CONVENTION_afficherImpression(e){
 function EUC_CONVENTION_afficherImpressionLot(e){
   var ctx=EUC_PFMP_contexteAdmin_();if(!ctx.autorise)throw new Error('Accès non autorisé.');
   var lot=String(e&&e.parameter&&e.parameter.lot||'').trim();if(!lot)throw new Error('Lot manquant.');
-  if(String(e.parameter&&e.parameter.format||'').toLowerCase()==='word'){var d=EUC_CONVENTION_donneesImpressionLot(lot),tokens=(d.items||[]).map(function(i){return i.token;}).filter(Boolean),r=EUC_DOCX_genererLotImprimableV94(tokens);return EUC_CONVENTION_htmlLienDrive_('Lot PFMP Word',r.total+' conventions regroupées dans un seul document Word imprimable.',r.url,r.folderUrl);}
+  if(String(e.parameter&&e.parameter.format||'').toLowerCase()==='word'){var d=EUC_CONVENTION_donneesImpressionLot(lot);if((d.items||[]).some(function(i){return !i.token;}))throw new Error('Ce lot réimprime des conventions déjà existantes : utilisez l’impression PDF, la réédition Word exige le lien d’origine.');var tokens=(d.items||[]).map(function(i){return i.token;}).filter(Boolean),r=EUC_DOCX_genererLotImprimableV94(tokens);return EUC_CONVENTION_htmlLienDrive_('Lot PFMP Word',r.total+' conventions regroupées dans un seul document Word imprimable.',r.url,r.folderUrl);}
   var tpl=HtmlService.createTemplateFromFile('Convention_PFMP_PdfV95');tpl.payload=JSON.stringify(EUC_PDF_payloadLotV95(lot));return tpl.evaluate().setTitle('Conventions PFMP — lot PDF').addMetaTag('viewport','width=device-width, initial-scale=1');
 }

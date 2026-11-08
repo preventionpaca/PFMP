@@ -19,6 +19,7 @@ function EUC_PFMP_afficherApplication(e) {
     qr.conventionAccessId=aid;
     qr.conventionEleveId=eid;
     qr.conventionSignature=sig;
+    qr.secoursUrl=ScriptApp.getService().getUrl()+'?page=declaration-entreprise';
     return qr.evaluate().setTitle('Accès sécurisé PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
   }
   EUC_ENT_controlerAccesUtilisateur_();

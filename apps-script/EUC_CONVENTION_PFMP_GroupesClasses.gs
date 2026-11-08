@@ -124,19 +124,46 @@ function EUC_CONVENTION_preparerAccesClasseNom(payload) {
   var pdif = pdifId ? meta.periodes.filter(function(x){ return x.id === pdifId; })[0] : null;
   if (!cl || !p) throw new Error('Classe de convention ou période introuvable.');
 
-  var lot = 'LOT-'+Utilities.getUuid(), records = [], items = [], base = ScriptApp.getService().getUrl();
+  var lot = 'LOT-'+Utilities.getUuid(), records = [], items = [], base = ScriptApp.getService().getUrl(), reprises = 0;
   EUC_CONVENTION_assurerTableAcces_();
+  /* DEV646 : relancer une classe ne refait plus les conventions. Un élève qui a déjà une convention active
+   * pour cette période la garde (même numéro, même QR code, déjà peut-être remplie par l'entreprise) :
+   * elle est seulement réimprimée. Seuls les élèves sans convention en reçoivent une nouvelle. */
+  var acces = EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_);
   eleves.forEach(function(e){
     var mode = String(parcours[String(e.id)] || '').toUpperCase();
     if (pdif && mode !== 'LYCEE' && mode !== 'ENTREPRISE') throw new Error('Parcours différencié à préciser pour '+e.nom+' '+e.prenom+'.');
+    var ex = EUC_DEV646_conventionExistante_(acces, e.id, p.id, annee, p.debut);
+    if (ex) {
+      reprises++;
+      items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:String(ex.Reference_convention||''),token:'',accessId:Number(ex.id),reprise:true,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(ex.id),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(ex.id),annee:annee,classe:cl.nom,debut:EUC_IMPORT_dateExistanteISO_(ex.Date_debut)||p.debut,fin:EUC_IMPORT_dateExistanteISO_(ex.Date_fin)||p.fin,pdifMode:String(ex.PDIF_mode||''),pdif:pdif?{type:pdif.type,debut:pdif.debut,fin:pdif.fin}:null});
+      return;
+    }
     var a = EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,p,annee,{pdif:pdif,pdifMode:mode,lot:lot});
     records.push(a.record);
     items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),annee:annee,classe:cl.nom,debut:p.debut,fin:a.dateFin,pdifMode:mode,pdif:pdif?{type:pdif.type,debut:pdif.debut,fin:pdif.fin}:null});
   });
   /* La création reste courte : le recalcul des vues est finalisé par un
    * second appel du navigateur, exactement comme pour une convention seule. */
-  EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
+  if (records.length) EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
   var refresh = EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},'creation-lot-conventions');
   CacheService.getScriptCache().put('EUC_CONV_LOT_'+lot,JSON.stringify({lot:lot,classe:cl.nom,classeEleves:classeElevesNom,annee:annee,periode:p,items:items}),21600);
-  return {ok:true,total:items.length,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
+  return {ok:true,total:items.length,creees:records.length,reprises:reprises,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
+}
+
+/* DEV646 — Convention active d'un élève pour une période et une année (mêmes règles que EUC_CONVENTION_accesActifsV525_).
+ * S'il y en a plusieurs (réimpressions d'avant DEV646) : celle remplie par l'entreprise, puis la plus récente. Calcul pur. */
+function EUC_DEV646_conventionExistante_(rows, eleveId, periodeId, annee, debutOfficiel) {
+  var actives = (rows || []).filter(function(r) {
+    if (!r || !r.id || Number(EUC_PFMP_ref_(r.Eleve)) !== Number(eleveId) || Number(EUC_PFMP_ref_(r.Periode)) !== Number(periodeId) || String(r.Annee_scolaire || '') !== String(annee)) return false;
+    if (/RATTRAPAGE|REMPLACEMENT/i.test(String(r.Type_sequence || ''))) return false;
+    /* Période déplacée au planning depuis la génération : l'ancienne convention porte d'autres dates, on en refait une. */
+    if (debutOfficiel && r.Date_officielle_debut && String(r.Date_officielle_debut).slice(0, 10) !== String(debutOfficiel)) return false;
+    var statut = String(r.Statut_administratif || r.Statut || '').toUpperCase();
+    return r.Revoked !== true && r.Supprimee_admin !== true && ['INTERROMPUE', 'ANNULEE_AVANT_DEMARRAGE', 'SUPPRIMEE_ADMIN'].indexOf(statut) < 0;
+  });
+  var remplie = function(r) { return r.Date_saisie_entreprise || r.Entreprise_siret || r.Entreprise_nis || r.Entreprise_raison_sociale ? 1 : 0; };
+  var quand = function(r) { var t = Date.parse(String(r.Date_creation || '')); return isNaN(t) ? 0 : t; };
+  actives.sort(function(a, b) { return remplie(b) - remplie(a) || quand(b) - quand(a) || Number(b.id) - Number(a.id); });
+  return actives[0] || null;
 }

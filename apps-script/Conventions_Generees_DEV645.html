@@ -28,6 +28,7 @@ h2{font-size:16px;margin:0}
 .classe{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--bord)}
 .classe b{min-width:110px}
 .pastille{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--vert-clair);color:var(--vert);font-weight:700;font-size:12px}
+.per{display:inline-flex;gap:4px;align-items:center;padding:2px 6px;border:1px solid var(--bord);border-radius:8px}
 .pastille.manque{background:var(--alerte-fond);color:var(--alerte)}
 .table{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
@@ -61,6 +62,17 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
       <span id="message" class="message" role="status" aria-live="polite"></span>
     </div>
     <p class="note" id="totaux"></p>
+    <details class="note"><summary><b>Comment lire ce tableau</b></summary>
+      <ul>
+        <li><b>convention(s)</b> : une par élève et par période (un rattrapage compte à part). Les réimpressions de la même convention ne comptent qu’une fois.</li>
+        <li><b>générations</b> : nombre total de fois où le générateur a produit une convention pour la classe (réimpressions comprises).</li>
+        <li><b>PFMP n°1 (23/11 → 18/12) : 21 conventions</b> : élèves qui ont une convention pour cette période du planning. Cliquer affiche la liste.</li>
+        <li><b>· 3 élèves sans</b> : élèves de la classe qui n’ont aucune convention active pour cette période.</li>
+        <li><b>hors période</b> : conventions dont les dates ne correspondent à aucune période actuelle du planning de la classe (période modifiée ou supprimée après la génération, ou dates d’une autre classe). Elles sont dans la liste de la classe, colonne Période « Hors période », avec leurs dates.</li>
+        <li><b>Aucune période de stage au planning</b> : la classe n’a pas de période PFMP dans les Plannings annuels pour cette année ; rien ne peut être compté.</li>
+        <li><b>Toute la classe</b> : affiche toutes les conventions de la classe, toutes périodes confondues.</li>
+      </ul>
+    </details>
   </section>
   <div id="structure"></div>
   <section id="filtre" hidden><div class="ligne"><label for="cherche">Rechercher</label><input id="cherche" type="search" placeholder="Élève, numéro, entreprise…" style="min-width:260px"><span id="compte" class="note"></span></div></section>
@@ -71,6 +83,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
   var $=function(id){return document.getElementById(id);},ANNEE=<?!= JSON.stringify(annee || '') ?>,DELAI=120000,STRUCT=null,LISTE=null,TITRE='';
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function heure(ms){return ms?new Date(ms).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'date inconnue';}
+  function court(d){var p=String(d||'').split('-');return p.length===3?p[2]+'/'+p[1]:'';}
   function dfr(d){return d?String(d).split('-').reverse().join('/'):'';}
   function message(t,err){$('message').textContent=t||'';$('message').className='message'+(err?' erreur':'');}
   /* Appel serveur avec délai maximal : succès, erreur et dépassement rendent la main de la même façon. */
@@ -99,8 +112,8 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
     $('structure').innerHTML=s.niveaux.length?s.niveaux.map(function(n){
       return '<section><div class="niveau"><h2>'+esc(n.libelle)+' <span class="pastille">'+n.total+'</span></h2>'+bouton('niveau','data-niveau="'+esc(n.cle)+'"','Afficher le niveau')+'</div><div class="classes">'+n.classes.map(function(c){
         return '<div class="classe"><b>'+esc(c.nom)+'</b><span class="note">'+c.eleves+' élève(s) · '+c.total+' convention(s)'+(c.generations>c.total?' · '+c.generations+' générations':'')+'</span>'+
-          c.periodes.map(function(p){return bouton('periode','data-classe="'+c.id+'" data-periode="'+esc(p.libelle)+'"',p.libelle+' : '+p.total)+(p.sans?' <span class="pastille manque" title="Élèves sans convention générée pour cette période">'+p.sans+' sans</span>':'');}).join(' ')+
-          (c.horsPeriode?' <span class="pastille manque">'+c.horsPeriode+' hors période</span>':'')+' '+bouton('classe','data-classe="'+c.id+'"','Toute la classe')+'</div>';
+          (c.periodes.length?c.periodes.map(function(p){return '<span class="per">'+bouton('periode','data-classe="'+c.id+'" data-periode="'+esc(p.libelle)+'"',p.libelle+' ('+court(p.debut)+' → '+court(p.fin)+') : '+p.total+' convention'+(p.total>1?'s':''))+(p.sans?' <span class="pastille manque" title="Élèves de la classe sans convention active pour cette période">'+p.sans+' élève'+(p.sans>1?'s':'')+' sans</span>':'')+'</span>';}).join(''):'<span class="pastille manque">Aucune période de stage au planning</span>')+
+          (c.horsPeriode?' <span class="pastille manque" title="Dates qui ne correspondent à aucune période actuelle du planning de la classe">'+c.horsPeriode+' hors période</span>':'')+' '+bouton('classe','data-classe="'+c.id+'"','Toute la classe')+'</div>';
       }).join('')+'</div></section>';
     }).join(''):'<section class="note">Aucune classe pour cette année.</section>';
   }

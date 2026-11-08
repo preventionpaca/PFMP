@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entreprises de Monaco — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1100px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:16px;margin:0 0 8px}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 12px}
+label{display:block;font-weight:700;font-size:13px}
+input{width:100%;font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:7px}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:8px 12px;background:var(--vert);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+button.leger{background:var(--vert-clair);color:var(--vert);padding:5px 10px;font-size:13px}
+.note{color:var(--gris);font-size:13px}
+.message{font-weight:700}.message.erreur{color:var(--alerte)}.message.ok{color:var(--vert)}
+.table{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bord);vertical-align:top}
+th{color:var(--gris)}
+.pastille{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--vert-clair);color:var(--vert);font-weight:700;font-size:12px}
+.pastille.manque{background:var(--alerte-fond);color:var(--alerte)}
+.spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
+.busy .spin{display:inline-block}
+@keyframes tour{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Entreprises de Monaco</h1>
+  <p>Entreprises monégasques de la base. Sans NIS connu, l’entreprise reçoit un numéro interne du lycée (EUC-MC-0001…) : elle est alors comptée dans le suivi et les cartes, et les élèves la retrouvent par son nom depuis leur QR code.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Entreprises de Monaco</nav>
+<main>
+  <section>
+    <h2>Ajouter une entreprise de Monaco</h2>
+    <div class="grille">
+      <div><label for="nom">Nom (raison sociale) *</label><input id="nom" autocomplete="off"></div>
+      <div><label for="enseigne">Enseigne</label><input id="enseigne" autocomplete="off"></div>
+      <div><label for="nis">NIS (laisser vide si inconnu)</label><input id="nis" autocomplete="off" placeholder="Numéro interne attribué si vide"></div>
+      <div><label for="adresse">Adresse *</label><input id="adresse" autocomplete="off"></div>
+      <div><label for="cp">Code postal</label><input id="cp" value="98000" autocomplete="off"></div>
+      <div><label for="ville">Ville</label><input id="ville" value="Monaco" autocomplete="off"></div>
+      <div><label for="telephone">Téléphone</label><input id="telephone" autocomplete="off"></div>
+      <div><label for="email">Courriel</label><input id="email" type="email" autocomplete="off"></div>
+    </div>
+    <p><button id="creer" type="button" data-action="creer"><span class="spin"></span><span class="txt">Enregistrer l’entreprise</span></button> <span id="mCreer" class="message" role="status" aria-live="polite"></span></p>
+  </section>
+  <section>
+    <h2>Entreprises de Monaco dans la base</h2>
+    <p class="note"><input id="cherche" type="search" placeholder="Rechercher un nom, un NIS…" style="max-width:320px"> <span id="compte"></span> <span id="mListe" class="message" role="status" aria-live="polite"></span></p>
+    <div id="liste" class="note">Chargement…</div>
+  </section>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},DELAI=60000,LISTE=[];
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function appel(nom,args,ok,ko){
+    var fini=false,timer=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Pas de réponse après 1 minute : rechargez la liste avant de réessayer.'));},DELAI);
+    var run=google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);});
+    run[nom].apply(run,args);
+  }
+  /* Bouton d'action : bloqué et avec chargement pendant l'appel, rendu en succès, erreur et dépassement. */
+  function occupe(b,on,texte){
+    var t=b.querySelector('.txt');if(!b.dataset.libelle)b.dataset.libelle=t.textContent;
+    b.disabled=on;b.classList.toggle('busy',on);t.textContent=on?texte:b.dataset.libelle;
+  }
+  function message(id,t,cls){$(id).textContent=t||'';$(id).className='message'+(cls?' '+cls:'');}
+  function dessiner(){
+    var q=$('cherche').value.trim().toLowerCase(),l=LISTE.filter(function(x){return !q||JSON.stringify(x).toLowerCase().indexOf(q)>=0;});
+    $('compte').textContent=l.length+' entreprise(s) sur '+LISTE.length+'.';
+    $('liste').innerHTML=l.length?'<div class="table"><table><thead><tr><th>Entreprise</th><th>Adresse</th><th>Numéro</th><th>Contact</th></tr></thead><tbody>'+l.map(function(x){
+      var num=x.nis?'<b>'+esc(x.nis)+'</b>'+(x.interne?' <span class="pastille">numéro interne</span>':' <span class="pastille">NIS</span>'):'<span class="pastille manque">sans numéro</span><br><button type="button" class="leger" data-action="numero" data-id="'+x.id+'"><span class="spin"></span><span class="txt">Donner un numéro interne</span></button>';
+      return '<tr><td><b>'+esc(x.nom||'—')+'</b>'+(x.enseigne?'<br><span class="note">'+esc(x.enseigne)+'</span>':'')+'</td><td>'+esc(x.adresse)+'<br><span class="note">'+esc([x.cp,x.ville].filter(Boolean).join(' '))+'</span></td><td>'+num+'</td><td>'+esc(x.telephone)+(x.email?'<br>'+esc(x.email):'')+'</td></tr>';
+    }).join('')+'</tbody></table></div>':'<p class="note">Aucune entreprise de Monaco à afficher.</p>';
+  }
+  function charger(){
+    $('liste').innerHTML='<p class="note busy"><span class="spin"></span>Chargement…</p>';
+    appel('EUC_DEV646_listerMonaco',[],function(r){LISTE=r.entreprises||[];dessiner();},function(e){$('liste').innerHTML='';message('mListe',e&&e.message||'Lecture impossible.','erreur');});
+  }
+  $('creer').onclick=function(){
+    var b=this;if(b.disabled)return;
+    var d={};['nom','enseigne','nis','adresse','cp','ville','telephone','email'].forEach(function(k){d[k]=$(k).value;});
+    occupe(b,true,'Enregistrement…');message('mCreer','');
+    appel('EUC_DEV646_creerMonaco',[d],function(r){occupe(b,false);message('mCreer','✓ '+r.nom+' enregistrée avec le numéro '+r.nis+'.','ok');['nom','enseigne','nis','adresse','telephone','email'].forEach(function(k){$(k).value='';});charger();},
+      function(e){occupe(b,false);message('mCreer',e&&e.message||'Enregistrement impossible.','erreur');});
+  };
+  $('liste').onclick=function(ev){
+    var b=ev.target.closest('button[data-action="numero"]');if(!b||b.disabled)return;
+    occupe(b,true,'Attribution…');message('mListe','');
+    appel('EUC_DEV646_attribuerNumero',[Number(b.dataset.id)],function(r){occupe(b,false);message('mListe','✓ Numéro '+r.nis+' attribué.','ok');charger();},
+      function(e){occupe(b,false);message('mListe',e&&e.message||'Attribution impossible.','erreur');});
+  };
+  $('cherche').oninput=dessiner;
+  charger();
+})();
+</script>
+</body>
+</html>

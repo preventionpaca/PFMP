@@ -550,9 +550,23 @@ const MESSAGE_DEPOT_G205_V569 =
 window.EUC_QR_MESSAGE_G205_V569 = MESSAGE_DEPOT_G205_V569;
 
 
+/* DEV646 : un problème d'enregistrement par QR renvoie d'abord vers le formulaire en ligne
+ * « Déclarer mon entreprise » ; le bureau G205 seulement si ce formulaire échoue aussi. */
+const SECOURS_URL_DEV646 = <?!= JSON.stringify(typeof secoursUrl !== 'undefined' ? secoursUrl : '') ?>;
+function escHtmlDev646(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function htmlSecoursDev646(text){
+  if(!SECOURS_URL_DEV646 || String(text||'').indexOf('G205')<0) return '';
+  const lien='<a href="'+escHtmlDev646(SECOURS_URL_DEV646)+'" target="_top">Déclarer mon entreprise (formulaire en ligne)</a>';
+  if(text===MESSAGE_DEPOT_G205_V569)
+    return 'L’enregistrement par le QR code n’a pas abouti. Déclare ton entreprise avec le formulaire en ligne : '+lien+'. Si ce formulaire ne fonctionne pas non plus, passe au bureau G205.';
+  return escHtmlDev646(text)+'<br>Avant de passer au bureau G205, essaie le formulaire en ligne : '+lien+'.';
+}
+
 function msg(text,error,busy){
 
-  status.textContent = text || '';
+  const secours = htmlSecoursDev646(text);
+  if(secours) status.innerHTML = secours;
+  else status.textContent = text || '';
 
   status.className =
     'status' +
@@ -1935,6 +1949,49 @@ init();
 }
 </style>
 
+<script>
+/* DEV646 : entreprise de Monaco sans NIS connu → recherche par son nom parmi les entreprises de la base.
+ * Trouvée : son numéro (NIS ou numéro interne du lycée) est repris et la recherche habituelle la verrouille.
+ * Absente : l'élève passe au bureau G205. */
+(function(){
+  var country=document.getElementById('entreprisePaysSelectV161'),ident=document.getElementById('siret'),search=document.getElementById('search');
+  if(!country||!ident||!search)return;
+  var box=document.createElement('div');box.id='monacoNomDev646';box.hidden=true;box.style.margin='8px 0';
+  box.innerHTML='<p style="margin:6px 0;font-size:14px"><b>Tu n’as pas le NIS ?</b> Cherche l’entreprise par son nom :</p>'+
+    '<input id="monacoNomDev646Q" type="text" autocomplete="off" placeholder="Nom de l’entreprise (3 lettres au moins)" style="width:100%;max-width:360px"> '+
+    '<button type="button" id="monacoNomDev646Go">Chercher par le nom</button><div id="monacoNomDev646R" role="status" aria-live="polite" style="margin-top:6px"></div>';
+  search.insertAdjacentElement('afterend',box);
+  var q=document.getElementById('monacoNomDev646Q'),go=document.getElementById('monacoNomDev646Go'),res=document.getElementById('monacoNomDev646R');
+  function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function maj(){box.hidden=country.value!=='Monaco';}
+  country.addEventListener('change',maj);maj();
+  var busy=window.EUC_QR_buttonBusyV568||function(b,on){b.disabled=on;};
+  function choisir(nis){
+    ident.value=nis;
+    ident.dispatchEvent(new Event('input',{bubbles:true}));
+    res.innerHTML='';
+    search.disabled=false;search.click();
+  }
+  go.addEventListener('click',function(){
+    if(go.disabled)return;
+    var texte=String(q.value||'').trim();
+    if(texte.replace(/\s/g,'').length<3){res.textContent='Écris au moins 3 lettres du nom de l’entreprise.';return;}
+    busy(go,true,'Recherche…');res.textContent='';
+    var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;busy(go,false);res.textContent='Pas de réponse : réessaie dans un instant.';},30000);
+    google.script.run.withSuccessHandler(function(r){
+      if(fini)return;fini=true;clearTimeout(minu);busy(go,false);
+      var l=(r&&r.resultats)||[];
+      if(!l.length){res.innerHTML='<b>Cette entreprise n’est pas encore dans notre base.</b> Passe au bureau G205 — bureau des formations et des entreprises — avec son nom et son adresse : elle y sera enregistrée.';return;}
+      res.innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;max-width:520px;text-align:left;margin:4px 0">'+e(x.nom)+(x.enseigne?' — '+e(x.enseigne):'')+'<br><small>'+e([x.adresse,x.ville].filter(Boolean).join(', '))+'</small></button>';}).join('')+
+        '<p style="margin:4px 0;font-size:13px">Elle n’est pas dans la liste ? Passe au bureau G205.</p>';
+      res.querySelectorAll('button[data-i]').forEach(function(b){b.addEventListener('click',function(){choisir(l[Number(b.dataset.i)].nis);});});
+    }).withFailureHandler(function(err){
+      if(fini)return;fini=true;clearTimeout(minu);busy(go,false);
+      res.textContent=String(err&&err.message||err||'Recherche impossible.');
+    }).EUC_DEV646_rechercherMonacoParNom(texte);
+  });
+})();
+</script>
 <?!= HtmlService.createHtmlOutputFromFile('Identites_Contacts_DEV602').getContent() ?>
 </body>
 </html>
