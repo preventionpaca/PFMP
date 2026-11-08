@@ -147,9 +147,12 @@ function EUC_DEV645_lister_(ix, q) {
       });
     });
   });
+  /* Petit « A » : élève apprenti (contrat actif couvrant la période), sur toutes ses lignes de la période. */
+  var apprentis = {};
+  Object.keys(ix.classes).forEach(function(k) { (ix.classes[k].periodes || []).forEach(function(p) { ((p.resume || {}).apprentis || []).forEach(function(id) { apprentis[id + '|' + p.id] = true; }); }); });
   var tout = lignes.concat(sans), rang = function(l) { return EUC_DEV645_rangNiveau_(l.niveau); };
   tout.sort(function(a, b) { return rang(a) - rang(b) || a.classe.localeCompare(b.classe, 'fr') || String(a.periodeDebut).localeCompare(String(b.periodeDebut)) || a.eleve.localeCompare(b.eleve, 'fr') || (a.sansConvention ? 1 : 0) - (b.sansConvention ? 1 : 0) || String(a.cle).localeCompare(String(b.cle)) || (a.anterieure ? 1 : 0) - (b.anterieure ? 1 : 0) || (b.ms || 0) - (a.ms || 0) || a.id - b.id; });
-  tout.forEach(function(l) { l.niveauLibelle = EUC_DEV645_libelleNiveau_(l.niveau); });
+  tout.forEach(function(l) { l.niveauLibelle = EUC_DEV645_libelleNiveau_(l.niveau); l.apprenti = !!apprentis[l.eleveId + '|' + l.periodeId]; });
   return { annee: ix.annee, conventions: lignes.filter(function(l) { return !l.anterieure; }).length, anterieures: lignes.filter(function(l) { return l.anterieure; }).length,
     sansConvention: sans.filter(function(l) { return l.motif === 'SANS'; }).length, apprentis: sans.filter(function(l) { return l.motif === 'APPRENTI'; }).length, aDefinir: sans.filter(function(l) { return l.motif === 'PDIF_A_DEFINIR'; }).length, lignes: tout };
 }

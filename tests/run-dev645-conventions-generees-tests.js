@@ -122,6 +122,8 @@ test('un apprenti n’est pas « sans convention » : compté et listé à part 
   const l = J(c.EUC_DEV645_lister_(ix, { classeId: 11, periode: 'PFMP n°1', sansConvention: true }));
   assert.equal(l.sansConvention, 0); assert.equal(l.apprentis, 1);
   assert.deepEqual(l.lignes.filter(x => x.sansConvention).map(x => [x.eleve, x.motif]), [['GAMMA Gus', 'APPRENTI']]);
+  assert.deepEqual(l.lignes.map(x => [x.eleve, x.apprenti]), [['GAMMA Gus', true], ['GAMMA Gus', true]], 'sa convention annulée et sa ligne portent le A');
+  assert.match(page, /title=\"Apprenti : contrat actif sur cette période\">A</);
   assert.match(page, /Apprenti sur cette période : pas de convention de stage/); assert.match(page, /sansConvention:true\},nomClasse/);
 });
 
