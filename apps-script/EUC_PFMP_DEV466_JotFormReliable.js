@@ -310,6 +310,12 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
 }
 /* DEV648 : toutes les lignes bloquées (et plus seulement 5), avec leurs identifiants pour que la page
  * propose de les retirer de la sélection et d'importer les autres. L'import reste tout ou rien. */
+/* Calcul pur : regroupe les enregistrements par ensemble identique de colonnes (ordre d'origine conservé). */
+function EUC_DEV648_parColonnes_(records){
+  var groupes={},ordre=[];
+  (records||[]).forEach(function(r){var k=Object.keys((r&&r.fields)||{}).sort().join('|');if(!groupes[k]){groupes[k]=[];ordre.push(k);}groupes[k].push(r);});
+  return ordre.map(function(k){return groupes[k];});
+}
 function EUC_DEV648_messageBlocage_(errors,total){
   return 'PRÉCONTRÔLE BLOQUÉ — aucune écriture effectuée. '+errors.length+' ligne(s) bloquée(s) sur '+total+' :\n'+
     errors.map(function(e){return '• '+e.eleve+' : '+e.erreur;}).join('\n')+
@@ -373,8 +379,9 @@ function EUC_DEV466_importSelection(payload){
       if(item.mode==='CREATE')creates.push({fields:item.fields});
       else if(item.mode==='COMPLETE')updates.push({id:item.accessId,fields:item.fields});
     });
-    if(creates.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:creates});
-    if(updates.length)EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:updates});
+    /* DEV648 : Grist refuse (400) un envoi groupé dont les lignes n'ont pas toutes les mêmes colonnes. */
+    EUC_DEV648_parColonnes_(creates).forEach(function(g){EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:g});});
+    EUC_DEV648_parColonnes_(updates).forEach(function(g){EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:g});});
     var readback=EUC_DEV466_readback_(items);
     if(readback.errors.length){
       throw new Error('CONTRÔLE GRIST ÉCHOUÉ — le tampon reste à contrôler. '+readback.errors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));

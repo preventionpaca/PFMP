@@ -30,9 +30,9 @@ test('l’import exige une sélection explicite et vérifie son cardinal',()=>{
   assert.deepEqual(Array.from(c.EUC_DEV466_selected_({manualSelection:true,ids:[1,2]}),x=>x.id),[1,2]);
 });
 
-test('les créations et compléments utilisent chacun une écriture groupée',()=>{
-  assert.match(code,/if\(creates\.length\)EUC_ENT_grist\('post'[\s\S]*\{records:creates\}\)/);
-  assert.match(code,/if\(updates\.length\)EUC_ENT_grist\('patch'[\s\S]*\{records:updates\}\)/);
+test('les créations et compléments utilisent des écritures groupées (DEV648 : une par ensemble identique de colonnes, exigence Grist)',()=>{
+  assert.match(code,/EUC_DEV648_parColonnes_\(creates\)\.forEach\(function\(g\)\{EUC_ENT_grist\('post'[^\n]*\{records:g\}\);\}\);/);
+  assert.match(code,/EUC_DEV648_parColonnes_\(updates\)\.forEach\(function\(g\)\{EUC_ENT_grist\('patch'[^\n]*\{records:g\}\);\}\);/);
   const body=code.slice(code.indexOf('function EUC_DEV466_importSelection'));
   assert.equal((body.match(/EUC_ENT_grist\(/g)||[]).length,2);
 });

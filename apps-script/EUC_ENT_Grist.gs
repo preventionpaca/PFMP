@@ -6,7 +6,8 @@ function EUC_DEV398_BASE_EUC_ENT_grist(methode,chemin,corps) {
   var url=c.EUC_ENT_GRIST_API_URL.replace(/\/$/,'')+'/api/docs/'+encodeURIComponent(c.EUC_ENT_GRIST_DOC_ID)+chemin;
   var o={method:methode,muteHttpExceptions:true,headers:{Authorization:'Bearer '+c.EUC_ENT_GRIST_API_KEY,Accept:'application/json'}};
   if(corps){o.contentType='application/json';o.payload=JSON.stringify(corps);} var r=UrlFetchApp.fetch(url,o), code=r.getResponseCode();
-  if(code<200||code>=300) throw new Error('Grist indisponible ou requête refusée ('+code+').'); return JSON.parse(r.getContentText()||'{}');
+  if(code<200||code>=300){var det='';if(code>=400&&code<500){try{det=String((JSON.parse(r.getContentText()||'{}')||{}).error||'');}catch(eDet){}det=det.replace(/\s+/g,' ').slice(0,200);}
+    throw new Error('Grist indisponible ou requête refusée ('+code+')'+(det?' — '+String(methode).toUpperCase()+' '+String(chemin).replace(/\?.*$/,'')+' : '+det:'')+'.');} return JSON.parse(r.getContentText()||'{}');
   };
   return typeof EUC_DEV447_call_==='function'?EUC_DEV447_call_(appel,this,arguments):appel.apply(this,arguments);
 }

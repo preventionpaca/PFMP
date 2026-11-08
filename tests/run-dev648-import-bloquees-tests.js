@@ -56,4 +56,15 @@ test('stockage des propriétés : anciens compteurs quotidiens Grist effacés (1
   const imp = /function EUC_DEV466_importSelection[^]*?\n\}/.exec(src)[0];
   assert.ok(imp.indexOf('EUC_DEV648_purgerUsageAncien_') < imp.indexOf('EUC_DEV425_beginImportItems_'), 'purge avant le marquage DIRTY');
 });
+test('écriture Grist : un envoi par ensemble identique de colonnes ; motif Grist affiché en cas de refus', () => {
+  const k = {}; vm.createContext(k); vm.runInContext(/function EUC_DEV648_parColonnes_[^]*?\n\}/.exec(src)[0], k);
+  const g = JSON.parse(JSON.stringify(k.EUC_DEV648_parColonnes_([{ fields: { A: 1, B: 2 } }, { id: 4, fields: { A: 1 } }, { fields: { B: 3, A: 5 } }])));
+  assert.deepEqual(g, [[{ fields: { A: 1, B: 2 } }, { fields: { B: 3, A: 5 } }], [{ id: 4, fields: { A: 1 } }]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(k.EUC_DEV648_parColonnes_([]))), []);
+  const imp = /function EUC_DEV466_importSelection[^]*?\n\}/.exec(src)[0];
+  assert.match(imp, /EUC_DEV648_parColonnes_\(creates\)\.forEach/); assert.match(imp, /EUC_DEV648_parColonnes_\(updates\)\.forEach/);
+  assert.ok(!/\{records:creates\}|\{records:updates\}/.test(imp), 'plus d’envoi groupé hétérogène');
+  const gr = read('apps-script/EUC_ENT_Grist.gs');
+  assert.match(gr, /Grist indisponible ou requête refusée \('\+code\+'\)'\+\(det\?/); assert.match(gr, /replace\(\/\\\?\.\*\$\/,''\)/, 'chemin sans paramètres');
+});
 console.log(n + ' tests DEV648 réussis.');
