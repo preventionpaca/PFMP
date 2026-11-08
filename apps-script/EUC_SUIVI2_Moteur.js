@@ -204,6 +204,8 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   return {
     entreprise: officiel || saisi, nomSaisi: officiel && saisi && EUC_SUIVI2_norm_(officiel) !== EUC_SUIVI2_norm_(saisi) ? saisi : '',
     adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    /* DEV649 : lieu de stage distinct du siège (visites à cette adresse). */
+    lieu: [P(a.Lieu_stage_adresse), [P(a.Lieu_stage_code_postal), P(a.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
     numero: P(a.Numero_enregistrement, a.Reference_convention), siret: sr.length === 14 ? sr : EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, ''),
@@ -245,6 +247,7 @@ function EUC_SUIVI2_ficheTampon_(j, siret) {
   var depot = EUC_SUIVI2_t_(j.Submission_ID), secours = /^SECOURS-/.test(depot);
   return { entreprise: P(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
     adresse: P([EUC_SUIVI2_t_(j.Adresse_officielle), [EUC_SUIVI2_t_(j.CP_officiel), EUC_SUIVI2_t_(j.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', '), j.Adresse_entreprise),
+    lieu: [P(j.Lieu_stage_adresse), [P(j.Lieu_stage_code_postal), P(j.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     contact: { nom: n(c.responsable) || n(c.tuteur), tel: c.responsable.tel || c.tuteur.tel, mail: c.responsable.mail || c.tuteur.mail },
     tuteur: { nom: n(c.tuteur), tel: c.tuteur.tel, mail: c.tuteur.mail },
     numero: secours ? depot.replace(/^SECOURS-/, '') : '', siret: siret || '', enregistreLe: secours ? EUC_SUIVI2_date_(j.Date_import) : '' };

@@ -184,6 +184,14 @@ function EUC_DEV603_deposer(q) {
   if (!e) throw new Error('Entreprise introuvable pour ce SIRET : vérifiez les 14 chiffres.');
   var ent = { siret: siret, raisonSociale: EUC_DEV603_t_(e.raisonSociale), enseigne: EUC_DEV603_t_(q.enseigne || e.enseigne), adresse: EUC_DEV603_t_(e.adresseComplete || e.numeroVoie || e.adresse), complement: EUC_DEV603_t_(e.complementAdresse || e.complement),
     codePostal: EUC_DEV603_t_(e.codePostal), commune: EUC_DEV603_t_(e.commune), actif: e.etat !== 'Fermé' };
+  /* DEV649 : SIRET non diffusible : nom et adresse saisis par l'élève (le SIRET, lui, est vérifié). */
+  if (e.nonDiffusible === true) {
+    var nd = q.nonDiffusible || {};
+    ent.nonDiffusible = true; ent.raisonSociale = ent.raisonSociale || EUC_DEV603_t_(nd.nom).slice(0, 250); ent.adresse = ent.adresse || EUC_DEV603_t_(nd.adresse).slice(0, 300);
+    ent.codePostal = ent.codePostal || EUC_DEV603_t_(nd.codePostal).slice(0, 20); ent.commune = ent.commune || EUC_DEV603_t_(nd.commune).slice(0, 150);
+    if (!ent.raisonSociale || !ent.adresse || !ent.commune) throw new Error('Entreprise non diffusible : indique son nom, son adresse et sa ville.');
+  }
+  ent.lieu = typeof EUC_DEV649_lieuSaisi_ === 'function' ? EUC_DEV649_lieuSaisi_(q.lieu) : { adresse: '', cp: '', commune: '' };
   if (!ent.raisonSociale || !ent.commune) throw new Error('Données officielles de l’entreprise incomplètes : faites valider par le bureau des entreprises.');
   var resp = EUC_DEV603_personne_('Responsable de l’entreprise', q.responsable, true);
   var tut = q.tuteurEstResponsable === true ? resp : EUC_DEV603_personne_('Tuteur', q.tuteur, true);
@@ -203,12 +211,13 @@ function EUC_DEV603_deposer(q) {
     var enAttente = tampon.filter(function(r) { var f = r.fields || {}; return /^SECOURS-/.test(EUC_DEV603_t_(f.Submission_ID)) && EUC_DEV603_t_(f.Periode_numero) === EUC_DEV603_t_(periode.libelle) && ['VALIDEE', 'REJETEE', 'REFUSEE'].indexOf(EUC_DEV603_t_(f.Decision).toUpperCase()) < 0; })[0];
     var numero = enAttente ? EUC_DEV603_t_((enAttente.fields || {}).Submission_ID).replace(/^SECOURS-/, '') : EUC_DEV603_numero_(m.annee);
     var ligne = EUC_DEV603_ligne_(numero, m.annee, eleve, { id: Number(c.id), nom: c.nom }, periode, ent, resp, tut, emailEleve);
+    if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, ent);
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
     if (enAttente) EUC_ENT_grist('patch', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ id: enAttente.id, fields: fields }] });
     else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, ent.raisonSociale, periode.libelle, false, c.id);
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, ent.raisonSociale, periode.libelle, false, c.id, { ent: ent, resp: resp, tut: tut, tuteurEstResponsable: q.tuteurEstResponsable === true, periode: periode, fiche: ef });
   return { ok: true, numero: numero, remplace: !!enAttente, entreprise: ent.raisonSociale, periode: periode.libelle, courriel: emailEleve ? emailEleve.replace(/^(.).*(@.*)$/, '$1…$2') : '' };
 }
 
@@ -274,8 +283,10 @@ function EUC_DEV603_ppEmails_(classeId) {
       .filter(function(m) { return /^[^@\s,;]+@[^@\s,;]+\.[a-z]{2,}$/.test(m); });
   } catch (e) { return []; }
 }
-function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme, classeId) {
+function EUC_DEV603_accuseDepot_(email, eleve, classe, numero, entreprise, periode, probleme, classeId, detail) {
   try {
+    /* DEV649 : récapitulatif complet (même modèle que la page du QR code) quand le détail est connu. */
+    if (detail && typeof EUC_DEV649_accuseComplet_ === 'function') return EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, classeId, detail);
     var copie = typeof EUC_DEV598_copie_ === 'function' ? EUC_DEV598_copie_('DEPOTS_CONVENTIONS') : '';
     var pp = EUC_DEV603_ppEmails_(classeId); if (pp.length) copie = copie.split(',').filter(Boolean).concat(pp).filter(function(v, i, a) { return a.indexOf(v) === i; }).join(',');
     if (email) MailApp.sendEmail({ to: email, replyTo: copie || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta convention de stage — numéro d’enregistrement ') + numero,
@@ -296,6 +307,7 @@ function EUC_DEV603_signalerProbleme(q) {
   var pays = ['FR', 'MC', 'AUTRE'].indexOf(EUC_DEV603_t_(q.pays).toUpperCase()) >= 0 ? EUC_DEV603_t_(q.pays).toUpperCase() : 'FR';
   var entreprise = EUC_DEV603_t_(q.entreprise).slice(0, 200), ville = EUC_DEV603_t_(q.ville).slice(0, 120), message = EUC_DEV603_t_(q.message).slice(0, 1500);
   if (!entreprise || !ville) throw new Error('Indique au moins le nom de l’entreprise et sa ville.');
+  var lieuAide = typeof EUC_DEV649_lieuSaisi_ === 'function' ? EUC_DEV649_lieuSaisi_(q.lieu) : { adresse: '', cp: '', commune: '' };
   var tel = EUC_DEV603_t_(q.telephone) ? EUC_DEV603_telephone_(q.telephone, pays) : { ok: true, format: '' };
   if (!tel.ok) throw new Error('Téléphone de l’entreprise : ' + tel.erreur);
   if (EUC_DEV603_t_(q.courriel) && !EUC_DEV603_courriel_(q.courriel).ok) throw new Error('Courriel de l’entreprise : ' + EUC_DEV603_courriel_(q.courriel).erreur);
@@ -317,11 +329,14 @@ function EUC_DEV603_signalerProbleme(q) {
     if (pays === 'MC' && EUC_DEV603_t_(q.siret)) { var nis = EUC_DEV603_t_(q.siret).toUpperCase().slice(0, 40); ligne.SIRET_brut = ''; ligne.SIRET_normalise = ''; ligne.NIS_brut = nis; ligne.NIS_normalise = nis.replace(/[\s-]+/g, ''); ligne.Entreprise_identifiant_type = 'NIS'; }
     ligne.Niveau_controle = 'ROUGE'; ligne.Decision = j.eleveId ? 'A_CONTROLER' : 'ESSAI';
     ligne.Alertes = 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
+    if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, { lieu: lieuAide });
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
     EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id);
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id,
+    { ent: { siret: EUC_DEV603_t_(q.siret), raisonSociale: entreprise, adresse: EUC_DEV603_t_(q.adresse), commune: ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) },
+      resp: { nom: EUC_DEV603_t_(q.contact) }, tut: {}, tuteurEstResponsable: true, periode: periode, fiche: typeof ef === 'undefined' ? {} : ef, message: message });
   return { ok: true, numero: numero, bureau: EUC_DEV603_BUREAU_ };
 }
 

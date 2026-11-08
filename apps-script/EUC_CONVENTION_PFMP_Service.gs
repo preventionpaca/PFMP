@@ -12,7 +12,9 @@ function EUC_CONVENTION_assurerTableAcces_(){
     c('Type_sequence','Type de séquence'),c('Numero_sequence','Numéro de séquence','Int'),c('Convention_origine','Convention d’origine','Ref:EUC_ACCES_FORMULAIRES_PFMP'),c('Convention_remplacement','Convention de remplacement','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
     c('PDIF_periode','Période PDIF','Ref:Planning_Periodes'),c('PDIF_mode','Parcours différencié'),c('Lot_generation','Lot de génération'),
     c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool'),
-    c('Drive_pdf_file_id','Identifiant PDF Drive'),c('Drive_pdf_url','URL PDF Drive'),c('Drive_pdf_nom','Nom PDF Drive'),c('Drive_pdf_date','Date archivage PDF','DateTime'),c('Drive_pdf_taille','Taille PDF','Int')
+    c('Drive_pdf_file_id','Identifiant PDF Drive'),c('Drive_pdf_url','URL PDF Drive'),c('Drive_pdf_nom','Nom PDF Drive'),c('Drive_pdf_date','Date archivage PDF','DateTime'),c('Drive_pdf_taille','Taille PDF','Int'),
+    /* DEV649 : lieu de stage distinct du siège, entreprise non diffusible. */
+    c('Lieu_stage_adresse','Lieu de stage — adresse'),c('Lieu_stage_code_postal','Lieu de stage — code postal'),c('Lieu_stage_commune','Lieu de stage — commune'),c('Entreprise_non_diffusible','Entreprise non diffusible','Bool')
   ];
   if(!exists){EUC_ENT_grist('post','/tables',{tables:[{id:t,columns:cols}]});try{cache.put(schemaKey,'OK',21600);}catch(eNew){}return {tableCreee:true};}
   var presentes={},current=EUC_ENT_grist('get','/tables/'+encodeURIComponent(t)+'/columns').columns||[];current.forEach(function(x){presentes[x.id]=true;});var missing=cols.filter(function(x){return !presentes[x.id];});if(missing.length)EUC_ENT_grist('post','/tables/'+encodeURIComponent(t)+'/columns',{columns:missing});try{cache.put(schemaKey,'OK',21600);}catch(ePut){}return {tableCreee:false,colonnesCreees:missing.map(function(x){return x.id;})};

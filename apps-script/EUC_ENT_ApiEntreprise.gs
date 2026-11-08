@@ -17,13 +17,23 @@ function EUC_ENT_traiterReponseApiNavigateur(json,valeur) {
   if(!json||!Array.isArray(json.results)||!json.results.length) return {source:'api',introuvable:true};
   return {source:'api',entreprise:EUC_ENT_mapperReponseApi(json.results[0],v.siret)};
 }
-function EUC_ENT_mapperReponseApi(u,siret) {
+function EUC_ENT_mapperReponseApi__DEV649_ORIG(u,siret) {
   var candidats=(u.matching_etablissements||[]).concat(u.siege?[u.siege]:[]), e=null;
   candidats.some(function(x){if(String(x.siret)===siret){e=x;return true;}return false;}); e=e||{};
   if(u.siege&&String(u.siege.siret)===siret)e=Object.assign({},u.siege,e);
   var adresse=EUC_ENT_normaliserAdresse_({numero:e.numero_voie,indice:e.indice_repetition,typeVoie:e.type_voie,voie:e.libelle_voie,complement:e.complement_adresse,codePostal:e.code_postal,ville:e.libelle_commune_etranger||e.libelle_commune,pays:e.libelle_pays_etranger||'France',codePays:e.code_pays_etranger,adresseComplete:e.adresse||e.geo_adresse});
   return {siret:siret,siren:u.siren||siret.slice(0,9),raisonSociale:u.nom_raison_sociale||u.nom_complet||'',enseigne:e.nom_commercial||(e.liste_enseignes||[])[0]||'',estSiege:!!e.est_siege,etat:e.etat_administratif==='A'?'Actif':'Fermé',formeJuridique:u.nature_juridique||'',codeApe:e.activite_principale||u.activite_principale||'',libelleActivite:'',dateCreation:e.date_creation||'',complementAdresse:adresse.complement,numeroVoie:adresse.adresse,codePostal:adresse.codePostal,commune:adresse.ville,pays:adresse.pays,adresseComplete:adresse.adresse,diffusionPartielle:(u.statut_diffusion!=='O'||e.statut_diffusion_etablissement!=='O')};
+}/* DEV649 : entreprise « non diffusible » (entrepreneur individuel opposé à la diffusion) : l'annuaire
+ * renvoie « [NON-DIFFUSIBLE] » à la place du nom et de l'adresse. Le SIRET reste vérifié (il existe et son
+ * état est connu) ; les champs masqués sont vidés pour que l'élève les saisisse, et le dossier est signalé. */
+function EUC_ENT_masqueNonDiffusible_(v){return /NON[\s_-]*DIFFUSIBLE/i.test(String(v==null?'':v));}
+function EUC_ENT_mapperReponseApi(u,siret) {
+  var e=EUC_ENT_mapperReponseApi__DEV649_ORIG(u,siret),nd=String(u&&u.statut_diffusion||'').toUpperCase()==='P';
+  Object.keys(e||{}).forEach(function(k){if(typeof e[k]==='string'&&EUC_ENT_masqueNonDiffusible_(e[k])){e[k]='';nd=true;}});
+  if(nd)e.nonDiffusible=true;
+  return e;
 }
+
 function EUC_ENT_identiteEntrepriseComplete_(e){return !!(e&&String(e.raisonSociale||'').trim()&&String(e.numeroVoie||e.adresseComplete||'').trim()&&String(e.codePostal||'').trim()&&String(e.commune||'').trim());}
 function EUC_ENT_echapperRegExp_(v){return String(v||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function EUC_ENT_normaliserAdresse_(d){

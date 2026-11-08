@@ -417,6 +417,9 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
 
   var officielFrance=null;
   var officielMonaco=null;
+  var nonDiffusible=false;
+  /* DEV649 : adresse du lieu de stage si différente du siège (chantier, atelier…) — facultative. */
+  var lieu=typeof EUC_DEV649_lieuSaisi_==='function'?EUC_DEV649_lieuSaisi_(d):{adresse:'',cp:'',commune:''};
   if(!estMonaco){
     officielFrance=EUC_V161_lirePreuveSiretFrance_(d.entrepriseVerification,siret);
     if(!officielFrance)officielFrance=EUC_V161_verifierSiretFrance(siret);
@@ -426,11 +429,21 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
       }
       throw new Error('SIRET non retrouvé dans la base officielle. Enregistrement impossible.');
     }
+    if(officielFrance.nonDiffusible===true){
+      /* DEV649 : SIRET existant mais « non diffusible » : nom et adresse saisis par l'élève, à vérifier par le bureau. */
+      nonDiffusible=true;
+      raison=String(officielFrance.entrepriseRaisonSociale||'').trim()||raison;
+      adresse=String(officielFrance.entrepriseAdresse||'').trim()||adresse;
+      commune=String(officielFrance.entrepriseCommune||'').trim()||commune;
+      d.entrepriseCodePostal=officielFrance.entrepriseCodePostal||txt(d.entrepriseCodePostal,20);
+      d.entrepriseComplement=officielFrance.entrepriseComplement||txt(d.entrepriseComplement,250);
+    }else{
     raison=String(officielFrance.entrepriseRaisonSociale||'').trim();
     adresse=String(officielFrance.entrepriseAdresse||'').trim();
     commune=String(officielFrance.entrepriseCommune||'').trim();
     d.entrepriseComplement=officielFrance.entrepriseComplement||'';
     d.entrepriseCodePostal=officielFrance.entrepriseCodePostal||'';
+    }
     pays='France';
   }else{
     officielMonaco=EUC_V161_resoudreEntrepriseMonacoPourSauvegarde_(nis);
@@ -481,7 +494,7 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Entreprise_siret:siret,
     Entreprise_nis:nis,
     Entreprise_identifiant_type:estMonaco?'NIS':'SIRET',
-    Entreprise_validation_statut:estMonaco?(officielMonaco?'VALIDE':'A_VALIDER'):'VALIDE',
+    Entreprise_validation_statut:estMonaco?(officielMonaco?'VALIDE':'A_VALIDER'):(nonDiffusible?'A_VERIFIER_NON_DIFFUSIBLE':'VALIDE'),
     Entreprise_raison_sociale:raison,
     Entreprise_enseigne:txt(d.entrepriseEnseigne,250),
     Entreprise_adresse:adresse,
@@ -509,6 +522,9 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Statut_administratif:'INFORMATIONS_ENREGISTREES',
     Date_derniere_utilisation:now
   };
+  if(nonDiffusible)fields.Entreprise_non_diffusible=true;
+  if(lieu.adresse||lieu.commune){fields.Lieu_stage_adresse=lieu.adresse;fields.Lieu_stage_code_postal=lieu.cp;fields.Lieu_stage_commune=lieu.commune;}
+  if((nonDiffusible||lieu.adresse||lieu.commune)&&typeof EUC_DEV649_assurerColonnesAcces_==='function')EUC_DEV649_assurerColonnesAcces_();
 
   var writeLock=LockService.getScriptLock(),locked=false,refresh=null;
   try{

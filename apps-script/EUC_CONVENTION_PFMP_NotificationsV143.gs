@@ -256,6 +256,7 @@ function EUC_NOTIF_dossierV143_(accesId,acces){
 
   return {
     acces:a,
+    fiche:e,
     numero:numero,
     eleve:{
       nom:String(e.Nom||''),
@@ -303,6 +304,8 @@ function EUC_NOTIF_preparerV143_(accesId,acces,params){
   if(d.eleve.email)cc=cc.concat(d.parents);
   cc=cc.concat(d.pp);
   if(bfe)cc.push(bfe);
+  /* DEV649 : copie de chaque dépôt aux personnes cochées « Dépôts et numéros de convention » (Destinataires & envois). */
+  if(typeof EUC_DEV649_copieDepots_==='function')cc=cc.concat(EUC_DEV649_copieDepots_());
 
   to=EUC_NOTIF_uniqueV143_(to);
   cc=EUC_NOTIF_uniqueV143_(cc).filter(function(x){return to.indexOf(x)<0;});
@@ -314,7 +317,12 @@ function EUC_NOTIF_preparerV143_(accesId,acces,params){
 
   var body=EUC_NOTIF_renderV143_(p.NOTIF_CORPS,vars);
   var sign=EUC_NOTIF_renderV143_(p.NOTIF_SIGNATURE,vars);
-  if(sign)body+='\n\n'+sign;
+  var htmlBody='';
+  if(typeof EUC_DEV649_recap_==='function'){
+    /* DEV649 : récapitulatif complet (élève, entreprise, lieu de stage, responsable, tuteur, bureau G205). */
+    var r=EUC_DEV649_recap_(EUC_DEV649_infoAcces_(d,body,sign));
+    body=r.texte;htmlBody=r.html;
+  }else if(sign)body+='\n\n'+sign;
 
   return {
     dossier:d,
@@ -323,6 +331,7 @@ function EUC_NOTIF_preparerV143_(accesId,acces,params){
     cc:cc,
     subject:EUC_NOTIF_renderV143_(p.NOTIF_OBJET,vars),
     body:body,
+    htmlBody:htmlBody,
     auto:/^(OUI|YES|TRUE|1)$/i.test(String(p.NOTIF_AUTO_ENVOI||''))
   };
 }
@@ -388,6 +397,7 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
       cc:n.cc.join(','),
       subject:n.subject,
       body:n.body,
+      htmlBody:n.htmlBody||undefined,
       name:'Lycée Les Eucalyptus — PFMP'
     });
 

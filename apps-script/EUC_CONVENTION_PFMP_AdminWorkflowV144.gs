@@ -690,7 +690,8 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
     Responsable_telephone:String(a.Responsable_telephone||''),Responsable_courriel:String(a.Responsable_courriel||''),
     Tuteur_nom:String(a.Tuteur_nom||''),Tuteur_prenom:String(a.Tuteur_prenom||''),Tuteur_fonction:String(a.Tuteur_fonction||''),
     Tuteur_telephone:String(a.Tuteur_telephone||''),Tuteur_courriel:String(a.Tuteur_courriel||''),
-    Date_debut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),Date_fin:EUC_IMPORT_dateExistanteISO_(a.Date_fin)
+    Date_debut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),Date_fin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),
+    Lieu_stage_adresse:String(a.Lieu_stage_adresse||''),Lieu_stage_code_postal:String(a.Lieu_stage_code_postal||''),Lieu_stage_commune:String(a.Lieu_stage_commune||'')
   };
   return base;
 }
@@ -969,7 +970,8 @@ function EUC_ADMIN_WORKFLOW_champsModifiablesV149_(){
     Responsable_telephone:'Téléphone responsable',Responsable_courriel:'Courriel responsable',
     Tuteur_nom:'Nom tuteur',Tuteur_prenom:'Prénom tuteur',Tuteur_fonction:'Fonction tuteur',
     Tuteur_telephone:'Téléphone tuteur',Tuteur_courriel:'Courriel tuteur',
-    Date_debut:'Date début',Date_fin:'Date fin'
+    Date_debut:'Date début',Date_fin:'Date fin',
+    Lieu_stage_adresse:'Lieu de stage — adresse',Lieu_stage_code_postal:'Lieu de stage — code postal',Lieu_stage_commune:'Lieu de stage — commune'
   };
 }
 
@@ -994,6 +996,7 @@ function EUC_ADMIN_WORKFLOW_corrigerV149(accesId,changements,motif){
   });
 
   if(!Object.keys(fields).length)throw new Error('Aucune modification détectée.');
+  if(['Lieu_stage_adresse','Lieu_stage_code_postal','Lieu_stage_commune'].some(function(k){return Object.prototype.hasOwnProperty.call(fields,k);})&&typeof EUC_DEV649_assurerColonnesAcces_==='function')EUC_DEV649_assurerColonnesAcces_();
 
   var now=EUC_ADMIN_WORKFLOW_nowV144_();
   fields.Derniere_correction_admin=now;

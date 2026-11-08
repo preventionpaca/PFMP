@@ -32,9 +32,10 @@ function EUC_V161_creerPreuveSiretFrance_(d){
     adresse:String(d.entrepriseAdresse||'').trim(),
     complement:String(d.entrepriseComplement||'').trim(),
     cp:String(d.entrepriseCodePostal||'').trim(),
-    commune:String(d.entrepriseCommune||'').trim()
+    commune:String(d.entrepriseCommune||'').trim(),
+    nd:d.nonDiffusible===true?1:0
   };
-  if(!/^\d{14}$/.test(body.siret)||!body.raison||!body.adresse||!body.cp||!body.commune)return '';
+  if(!/^\d{14}$/.test(body.siret)||(!body.nd&&(!body.raison||!body.adresse||!body.cp||!body.commune)))return '';
 
   var payload=Utilities.base64EncodeWebSafe(JSON.stringify(body),Utilities.Charset.UTF_8);
   return payload+'.'+EUC_CONVENTION_resumeSignatureV134_('SIRET_FRANCE_V567|'+payload);
@@ -70,6 +71,7 @@ function EUC_V161_lirePreuveSiretFrance_(preuve,siret){
     entrepriseCommune:String(body.commune||'').trim(),
     entreprisePays:'France'
   };
+  if(Number(body.nd)===1){d.nonDiffusible=true;return d;}
   return d.entrepriseRaisonSociale&&d.entrepriseAdresse&&d.entrepriseCodePostal&&d.entrepriseCommune?d:null;
 }
 
@@ -104,6 +106,12 @@ function EUC_V161_mapperEntrepriseFrance_(rep,siret){
   var cp=p(d.codePostal,d.code_postal,d.cp);
   var commune=p(d.commune,d.ville,d.localite);
 
+  /* DEV649 : SIRET non diffusible : trouvé, mais nom et adresse à saisir par l'élève. */
+  if(d.nonDiffusible===true){
+    return {found:true,nonDiffusible:true,entrepriseSiret:String(siret||'').replace(/\D/g,''),
+      entrepriseRaisonSociale:raison,entrepriseEnseigne:p(d.enseigne,d.nomCommercial,d.nom_commercial),entrepriseAdresse:adresse,
+      entrepriseComplement:p(d.complement,d.complement_adresse,d.complementAdresse),entrepriseCodePostal:cp,entrepriseCommune:commune,entreprisePays:'France'};
+  }
   var manquants=[];
   if(!raison)manquants.push('raison sociale');
   if(!adresse)manquants.push('adresse');

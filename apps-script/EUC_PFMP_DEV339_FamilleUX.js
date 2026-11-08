@@ -229,6 +229,7 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
       if(dernier){
         x.entreprise=EUC_DEV339_txt_(dernier.Entreprise_raison_sociale)||EUC_DEV339_txt_(dernier.Entreprise_enseigne);
         x.adresseEntreprise=typeof EUC_DEV340_address_==='function'?EUC_DEV340_address_(dernier):EUC_DEV339_txt_(dernier.Entreprise_adresse);
+        x.lieuStage=typeof EUC_DEV649_lieuTexte_==='function'?EUC_DEV649_lieuTexte_(dernier):'';
         x.contactEntreprise=typeof EUC_DEV340_contact_==='function'?EUC_DEV340_contact_(dernier):'';
         x.tuteurEntreprise=typeof EUC_DEV340_tuteur_==='function'?EUC_DEV340_tuteur_(dernier):'';
         x.telephoneEntreprise=EUC_DEV339_txt_(dernier.Entreprise_telephone)||EUC_DEV339_txt_(dernier.Responsable_telephone)||EUC_DEV339_txt_(dernier.Tuteur_telephone);
@@ -236,7 +237,7 @@ function EUC_DEV422_enrichDetailBatch_(detail,annee,famille,cid,pid,batch,period
         x.telephoneTuteur=EUC_DEV339_txt_(dernier.Tuteur_telephone);
         x.courrielTuteur=EUC_DEV339_txt_(dernier.Tuteur_courriel);
       }else{
-        x.entreprise='';x.adresseEntreprise='';x.contactEntreprise='';x.tuteurEntreprise='';
+        x.entreprise='';x.adresseEntreprise='';x.lieuStage='';x.contactEntreprise='';x.tuteurEntreprise='';
         x.telephoneEntreprise='';x.courrielEntreprise='';x.telephoneTuteur='';x.courrielTuteur='';
       }
     }

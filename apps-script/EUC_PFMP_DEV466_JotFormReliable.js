@@ -234,6 +234,8 @@ function EUC_DEV648_datesLisibles_(row){
 }
 function EUC_DEV466_prepare_(selected,ctx,payload){
   selected=(selected||[]).map(EUC_DEV648_datesLisibles_);
+  /* DEV649 : colonnes du lieu de stage présentes avant de lire le schéma de la table des conventions. */
+  try{if(typeof EUC_DEV649_assurerColonnesAcces_==='function')EUC_DEV649_assurerColonnesAcces_();}catch(eSchema){}
   var overrides=EUC_DEV503_overrideMap_(payload);
   var students=EUC_DEV307_flatRecords_(EUC_DEV307_STUDENTS_TABLE_),studentBy={};
   students.forEach(function(s){studentBy[Number(s.id)||0]=s;});

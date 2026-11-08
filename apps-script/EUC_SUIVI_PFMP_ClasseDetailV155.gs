@@ -227,6 +227,7 @@ function EUC_SUIVI_CLASSE_detailV155(codeAnnee,classeId,periodeId){
 
       entreprise:d?EUC_V155_txt_(d.Entreprise_raison_sociale):'',
       adresseEntreprise:EUC_V155_adresseEntreprise_(d),
+      lieuStage:typeof EUC_DEV649_lieuTexte_==='function'?EUC_DEV649_lieuTexte_(d):'',
       contactEntreprise:EUC_V155_contactEntreprise_(d),
 
       professeurPrincipal:pp.map(function(x){return x.nom;}).join(' / '),

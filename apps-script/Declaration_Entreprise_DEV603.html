@@ -34,6 +34,10 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 /* DEV648 : listes déroulantes lisibles sur tous les navigateurs (même hauteur que les champs, flèche visible). */
 select{display:block;width:100%;min-height:48px;font:inherit;font-size:16px;color:#16302a;padding:.7rem 2.6rem .7rem .8rem;border:1px solid var(--bord);border-radius:8px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%2307866e' stroke-width='2.2'/%3E%3C/svg%3E") no-repeat right .9rem center;-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer}
 select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
+.lieu-stage{margin:12px 0;padding:10px 12px;border:2px solid #d97706;border-radius:10px;background:#fffbeb}
+.lieu-stage summary{cursor:pointer;font-weight:700;color:#92400e}
+.lieu-note{margin:6px 0;color:#92400e;font-size:14px}
+.nd-note{margin:10px 0;padding:10px 12px;border:2px solid #d97706;border-radius:8px;background:#fff7d6;color:#3b0d0c}
 </style>
 </head>
 <body>
@@ -89,7 +93,18 @@ select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
     <label for="siret">N° SIRET</label><input id="siret" inputmode="numeric" maxlength="20" placeholder="732 829 320 00074">
     <button type="button" id="verifier">Vérifier le SIRET</button>
     <div id="officiel"></div>
+    <div id="ndBloc" hidden class="nd-note">
+      <p style="margin:0 0 6px">SIRET trouvé, mais cette entreprise est « non diffusible » : son nom et son adresse ne sont pas publics. Recopie-les depuis un document de l’entreprise (ou demande-les à ton tuteur). Le bureau G205 vérifiera.</p>
+      <label for="ndNom">Nom de l’entreprise</label><input id="ndNom" autocomplete="off">
+      <label for="ndAdr">Adresse du siège</label><input id="ndAdr" autocomplete="off">
+      <div class="deux"><div><label for="ndCp">Code postal</label><input id="ndCp" autocomplete="off"></div><div><label for="ndVille">Ville</label><input id="ndVille" autocomplete="off"></div></div>
+    </div>
     <label for="enseigne">Nom commercial (si différent)</label><input id="enseigne">
+    <details class="lieu-stage" id="LieuBloc"><summary>Le stage a lieu à une autre adresse que celle de l’entreprise ? (chantier, atelier…)</summary>
+      <p class="lieu-note">Remplis seulement si tu ne travailles pas à l’adresse de l’entreprise : le professeur viendra te voir à cette adresse.</p>
+      <label for="LieuAdr">Adresse du lieu de stage</label><input id="LieuAdr" autocomplete="off">
+      <div class="deux"><div><label for="LieuCp">Code postal</label><input id="LieuCp" autocomplete="off"></div><div><label for="LieuVille">Ville</label><input id="LieuVille" autocomplete="off"></div></div>
+    </details>
     <button type="button" class="plein" id="b3" disabled>Continuer</button><p id="m3" role="status"></p>
     <p><button type="button" id="aide">Mon SIRET ne fonctionne pas, ou mon entreprise est à Monaco / à l’étranger</button></p>
   </section>
@@ -108,6 +123,11 @@ select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
       <div id="aMonacoR" role="status" aria-live="polite" style="margin-top:6px"></div>
     </div>
     <label for="aSiret">SIRET ou numéro d’identification (si tu l’as)</label><input id="aSiret">
+    <details class="lieu-stage" id="aLieuBloc"><summary>Le stage a lieu à une autre adresse que celle de l’entreprise ? (chantier, atelier…)</summary>
+      <p class="lieu-note">Remplis seulement si tu ne travailles pas à l’adresse de l’entreprise : le professeur viendra te voir à cette adresse.</p>
+      <label for="aLieuAdr">Adresse du lieu de stage</label><input id="aLieuAdr" autocomplete="off">
+      <div class="deux"><div><label for="aLieuCp">Code postal</label><input id="aLieuCp" autocomplete="off"></div><div><label for="aLieuVille">Ville</label><input id="aLieuVille" autocomplete="off"></div></div>
+    </details>
     <label for="aContact">Nom de ton tuteur</label><input id="aContact">
     <div class="deux"><div><label for="aTel">Téléphone de l’entreprise</label><input id="aTel" type="tel" inputmode="tel"></div><div><label for="aMail">Courriel de l’entreprise</label><input id="aMail" type="email"></div></div>
     <label for="aMsg">Ton message</label><textarea id="aMsg" rows="3" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px"></textarea>
@@ -181,10 +201,17 @@ $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérifica
 /* Étape 2 */
 $('b2').onclick=function(){if(!$('periode').value){erreur('m2','Choisis ta période de stage.');return;}var m=$('emailEleve').value.trim();if(m&&!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(m)){erreur('m2','Adresse courriel invalide.');return;}$('m2').textContent='';etape(3);};
 /* Étape 3 : même vérification que le QR code (fiche connue ou Recherche d'entreprises). */
-$('siret').addEventListener('input',function(){SIRET=null;REPONSE_API=null;$('b3').disabled=true;$('officiel').innerHTML='';});
+var ND=false;
+$('siret').addEventListener('input',function(){SIRET=null;REPONSE_API=null;ND=false;$('ndBloc').hidden=true;$('b3').disabled=true;$('officiel').innerHTML='';});
+function lireLieu(pre){return {lieuStageAdresse:$(pre+'LieuAdr').value.trim(),lieuStageCodePostal:$(pre+'LieuCp').value.trim(),lieuStageCommune:$(pre+'LieuVille').value.trim()};}
+function lieuIncomplet(pre){var l=lireLieu(pre);return (l.lieuStageAdresse||l.lieuStageCodePostal||l.lieuStageCommune)&&!(l.lieuStageAdresse&&l.lieuStageCommune);}
 $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');
   appel('EUC_ENT_rechercherSiret',s,function(r){
     function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
+      /* DEV649 : entreprise non diffusible : nom et adresse à saisir. */
+      ND=e.nonDiffusible===true;$('ndBloc').hidden=!ND;
+      if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
+        $('officiel').innerHTML='<div class="officiel"><b>SIRET '+esc(s)+' trouvé</b>'+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'</div>';$('b3').disabled=false;try{$('ndNom').focus();}catch(eF){}return;}
       $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
       if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
     if(r.entreprise){montrer(r.entreprise);return;}
@@ -192,7 +219,10 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
     fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){return x.json();}).then(function(json){clearTimeout(minu);REPONSE_API=json;
       appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});}).catch(function(){clearTimeout(minu);libre(b);erreur('m3','Le service de vérification ne répond pas. Réessaie dans un instant.');});
   },function(e){libre(b);erreur('m3',e);});};
-$('b3').onclick=function(){if(!SIRET)return;etape(4);};
+$('b3').onclick=function(){if(!SIRET)return;$('m3').textContent='';
+  if(ND&&!($('ndNom').value.trim()&&$('ndAdr').value.trim()&&$('ndVille').value.trim())){erreur('m3','Entreprise non diffusible : indique son nom, son adresse et sa ville.');return;}
+  if(lieuIncomplet('')){erreur('m3','Lieu du stage : indique l’adresse et la ville, ou laisse ces champs vides si le stage a lieu à l’adresse de l’entreprise.');return;}
+  etape(4);};
 $('aide').onclick=function(){etape('3b');};$('aRetour').onclick=function(){etape(3);};
 $('aPays').onchange=function(){$('aPaysAutre').hidden=this.value!=='AUTRE';$('aMonaco').hidden=this.value!=='MC';};
 /* DEV648 : même recherche par nom que la page du QR code (entreprises de Monaco de la base, NIS ou numéro interne). */
@@ -206,14 +236,14 @@ $('aMonacoGo').onclick=function(){var b=this,t=$('aMonacoQ').value.trim();if(b.d
   },function(e){libre(b);$('aMonacoR').textContent=msgErr(e);});};
 surveiller($('aTel'),function(){return $('aPays').value;});surveiller($('aMail'));
 $('aEnvoyer').onclick=function(){var b=this;$('mA').textContent='';occupe(b,'Envoi…');
-  appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value},
+  appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value,lieu:lireLieu('a')},
     function(r){libre(b);$('recu').innerHTML='<p>Numéro de demande : <b style="font-size:20px">'+esc(r.numero)+'</b></p><p class="erreur" style="font-size:18px">Passe au plus vite au '+esc(r.bureau)+'.</p><p class="note">Le bureau des entreprises a reçu ta demande.</p>';etape(5);},
     function(e){libre(b);erreur('mA',e);});};
 /* Étape 4 */
 personne('resp');personne('tut');
 $('meme').onchange=function(){$('blocTuteur').hidden=this.checked;};
 $('b4').onclick=function(){var b=this;$('m4').textContent='';occupe(b,'Envoi…');
-  appel('EUC_DEV603_deposer',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),siret:SIRET,reponseApi:REPONSE_API,enseigne:$('enseigne').value.trim(),responsable:lirePersonne('resp'),tuteurEstResponsable:$('meme').checked,tuteur:lirePersonne('tut')},
+  appel('EUC_DEV603_deposer',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),siret:SIRET,reponseApi:REPONSE_API,enseigne:$('enseigne').value.trim(),nonDiffusible:ND?{nom:$('ndNom').value.trim(),adresse:$('ndAdr').value.trim(),codePostal:$('ndCp').value.trim(),commune:$('ndVille').value.trim()}:null,lieu:lireLieu(''),responsable:lirePersonne('resp'),tuteurEstResponsable:$('meme').checked,tuteur:lirePersonne('tut')},
     function(r){libre(b);$('recu').innerHTML=(r.essai?'<p class="erreur">Mode essai : ce dépôt apparaît dans « Soumissions reçues » mais ne peut pas être validé.</p>':'')+'<p>Numéro d’enregistrement de ta convention :<br><b style="font-size:24px">'+esc(r.numero)+'</b></p><p class="erreur">Recopie ce numéro sur ta convention.</p><p>Entreprise : <b>'+esc(r.entreprise)+'</b><br>Période : '+esc(r.periode)+'</p><p>Le bureau des entreprises va vérifier ta déclaration ; tu seras prévenu(e) par courriel quand elle sera validée. Le numéro ne changera pas.</p>'+(r.courriel?'<p class="note">Ce numéro t’a aussi été envoyé à '+esc(r.courriel)+'.</p>':'');etape(5);},
     function(e){libre(b);erreur('m4',e);});};
 

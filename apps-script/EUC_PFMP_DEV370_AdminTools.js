@@ -201,7 +201,10 @@ function EUC_DEV440_missionLine_(x,transport){
   x=x||{};
   return{
     eleveId:EUC_DEV368_n(x.eleveId),eleve:[x.nom,x.prenom].filter(Boolean).join(' '),
-    entreprise:EUC_DEV368_t(x.entreprise),adresse:EUC_DEV368_t(x.adresseEntreprise),transport:EUC_DEV368_t(transport)||'Véhicule personnel',
+    entreprise:EUC_DEV368_t(x.entreprise),transport:EUC_DEV368_t(transport)||'Véhicule personnel',
+    /* DEV649 : les trajets se font vers le lieu de stage quand il diffère du siège ; le siège reste indiqué. */
+    adresse:EUC_DEV368_t(x.lieuStage)?'⚠ LIEU DU STAGE : '+EUC_DEV368_t(x.lieuStage)+(EUC_DEV368_t(x.adresseEntreprise)?'\n(siège : '+EUC_DEV368_t(x.adresseEntreprise)+')':''):EUC_DEV368_t(x.adresseEntreprise),
+    lieuStage:EUC_DEV368_t(x.lieuStage),siege:EUC_DEV368_t(x.adresseEntreprise),
     contactEntreprise:EUC_DEV440_contactBlock_(x.coordonneesEntreprise||x.contactEntreprise,x.responsableEntreprise||x.nomResponsableEntreprise,x.telephoneEntreprise,x.courrielEntreprise||x.emailEntreprise),
     contactTuteur:EUC_DEV440_contactBlock_(x.coordonneesTuteur||x.tuteurEntreprise,x.tuteur||x.nomTuteurEntreprise,x.telephoneTuteur,x.courrielTuteur||x.emailTuteur)
   };

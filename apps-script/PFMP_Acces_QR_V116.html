@@ -243,6 +243,10 @@ button.euc-action-busy:before{
 /* DEV648 : listes déroulantes lisibles sur tous les navigateurs (même hauteur que les champs, flèche visible). */
 select{display:block;width:100%;min-height:48px;font:inherit;font-size:16px;color:#16302a;padding:.7rem 2.6rem .7rem .8rem;border:1px solid #b9cbc6;border-radius:8px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%2307866e' stroke-width='2.2'/%3E%3C/svg%3E") no-repeat right .9rem center;-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer}
 select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
+.lieu-stage{margin:14px 0;padding:10px 12px;border:2px solid #d97706;border-radius:10px;background:#fffbeb}
+.lieu-stage summary{cursor:pointer;font-weight:700;color:#92400e}
+.lieu-note{margin:6px 0;color:#92400e;font-size:14px}
+.nd-note{margin:8px 0;padding:10px 12px;border:2px solid #d97706;border-radius:8px;background:#fff7d6;color:#3b0d0c;font-weight:600}
 </style>
 </head>
 
@@ -411,6 +415,26 @@ Pays *
 </label>
 
 </div>
+
+<!-- DEV649 : lieu du stage s'il est différent du siège (chantier, atelier, locaux d'une autre entreprise…). -->
+<details id="lieuStageBloc" class="lieu-stage">
+<summary>Le stage a lieu à une autre adresse que celle de l’entreprise ? (chantier, atelier…)</summary>
+<p class="lieu-note">Remplis seulement si tu ne travailles pas à l’adresse ci-dessus : le professeur viendra te voir à cette adresse.</p>
+<div class="enterprise-grid">
+<label class="wide">
+Adresse du lieu de stage
+<input name="lieuStageAdresse" autocomplete="off">
+</label>
+<label>
+Code postal
+<input name="lieuStageCodePostal" autocomplete="off">
+</label>
+<label>
+Ville
+<input name="lieuStageCommune" autocomplete="off">
+</label>
+</div>
+</details>
 
 
 <h3>Responsable dans l’entreprise</h3>
@@ -1611,6 +1635,8 @@ init();
                     lockIdentity(true,false);
                     lockOne('entrepriseEnseigne',false);
                     status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
+
+                    if(x.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
                   })
                   .withFailureHandler(function(e){
                     clearTimeout(timer);
@@ -1654,6 +1680,8 @@ init();
             lockIdentity(true,false);
             lockOne('entrepriseEnseigne',false);
             status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
+
+            if(r.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
           })
           .withFailureHandler(function(e){
             finishSearch();
@@ -1998,6 +2026,21 @@ init();
     }).EUC_DEV646_rechercherMonacoParNom(texte);
   });
 })();
+</script>
+<script>
+/* DEV649 : SIRET « non diffusible » : trouvé à l'INSEE mais nom et adresse masqués → saisie par l'élève. */
+window.EUC_DEV649_nonDiffusible=function(){
+  ['entrepriseRaisonSociale','entrepriseAdresse','entrepriseComplement','entrepriseCodePostal','entrepriseCommune'].forEach(function(k){
+    var el=document.querySelector('[name="'+k+'"]');if(!el)return;el.readOnly=false;el.disabled=false;el.classList.remove('euc-locked');el.setAttribute('aria-readonly','false');
+  });
+  var box=document.getElementById('ndNoteDev649');
+  if(!box){box=document.createElement('div');box.id='ndNoteDev649';box.className='nd-note';box.setAttribute('role','status');
+    var s=document.getElementById('search');if(s&&s.parentNode)s.parentNode.insertAdjacentElement('afterend',box);}
+  box.textContent='SIRET trouvé, mais cette entreprise est « non diffusible » : son nom et son adresse ne sont pas publics. Recopie-les depuis un document de l’entreprise (ou demande-les à ton tuteur). Le bureau G205 vérifiera.';
+  var st=document.getElementById('siretState');if(st)st.textContent='SIRET trouvé — entreprise non diffusible';
+  var f=document.querySelector('[name="entrepriseRaisonSociale"]');if(f)try{f.focus();}catch(e){}
+};
+document.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='siret'){var b=document.getElementById('ndNoteDev649');if(b)b.remove();}},true);
 </script>
 <?!= HtmlService.createHtmlOutputFromFile('Identites_Contacts_DEV602').getContent() ?>
 </body>

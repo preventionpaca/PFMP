@@ -180,7 +180,11 @@ function EUC_DEV528_companyFields_(row,ctx,columns){
    * une valeur vide ne remplace jamais une valeur déjà trouvée. */
   if(typeof EUC_DEV602_jotform_==='function'){var j=EUC_DEV602_jotform_(row,EUC_DEV528_raw_(row));Object.keys(j).forEach(function(k){if(!extra[k])extra[k]=j[k];});}
   Object.keys(extra).forEach(function(k){if(!extra[k]&&out[k])delete extra[k];});
-  out=Object.assign(out,EUC_DEV307_filterFields_(extra,columns));
+  /* DEV649 : lieu de stage distinct du siège et entreprise non diffusible (formulaire en ligne). */
+  var lieu={};
+  if(String(row.Lieu_stage_adresse||'').trim()||String(row.Lieu_stage_commune||'').trim()){lieu.Lieu_stage_adresse=String(row.Lieu_stage_adresse||'').trim();lieu.Lieu_stage_code_postal=String(row.Lieu_stage_code_postal||'').trim();lieu.Lieu_stage_commune=String(row.Lieu_stage_commune||'').trim();}
+  if(row.Entreprise_non_diffusible===true){lieu.Entreprise_non_diffusible=true;lieu.Entreprise_validation_statut='A_VERIFIER_NON_DIFFUSIBLE';}
+  out=Object.assign(out,EUC_DEV307_filterFields_(extra,columns),EUC_DEV307_filterFields_(lieu,columns));
   Object.keys(out).forEach(function(k){if(EUC_DEV648_masque_(out[k]))delete out[k];});
   return out;
 }
