@@ -7,6 +7,7 @@
 - `EUC_LIEN_eleve_(requete)` (EUC_DEV640_Liens.js) construit ces adresses depuis `EUC_LIEN_('enregistrer')`. Utilisé pour : QR des conventions imprimées (PdfV95, DonneesV80, Service par jeton), bouton « Continuer vers ma convention » du code de secours, lien de secours de la page QR. Les QR déjà imprimés gardent l'adresse Apps Script et fonctionnent toujours.
 - Page QR et page de continuation entreprise : `XFrameOptionsMode.ALLOWALL` pour l'affichage dans l'enveloppe.
 - Choix 2 du formulaire : « Ma convention n’a pas de QR code, ou pas de code écrit sous le QR code » (premières conventions imprimées sans code sous le QR).
+- En-tête du formulaire : courriel du bureau assemblé à l'affichage (absent du code de la page, contre les robots) ; ligne « Pour toute question, passe au bureau des formations et des entreprises, en G205. »
 - Tests : `tests/run-dev647-enveloppe-eleves-tests.js` (4).
 
 ## Mise à jour du 8 novembre 2026 — DEV646 : génération de classe sans doublon, Monaco sans NIS, renvoi vers le formulaire en ligne

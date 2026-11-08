@@ -34,7 +34,9 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 </style>
 </head>
 <body>
-<header><h1>Enregistrer ma PFMP</h1><p>Lycée Les Eucalyptus — 7 avenue des Eucalyptus, 06200 Nice<br>Bureau des formations et des entreprises : <a href="mailto:bfe@lycee-les-eucalyptus.org">bfe@lycee-les-eucalyptus.org</a> · <a href="tel:+33492293065">04 92 29 30 65</a></p>
+<header><h1>Enregistrer ma PFMP</h1><p>Lycée Les Eucalyptus — 7 avenue des Eucalyptus, 06200 Nice<br>Bureau des formations et des entreprises : <a id="courrielBfe" href="#">bfe (arobase) lycee-les-eucalyptus.org</a> · <a href="tel:+33492293065">04 92 29 30 65</a><br><b>Pour toute question, passe au bureau des formations et des entreprises, en G205.</b></p>
+<script>/* Adresse assemblée à l’affichage : absente du code de la page, elle n’est pas ramassée par les robots. */
+(function(){var a=document.getElementById('courrielBfe'),c=['bfe',['lycee','les','eucalyptus'].join('-')+'.'+'org'].join(String.fromCharCode(64));a.textContent=c;a.href='mail'+'to:'+c;})();</script>
 <div class="etapes"><span id="e1" class="on">1. Moi</span><span id="e2">2. Période</span><span id="e3">3. Entreprise</span><span id="e4">4. Responsable et tuteur</span></div></header>
 <main>
   <div id="etat" class="note" role="status">Chargement…</div>

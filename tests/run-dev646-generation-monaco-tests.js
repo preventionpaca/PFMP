@@ -137,7 +137,11 @@ test('QR : un échec d’enregistrement renvoie d’abord vers le formulaire en 
 test('formulaire en ligne « Enregistrer ma PFMP » : coordonnées du lycée, deux cas (avec ou sans QR code), captcha commun', () => {
   const f = read('apps-script/Declaration_Entreprise_DEV603.html'), srv = read('apps-script/EUC_DEV603_Declaration.js');
   assert.match(f, /<h1>Enregistrer ma PFMP<\/h1>/); assert.match(srv, /setTitle\('Enregistrer ma PFMP — Lycée Les Eucalyptus'\)/);
-  ['7 avenue des Eucalyptus, 06200 Nice', 'mailto:bfe@lycee-les-eucalyptus.org', '04 92 29 30 65'].forEach(x => assert.ok(f.includes(x), x));
+  ['7 avenue des Eucalyptus, 06200 Nice', '04 92 29 30 65', 'Pour toute question, passe au bureau des formations et des entreprises, en G205.'].forEach(x => assert.ok(f.includes(x), x));
+  /* DEV647 : courriel du bureau assemblé à l'affichage, absent du code (robots). */
+  assert.ok(!f.includes('bfe@'), 'adresse en clair'); assert.match(f, /id="courrielBfe"/); assert.match(f, /String\.fromCharCode\(64\)/);
+  { const vm = require('vm'), el = { textContent: '', href: '' }, js = /<script>\/\* Adresse assemblée[^]*?<\/script>/.exec(f)[0].replace(/<\/?script>/g, ''); vm.runInNewContext(js, { document: { getElementById: () => el }, String });
+    assert.strictEqual(el.textContent, 'bfe@lycee-les-eucalyptus.org'); assert.strictEqual(el.href, 'mailto:bfe@lycee-les-eucalyptus.org'); }
   assert.match(f, /1\. Ma convention comporte un QR code/); assert.match(f, /2\. Ma convention n’a pas de QR code, ou pas de code écrit sous le QR code/);
   const i = id => f.indexOf('id="' + id + '"');
   assert.ok(i('partQr') < i('codeConv') && i('codeConv') < i('partSans'), 'le code est dans le cas 1');
