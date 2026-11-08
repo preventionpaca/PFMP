@@ -67,4 +67,10 @@ test('écriture Grist : un envoi par ensemble identique de colonnes ; motif Gris
   const gr = read('apps-script/EUC_ENT_Grist.gs');
   assert.match(gr, /Grist indisponible ou requête refusée \('\+code\+'\)'\+\(det\?/); assert.match(gr, /replace\(\/\\\?\.\*\$\/,''\)/, 'chemin sans paramètres');
 });
+test('sélection conservée au rechargement (identifiants de lignes seulement, stockage protégé)', () => {
+  assert.match(page, /function saveSelection\(\)\{try\{localStorage\.setItem\(selectionStorageKey,JSON\.stringify\(Array\.from\(chosen\)\)\);\}catch\(e\)\{\}\}/);
+  assert.match(page, /function init\(\)\{\n    chosen\.clear\(\);\n    loadSelection\(\);\n    refresh\(\);/);
+  assert.match(page, /function refresh\(\)\{\n    saveSelection\(\);/);
+  assert.match(page, /if\(id\)chosen\.add\(id\);\}\);\}catch\(e\)\{\}\}/);
+});
 console.log(n + ' tests DEV648 réussis.');
