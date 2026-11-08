@@ -160,7 +160,14 @@ function EUC_DEV528_enrichJotformContacts_(rows){
 
 /* Les prochains imports ecrivent aussi les champs canoniques. L'ancien
  * mapping reste la base ; DEV528 ajoute uniquement les coordonnees oubliees. */
+/* DEV648 : l'annuaire INSEE masque nom et adresse des entreprises « non diffusibles » ([NON-DIFFUSIBLE]).
+ * Ce masque n'est jamais une donnée : on le retire de la ligne pour que la saisie de l'élève (JotForm) serve. */
+function EUC_DEV648_masque_(v){return /NON[\s_-]*DIFFUSIBLE/i.test(String(v==null?'':v));}
+function EUC_DEV648_sansMasque_(row){
+  var out={};Object.keys(row||{}).forEach(function(k){out[k]=EUC_DEV648_masque_(row[k])&&k!=='Raw_JSON'?'':row[k];});return out;
+}
 function EUC_DEV528_companyFields_(row,ctx,columns){
+  row=EUC_DEV648_sansMasque_(row);
   var out=EUC_DEV307_companyFields_(row,ctx,columns),c=EUC_DEV528_contactFromBuffer_(row),extra={
     Entreprise_telephone:c.telephone,
     Entreprise_courriel:c.courriel,
@@ -173,5 +180,7 @@ function EUC_DEV528_companyFields_(row,ctx,columns){
    * une valeur vide ne remplace jamais une valeur déjà trouvée. */
   if(typeof EUC_DEV602_jotform_==='function'){var j=EUC_DEV602_jotform_(row,EUC_DEV528_raw_(row));Object.keys(j).forEach(function(k){if(!extra[k])extra[k]=j[k];});}
   Object.keys(extra).forEach(function(k){if(!extra[k]&&out[k])delete extra[k];});
-  return Object.assign(out,EUC_DEV307_filterFields_(extra,columns));
+  out=Object.assign(out,EUC_DEV307_filterFields_(extra,columns));
+  Object.keys(out).forEach(function(k){if(EUC_DEV648_masque_(out[k]))delete out[k];});
+  return out;
 }

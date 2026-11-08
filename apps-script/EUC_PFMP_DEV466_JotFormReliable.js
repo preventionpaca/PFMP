@@ -293,13 +293,17 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
       var companyFields=typeof EUC_DEV528_companyFields_==='function'?EUC_DEV528_companyFields_(row,ctx,columns):EUC_DEV307_companyFields_(row,ctx,columns),specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
       if(existing&&EUC_DEV466_isSubmitted_(existing)){
         mode='EXISTING';fields={};accessId=Number(existing.id)||0;
+        /* DEV648 : convention déjà importée avec le masque INSEE [NON-DIFFUSIBLE] : seuls ces champs
+         * masqués sont remplacés par la saisie de l'élève ; rien d'autre n'est touché. */
+        var repare=EUC_DEV648_champsMasques_(existing,companyFields);
+        if(Object.keys(repare).length){mode='REPARE';fields=EUC_DEV307_filterFields_(repare,columns);}
       }else if(existing){
         mode='COMPLETE';accessId=Number(existing.id)||0;
         fields=EUC_DEV466_mergeIncomplete_(existing,preparedFields,companyFields,columns);
       }else{
         fields=EUC_DEV307_filterFields_(Object.assign({},preparedFields,companyFields),columns);
       }
-      if(periodRes.manual===true&&mode!=='EXISTING')fields=Object.assign({},fields,EUC_DEV307_filterFields_(specialFields,columns));
+      if(periodRes.manual===true&&mode!=='EXISTING'&&mode!=='REPARE')fields=Object.assign({},fields,EUC_DEV307_filterFields_(specialFields,columns));
       items.push({rowId:Number(row.id)||0,label:label,studentId:studentId,classId:realClassId,periodId:periodId,year:year,family:EUC_DEV466_family_(classBy[realClassId]),key:key,siret:siret,mode:mode,fields:fields,accessId:accessId,datesSpeciales:periodRes.manual===true});
     }catch(e){errors.push({id:Number(row.id)||0,eleve:label,erreur:EUC_DEV466_txt_(e&&e.message||e)});}
   });
@@ -315,6 +319,12 @@ function EUC_DEV648_parColonnes_(records){
   var groupes={},ordre=[];
   (records||[]).forEach(function(r){var k=Object.keys((r&&r.fields)||{}).sort().join('|');if(!groupes[k]){groupes[k]=[];ordre.push(k);}groupes[k].push(r);});
   return ordre.map(function(k){return groupes[k];});
+}
+/* Calcul pur : champs d'une convention existante masqués « [NON-DIFFUSIBLE] » pour lesquels une valeur réelle existe. */
+function EUC_DEV648_champsMasques_(existing,companyFields){
+  var masque=function(v){return /NON[\s_-]*DIFFUSIBLE/i.test(String(v==null?'':v));},out={};
+  Object.keys(companyFields||{}).forEach(function(k){var v=companyFields[k];if(masque(existing&&existing[k])&&!EUC_DEV466_empty_(v)&&!masque(v))out[k]=v;});
+  return out;
 }
 function EUC_DEV648_vueAbsente_(e){return /Vue reconstruite introuvable/.test(String(e&&e.erreur||''));}
 function EUC_DEV648_messageBlocage_(errors,total){
@@ -378,7 +388,7 @@ function EUC_DEV466_importSelection(payload){
     var creates=[],updates=[];
     items.forEach(function(item){
       if(item.mode==='CREATE')creates.push({fields:item.fields});
-      else if(item.mode==='COMPLETE')updates.push({id:item.accessId,fields:item.fields});
+      else if(item.mode==='COMPLETE'||item.mode==='REPARE')updates.push({id:item.accessId,fields:item.fields});
     });
     /* DEV648 : Grist refuse (400) un envoi groupé dont les lignes n'ont pas toutes les mêmes colonnes. */
     EUC_DEV648_parColonnes_(creates).forEach(function(g){EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_DEV307_ACCESS_TABLE_)+'/records',{records:g});});
@@ -399,7 +409,7 @@ function EUC_DEV466_importSelection(payload){
     /* DEV603 : déclarations du formulaire de secours — numéro de convention attribué et envoyé à l'élève. */
     if(typeof EUC_DEV603_apresValidation_==='function')EUC_DEV603_apresValidation_(items);
     var list=EUC_DEV298_lister(),created=items.filter(function(x){return x.mode==='CREATE';}).length;
-    var completed=items.filter(function(x){return x.mode==='COMPLETE';}).length;
+    var completed=items.filter(function(x){return x.mode==='COMPLETE'||x.mode==='REPARE';}).length;
     var existing=items.filter(function(x){return x.mode==='EXISTING';}).length;
     list.validationBilan={
       selectionnees:items.length,creees:created,completees:completed,dejaExistantes:existing,

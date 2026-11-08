@@ -82,4 +82,16 @@ test('cache de vue absent : avertissement, le tampon est validé ; vue sans la c
   assert.equal(k.EUC_DEV648_vueAbsente_({ erreur: 'Vue reconstruite introuvable dans le cache publié.' }), true);
   assert.equal(k.EUC_DEV648_vueAbsente_({ erreur: 'La vue de classe ne publie pas encore la convention pour la période choisie.' }), false);
 });
+test('[NON-DIFFUSIBLE] (masque INSEE) : jamais écrit, la saisie de l’élève sert ; conventions déjà masquées réparées sur ces seuls champs', () => {
+  const c528 = read('apps-script/EUC_PFMP_DEV528_JotFormContacts.js'), k = { Object, String }; vm.createContext(k);
+  vm.runInContext(/function EUC_DEV648_masque_[^\n]*/.exec(c528)[0] + '\n' + /function EUC_DEV648_sansMasque_[^]*?\n\}/.exec(c528)[0] + '\n' + /function EUC_DEV466_empty_[^]*?\n\}/.exec(src)[0] + '\n' + /function EUC_DEV648_champsMasques_[^]*?\n\}/.exec(src)[0], k);
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV648_sansMasque_({ Raison_sociale_officielle: '[NON-DIFFUSIBLE]', Adresse_officielle: '[NON-DIFFUSIBLE] [NON-DIFFUSIBLE]', Entreprise_saisie: 'Motion Motors', Ville_officielle: 'CARROS', Raw_JSON: '{"x":"[NON-DIFFUSIBLE]"}' })));
+  assert.equal(r.Raison_sociale_officielle, ''); assert.equal(r.Adresse_officielle, ''); assert.equal(r.Entreprise_saisie, 'Motion Motors'); assert.equal(r.Ville_officielle, 'CARROS'); assert.ok(r.Raw_JSON.includes('NON-DIFFUSIBLE'));
+  assert.match(c528, /row=EUC_DEV648_sansMasque_\(row\);/); assert.match(c528, /if\(EUC_DEV648_masque_\(out\[k\]\)\)delete out\[k\];/);
+  const fix = JSON.parse(JSON.stringify(k.EUC_DEV648_champsMasques_({ Entreprise_raison_sociale: '[NON-DIFFUSIBLE]', Entreprise_adresse: '[NON-DIFFUSIBLE]', Entreprise_commune: 'CARROS', Tuteur_nom: 'Minhonnue' },
+    { Entreprise_raison_sociale: 'Motion Motors', Entreprise_adresse: '', Entreprise_commune: 'Carros', Tuteur_nom: 'Autre' })));
+  assert.deepEqual(fix, { Entreprise_raison_sociale: 'Motion Motors' }, 'seuls les champs masqués avec une vraie valeur');
+  assert.match(src, /var repare=EUC_DEV648_champsMasques_\(existing,companyFields\);/);
+  assert.match(src, /item\.mode==='COMPLETE'\|\|item\.mode==='REPARE'\)updates\.push/);
+});
 console.log(n + ' tests DEV648 réussis.');
