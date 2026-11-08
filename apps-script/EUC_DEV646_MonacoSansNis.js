@@ -15,8 +15,11 @@ function EUC_DEV646_nis_(v) { return EUC_DEV646_t_(v).toUpperCase().replace(/[\s
 function EUC_DEV646_interne_(nis) { return EUC_DEV646_nis_(nis).indexOf(EUC_DEV646_nis_(EUC_DEV646_PREFIXE_)) === 0; }
 function EUC_DEV646_table_() { return typeof EUC_V161F8_tableEntreprise_ === 'function' ? EUC_V161F8_tableEntreprise_() : 'EUC_ENTREPRISES'; }
 
-/* Entreprise de Monaco : pays Monaco ou NIS renseigné. Calcul pur. */
-function EUC_DEV646_monaco_(r) { return /monaco/i.test(EUC_DEV646_t_(r.Pays)) || !!EUC_DEV646_t_(r.NIS); }
+/* Entreprise de Monaco (même règle que le suivi) : pays, commune ou code postal 980xx de Monaco, ou NIS renseigné. Calcul pur. */
+function EUC_DEV646_monaco_(r) {
+  var lieu = EUC_DEV646_n_([r.Pays, r.Commune, r.Ville].join(' '));
+  return /\bmonaco\b|\bmonte carlo\b/.test(lieu) || /^mc$/i.test(EUC_DEV646_t_(r.Pays)) || /^980\d\d$/.test(EUC_DEV646_t_(r.Code_postal)) || !!EUC_DEV646_t_(r.NIS);
+}
 function EUC_DEV646_fiche_(r) {
   return { id: Number(r.id) || 0, nis: EUC_DEV646_t_(r.NIS), interne: EUC_DEV646_interne_(r.NIS), nom: EUC_DEV646_t_(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: EUC_DEV646_t_(r.Enseigne),
     adresse: EUC_DEV646_t_(r.Adresse || r.Adresse_complete), cp: EUC_DEV646_t_(r.Code_postal), ville: EUC_DEV646_t_(r.Commune) || 'Monaco', telephone: EUC_DEV646_t_(r.Telephone), email: EUC_DEV646_t_(r.Email) };

@@ -84,6 +84,15 @@ test('recherche par nom : entreprises de Monaco avec un numéro, sans accent ni 
   assert.throws(() => m.EUC_DEV646_filtrerParNom_(ENT, 'ab'), /3 lettres/);
 });
 
+test('Monaco reconnu comme dans le suivi : pays, commune, Monte-Carlo ou code postal 980xx', () => {
+  assert.equal(m.EUC_DEV646_monaco_({ Commune: 'MONACO' }), true);
+  assert.equal(m.EUC_DEV646_monaco_({ Commune: 'Monte-Carlo' }), true);
+  assert.equal(m.EUC_DEV646_monaco_({ Code_postal: '98000' }), true);
+  assert.equal(m.EUC_DEV646_monaco_({ Pays: 'MC' }), true);
+  assert.equal(m.EUC_DEV646_monaco_({ Commune: 'Nice', Code_postal: '06000', Pays: 'France' }), false);
+  assert.equal(m.EUC_DEV646_monaco_({ Commune: 'Beausoleil', Code_postal: '06240' }), false);
+});
+
 test('numéro interne : EUC-MC-0001, puis le suivant, reconnu comme interne', () => {
   assert.equal(m.EUC_DEV646_numeroSuivant_([]), 'EUC-MC-0001');
   assert.equal(m.EUC_DEV646_numeroSuivant_(ENT.concat([{ NIS: 'EUCMC0007' }])), 'EUC-MC-0008');
