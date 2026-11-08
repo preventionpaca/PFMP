@@ -6,6 +6,7 @@
 - Branché dans `EUC_ENT_traiterReponseApiNavigateur` (commun à la page QR et au formulaire en ligne) : SIRET non diffusible → fiche INPI complète (nom, voie, code postal, commune) → entreprise traitée comme vérifiée (`sourceIdentite` INPI_RNE). Sinon (non activé, pas d'identifiants, erreur, fiche incomplète) : saisie par l'élève (DEV649/650).
 - Page d'administration `acces-inpi-pfmp` (« Accès INPI », DDFPT/ADMIN_PFMP pour écrire) : identifiants enregistrés dans `INPI_RNE_IDENTIFIANT` / `INPI_RNE_MOT_DE_PASSE` (l'éditeur Apps Script n'affiche que 50 propriétés), essai sur un SIRET sans écriture, activation `INPI_RNE_ACTIF` = OUI par l'utilisateur.
 - Compte data.inpi.fr créé par l'utilisateur, accès API « Informations des entreprises » accordé le 9 novembre 2026.
+- Fiches `EUC_ENTREPRISES` encore masquées « [NON-DIFFUSIBLE] » (import d'avant DEV648) : ignorées par la recherche SIRET (`EUC_ENT_identiteEntrepriseComplete_` → data.gouv puis INPI) et par le suivi (`EUC_SUIVI2_premier_` saute toute valeur masquée). Section 4 de la page « Accès INPI » : liste et « Corriger depuis l'INPI » (champs masqués ou vides seulement, clic de l'administrateur).
 
 ## Mise à jour du 8 novembre 2026 — DEV650 : entreprise non diffusible, vérification sur l'INPI
 

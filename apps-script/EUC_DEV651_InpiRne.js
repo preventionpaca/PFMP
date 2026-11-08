@@ -131,3 +131,34 @@ function EUC_DEV651_activer(oui) {
   EUC_DEV651_props_().setProperty(EUC_DEV651_CLES_.actif, oui ? 'OUI' : 'NON');
   return EUC_DEV651_etat();
 }
+
+/* ---------- Fiches de la base encore masquées « [NON-DIFFUSIBLE] » (import d'avant DEV648) ---------- */
+function EUC_DEV651_masque_(v) { return /NON[\s_-]*DIFFUSIBLE/i.test(String(v == null ? '' : v)); }
+var EUC_DEV651_CHAMPS_FICHE_ = ['Raison_sociale', 'Enseigne', 'Numero_voie', 'Adresse_complete', 'Code_postal', 'Commune'];
+function EUC_DEV651_table_() { var c = EUC_ENT_lireConfiguration(); return c.EUC_ENT_TABLE_ENTREPRISES || 'EUC_ENTREPRISES'; }
+/* Calcul pur : champs à écrire sur une fiche masquée (seuls les champs masqués ou vides sont remplacés). */
+function EUC_DEV651_correctionFiche_(r, x) {
+  var v = { Raison_sociale: x.nom, Enseigne: x.enseigne, Numero_voie: x.adresse, Adresse_complete: [x.adresse, [x.codePostal, x.commune].join(' ')].filter(Boolean).join(', '), Code_postal: x.codePostal, Commune: x.commune }, f = {};
+  EUC_DEV651_CHAMPS_FICHE_.forEach(function(k) { if (v[k] && (!EUC_DEV651_t_(r[k]) || EUC_DEV651_masque_(r[k]))) f[k] = v[k]; });
+  return f;
+}
+function EUC_DEV651_fichesMasquees() {
+  EUC_IMPORT_exigerAdminTexte_();
+  return { fiches: EUC_IMPORT_lireRecords_(EUC_DEV651_table_()).filter(function(r) { return EUC_DEV651_CHAMPS_FICHE_.some(function(k) { return EUC_DEV651_masque_(r[k]); }); })
+    .map(function(r) { return { id: r.id, siret: EUC_DEV651_t_(r.SIRET), nom: EUC_DEV651_t_(r.Raison_sociale), enseigne: EUC_DEV651_t_(r.Enseigne), commune: EUC_DEV651_t_(r.Commune) }; }) };
+}
+function EUC_DEV651_corrigerFiche(id) {
+  EUC_DEV651_exigerGestion_();
+  id = Number(id);
+  var r = EUC_IMPORT_lireRecords_(EUC_DEV651_table_()).filter(function(x) { return x.id === id; })[0];
+  if (!r) throw new Error('Fiche entreprise introuvable.');
+  var s = EUC_DEV651_t_(r.SIRET).replace(/\D/g, '');
+  if (!/^\d{14}$/.test(s)) throw new Error('Cette fiche n’a pas de SIRET valide.');
+  var x = EUC_DEV651_mapper_(EUC_DEV651_lireEntreprise_(s.slice(0, 9)), s);
+  if (!EUC_DEV651_complete_(x)) throw new Error('L’INPI ne donne pas de fiche complète pour ce SIRET.');
+  var champs = EUC_DEV651_correctionFiche_(r, x);
+  if (!Object.keys(champs).length) return { id: id, champs: {} };
+  EUC_ENT_grist('patch', '/tables/' + encodeURIComponent(EUC_DEV651_table_()) + '/records', { records: [{ id: id, fields: champs }] });
+  try { if (typeof EUC_V161_SIRET_CACHE_PREFIX_ !== 'undefined') CacheService.getScriptCache().remove(EUC_V161_SIRET_CACHE_PREFIX_ + s); } catch (e) {}
+  return { id: id, champs: champs };
+}

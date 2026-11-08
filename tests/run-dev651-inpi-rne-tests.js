@@ -81,4 +81,20 @@ test('branchement : annuaire data.gouv puis INPI pour les deux entrées ; page d
   ['bEnregistrer', 'bTester', 'bActiver', 'bDesactiver'].forEach(b => assert.match(h, new RegExp('id="' + b + '"( class="leger")?><span class="spin"></span>')));
   assert.match(h, /DELAI=60000/); assert.match(h, /b\.disabled=on;b\.classList\.toggle\('busy',on\)/);
 });
+test('fiches de la base masquées : ignorées à la recherche et au suivi, corrigées depuis l’INPI', () => {
+  const c = { console, JSON, Object, String, Array, RegExp }; vm.createContext(c);
+  vm.runInContext(read('apps-script/EUC_ENT_ApiEntreprise.gs'), c);
+  assert.equal(c.EUC_ENT_identiteEntrepriseComplete_({ raisonSociale: '[NON-DIFFUSIBLE]', numeroVoie: '1 rue X', codePostal: '06000', commune: 'Nice' }), false, 'fiche masquée : data.gouv puis INPI');
+  assert.equal(c.EUC_ENT_identiteEntrepriseComplete_({ raisonSociale: 'A', numeroVoie: '1 rue X', codePostal: '06000', commune: 'Nice' }), true);
+  const m = read('apps-script/EUC_SUIVI2_Moteur.js');
+  assert.match(m, /function EUC_SUIVI2_premier_\(\) \{ for \(var i = 0; i < arguments\.length; i\+\+\) \{ var v = EUC_SUIVI2_t_\(arguments\[i\]\); if \(v && !\/NON\[\\s_-\]\*DIFFUSIBLE\/i\.test\(v\)\) return v; \} return ''; \}/);
+  const { k } = contexte({}, []);
+  const x = J(k.EUC_DEV651_mapper_(RNE_PP, '12345678900017'));
+  assert.deepEqual(J(k.EUC_DEV651_correctionFiche_({ Raison_sociale: '[NON-DIFFUSIBLE]', Enseigne: 'Garage Maison', Numero_voie: '[NON-DIFFUSIBLE]', Adresse_complete: '', Code_postal: '06510', Commune: 'CARROS' }, x)),
+    { Raison_sociale: 'TESTEUR Alex', Numero_voie: '9 AV du Atelier', Adresse_complete: '9 AV du Atelier, 06510 Carros' }, 'seuls les champs masqués ou vides sont remplacés');
+  const src = read('apps-script/EUC_DEV651_InpiRne.js');
+  assert.match(src, /function EUC_DEV651_corrigerFiche\(id\) \{\n  EUC_DEV651_exigerGestion_\(\);/);
+  const h = read('apps-script/Acces_INPI_DEV651.html');
+  assert.match(h, /id="bFiches" class="leger"><span class="spin"><\/span>/); assert.match(h, /occupe\(bc,true,'Correction…'\)/);
+});
 console.log(n + ' tests DEV651 réussis.');

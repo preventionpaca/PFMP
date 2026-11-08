@@ -67,6 +67,13 @@ table{border-collapse:collapse;margin-top:8px}td{padding:4px 12px 4px 0;vertical
     <button type="button" id="bDesactiver" class="leger"><span class="spin"></span><span class="txt">Désactiver</span></button>
     <div id="mActiver" class="message" role="status"></div>
   </section>
+  <section>
+    <h2>4. Fiches entreprises encore masquées</h2>
+    <p class="note">Fiches de la base créées avant l’INPI avec « [NON-DIFFUSIBLE] » à la place du nom ou de l’adresse. « Corriger depuis l’INPI » remplace uniquement les champs masqués ou vides par ceux du registre ; les conventions déjà enregistrées gardent leurs propres champs (Administration des conventions).</p>
+    <button type="button" id="bFiches" class="leger"><span class="spin"></span><span class="txt">Rechercher les fiches masquées</span></button>
+    <div id="mFiches" class="message" role="status"></div>
+    <div id="fiches"></div>
+  </section>
 </main>
 <script>
 (function(){
@@ -100,6 +107,16 @@ table{border-collapse:collapse;margin-top:8px}td{padding:4px 12px 4px 0;vertical
       function(e){occupe(b,false);message('mTester',erreurTexte(e),'erreur');});};
   function activer(b,oui){message('mActiver','');occupe(b,true,oui?'Activation…':'Désactivation…');
     appel('EUC_DEV651_activer',[oui],function(s){occupe(b,false);montrerEtat(s);message('mActiver',oui?'Activé.':'Désactivé.','ok');},function(e){occupe(b,false);message('mActiver',erreurTexte(e),'erreur');});}
+  function chargerFiches(b){message('mFiches','');$('fiches').innerHTML='';occupe(b,true,'Recherche…');
+    appel('EUC_DEV651_fichesMasquees',[],function(r){occupe(b,false);var l=r.fiches||[];
+      if(!l.length){message('mFiches','Aucune fiche masquée.','ok');return;}
+      message('mFiches',l.length+' fiche(s) masquée(s).','erreur');
+      $('fiches').innerHTML='<table>'+l.map(function(f){return '<tr><td>'+esc(f.siret||'sans SIRET')+'</td><td>'+esc(f.nom)+(f.enseigne?' — '+esc(f.enseigne):'')+(f.commune?' ('+esc(f.commune)+')':'')+'</td><td><button type="button" class="leger corriger" data-id="'+f.id+'"><span class="spin"></span><span class="txt">Corriger depuis l’INPI</span></button><div class="message" role="status"></div></td></tr>';}).join('')+'</table>';
+      Array.prototype.forEach.call(document.querySelectorAll('button.corriger'),function(bc){bc.onclick=function(){var m=bc.nextElementSibling;m.textContent='';m.className='message';occupe(bc,true,'Correction…');
+        appel('EUC_DEV651_corrigerFiche',[Number(bc.dataset.id)],function(x){occupe(bc,false);var c=x.champs||{};bc.disabled=true;m.className='message ok';m.textContent=Object.keys(c).length?'Corrigée : '+(c.Raison_sociale||'')+(c.Commune?', '+c.Commune:''):'Rien à corriger.';},
+          function(e){occupe(bc,false);m.className='message erreur';m.textContent=erreurTexte(e);});};});},
+      function(e){occupe(b,false);message('mFiches',erreurTexte(e),'erreur');});}
+  $('bFiches').onclick=function(){chargerFiches(this);};
   $('bActiver').onclick=function(){activer(this,true);};
   $('bDesactiver').onclick=function(){activer(this,false);};
 })();

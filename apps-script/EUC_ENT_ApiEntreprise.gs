@@ -37,7 +37,8 @@ function EUC_ENT_mapperReponseApi(u,siret) {
   return e;
 }
 
-function EUC_ENT_identiteEntrepriseComplete_(e){return !!(e&&String(e.raisonSociale||'').trim()&&String(e.numeroVoie||e.adresseComplete||'').trim()&&String(e.codePostal||'').trim()&&String(e.commune||'').trim());}
+/* DEV651 : une fiche locale encore masquée (« [NON-DIFFUSIBLE] ») n'est pas complète : data.gouv puis l'INPI prennent le relais. */
+function EUC_ENT_identiteEntrepriseComplete_(e){return !!(e&&!['raisonSociale','numeroVoie','adresseComplete','commune'].some(function(k){return EUC_ENT_masqueNonDiffusible_(e[k]);})&&String(e.raisonSociale||'').trim()&&String(e.numeroVoie||e.adresseComplete||'').trim()&&String(e.codePostal||'').trim()&&String(e.commune||'').trim());}
 function EUC_ENT_echapperRegExp_(v){return String(v||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 function EUC_ENT_normaliserAdresse_(d){
   d=d||{};var espace=function(v){return String(v||'').trim().replace(/\s+/g,' ');};

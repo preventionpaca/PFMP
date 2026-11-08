@@ -193,7 +193,8 @@ function EUC_SUIVI2_monaco_(x) {
 }
 function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_identifiantEntreprise_(a, entreprises); }
 /* DEV576 — fiche d'un élève pour une période (tableau des enseignants). */
-function EUC_SUIVI2_premier_() { for (var i = 0; i < arguments.length; i++) { var v = EUC_SUIVI2_t_(arguments[i]); if (v) return v; } return ''; }
+/* DEV651 : une valeur masquée par l'annuaire (« [NON-DIFFUSIBLE] ») n'est jamais retenue : la suivante l'est. */
+function EUC_SUIVI2_premier_() { for (var i = 0; i < arguments.length; i++) { var v = EUC_SUIVI2_t_(arguments[i]); if (v && !/NON[\s_-]*DIFFUSIBLE/i.test(v)) return v; } return ''; }
 function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   if (!a) return null;
   var P = EUC_SUIVI2_premier_, sr = EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, '');
