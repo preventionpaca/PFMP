@@ -114,6 +114,17 @@ test('chaque convention donne l’historique de ses générations : date, auteur
   assert.match(page, /auteur non enregistré/); assert.match(page, /<details><summary>/);
 });
 
+test('un apprenti n’est pas « sans convention » : compté et listé à part ; cliquer une période donne les noms', () => {
+  const src = sources(base); src.apprentissage = [R(900, { Eleve: 3, Annee_scolaire: 1, Date_debut: '2026-09-01', Date_fin: '2027-08-31', Entreprise: 'GARAGE APPRENTI' })];
+  const m = c.EUC_SUIVI2_calculer_(src, '2026-2027', '2026-11-08'), ix = c.EUC_DEV645_index_(m, src);
+  const term = J(c.EUC_DEV645_structure_(ix)).niveaux[2].classes[0];
+  assert.deepEqual(term.periodes.map(p => [p.sans, p.apprentis]), [[0, 1]], 'GAMMA, apprenti dont la convention est annulée, n’est pas sans convention');
+  const l = J(c.EUC_DEV645_lister_(ix, { classeId: 11, periode: 'PFMP n°1', sansConvention: true }));
+  assert.equal(l.sansConvention, 0); assert.equal(l.apprentis, 1);
+  assert.deepEqual(l.lignes.filter(x => x.sansConvention).map(x => [x.eleve, x.motif]), [['GAMMA Gus', 'APPRENTI']]);
+  assert.match(page, /Apprenti sur cette période : pas de convention de stage/); assert.match(page, /sansConvention:true\},nomClasse/);
+});
+
 test('page : réservée à l’administration, appels en lecture seule, jamais un fichier entier d’un coup', () => {
   const srv = read('apps-script/EUC_DEV645_ConventionsGenerees.js');
   ['EUC_DEV645_afficher', 'EUC_DEV645_structure', 'EUC_DEV645_lister'].forEach(f => assert.match(srv, new RegExp('function ' + f + '\\([^)]*\\) \\{\\n  EUC_SUIVI2_exigerAdmin_\\(\\);')));

@@ -67,7 +67,9 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
         <li><b>convention(s)</b> : une par élève et par période (un rattrapage compte à part). Les réimpressions de la même convention ne comptent qu’une fois.</li>
         <li><b>générations</b> : nombre total de fois où le générateur a produit une convention pour la classe (réimpressions comprises).</li>
         <li><b>PFMP n°1 (23/11 → 18/12) : 21 conventions</b> : élèves qui ont une convention pour cette période du planning. Cliquer affiche la liste.</li>
-        <li><b>· 3 élèves sans</b> : élèves de la classe qui n’ont aucune convention active pour cette période.</li>
+        <li><b>3 élèves sans convention</b> : élèves qui devraient en avoir une pour cette période et n’en ont aucune active. Cliquer donne leurs noms. Les apprentis n’en ont pas besoin : ils sont comptés à part (<b>2 apprentis</b>), d’après les contrats enregistrés. Un apprenti compté « sans convention » est un apprenti dont le contrat n’est pas enregistré dans l’application.</li>
+        <li><b>P.dif.</b> : seuls les élèves qui le font en entreprise doivent avoir une convention ; <b>à définir</b> = choix lycée ou entreprise pas encore fait.</li>
+        <li><b>Cliquer sur une période</b> montre ses conventions, puis les élèves sans convention et les apprentis de cette période.</li>
         <li><b>hors période</b> : conventions dont les dates ne correspondent à aucune période actuelle du planning de la classe (période modifiée ou supprimée après la génération, ou dates d’une autre classe). Elles sont dans la liste de la classe, colonne Période « Hors période », avec leurs dates.</li>
         <li><b>Aucune période de stage au planning</b> : la classe n’a pas de période PFMP dans les Plannings annuels pour cette année ; rien ne peut être compté.</li>
         <li><b>Toute la classe</b> : affiche toutes les conventions de la classe, toutes périodes confondues.</li>
@@ -112,7 +114,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
     $('structure').innerHTML=s.niveaux.length?s.niveaux.map(function(n){
       return '<section><div class="niveau"><h2>'+esc(n.libelle)+' <span class="pastille">'+n.total+'</span></h2>'+bouton('niveau','data-niveau="'+esc(n.cle)+'"','Afficher le niveau')+'</div><div class="classes">'+n.classes.map(function(c){
         return '<div class="classe"><b>'+esc(c.nom)+'</b><span class="note">'+c.eleves+' élève(s) · '+c.total+' convention(s)'+(c.generations>c.total?' · '+c.generations+' générations':'')+'</span>'+
-          (c.periodes.length?c.periodes.map(function(p){return '<span class="per">'+bouton('periode','data-classe="'+c.id+'" data-periode="'+esc(p.libelle)+'"',p.libelle+' ('+court(p.debut)+' → '+court(p.fin)+') : '+p.total+' convention'+(p.total>1?'s':''))+(p.sans?' <span class="pastille manque" title="Élèves de la classe sans convention active pour cette période">'+p.sans+' élève'+(p.sans>1?'s':'')+' sans</span>':'')+'</span>';}).join(''):'<span class="pastille manque">Aucune période de stage au planning</span>')+
+          (c.periodes.length?c.periodes.map(function(p){return '<span class="per">'+bouton('periode','data-classe="'+c.id+'" data-periode="'+esc(p.libelle)+'"',p.libelle+' ('+court(p.debut)+' → '+court(p.fin)+') : '+p.total+' convention'+(p.total>1?'s':''))+(p.sans?' '+bouton('periode','data-classe="'+c.id+'" data-periode="'+esc(p.libelle)+'" data-manque="1"',p.sans+' élève'+(p.sans>1?'s':'')+' sans convention'):'')+(p.apprentis?' <span class="pastille" title="Apprentis sur cette période : pas de convention de stage">'+p.apprentis+' apprenti'+(p.apprentis>1?'s':'')+'</span>':'')+(p.aDefinir?' <span class="pastille manque" title="P.dif. : lycée ou entreprise pas encore choisi">'+p.aDefinir+' à définir</span>':'')+'</span>';}).join(''):'<span class="pastille manque">Aucune période de stage au planning</span>')+
           (c.horsPeriode?' <span class="pastille manque" title="Dates qui ne correspondent à aucune période actuelle du planning de la classe">'+c.horsPeriode+' hors période</span>':'')+' '+bouton('classe','data-classe="'+c.id+'"','Toute la classe')+'</div>';
       }).join('')+'</div></section>';
     }).join(''):'<section class="note">Aucune classe pour cette année.</section>';
@@ -124,7 +126,8 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
     appel('EUC_DEV645_structure',[$('annee').value],function(r){occupe(null);STRUCT=r;dessinerStructure();},function(e){occupe(null);$('structure').innerHTML='';message(e&&e.message||'Lecture impossible.',true);});
   }
   function ligne(l){
-    if(l.sansConvention)return '<tr class="sans"><td><b>'+esc(l.eleve)+'</b></td><td>'+esc(l.periode)+'<br><span class="note">'+dfr(l.debut)+' → '+dfr(l.fin)+'</span></td><td colspan="4">Aucune convention générée</td></tr>';
+    if(l.sansConvention){var motifs={SANS:'Aucune convention générée',APPRENTI:'Apprenti sur cette période : pas de convention de stage',PDIF_A_DEFINIR:'P.dif. : lycée ou entreprise pas encore choisi'};
+      return '<tr class="'+(l.motif==='SANS'?'sans':'anterieure')+'"><td><b>'+esc(l.eleve)+'</b></td><td>'+esc(l.periode)+'<br><span class="note">'+dfr(l.debut)+' → '+dfr(l.fin)+'</span></td><td colspan="4">'+esc(motifs[l.motif]||motifs.SANS)+'</td></tr>';}
     var type=l.rattrapage?' · rattrapage':(l.remplacement?' · remplacement':'');
     var qui=function(h){return heure(h.ms)+' · '+esc(h.auteur||'auteur non enregistré')+' · '+esc(h.mode);};
     var hist=(l.historique||[]).length>1?'<details><summary><span class="pastille">'+l.generations+' générations</span></summary><ol class="hist">'+l.historique.map(function(h){return '<li'+(h.retenue?' class="retenue"':'')+'>'+qui(h)+(h.retenue?' — <b>retenue</b>':'')+(h.saisie?' — remplie par l’entreprise':'')+'</li>';}).join('')+'</ol></details>':'';
@@ -133,7 +136,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
   }
   function dessinerListe(){
     var q=$('cherche').value.trim().toLowerCase(),l=(LISTE.lignes||[]).filter(function(x){return !q||JSON.stringify(x).toLowerCase().indexOf(q)>=0;}),niv='',cl='',html=[];
-    $('compte').textContent=TITRE+' : '+LISTE.conventions+' convention(s)'+(LISTE.anterieures?', '+LISTE.anterieures+' génération(s) antérieure(s)':'')+(LISTE.sansConvention?', '+LISTE.sansConvention+' élève(s) sans convention':'')+(q?' — '+l.length+' ligne(s) trouvée(s)':'')+'.';
+    $('compte').textContent=TITRE+' : '+LISTE.conventions+' convention(s)'+(LISTE.anterieures?', '+LISTE.anterieures+' génération(s) antérieure(s)':'')+(LISTE.sansConvention?', '+LISTE.sansConvention+' élève(s) sans convention':'')+(LISTE.apprentis?', '+LISTE.apprentis+' apprenti(s)':'')+(LISTE.aDefinir?', '+LISTE.aDefinir+' P.dif. à définir':'')+(q?' — '+l.length+' ligne(s) trouvée(s)':'')+'.';
     l.forEach(function(x){
       if(x.niveauLibelle!==niv){niv=x.niveauLibelle;cl='';html.push('<tr class="titre"><td colspan="6">'+esc(niv)+'</td></tr>');}
       if(x.classe!==cl){cl=x.classe;html.push('<tr><td colspan="6"><b>'+esc(cl)+'</b></td></tr>');}
@@ -142,7 +145,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
     $('resultat').innerHTML=l.length?'<section><div class="table"><table><thead><tr><th>Élève</th><th>Période</th><th>Numéro et statut</th><th>Générée le, par</th><th>Entreprise (QR)</th><th>Entreprise</th></tr></thead><tbody>'+html.join('')+'</tbody></table></div></section>':'<section class="note">Aucune convention à afficher.</section>';
   }
   function lister(btn,q,titre){
-    q.periode=q.periode!=null?q.periode:$('periode').value;q.sansConvention=$('sans').checked;q.toutes=$('toutes').checked;
+    q.periode=q.periode!=null?q.periode:$('periode').value;q.sansConvention=q.sansConvention||$('sans').checked;q.toutes=$('toutes').checked;
     TITRE=titre+(q.periode?' — '+q.periode:'');
     occupe(btn);message('');
     appel('EUC_DEV645_lister',[$('annee').value,q],function(r){occupe(null);LISTE=r;$('filtre').hidden=false;dessinerListe();$('filtre').scrollIntoView({behavior:'smooth'});},function(e){occupe(null);message(e&&e.message||'Lecture impossible.',true);});
@@ -152,7 +155,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
     var b=ev.target.closest('button[data-action]');if(!b||b.disabled)return;
     if(b.dataset.action==='niveau')lister(b,{niveau:b.dataset.niveau},b.closest('section').querySelector('h2').firstChild.textContent.trim());
     else if(b.dataset.action==='classe')lister(b,{classeId:Number(b.dataset.classe),periode:''},nomClasse(b.dataset.classe));
-    else if(b.dataset.action==='periode')lister(b,{classeId:Number(b.dataset.classe),periode:b.dataset.periode},nomClasse(b.dataset.classe));
+    else if(b.dataset.action==='periode')lister(b,{classeId:Number(b.dataset.classe),periode:b.dataset.periode,sansConvention:true},nomClasse(b.dataset.classe));
   };
   $('tout').onclick=function(){if(STRUCT)lister(this,{},'Toute l’année '+STRUCT.annee);};
   $('cherche').oninput=function(){if(LISTE)dessinerListe();};

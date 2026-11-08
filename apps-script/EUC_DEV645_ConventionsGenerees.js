@@ -90,6 +90,23 @@ function EUC_DEV645_regrouper_(lignes) {
 /* Adresse du compte du lycée → identifiant lisible (« prenom.nom ») ; vide si non enregistré. */
 function EUC_DEV645_auteur_(v) { return EUC_SUIVI2_t_(v).toLowerCase().replace(/@.*$/, ''); }
 
+/* Qui doit avoir une convention pour une période (même calcul que le suivi) :
+ * les apprentis n'en ont pas ; pour le P.dif., seulement les élèves qui le font en entreprise. */
+function EUC_DEV645_repartition_(ix, c, p) {
+  var r = p.resume || {}, apprentis = {}, entreprise = {}, aDefinir = {};
+  (r.apprentis || []).forEach(function(id) { apprentis[id] = true; });
+  (r.entreprise || []).forEach(function(id) { entreprise[id] = true; });
+  (r.aDefinir || []).forEach(function(id) { aDefinir[id] = true; });
+  var out = { sans: [], apprentis: [], aDefinir: [] };
+  (c.eleves || []).forEach(function(e) {
+    if (ix.avec[e.id + '|' + p.id]) return;
+    if (apprentis[e.id] && !p.pdif) out.apprentis.push(e);
+    else if (p.pdif && aDefinir[e.id]) out.aDefinir.push(e);
+    else if (!p.pdif || (entreprise[e.id] && !apprentis[e.id])) out.sans.push(e);
+  });
+  return out;
+}
+
 function EUC_DEV645_structure_(ix) {
   var niveaux = {}, periodes = {};
   Object.keys(ix.classes).forEach(function(k) {
@@ -98,7 +115,8 @@ function EUC_DEV645_structure_(ix) {
     var ps = (c.periodes || []).filter(function(p) { return !p.suivi; });
     var x = { id: c.id, nom: c.nom, eleves: (c.eleves || []).length, total: 0, generations: 0, periodes: ps.map(function(p) {
       var pc = EUC_DEV645_clePeriode_(p.libelle); periodes[pc] = true;
-      return { id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, total: 0, sans: (c.eleves || []).filter(function(e) { return !ix.avec[e.id + '|' + p.id]; }).length };
+      var rp = EUC_DEV645_repartition_(ix, c, p);
+      return { id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, pdif: !!p.pdif, total: 0, sans: rp.sans.length, apprentis: rp.apprentis.length, aDefinir: rp.aDefinir.length };
     }), horsPeriode: 0 };
     ix.lignes.forEach(function(l) {
       if (l.classeId !== c.id) return;
@@ -123,13 +141,15 @@ function EUC_DEV645_lister_(ix, q) {
   if (q.sansConvention) Object.keys(ix.classes).forEach(function(k) {
     var c = ix.classes[k]; if (!garder(c)) return;
     (c.periodes || []).filter(function(p) { return !p.suivi && (!periode || EUC_DEV645_clePeriode_(p.libelle) === periode); }).forEach(function(p) {
-      (c.eleves || []).forEach(function(e) {
-        if (!ix.avec[e.id + '|' + p.id]) sans.push({ id: 0, eleveId: e.id, eleve: e.libelle, classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c), periodeId: p.id, periode: p.libelle, periodeDebut: p.debut, debut: p.debut, fin: p.fin, sansConvention: true });
+      var rp = EUC_DEV645_repartition_(ix, c, p);
+      [['sans', 'SANS'], ['apprentis', 'APPRENTI'], ['aDefinir', 'PDIF_A_DEFINIR']].forEach(function(k) {
+        rp[k[0]].forEach(function(e) { sans.push({ id: 0, eleveId: e.id, eleve: e.libelle, classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c), periodeId: p.id, periode: p.libelle, periodeDebut: p.debut, debut: p.debut, fin: p.fin, sansConvention: true, motif: k[1] }); });
       });
     });
   });
   var tout = lignes.concat(sans), rang = function(l) { return EUC_DEV645_rangNiveau_(l.niveau); };
   tout.sort(function(a, b) { return rang(a) - rang(b) || a.classe.localeCompare(b.classe, 'fr') || String(a.periodeDebut).localeCompare(String(b.periodeDebut)) || a.eleve.localeCompare(b.eleve, 'fr') || (a.sansConvention ? 1 : 0) - (b.sansConvention ? 1 : 0) || String(a.cle).localeCompare(String(b.cle)) || (a.anterieure ? 1 : 0) - (b.anterieure ? 1 : 0) || (b.ms || 0) - (a.ms || 0) || a.id - b.id; });
   tout.forEach(function(l) { l.niveauLibelle = EUC_DEV645_libelleNiveau_(l.niveau); });
-  return { annee: ix.annee, conventions: lignes.filter(function(l) { return !l.anterieure; }).length, anterieures: lignes.filter(function(l) { return l.anterieure; }).length, sansConvention: sans.length, lignes: tout };
+  return { annee: ix.annee, conventions: lignes.filter(function(l) { return !l.anterieure; }).length, anterieures: lignes.filter(function(l) { return l.anterieure; }).length,
+    sansConvention: sans.filter(function(l) { return l.motif === 'SANS'; }).length, apprentis: sans.filter(function(l) { return l.motif === 'APPRENTI'; }).length, aDefinir: sans.filter(function(l) { return l.motif === 'PDIF_A_DEFINIR'; }).length, lignes: tout };
 }
