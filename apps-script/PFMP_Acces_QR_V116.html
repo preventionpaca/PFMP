@@ -556,7 +556,7 @@ const SECOURS_URL_DEV646 = <?!= JSON.stringify(typeof secoursUrl !== 'undefined'
 function escHtmlDev646(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function htmlSecoursDev646(text){
   if(!SECOURS_URL_DEV646 || String(text||'').indexOf('G205')<0) return '';
-  const lien='<a href="'+escHtmlDev646(SECOURS_URL_DEV646)+'" target="_top">Déclarer mon entreprise (formulaire en ligne)</a>';
+  const lien='<a href="'+escHtmlDev646(SECOURS_URL_DEV646)+'" target="_top">Enregistrer ma PFMP (formulaire en ligne)</a>';
   if(text===MESSAGE_DEPOT_G205_V569)
     return 'L’enregistrement par le QR code n’a pas abouti. Déclare ton entreprise avec le formulaire en ligne : '+lien+'. Si ce formulaire ne fonctionne pas non plus, passe au bureau G205.';
   return escHtmlDev646(text)+'<br>Avant de passer au bureau G205, essaie le formulaire en ligne : '+lien+'.';

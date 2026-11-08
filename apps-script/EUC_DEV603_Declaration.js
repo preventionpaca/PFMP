@@ -235,7 +235,7 @@ function EUC_DEV603_apresValidation_(items) {
 }
 
 function EUC_DEV603_afficher(e) {
-  return HtmlService.createTemplateFromFile('Declaration_Entreprise_DEV603').evaluate().setTitle('Déclarer mon entreprise de stage — PFMP').addMetaTag('viewport', 'width=device-width, initial-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return HtmlService.createTemplateFromFile('Declaration_Entreprise_DEV603').evaluate().setTitle('Enregistrer ma PFMP — Lycée Les Eucalyptus').addMetaTag('viewport', 'width=device-width, initial-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 /* Relecture de la réponse officielle obtenue par le navigateur (même règle que le QR code). */
 function EUC_DEV603_traiterApi(q) { q = q || {}; return EUC_ENT_traiterReponseApiNavigateur(q.json, EUC_DEV603_t_(q.siret)); }

@@ -4,7 +4,7 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Déclarer mon entreprise de stage — PFMP</title>
+<title>Enregistrer ma PFMP — Lycée Les Eucalyptus</title>
 <style>
 :root{--vert:#08745f;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da}
 *{box-sizing:border-box}
@@ -29,31 +29,46 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
 .erreur{color:#991b1b;font-weight:700}.ok{color:#166534;font-weight:700}
 .piege{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
 .fini{background:#ecfdf5;border-color:#86efac}
+.choix button.choixBtn{text-align:left;margin-top:0;font-weight:400;line-height:1.35}.choix button.choixBtn.on{background:#ecfdf5;border-width:2px}
 .etapes{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0;font-size:13px}.etapes span{padding:2px 8px;border-radius:999px;background:#fff;border:1px solid var(--bord)}.etapes span.on{background:var(--vert);color:#fff;border-color:var(--vert)}
 </style>
 </head>
 <body>
-<header><h1>Déclarer mon entreprise de stage</h1><p>Lycée Les Eucalyptus — à utiliser si tu n’as pas pu enregistrer ton entreprise avec le QR code de ta convention.</p>
+<header><h1>Enregistrer ma PFMP</h1><p>Lycée Les Eucalyptus — 7 avenue des Eucalyptus, 06200 Nice<br>Bureau des formations et des entreprises : <a href="mailto:bfe@lycee-les-eucalyptus.org">bfe@lycee-les-eucalyptus.org</a> · <a href="tel:+33492293065">04 92 29 30 65</a></p>
 <div class="etapes"><span id="e1" class="on">1. Moi</span><span id="e2">2. Période</span><span id="e3">3. Entreprise</span><span id="e4">4. Responsable et tuteur</span></div></header>
 <main>
   <div id="etat" class="note" role="status">Chargement…</div>
 
   <section id="s1" hidden>
-    <div class="officiel" style="margin:0 0 12px">
-      <b>Tu as ta convention papier ?</b> Sous le QR code figure un <b>code de secours</b> (ex. 4821-K7QM9P).
-      <div class="deux" style="margin-top:6px"><input id="codeConv" placeholder="Code de la convention" autocomplete="off" autocapitalize="characters"><button type="button" id="bCode" style="margin-top:0">Utiliser mon code</button></div>
-      <span class="note">Recopie aussi le code de l’image plus bas. Sinon, remplis le formulaire ci-dessous.</span><p id="mCode" role="status"></p>
+    <h2>Ma convention de stage</h2>
+    <p class="note">Choisis ton cas.</p>
+    <div class="deux choix">
+      <button type="button" id="choixQr" class="choixBtn"><b>1. Ma convention comporte un QR code</b><br><span class="note">J’utilise le code écrit sous le QR code</span></button>
+      <button type="button" id="choixSans" class="choixBtn"><b>2. Ma convention ne comporte pas de QR code</b><br><span class="note">Je complète le formulaire</span></button>
     </div>
-    <h2>1. Qui es-tu ?</h2>
-    <p class="note">Écris ton nom et ton prénom comme sur Pronote. Ta date de naissance sert à vérifier que c’est bien toi.</p>
-    <label for="classe">Classe</label><select id="classe"><option value="">— choisir —</option></select>
-    <div class="deux"><div><label for="nomEleve">Nom</label><input id="nomEleve" autocomplete="family-name"></div><div><label for="prenomEleve">Prénom</label><input id="prenomEleve" autocomplete="given-name"></div></div>
-    <label for="naissance">Date de naissance</label><input id="naissance" type="date">
-    <div class="piege" aria-hidden="true"><label>Site <input id="site" tabindex="-1" autocomplete="off"></label></div>
-    <label for="captcha">Recopie le code de l’image (5 caractères)</label>
-    <div class="captcha"><img id="captchaImg" alt="Code de sécurité" width="230" height="70"><button type="button" id="nouveauCode">Nouveau code</button></div>
-    <input id="captcha" autocomplete="off" autocapitalize="characters" maxlength="8" style="max-width:220px;margin-top:8px">
-    <button type="button" class="plein" id="b1">Continuer</button><p id="m1" role="status"></p>
+
+    <div id="partQr" hidden>
+      <h2 style="margin-top:14px">Code de ma convention</h2>
+      <p class="note">Sous le QR code de ta convention papier figure un code (ex. 4821-K7QM9P). Recopie-le ici.</p>
+      <label for="codeConv">Code de la convention</label><input id="codeConv" placeholder="4821-K7QM9P" autocomplete="off" autocapitalize="characters">
+    </div>
+
+    <div id="partSans" hidden>
+      <h2 style="margin-top:14px">1. Qui es-tu ?</h2>
+      <p class="note">Écris ton nom et ton prénom comme sur Pronote. Ta date de naissance sert à vérifier que c’est bien toi.</p>
+      <label for="classe">Classe</label><select id="classe"><option value="">— choisir —</option></select>
+      <div class="deux"><div><label for="nomEleve">Nom</label><input id="nomEleve" autocomplete="family-name"></div><div><label for="prenomEleve">Prénom</label><input id="prenomEleve" autocomplete="given-name"></div></div>
+      <label for="naissance">Date de naissance</label><input id="naissance" type="date">
+    </div>
+
+    <div id="partCaptcha" hidden>
+      <div class="piege" aria-hidden="true"><label>Site <input id="site" tabindex="-1" autocomplete="off"></label></div>
+      <label for="captcha">Recopie le code de l’image (5 caractères)</label>
+      <div class="captcha"><img id="captchaImg" alt="Code de sécurité" width="230" height="70"><button type="button" id="nouveauCode">Nouveau code</button></div>
+      <input id="captcha" autocomplete="off" autocapitalize="characters" maxlength="8" style="max-width:220px;margin-top:8px">
+    </div>
+    <div id="actQr" hidden><button type="button" class="plein" id="bCode">Utiliser mon code</button><p id="mCode" role="status"></p></div>
+    <div id="actSans" hidden><button type="button" class="plein" id="b1">Continuer</button><p id="m1" role="status"></p></div>
   </section>
 
   <section id="s2" hidden>
@@ -131,7 +146,16 @@ function nouveauCode(){appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captc
 /* Étape 1 */
 $('nomEleve').addEventListener('blur',function(){this.value=nom(this.value);});$('prenomEleve').addEventListener('blur',function(){this.value=prenom(this.value);});
 $('nouveauCode').onclick=nouveauCode;
-$('bCode').onclick=function(){var b=this;$('mCode').textContent='';if(!$('captcha').value.trim()){erreur('mCode','Recopie d’abord le code de l’image (plus bas).');return;}occupe(b,'Vérification…');
+/* Deux cas : convention avec QR code (code de secours) ou sans QR code (identité complète). */
+function choisir(cas){
+  $('choixQr').classList.toggle('on',cas==='qr');$('choixSans').classList.toggle('on',cas==='sans');
+  $('partQr').hidden=$('actQr').hidden=cas!=='qr';$('partSans').hidden=$('actSans').hidden=cas!=='sans';$('partCaptcha').hidden=false;
+  $('mCode').textContent='';$('m1').textContent='';
+  var f=cas==='qr'?$('codeConv'):$('classe');try{f.focus();}catch(e){}
+}
+$('choixQr').onclick=function(){choisir('qr');};
+$('choixSans').onclick=function(){choisir('sans');};
+$('bCode').onclick=function(){var b=this;$('mCode').textContent='';if(!$('captcha').value.trim()){erreur('mCode','Recopie d’abord le code de l’image.');return;}occupe(b,'Vérification…');
   appel('EUC_DEV603_ouvrirCode',{code:$('codeConv').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},function(r){libre(b);$('mCode').innerHTML='<a class="plein" style="display:inline-block;background:#08745f;color:#fff;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none" target="_top" href="'+esc(r.url)+'">Continuer vers ma convention →</a>';},
     function(e){libre(b);erreur('mCode',e);nouveauCode();});};
 $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérification…');

@@ -134,6 +134,19 @@ test('QR : un échec d’enregistrement renvoie d’abord vers le formulaire en 
   assert.match(dep, /Si tu restes bloqué, passe au bureau G205/);
 });
 
+test('formulaire en ligne « Enregistrer ma PFMP » : coordonnées du lycée, deux cas (avec ou sans QR code), captcha commun', () => {
+  const f = read('apps-script/Declaration_Entreprise_DEV603.html'), srv = read('apps-script/EUC_DEV603_Declaration.js');
+  assert.match(f, /<h1>Enregistrer ma PFMP<\/h1>/); assert.match(srv, /setTitle\('Enregistrer ma PFMP — Lycée Les Eucalyptus'\)/);
+  ['7 avenue des Eucalyptus, 06200 Nice', 'mailto:bfe@lycee-les-eucalyptus.org', '04 92 29 30 65'].forEach(x => assert.ok(f.includes(x), x));
+  assert.match(f, /1\. Ma convention comporte un QR code/); assert.match(f, /2\. Ma convention ne comporte pas de QR code/);
+  const i = id => f.indexOf('id="' + id + '"');
+  assert.ok(i('partQr') < i('codeConv') && i('codeConv') < i('partSans'), 'le code est dans le cas 1');
+  assert.ok(i('partSans') < i('classe') && i('naissance') < i('partCaptcha'), 'l’identité est dans le cas 2');
+  assert.ok(i('partCaptcha') < i('captcha') && i('captcha') < i('actQr') && i('actQr') < i('bCode') && i('actSans') < i('b1'));
+  assert.match(f, /\$\('partQr'\)\.hidden=\$\('actQr'\)\.hidden=cas!=='qr';\$\('partSans'\)\.hidden=\$\('actSans'\)\.hidden=cas!=='sans';\$\('partCaptcha'\)\.hidden=false;/);
+  ['partQr', 'partSans', 'partCaptcha', 'actQr', 'actSans'].forEach(x => assert.ok(f.includes('id="' + x + '" hidden'), x + ' caché tant qu’aucun cas n’est choisi'));
+});
+
 test('branchement : route, lien d’administration, contrôle de release', () => {
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'entreprises-monaco-pfmp':\n      return EUC_DEV646_afficher\(e\);/);
   assert.match(read('apps-script/Admin_PFMP.html'), /\?page=entreprises-monaco-pfmp">Entreprises de Monaco/);
