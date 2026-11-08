@@ -344,5 +344,5 @@ function EUC_DEV603_ouvrirCode(q) {
   var rid = EUC_DEV603_lireCode_(q.code);
   var a = (EUC_ENT_grist('get', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ id: [rid] }))).records || [])[0];
   if (!a || (a.fields || {}).Revoked === true) throw new Error('Cette convention n’est plus active : passe au bureau G205 — bureau des formations et des entreprises.');
-  return { ok: true, url: EUC_DEV598_base_() + '?page=pfmp&rid=' + rid };
+  return { ok: true, url: EUC_LIEN_eleve_('page=pfmp&rid=' + rid) };
 }

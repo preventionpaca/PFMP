@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp
+
+- Dépôt GitHub Pages `preventionpaca/enregistrer-pfmp-eucalyptus` (hors de ce dépôt) : https://enregistrer-pfmp.lycee-les-eucalyptus.org affiche dans un cadre, sans le bandeau Google Apps Script, les pages élèves de la Web App publique verte. Sans paramètre : formulaire « Enregistrer ma PFMP ». `?page=pfmp&rid=…` (ou `token`, `resume`, `q`, `k`, `aid`, `eid`, `sig`) : page du QR code. Toute autre page ouvre le formulaire (liste fermée). Lien direct proposé après 15 s de chargement.
+- Constat : dans un cadre, Google n'affiche pas son bandeau (vérifié sans compte, téléphone et ordinateur) ; aucun décalage du cadre n'est nécessaire.
+- `EUC_LIEN_eleve_(requete)` (EUC_DEV640_Liens.js) construit ces adresses depuis `EUC_LIEN_('enregistrer')`. Utilisé pour : QR des conventions imprimées (PdfV95, DonneesV80, Service par jeton), bouton « Continuer vers ma convention » du code de secours, lien de secours de la page QR. Les QR déjà imprimés gardent l'adresse Apps Script et fonctionnent toujours.
+- Page QR et page de continuation entreprise : `XFrameOptionsMode.ALLOWALL` pour l'affichage dans l'enveloppe.
+- Choix 2 du formulaire : « Ma convention n’a pas de QR code, ou pas de code écrit sous le QR code » (premières conventions imprimées sans code sous le QR).
+- Tests : `tests/run-dev647-enveloppe-eleves-tests.js` (4).
+
 ## Mise à jour du 8 novembre 2026 — DEV646 : génération de classe sans doublon, Monaco sans NIS, renvoi vers le formulaire en ligne
 
 - Génération « classe entière » (`EUC_CONVENTION_preparerAccesClasseNom`, seule appelée par le générateur) : un élève qui a déjà une convention active pour la période la garde (même numéro, même QR, rid) ; elle est seulement réimprimée, sauf si la période a été déplacée au planning depuis (`Date_officielle_debut` différente) : une nouvelle convention est alors créée. Seuls les élèves sans convention en reçoivent une. Choix parmi plusieurs générations anciennes : celle remplie par l'entreprise, puis la plus récente (`EUC_DEV646_conventionExistante_`). Le lot PDF imprime les reprises par identifiant ; la réédition Word d'un lot avec reprises est refusée (elle exige le jeton d'origine). `EUC_CONVENTION_preparerAccesClasse` et `EUC_DEV174_preparerAccesClasseNom` ne sont appelées par aucune page et restent inchangées.

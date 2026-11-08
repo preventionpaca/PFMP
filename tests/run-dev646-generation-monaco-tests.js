@@ -127,7 +127,7 @@ test('QR : recherche par nom pour Monaco, entreprise absente → bureau G205, bo
 
 test('QR : un échec d’enregistrement renvoie d’abord vers le formulaire en ligne, puis le bureau G205', () => {
   const qr = read('apps-script/PFMP_Acces_QR_V116.html'), web = read('apps-script/EUC_PFMP_WebApp.gs'), dep = read('apps-script/Declaration_Entreprise_DEV603.html');
-  assert.match(web, /qr\.secoursUrl=ScriptApp\.getService\(\)\.getUrl\(\)\+'\?page=declaration-entreprise';/);
+  assert.match(web, /qr\.secoursUrl=EUC_LIEN_eleve_\(''\);/); // DEV647 : formulaire par la page d'enveloppe
   assert.match(qr, /Déclare ton entreprise avec le formulaire en ligne.*Si ce formulaire ne fonctionne pas non plus, passe au bureau G205/);
   assert.match(qr, /Avant de passer au bureau G205, essaie le formulaire en ligne/);
   assert.match(qr, /typeof secoursUrl !== 'undefined'/);
@@ -138,7 +138,7 @@ test('formulaire en ligne « Enregistrer ma PFMP » : coordonnées du lycée, de
   const f = read('apps-script/Declaration_Entreprise_DEV603.html'), srv = read('apps-script/EUC_DEV603_Declaration.js');
   assert.match(f, /<h1>Enregistrer ma PFMP<\/h1>/); assert.match(srv, /setTitle\('Enregistrer ma PFMP — Lycée Les Eucalyptus'\)/);
   ['7 avenue des Eucalyptus, 06200 Nice', 'mailto:bfe@lycee-les-eucalyptus.org', '04 92 29 30 65'].forEach(x => assert.ok(f.includes(x), x));
-  assert.match(f, /1\. Ma convention comporte un QR code/); assert.match(f, /2\. Ma convention ne comporte pas de QR code/);
+  assert.match(f, /1\. Ma convention comporte un QR code/); assert.match(f, /2\. Ma convention n’a pas de QR code, ou pas de code écrit sous le QR code/);
   const i = id => f.indexOf('id="' + id + '"');
   assert.ok(i('partQr') < i('codeConv') && i('codeConv') < i('partSans'), 'le code est dans le cas 1');
   assert.ok(i('partSans') < i('classe') && i('naissance') < i('partCaptcha'), 'l’identité est dans le cas 2');

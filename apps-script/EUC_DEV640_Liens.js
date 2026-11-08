@@ -38,6 +38,13 @@ function EUC_LIEN_(cle) {
   return u;
 }
 
+/** DEV647 — Pages des élèves (formulaire « Enregistrer ma PFMP », page du QR code) : toujours par la page
+ * d'enveloppe enregistrer-pfmp (GitHub), qui les affiche sans le bandeau Google Apps Script.
+ * EUC_LIEN_eleve_('page=pfmp&rid=12') → https://enregistrer-pfmp…/?page=pfmp&rid=12 */
+function EUC_LIEN_eleve_(requete) {
+  return EUC_LIEN_('enregistrer') + (requete ? '?' + String(requete).replace(/^\?/, '') : '');
+}
+
 /** Nom d'hôte seul (ex. 'pfmp.lycee-les-eucalyptus.org'). */
 function EUC_LIEN_hote_(cle) {
   return EUC_LIEN_(cle).replace(/^https:\/\//, '').replace(/\/.*$/, '');

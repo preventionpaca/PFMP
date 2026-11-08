@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert'), crypto = require('crypto');
 const root = path.join(__dirname, '..'), read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV602_Identites.js', 'EUC_DEV603_Declaration.js'].map(f => read('apps-script/' + f)).join('\n');
+const sources = ['EUC_SUIVI2_Moteur.js', 'EUC_DEV597_Echeancier.js', 'EUC_DEV598_BilanVisite.js', 'EUC_DEV602_Identites.js', 'EUC_DEV603_Declaration.js', 'EUC_DEV640_Liens.js'].map(f => read('apps-script/' + f)).join('\n');
 let n = 0;
 function test(name, fn) { try { fn(); n++; console.log('✓', name); } catch (e) { console.error('✗', name); throw e; } }
 const J = x => JSON.parse(JSON.stringify(x));
@@ -290,7 +290,7 @@ test('DEV606 : code de secours de la convention — signé, imprimé sous le QR,
   t.EUC_ACCES_FORMULAIRES_PFMP.push({ id: 4821, fields: {} }, { id: 4822, fields: { Revoked: true } });
   k.EUC_DEV598_base_ = () => 'https://script.google.com/macros/s/ID/exec';
   const r = k.EUC_DEV603_ouvrirCode({ code, captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZZ') });
-  assert.strictEqual(r.url, 'https://script.google.com/macros/s/ID/exec?page=pfmp&rid=4821');
+  assert.strictEqual(r.url, 'https://enregistrer-pfmp.lycee-les-eucalyptus.org/?page=pfmp&rid=4821'); // DEV647 : par la page d'enveloppe
   assert.throws(() => k.EUC_DEV603_ouvrirCode({ code, captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZY') }), /incorrect/);
   assert.throws(() => k.EUC_DEV603_ouvrirCode({ code: k.EUC_DEV603_codeConvention_(4822), captcha: 'ZZZZZ', captchaJeton: captchaConnu(k, 'ZZZZZ') }), /plus active/);
   assert.match(read('apps-script/EUC_CONVENTION_PFMP_PdfV95.gs'), /data\.codeSecours=typeof EUC_DEV603_codeConvention_==='function'\?EUC_DEV603_codeConvention_\(rid\):'';/);

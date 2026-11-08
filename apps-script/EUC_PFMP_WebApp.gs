@@ -1,7 +1,7 @@
 /** Eucalyptus PFMP — v1.0.0-dev.117 — QR + continuation entreprise sécurisée. */
 function EUC_PFMP_afficherApplication(e) {
   var resume=String(e&&e.parameter&&e.parameter.resume||'').trim();
-  if(resume){return HtmlService.createTemplateFromFile('PFMP_Continuation_QR_V117').evaluate().setTitle('Entreprise et tuteur — PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');}
+  if(resume){return HtmlService.createTemplateFromFile('PFMP_Continuation_QR_V117').evaluate().setTitle('Entreprise et tuteur — PFMP').addMetaTag('viewport','width=device-width, initial-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}
   var rid=String(e&&e.parameter&&e.parameter.rid||'').trim();
   var token=String(e&&e.parameter&&e.parameter.token||'').trim();
   var q=String(e&&e.parameter&&e.parameter.q||'').trim();
@@ -19,8 +19,8 @@ function EUC_PFMP_afficherApplication(e) {
     qr.conventionAccessId=aid;
     qr.conventionEleveId=eid;
     qr.conventionSignature=sig;
-    qr.secoursUrl=ScriptApp.getService().getUrl()+'?page=declaration-entreprise';
-    return qr.evaluate().setTitle('Accès sécurisé PFMP').addMetaTag('viewport','width=device-width, initial-scale=1');
+    qr.secoursUrl=EUC_LIEN_eleve_('');
+    return qr.evaluate().setTitle('Accès sécurisé PFMP').addMetaTag('viewport','width=device-width, initial-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   EUC_ENT_controlerAccesUtilisateur_();
   var tpl=HtmlService.createTemplateFromFile('PFMP');
