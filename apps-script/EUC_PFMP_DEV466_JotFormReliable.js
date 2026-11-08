@@ -219,7 +219,21 @@ function EUC_DEV466_selected_(payload){
   }
   return selected;
 }
+/* DEV648 : lignes analysées avant DEV644 — dates JotForm restées en texte français (« nov. 23, 2026 »),
+ * illisibles pour le précontrôle. Conversion en AAAA-MM-JJ au moment de l'import (copie de la ligne,
+ * le tampon n'est pas modifié) ; date vide : reprise depuis le texte d'origine (Raw_JSON). */
+function EUC_DEV648_datesLisibles_(row){
+  var out=Object.assign({},row||{}),raw=null;
+  var conv=function(v){var t=EUC_DEV466_txt_(v);if(!t)return '';var d=typeof EUC_V160_dateIso_==='function'?EUC_V160_dateIso_(t):t;return /^\d{4}-\d{2}-\d{2}$/.test(d)?d:t;};
+  [['Date_debut_brut','Date de début'],['Date_fin_brut','Date de fin']].forEach(function(c){
+    var v=conv(out[c[0]]);
+    if(!v){if(raw===null){try{raw=JSON.parse(String(out.Raw_JSON||'{}'))||{};}catch(e){raw={};}}v=conv(raw[c[1]]);}
+    if(v)out[c[0]]=v;
+  });
+  return out;
+}
 function EUC_DEV466_prepare_(selected,ctx,payload){
+  selected=(selected||[]).map(EUC_DEV648_datesLisibles_);
   var overrides=EUC_DEV503_overrideMap_(payload);
   var students=EUC_DEV307_flatRecords_(EUC_DEV307_STUDENTS_TABLE_),studentBy={};
   students.forEach(function(s){studentBy[Number(s.id)||0]=s;});

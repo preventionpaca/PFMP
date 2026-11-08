@@ -28,4 +28,17 @@ test('page : marqueur masqué, retrait des lignes bloquées après confirmation,
   assert.match(page, /setTimeout\(function\(\)\{btn\.click\(\);\},30\);/);
   assert.match(page, /btn\.disabled=false;\s*btn\.innerHTML=previous;\s*var brut=/, 'le bouton retrouve son état avant la proposition');
 });
+test('dates JotForm en français restées dans le tampon : lues au moment de l’import', () => {
+  const k = { JSON, Object, String }; vm.createContext(k);
+  vm.runInContext(/var EUC_V160_MOIS_[^;]*;/.exec(read('apps-script/EUC_MIGRATION_JOTFORM_V160.gs'))[0] + '\n' + /function EUC_V160_txt_[^\n]*/.exec(read('apps-script/EUC_MIGRATION_JOTFORM_V160.gs'))[0] + '\n' + /function EUC_V160_dateIso_[^]*?\n\}/.exec(read('apps-script/EUC_MIGRATION_JOTFORM_V160.gs'))[0] + '\n' + /function EUC_DEV466_txt_[^\n]*/.exec(src)[0] + '\n' + /function EUC_DEV648_datesLisibles_[^]*?\n\}/.exec(src)[0], k);
+  const ligne = { id: 5, Date_debut_brut: 'nov. 23, 2026', Date_fin_brut: 'déc. 18, 2026' };
+  const r = k.EUC_DEV648_datesLisibles_(ligne);
+  assert.equal(r.Date_debut_brut, '2026-11-23'); assert.equal(r.Date_fin_brut, '2026-12-18');
+  assert.equal(ligne.Date_debut_brut, 'nov. 23, 2026', 'le tampon n’est pas modifié');
+  assert.equal(k.EUC_DEV648_datesLisibles_({ Date_debut_brut: '2026-11-23', Date_fin_brut: '18/12/2026' }).Date_fin_brut, '2026-12-18');
+  const vide = k.EUC_DEV648_datesLisibles_({ Date_debut_brut: '', Date_fin_brut: '', Raw_JSON: JSON.stringify({ 'Date de début': 'janv. 5, 2027', 'Date de fin': 'févr. 6, 2027' }) });
+  assert.equal(vide.Date_debut_brut, '2027-01-05'); assert.equal(vide.Date_fin_brut, '2027-02-06');
+  assert.equal(k.EUC_DEV648_datesLisibles_({ Date_debut_brut: '', Date_fin_brut: '' }).Date_debut_brut, '', 'vraiment absente : reste absente (bloquée)');
+  assert.match(src, /function EUC_DEV466_prepare_\(selected,ctx,payload\)\{\n  selected=\(selected\|\|\[\]\)\.map\(EUC_DEV648_datesLisibles_\);/);
+});
 console.log(n + ' tests DEV648 réussis.');
