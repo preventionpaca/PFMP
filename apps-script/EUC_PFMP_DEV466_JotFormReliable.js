@@ -358,8 +358,17 @@ function EUC_DEV466_importSelection(payload){
   if(!lock.tryLock(10000))throw new Error('Un autre import PFMP est déjà en cours.');
   try{
     var started=Date.now(),ctx=EUC_IMPORT_exigerAdminTexte_(),selected=EUC_DEV466_selected_(payload),plan=EUC_DEV466_prepare_(selected,ctx,payload),items=plan.items;
+    /* DEV648 : place libre dans les propriétés avant de marquer le suivi « en cours d'écriture ». */
+    try{if(typeof EUC_DEV648_purgerUsageAncien_==='function')EUC_DEV648_purgerUsageAncien_();}catch(ePurge){}
     if(Object.keys(EUC_DEV503_overrideMap_(payload)).length)EUC_CONVENTION_assurerTableAcces_();
-    var tokens=EUC_DEV425_beginImportItems_(items,'import-jotform-dev466'),creates=[],updates=[];
+    var tokens;
+    try{tokens=EUC_DEV425_beginImportItems_(items,'import-jotform-dev466');}
+    catch(eDirty){
+      if(!/quota/i.test(String(eDirty&&eDirty.message||eDirty)))throw eDirty;
+      var diag='';try{diag=EUC_DEV648_proprietesLourdes_();}catch(eDiag){}
+      throw new Error('Aucune écriture effectuée : le stockage interne du script est plein. '+diag);
+    }
+    var creates=[],updates=[];
     items.forEach(function(item){
       if(item.mode==='CREATE')creates.push({fields:item.fields});
       else if(item.mode==='COMPLETE')updates.push({id:item.accessId,fields:item.fields});

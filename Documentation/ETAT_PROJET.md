@@ -5,7 +5,8 @@
 - Le précontrôle de `EUC_DEV466_importSelection` reste tout ou rien (aucune écriture si une ligne est bloquée), mais le message liste désormais toutes les lignes bloquées (et plus seulement 5) avec un marqueur `[[BLOQUEES:id,…]]` masqué à l'affichage.
 - La page Migration JotForm propose alors, après confirmation, de retirer ces lignes de la sélection et de relancer l'import des autres (nouveau précontrôle complet, nouvelle confirmation). Les lignes retirées restent dans le tableau.
 - Dates : les lignes du tampon analysées avant DEV644 gardent le texte JotForm français (« nov. 23, 2026 ») dans `Date_debut_brut` / `Date_fin_brut`, illisible pour le précontrôle (tous les élèves bloqués « Dates PFMP absentes ou illisibles »). `EUC_DEV648_datesLisibles_` convertit ces dates au moment de l'import (copie de la ligne, tampon inchangé ; date vide reprise de `Raw_JSON`). Plus besoin de réanalyser le fichier, ce qui aurait écrasé les rapprochements.
-- Tests : `tests/run-dev648-import-bloquees-tests.js` (4).
+- Stockage des propriétés plein (« Vous avez dépassé le quota de stockage des propriétés » au marquage DIRTY de DEV425) : le compteur DEV447 créait une clé par jour sans jamais effacer les anciennes. `EUC_DEV648_purgerUsageAncien_` garde les 14 derniers jours (historique du tableau de bord ramené à 14 jours), lancé au premier appel de chaque jour et avant chaque import JotForm. Si le stockage reste plein, l'import s'arrête sans écriture et affiche les noms et tailles des propriétés les plus lourdes (sans valeurs).
+- Tests : `tests/run-dev648-import-bloquees-tests.js` (5).
 
 ## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp
 

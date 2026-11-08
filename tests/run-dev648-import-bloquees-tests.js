@@ -41,4 +41,19 @@ test('dates JotForm en français restées dans le tampon : lues au moment de l�
   assert.equal(k.EUC_DEV648_datesLisibles_({ Date_debut_brut: '', Date_fin_brut: '' }).Date_debut_brut, '', 'vraiment absente : reste absente (bloquée)');
   assert.match(src, /function EUC_DEV466_prepare_\(selected,ctx,payload\)\{\n  selected=\(selected\|\|\[\]\)\.map\(EUC_DEV648_datesLisibles_\);/);
 });
+test('stockage des propriétés : anciens compteurs quotidiens Grist effacés (14 derniers jours gardés)', () => {
+  const u = read('apps-script/EUC_PFMP_DEV447_GristUsage.js'), k = {}; vm.createContext(k);
+  vm.runInContext(/var EUC_DEV447_USAGE_PREFIX_[^\n]*/.exec(u)[0] + '\n' + /var EUC_DEV447_USAGE_RETENTION_[^\n]*/.exec(u)[0] + '\n' + /function EUC_DEV648_clesUsageAnciennes_[^]*?\n\}/.exec(u)[0] + '\n' + /function EUC_DEV648_purgerUsageAncien_[^]*?\n\}/.exec(u)[0], k);
+  const P = k.EUC_DEV447_USAGE_PREFIX_, jours = Array.from({ length: 60 }, (_, i) => '2026-' + String(9 + Math.floor(i / 30)).padStart(2, '0') + '-' + String(1 + i % 30).padStart(2, '0'));
+  const store = {}; jours.forEach(d => store[P + d] = '{}'); store.AUTRE_REGLAGE = 'x'; store.EUC_DEV447_GRIST_USAGE_INDEX_V1 = '[]';
+  const props = { getKeys: () => Object.keys(store), deleteProperty: key => { delete store[key]; } };
+  assert.equal(k.EUC_DEV648_purgerUsageAncien_(props), 46);
+  assert.deepEqual(Object.keys(store).filter(x => x.startsWith(P)).map(x => x.slice(P.length)), jours.slice(-14));
+  assert.ok(store.AUTRE_REGLAGE && 'EUC_DEV447_GRIST_USAGE_INDEX_V1' in store, 'les autres propriétés ne sont pas touchées');
+  assert.match(u, /if\(!raw\)try\{EUC_DEV648_purgerUsageAncien_\(props\);\}catch\(ePurge\)\{\}/);
+  assert.match(src, /le stockage interne du script est plein/); assert.match(u, /function EUC_DEV648_proprietesLourdes_/);
+  assert.match(src, /EUC_DEV648_purgerUsageAncien_\(\);\}catch\(ePurge\)\{\}/);
+  const imp = /function EUC_DEV466_importSelection[^]*?\n\}/.exec(src)[0];
+  assert.ok(imp.indexOf('EUC_DEV648_purgerUsageAncien_') < imp.indexOf('EUC_DEV425_beginImportItems_'), 'purge avant le marquage DIRTY');
+});
 console.log(n + ' tests DEV648 réussis.');

@@ -1,11 +1,11 @@
 /** DEV447 — compteur local des appels Grist émis par Eucalyptus PFMP.
  * Stockage : Script Properties uniquement. Aucune donnée métier, URL, requête
- * SQL ou valeur de réponse n'est conservée. Historique glissant : 31 jours.
+ * SQL ou valeur de réponse n'est conservée. Historique glissant : 14 jours (DEV648 : jours plus anciens effacés).
  */
 var EUC_DEV447_USAGE_PREFIX_='EUC_DEV447_GRIST_USAGE_V1_';
 var EUC_DEV447_USAGE_INDEX_='EUC_DEV447_GRIST_USAGE_INDEX_V1';
 var EUC_DEV447_USAGE_QUOTA_=40000;
-var EUC_DEV447_USAGE_RETENTION_=31;
+var EUC_DEV447_USAGE_RETENTION_=14;
 var EUC_DEV447_BREAKER_PROP_='EUC_DEV447_GRIST_BREAKER_V1';
 var EUC_DEV447_INSTALLED_=false;
 var EUC_DEV447_BASE_DOGET_=null;
@@ -62,6 +62,26 @@ function EUC_DEV447_updateIndex_(props,day){
   return index;
 }
 
+/* DEV648 : un compteur par jour était créé sans jamais effacer les anciens jours, jusqu'à remplir le
+ * stockage des propriétés du script (500 Ko : « quota de stockage des propriétés » à l'import JotForm).
+ * Calcul pur : clés de compteurs plus anciennes que les `garder` derniers jours. */
+function EUC_DEV648_clesUsageAnciennes_(keys,garder){
+  var jours=(keys||[]).filter(function(k){return String(k).indexOf(EUC_DEV447_USAGE_PREFIX_)===0;}).map(function(k){return String(k).slice(EUC_DEV447_USAGE_PREFIX_.length);}).sort();
+  var gardes=jours.slice(-Math.max(1,Number(garder)||1));
+  return jours.filter(function(d){return gardes.indexOf(d)<0;}).map(function(d){return EUC_DEV447_USAGE_PREFIX_+d;});
+}
+function EUC_DEV648_purgerUsageAncien_(props){
+  props=props||PropertiesService.getScriptProperties();
+  var vieux=EUC_DEV648_clesUsageAnciennes_(props.getKeys(),EUC_DEV447_USAGE_RETENTION_);
+  vieux.forEach(function(k){try{props.deleteProperty(k);}catch(e){}});
+  return vieux.length;
+}
+/* Diagnostic sans valeurs : noms et tailles des propriétés les plus lourdes (aucune donnée nominative). */
+function EUC_DEV648_proprietesLourdes_(){
+  var all=PropertiesService.getScriptProperties().getProperties(),total=0;
+  var l=Object.keys(all).map(function(k){var n=k.length+String(all[k]).length;total+=n;return {k:k,n:n};}).sort(function(a,b){return b.n-a.n;});
+  return 'Stockage des propriétés : '+Math.round(total/1024)+' Ko sur 500 Ko, '+l.length+' clés. Plus lourdes : '+l.slice(0,8).map(function(x){return x.k+' ('+Math.round(x.n/1024)+' Ko)';}).join(', ')+'.';
+}
 function EUC_DEV447_record_(method,path,body,status,durationMs,origin){
   var lock=null,acquired=false;
   try{
@@ -90,7 +110,8 @@ function EUC_DEV447_record_(method,path,body,status,durationMs,origin){
     data.categories[category]=item;
     data.hours=data.hours||{};data.hours[hour]=(Number(data.hours[hour])||0)+1;
     data.origins=data.origins||{};data.origins[origin]=(Number(data.origins[origin])||0)+1;
-    props.setProperty(key,JSON.stringify(data));
+    if(!raw)try{EUC_DEV648_purgerUsageAncien_(props);}catch(ePurge){}
+    try{props.setProperty(key,JSON.stringify(data));}catch(eQuota){EUC_DEV648_purgerUsageAncien_(props);props.setProperty(key,JSON.stringify(data));}
     if(!raw)EUC_DEV447_updateIndex_(props,day);
     return true;
   }catch(e){return false;}

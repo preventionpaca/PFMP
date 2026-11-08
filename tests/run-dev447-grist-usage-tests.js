@@ -62,7 +62,7 @@ assert.match(page.getContent(),/Consommation_API_Grist_DEV447/);
 assert.match(page.getContent(),/CANAL/);
 assert.strictEqual(decorated,1,'la route interceptée doit recevoir exactement une fois le décor commun');
 
-assert.match(html,/Historique quotidien — 31 jours/);
+assert.match(html,/Historique quotidien — 14 jours/);
 assert.match(html,/uniquement les appels Grist observés par PFMP/);
 assert.match(html,/horaire non vérifié/);
 assert.match(html,/Chronologie horaire/);
