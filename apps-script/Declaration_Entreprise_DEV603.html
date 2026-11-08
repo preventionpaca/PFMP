@@ -152,13 +152,17 @@ $('nouveauCode').onclick=nouveauCode;
 function choisir(cas){
   $('choixQr').classList.toggle('on',cas==='qr');$('choixSans').classList.toggle('on',cas==='sans');
   $('partQr').hidden=$('actQr').hidden=cas!=='qr';$('partSans').hidden=$('actSans').hidden=cas!=='sans';$('partCaptcha').hidden=false;
-  $('mCode').textContent='';$('m1').textContent='';
+  $('mCode').textContent='';$('m1').textContent='';$('bCode').hidden=false;
   var f=cas==='qr'?$('codeConv'):$('classe');try{f.focus();}catch(e){}
 }
 $('choixQr').onclick=function(){choisir('qr');};
 $('choixSans').onclick=function(){choisir('sans');};
 $('bCode').onclick=function(){var b=this;$('mCode').textContent='';if(!$('captcha').value.trim()){erreur('mCode','Recopie d’abord le code de l’image.');return;}occupe(b,'Vérification…');
-  appel('EUC_DEV603_ouvrirCode',{code:$('codeConv').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},function(r){libre(b);$('mCode').innerHTML='<a class="plein" style="display:inline-block;background:#08745f;color:#fff;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none" target="_top" href="'+esc(r.url)+'">Continuer vers ma convention →</a>';},
+  appel('EUC_DEV603_ouvrirCode',{code:$('codeConv').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},function(r){libre(b);
+      /* DEV648 : code et image validés : ouverture directe de la convention ; le lien reste en secours
+       * si le navigateur bloque l'ouverture automatique. */
+      b.hidden=true;$('mCode').innerHTML='<span class="note">✓ Code accepté, ouverture de ta convention…</span><br><a class="plein" style="display:inline-block;margin-top:8px;background:#08745f;color:#fff;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none" target="_top" href="'+esc(r.url)+'">Continuer vers ma convention →</a>';
+      try{window.top.location.href=r.url;}catch(eNav){try{window.open(r.url,'_top');}catch(eOpen){}}},
     function(e){libre(b);erreur('mCode',e);nouveauCode();});};
 $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérification…');
   appel('EUC_DEV603_identifier',{classeId:Number($('classe').value),nom:$('nomEleve').value,prenom:$('prenomEleve').value,naissance:$('naissance').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},

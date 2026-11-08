@@ -94,4 +94,12 @@ test('[NON-DIFFUSIBLE] (masque INSEE) : jamais écrit, la saisie de l’élève 
   assert.match(src, /var repare=EUC_DEV648_champsMasques_\(existing,companyFields\);/);
   assert.match(src, /item\.mode==='COMPLETE'\|\|item\.mode==='REPARE'\)updates\.push/);
 });
+test('code de convention accepté : la convention s’ouvre seule, lien de secours conservé, bouton rendu au changement de choix', () => {
+  const f = read('apps-script/Declaration_Entreprise_DEV603.html');
+  assert.match(f, /b\.hidden=true;\$\('mCode'\)\.innerHTML='<span class="note">✓ Code accepté, ouverture de ta convention…<\/span>/);
+  assert.match(f, /try\{window\.top\.location\.href=r\.url;\}catch\(eNav\)\{try\{window\.open\(r\.url,'_top'\);\}catch\(eOpen\)\{\}\}\}/);
+  assert.ok(f.includes('target="_top" href="\'+esc(r.url)+\'">Continuer vers ma convention →</a>'), 'lien de secours');
+  assert.match(f, /\$\('bCode'\)\.hidden=false;/);
+  assert.match(f, /function\(e\)\{libre\(b\);erreur\('mCode',e\);nouveauCode\(\);\}/, 'erreur : bouton rendu, nouvelle image');
+});
 console.log(n + ' tests DEV648 réussis.');
