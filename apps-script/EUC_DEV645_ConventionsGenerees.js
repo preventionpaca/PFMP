@@ -58,15 +58,29 @@ function EUC_DEV645_index_(m, src) {
     var p = periodes.filter(function(x) { return x.id === pid; })[0] || (debut && fin ? EUC_SUIVI2_meilleurePeriode_(periodes, debut, fin) : null);
     var annulee = code === 'ANNULEE' || code === 'INTERROMPUE' || a.Revoked === true;
     var l = { id: Number(a.id), eleveId: eid || 0, eleve: e ? e.libelle : (T(a.Eleve_nom) || 'Élève non inscrit cette année'), classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c),
-      periodeId: p ? p.id : 0, periode: p ? p.libelle : 'Hors période', debut: debut || (p ? p.debut : ''), fin: fin || (p ? p.fin : ''),
+      periodeId: p ? p.id : 0, periode: p ? p.libelle : 'Hors période', periodeDebut: p ? p.debut : '9999', debut: debut || (p ? p.debut : ''), fin: fin || (p ? p.fin : ''),
       numero: EUC_SUIVI2_premier_(a.Numero_enregistrement, a.Reference_convention), statut: a.Revoked === true && !annulee ? 'Révoquée' : (EUC_DEV645_STATUTS_[code] || code), annulee: annulee,
       rattrapage: /RATTRAPAGE/i.test(T(a.Type_sequence)), remplacement: /REMPLACEMENT/i.test(T(a.Type_sequence)),
       generee: D(a.Date_creation || a.Date_enregistrement), ms: EUC_DEV643_ms_(a.Date_creation || a.Date_enregistrement), lot: T(a.Lot_generation),
       saisieEntreprise: D(a.Date_saisie_entreprise), entreprise: EUC_SUIVI2_premier_(a.Entreprise_raison_sociale, a.Entreprise_enseigne) };
+    var seq = l.rattrapage || l.remplacement ? T(a.Type_sequence).toUpperCase() + (Number(a.Numero_sequence) || 1) : 'INITIALE';
+    l.cle = eid ? eid + '|' + l.periodeId + '|' + seq : 'D' + l.id;
     lignes.push(l);
     if (eid && !annulee) avec[eid + '|' + l.periodeId] = true;
   });
+  EUC_DEV645_regrouper_(lignes);
   return { annee: m.annee, classes: classes, lignes: lignes, avec: avec };
+}
+
+/* Chaque réimpression depuis le générateur crée une ligne : une seule convention par élève, période et séquence.
+ * Celle retenue : active, puis remplie par l'entreprise, puis la plus récente. Les autres sont des générations antérieures. */
+function EUC_DEV645_regrouper_(lignes) {
+  var groupes = {};
+  lignes.forEach(function(l) { (groupes[l.cle] = groupes[l.cle] || []).push(l); });
+  Object.keys(groupes).forEach(function(k) {
+    var g = groupes[k].sort(function(a, b) { return (a.annulee ? 1 : 0) - (b.annulee ? 1 : 0) || (b.saisieEntreprise || b.entreprise ? 1 : 0) - (a.saisieEntreprise || a.entreprise ? 1 : 0) || b.ms - a.ms || b.id - a.id; });
+    g.forEach(function(l, i) { l.generations = g.length; l.anterieure = i > 0; l.principale = g[0].id; });
+  });
 }
 
 function EUC_DEV645_structure_(ix) {
@@ -75,12 +89,14 @@ function EUC_DEV645_structure_(ix) {
     var c = ix.classes[k], cle = EUC_DEV645_cleNiveau_(c);
     var n = niveaux[cle] = niveaux[cle] || { cle: cle, libelle: EUC_DEV645_libelleNiveau_(cle), rang: EUC_DEV645_rangNiveau_(cle), total: 0, classes: [] };
     var ps = (c.periodes || []).filter(function(p) { return !p.suivi; });
-    var x = { id: c.id, nom: c.nom, eleves: (c.eleves || []).length, total: 0, periodes: ps.map(function(p) {
+    var x = { id: c.id, nom: c.nom, eleves: (c.eleves || []).length, total: 0, generations: 0, periodes: ps.map(function(p) {
       var pc = EUC_DEV645_clePeriode_(p.libelle); periodes[pc] = true;
       return { id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, total: 0, sans: (c.eleves || []).filter(function(e) { return !ix.avec[e.id + '|' + p.id]; }).length };
     }), horsPeriode: 0 };
     ix.lignes.forEach(function(l) {
       if (l.classeId !== c.id) return;
+      x.generations = (x.generations || 0) + 1;
+      if (l.anterieure) return;
       x.total++;
       var p = x.periodes.filter(function(y) { return y.id === l.periodeId; })[0];
       if (p) p.total++; else x.horsPeriode++;
@@ -89,24 +105,24 @@ function EUC_DEV645_structure_(ix) {
   });
   var l = Object.keys(niveaux).map(function(k) { var n = niveaux[k]; n.classes.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }); return n; })
     .sort(function(a, b) { return a.rang - b.rang || a.libelle.localeCompare(b.libelle, 'fr'); });
-  return { annee: ix.annee, total: ix.lignes.length, niveaux: l, periodes: Object.keys(periodes).sort(function(a, b) { return a.localeCompare(b, 'fr', { numeric: true }); }) };
+  return { annee: ix.annee, total: ix.lignes.filter(function(l) { return !l.anterieure; }).length, generations: ix.lignes.length, niveaux: l, periodes: Object.keys(periodes).sort(function(a, b) { return a.localeCompare(b, 'fr', { numeric: true }); }) };
 }
 
 function EUC_DEV645_lister_(ix, q) {
   var cid = Number(q.classeId) || 0, niveau = EUC_SUIVI2_t_(q.niveau), periode = EUC_DEV645_clePeriode_(q.periode);
   var garder = function(c) { return (!cid || c.id === cid) && (!niveau || EUC_DEV645_cleNiveau_(c) === niveau); };
-  var lignes = ix.lignes.filter(function(l) { var c = ix.classes[l.classeId]; return garder(c) && (!periode || EUC_DEV645_clePeriode_(l.periode) === periode); });
+  var lignes = ix.lignes.filter(function(l) { var c = ix.classes[l.classeId]; return garder(c) && (q.toutes || !l.anterieure) && (!periode || EUC_DEV645_clePeriode_(l.periode) === periode); });
   var sans = [];
   if (q.sansConvention) Object.keys(ix.classes).forEach(function(k) {
     var c = ix.classes[k]; if (!garder(c)) return;
     (c.periodes || []).filter(function(p) { return !p.suivi && (!periode || EUC_DEV645_clePeriode_(p.libelle) === periode); }).forEach(function(p) {
       (c.eleves || []).forEach(function(e) {
-        if (!ix.avec[e.id + '|' + p.id]) sans.push({ id: 0, eleveId: e.id, eleve: e.libelle, classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c), periodeId: p.id, periode: p.libelle, debut: p.debut, fin: p.fin, sansConvention: true });
+        if (!ix.avec[e.id + '|' + p.id]) sans.push({ id: 0, eleveId: e.id, eleve: e.libelle, classeId: c.id, classe: c.nom, niveau: EUC_DEV645_cleNiveau_(c), periodeId: p.id, periode: p.libelle, periodeDebut: p.debut, debut: p.debut, fin: p.fin, sansConvention: true });
       });
     });
   });
   var tout = lignes.concat(sans), rang = function(l) { return EUC_DEV645_rangNiveau_(l.niveau); };
-  tout.sort(function(a, b) { return rang(a) - rang(b) || a.classe.localeCompare(b.classe, 'fr') || String(a.debut).localeCompare(String(b.debut)) || a.eleve.localeCompare(b.eleve, 'fr') || (a.sansConvention ? 1 : 0) - (b.sansConvention ? 1 : 0) || a.id - b.id; });
+  tout.sort(function(a, b) { return rang(a) - rang(b) || a.classe.localeCompare(b.classe, 'fr') || String(a.periodeDebut).localeCompare(String(b.periodeDebut)) || a.eleve.localeCompare(b.eleve, 'fr') || (a.sansConvention ? 1 : 0) - (b.sansConvention ? 1 : 0) || String(a.cle).localeCompare(String(b.cle)) || (a.anterieure ? 1 : 0) - (b.anterieure ? 1 : 0) || (b.ms || 0) - (a.ms || 0) || a.id - b.id; });
   tout.forEach(function(l) { l.niveauLibelle = EUC_DEV645_libelleNiveau_(l.niveau); });
-  return { annee: ix.annee, conventions: lignes.length, sansConvention: sans.length, lignes: tout };
+  return { annee: ix.annee, conventions: lignes.filter(function(l) { return !l.anterieure; }).length, anterieures: lignes.filter(function(l) { return l.anterieure; }).length, sansConvention: sans.length, lignes: tout };
 }

@@ -4,6 +4,7 @@
 
 - Nouvelle page admin `conventions-generees-pfmp` (« Conventions générées », lecture seule) : conventions de `EUC_ACCES_FORMULAIRES_PFMP` d'une année, par niveau (BAC PRO Seconde, Première, Terminale, CAP, BTS, autres) puis par classe et par période.
 - Chargement en deux temps : la structure (effectifs par niveau, classe et période, sans aucun nom) s'affiche d'abord. La liste nominative n'est lue que pour ce qui est demandé : toute l'année, un niveau, une classe, une période d'une classe, ou une période pour tous (sélecteur « Période »).
+- Constat sur le vert (8 novembre) : chaque réimpression depuis le générateur crée une nouvelle ligne (ex. un élève de 1CAR : 9 lignes pour la PFMP n°1). La page compte donc une convention par élève, période et séquence (initiale, rattrapage, remplacement) : celle qui est active, puis remplie par l'entreprise, puis la plus récente. Le nombre de générations est affiché ; la case « générations antérieures » montre les autres. Rien n'est supprimé.
 - Option « Montrer aussi les élèves sans convention générée » : liste les élèves inscrits sans convention active pour une période. Une convention annulée, interrompue ou révoquée ne compte pas comme faite ; une convention supprimée est ignorée.
 - Élèves dont la convention a été distribuée sans QR code (avant le système) : le formulaire de secours (`declaration-entreprise`) ne demande aucune convention générée. Il retrouve l'élève par classe, nom, prénom et date de naissance. Générer une convention n'est utile que pour remettre une convention imprimée avec QR code.
 

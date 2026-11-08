@@ -90,6 +90,20 @@ test('une convention sans lien de période est rattachée par ses dates, sinon �
   assert.equal(J(c.EUC_DEV645_structure_(ix)).niveaux[0].classes[0].horsPeriode, 1);
 });
 
+test('les réimpressions comptent pour une seule convention : celle remplie par l’entreprise, sinon la plus récente', () => {
+  const g = [D(700, { Eleve: 1, Periode: 100, Date_creation: '2026-09-08T08:00:00.000Z' }), D(701, { Eleve: 1, Periode: 100, Date_creation: '2026-09-14T08:00:00.000Z', Date_saisie_entreprise: '2026-10-01', Entreprise_raison_sociale: 'GARAGE' }),
+    D(702, { Eleve: 1, Periode: 100, Date_creation: '2026-11-02T08:00:00.000Z' }), D(703, { Eleve: 2, Periode: 100, Date_creation: '2026-09-08T08:00:00.000Z' }), D(704, { Eleve: 2, Periode: 100, Date_creation: '2026-10-08T08:00:00.000Z' }),
+    D(705, { Eleve: 2, Periode: 100, Type_sequence: 'RATTRAPAGE', Numero_sequence: 2 })];
+  const ix = index(g), s = J(c.EUC_DEV645_structure_(ix)), cl = s.niveaux[0].classes[0];
+  assert.equal(s.total, 3); assert.equal(s.generations, 6); assert.equal(cl.periodes[0].total, 3); assert.equal(cl.generations, 6);
+  const l = J(c.EUC_DEV645_lister_(ix, { classeId: 10 }));
+  assert.deepEqual(l.lignes.map(x => [x.id, x.generations]), [[701, 3], [704, 2], [705, 1]]);
+  assert.equal(l.conventions, 3); assert.equal(l.anterieures, 0);
+  const t = J(c.EUC_DEV645_lister_(ix, { classeId: 10, toutes: true }));
+  assert.deepEqual(t.lignes.map(x => [x.id, x.anterieure]), [[701, false], [702, true], [700, true], [704, false], [703, true], [705, false]]);
+  assert.equal(t.conventions, 3); assert.equal(t.anterieures, 3);
+});
+
 test('page : réservée à l’administration, appels en lecture seule, jamais un fichier entier d’un coup', () => {
   const srv = read('apps-script/EUC_DEV645_ConventionsGenerees.js');
   ['EUC_DEV645_afficher', 'EUC_DEV645_structure', 'EUC_DEV645_lister'].forEach(f => assert.match(srv, new RegExp('function ' + f + '\\([^)]*\\) \\{\\n  EUC_SUIVI2_exigerAdmin_\\(\\);')));
