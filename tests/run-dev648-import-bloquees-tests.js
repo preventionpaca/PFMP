@@ -102,4 +102,16 @@ test('code de convention accepté : la convention s’ouvre seule, lien de secou
   assert.match(f, /\$\('bCode'\)\.hidden=false;/);
   assert.match(f, /function\(e\)\{libre\(b\);erreur\('mCode',e\);nouveauCode\(\);\}/, 'erreur : bouton rendu, nouvelle image');
 });
+test('Monaco sans NIS : la recherche par nom apparaît sur la page QR et dans le formulaire en ligne', () => {
+  const qr = read('apps-script/PFMP_Acces_QR_V116.html');
+  assert.match(qr, /ev\.stopImmediatePropagation\(\);\n      applyMode\(\);/, 'le sélecteur FIX9 coupe bien la propagation');
+  assert.match(qr, /document\.addEventListener\('change',function\(ev\)\{if\(ev\.target===country\)setTimeout\(maj,0\);\},true\);/);
+  assert.match(qr, /lab\.textContent=mc\?'NIS \(Monaco\)':labInit;/);
+  const f = read('apps-script/Declaration_Entreprise_DEV603.html'), d = read('apps-script/EUC_DEV603_Declaration.js');
+  assert.match(f, /<div id="aMonaco" hidden/); assert.match(f, /\$\('aMonaco'\)\.hidden=this\.value!=='MC';/);
+  assert.match(f, /appel\('EUC_DEV646_rechercherMonacoParNom',t,/);
+  assert.match(f, /\$\('aSiret'\)\.value=x\.nis;/);
+  assert.match(f, /occupe\(b,'Recherche…'\)/); assert.equal((f.match(/function\(r\)\{libre\(b\);var l=\(r&&r\.resultats\)/g) || []).length, 1); assert.match(f, /function\(e\)\{libre\(b\);\$\('aMonacoR'\)\.textContent=msgErr\(e\);\}/);
+  assert.match(d, /if \(pays === 'MC' && EUC_DEV603_t_\(q\.siret\)\) \{ var nis = [^\n]*ligne\.NIS_brut = nis;[^\n]*ligne\.Entreprise_identifiant_type = 'NIS'; \}/);
+});
 console.log(n + ' tests DEV648 réussis.');

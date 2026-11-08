@@ -12,6 +12,7 @@
 - « [NON-DIFFUSIBLE] » : masque de l'annuaire INSEE pour les entreprises non diffusibles, recopié par la vérification SIRET dans Raison_sociale_officielle, Adresse_officielle… puis dans la convention. `EUC_DEV648_sansMasque_` le retire avant de construire les champs entreprise (la saisie JotForm de l'élève sert) et aucun champ masqué n'est écrit. Une convention déjà importée masquée est réparée au réimport (mode REPARE : seuls les champs masqués, remplacés par une vraie valeur).
 - Tests : `tests/run-dev648-import-bloquees-tests.js` (9).
 - Formulaire « Enregistrer ma PFMP », choix 1 : code et image acceptés, la convention s'ouvre seule (navigation de la page entière), le lien « Continuer vers ma convention » reste en secours.
+- Monaco sans NIS : la case « Tu n’as pas le NIS ? » de la page QR ne s'affichait jamais (le sélecteur de pays FIX9 coupe « change » par stopImmediatePropagation) ; écoute désormais sur le document en capture, libellé « NIS (Monaco) ». Même recherche par nom ajoutée au formulaire en ligne (« Mon SIRET ne fonctionne pas… », pays Monaco) ; le numéro trouvé (NIS ou EUC-MC-…) est gardé dans NIS_brut / NIS_normalise de la demande.
 - Conventions générées (DEV645) : chaque convention active affiche « Ouvrir sa page QR » (par l'enveloppe enregistrer-pfmp) et le code écrit sous le QR (`EUC_DEV645_accesQr_`). Page réservée à l'administration.
 
 ## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp

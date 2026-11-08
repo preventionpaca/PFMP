@@ -313,6 +313,8 @@ function EUC_DEV603_signalerProbleme(q) {
     var ligne = EUC_DEV603_ligne_(numero, m.annee, eleve, { id: Number(c.id), nom: c.nom }, periode, { siret: EUC_DEV603_t_(q.siret).replace(/\D/g, ''), raisonSociale: entreprise, enseigne: '', adresse: EUC_DEV603_t_(q.adresse).slice(0, 250), complement: '', codePostal: '', commune: ville, actif: true }, vide, vide, emailEleve);
     ligne.Submission_ID = j.eleveId ? 'SECOURS-' + numero : numero; ligne.SIRET_statut = 'A_CONTROLER'; ligne.SIRET_source = 'Non vérifié (' + ({ FR: 'France', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ')';
     ligne.Raison_sociale_officielle = ''; ligne.Adresse_officielle = ''; ligne.CP_officiel = ''; ligne.Ville_officielle = ''; ligne.Pays_officiel = pays === 'AUTRE' ? EUC_DEV603_t_(q.paysNom).slice(0, 60) : pays;
+    /* DEV648 : Monaco — le numéro saisi ou trouvé par le nom (NIS ou EUC-MC-0001) est gardé tel quel. */
+    if (pays === 'MC' && EUC_DEV603_t_(q.siret)) { var nis = EUC_DEV603_t_(q.siret).toUpperCase().slice(0, 40); ligne.SIRET_brut = ''; ligne.SIRET_normalise = ''; ligne.NIS_brut = nis; ligne.NIS_normalise = nis.replace(/[\s-]+/g, ''); ligne.Entreprise_identifiant_type = 'NIS'; }
     ligne.Niveau_controle = 'ROUGE'; ligne.Decision = j.eleveId ? 'A_CONTROLER' : 'ESSAI';
     ligne.Alertes = 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};

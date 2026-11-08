@@ -1963,8 +1963,12 @@ init();
   search.insertAdjacentElement('afterend',box);
   var q=document.getElementById('monacoNomDev646Q'),go=document.getElementById('monacoNomDev646Go'),res=document.getElementById('monacoNomDev646R');
   function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function maj(){box.hidden=country.value!=='Monaco';}
-  country.addEventListener('change',maj);maj();
+  /* DEV648 : le sélecteur FIX9 coupe la propagation de « change » sur la liste (stopImmediatePropagation) :
+   * on écoute donc en amont, sur le document, en phase de capture. Libellé NIS pour Monaco. */
+  var lab=document.getElementById('identifiantLabelV161'),labInit=lab?lab.textContent:'SIRET';
+  function maj(){var mc=country.value==='Monaco';box.hidden=!mc;if(lab)lab.textContent=mc?'NIS (Monaco)':labInit;}
+  document.addEventListener('change',function(ev){if(ev.target===country)setTimeout(maj,0);},true);
+  country.addEventListener('input',function(){setTimeout(maj,0);});maj();
   var busy=window.EUC_QR_buttonBusyV568||function(b,on){b.disabled=on;};
   function choisir(nis){
     ident.value=nis;

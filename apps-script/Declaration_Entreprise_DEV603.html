@@ -98,6 +98,12 @@ button.plein{background:var(--vert);color:#fff}button:disabled{opacity:.55;curso
     <label for="aAdr">Adresse</label><input id="aAdr">
     <div class="deux"><div><label for="aVille">Ville</label><input id="aVille"></div><div><label for="aPays">Pays</label><select id="aPays"><option value="FR">France</option><option value="MC">Monaco</option><option value="AUTRE">Autre pays</option></select></div></div>
     <div id="aPaysAutre" hidden><label for="aPaysNom">Lequel ?</label><input id="aPaysNom"></div>
+    <div id="aMonaco" hidden style="margin:8px 0;padding:8px 10px;border:1px solid var(--bord);border-radius:8px">
+      <p style="margin:4px 0"><b>Entreprise de Monaco : tu n’as pas le NIS ?</b> Cherche-la par son nom :</p>
+      <input id="aMonacoQ" autocomplete="off" placeholder="Nom de l’entreprise (3 lettres au moins)">
+      <button type="button" id="aMonacoGo">Chercher par le nom</button>
+      <div id="aMonacoR" role="status" aria-live="polite" style="margin-top:6px"></div>
+    </div>
     <label for="aSiret">SIRET ou numéro d’identification (si tu l’as)</label><input id="aSiret">
     <label for="aContact">Nom de ton tuteur</label><input id="aContact">
     <div class="deux"><div><label for="aTel">Téléphone de l’entreprise</label><input id="aTel" type="tel" inputmode="tel"></div><div><label for="aMail">Courriel de l’entreprise</label><input id="aMail" type="email"></div></div>
@@ -185,7 +191,16 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
   },function(e){libre(b);erreur('m3',e);});};
 $('b3').onclick=function(){if(!SIRET)return;etape(4);};
 $('aide').onclick=function(){etape('3b');};$('aRetour').onclick=function(){etape(3);};
-$('aPays').onchange=function(){$('aPaysAutre').hidden=this.value!=='AUTRE';};
+$('aPays').onchange=function(){$('aPaysAutre').hidden=this.value!=='AUTRE';$('aMonaco').hidden=this.value!=='MC';};
+/* DEV648 : même recherche par nom que la page du QR code (entreprises de Monaco de la base, NIS ou numéro interne). */
+$('aMonacoGo').onclick=function(){var b=this,t=$('aMonacoQ').value.trim();if(b.disabled)return;
+  if(t.replace(/\s/g,'').length<3){$('aMonacoR').textContent='Écris au moins 3 lettres du nom de l’entreprise.';return;}
+  occupe(b,'Recherche…');$('aMonacoR').textContent='';
+  appel('EUC_DEV646_rechercherMonacoParNom',t,function(r){libre(b);var l=(r&&r.resultats)||[];
+    if(!l.length){$('aMonacoR').innerHTML='<b>Cette entreprise n’est pas encore dans notre base.</b> Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.';return;}
+    $('aMonacoR').innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0">'+esc(x.nom)+(x.enseigne?' — '+esc(x.enseigne):'')+'<br><span class="note">'+esc([x.adresse,x.ville].filter(Boolean).join(', '))+'</span></button>';}).join('');
+    $('aMonacoR').querySelectorAll('button[data-i]').forEach(function(bt){bt.onclick=function(){var x=l[Number(bt.dataset.i)];$('aEnt').value=x.nom;$('aAdr').value=x.adresse||'';$('aVille').value=x.ville||'Monaco';$('aSiret').value=x.nis;$('aMonacoR').innerHTML='✓ '+esc(x.nom)+' — numéro '+esc(x.nis)+'.';};});
+  },function(e){libre(b);$('aMonacoR').textContent=msgErr(e);});};
 surveiller($('aTel'),function(){return $('aPays').value;});surveiller($('aMail'));
 $('aEnvoyer').onclick=function(){var b=this;$('mA').textContent='';occupe(b,'Envoi…');
   appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value},
