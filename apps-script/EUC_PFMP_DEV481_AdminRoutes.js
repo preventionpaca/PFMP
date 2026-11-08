@@ -43,6 +43,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV645_afficher(e);
     case 'entreprises-monaco-pfmp':
       return EUC_DEV646_afficher(e);
+    case 'acces-inpi-pfmp':
+      return EUC_DEV651_afficher(e);
     case 'plannings-pfmp':
       return EUC_DEV610_afficher(e);
     case 'epi-pfmp':

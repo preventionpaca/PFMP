@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 9 novembre 2026 — DEV651 : API RNE de l'INPI pour les entreprises non diffusibles
+
+- `EUC_DEV651_InpiRne.js` : connexion `registre-national-entreprises.inpi.fr/api/sso/login` (jeton en cache 30 min, renouvelé une fois sur 401/403), lecture `/api/companies/<SIREN>`, choix de l'établissement du SIRET (sinon adresse de l'entreprise), nom = dénomination ou NOM Prénoms de l'entrepreneur.
+- Branché dans `EUC_ENT_traiterReponseApiNavigateur` (commun à la page QR et au formulaire en ligne) : SIRET non diffusible → fiche INPI complète (nom, voie, code postal, commune) → entreprise traitée comme vérifiée (`sourceIdentite` INPI_RNE). Sinon (non activé, pas d'identifiants, erreur, fiche incomplète) : saisie par l'élève (DEV649/650).
+- Page d'administration `acces-inpi-pfmp` (« Accès INPI », DDFPT/ADMIN_PFMP pour écrire) : identifiants enregistrés dans `INPI_RNE_IDENTIFIANT` / `INPI_RNE_MOT_DE_PASSE` (l'éditeur Apps Script n'affiche que 50 propriétés), essai sur un SIRET sans écriture, activation `INPI_RNE_ACTIF` = OUI par l'utilisateur.
+- Compte data.inpi.fr créé par l'utilisateur, accès API « Informations des entreprises » accordé le 9 novembre 2026.
+
 ## Mise à jour du 8 novembre 2026 — DEV650 : entreprise non diffusible, vérification sur l'INPI
 
 - Ordre de vérification d'un SIRET : annuaire data.gouv (Recherche d'entreprises, données INSEE) d'abord. S'il répond « non diffusible » (nom et adresse masqués), le registre national des entreprises de l'INPI (data.inpi.fr) publie ces informations, sans compte.

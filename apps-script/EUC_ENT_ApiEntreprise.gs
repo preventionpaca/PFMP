@@ -15,7 +15,10 @@ function EUC_ENT_traiterReponseApiNavigateur(json,valeur) {
   EUC_ENT_controlerRechercheSiret_();
   var v=EUC_ENT_validerSiret(valeur); if(!v.valide) throw new Error(v.message);
   if(!json||!Array.isArray(json.results)||!json.results.length) return {source:'api',introuvable:true};
-  return {source:'api',entreprise:EUC_ENT_mapperReponseApi(json.results[0],v.siret)};
+  var ent=EUC_ENT_mapperReponseApi(json.results[0],v.siret);
+  /* DEV651 : non diffusible à l'INSEE → nom et adresse lus au registre de l'INPI (si activé). */
+  if(ent&&ent.nonDiffusible===true&&typeof EUC_DEV651_completerNonDiffusible_==='function')ent=EUC_DEV651_completerNonDiffusible_(ent,v.siret);
+  return {source:'api',entreprise:ent};
 }
 function EUC_ENT_mapperReponseApi__DEV649_ORIG(u,siret) {
   var candidats=(u.matching_etablissements||[]).concat(u.siege?[u.siege]:[]), e=null;

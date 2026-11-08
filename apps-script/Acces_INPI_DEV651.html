@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accès INPI — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:900px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:16px;margin:0 0 8px}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 12px}
+label{display:block;font-weight:700;font-size:13px}
+input{width:100%;font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:7px}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:8px 12px;background:var(--vert);color:#fff;cursor:pointer;margin-top:10px}
+button:disabled{opacity:.6;cursor:wait}
+button.leger{background:var(--vert-clair);color:var(--vert)}
+.note{color:var(--gris);font-size:13px}
+.message{font-weight:700;margin-top:8px}.message.erreur{color:var(--alerte)}.message.ok{color:var(--vert)}
+.pastille{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--vert-clair);color:var(--vert);font-weight:700;font-size:12px}
+.pastille.manque{background:var(--alerte-fond);color:var(--alerte)}
+table{border-collapse:collapse;margin-top:8px}td{padding:4px 12px 4px 0;vertical-align:top}td:first-child{color:var(--gris)}
+.spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
+.busy .spin{display:inline-block}
+@keyframes tour{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Accès INPI</h1>
+  <p>Entreprises « non diffusibles » : l’annuaire data.gouv masque leur nom et leur adresse, le registre national des entreprises (INPI) les publie. Ordre de recherche d’un SIRET : base de l’application, data.gouv, puis INPI.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Accès INPI</nav>
+<main>
+  <section>
+    <h2>État</h2>
+    <div id="etat" class="note">Chargement…</div>
+  </section>
+  <section>
+    <h2>1. Identifiants du compte data.inpi.fr</h2>
+    <p class="note">Compte avec l’accès API « Informations des entreprises ». Le mot de passe est enregistré dans les propriétés du script ; il n’est jamais réaffiché.</p>
+    <div class="grille">
+      <div><label for="identifiant">Identifiant (adresse de connexion)</label><input id="identifiant" autocomplete="off"></div>
+      <div><label for="motDePasse">Mot de passe</label><input id="motDePasse" type="password" autocomplete="new-password"></div>
+    </div>
+    <button type="button" id="bEnregistrer"><span class="spin"></span><span class="txt">Enregistrer les identifiants</span></button>
+    <div id="mEnregistrer" class="message" role="status"></div>
+  </section>
+  <section>
+    <h2>2. Essai</h2>
+    <p class="note">Interroge l’INPI pour un SIRET et affiche le nom et l’adresse trouvés. Aucune écriture.</p>
+    <label for="siret">SIRET</label><input id="siret" inputmode="numeric" value="99271136600011" style="max-width:260px">
+    <button type="button" id="bTester"><span class="spin"></span><span class="txt">Tester la connexion</span></button>
+    <div id="mTester" class="message" role="status"></div>
+    <div id="resultat"></div>
+  </section>
+  <section>
+    <h2>3. Utilisation sur les pages des élèves</h2>
+    <p class="note">Une fois activé : pour un SIRET non diffusible, la page du QR code et le formulaire en ligne remplissent et verrouillent le nom et l’adresse lus à l’INPI. Si l’INPI ne répond pas, l’élève les saisit (comme aujourd’hui).</p>
+    <button type="button" id="bActiver"><span class="spin"></span><span class="txt">Activer</span></button>
+    <button type="button" id="bDesactiver" class="leger"><span class="spin"></span><span class="txt">Désactiver</span></button>
+    <div id="mActiver" class="message" role="status"></div>
+  </section>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},DELAI=60000;
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function appel(nom,args,ok,ko){
+    var fini=false,timer=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Pas de réponse après 1 minute : rechargez la page avant de réessayer.'));},DELAI);
+    var run=google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);});
+    run[nom].apply(run,args);
+  }
+  /* Bouton d'action : bloqué et avec chargement pendant l'appel, rendu en succès, erreur et dépassement. */
+  function occupe(b,on,texte){
+    var t=b.querySelector('.txt');if(!b.dataset.libelle)b.dataset.libelle=t.textContent;
+    b.disabled=on;b.classList.toggle('busy',on);t.textContent=on?texte:b.dataset.libelle;
+  }
+  function message(id,t,cls){$(id).textContent=t||'';$(id).className='message'+(cls?' '+cls:'');}
+  function erreurTexte(e){return String(e&&e.message||e||'Erreur inconnue.');}
+  function montrerEtat(s){
+    $('etat').innerHTML=(s.configure?'<span class="pastille">Identifiants enregistrés</span> '+esc(s.identifiant):'<span class="pastille manque">Identifiants non enregistrés</span>')+
+      ' &nbsp; '+(s.actif?'<span class="pastille">Utilisé sur les pages des élèves</span>':'<span class="pastille manque">Pas encore utilisé sur les pages des élèves</span>');
+  }
+  appel('EUC_DEV651_etat',[],montrerEtat,function(e){$('etat').textContent=erreurTexte(e);});
+  $('bEnregistrer').onclick=function(){var b=this;message('mEnregistrer','');occupe(b,true,'Enregistrement…');
+    appel('EUC_DEV651_enregistrer',[{identifiant:$('identifiant').value,motDePasse:$('motDePasse').value}],function(s){occupe(b,false);$('motDePasse').value='';montrerEtat(s);message('mEnregistrer','Identifiants enregistrés. Lancez l’essai.','ok');},
+      function(e){occupe(b,false);message('mEnregistrer',erreurTexte(e),'erreur');});};
+  $('bTester').onclick=function(){var b=this;message('mTester','');$('resultat').innerHTML='';occupe(b,true,'Interrogation de l’INPI…');
+    appel('EUC_DEV651_tester',[$('siret').value],function(r){occupe(b,false);
+      if(!r.trouve){message('mTester','Connexion réussie, mais aucune entreprise trouvée pour ce SIREN ('+r.duree+' ms).','erreur');return;}
+      var f=r.fiche||{};message('mTester',r.complet?'Connexion réussie : fiche complète ('+r.duree+' ms).':'Connexion réussie, mais fiche incomplète : elle ne serait pas utilisée ('+r.duree+' ms).',r.complet?'ok':'erreur');
+      $('resultat').innerHTML='<table>'+[['Nom',f.nom],['Nom commercial',f.enseigne],['Adresse',f.adresse],['Complément',f.complement],['Code postal',f.codePostal],['Commune',f.commune],['Établissement du SIRET trouvé',f.siretTrouve?'oui':'non (adresse du siège)']].map(function(l){return '<tr><td>'+esc(l[0])+'</td><td>'+esc(l[1]||'—')+'</td></tr>';}).join('')+'</table>';},
+      function(e){occupe(b,false);message('mTester',erreurTexte(e),'erreur');});};
+  function activer(b,oui){message('mActiver','');occupe(b,true,oui?'Activation…':'Désactivation…');
+    appel('EUC_DEV651_activer',[oui],function(s){occupe(b,false);montrerEtat(s);message('mActiver',oui?'Activé.':'Désactivé.','ok');},function(e){occupe(b,false);message('mActiver',erreurTexte(e),'erreur');});}
+  $('bActiver').onclick=function(){activer(this,true);};
+  $('bDesactiver').onclick=function(){activer(this,false);};
+})();
+</script>
+</body>
+</html>
