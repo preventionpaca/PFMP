@@ -104,6 +104,16 @@ test('les réimpressions comptent pour une seule convention : celle remplie par 
   assert.equal(t.conventions, 3); assert.equal(t.anterieures, 3);
 });
 
+test('chaque convention donne l’historique de ses générations : date, auteur, classe entière ou élève seul', () => {
+  const g = [D(700, { Eleve: 1, Periode: 100, Date_creation: '2026-09-08T08:00:00.000Z', Auteur: 'Sabine.Exemple@lycee.test' }),
+    D(701, { Eleve: 1, Periode: 100, Date_creation: '2026-11-02T08:00:00.000Z', Lot_generation: '', Auteur: '' })];
+  const l = J(c.EUC_DEV645_lister_(index(g), { classeId: 10 })).lignes;
+  assert.equal(l.length, 1);
+  assert.deepEqual(l[0].historique.map(h => [h.id, h.date, h.auteur, h.mode, h.retenue]),
+    [[700, '2026-09-08', 'sabine.exemple', 'Classe entière', false], [701, '2026-11-02', '', 'Élève seul', true]]);
+  assert.match(page, /auteur non enregistré/); assert.match(page, /<details><summary>/);
+});
+
 test('page : réservée à l’administration, appels en lecture seule, jamais un fichier entier d’un coup', () => {
   const srv = read('apps-script/EUC_DEV645_ConventionsGenerees.js');
   ['EUC_DEV645_afficher', 'EUC_DEV645_structure', 'EUC_DEV645_lister'].forEach(f => assert.match(srv, new RegExp('function ' + f + '\\([^)]*\\) \\{\\n  EUC_SUIVI2_exigerAdmin_\\(\\);')));

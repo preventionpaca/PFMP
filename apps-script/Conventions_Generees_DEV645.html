@@ -36,6 +36,8 @@ th{color:var(--gris)}
 tr.titre td{background:var(--vert-clair);font-weight:700;color:var(--vert)}
 tr.sans td{color:var(--alerte)}
 tr.annulee td{color:var(--gris);text-decoration:line-through}
+.hist{margin:4px 0 0;padding-left:18px;font-size:12px;color:var(--gris)}.hist .retenue{color:var(--texte)}
+summary{cursor:pointer;margin-top:3px}
 tr.anterieure td{color:var(--gris);background:#fafcfb}
 .spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
 .busy .spin{display:inline-block}
@@ -68,6 +70,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
 (function(){
   var $=function(id){return document.getElementById(id);},ANNEE=<?!= JSON.stringify(annee || '') ?>,DELAI=120000,STRUCT=null,LISTE=null,TITRE='';
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function heure(ms){return ms?new Date(ms).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'date inconnue';}
   function dfr(d){return d?String(d).split('-').reverse().join('/'):'';}
   function message(t,err){$('message').textContent=t||'';$('message').className='message'+(err?' erreur':'');}
   /* Appel serveur avec délai maximal : succès, erreur et dépassement rendent la main de la même façon. */
@@ -110,8 +113,10 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
   function ligne(l){
     if(l.sansConvention)return '<tr class="sans"><td><b>'+esc(l.eleve)+'</b></td><td>'+esc(l.periode)+'<br><span class="note">'+dfr(l.debut)+' → '+dfr(l.fin)+'</span></td><td colspan="4">Aucune convention générée</td></tr>';
     var type=l.rattrapage?' · rattrapage':(l.remplacement?' · remplacement':'');
-    var gen=l.anterieure?'<br><span class="note">Génération antérieure</span>':(l.generations>1?'<br><span class="pastille">'+l.generations+' générations</span>':'');
-    return '<tr'+(l.annulee?' class="annulee"':(l.anterieure?' class="anterieure"':''))+'><td><b>'+esc(l.eleve)+'</b></td><td>'+esc(l.periode)+esc(type)+'<br><span class="note">'+dfr(l.debut)+' → '+dfr(l.fin)+'</span></td><td>'+esc(l.numero||'—')+'<br><span class="note">'+esc(l.statut)+'</span></td><td>'+dfr(l.generee)+gen+(l.lot?'<br><span class="note">'+esc(l.lot)+'</span>':'')+'</td><td>'+(l.saisieEntreprise?'Saisie le '+dfr(l.saisieEntreprise):'<span class="note">Pas encore</span>')+'</td><td>'+esc(l.entreprise||'—')+'</td></tr>';
+    var qui=function(h){return heure(h.ms)+' · '+esc(h.auteur||'auteur non enregistré')+' · '+esc(h.mode);};
+    var hist=(l.historique||[]).length>1?'<details><summary><span class="pastille">'+l.generations+' générations</span></summary><ol class="hist">'+l.historique.map(function(h){return '<li'+(h.retenue?' class="retenue"':'')+'>'+qui(h)+(h.retenue?' — <b>retenue</b>':'')+(h.saisie?' — remplie par l’entreprise':'')+'</li>';}).join('')+'</ol></details>':'';
+    var gen=l.anterieure?'<br><span class="note">Génération antérieure · '+esc(l.auteur||'auteur non enregistré')+' · '+(l.lot?'Classe entière':'Élève seul')+'</span>':'<br><span class="note">'+esc(l.auteur||'auteur non enregistré')+' · '+(l.lot?'Classe entière':'Élève seul')+'</span>'+hist;
+    return '<tr'+(l.annulee?' class="annulee"':(l.anterieure?' class="anterieure"':''))+'><td><b>'+esc(l.eleve)+'</b></td><td>'+esc(l.periode)+esc(type)+'<br><span class="note">'+dfr(l.debut)+' → '+dfr(l.fin)+'</span></td><td>'+esc(l.numero||'—')+'<br><span class="note">'+esc(l.statut)+'</span></td><td>'+esc(heure(l.ms))+gen+'</td><td>'+(l.saisieEntreprise?'Saisie le '+dfr(l.saisieEntreprise):'<span class="note">Pas encore</span>')+'</td><td>'+esc(l.entreprise||'—')+'</td></tr>';
   }
   function dessinerListe(){
     var q=$('cherche').value.trim().toLowerCase(),l=(LISTE.lignes||[]).filter(function(x){return !q||JSON.stringify(x).toLowerCase().indexOf(q)>=0;}),niv='',cl='',html=[];
@@ -121,7 +126,7 @@ tr.anterieure td{color:var(--gris);background:#fafcfb}
       if(x.classe!==cl){cl=x.classe;html.push('<tr><td colspan="6"><b>'+esc(cl)+'</b></td></tr>');}
       html.push(ligne(x));
     });
-    $('resultat').innerHTML=l.length?'<section><div class="table"><table><thead><tr><th>Élève</th><th>Période</th><th>Numéro et statut</th><th>Générée le</th><th>Entreprise (QR)</th><th>Entreprise</th></tr></thead><tbody>'+html.join('')+'</tbody></table></div></section>':'<section class="note">Aucune convention à afficher.</section>';
+    $('resultat').innerHTML=l.length?'<section><div class="table"><table><thead><tr><th>Élève</th><th>Période</th><th>Numéro et statut</th><th>Générée le, par</th><th>Entreprise (QR)</th><th>Entreprise</th></tr></thead><tbody>'+html.join('')+'</tbody></table></div></section>':'<section class="note">Aucune convention à afficher.</section>';
   }
   function lister(btn,q,titre){
     q.periode=q.periode!=null?q.periode:$('periode').value;q.sansConvention=$('sans').checked;q.toutes=$('toutes').checked;

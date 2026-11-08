@@ -61,7 +61,7 @@ function EUC_DEV645_index_(m, src) {
       periodeId: p ? p.id : 0, periode: p ? p.libelle : 'Hors période', periodeDebut: p ? p.debut : '9999', debut: debut || (p ? p.debut : ''), fin: fin || (p ? p.fin : ''),
       numero: EUC_SUIVI2_premier_(a.Numero_enregistrement, a.Reference_convention), statut: a.Revoked === true && !annulee ? 'Révoquée' : (EUC_DEV645_STATUTS_[code] || code), annulee: annulee,
       rattrapage: /RATTRAPAGE/i.test(T(a.Type_sequence)), remplacement: /REMPLACEMENT/i.test(T(a.Type_sequence)),
-      generee: D(a.Date_creation || a.Date_enregistrement), ms: EUC_DEV643_ms_(a.Date_creation || a.Date_enregistrement), lot: T(a.Lot_generation),
+      generee: D(a.Date_creation || a.Date_enregistrement), ms: EUC_DEV643_ms_(a.Date_creation || a.Date_enregistrement), lot: T(a.Lot_generation), auteur: EUC_DEV645_auteur_(a.Auteur),
       saisieEntreprise: D(a.Date_saisie_entreprise), entreprise: EUC_SUIVI2_premier_(a.Entreprise_raison_sociale, a.Entreprise_enseigne) };
     var seq = l.rattrapage || l.remplacement ? T(a.Type_sequence).toUpperCase() + (Number(a.Numero_sequence) || 1) : 'INITIALE';
     l.cle = eid ? eid + '|' + l.periodeId + '|' + seq : 'D' + l.id;
@@ -80,8 +80,15 @@ function EUC_DEV645_regrouper_(lignes) {
   Object.keys(groupes).forEach(function(k) {
     var g = groupes[k].sort(function(a, b) { return (a.annulee ? 1 : 0) - (b.annulee ? 1 : 0) || (b.saisieEntreprise || b.entreprise ? 1 : 0) - (a.saisieEntreprise || a.entreprise ? 1 : 0) || b.ms - a.ms || b.id - a.id; });
     g.forEach(function(l, i) { l.generations = g.length; l.anterieure = i > 0; l.principale = g[0].id; });
+    /* Historique de toutes les générations, de la première à la dernière : quand, qui, comment. */
+    g[0].historique = g.slice().sort(function(a, b) { return a.ms - b.ms || a.id - b.id; }).map(function(l) {
+      return { id: l.id, ms: l.ms, date: l.generee, auteur: l.auteur, mode: l.lot ? 'Classe entière' : 'Élève seul', retenue: l.id === g[0].id, saisie: l.saisieEntreprise };
+    });
   });
 }
+
+/* Adresse du compte du lycée → identifiant lisible (« prenom.nom ») ; vide si non enregistré. */
+function EUC_DEV645_auteur_(v) { return EUC_SUIVI2_t_(v).toLowerCase().replace(/@.*$/, ''); }
 
 function EUC_DEV645_structure_(ix) {
   var niveaux = {}, periodes = {};
