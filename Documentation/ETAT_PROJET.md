@@ -3,7 +3,9 @@
 ## Mise à jour du 8 novembre 2026 — DEV650 : entreprise non diffusible, vérification sur l'INPI
 
 - Ordre de vérification d'un SIRET : annuaire data.gouv (Recherche d'entreprises, données INSEE) d'abord. S'il répond « non diffusible » (nom et adresse masqués), le registre national des entreprises de l'INPI (data.inpi.fr) publie ces informations, sans compte.
-- data.inpi.fr est protégé contre les robots (Cloudflare, captcha) : pas d'interrogation automatique. `EUC_DEV649_lienInpi_` construit le lien direct `https://data.inpi.fr/entreprises/<SIREN>` (9 premiers chiffres).
+- Ordre complet : 1) base de l'application (`EUC_ENTREPRISES`, fiche complète saisie par le bureau : utilisée telle quelle, verrouillée, même si l'entreprise est non diffusible) ; 2) annuaire data.gouv ; 3) non diffusible → lien INPI, saisie par l'élève, contrôle par le bureau.
+- data.inpi.fr est protégé contre les robots (Cloudflare, captcha) : pas d'interrogation automatique. `EUC_DEV649_lienInpi_` (et `EUC_DEV650_lienInpi` dans les deux pages) construit le lien de la recherche avancée par SIRET (actifs et radiés, personnes morales et physiques), identique à celle du bureau ; SIREN seul → `data.inpi.fr/entreprises/<SIREN>`.
+- Plus de justificatif (Kbis, avis INSEE) ni de passage obligatoire au G205 pour une entreprise non diffusible : le bureau contrôle sur l'INPI (décision du 8 novembre 2026).
 - Lien affiché à l'élève dans les deux entrées (page QR `ndInpiDev650`, formulaire en ligne `ndInpi`), dans le récapitulatif des dépôts (texte et HTML) et dans les alertes de la table d'attente. L'élève saisit toujours le nom et l'adresse ; le bureau les contrôle sur la fiche INPI.
 - Courriels de dépôt : inchangés (envoi par le compte propriétaire du script, copie directe à la ligne « Dépôts » de « Destinataires & envois », adresses dédoublonnées).
 

@@ -73,11 +73,11 @@ test('récapitulatif : toutes les rubriques, lieu de stage et bureau G205 mis en
   assert.ok(!k.EUC_DEV649_recap_({ eleve: { nom: '<b>x</b>' } }).html.includes('<b>x</b>'), 'échappement HTML');
 });
 
-test('QR : informations du récapitulatif depuis la convention, bureau G205 si non diffusible ou Monaco à valider', () => {
+test('QR : informations du récapitulatif depuis la convention, bureau G205 si Monaco à valider (non diffusible : contrôle INPI par le bureau, DEV650)', () => {
   const d = { numero: 'N1', classe: '1TEST', dateDebut: '2026-11-23', dateFin: '2026-12-18', eleve: { nom: 'A', prenom: 'B', email: 'b@ex.fr' }, fiche: { Adresse: '3 rue X', Code_postal: '06000', Ville: 'Nice', Date_naissance: '2009-03-14' }, ppNoms: ['PP'],
     acces: { Entreprise_raison_sociale: 'E', Entreprise_siret: '12345678900017', Entreprise_non_diffusible: true, Lieu_stage_adresse: '1 chantier', Lieu_stage_commune: 'Nice', Tuteur_est_responsable: true } };
   const i = J(k.EUC_DEV649_infoAcces_(d, 'intro', 'sig'));
-  assert.equal(i.g205.requis, true); assert.match(i.g205.motif, /non diffusible/); assert.equal(i.lieu, '1 chantier, Nice'); assert.equal(i.eleve.adresse, '3 rue X, 06000 Nice'); assert.equal(i.eleve.naissance, '2009-03-14');
+  assert.equal(i.g205.requis, false); assert.equal(i.entreprise.nonDiffusible, true); assert.equal(i.lieu, '1 chantier, Nice'); assert.equal(i.eleve.adresse, '3 rue X, 06000 Nice'); assert.equal(i.eleve.naissance, '2009-03-14');
   const m = J(k.EUC_DEV649_infoAcces_({ acces: { Entreprise_pays: 'Monaco', Entreprise_identifiant_type: 'NIS', Entreprise_validation_statut: 'A_VALIDER' } }));
   assert.equal(m.g205.requis, true); assert.match(m.g205.motif, /Monaco à valider/);
   assert.equal(J(k.EUC_DEV649_infoAcces_({ acces: { Entreprise_validation_statut: 'VALIDE' } })).g205.requis, false);
@@ -134,18 +134,23 @@ test('page QR : bloc lieu de stage facultatif et saisie débloquée pour une ent
   assert.match(q, /window\.EUC_DEV649_nonDiffusible=function\(\)\{[^]*el\.readOnly=false;/);
   assert.ok(q.indexOf('window.EUC_DEV649_nonDiffusible=') < q.indexOf("createHtmlOutputFromFile('Identites_Contacts_DEV602')"));
 });
-test('DEV650 : entreprise non diffusible → lien direct vers la fiche INPI (courriel, import, deux formulaires)', () => {
-  assert.equal(k.EUC_DEV649_lienInpi_('123 456 789 00017'), 'https://data.inpi.fr/entreprises/123456789');
+test('DEV650 : entreprise non diffusible → recherche avancée INPI par SIRET, sans justificatif à apporter', () => {
+  const ATTENDU = 'https://data.inpi.fr/recherche_avancee/entreprises?advancedSearch=%7B%22checkboxes%22%3A%7B%22status%22%3A%7B%22order%22%3A0%2C%22searchField%22%3A%5B%22is_rad%22%5D%2C%22values%22%3A%5B%7B%22value%22%3A%22false%22%2C%22checked%22%3Atrue%7D%2C%7B%22value%22%3A%22true%22%2C%22checked%22%3Atrue%7D%5D%7D%7D%2C%22texts%22%3A%7B%22siret%22%3A%7B%22order%22%3A3%2C%22searchField%22%3A%5B%22formality.content.personneMorale.etablissementPrincipal.descriptionEtablissement.siret%22%2C%22formality.content.personneMorale.etablissementPrincipal.descriptionEtablissement.siret.whitespace_remove%22%2C%22formality.content.personneMorale.autresEtablissements.descriptionEtablissement.siret%22%2C%22formality.content.personneMorale.autresEtablissements.descriptionEtablissement.siret.whitespace_remove%22%2C%22formality.content.personnePhysique.etablissementPrincipal.descriptionEtablissement.siret%22%2C%22formality.content.personnePhysique.etablissementPrincipal.descriptionEtablissement.siret.whitespace_remove%22%2C%22formality.content.personnePhysique.autresEtablissements.descriptionEtablissement.siret%22%2C%22formality.content.personnePhysique.autresEtablissements.descriptionEtablissement.siret.whitespace_remove%22%5D%2C%22checkedSearchField%22%3A%5B%5D%2C%22value%22%3A%2212345678900017%22%7D%7D%2C%22multipleSelects%22%3A%7B%7D%2C%22dates%22%3A%7B%7D%7D';
+  assert.equal(k.EUC_DEV649_lienInpi_('123 456 789 00017'), ATTENDU, 'lien identique à la recherche avancée data.inpi.fr');
   assert.equal(k.EUC_DEV649_lienInpi_('123456789'), 'https://data.inpi.fr/entreprises/123456789');
   assert.equal(k.EUC_DEV649_lienInpi_('MC-1234'), ''); assert.equal(k.EUC_DEV649_lienInpi_(''), '');
   const r = k.EUC_DEV649_recap_(INFO);
-  assert.match(r.texte, /!!! Entreprise « non diffusible »[^\n]*INPI\.\nFiche INPI : https:\/\/data\.inpi\.fr\/entreprises\/123456789\n/);
-  assert.match(r.html, /<a href="https:\/\/data\.inpi\.fr\/entreprises\/123456789"[^>]*>Ouvrir la fiche de l’entreprise sur data\.inpi\.fr<\/a>/);
+  assert.ok(r.texte.includes('\nFiche INPI : ' + ATTENDU + '\n'), 'lien INPI dans le texte');
+  assert.ok(r.html.includes('<a href="' + ATTENDU + '"'), 'lien INPI dans le HTML');
   assert.ok(!k.EUC_DEV649_recap_(Object.assign({}, INFO, { entreprise: { nom: 'X', identifiant: '12345678900017' } })).texte.includes('inpi'), 'pas de lien INPI pour une entreprise diffusible');
   const l = J(k.EUC_DEV649_ligneTampon_({ Alertes: '' }, { nonDiffusible: true, siret: '12345678900017', raisonSociale: 'G' }));
-  assert.match(l.Alertes, /https:\/\/data\.inpi\.fr\/entreprises\/123456789/);
+  assert.ok(l.Alertes.includes(ATTENDU)); assert.ok(!/justificatif/i.test(l.Alertes));
+  const src = read('apps-script/EUC_DEV649_LieuStageRecap.js');
+  assert.ok(!/justificatif|Kbis/i.test(src), 'plus de justificatif demandé pour une entreprise non diffusible');
   const f = read('apps-script/Declaration_Entreprise_DEV603.html'), q = read('apps-script/PFMP_Acces_QR_V116.html');
-  assert.match(f, /<a id="ndInpi" href="#" target="_blank" rel="noopener">/); assert.match(f, /\$\('ndInpi'\)\.href='https:\/\/data\.inpi\.fr\/entreprises\/'\+s\.slice\(0,9\);/);
-  assert.match(q, /aI\.href='https:\/\/data\.inpi\.fr\/entreprises\/'\+siren;aI\.target='_blank';aI\.rel='noopener';/);
+  assert.match(f, /<a id="ndInpi" href="#" target="_blank" rel="noopener">/); assert.match(f, /\$\('ndInpi'\)\.href=EUC_DEV650_lienInpi\(s\);/);
+  assert.match(q, /aI\.href=lien;aI\.target='_blank';aI\.rel='noopener';/);
+  [f, q].forEach(h => { const m = h.match(/function EUC_DEV650_lienInpi\(n\)\{[^]*?\}\)\);\}/); assert.ok(m, 'fonction INPI des pages');
+    const fn = new Function(m[0] + ';return EUC_DEV650_lienInpi;')(); assert.equal(fn('12345678900017'), ATTENDU); assert.equal(fn('1'), ''); });
 });
 console.log(n + ' tests DEV649 réussis.');

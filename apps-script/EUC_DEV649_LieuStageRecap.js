@@ -30,10 +30,18 @@ function EUC_DEV649_adresseVisite_(lieu, siege) { return EUC_DEV649_t_(lieu) || 
 
 /* DEV650 : entreprise non diffusible : l'annuaire data.gouv (INSEE) masque nom et adresse, mais le registre
  * national des entreprises (INPI, data.inpi.fr) les publie, sans compte. Le site INPI est protégé contre les robots :
- * pas d'interrogation automatique, un lien direct vers la fiche (SIREN = 9 premiers chiffres du SIRET). */
+ * pas d'interrogation automatique, un lien vers sa recherche avancée par SIRET (établissements actifs et radiés,
+ * personnes morales et physiques). SIREN seul (9 chiffres) : fiche de l'entreprise. */
 function EUC_DEV649_lienInpi_(id) {
   var n = String(id == null ? '' : id).replace(/\D/g, '');
-  return n.length === 9 || n.length === 14 ? 'https://data.inpi.fr/entreprises/' + n.slice(0, 9) : '';
+  if (n.length === 9) return 'https://data.inpi.fr/entreprises/' + n;
+  if (n.length !== 14) return '';
+  var champs = [];
+  ['personneMorale', 'personnePhysique'].forEach(function(t) { ['etablissementPrincipal', 'autresEtablissements'].forEach(function(e) {
+    var c = 'formality.content.' + t + '.' + e + '.descriptionEtablissement.siret'; champs.push(c, c + '.whitespace_remove'); }); });
+  var q = { checkboxes: { status: { order: 0, searchField: ['is_rad'], values: [{ value: 'false', checked: true }, { value: 'true', checked: true }] } },
+    texts: { siret: { order: 3, searchField: champs, checkedSearchField: [], value: n } }, multipleSelects: {}, dates: {} };
+  return 'https://data.inpi.fr/recherche_avancee/entreprises?advancedSearch=' + encodeURIComponent(JSON.stringify(q));
 }
 function EUC_DEV649_dateFr_(v) {
   var s = EUC_DEV649_t_(v), m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -122,7 +130,6 @@ function EUC_DEV649_infoAcces_(d, intro, signature) {
   var nd = a.Entreprise_non_diffusible === true || T(a.Entreprise_validation_statut) === 'A_VERIFIER_NON_DIFFUSIBLE';
   var aValider = monaco && T(a.Entreprise_validation_statut) === 'A_VALIDER';
   var motifs = [];
-  if (nd) motifs.push('entreprise non diffusible : apporter un justificatif (extrait RNE / Kbis, avis de situation INSEE)');
   if (aValider) motifs.push('entreprise de Monaco à valider : apporter son NIS et ses coordonnées');
   return {
     source: 'page du QR code', numero: d.numero, intro: intro, signature: signature,
@@ -157,7 +164,7 @@ function EUC_DEV649_ligneTampon_(ligne, ent) {
   if (ent.nonDiffusible) {
     ligne.Entreprise_non_diffusible = true; ligne.Raison_sociale_officielle = ''; ligne.Adresse_officielle = ''; ligne.Entreprise_saisie = ent.enseigne || ent.raisonSociale;
     ligne.Niveau_controle = 'ORANGE'; ligne.Decision = 'A_CONTROLER';
-    ligne.Alertes = [EUC_DEV649_t_(ligne.Alertes), 'Entreprise non diffusible à l’INSEE : nom et adresse saisis par l’élève, à vérifier sur l’INPI' + (EUC_DEV649_lienInpi_(ent.siret) ? ' (' + EUC_DEV649_lienInpi_(ent.siret) + ')' : '') + ' (justificatif au bureau G205)'].filter(Boolean).join(' · ');
+    ligne.Alertes = [EUC_DEV649_t_(ligne.Alertes), 'Entreprise non diffusible à l’INSEE : nom et adresse saisis par l’élève, à vérifier sur l’INPI' + (EUC_DEV649_lienInpi_(ent.siret) ? ' (' + EUC_DEV649_lienInpi_(ent.siret) + ')' : '')].filter(Boolean).join(' · ');
   }
   if (ligne.Lieu_stage_adresse || ligne.Entreprise_non_diffusible) try { EUC_DEV649_assurerColonnesTampon_(); } catch (e) {}
   return ligne;
@@ -168,7 +175,6 @@ function EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, class
     var ent = detail.ent || {}, f = EUC_DEV649_adresseEleve_(detail.fiche), T = EUC_DEV649_t_;
     var motifs = [];
     if (probleme) motifs.push('entreprise non vérifiée' + (detail.message ? ' (message : ' + T(detail.message) + ')' : '') + ' : venir avec les coordonnées complètes de l’entreprise');
-    if (ent.nonDiffusible) motifs.push('entreprise non diffusible : apporter un justificatif (extrait RNE / Kbis, avis de situation INSEE)');
     var info = {
       source: 'formulaire en ligne', numero: numero,
       intro: probleme ? 'Demande reçue : l’entreprise n’a pas pu être vérifiée automatiquement.' : 'Déclaration reçue. Le bureau des entreprises va la vérifier ; un courriel confirmera la validation.',

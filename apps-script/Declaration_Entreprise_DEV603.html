@@ -204,6 +204,9 @@ $('b2').onclick=function(){if(!$('periode').value){erreur('m2','Choisis ta péri
 /* Étape 3 : même vérification que le QR code (fiche connue ou Recherche d'entreprises). */
 var ND=false;
 $('siret').addEventListener('input',function(){SIRET=null;REPONSE_API=null;ND=false;$('ndBloc').hidden=true;$('b3').disabled=true;$('officiel').innerHTML='';});
+/* DEV650 : recherche avancée INPI par SIRET (même lien que EUC_DEV649_lienInpi_ côté serveur). */
+function EUC_DEV650_lienInpi(n){n=String(n||'').replace(/\D/g,'');if(n.length!==14)return n.length===9?'https://data.inpi.fr/entreprises/'+n:'';var c=[];['personneMorale','personnePhysique'].forEach(function(t){['etablissementPrincipal','autresEtablissements'].forEach(function(e){var x='formality.content.'+t+'.'+e+'.descriptionEtablissement.siret';c.push(x,x+'.whitespace_remove');});});
+  return 'https://data.inpi.fr/recherche_avancee/entreprises?advancedSearch='+encodeURIComponent(JSON.stringify({checkboxes:{status:{order:0,searchField:['is_rad'],values:[{value:'false',checked:true},{value:'true',checked:true}]}},texts:{siret:{order:3,searchField:c,checkedSearchField:[],value:n}},multipleSelects:{},dates:{}}));}
 function lireLieu(pre){return {lieuStageAdresse:$(pre+'LieuAdr').value.trim(),lieuStageCodePostal:$(pre+'LieuCp').value.trim(),lieuStageCommune:$(pre+'LieuVille').value.trim()};}
 function lieuIncomplet(pre){var l=lireLieu(pre);return (l.lieuStageAdresse||l.lieuStageCodePostal||l.lieuStageCommune)&&!(l.lieuStageAdresse&&l.lieuStageCommune);}
 $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');
@@ -211,7 +214,7 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
     function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
       /* DEV649 : entreprise non diffusible : nom et adresse à saisir. */
       ND=e.nonDiffusible===true;$('ndBloc').hidden=!ND;
-      if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});$('ndInpi').href='https://data.inpi.fr/entreprises/'+s.slice(0,9);if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
+      if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});$('ndInpi').href=EUC_DEV650_lienInpi(s);if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
         $('officiel').innerHTML='<div class="officiel"><b>SIRET '+esc(s)+' trouvé</b>'+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'</div>';$('b3').disabled=false;try{$('ndNom').focus();}catch(eF){}return;}
       $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
       if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
