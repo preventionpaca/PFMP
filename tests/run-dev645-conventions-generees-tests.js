@@ -151,4 +151,15 @@ test('branchement : route, lien d’administration et contrôle de release', () 
   assert.match(read('scripts/pfmp-release-config.json'), /"page": "conventions-generees-pfmp", "scope": "admin", "expected": "Conventions générées"/);
 });
 
+test('DEV648 : chaque convention active donne sa page QR (enveloppe) et le code écrit sous le QR', () => {
+  const r = { lignes: [{ id: 12 }, { id: 13, annulee: true }, { id: 0, sansConvention: true }, { id: 14 }] };
+  c.EUC_DEV645_accesQr_(r, q => 'https://enregistrer.test/?' + q, id => { if (id === 14) throw new Error('x'); return id + '-ABCDEF'; });
+  assert.equal(r.lignes[0].lienQr, 'https://enregistrer.test/?page=pfmp&rid=12'); assert.equal(r.lignes[0].codeQr, '12-ABCDEF');
+  assert.ok(!r.lignes[1].lienQr && !r.lignes[2].lienQr, 'ni annulée ni sans convention');
+  assert.equal(r.lignes[3].lienQr, 'https://enregistrer.test/?page=pfmp&rid=14'); assert.equal(r.lignes[3].codeQr, '');
+  assert.match(read('apps-script/EUC_DEV645_ConventionsGenerees.js'), /EUC_DEV645_accesQr_\(EUC_DEV645_lister_\([^\n]*\), EUC_LIEN_eleve_, EUC_DEV603_codeConvention_\);/);
+  assert.ok(page.includes('Ouvrir sa page QR</a>') && page.includes('Code sous le QR : <b>'));
+  assert.match(page, /target="_blank" rel="noopener"/);
+});
+
 console.log(n + ' tests DEV645 conventions générées réussis');

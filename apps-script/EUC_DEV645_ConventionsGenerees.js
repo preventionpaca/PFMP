@@ -26,7 +26,18 @@ function EUC_DEV645_structure(annee) {
 /* q = { niveau, classeId, periode, sansConvention } ; tous facultatifs (rien = toute l'année). */
 function EUC_DEV645_lister(annee, q) {
   EUC_SUIVI2_exigerAdmin_();
-  return EUC_DEV645_lister_(EUC_DEV645_index_(EUC_SUIVI2_modele_(annee), EUC_SUIVI2_lireSources_()), q || {});
+  return EUC_DEV645_accesQr_(EUC_DEV645_lister_(EUC_DEV645_index_(EUC_SUIVI2_modele_(annee), EUC_SUIVI2_lireSources_()), q || {}), EUC_LIEN_eleve_, EUC_DEV603_codeConvention_);
+}
+
+/* DEV648 : page QR de l'élève (par l'enveloppe enregistrer-pfmp) et code écrit sous le QR, pour chaque
+ * convention active : l'administration intervient sans réimprimer. Calcul pur (fonctions passées). */
+function EUC_DEV645_accesQr_(r, lien, code) {
+  (r && r.lignes || []).forEach(function(l) {
+    if (!(Number(l.id) > 0) || l.annulee || l.sansConvention) return;
+    l.lienQr = lien('page=pfmp&rid=' + Number(l.id));
+    try { l.codeQr = code(Number(l.id)); } catch (e) { l.codeQr = ''; }
+  });
+  return r;
 }
 
 function EUC_DEV645_cleNiveau_(c) { return c.famille + '|' + c.niveau; }

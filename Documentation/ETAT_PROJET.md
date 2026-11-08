@@ -11,6 +11,7 @@
 - « PUBLICATION INCOMPLÈTE — Vue reconstruite introuvable dans le cache publié » : conventions écrites et relues dans Grist, mais cache de vue de classe (DEV416) absent. Devenu un avertissement : le tampon est validé, le bilan liste ces élèves. Une vue présente qui ne montre pas la convention reste bloquante.
 - « [NON-DIFFUSIBLE] » : masque de l'annuaire INSEE pour les entreprises non diffusibles, recopié par la vérification SIRET dans Raison_sociale_officielle, Adresse_officielle… puis dans la convention. `EUC_DEV648_sansMasque_` le retire avant de construire les champs entreprise (la saisie JotForm de l'élève sert) et aucun champ masqué n'est écrit. Une convention déjà importée masquée est réparée au réimport (mode REPARE : seuls les champs masqués, remplacés par une vraie valeur).
 - Tests : `tests/run-dev648-import-bloquees-tests.js` (9).
+- Conventions générées (DEV645) : chaque convention active affiche « Ouvrir sa page QR » (par l'enveloppe enregistrer-pfmp) et le code écrit sous le QR (`EUC_DEV645_accesQr_`). Page réservée à l'administration.
 
 ## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp
 
