@@ -114,4 +114,11 @@ test('Monaco sans NIS : la recherche par nom apparaît sur la page QR et dans le
   assert.match(f, /occupe\(b,'Recherche…'\)/); assert.equal((f.match(/function\(r\)\{libre\(b\);var l=\(r&&r\.resultats\)/g) || []).length, 1); assert.match(f, /function\(e\)\{libre\(b\);\$\('aMonacoR'\)\.textContent=msgErr\(e\);\}/);
   assert.match(d, /if \(pays === 'MC' && EUC_DEV603_t_\(q\.siret\)\) \{ var nis = [^\n]*ligne\.NIS_brut = nis;[^\n]*ligne\.Entreprise_identifiant_type = 'NIS'; \}/);
 });
+test('listes déroulantes lisibles (pays de l’entreprise) sur la page QR et le formulaire en ligne', () => {
+  ['apps-script/PFMP_Acces_QR_V116.html', 'apps-script/Declaration_Entreprise_DEV603.html'].forEach(f => {
+    const t = read(f), css = t.slice(0, t.indexOf('</style>'));
+    assert.match(css, /select\{display:block;width:100%;min-height:48px;font:inherit;font-size:16px;/, f);
+    assert.match(css, /appearance:none/, f); assert.match(css, /select:focus\{outline:3px solid/, f);
+  });
+});
 console.log(n + ' tests DEV648 réussis.');
