@@ -73,4 +73,13 @@ test('sélection conservée au rechargement (identifiants de lignes seulement, s
   assert.match(page, /function refresh\(\)\{\n    saveSelection\(\);/);
   assert.match(page, /if\(id\)chosen\.add\(id\);\}\);\}catch\(e\)\{\}\}/);
 });
+test('cache de vue absent : avertissement, le tampon est validé ; vue sans la convention : toujours bloquant', () => {
+  const imp = /function EUC_DEV466_importSelection[^]*?\n\}/.exec(src)[0];
+  assert.match(imp, /viewWarnings=viewAll\.filter\(EUC_DEV648_vueAbsente_\),viewErrors=viewAll\.filter\(function\(e\)\{return !EUC_DEV648_vueAbsente_\(e\);\}\);\n    if\(viewErrors\.length\)\{/);
+  assert.ok(imp.indexOf('if(viewErrors.length)') < imp.indexOf('EUC_DEV322_patchBufferValidated_'));
+  assert.match(imp, /affichees:items\.length-viewWarnings\.length/);
+  const k = {}; vm.createContext(k); vm.runInContext(/function EUC_DEV648_vueAbsente_[^\n]*/.exec(src)[0], k);
+  assert.equal(k.EUC_DEV648_vueAbsente_({ erreur: 'Vue reconstruite introuvable dans le cache publié.' }), true);
+  assert.equal(k.EUC_DEV648_vueAbsente_({ erreur: 'La vue de classe ne publie pas encore la convention pour la période choisie.' }), false);
+});
 console.log(n + ' tests DEV648 réussis.');

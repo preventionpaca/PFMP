@@ -8,7 +8,8 @@
 - Stockage des propriétés plein (« Vous avez dépassé le quota de stockage des propriétés » au marquage DIRTY de DEV425) : le compteur DEV447 créait une clé par jour sans jamais effacer les anciennes. `EUC_DEV648_purgerUsageAncien_` garde les 14 derniers jours (historique du tableau de bord ramené à 14 jours), lancé au premier appel de chaque jour et avant chaque import JotForm. Si le stockage reste plein, l'import s'arrête sans écriture et affiche les noms et tailles des propriétés les plus lourdes (sans valeurs).
 - Erreur Grist 400 à l'écriture : Grist refuse un envoi groupé dont les lignes n'ont pas toutes les mêmes colonnes (créations et compléments hétérogènes dès qu'un lot dépasse quelques élèves). `EUC_DEV648_parColonnes_` envoie un lot par ensemble identique de colonnes. `EUC_ENT_grist` ajoute désormais au message 4xx la méthode, la table (sans paramètres) et le motif renvoyé par Grist (200 caractères).
 - Sélection de la page Migration JotForm conservée au rechargement (localStorage, numéros de lignes du tampon seulement).
-- Tests : `tests/run-dev648-import-bloquees-tests.js` (7).
+- « PUBLICATION INCOMPLÈTE — Vue reconstruite introuvable dans le cache publié » : conventions écrites et relues dans Grist, mais cache de vue de classe (DEV416) absent. Devenu un avertissement : le tampon est validé, le bilan liste ces élèves. Une vue présente qui ne montre pas la convention reste bloquante.
+- Tests : `tests/run-dev648-import-bloquees-tests.js` (8).
 
 ## Mise à jour du 8 novembre 2026 — DEV647 : pages des élèves par l'enveloppe enregistrer-pfmp
 

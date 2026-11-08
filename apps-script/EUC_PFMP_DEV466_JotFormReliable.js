@@ -316,6 +316,7 @@ function EUC_DEV648_parColonnes_(records){
   (records||[]).forEach(function(r){var k=Object.keys((r&&r.fields)||{}).sort().join('|');if(!groupes[k]){groupes[k]=[];ordre.push(k);}groupes[k].push(r);});
   return ordre.map(function(k){return groupes[k];});
 }
+function EUC_DEV648_vueAbsente_(e){return /Vue reconstruite introuvable/.test(String(e&&e.erreur||''));}
 function EUC_DEV648_messageBlocage_(errors,total){
   return 'PRÉCONTRÔLE BLOQUÉ — aucune écriture effectuée. '+errors.length+' ligne(s) bloquée(s) sur '+total+' :\n'+
     errors.map(function(e){return '• '+e.eleve+' : '+e.erreur;}).join('\n')+
@@ -386,7 +387,11 @@ function EUC_DEV466_importSelection(payload){
     if(readback.errors.length){
       throw new Error('CONTRÔLE GRIST ÉCHOUÉ — le tampon reste à contrôler. '+readback.errors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
     }
-    var snapshots=EUC_DEV425_finishMany_(tokens),viewErrors=EUC_DEV466_verifyViews_(items);
+    var snapshots=EUC_DEV425_finishMany_(tokens),viewAll=EUC_DEV466_verifyViews_(items);
+    /* DEV648 : un cache de vue absent (expiré ou trop gros pour le cache) n'est qu'un avertissement :
+     * les conventions sont déjà relues dans Grist et le suivi les recalcule depuis Grist. Une vue
+     * présente qui ne montre pas la convention reste bloquante. */
+    var viewWarnings=viewAll.filter(EUC_DEV648_vueAbsente_),viewErrors=viewAll.filter(function(e){return !EUC_DEV648_vueAbsente_(e);});
     if(viewErrors.length){
       throw new Error('PUBLICATION INCOMPLÈTE — aucune ligne du tampon n’est marquée validée. Relancez le même lot sans risque de doublon. '+viewErrors.slice(0,5).map(function(e){return e.eleve+' : '+e.erreur;}).join(' | '));
     }
@@ -398,8 +403,9 @@ function EUC_DEV466_importSelection(payload){
     var existing=items.filter(function(x){return x.mode==='EXISTING';}).length;
     list.validationBilan={
       selectionnees:items.length,creees:created,completees:completed,dejaExistantes:existing,
-      lieesEleves:items.length,verifiees:items.length,affichees:items.length,rejetees:0,
-      cibleAvant:plan.accessesBefore,cibleApres:readback.rows.length,erreurs:[],
+      lieesEleves:items.length,verifiees:items.length,affichees:items.length-viewWarnings.length,rejetees:0,
+      cibleAvant:plan.accessesBefore,cibleApres:readback.rows.length,
+      erreurs:viewWarnings.map(function(e){return {id:e.id,eleve:e.eleve,erreur:'Importée et vérifiée dans Grist ; liste de classe en cache pas encore à jour (avertissement).'};}),
       idempotent:true,publicationAtomique:true,table:EUC_DEV307_ACCESS_TABLE_,snapshotSync:{ok:true,details:snapshots},
       dureeMs:Date.now()-started
     };
