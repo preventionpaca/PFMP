@@ -35,6 +35,8 @@ function EUC_DEV190X_classes_(annee,terminalOnly){
   }
   if(typeof EUC_DEV564_normalizeClass_==='function')rows=rows.map(EUC_DEV564_normalizeClass_);
   if(!terminalOnly&&typeof EUC_DEV565_mergeRequiredClasses_==='function')rows=EUC_DEV565_mergeRequiredClasses_(rows);
+  /* DEV655 : la structure DEV190R n'existe plus ; les Terminales viennent des promotions d'élèves. */
+  if(terminalOnly&&!rows.length&&typeof EUC_DEV655_terminales_==='function')rows=EUC_DEV655_terminales_();
   return rows;
 }
 

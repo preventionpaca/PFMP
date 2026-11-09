@@ -123,6 +123,7 @@ function EUC_CONVENTION_preparerAccesClasseNom(payload) {
   var p = meta.periodes.filter(function(x){ return x.id === periodeId; })[0];
   var pdif = pdifId ? meta.periodes.filter(function(x){ return x.id === pdifId; })[0] : null;
   if (!cl || !p) throw new Error('Classe de convention ou période introuvable.');
+  if (pdif) EUC_CONVENTION_verifierPeriodeAutorisee_(meta, classeConventionId, annee, pdifId, 'Période PDIF');
 
   var lot = 'LOT-'+Utilities.getUuid(), records = [], items = [], base = ScriptApp.getService().getUrl(), reprises = 0;
   EUC_CONVENTION_assurerTableAcces_();
@@ -130,25 +131,44 @@ function EUC_CONVENTION_preparerAccesClasseNom(payload) {
    * pour cette période la garde (même numéro, même QR code, déjà peut-être remplie par l'entreprise) :
    * elle est seulement réimprimée. Seuls les élèves sans convention en reçoivent une nouvelle. */
   var acces = EUC_IMPORT_lireRecords_(EUC_CONVENTION_ACCES_TABLE_);
-  eleves.forEach(function(e){
-    var mode = String(parcours[String(e.id)] || '').toUpperCase();
-    if (pdif && mode !== 'LYCEE' && mode !== 'ENTREPRISE') throw new Error('Parcours différencié à préciser pour '+e.nom+' '+e.prenom+'.');
-    var ex = EUC_DEV646_conventionExistante_(acces, e.id, p.id, annee, p.debut);
+  /* DEV655 — parcours différencié : deux conventions distinctes.
+   * - période PFMP (dernière de Terminale) : convention aux dates officielles, plus de prolongation ;
+   *   un élève « PDIF en entreprise » reçoit en plus une convention sur la période PDIF ;
+   * - période PDIF choisie directement : seule une convention PDIF pour les élèves « en entreprise ».
+   * Les choix sont enregistrés dans la table de fin de Terminale (source du suivi). */
+  var periodePdif = typeof EUC_DEV655_estPeriodePdif_ === 'function' && EUC_DEV655_estPeriodePdif_(p);
+  if (periodePdif) pdif = null;
+  var modes = {}, pdifEntreprise = 0, pdifLycee = 0, aAnnuler = [], perPdif = periodePdif ? p : pdif;
+  var assurer = function(e, per, mode, estPdif){
+    var ex = EUC_DEV646_conventionExistante_(acces, e.id, per.id, annee, per.debut);
+    var pd = estPdif ? {type:per.type,debut:per.debut,fin:per.fin} : (pdif ? {type:pdif.type,debut:pdif.debut,fin:pdif.fin} : null);
     if (ex) {
       reprises++;
-      items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:String(ex.Reference_convention||''),token:'',accessId:Number(ex.id),reprise:true,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(ex.id),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(ex.id),annee:annee,classe:cl.nom,debut:EUC_IMPORT_dateExistanteISO_(ex.Date_debut)||p.debut,fin:EUC_IMPORT_dateExistanteISO_(ex.Date_fin)||p.fin,pdifMode:String(ex.PDIF_mode||''),pdif:pdif?{type:pdif.type,debut:pdif.debut,fin:pdif.fin}:null});
+      items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:String(ex.Reference_convention||''),token:'',accessId:Number(ex.id),reprise:true,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(ex.id),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(ex.id),annee:annee,classe:cl.nom,debut:EUC_IMPORT_dateExistanteISO_(ex.Date_debut)||per.debut,fin:EUC_IMPORT_dateExistanteISO_(ex.Date_fin)||per.fin,pdifMode:String(ex.PDIF_mode||mode||''),conventionPdif:estPdif,pdif:pd});
       return;
     }
-    var a = EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,p,annee,{pdif:pdif,pdifMode:mode,lot:lot});
+    var a = EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,per,annee,{pdif:estPdif?null:pdif,pdifMode:mode,lot:lot});
+    if (estPdif) a.record.fields.PDIF_periode = per.id;
     records.push(a.record);
-    items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),annee:annee,classe:cl.nom,debut:p.debut,fin:a.dateFin,pdifMode:mode,pdif:pdif?{type:pdif.type,debut:pdif.debut,fin:pdif.fin}:null});
+    items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&token='+encodeURIComponent(a.token),urlImpression:base+'?page=convention-pfmp-print&token='+encodeURIComponent(a.token),annee:annee,classe:cl.nom,debut:a.dateDebut,fin:a.dateFin,pdifMode:mode,conventionPdif:estPdif,pdif:pd});
+  };
+  eleves.forEach(function(e){
+    var mode = String(parcours[String(e.id)] || '').toUpperCase();
+    if ((pdif || periodePdif) && mode !== 'LYCEE' && mode !== 'ENTREPRISE') throw new Error('Parcours différencié à préciser pour '+e.nom+' '+e.prenom+'.');
+    if (pdif || periodePdif) { modes[e.id] = mode; if (mode === 'ENTREPRISE') pdifEntreprise++; else pdifLycee++; }
+    /* Élève passé au lycée alors qu'une convention PDIF existe déjà : rien n'est annulé automatiquement. */
+    if (perPdif && mode === 'LYCEE' && EUC_DEV646_conventionExistante_(acces, e.id, perPdif.id, annee, perPdif.debut)) aAnnuler.push(e.nom+' '+e.prenom);
+    if (periodePdif) { if (mode === 'ENTREPRISE') assurer(e, p, mode, true); return; }
+    assurer(e, p, mode, false);
+    if (pdif && mode === 'ENTREPRISE') assurer(e, pdif, mode, true);
   });
+  if (Object.keys(modes).length && typeof EUC_DEV655_enregistrerModes_ === 'function') EUC_DEV655_enregistrerModes_(ctx, annee, modes);
   /* La création reste courte : le recalcul des vues est finalisé par un
    * second appel du navigateur, exactement comme pour une convention seule. */
   if (records.length) EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
   var refresh = EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},'creation-lot-conventions');
   CacheService.getScriptCache().put('EUC_CONV_LOT_'+lot,JSON.stringify({lot:lot,classe:cl.nom,classeEleves:classeElevesNom,annee:annee,periode:p,items:items}),21600);
-  return {ok:true,total:items.length,creees:records.length,reprises:reprises,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
+  return {ok:true,total:items.length,creees:records.length,reprises:reprises,pdifEntreprise:pdifEntreprise,pdifLycee:pdifLycee,pdifAAnnuler:aAnnuler,periodePdif:!!periodePdif,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
 }
 
 /* DEV646 — Convention active d'un élève pour une période et une année (mêmes règles que EUC_CONVENTION_accesActifsV525_).

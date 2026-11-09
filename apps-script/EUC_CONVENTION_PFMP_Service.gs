@@ -123,7 +123,8 @@ function EUC_CONVENTION_verifierPeriodeAutorisee_(meta,classeId,annee,periodeId,
 
 function EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,opt){
   opt=opt||{};var pdif=opt.pdif||null,pdifMode=String(opt.pdifMode||'').toUpperCase(),lot=String(opt.lot||'');
-  var finOfficielle=(pdif&&pdifMode==='ENTREPRISE')?EUC_CONVENTION_maxDate_(p.fin,pdif.fin):p.fin;
+  /* DEV655 : plus de prolongation. Le PDIF en entreprise fait l'objet d'une convention à part sur la période PDIF. */
+  var finOfficielle=p.fin;
   var scenario=String(opt.scenarioDates||'DATES_OFFICIELLES').trim().toUpperCase(),debutReel=String(opt.dateDeclareeDebut||p.debut),finReelle=String(opt.dateDeclareeFin||finOfficielle),motif=String(opt.motifEcartDates||'').trim();
   if(scenario!=='DATES_OFFICIELLES'){
     var dates=EUC_CONVENTION_validerDatesIndividuelles_(debutReel,finReelle,motif);
@@ -132,7 +133,7 @@ function EUC_CONVENTION_preparerRecordAcces_(ctx,eleve,cl,p,annee,opt){
     debutReel=p.debut;finReelle=finOfficielle;motif='';
   }
   var requestId=EUC_CONVENTION_requestIdV513_(opt.requestId),token=requestId||EUC_CONVENTION_token_(),hash=EUC_CONVENTION_hash_(token),now=new Date().toISOString(),ref='PFMP-'+annee.replace('-','')+'-'+eleve.id+'-'+String(new Date().getTime()).slice(-6)+'-'+String(Math.floor(Math.random()*90)+10);
-  var lib=p.type+' '+p.debut+' → '+p.fin;if(pdif&&pdifMode==='ENTREPRISE')lib+=' + '+pdif.type+' '+pdif.debut+' → '+pdif.fin+' en entreprise';
+  var lib=p.type+' '+p.debut+' → '+p.fin;
   var fields={Token_hash:hash,Request_id:requestId,Eleve:eleve.id,Annee_scolaire:annee,Classe_convention:cl.id,Classe_convention_nom:cl.nom,Periode:p.id,Periode_libelle:lib,Date_debut:debutReel,Date_fin:finReelle,Scenario_dates:scenario,Date_officielle_debut:p.debut,Date_officielle_fin:finOfficielle,Date_declaree_debut:debutReel,Date_declaree_fin:finReelle,Motif_ecart_dates:motif,Type_sequence:String(opt.typeSequence||'INITIALE'),Numero_sequence:Number(opt.numeroSequence||1),Convention_origine:Number(opt.conventionOrigine||0)||null,PDIF_periode:pdif?pdif.id:null,PDIF_mode:pdifMode||'',Lot_generation:lot,Statut:'CONVENTION_GENEREE',Tentatives_echec:0,Bloque_jusqua:null,Date_creation:now,Date_derniere_utilisation:null,Auteur:ctx.email||'',Reference_convention:ref,Revoked:false};
   if(opt.statutAdministratif)fields.Statut_administratif=String(opt.statutAdministratif);
   return {token:token,reference:ref,dateDebut:debutReel,dateFin:finReelle,record:{fields:fields}};
@@ -181,6 +182,8 @@ function EUC_CONVENTION_preparerAcces(payload){
    * officielles. Le recalcul complet ne bloque plus cette requête : le client
    * le finalise séparément et le déclencheur DEV425 sert de filet de sécurité. */
   var refresh=EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},existing?'reprise-idempotente':'creation-convention');
+  /* DEV655 : une convention sur la période PDIF vaut choix « PDIF en entreprise » pour le suivi. */
+  if(typeof EUC_DEV655_estPeriodePdif_==='function'&&EUC_DEV655_estPeriodePdif_(p)){var ch={};ch[eleveId]='ENTREPRISE';try{EUC_DEV655_enregistrerModes_(ctx,annee,ch);}catch(eMode){console.log('DEV655_MODE '+String(eMode&&eMode.message||eMode));}}
   var base=ScriptApp.getService().getUrl(),rid=Number(a.id)||0;return {ok:true,idempotent:!!existing,accessId:rid,reference:a.reference,token:a.token,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(rid),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(rid),eleve:eleve,classeConvention:cl,periode:p,anneeConvention:annee,pdifMode:pdifMode,scenarioDates:scenario,dateDebut:a.dateDebut,dateFin:a.dateFin,refreshToken:refresh};
 }
 

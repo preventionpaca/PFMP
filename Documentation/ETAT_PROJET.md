@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV655 : parcours différencié, deux conventions distinctes
+
+- Décision métier (utilisateur, 10/11/2026) : deux conventions dès le départ. La dernière PFMP de Terminale garde ses dates officielles (la prolongation jusqu'à la fin du PDIF est supprimée) ; un élève « PDIF en entreprise » reçoit une seconde convention sur la période PDIF, avec son propre QR code, éventuellement dans une autre entreprise (réorientation).
+- Changement d'avis en cours d'année : la convention PDIF se génère plus tard (période PDIF choisie directement dans le générateur, en classe ou pour un élève, avec dates individuelles ou début retardé) ou s'annule avant démarrage dans « Administration des conventions » (pas de rupture). Le générateur n'annule jamais rien seul : il signale l'élève revenu au lycée qui a déjà une convention PDIF.
+- Choix de fin de Terminale : source unique `EUC_PARCOURS_DIFFERENCIE_PFMP.Mode_fin_terminale` (lue par le suivi). Le générateur pré-remplit les choix depuis cette table et y enregistre ceux qu'il utilise ; une convention individuelle sur la période PDIF vaut choix « entreprise ».
+- Page « Fin de Terminale » (`parcours-differencie-pfmp`) : elle était inutilisable (liste de classes vide, fonctions serveur DEV285B absentes du dépôt). Rétablie par `EUC_DEV655_FinTerminale.js` (classes de Terminale depuis les promotions d'élèves, chargement et enregistrement des choix sans écriture inutile).
+- Conventions déjà éditées avec l'ancienne prolongation : non modifiées automatiquement.
+- Limite connue : le lot PDF reste limité à 40 conventions (classe + conventions PDIF du même lot).
+- Tests : 5 DEV655 ; suite complète 1226 tests réussis.
+
 ## Mise à jour du 10 novembre 2026 — DEV656 : accusé de dépôt de la convention (QR et formulaire en ligne)
 
 - Même accusé pour la page du QR code et le formulaire en ligne : « Déclaration reçue. », numéro d'enregistrement, récapitulatif complet, puis rappel des signatures (élève et, s'il est mineur, représentants légaux ; enseignant référent ; tuteur ; représentant de l'entreprise ; dépôt au bureau G205 ; convention valable seulement après la signature du Proviseur). L'annonce « le bureau va la vérifier ; un courriel confirmera la validation » est supprimée.
