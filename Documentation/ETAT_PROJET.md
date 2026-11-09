@@ -1,5 +1,9 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV658 : impression de la page « Import des apprentis Yparéo »
+
+- Bouton « Imprimer / PDF » (`window.print()` depuis la page : le Ctrl+P du navigateur n'imprime qu'une partie de l'iframe Apps Script). Style `@media print` dans `Import_Ypareo_DEV566.html` : boutons, choix de fichiers, lien de retour et bandeau LIVE/DRY_RUN masqués ; année scolaire en haut ; couples groupe Yparéo + classe jamais coupés ; en-tête du tableau répété à chaque page ; colonnes de largeur fixe pour que la colonne « Contrôle » reste visible. Aucune logique d'import modifiée. Rendu validé par l'utilisateur.
+
 ## Mise à jour du 10 novembre 2026 — DEV657 : texte définitif du rappel de l'accusé de dépôt
 
 - Rappel validé par l'utilisateur (QR et formulaire en ligne) : signatures de l'élève et, s'il est mineur, de ses représentants légaux, de l'**enseignant référent** (en gras dans le courriel HTML), du tuteur et du représentant de l'entreprise, puis dépôt au secrétariat de Madame la Proviseure adjointe ; convention valable seulement après la signature du Proviseur.
