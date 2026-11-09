@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV656 : accusé de dépôt de la convention (QR et formulaire en ligne)
+
+- Même accusé pour la page du QR code et le formulaire en ligne : « Déclaration reçue. », numéro d'enregistrement, récapitulatif complet, puis rappel des signatures (élève et, s'il est mineur, représentants légaux ; enseignant référent ; tuteur ; représentant de l'entreprise ; dépôt au bureau G205 ; convention valable seulement après la signature du Proviseur). L'annonce « le bureau va la vérifier ; un courriel confirmera la validation » est supprimée.
+- Page du QR code : le récapitulatif n'utilise plus le paramètre « Corps du courriel » (NOTIF_CORPS) comme introduction ; l'objet et la signature paramétrés restent utilisés.
+- Tests : 13 DEV649 (dont le nouveau test DEV656), suite complète 1221 tests réussis.
+
 ## Mise à jour du 10 novembre 2026 — DEV654 : téléphone des contacts (formulaire en ligne), lien « Mes visites » dans Ordres de mission
 
 - Formulaire « Enregistrer ma PFMP » : le téléphone du responsable / tuteur d'une entreprise française n'acceptait qu'un numéro français ; les élèves inventaient un numéro pour un contact monégasque. Désormais accepté aussi : +377 (fixe 9XXXXXXX, mobile 6XXXXXXXX), 8 chiffres commençant par 9 (Monaco), international +XX (hors +33 mal formé). Même règle côté page (`tel`) et serveur (`EUC_DEV603_telephone_`). La page du QR code ne bloquait pas.

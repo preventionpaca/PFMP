@@ -153,4 +153,15 @@ test('DEV650 : entreprise non diffusible → recherche avancée INPI par SIRET, 
   [f, q].forEach(h => { const m = h.match(/function EUC_DEV650_lienInpi\(n\)\{[^]*?\}\)\);\}/); assert.ok(m, 'fonction INPI des pages');
     const fn = new Function(m[0] + ';return EUC_DEV650_lienInpi;')(); assert.equal(fn('12345678900017'), ATTENDU); assert.equal(fn('1'), ''); });
 });
+test('DEV656 : accusé de dépôt identique (QR et formulaire) : « Déclaration reçue. », numéro, récapitulatif, rappel des signatures', () => {
+  const r = k.EUC_DEV649_recap_(Object.assign({}, INFO, { intro: k.EUC_DEV649_INTRO_DEPOT_ }));
+  assert.ok(r.texte.startsWith('Déclaration reçue.\n\nNuméro d’enregistrement : '), 'intro puis numéro');
+  const rappel = k.EUC_DEV649_RAPPEL_SIGNATURES_;
+  assert.ok(/représentants légaux/.test(rappel) && /enseignant référent/.test(rappel) && /tuteur/.test(rappel) && /représentant de l’entreprise/.test(rappel) && /Proviseur/.test(rappel));
+  assert.ok(r.texte.indexOf(rappel) > r.texte.indexOf('— Tuteur'), 'rappel après toutes les informations');
+  assert.ok(r.html.includes('Rappel : l’original papier'));
+  assert.equal(J(k.EUC_DEV649_infoAcces_({ acces: {} }, 'Bonjour, ancien corps paramétré', 'sig')).intro, 'Déclaration reçue.', 'page QR : même intro');
+  const src = read('apps-script/EUC_DEV649_LieuStageRecap.js') + read('apps-script/EUC_DEV603_Declaration.js');
+  assert.ok(!/va la vérifier|confirmera la validation|quand elle sera validée/.test(src), 'plus d’annonce de validation par courriel');
+});
 console.log(n + ' tests DEV649 réussis.');

@@ -57,6 +57,9 @@ function EUC_DEV649_personne_(p) {
  *   periode:{libelle,debut,fin}, entreprise:{nom,enseigne,identifiant,adresse,telephone,courriel,nonDiffusible},
  *   lieu, responsable:{civilite,prenom,nom,fonction,telephone,courriel}, tuteur:{…}, tuteurEstResponsable,
  *   g205:{requis,motif}, pp:[noms], signature } */
+/* Rappel commun aux accusés de dépôt (page du QR code et formulaire en ligne). */
+var EUC_DEV649_INTRO_DEPOT_ = 'Déclaration reçue.';
+var EUC_DEV649_RAPPEL_SIGNATURES_ = 'Rappel : l’original papier de la convention doit être signé par l’élève et, s’il est mineur, par ses représentants légaux, par l’enseignant référent, par le tuteur et par le représentant de l’entreprise, puis déposé au bureau G205. La convention de PFMP n’est valable qu’après la signature de Monsieur le Proviseur : la PFMP ne peut pas débuter avant.';
 function EUC_DEV649_recap_(info) {
   info = info || {};
   var T = EUC_DEV649_t_, H = EUC_DEV649_html_, e = info.eleve || {}, p = info.periode || {}, ent = info.entreprise || {}, g = info.g205 || {};
@@ -72,7 +75,7 @@ function EUC_DEV649_recap_(info) {
   var nd = ent.nonDiffusible ? 'Entreprise « non diffusible » sur l’annuaire data.gouv (INSEE) : nom et adresse saisis par l’élève, à vérifier sur le registre de l’INPI.' : '';
   var inpi = ent.nonDiffusible ? EUC_DEV649_lienInpi_(ent.identifiant) : '';
   var g205 = g.requis ? 'À FAIRE : passer au bureau G205 (bureau des formations et des entreprises) pour finaliser la convention' + (T(g.motif) ? ' — ' + T(g.motif) : '') + '.' : '';
-  var suite = 'L’original papier de la convention doit être déposé au bureau G205 pour la signature de Monsieur le Proviseur. La PFMP ne peut débuter qu’une fois la convention signée par toutes les parties.';
+  var suite = EUC_DEV649_RAPPEL_SIGNATURES_;
   /* Texte brut */
   var lignes = [];
   if (T(info.intro)) lignes.push(T(info.intro).replace(/ {2,}/g, ' '), '');
@@ -132,7 +135,8 @@ function EUC_DEV649_infoAcces_(d, intro, signature) {
   var motifs = [];
   if (aValider) motifs.push('entreprise de Monaco à valider : apporter son NIS et ses coordonnées');
   return {
-    source: 'page du QR code', numero: d.numero, intro: intro, signature: signature,
+    /* Même accusé que le formulaire en ligne : « Déclaration reçue. », le récapitulatif puis le rappel des signatures. */
+    source: 'page du QR code', numero: d.numero, intro: EUC_DEV649_INTRO_DEPOT_, signature: signature,
     eleve: { nom: d.eleve && d.eleve.nom, prenom: d.eleve && d.eleve.prenom, naissance: f.naissance, classe: d.classe, adresse: f.adresse, telephone: f.telephone, courriel: d.eleve && d.eleve.email },
     periode: { libelle: a.Periode_libelle, debut: d.dateDebut, fin: d.dateFin },
     entreprise: { nom: a.Entreprise_raison_sociale, enseigne: a.Entreprise_enseigne, identifiant: T(a.Entreprise_siret) || T(a.Entreprise_nis),
@@ -177,7 +181,7 @@ function EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, class
     if (probleme) motifs.push('entreprise non vérifiée' + (detail.message ? ' (message : ' + T(detail.message) + ')' : '') + ' : venir avec les coordonnées complètes de l’entreprise');
     var info = {
       source: 'formulaire en ligne', numero: numero,
-      intro: probleme ? 'Demande reçue : l’entreprise n’a pas pu être vérifiée automatiquement.' : 'Déclaration reçue. Le bureau des entreprises va la vérifier ; un courriel confirmera la validation.',
+      intro: probleme ? 'Demande reçue : l’entreprise n’a pas pu être vérifiée automatiquement.' : EUC_DEV649_INTRO_DEPOT_,
       eleve: { nom: eleve.nom, prenom: eleve.prenom, naissance: eleve.naissance || f.naissance, classe: classe, adresse: f.adresse, telephone: f.telephone, courriel: email },
       periode: { libelle: detail.periode && detail.periode.libelle, debut: detail.periode && detail.periode.debut, fin: detail.periode && detail.periode.fin },
       entreprise: { nom: ent.raisonSociale, enseigne: ent.enseigne, identifiant: ent.siret, adresse: [T(ent.adresse), T(ent.complement), [T(ent.codePostal), T(ent.commune)].filter(Boolean).join(' '), ent.pays === 'MC' ? 'Monaco' : ''].filter(Boolean).join(', '),
