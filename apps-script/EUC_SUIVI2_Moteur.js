@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.651'; /* DEV651 : valeurs masquées « [NON-DIFFUSIBLE] » ignorées (recalcul forcé) */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.652'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur (recalcul forcé) */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -207,6 +207,7 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
     adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     /* DEV649 : lieu de stage distinct du siège (visites à cette adresse). */
     lieu: [P(a.Lieu_stage_adresse), [P(a.Lieu_stage_code_postal), P(a.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    lieuPar: P(a.Lieu_stage_modifie_par) ? 'modifié par ' + P(a.Lieu_stage_modifie_par) + (P(a.Lieu_stage_modifie_le) ? ' le ' + P(a.Lieu_stage_modifie_le).slice(0, 10).split('-').reverse().join('/') : '') : '',
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
     numero: P(a.Numero_enregistrement, a.Reference_convention), siret: sr.length === 14 ? sr : EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, ''),

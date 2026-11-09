@@ -59,6 +59,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV635_afficher(e);
     case 'echeancier-apprentis-pfmp':
       return EUC_DEV597_afficher(e);
+    case 'mes-visites-pfmp':
+      return EUC_DEV652_afficher(e);
     case 'bilan-visite-apprenti':
       return EUC_DEV598_afficherFiche(e);
     case 'validation-bilan-visite':

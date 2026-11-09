@@ -88,7 +88,7 @@ test('fiches de la base masquées : ignorées à la recherche et au suivi, corri
   assert.equal(c.EUC_ENT_identiteEntrepriseComplete_({ raisonSociale: 'A', numeroVoie: '1 rue X', codePostal: '06000', commune: 'Nice' }), true);
   const m = read('apps-script/EUC_SUIVI2_Moteur.js');
   assert.match(m, /function EUC_SUIVI2_premier_\(\) \{ for \(var i = 0; i < arguments\.length; i\+\+\) \{ var v = EUC_SUIVI2_t_\(arguments\[i\]\); if \(v && !\/NON\[\\s_-\]\*DIFFUSIBLE\/i\.test\(v\)\) return v; \} return ''; \}/);
-  assert.match(m, /var EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.651';/, 'modèle du suivi recalculé (cache par version)');
+  assert.match(m, /var EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.65[1-9]';/, 'modèle du suivi recalculé (cache par version)');
   const { k } = contexte({}, []);
   const x = J(k.EUC_DEV651_mapper_(RNE_PP, '12345678900017'));
   assert.deepEqual(J(k.EUC_DEV651_correctionFiche_({ Raison_sociale: '[NON-DIFFUSIBLE]', Enseigne: 'Garage Maison', Numero_voie: '[NON-DIFFUSIBLE]', Adresse_complete: '', Code_postal: '06510', Commune: 'CARROS' }, x)),

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mes visites — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed;--orange:#92400e;--orange-fond:#fff7d6}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0}
+main{max-width:760px;margin:0 auto;padding:0 16px 40px}
+section,.eleve{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:16px;margin:0 0 6px}
+.note{color:var(--gris);font-size:13px}
+.adresse{margin:6px 0}
+.lieu{margin:6px 0;padding:8px 10px;border:2px solid #d97706;border-radius:8px;background:var(--orange-fond);color:var(--orange);font-weight:700}
+.lieu small{display:block;font-weight:400}
+label{display:block;font-weight:700;font-size:13px;margin-top:8px}
+input{width:100%;font:15px Arial,sans-serif;padding:9px 10px;border:1px solid var(--bord);border-radius:7px}
+.deux{display:grid;grid-template-columns:120px 1fr;gap:8px}
+button{font:700 15px Arial,sans-serif;border:0;border-radius:8px;padding:10px 14px;background:var(--vert);color:#fff;cursor:pointer;margin-top:10px}
+button:disabled{opacity:.6;cursor:wait}
+button.leger{background:var(--vert-clair);color:var(--vert)}
+.message{font-weight:700;margin-top:8px}.message.erreur{color:var(--alerte)}.message.ok{color:var(--vert)}
+.spin{display:none;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
+.busy .spin{display:inline-block}
+@keyframes tour{to{transform:rotate(360deg)}}
+.chargement{padding:24px 0;text-align:center;color:var(--gris)}
+.chargement .spin{display:inline-block}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mes visites</h1>
+  <p id="titre">Lieux de visite de vos élèves en PFMP</p>
+</header>
+<main>
+  <div id="etat" class="chargement" role="status"><span class="spin"></span>Chargement de vos visites…</div>
+  <div id="contenu" hidden>
+    <section>
+      <p class="note" style="margin:0">Après votre appel au tuteur, si vous voyez un élève ailleurs qu’à l’adresse prévue (chantier, atelier, autre garage), indiquez le lieu réel. Il remplace l’adresse dans le suivi, la carte et votre récapitulatif des visites. Votre ordre de mission (page 1) reste valable.</p>
+      <button type="button" id="bPdf"><span class="spin"></span><span class="txt">Télécharger ma page 2 (récapitulatif des visites)</span></button>
+      <div id="mPdf" class="message" role="status"></div>
+    </section>
+    <div id="liste"></div>
+  </div>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},JETON=<?!= JSON.stringify(jeton) ?>,DELAI=90000,DONNEES=null;
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function appel(nom,args,ok,ko){
+    var fini=false,timer=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Pas de réponse après 90 secondes : rechargez la page avant de réessayer.'));},DELAI);
+    var run=google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);});
+    run[nom].apply(run,args);
+  }
+  /* Bouton d'action : bloqué et avec chargement pendant l'appel, rendu en succès, erreur et dépassement. */
+  function occupe(b,on,texte){
+    var t=b.querySelector('.txt');if(!b.dataset.libelle)b.dataset.libelle=t.textContent;
+    b.disabled=on;b.classList.toggle('busy',on);t.textContent=on?texte:b.dataset.libelle;
+  }
+  function erreurTexte(e){return String(e&&e.message||e||'Erreur inconnue.');}
+  function fiche(l){
+    var lieu=l.lieuStage?'<div class="lieu">⚠ Lieu de visite : '+esc(l.lieuStage)+(l.modifiePar?'<small>modifié par '+esc(l.modifiePar)+(l.modifieLe?' le '+esc(l.modifieLe.slice(0,10).split('-').reverse().join('/')):'')+'</small>':'')+'</div>':'';
+    return '<div class="eleve" data-id="'+l.eleveId+'"><h2>'+esc(l.eleve)+'</h2><div><b>'+esc(l.entreprise||'Entreprise non renseignée')+'</b></div>'+
+      '<div class="adresse note">'+(l.lieuStage?'Siège : ':'Adresse : ')+esc(l.siege||'—')+'</div>'+lieu+
+      (l.convention?'<button type="button" class="leger ouvrir">'+(l.lieuStage?'Changer le lieu de visite':'Je vais le voir ailleurs')+'</button>'+
+      '<div class="form" hidden><label>Adresse du lieu de visite</label><input class="fAdr" autocomplete="off" value="'+esc(l.lieu.adresse)+'" placeholder="N° et rue, ou nom du chantier">'+
+      '<div class="deux"><div><label>Code postal</label><input class="fCp" inputmode="numeric" maxlength="5" autocomplete="off" value="'+esc(l.lieu.codePostal)+'"></div><div><label>Commune</label><input class="fVille" autocomplete="off" value="'+esc(l.lieu.commune)+'"></div></div>'+
+      '<button type="button" class="enregistrer"><span class="spin"></span><span class="txt">Enregistrer le lieu de visite</span></button> '+
+      (l.lieuStage?'<button type="button" class="leger effacer"><span class="spin"></span><span class="txt">Revenir à l’adresse de l’entreprise</span></button>':'')+'</div>'
+      :'<p class="note">Convention introuvable : contactez le bureau des entreprises.</p>')+
+      '<div class="message" role="status"></div></div>';
+  }
+  function dessiner(g){
+    DONNEES=g;$('titre').textContent=[g.professeur,g.classe,g.periode,(g.debut&&g.fin?g.debut+' au '+g.fin:'')].filter(Boolean).join(' — ');
+    $('liste').innerHTML=g.lignes.length?g.lignes.map(fiche).join(''):'<section><p class="note" style="margin:0">Aucun élève à visiter pour cette classe et cette période.</p></section>';
+    $('bPdf').hidden=!g.lignes.length;
+    Array.prototype.forEach.call(document.querySelectorAll('.eleve'),function(box){
+      var id=Number(box.dataset.id),f=box.querySelector('.form'),m=box.querySelector('.message');
+      var o=box.querySelector('.ouvrir');if(o)o.onclick=function(){f.hidden=!f.hidden;if(!f.hidden)try{box.querySelector('.fAdr').focus();}catch(e){}};
+      function envoyer(b,effacer){m.textContent='';m.className='message';occupe(b,true,effacer?'Retour à l’adresse de l’entreprise…':'Enregistrement…');
+        appel('EUC_DEV652_modifierLieu',[{t:JETON,eleveId:id,effacer:effacer,adresse:box.querySelector('.fAdr').value,codePostal:box.querySelector('.fCp').value,commune:box.querySelector('.fVille').value}],
+          function(g2){occupe(b,false);dessiner(g2);var nb=document.querySelector('.eleve[data-id="'+id+'"] .message');if(nb){nb.className='message ok';nb.textContent=effacer?'Adresse de l’entreprise rétablie.':'Lieu de visite enregistré. Pensez à retélécharger votre page 2.';}},
+          function(e){occupe(b,false);m.className='message erreur';m.textContent=erreurTexte(e);});}
+      var en=box.querySelector('.enregistrer');if(en)en.onclick=function(){envoyer(en,false);};
+      var ef=box.querySelector('.effacer');if(ef)ef.onclick=function(){envoyer(ef,true);};
+    });
+  }
+  $('bPdf').onclick=function(){var b=this;$('mPdf').textContent='';$('mPdf').className='message';occupe(b,true,'Préparation du PDF…');
+    appel('EUC_DEV652_pdfPage2',[{t:JETON}],function(r){occupe(b,false);
+      try{var bin=atob(r.base64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+        var url=URL.createObjectURL(new Blob([u],{type:r.mime})),a=document.createElement('a');a.href=url;a.download=r.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},60000);
+        $('mPdf').className='message ok';$('mPdf').textContent='PDF téléchargé : '+r.name;}catch(e){$('mPdf').className='message erreur';$('mPdf').textContent='Téléchargement impossible : '+erreurTexte(e);}},
+      function(e){occupe(b,false);$('mPdf').className='message erreur';$('mPdf').textContent=erreurTexte(e);});};
+  if(!JETON){$('etat').className='message erreur';$('etat').textContent='Lien incomplet : utilisez le lien du courriel de votre ordre de mission.';return;}
+  appel('EUC_DEV652_ouvrir',[{t:JETON}],function(g){$('etat').hidden=true;$('contenu').hidden=false;dessiner(g);},
+    function(e){$('etat').className='message erreur';$('etat').textContent=erreurTexte(e);});
+})();
+</script>
+</body>
+</html>

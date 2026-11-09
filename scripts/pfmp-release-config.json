@@ -31,6 +31,7 @@
     {"page": "conventions-generees-pfmp", "scope": "admin", "expected": "Conventions générées"},
     {"page": "entreprises-monaco-pfmp", "scope": "admin", "expected": "Entreprises de Monaco"},
     {"page": "acces-inpi-pfmp", "scope": "admin", "expected": "Accès INPI"},
+    {"page": "mes-visites-pfmp", "scope": "admin", "expected": "Mes visites"},
     {"page": "apprentis-classes-pfmp", "scope": "admin", "expected": "Apprentis par classe entière"},
     {"page": "diplomes-classes-pfmp", "scope": "admin", "expected": "Diplômes par classe"},
     {"page": "dossier-apprentissage-pfmp", "scope": "admin", "expected": "Dossier de demande d’apprentissage"},

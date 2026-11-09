@@ -559,6 +559,13 @@ function EUC_DEV440_prepareMissionTransportEmail(q){
   var kind=EUC_DEV443_missionKind_(q),qualifier=kind==='PREVISIONNEL'?'prévisionnel':'définitif',template=EUC_DEV476_missionEmailTemplates_()[kind];
   var values={PROFESSEUR:g.professeur,CLASSE:g.classe,PERIODE:g.periode,DEBUT:g.debut||'date de début à préciser',FIN:g.fin||'date de fin à préciser',TYPE:qualifier,EXPEDITEUR:sender||'Bureau des entreprises',PROCEDURE:'procédure'};
   var subject=EUC_DEV476_renderMissionEmail_(template.subject,values),body=EUC_DEV476_renderMissionEmail_(template.body,values),htmlBody=EUC_DEV478_renderMissionEmailHtml_(template.body,values,settings.procedureUrl);
+  /* DEV652 : lien personnel « Mes visites » (lieu de visite à ajuster, page 2 à réimprimer). */
+  var lienVisites=typeof EUC_DEV652_lienGroupe_==='function'?EUC_DEV652_lienGroupe_(q,g):'';
+  if(lienVisites){
+    var phrase='Si vous voyez un élève ailleurs qu’à l’adresse prévue (chantier, atelier, autre garage), indiquez le lieu réel et réimprimez votre récapitulatif des visites (page 2) depuis votre lien personnel « Mes visites » : ';
+    body+='\n\n'+phrase+lienVisites;
+    htmlBody+='<br><br>'+phrase.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'<a href="'+lienVisites.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">Mes visites</a>';
+  }
   return{ok:true,to:recipient,cc:cc,replyTo:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)?replyTo:'',subject:subject,body:body,htmlBody:htmlBody,kind:kind,professeur:g.professeur,classe:g.classe,periode:g.periode};
 }
 var EUC_DEV492_MISSION_EMAIL_STATUS_PREFIX_='DEV492_MISSION_EMAIL_STATUS_';
@@ -672,6 +679,12 @@ function EUC_DEV438_appendVisitRecap_(body,g){
     var cell=box.getCell(0,0);try{cell.setVerticalAlignment(DocumentApp.VerticalAlignment.CENTER).setPaddingTop(4).setPaddingBottom(4).setPaddingLeft(4).setPaddingRight(4).editAsText().setBold(true).setFontSize(7)}catch(e4){}
     try{cell.getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.CENTER)}catch(e5){}
   });
+  /* DEV652 : lien « Mes visites » : le professeur visiteur ajuste le lieu de visite et réimprime cette page. */
+  if(g.lienVisites){
+    var maj=body.appendParagraph(g.miseAJour?'Adresses de visite à jour au '+g.miseAJour+'.':'Lieu de visite différent (chantier, atelier…) ? Modifiez-le et réimprimez cette page : ');
+    maj.setFontSize(7).setBold(true).setSpacingBefore(5).setSpacingAfter(0);
+    if(!g.miseAJour){var lien=maj.appendText('Mes visites');lien.setLinkUrl(g.lienVisites).setForegroundColor('#0b5cad');}
+  }
   var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
   help.setFontSize(7).setItalic(true).setSpacingBefore(5).setSpacingAfter(2);
   var receipts=body.appendParagraph('Justificatifs : joindre tous les justificatifs nécessaires pour bénéficier d’une prise en charge financière.');
@@ -711,6 +724,7 @@ function EUC_DEV436_pdfMission(q){
     if(kind==='PREVISIONNEL')EUC_DEV443_applyProvisionalWatermark_(body);
     doc.saveAndClose();
     var landscapeSectionIndex=EUC_DEV440_insertLandscapeSection_(id);
+    if(typeof EUC_DEV652_lienGroupe_==='function')g.lienVisites=EUC_DEV652_lienGroupe_(q,g);
     doc=DocumentApp.openById(id);body=doc.getBody();EUC_DEV438_appendVisitRecap_(body,g);doc.saveAndClose();
     EUC_DEV440_styleLandscapeSection_(id,landscapeSectionIndex);
     var pdf=copy.getAs(MimeType.PDF).setName('Ordre_de_mission_'+(kind==='PREVISIONNEL'?'previsionnel_':'definitif_')+safe+'.pdf');

@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV652 : « Mes visites », lieu de visite ajusté par le professeur visiteur (lot 1)
+
+- Constat : le PP affecte, le professeur visiteur visite ; l'ordre de mission (page 1, signée par le Proviseur) est prévisionnel ; le lieu réel (chantier Mélec, pige d'un auto-entrepreneur dans un autre garage) n'est connu qu'à l'appel du tuteur, parfois deux jours avant.
+- `EUC_DEV652_MesVisites.js` + `Mes_Visites_DEV652.html`, route `mes-visites-pfmp` : lien personnel signé (HMAC, secret DEV598 ; année, famille, classe, période, professeur). Le professeur voit ses élèves de la période ; « Je vais le voir ailleurs » écrit `Lieu_stage_*` de la convention active + `Lieu_stage_modifie_par` / `_le` + `Historique_admin_JSON` (LIEU_VISITE_PROFESSEUR / LIEU_VISITE_RETOUR_SIEGE). Effet immédiat (décision : pas de validation préalable, visible dans le suivi « modifié par … »).
+- « Télécharger ma page 2 » : récapitulatif des visites (même mise en page `EUC_DEV438_appendVisitRecap_`) avec les adresses à jour ; la page 1 n'est pas régénérée.
+- Lien ajouté sur la page 2 des ordres de mission générés et dans le courriel d'envoi (sans modifier les modèles de courriel enregistrés).
+- Lot 2 prévu : visites cochées, date, départ (D / EK / n° de la visite précédente = tournée), kilomètres calculés et modifiables, page 2 pré-remplie (procédure interne).
+
 ## Mise à jour du 9 novembre 2026 — DEV651 : API RNE de l'INPI pour les entreprises non diffusibles
 
 - `EUC_DEV651_InpiRne.js` : connexion `registre-national-entreprises.inpi.fr/api/sso/login` (jeton en cache 30 min, renouvelé une fois sur 401/403), lecture `/api/companies/<SIREN>`, choix de l'établissement du SIRET (sinon adresse de l'entreprise), nom = dénomination ou NOM Prénoms de l'entrepreneur.
