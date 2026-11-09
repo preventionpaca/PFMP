@@ -59,7 +59,7 @@ function EUC_DEV649_personne_(p) {
  *   g205:{requis,motif}, pp:[noms], signature } */
 /* Rappel commun aux accusés de dépôt (page du QR code et formulaire en ligne). */
 var EUC_DEV649_INTRO_DEPOT_ = 'Déclaration reçue.';
-var EUC_DEV649_RAPPEL_SIGNATURES_ = 'Rappel : l’original papier de la convention doit être signé par l’élève et, s’il est mineur, par ses représentants légaux, par l’enseignant référent, par le tuteur et par le représentant de l’entreprise, puis déposé au bureau G205. La convention de PFMP n’est valable qu’après la signature de Monsieur le Proviseur : la PFMP ne peut pas débuter avant.';
+var EUC_DEV649_RAPPEL_SIGNATURES_ = 'Rappel : l’original papier de la convention doit être signé par l’élève et, s’il est mineur, par ses représentants légaux, par l’enseignant référent, par le tuteur et par le représentant de l’entreprise, puis déposé au secrétariat de Madame la Proviseure adjointe. La convention de PFMP n’est valable qu’après la signature de Monsieur le Proviseur : la PFMP ne peut pas débuter avant.';
 function EUC_DEV649_recap_(info) {
   info = info || {};
   var T = EUC_DEV649_t_, H = EUC_DEV649_html_, e = info.eleve || {}, p = info.periode || {}, ent = info.entreprise || {}, g = info.g205 || {};
@@ -106,7 +106,8 @@ function EUC_DEV649_recap_(info) {
     if (rows.length) html.push('<h3 style="margin:16px 0 4px;font-size:15px;color:#0b6b4f">' + H(b[0]) + '</h3><table style="border-collapse:collapse">' + rows.join('') + '</table>');
   });
   if ((info.pp || []).length) html.push('<p style="color:#5b6b66">Professeur principal : ' + H(info.pp.join(' / ')) + '</p>');
-  html.push('<p style="margin-top:16px">' + H(suite) + '</p>');
+  /* « enseignant référent » en gras dans le courriel HTML. */
+  html.push('<p style="margin-top:16px">' + H(suite).replace('enseignant référent', '<b>enseignant référent</b>') + '</p>');
   if (T(info.signature)) html.push('<p>' + H(info.signature).replace(/\n/g, '<br>') + '</p>');
   html.push('</div>');
   return { texte: lignes.join('\n'), html: html.join('') };

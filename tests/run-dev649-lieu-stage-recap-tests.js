@@ -160,6 +160,8 @@ test('DEV656 : accusé de dépôt identique (QR et formulaire) : « Déclaration
   assert.ok(/représentants légaux/.test(rappel) && /enseignant référent/.test(rappel) && /tuteur/.test(rappel) && /représentant de l’entreprise/.test(rappel) && /Proviseur/.test(rappel));
   assert.ok(r.texte.indexOf(rappel) > r.texte.indexOf('— Tuteur'), 'rappel après toutes les informations');
   assert.ok(r.html.includes('Rappel : l’original papier'));
+  assert.ok(r.html.includes('par l’<b>enseignant référent</b>, par le tuteur'), 'enseignant référent en gras');
+  assert.ok(rappel.includes('déposé au secrétariat de Madame la Proviseure adjointe.') && !rappel.includes('G205'), 'lieu de dépôt');
   assert.equal(J(k.EUC_DEV649_infoAcces_({ acces: {} }, 'Bonjour, ancien corps paramétré', 'sig')).intro, 'Déclaration reçue.', 'page QR : même intro');
   const src = read('apps-script/EUC_DEV649_LieuStageRecap.js') + read('apps-script/EUC_DEV603_Declaration.js');
   assert.ok(!/va la vérifier|confirmera la validation|quand elle sera validée/.test(src), 'plus d’annonce de validation par courriel');

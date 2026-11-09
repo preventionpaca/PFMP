@@ -1,5 +1,9 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV657 : texte définitif du rappel de l'accusé de dépôt
+
+- Rappel validé par l'utilisateur (QR et formulaire en ligne) : signatures de l'élève et, s'il est mineur, de ses représentants légaux, de l'**enseignant référent** (en gras dans le courriel HTML), du tuteur et du représentant de l'entreprise, puis dépôt au secrétariat de Madame la Proviseure adjointe ; convention valable seulement après la signature du Proviseur.
+
 ## Mise à jour du 10 novembre 2026 — DEV655 : parcours différencié, deux conventions distinctes
 
 - Décision métier (utilisateur, 10/11/2026) : deux conventions dès le départ. La dernière PFMP de Terminale garde ses dates officielles (la prolongation jusqu'à la fin du PDIF est supprimée) ; un élève « PDIF en entreprise » reçoit une seconde convention sur la période PDIF, avec son propre QR code, éventuellement dans une autre entreprise (réorientation).
