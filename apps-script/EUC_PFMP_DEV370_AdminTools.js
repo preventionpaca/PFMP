@@ -656,7 +656,8 @@ function EUC_DEV438_appendVisitRecap_(body,g){
   var meta=body.appendParagraph((g.classe||'')+' — '+(g.periode||'')+' — '+(g.debut||'')+' au '+(g.fin||''));
   meta.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setFontSize(8).setSpacingAfter(5);
   var rows=[['N°','Élève','Entreprise','Adresse','Contact\nentreprise','Contact\ntuteur','Date','Lieu de\ndépart','Heure\nd’arrivée','Nombre de\nkilomètres','Heure de\ndépart','Moyen de\ntransport']];
-  (g.lignes||[]).forEach(function(x,i){rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'',x.contactEntreprise||'',x.contactTuteur||'','','','','','',x.transport||''])});
+  /* DEV653 : visites saisies dans « Mes visites » : page 2 pré-remplie (procédure interne). */
+  (g.lignes||[]).forEach(function(x,i){var v=typeof EUC_DEV653_cellules_==='function'?EUC_DEV653_cellules_(x.visite)||{}:{};rows.push([String(i+1),x.eleve||'',x.entreprise||'',x.adresse||'',x.contactEntreprise||'',x.contactTuteur||'',v.date||'',v.depart||'',v.arrivee||'',v.km||'',v.departHeure||'',v.transport||x.transport||''])});
   /* La zone utile A4 paysage mesure environ 794 pt. Le tableau historique
      reste à 630 pt, un espace de 9 pt (environ 3 mm) le sépare des 145 pt
      réservés aux signatures. */
@@ -684,6 +685,10 @@ function EUC_DEV438_appendVisitRecap_(body,g){
     var maj=body.appendParagraph(g.miseAJour?'Adresses de visite à jour au '+g.miseAJour+'.':'Lieu de visite différent (chantier, atelier…) ? Modifiez-le et réimprimez cette page : ');
     maj.setFontSize(7).setBold(true).setSpacingBefore(5).setSpacingAfter(0);
     if(!g.miseAJour){var lien=maj.appendText('Mes visites');lien.setLinkUrl(g.lienVisites).setForegroundColor('#0b5cad');}
+  }
+  if(typeof EUC_DEV653_totalKm_==='function'&&(g.lignes||[]).some(function(x){return x.visite;})){
+    var tot=body.appendParagraph('Total des kilomètres déclarés : '+EUC_DEV653_totalKm_(g.lignes)+' km — « calc. » : kilomètres calculés par l’itinéraire lorsque le professeur a déclaré une autre distance.');
+    tot.setFontSize(7).setBold(true).setSpacingBefore(4).setSpacingAfter(0);
   }
   var help=body.appendParagraph('Lieu de départ : indiquer D pour le domicile, EK pour le lycée Les Eucalyptus, ou le numéro d’ordre de l’entreprise visitée juste avant lorsque les visites s’enchaînent dans une tournée.');
   help.setFontSize(7).setItalic(true).setSpacingBefore(5).setSpacingAfter(2);

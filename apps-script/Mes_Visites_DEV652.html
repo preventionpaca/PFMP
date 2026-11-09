@@ -30,6 +30,14 @@ button.leger{background:var(--vert-clair);color:var(--vert)}
 @keyframes tour{to{transform:rotate(360deg)}}
 .chargement{padding:24px 0;text-align:center;color:var(--gris)}
 .chargement .spin{display:inline-block}
+.visite{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bord)}
+.fait{padding:8px 10px;border-radius:8px;background:var(--vert-clair);color:var(--vert);font-weight:700}
+.fait small{display:block;font-weight:400;color:var(--texte)}
+.ecart{color:var(--alerte)}
+.num{display:inline-block;min-width:26px;padding:1px 6px;border-radius:999px;background:var(--vert);color:#fff;font-size:13px;text-align:center;margin-right:6px}
+select{width:100%;font:15px Arial,sans-serif;padding:9px 10px;border:1px solid var(--bord);border-radius:7px;background:#fff}
+.trois{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:480px){.trois{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -42,6 +50,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}
   <div id="contenu" hidden>
     <section>
       <p class="note" style="margin:0">Après votre appel au tuteur, si vous voyez un élève ailleurs qu’à l’adresse prévue (chantier, atelier, autre garage), indiquez le lieu réel. Il remplace l’adresse dans le suivi, la carte et votre récapitulatif des visites. Votre ordre de mission (page 1) reste valable.</p>
+      <p class="note">Après chaque visite, touchez « J’y suis allé » : date, lieu de départ (domicile, lycée ou la visite faite juste avant, pour une tournée), heures et transport. Les kilomètres sont calculés et restent modifiables ; votre page 2 sort pré-remplie.</p>
       <button type="button" id="bPdf"><span class="spin"></span><span class="txt">Télécharger ma page 2 (récapitulatif des visites)</span></button>
       <div id="mPdf" class="message" role="status"></div>
     </section>
@@ -65,7 +74,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}
   function erreurTexte(e){return String(e&&e.message||e||'Erreur inconnue.');}
   function fiche(l){
     var lieu=l.lieuStage?'<div class="lieu">⚠ Lieu de visite : '+esc(l.lieuStage)+(l.modifiePar?'<small>modifié par '+esc(l.modifiePar)+(l.modifieLe?' le '+esc(l.modifieLe.slice(0,10).split('-').reverse().join('/')):'')+'</small>':'')+'</div>':'';
-    return '<div class="eleve" data-id="'+l.eleveId+'"><h2>'+esc(l.eleve)+'</h2><div><b>'+esc(l.entreprise||'Entreprise non renseignée')+'</b></div>'+
+    return '<div class="eleve" data-id="'+l.eleveId+'"><h2><span class="num">'+l.numero+'</span>'+esc(l.eleve)+'</h2><div><b>'+esc(l.entreprise||'Entreprise non renseignée')+'</b></div>'+
       '<div class="adresse note">'+(l.lieuStage?'Siège : ':'Adresse : ')+esc(l.siege||'—')+'</div>'+lieu+
       (l.convention?'<button type="button" class="leger ouvrir">'+(l.lieuStage?'Changer le lieu de visite':'Je vais le voir ailleurs')+'</button>'+
       '<div class="form" hidden><label>Adresse du lieu de visite</label><input class="fAdr" autocomplete="off" value="'+esc(l.lieu.adresse)+'" placeholder="N° et rue, ou nom du chantier">'+
@@ -73,7 +82,40 @@ button.leger{background:var(--vert-clair);color:var(--vert)}
       '<button type="button" class="enregistrer"><span class="spin"></span><span class="txt">Enregistrer le lieu de visite</span></button> '+
       (l.lieuStage?'<button type="button" class="leger effacer"><span class="spin"></span><span class="txt">Revenir à l’adresse de l’entreprise</span></button>':'')+'</div>'
       :'<p class="note">Convention introuvable : contactez le bureau des entreprises.</p>')+
-      '<div class="message" role="status"></div></div>';
+      visiteHtml(l)+'<div class="message" role="status"></div></div>';
+  }
+  var TRANSPORTS=['Véhicule personnel','Bus','Tramway','Train','À pied','Visioconférence'];
+  function domicile(){try{return localStorage.getItem('EUC_DEV653_DOMICILE')||'';}catch(e){return '';}}
+  function retenirDomicile(v){try{if(v)localStorage.setItem('EUC_DEV653_DOMICILE',v);}catch(e){}}
+  function aujourdhui(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function libelleDepart(dep){if(dep==='D')return 'domicile';if(dep==='EK')return 'lycée';var l=(DONNEES.lignes||[])[Number(dep)-1];return dep?'visite n°'+dep+(l?' ('+l.eleve+')':''):'—';}
+  function visiteHtml(l){
+    var v=l.visite||null,opts=function(sel){return '<option value="">Choisir…</option><option value="D"'+(sel==='D'?' selected':'')+'>D — mon domicile</option><option value="EK"'+(sel==='EK'?' selected':'')+'>EK — le lycée</option>'+
+      (DONNEES.lignes||[]).filter(function(x){return x.eleveId!==l.eleveId;}).map(function(x){return '<option value="'+x.numero+'"'+(String(sel)===String(x.numero)?' selected':'')+'>n°'+x.numero+' — après la visite de '+esc(x.eleve)+'</option>';}).join('');};
+    var resume=v?'<div class="fait">✓ Visite du '+esc(v.date.split('-').reverse().join('/'))+(v.heureArrivee?' · '+esc(v.heureArrivee)+(v.heureDepart?'–'+esc(v.heureDepart):''):'')+
+      '<small>Départ : '+esc(libelleDepart(v.depart))+' · '+esc(v.transport)+' · '+(v.transport==='Visioconférence'?'visio':'<b>'+esc(v.km)+' km</b>'+(v.ecart?' <span class="ecart">(calculé : '+esc(v.kmCalcules)+' km)</span>':''))+'</small></div>':'';
+    return '<div class="visite">'+resume+'<button type="button" class="'+(v?'leger ':'')+'ouvrirVisite">'+(v?'Modifier la visite':'J’y suis allé')+'</button>'+
+      '<div class="formVisite" hidden><div class="trois"><div><label>Date</label><input type="date" class="vDate" value="'+esc(v?v.date:aujourdhui())+'"></div>'+
+      '<div><label>Arrivée</label><input type="time" class="vArr" value="'+esc(v?v.heureArrivee:'')+'"></div><div><label>Départ</label><input type="time" class="vDep" value="'+esc(v?v.heureDepart:'')+'"></div></div>'+
+      '<label>Moyen de transport</label><select class="vTransport">'+TRANSPORTS.map(function(t){return '<option'+((v?v.transport:l.transport||'Véhicule personnel')===t?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select>'+
+      '<div class="zoneKm"><label>Je suis parti de</label><select class="vDepart">'+opts(v?v.depart:'')+'</select>'+
+      '<div class="zoneDomicile" hidden><label>Adresse de mon domicile (gardée sur cet appareil uniquement)</label><input class="vDomicile" autocomplete="street-address" value="'+esc(domicile())+'"></div>'+
+      '<label>Kilomètres (laisser vide : calcul automatique)</label><input class="vKm" inputmode="decimal" value="'+esc(v&&v.ecart?v.km:'')+'" placeholder="'+esc(v&&v.kmCalcules!=null?'calculé : '+v.kmCalcules+' km':'calcul automatique')+'">'+
+      '<label>Motif si autre distance (facultatif)</label><input class="vMotif" value="'+esc(v?v.motif:'')+'" placeholder="déviation, travaux…"></div>'+
+      '<button type="button" class="enregistrerVisite"><span class="spin"></span><span class="txt">Enregistrer la visite</span></button> '+
+      (v?'<button type="button" class="leger retirerVisite"><span class="spin"></span><span class="txt">Je n’y suis pas allé</span></button>':'')+'</div></div>';
+  }
+  function brancherVisite(box,id){
+    var f=box.querySelector('.formVisite'),m=box.querySelector('.message'),q=function(c){return box.querySelector(c);};
+    var maj=function(){var visio=q('.vTransport').value==='Visioconférence';q('.zoneKm').hidden=visio;q('.zoneDomicile').hidden=visio||q('.vDepart').value!=='D';};
+    q('.ouvrirVisite').onclick=function(){f.hidden=!f.hidden;maj();};
+    q('.vTransport').onchange=maj;q('.vDepart').onchange=maj;
+    function appelVisite(b,nom,args,ok){m.textContent='';m.className='message';occupe(b,true,nom==='EUC_DEV653_retirerVisite'?'Retrait…':'Calcul et enregistrement…');
+      appel(nom,[args],function(g2){occupe(b,false);dessiner(g2);var nb=document.querySelector('.eleve[data-id="'+id+'"] .message');if(nb){nb.className='message ok';nb.textContent=ok;}},
+        function(e){occupe(b,false);m.className='message erreur';m.textContent=erreurTexte(e);});}
+    q('.enregistrerVisite').onclick=function(){var dom=q('.vDomicile').value.trim();if(q('.vDepart').value==='D')retenirDomicile(dom);
+      appelVisite(this,'EUC_DEV653_enregistrerVisite',{t:JETON,eleveId:id,date:q('.vDate').value,heureArrivee:q('.vArr').value,heureDepart:q('.vDep').value,transport:q('.vTransport').value,depart:q('.vDepart').value,domicile:q('.vDepart').value==='D'?dom:'',km:q('.vKm').value,motif:q('.vMotif').value},'Visite enregistrée.');};
+    var r=q('.retirerVisite');if(r)r.onclick=function(){appelVisite(r,'EUC_DEV653_retirerVisite',{t:JETON,eleveId:id},'Visite retirée.');};
   }
   function dessiner(g){
     DONNEES=g;$('titre').textContent=[g.professeur,g.classe,g.periode,(g.debut&&g.fin?g.debut+' au '+g.fin:'')].filter(Boolean).join(' — ');
@@ -88,6 +130,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}
           function(e){occupe(b,false);m.className='message erreur';m.textContent=erreurTexte(e);});}
       var en=box.querySelector('.enregistrer');if(en)en.onclick=function(){envoyer(en,false);};
       var ef=box.querySelector('.effacer');if(ef)ef.onclick=function(){envoyer(ef,true);};
+      brancherVisite(box,id);
     });
   }
   $('bPdf').onclick=function(){var b=this;$('mPdf').textContent='';$('mPdf').className='message';occupe(b,true,'Préparation du PDF…');

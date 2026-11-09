@@ -66,6 +66,9 @@ function EUC_DEV652_groupe_(j) {
     var mk = j.annee + '|' + j.classeId + '|' + j.periodeId + '|' + (Number(x.eleveId) || 0);
     lignes.push(EUC_DEV652_ligne_(EUC_DEV440_missionLine_(x, tm[mk] ? tm[mk].mode : ''), conv[Number(x.eleveId) || 0]));
   });
+  /* DEV653 : visites effectuées (date, départ, km) et numéro d'ordre de la page 2. */
+  var visites = {}; try { if (typeof EUC_DEV653_lire_ === 'function') visites = EUC_DEV653_lire_(j); } catch (eV) { visites = {}; }
+  lignes.forEach(function(l, i) { l.numero = i + 1; l.visite = typeof EUC_DEV653_vue_ === 'function' ? EUC_DEV653_vue_(visites[l.eleveId]) : null; if (l.visite && l.visite.transport) l.transport = l.visite.transport; });
   return { professeur: j.prof, classe: EUC_DEV652_t_(dc.nom) || ('Classe ' + j.classeId), periode: EUC_DEV652_t_(dp.libelle || dp.nom), debut: EUC_DEV652_t_(dp.debutFr || dp.debut), fin: EUC_DEV652_t_(dp.finFr || dp.fin), lignes: lignes };
 }
 

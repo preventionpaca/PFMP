@@ -6,7 +6,9 @@
 - `EUC_DEV652_MesVisites.js` + `Mes_Visites_DEV652.html`, route `mes-visites-pfmp` : lien personnel signé (HMAC, secret DEV598 ; année, famille, classe, période, professeur). Le professeur voit ses élèves de la période ; « Je vais le voir ailleurs » écrit `Lieu_stage_*` de la convention active + `Lieu_stage_modifie_par` / `_le` + `Historique_admin_JSON` (LIEU_VISITE_PROFESSEUR / LIEU_VISITE_RETOUR_SIEGE). Effet immédiat (décision : pas de validation préalable, visible dans le suivi « modifié par … »).
 - « Télécharger ma page 2 » : récapitulatif des visites (même mise en page `EUC_DEV438_appendVisitRecap_`) avec les adresses à jour ; la page 1 n'est pas régénérée.
 - Lien ajouté sur la page 2 des ordres de mission générés et dans le courriel d'envoi (sans modifier les modèles de courriel enregistrés).
-- Lot 2 prévu : visites cochées, date, départ (D / EK / n° de la visite précédente = tournée), kilomètres calculés et modifiables, page 2 pré-remplie (procédure interne).
+- Lot 2 (DEV653, `EUC_DEV653_Tournee.js`) : « J'y suis allé » par élève → table `EUC_VISITES_PFMP` (date, départ D / EK / n° de la visite précédente, heures, transport, km calculés, km déclarés, motif). Km = itinéraire voiture Google (`Maps.newDirectionFinder`, cache 6 h) du départ vers le lieu de visite (lieu de stage sinon siège) ; EK = paramètre ADRESSE de la convention ; D = adresse du domicile gardée sur l'appareil du professeur (localStorage), envoyée pour le calcul seulement, jamais écrite. Km modifiables, écart affiché « calc. N » sur la page 2. Visio, bus, tram, train, à pied : 0 km. Retrait = ligne vidée (pas de suppression).
+- Page 2 de « Mes visites » pré-remplie (date, départ, heures, km, transport) + total des km déclarés. La page 2 des ordres de mission générés par l'administration reste vierge.
+- Non couvert, à décider : trajet retour (dernière visite → domicile/lycée), absent du formulaire papier.
 
 ## Mise à jour du 9 novembre 2026 — DEV651 : API RNE de l'INPI pour les entreprises non diffusibles
 
