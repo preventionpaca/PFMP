@@ -101,4 +101,8 @@ test('page « Mes visites », route, suivi', () => {
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /lieuPar: P\(a\.Lieu_stage_modifie_par\) \? 'modifié par '/);
   assert.match(read('apps-script/Suivi_Enseignants_DEV576.html'), /f\.lieuPar\?'<br><span/);
 });
+test('page Ordres de mission : lien « Mes visites » de chaque groupe', () => {
+  assert.match(read('apps-script/EUC_PFMP_DEV370_AdminTools.js'), /groups\.forEach\(function\(group\)\{if\(typeof EUC_DEV652_lienGroupe_==='function'\)group\.lienVisites=EUC_DEV652_lienGroupe_\(q,group\);\}\);\n  groups\.forEach\(function\(group\)\{group\.pdfToken=/);
+  assert.match(read('apps-script/Ordres_Mission_PFMP_V368.html'), /\(g\.lienVisites\?'<a class="badge" target="_blank" rel="noopener" href="'\+esc\(g\.lienVisites\)\+'"[^>]*>Mes visites ↗<\/a>':''\)/);
+});
 console.log(n + ' tests DEV652 réussis.');

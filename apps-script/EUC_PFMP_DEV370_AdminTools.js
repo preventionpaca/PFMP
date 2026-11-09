@@ -259,6 +259,8 @@ function EUC_DEV374_missions(q){
     });
   });
   var groups=Object.keys(g).map(function(k){return g[k]});
+  /* DEV652 : lien « Mes visites » du professeur, affiché dans la page Ordres de mission. */
+  groups.forEach(function(group){if(typeof EUC_DEV652_lienGroupe_==='function')group.lienVisites=EUC_DEV652_lienGroupe_(q,group);});
   groups.forEach(function(group){group.pdfToken=EUC_DEV440_cacheGroup_(group)});
   return {ok:true,groups:groups,metrics:{transportMs:transportMs,targetsMs:targetsMs,detailMs:detailMs,totalMs:new Date().getTime()-started}};
 }

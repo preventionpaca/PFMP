@@ -109,7 +109,7 @@ test('DEV603 : refus — contrôle des noms, téléphone, période inconnue, SIR
   const dep = x => () => k.EUC_DEV603_deposer(Object.assign({ jeton, periodeId: 100, siret: '73282932000074', responsable: resp, tuteurEstResponsable: true }, x));
   assert.throws(dep({ responsable: Object.assign({}, resp, { nom: 'Chef' }) }), /n’est pas un vrai nom/);
   assert.throws(dep({ responsable: Object.assign({}, resp, { civilite: '' }) }), /civilité/);
-  assert.throws(dep({ responsable: Object.assign({}, resp, { telephone: '0493' }) }), /10 chiffres/);
+  assert.throws(dep({ responsable: Object.assign({}, resp, { telephone: '0493' }) }), /Responsable de l’entreprise : numéro français \(06 12 34 56 78\)/);
   assert.throws(dep({ periodeId: 101 }), /période/);
   assert.throws(dep({ siret: '123' }), /14 chiffres/);
   const k2 = contexte(base(), { siret: { source: 'api_navigateur', url: 'u' } }), jeton2 = k2.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
@@ -216,8 +216,13 @@ test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger
   const t = base(), k = contexte(t), T = (v, p) => J(k.EUC_DEV603_telephone_(v, p));
   assert.deepStrictEqual(T('0610132014', 'FR'), { ok: true, format: '06 10 13 20 14' });
   assert.deepStrictEqual(T('+33 4.93.00.00.00', 'FR'), { ok: true, format: '04 93 00 00 00' });
-  assert.strictEqual(T('0610132014141104', 'FR').ok, false); assert.match(T('0610132014141104', 'FR').erreur, /10 chiffres/);
-  assert.strictEqual(T('+377 93 15 00 00', 'FR').ok, false);
+  assert.strictEqual(T('0610132014141104', 'FR').ok, false); assert.match(T('0610132014141104', 'FR').erreur, /numéro français \(06 12 34 56 78\), monégasque/);
+  /* DEV654 : entreprise française, contact monégasque ou étranger : accepté (les élèves inventaient un numéro français). */
+  assert.deepStrictEqual(T('+377 93 15 00 00', 'FR'), { ok: true, format: '+377 93 15 00 00' });
+  assert.deepStrictEqual(T('+377 6 12 34 56 78', 'FR'), { ok: true, format: '+377 6 12 34 56 78' });
+  assert.deepStrictEqual(T('93 15 00 00', 'FR'), { ok: true, format: '+377 93 15 00 00' });
+  assert.deepStrictEqual(T('+39 0184 123456', 'FR'), { ok: true, format: '+390184123456' });
+  assert.strictEqual(T('+33 6 12', 'FR').ok, false); assert.strictEqual(T('612345678', 'FR').ok, false); assert.strictEqual(T('12345', 'FR').ok, false);
   assert.deepStrictEqual(T('+377 93 15 00 00', 'MC'), { ok: true, format: '+377 93 15 00 00' });
   assert.deepStrictEqual(T('00377 612345678', 'MC'), { ok: true, format: '+377 6 12 34 56 78' });
   assert.deepStrictEqual(T('06 12 34 56 78', 'MC'), { ok: true, format: '06 12 34 56 78' });

@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 10 novembre 2026 — DEV654 : téléphone des contacts (formulaire en ligne), lien « Mes visites » dans Ordres de mission
+
+- Formulaire « Enregistrer ma PFMP » : le téléphone du responsable / tuteur d'une entreprise française n'acceptait qu'un numéro français ; les élèves inventaient un numéro pour un contact monégasque. Désormais accepté aussi : +377 (fixe 9XXXXXXX, mobile 6XXXXXXXX), 8 chiffres commençant par 9 (Monaco), international +XX (hors +33 mal formé). Même règle côté page (`tel`) et serveur (`EUC_DEV603_telephone_`). La page du QR code ne bloquait pas.
+- Page Ordres de mission : badge « Mes visites ↗ » par groupe (lien personnel du professeur).
+
 ## Mise à jour du 10 novembre 2026 — DEV652 : « Mes visites », lieu de visite ajusté par le professeur visiteur (lot 1)
 
 - Constat : le PP affecte, le professeur visiteur visite ; l'ordre de mission (page 1, signée par le Proviseur) est prévisionnel ; le lieu réel (chantier Mélec, pige d'un auto-entrepreneur dans un autre garage) n'est connu qu'à l'appel du tuteur, parfois deux jours avant.

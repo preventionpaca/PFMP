@@ -140,7 +140,9 @@ function EUC_DEV603_telephone_(v, pays) {
   pays = String(pays || 'FR').toUpperCase();
   if (pays === 'MC') return (/^\+33|^0/.test(d) ? fr() : mc()) || mc() || fr() || { ok: false, erreur: 'numéro monégasque (+377 93 15 00 00, +377 6 12 34 56 78) ou français (06 12 34 56 78) attendu.' };
   if (pays === 'AUTRE') return /^\+\d{8,15}$/.test(d) ? { ok: true, format: d } : { ok: false, erreur: 'numéro international attendu : + indicatif du pays puis le numéro (ex. +39 0184 123456).' };
-  return fr() || { ok: false, erreur: 'numéro français à 10 chiffres attendu (ex. 06 12 34 56 78 ou 04 93 00 00 00).' };
+  /* DEV654 : entreprise française mais contact monégasque (+377) ou étranger : accepté. */
+  return fr() || (/^\+377|^9\d{7}$/.test(d) ? mc() : null) || (/^\+\d{8,15}$/.test(d) && !/^\+33/.test(d) ? { ok: true, format: d } : null) ||
+    { ok: false, erreur: 'numéro français (06 12 34 56 78), monégasque (+377 93 15 00 00, +377 6 12 34 56 78) ou étranger (+39 0184 123456) attendu.' };
 }
 /* Courriel : format et fautes de frappe courantes (calcul pur). */
 function EUC_DEV603_courriel_(v) {
