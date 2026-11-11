@@ -7,6 +7,8 @@
 - Administration des conventions : case « PDF de la convention » (éditée le … / pas encore éditée), mention dans la recherche ; « Rééditer / imprimer le PDF » demande confirmation si déjà éditée.
 - Générateur, relance d'une classe : le PDF de la classe ne contient plus que les conventions pas encore éditées ; lien séparé « Rééditer toute la classe » (confirmation). Chaque élève déjà édité est signalé avec sa date.
 - Limite : une convention imprimée sans archivage Drive réussi (ou avant DEV525) apparaît « pas encore éditée ».
+- Correctif du 11/11 : version du modèle du suivi portée à dev.660 (le cache par version servait l'ancien calcul sans dates d'édition) ; pastille « 🖨 Éditée le … » / « Non éditée » sur chaque élève scolaire ; compteurs « Conventions éditées » et « Conventions non éditées » (noms au clic) ; lien « ← Administration PFMP » du bandeau lisible (fond blanc, texte vert).
+- L'administration des conventions ne liste que les dossiers enregistrés : la liste comparative éditées / non éditées est dans le suivi par classe.
 
 ## Mise à jour du 11 novembre 2026 — DEV659 : lieu de stage recopié du siège
 
