@@ -122,7 +122,7 @@ test('DEV660 : relance d’une classe : conventions déjà éditées hors du PDF
   assert.match(read('apps-script/EUC_SUIVI2_Enseignants.js'), /\(r\.editions \|\| \{\}\)\[e\.id\]/);
   const se = read('apps-script/Suivi_Enseignants_DEV576.html'); assert.match(se, /🖨 Éditée le/); assert.match(se, /Non éditée/); assert.match(se, /\['Conventions éditées',oui\.length/); assert.match(se, /\['Conventions non éditées',non\.length,non\]/);
   assert.match(se, /id="versAdmin"[^>]*color:#0b4f40;background:#fff/, 'lien de retour lisible sur le bandeau clair');
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.661'/, 'modèle du suivi recalculé (cache par version)');
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.6(6[1-9]|[7-9]\d)'/, 'modèle du suivi recalculé (cache par version)');
   const ad = read('apps-script/Admin_Conventions_PFMP.html'); assert.match(ad, /id="edition"/); assert.match(ad, /déjà été éditée le/);
   assert.match(read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs'), /editeeLe:EUC_IMPORT_dateExistanteISO_\(a\.Drive_pdf_date\)/);
   const g = read('apps-script/Convention_PFMP_Generateur.html'); assert.match(g, /id="batchPrintTout"/); assert.match(g, /pas encore éditée/);

@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV662 : lieu de stage recopié du siège masqué à l'affichage
+
+- DEV659 ne vidait le lieu recopié du siège qu'aux nouveaux dépôts : les dossiers déjà enregistrés (ex. S0014, 33 rue Barberis) gardaient l'alerte « Lieu du stage » dans le suivi.
+- `EUC_DEV649_lieuTexte_` (ordres de mission, Mes visites, carte, récapitulatif QR, familles) et `EUC_SUIVI2_lieu_` (suivi, dossiers et table d'attente) comparent le lieu au siège : identique → non affiché ; précision de numéro ou vrai autre lieu → affiché. Aucune donnée Grist modifiée.
+- Version du modèle du suivi : dev.662.
+
 ## Mise à jour du 11 novembre 2026 — DEV660 : conventions déjà éditées
 
 - Source : `Drive_pdf_date`, posé sur chaque convention à chaque PDF généré (archivage Drive automatique, DEV525). Aucun compteur : seule la date de la dernière édition est affichée.

@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.661'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.662'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -222,7 +222,7 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
     entreprise: officiel || saisi, nomSaisi: officiel && saisi && EUC_SUIVI2_norm_(officiel) !== EUC_SUIVI2_norm_(saisi) ? saisi : '',
     adresse: [P(a.Entreprise_adresse, f.Adresse), [P(a.Entreprise_code_postal, f.Code_postal), P(a.Entreprise_commune, f.Commune, f.Ville)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     /* DEV649 : lieu de stage distinct du siège (visites à cette adresse). */
-    lieu: [P(a.Lieu_stage_adresse), [P(a.Lieu_stage_code_postal), P(a.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    lieu: EUC_SUIVI2_lieu_(a.Lieu_stage_adresse, a.Lieu_stage_code_postal, a.Lieu_stage_commune, [P(a.Entreprise_adresse, f.Adresse), P(a.Entreprise_complement)].filter(Boolean).join(', '), P(a.Entreprise_commune, f.Commune, f.Ville)),
     lieuPar: P(a.Lieu_stage_modifie_par) ? 'modifié par ' + P(a.Lieu_stage_modifie_par) + (P(a.Lieu_stage_modifie_le) ? ' le ' + P(a.Lieu_stage_modifie_le).slice(0, 10).split('-').reverse().join('/') : '') : '',
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
@@ -230,6 +230,13 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
     debut: EUC_SUIVI2_date_(a.Date_debut), fin: EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin),
     enregistreLe: EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_saisie_entreprise || a.Date_creation)
   };
+}
+/* DEV662 : lieu de stage affiché ; vide s'il recopie le siège (dossiers enregistrés avant DEV659). */
+function EUC_SUIVI2_lieu_(adresse, cp, commune, siegeAdresse, siegeCommune) {
+  var P = EUC_SUIVI2_premier_, texte = [P(adresse), [P(cp), P(commune)].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  if (texte && typeof EUC_DEV659_comparerLieu_ === 'function' && P(siegeCommune)
+    && EUC_DEV659_comparerLieu_({ adresse: P(adresse), commune: P(commune) }, { adresse: P(siegeAdresse), commune: P(siegeCommune) }) === 'IDENTIQUE') return '';
+  return texte;
 }
 function EUC_SUIVI2_nomEntreprise_(f) { return EUC_SUIVI2_premier_(f && f.Raison_sociale, f && f.Raison_sociale_officielle, f && f.Nom, f && f.Nom_entreprise, f && f.Entreprise); }
 /* Réponse brute JotForm : premier champ dont le libellé correspond. */
@@ -265,7 +272,7 @@ function EUC_SUIVI2_ficheTampon_(j, siret) {
   var depot = EUC_SUIVI2_t_(j.Submission_ID), secours = /^SECOURS-/.test(depot);
   return { entreprise: P(j.Raison_sociale_officielle, j.Nom_commercial, j.Entreprise_saisie),
     adresse: P([EUC_SUIVI2_t_(j.Adresse_officielle), [EUC_SUIVI2_t_(j.CP_officiel), EUC_SUIVI2_t_(j.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', '), j.Adresse_entreprise),
-    lieu: [P(j.Lieu_stage_adresse), [P(j.Lieu_stage_code_postal), P(j.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    lieu: EUC_SUIVI2_lieu_(j.Lieu_stage_adresse, j.Lieu_stage_code_postal, j.Lieu_stage_commune, P(j.Adresse_officielle, j.Adresse_entreprise), P(j.Ville_officielle)),
     contact: { nom: n(c.responsable) || n(c.tuteur), tel: c.responsable.tel || c.tuteur.tel, mail: c.responsable.mail || c.tuteur.mail },
     tuteur: { nom: n(c.tuteur), tel: c.tuteur.tel, mail: c.tuteur.mail },
     numero: secours ? depot.replace(/^SECOURS-/, '') : '', siret: siret || '', enregistreLe: secours ? EUC_SUIVI2_date_(j.Date_import) : '' };

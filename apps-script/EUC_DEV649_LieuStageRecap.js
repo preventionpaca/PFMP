@@ -23,6 +23,9 @@ function EUC_DEV649_lieuSaisi_(d) {
 function EUC_DEV649_lieuTexte_(a) {
   a = a || {};
   var adr = EUC_DEV649_t_(a.Lieu_stage_adresse), ville = [EUC_DEV649_t_(a.Lieu_stage_code_postal), EUC_DEV649_t_(a.Lieu_stage_commune)].filter(Boolean).join(' ');
+  /* DEV662 : un lieu enregistré avant DEV659 qui recopie le siège n'est plus affiché (visites au siège). */
+  if (EUC_DEV649_t_(a.Entreprise_commune) && EUC_DEV659_comparerLieu_({ adresse: a.Lieu_stage_adresse, commune: a.Lieu_stage_commune },
+    { adresse: [EUC_DEV649_t_(a.Entreprise_adresse), EUC_DEV649_t_(a.Entreprise_complement)].filter(Boolean).join(', '), commune: a.Entreprise_commune }) === 'IDENTIQUE') return '';
   return [adr, ville].filter(Boolean).join(', ');
 }
 /* DEV659 : lieu saisi comparé au siège (calcul pur). Des élèves recopient le siège dans « lieu du stage » :

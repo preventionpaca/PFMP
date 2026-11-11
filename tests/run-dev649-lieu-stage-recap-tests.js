@@ -188,4 +188,17 @@ test('DEV659 : lieu de stage recopié du siège ignoré, numéro ajouté gardé 
   assert.match(qr, /lieu=EUC_DEV659_lieuRetenu_\(lieu,/); assert.equal((dec.match(/EUC_DEV659_lieuRetenu_\(/g) || []).length, 2, 'formulaire : SIRET et demande d’aide');
   ['apps-script/Declaration_Entreprise_DEV603.html', 'apps-script/PFMP_Acces_QR_V116.html'].forEach(f => { const h = read(f); assert.ok(/Tu travailles ailleurs qu’au siège/.test(h) && !/Le stage a lieu à une autre adresse/.test(h), f); });
 });
+test('DEV662 : lieu déjà enregistré qui recopie le siège masqué (suivi, ordres de mission, Mes visites, carte)', () => {
+  const a = { Entreprise_adresse: '33 RUE BARBERIS', Entreprise_code_postal: '06300', Entreprise_commune: 'NICE', Lieu_stage_adresse: '33 RUE BARBERIS, NICE, 06300', Lieu_stage_code_postal: '', Lieu_stage_commune: 'NICE' };
+  assert.equal(k.EUC_DEV649_lieuTexte_(a), '', 'cas INSERRA enregistré avant DEV659');
+  assert.equal(k.EUC_DEV649_lieuTexte_(Object.assign({}, a, { Lieu_stage_adresse: '12 AVENUE JEAN MEDECIN' })), '12 AVENUE JEAN MEDECIN, NICE', 'vrai autre lieu gardé');
+  assert.equal(k.EUC_DEV649_lieuTexte_(Object.assign({}, a, { Entreprise_adresse: 'RUE BARBERIS' })), '33 RUE BARBERIS, NICE, 06300, NICE', 'précision de numéro gardée');
+  const s = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isNaN, parseInt };
+  vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), s); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js'), s);
+  assert.equal(s.EUC_SUIVI2_lieu_('33 RUE BARBERIS, NICE, 06300', '', 'NICE', '33 RUE BARBERIS', 'NICE'), '');
+  assert.equal(s.EUC_SUIVI2_lieu_('29 Avenue Auguste Verola', '06200', 'Nice', '18 RUE DE LA PETITE SENSIVE', 'NANTES'), '29 Avenue Auguste Verola, 06200 Nice');
+  assert.equal(s.EUC_SUIVI2_lieu_('1 rue A', '', 'Nice', '', ''), '1 rue A, Nice', 'siège inconnu : lieu affiché');
+  const f = s.EUC_SUIVI2_ficheDossier_(a, {}); assert.equal(f.lieu, ''); assert.equal(f.adresse, '33 RUE BARBERIS, 06300 NICE');
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.662'/);
+});
 console.log(n + ' tests DEV649 réussis.');
