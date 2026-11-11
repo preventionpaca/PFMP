@@ -9,6 +9,11 @@
  *     sous le numéro déjà donné à l'élève, qui est prévenu par courriel ;
  *   - classer « sans suite » (doublon, abandon) : la ligne est marquée REJETEE, jamais supprimée.
  * Aucune donnée n'est effacée ; chaque écriture vise une seule ligne de la table d'attente.
+ *
+ * DEV666 : seules les soumissions qui demandent une action sont « à traiter » (demande d'aide, SIRET non vérifié,
+ * NIS manquant, établissement fermé, doublon). Un dépôt au SIRET vérifié alimente déjà le suivi (« Convention
+ * enregistrée ») : il est rangé dans « Déjà dans le suivi », sans rien à valider. Pour une entreprise à identifier,
+ * la base des entreprises (France et Monaco) et les dépôts déjà vérifiés sont cherchés par nom.
  */
 var EUC_DEV665_PAGE_ = 'soumissions-a-traiter-pfmp';
 var EUC_DEV665_CLOSES_ = ['VALIDEE', 'REJETEE', 'REFUSEE', 'ESSAI'];
@@ -46,16 +51,43 @@ function EUC_DEV665_vue_(r) {
     officiel: { nom: T(f.Raison_sociale_officielle), enseigne: T(f.Nom_commercial), adresse: T(f.Adresse_officielle), cp: T(f.CP_officiel), ville: T(f.Ville_officielle) },
     contact: { nom: T(f.Nom_responsable), tel: T(f.Telephone_entreprise), mail: T(f.Email_entreprise) }, tuteur: { nom: T(f.Nom_tuteur), tel: T(f.Telephone_tuteur), mail: T(f.Email_tuteur) },
     lieu: [T(f.Lieu_stage_adresse), [T(f.Lieu_stage_code_postal), T(f.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
-    alertes: T(f.Alertes), decision: T(f.Decision).toUpperCase()
+    alertes: T(f.Alertes), decision: T(f.Decision).toUpperCase(),
+    /* DEV666 : déjà compté « Convention enregistrée » dans le suivi : rien à faire au bureau. */
+    dansSuivi: EUC_DEV666_dansSuivi_(f), ferme: T(f.Niveau_controle).toUpperCase() === 'ORANGE'
   };
+}
+/* DEV666 : même règle que le suivi (EUC_SUIVI2_modele_) pour compter un dépôt comme convention enregistrée :
+ * SIRET vérifié de 14 chiffres, NIS de Monaco validé, décision VALIDEE ou ligne importée ; jamais une ligne ignorée. Calcul pur. */
+function EUC_DEV666_dansSuivi_(f) {
+  f = f || {}; var T = EUC_DEV665_t_, decision = T(f.Decision).toUpperCase(), statut = T(f.SIRET_statut).toUpperCase();
+  if (decision === 'IGNOREE') return false;
+  var siret = T(f.SIRET_normalise || f.SIRET_brut).replace(/\D/g, '').length === 14, nis = T(f.NIS_normalise || f.NIS);
+  var monacoNis = !!nis && (statut === 'NIS_MONACO' || T(f.NIS_statut).toUpperCase().indexOf('VALIDE') === 0);
+  var importee = f.Importer === true || Number(f.Importer) === 1 || /^(OUI|YES|TRUE|VRAI)$/i.test(T(f.Importer));
+  return monacoNis || (siret && (decision === 'VALIDEE' || statut === 'VERIFIE' || importee));
+}
+/* DEV666 : ce que le bureau doit faire (calcul pur) ; '' = rien (la soumission alimente déjà le suivi). */
+function EUC_DEV666_raison_(x) {
+  if (x.doublonDe) return 'Doublon : l’élève a déjà déposé ' + x.doublonDe + ' pour cette période — à classer sans suite';
+  if (!x.dansSuivi) return x.aide ? 'Demande d’aide : entreprise à identifier' : x.pays === 'MC' ? 'NIS de Monaco à saisir' : 'SIRET à vérifier';
+  if (x.ferme) return 'Établissement fermé selon l’INSEE : vérifier le SIRET';
+  return '';
 }
 /* Dépôts en attente (calcul pur) : formulaire en ligne seulement, les plus récents d'abord ; doublons repérés
  * (même élève, même période : seule la plus récente n'est pas marquée). */
 function EUC_DEV665_enAttente_(records) {
   var l = (records || []).filter(function(r) { var f = r.fields || {}; return /^SECOURS-/.test(EUC_DEV665_t_(f.Submission_ID)) && EUC_DEV665_CLOSES_.indexOf(EUC_DEV665_t_(f.Decision).toUpperCase()) < 0; })
     .map(EUC_DEV665_vue_).sort(function(a, b) { return b.id - a.id; });
-  var vus = {};
-  l.forEach(function(x) { var k = x.eleveId + '|' + x.periode; x.doublonDe = vus[k] || ''; if (!vus[k]) vus[k] = x.numero; });
+  var vus = {}, enregistre = {};
+  l.forEach(function(x) { var k = x.eleveId + '|' + x.periode; if (x.dansSuivi && !enregistre[k]) enregistre[k] = x.numero; });
+  l.forEach(function(x) {
+    var k = x.eleveId + '|' + x.periode;
+    /* Doublon du dépôt qui alimente déjà le suivi (le plus récent s'il y en a plusieurs) ; sinon, du dépôt le plus récent. */
+    var reference = enregistre[k] || vus[k] || '';
+    x.doublonDe = reference && reference !== x.numero ? reference : '';
+    if (!vus[k]) vus[k] = x.numero;
+    x.raison = EUC_DEV666_raison_(x); x.aTraiter = !!x.raison;
+  });
   return l;
 }
 
@@ -90,7 +122,54 @@ function EUC_DEV665_afficher(e) {
 }
 function EUC_DEV665_lister() {
   EUC_IMPORT_exigerAdminTexte_();
-  return { soumissions: EUC_DEV665_enAttente_(EUC_DEV665_lignes_()) };
+  var lignes = EUC_DEV665_lignes_(), l = EUC_DEV665_enAttente_(lignes), base = null;
+  /* DEV666 : entreprise à identifier : propositions tirées de la base des entreprises et des dépôts déjà vérifiés. */
+  l.forEach(function(x) {
+    if (!x.aTraiter || x.dansSuivi || x.doublonDe || !x.saisie.nom) return;
+    if (!base) { try { base = EUC_DEV666_connues_(EUC_IMPORT_lireRecords_(EUC_DEV646_table_()), lignes); } catch (e) { base = EUC_DEV666_connues_([], lignes); } }
+    x.suggestions = EUC_DEV666_chercher_(base, x.saisie.nom);
+  });
+  return { soumissions: l };
+}
+/* DEV666 : recherche par nom (calcul pur). Formes juridiques et petits mots ignorés ; un mot de 5 lettres ou plus
+ * est reconnu par ses 5 premières lettres (SACOME ↔ SACOM), un mot plus court entier (CONTI). */
+var EUC_DEV666_MOTS_VIDES_ = ['SAM', 'SARL', 'SAS', 'SASU', 'SA', 'EURL', 'SCI', 'SNC', 'SCS', 'STE', 'SOCIETE', 'STE', 'ETS', 'ETABLISSEMENTS', 'ENTREPRISE', 'GROUPE', 'THE', 'LES', 'DES', 'DE', 'DU', 'LA', 'LE', 'ET', 'MONACO', 'FRANCE'];
+function EUC_DEV666_mots_(v) {
+  return EUC_DEV665_t_(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim().split(' ')
+    .filter(function(m) { return m.length >= 3 && EUC_DEV666_MOTS_VIDES_.indexOf(m) < 0; });
+}
+function EUC_DEV666_racine_(m) { return m.length >= 5 ? m.slice(0, 5) : m; }
+/* Entreprises connues (calcul pur) : base des entreprises (SIRET ou NIS) puis dépôts vérifiés ; une entrée par identifiant. */
+function EUC_DEV666_connues_(entreprises, lignes) {
+  var T = EUC_DEV665_t_, vus = {}, l = [];
+  function ajouter(e) { var k = e.siret ? 'S' + e.siret : 'N' + EUC_DEV665_nis_(e.nis); if (!(e.siret || e.nis) || vus[k] || !e.nom) return; vus[k] = true; e.mots = EUC_DEV666_mots_(e.nom + ' ' + e.enseigne); l.push(e); }
+  (entreprises || []).forEach(function(r) {
+    var siret = T(r.SIRET || r.Siret).replace(/\D/g, ''), nis = T(r.NIS);
+    ajouter({ siret: siret.length === 14 ? siret : '', nis: siret.length === 14 ? '' : nis, nom: T(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: T(r.Enseigne),
+      adresse: T(r.Numero_voie || r.Adresse || r.Adresse_complete), cp: T(r.Code_postal), ville: T(r.Commune || r.Ville), source: 'base des entreprises' });
+  });
+  (lignes || []).forEach(function(r) {
+    var f = r.fields || {}; if (!EUC_DEV666_dansSuivi_(f)) return;
+    var siret = T(f.SIRET_normalise).replace(/\D/g, ''), nis = EUC_DEV665_nis_(f.NIS_normalise);
+    ajouter({ siret: siret.length === 14 ? siret : '', nis: siret.length === 14 ? '' : nis, nom: T(f.Raison_sociale_officielle), enseigne: T(f.Nom_commercial) !== T(f.Raison_sociale_officielle) ? T(f.Nom_commercial) : '',
+      adresse: T(f.Adresse_officielle), cp: T(f.CP_officiel), ville: T(f.Ville_officielle), source: 'dépôt ' + T(f.Submission_ID).replace(/^SECOURS-/, '') + ' (' + T(f.Eleve_match_libelle) + ')' });
+  });
+  return l;
+}
+function EUC_DEV666_chercher_(connues, nom) {
+  var q = EUC_DEV666_mots_(nom).map(EUC_DEV666_racine_); if (!q.length) return [];
+  return (connues || []).map(function(e) {
+    var r = e.mots.map(EUC_DEV666_racine_), score = q.filter(function(m) { return r.indexOf(m) >= 0; }).length;
+    return { e: e, score: score };
+  }).filter(function(x) { return x.score > 0; }).sort(function(a, b) { return b.score - a.score || a.e.nom.localeCompare(b.e.nom, 'fr'); }).slice(0, 6)
+    .map(function(x) { var e = x.e; return { siret: e.siret, nis: e.nis, nom: e.nom, enseigne: e.enseigne, adresse: e.adresse, cp: e.cp, ville: e.ville, source: e.source }; });
+}
+/* DEV666 : recherche manuelle dans toute la base (France et Monaco) et les dépôts vérifiés. */
+function EUC_DEV666_chercherBase(q) {
+  EUC_IMPORT_exigerAdminTexte_();
+  var nom = EUC_DEV665_t_(q && q.nom);
+  if (!EUC_DEV666_mots_(nom).length) throw new Error('Écrivez au moins un mot de 3 lettres du nom de l’entreprise.');
+  return { resultats: EUC_DEV666_chercher_(EUC_DEV666_connues_(EUC_IMPORT_lireRecords_(EUC_DEV646_table_()), EUC_DEV665_lignes_()), nom) };
 }
 
 /* France : SIRET corrigé par le bureau, vérifié côté serveur (base Grist ou annuaire officiel relu). */
@@ -117,7 +196,7 @@ function EUC_DEV665_verifierSiret(q) {
     Alertes: EUC_DEV665_trace_(f.Alertes, 'SIRET corrigé par le bureau : ' + siret + (actif ? '' : ' — établissement fermé selon l’INSEE'))
   };
   EUC_DEV665_patch_(r.id, champs);
-  return { ok: true, soumission: EUC_DEV665_vue_({ id: r.id, fields: Object.assign({}, f, champs) }), ferme: !actif };
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), ferme: !actif };
 }
 
 /* Monaco : NIS (ou numéro interne) saisi ou corrigé par le bureau, avec nom et adresse. */
@@ -137,7 +216,13 @@ function EUC_DEV665_enregistrerMonaco(q) {
     Niveau_controle: 'VERT', Decision: 'A_VALIDER', Alertes: EUC_DEV665_trace_(f.Alertes, 'NIS saisi par le bureau : ' + nis)
   };
   EUC_DEV665_patch_(r.id, champs);
-  return { ok: true, soumission: EUC_DEV665_vue_({ id: r.id, fields: Object.assign({}, f, champs) }) };
+  /* DEV666 : l'entreprise entre aussi dans la base (recherche par nom du QR code et des prochains dépôts). */
+  var base = EUC_DEV665_ajouterBaseMonaco_(Object.assign({}, f, champs));
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), baseMonaco: base };
+}
+/* DEV666 : vue d'un dépôt après correction (calcul pur) : identifié, il alimente le suivi et sort de la liste à traiter. */
+function EUC_DEV666_finir_(id, fields) {
+  var x = EUC_DEV665_vue_({ id: id, fields: fields }); x.doublonDe = ''; x.raison = EUC_DEV666_raison_(x); x.aTraiter = !!x.raison; return x;
 }
 
 /* Validation : même import que « Soumissions reçues » (conventions relues dans Grist, suivi publié), une seule ligne. */

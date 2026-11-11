@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV666 : n'afficher que les soumissions à traiter ; entreprise déjà connue proposée ; numéro ajouté au siège
+
+- **Seulement ce qui est à traiter** : un dépôt compte dans le suivi (« Convention enregistrée ») dès que son SIRET est vérifié ou son NIS validé. C'est la même règle que `EUC_SUIVI2_modele_`, reprise dans `EUC_DEV666_dansSuivi_`. Ces dépôts ne sont plus listés par défaut ; on les retrouve sous le filtre « Déjà dans le suivi (rien à faire) ». Restent à traiter : les demandes d'aide, un SIRET non vérifié, un NIS manquant, un établissement fermé, un doublon (y compris le doublon d'un dépôt déjà enregistré).
+- **Entreprise déjà connue** : pour une entreprise à identifier, la base des entreprises (France avec SIRET, Monaco avec NIS) et les dépôts déjà vérifiés sont cherchés par nom. Un clic reprend le SIRET (vérifié aussitôt) ou le NIS. Exemple : SACOME Conti ↔ SAM SACOM CONTI au SIRET français. Une recherche manuelle « Chercher dans la base des entreprises » s'ajoute.
+- **Monaco** : un NIS enregistré par le bureau ajoute aussi l'entreprise à la base. La soumission passe alors dans le suivi : plus rien à valider. « Valider : créer la convention » reste proposé seulement pour une soumission à traiter déjà identifiée (par exemple un établissement fermé).
+- **Adresse** : quand le lieu de stage est la même voie que le siège avec un numéro que le siège n'a pas (cas SARATHO, « 62 Avenue des Baume Hes » pour « AVENUE DES BAUMETTES »), le suivi affiche l'adresse du siège numérotée (« 62 AVENUE DES BAUMETTES, 06270 VILLENEUVE-LOUBET ») sans alerte « Lieu du stage ». Mes visites, les ordres de mission et la carte font de même. Le calcul a lieu à l'affichage, donc il s'applique aussi aux dépôts déjà enregistrés ; aucune donnée n'est réécrite. Version du modèle du suivi : dev.666.
+- Tests : 1246, avec 3 nouveaux tests DEV666 dans `run-dev665-soumissions-tests.js` et 1 dans `run-dev649-lieu-stage-recap-tests.js`. Le test de version du suivi accepte toute version ≥ dev.662.
+- Parcours métier réels : non exécutés (écritures d'élève ou de convention interdites sans autorisation).
+
 ## Mise à jour du 11 novembre 2026 — DEV665 : « Soumissions à traiter (bureau G205) »
 
 - Décision de l'utilisateur (11/11) : un panneau pour traiter toutes les soumissions du formulaire en ligne (France ou Monaco, vérifiées ou demandes d'aide), corriger à la main le SIRET ou le NIS, valider, écarter les doublons ; liens « Soumissions reçues » et « Entreprises de Monaco » déplacés dans le bloc Entreprises (paramétrage).

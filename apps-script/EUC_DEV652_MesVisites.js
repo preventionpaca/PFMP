@@ -52,8 +52,11 @@ function EUC_DEV652_conventions_(annee, periodeId) {
 function EUC_DEV652_ligne_(l, a) {
   l = l || {}; a = a || null;
   var lieu = a ? EUC_DEV649_lieuTexte_(a) : EUC_DEV652_t_(l.lieuStage), siege = EUC_DEV652_t_(l.siege);
+  /* DEV666 : numéro ajouté par l'élève à la voie du siège : adresse du siège numérotée, sans alerte. */
+  var precis = !!(a && lieu && typeof EUC_DEV666_siegeNumerote_ === 'function' && EUC_DEV652_t_(a.Entreprise_commune)
+    && EUC_DEV666_siegeNumerote_({ adresse: a.Lieu_stage_adresse, commune: a.Lieu_stage_commune }, { adresse: EUC_DEV652_t_(a.Entreprise_adresse), commune: a.Entreprise_commune }));
   return { eleveId: Number(l.eleveId) || 0, eleve: l.eleve, entreprise: l.entreprise, transport: l.transport, contactEntreprise: l.contactEntreprise, contactTuteur: l.contactTuteur,
-    siege: siege, lieuStage: lieu, adresse: lieu ? '⚠ LIEU DU STAGE : ' + lieu + (siege ? '\n(siège : ' + siege + ')' : '') : siege,
+    siege: siege, lieuStage: precis ? '' : lieu, adresse: precis ? lieu : lieu ? '⚠ LIEU DU STAGE : ' + lieu + (siege ? '\n(siège : ' + siege + ')' : '') : siege,
     lieu: a ? { adresse: EUC_DEV652_t_(a.Lieu_stage_adresse), codePostal: EUC_DEV652_t_(a.Lieu_stage_code_postal), commune: EUC_DEV652_t_(a.Lieu_stage_commune) } : { adresse: '', codePostal: '', commune: '' },
     modifiePar: a ? EUC_DEV652_t_(a.Lieu_stage_modifie_par) : '', modifieLe: a ? EUC_DEV652_t_(a.Lieu_stage_modifie_le) : '', convention: !!a };
 }

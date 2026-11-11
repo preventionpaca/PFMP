@@ -26,6 +26,9 @@ function EUC_DEV649_lieuTexte_(a) {
   /* DEV662 : un lieu enregistré avant DEV659 qui recopie le siège n'est plus affiché (visites au siège). */
   if (EUC_DEV649_t_(a.Entreprise_commune) && EUC_DEV659_comparerLieu_({ adresse: a.Lieu_stage_adresse, commune: a.Lieu_stage_commune },
     { adresse: [EUC_DEV649_t_(a.Entreprise_adresse), EUC_DEV649_t_(a.Entreprise_complement)].filter(Boolean).join(', '), commune: a.Entreprise_commune }) === 'IDENTIQUE') return '';
+  /* DEV666 : simple numéro ajouté à la voie du siège : adresse du siège numérotée (géocodage, ordres de mission). */
+  var numerote = EUC_DEV649_t_(a.Entreprise_commune) ? EUC_DEV666_siegeNumerote_({ adresse: a.Lieu_stage_adresse, commune: a.Lieu_stage_commune }, { adresse: EUC_DEV649_t_(a.Entreprise_adresse), commune: a.Entreprise_commune }) : '';
+  if (numerote) return [numerote, [EUC_DEV649_t_(a.Entreprise_code_postal), EUC_DEV649_t_(a.Entreprise_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   return [adr, ville].filter(Boolean).join(', ');
 }
 /* DEV659 : lieu saisi comparé au siège (calcul pur). Des élèves recopient le siège dans « lieu du stage » :
@@ -79,6 +82,18 @@ function EUC_DEV659_comparerLieu_(lieu, siege) {
   if (!nl.length) return 'IDENTIQUE';
   if (!ns.length) return 'PRECISION';
   return nl.every(function(n) { return ns.indexOf(n) >= 0; }) ? 'IDENTIQUE' : 'DIFFERENT';
+}
+/* DEV666 : même voie que le siège avec un numéro que le siège n'a pas (PRECISION) : l'adresse retenue est celle du
+ * siège (base ou SIRET), complétée du numéro saisi par l'élève (ex. « 62 AVENUE DES BAUMETTES »), sans alerte.
+ * Renvoie '' dans tous les autres cas (calcul pur). */
+function EUC_DEV666_siegeNumerote_(lieu, siege) {
+  lieu = lieu || {}; siege = siege || {};
+  if (EUC_DEV659_comparerLieu_(lieu, siege) !== 'PRECISION') return '';
+  var communes = [lieu.commune, siege.commune], s = EUC_DEV659_voies_(siege.adresse, communes)[0], num = '';
+  EUC_DEV659_voies_(lieu.adresse, communes).forEach(function(l) {
+    if (!num && l.numeros.length && EUC_DEV659_distance_(l.voie, s.voie) <= Math.floor(Math.max(l.voie.length, s.voie.length) / 4)) num = l.numeros[0];
+  });
+  return num ? num + ' ' + EUC_DEV649_t_(siege.adresse) : '';
 }
 /* Lieu à enregistrer : vidé s'il recopie le siège. */
 function EUC_DEV659_lieuRetenu_(lieu, siege) {

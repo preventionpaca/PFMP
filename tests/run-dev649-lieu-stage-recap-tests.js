@@ -192,13 +192,36 @@ test('DEV662 : lieu déjà enregistré qui recopie le siège masqué (suivi, ord
   const a = { Entreprise_adresse: '33 RUE BARBERIS', Entreprise_code_postal: '06300', Entreprise_commune: 'NICE', Lieu_stage_adresse: '33 RUE BARBERIS, NICE, 06300', Lieu_stage_code_postal: '', Lieu_stage_commune: 'NICE' };
   assert.equal(k.EUC_DEV649_lieuTexte_(a), '', 'cas INSERRA enregistré avant DEV659');
   assert.equal(k.EUC_DEV649_lieuTexte_(Object.assign({}, a, { Lieu_stage_adresse: '12 AVENUE JEAN MEDECIN' })), '12 AVENUE JEAN MEDECIN, NICE', 'vrai autre lieu gardé');
-  assert.equal(k.EUC_DEV649_lieuTexte_(Object.assign({}, a, { Entreprise_adresse: 'RUE BARBERIS' })), '33 RUE BARBERIS, NICE, 06300, NICE', 'précision de numéro gardée');
+  assert.equal(k.EUC_DEV649_lieuTexte_(Object.assign({}, a, { Entreprise_adresse: 'RUE BARBERIS' })), '33 RUE BARBERIS, 06300 NICE', 'précision de numéro gardée : adresse du siège numérotée (DEV666)');
   const s = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isNaN, parseInt };
   vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), s); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js'), s);
   assert.equal(s.EUC_SUIVI2_lieu_('33 RUE BARBERIS, NICE, 06300', '', 'NICE', '33 RUE BARBERIS', 'NICE'), '');
   assert.equal(s.EUC_SUIVI2_lieu_('29 Avenue Auguste Verola', '06200', 'Nice', '18 RUE DE LA PETITE SENSIVE', 'NANTES'), '29 Avenue Auguste Verola, 06200 Nice');
   assert.equal(s.EUC_SUIVI2_lieu_('1 rue A', '', 'Nice', '', ''), '1 rue A, Nice', 'siège inconnu : lieu affiché');
   const f = s.EUC_SUIVI2_ficheDossier_(a, {}); assert.equal(f.lieu, ''); assert.equal(f.adresse, '33 RUE BARBERIS, 06300 NICE');
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.662'/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.6(6[2-9]|[7-9]\d)'/);
+});
+test('DEV666 : numéro ajouté par l’élève à la voie du siège : adresse du siège numérotée, sans alerte (suivi, Mes visites)', () => {
+  const s = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isNaN, parseInt };
+  vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), s); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js'), s);
+  /* Cas SARATHO : siège « AVENUE DES BAUMETTES » sans numéro, lieu « 62 Avenue des Baume Hes » (faute de frappe). */
+  const lieu = { adresse: '62 Avenue des Baume Hes, 62 AVENUE DES BAUMET', commune: 'Villeneuve-loubet' }, siege = { adresse: 'AVENUE DES BAUMETTES', commune: 'VILLENEUVE-LOUBET' };
+  assert.equal(s.EUC_DEV666_siegeNumerote_(lieu, siege), '62 AVENUE DES BAUMETTES');
+  assert.equal(s.EUC_DEV666_siegeNumerote_({ adresse: '29 Avenue Auguste Verola', commune: 'Nice' }, { adresse: '18 RUE DE LA PETITE SENSIVE', commune: 'NANTES' }), '', 'vrai autre lieu (CAROFF) : rien');
+  assert.equal(s.EUC_SUIVI2_lieu_(lieu.adresse, '', lieu.commune, siege.adresse, siege.commune), '', 'plus d’alerte « Lieu du stage »');
+  assert.equal(s.EUC_SUIVI2_lieu_('29 Avenue Auguste Verola', '06200', 'Nice', '18 RUE DE LA PETITE SENSIVE', 'NANTES'), '29 Avenue Auguste Verola, 06200 Nice', 'alerte gardée pour un autre lieu');
+  const t = s.EUC_SUIVI2_ficheTampon_({ Submission_ID: 'SECOURS-PFMP-2026-S0016', Raison_sociale_officielle: 'BYMYCAR COTE D AZUR', Adresse_officielle: 'AVENUE DES BAUMETTES', CP_officiel: '06270', Ville_officielle: 'VILLENEUVE-LOUBET',
+    Lieu_stage_adresse: lieu.adresse, Lieu_stage_commune: lieu.commune }, '45100930200014');
+  assert.equal(t.lieu, ''); assert.equal(t.adresse, '62 AVENUE DES BAUMETTES, 06270 VILLENEUVE-LOUBET', 'dépôt affiché avec l’adresse du siège numérotée');
+  const d = s.EUC_SUIVI2_ficheDossier_({ Entreprise_adresse: 'AVENUE DES BAUMETTES', Entreprise_code_postal: '06270', Entreprise_commune: 'VILLENEUVE-LOUBET', Lieu_stage_adresse: lieu.adresse, Lieu_stage_commune: lieu.commune }, {});
+  assert.equal(d.lieu, ''); assert.equal(d.adresse, '62 AVENUE DES BAUMETTES, 06270 VILLENEUVE-LOUBET');
+  /* Mes visites : adresse numérotée, sans « ⚠ LIEU DU STAGE ». */
+  const v = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp }; vm.createContext(v);
+  vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), v); vm.runInContext(read('apps-script/EUC_DEV652_MesVisites.js'), v);
+  const a = { Entreprise_adresse: 'AVENUE DES BAUMETTES', Entreprise_code_postal: '06270', Entreprise_commune: 'VILLENEUVE-LOUBET', Lieu_stage_adresse: lieu.adresse, Lieu_stage_commune: lieu.commune };
+  const l = v.EUC_DEV652_ligne_({ eleveId: 1, siege: 'AVENUE DES BAUMETTES, 06270 VILLENEUVE-LOUBET' }, a);
+  assert.equal(l.adresse, '62 AVENUE DES BAUMETTES, 06270 VILLENEUVE-LOUBET'); assert.equal(l.lieuStage, '');
+  const autre = v.EUC_DEV652_ligne_({ eleveId: 1, siege: 'S' }, Object.assign({}, a, { Lieu_stage_adresse: '12 AVENUE JEAN MEDECIN', Lieu_stage_commune: 'VILLENEUVE-LOUBET' }));
+  assert.match(autre.adresse, /^⚠ LIEU DU STAGE : 12 AVENUE JEAN MEDECIN/);
 });
 console.log(n + ' tests DEV649 réussis.');

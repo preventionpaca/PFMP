@@ -158,4 +158,42 @@ test('Entreprises de Monaco : code postal 980xx écrit dans l’adresse reconnu 
   assert.equal(k.EUC_DEV646_monaco_({ Adresse_complete: '9800 route de Nice', Code_postal: '06000', Commune: 'NICE' }), false);
   assert.equal(k.EUC_DEV646_monaco_({ Adresse_complete: '1 rue X', Code_postal: '06000', Commune: 'NICE', Numero_voie: '98000' }), true, '980xx isolé');
 });
+test('DEV666 : à traiter seulement ce qui demande une action ; SIRET vérifié = déjà dans le suivi ; doublon d’un dépôt enregistré', () => {
+  const verif = (id, num, eleve, extra) => ligneJoan(id, num, Object.assign({ Eleve_match_id: eleve, Eleve_match_libelle: 'E' + eleve, Pays_officiel: 'FR', Entreprise_identifiant_type: '', NIS_normalise: '',
+    SIRET_normalise: '41384608000039', SIRET_statut: 'VERIFIE', Niveau_controle: 'VERT', Decision: 'A_VALIDER', Raison_sociale_officielle: 'NICE FESTIVITES' }, extra || {}));
+  const l = [verif(20, 'S0014', 20), verif(21, 'S0012', 21, { Niveau_controle: 'ORANGE', Decision: 'A_CONTROLER' }), ligneJoan(22, 'S0013', 22, {}),
+    verif(23, 'S0030', 7, { NIS_normalise: '7112B19343', SIRET_normalise: '', SIRET_statut: 'NIS_MONACO', Pays_officiel: 'MC', Entreprise_identifiant_type: 'NIS', Raison_sociale_officielle: 'TITAN' }), ligneJoan(24, 'S0017')];
+  l[2].fields.Eleve_match_id = 22;
+  const r = J(contexte(l).EUC_DEV665_lister().soumissions), par = num => r.find(x => x.numero === num);
+  assert.equal(par('S0014').aTraiter, false, 'SIRET vérifié : rien à faire'); assert.equal(par('S0014').dansSuivi, true);
+  assert.equal(par('S0012').aTraiter, true, 'établissement fermé'); assert.match(par('S0012').raison, /fermé/);
+  assert.equal(par('S0013').aTraiter, true); assert.match(par('S0013').raison, /Demande d’aide/);
+  assert.equal(par('S0030').aTraiter, false, 'NIS validé : dans le suivi');
+  assert.equal(par('S0017').doublonDe, 'S0030', 'demande plus ancienne = doublon du dépôt enregistré'); assert.match(par('S0017').raison, /Doublon/);
+  const k = contexte(l.map(x => J(x))); assert.equal(k.EUC_DEV666_dansSuivi_({ SIRET_normalise: '41384608000039', SIRET_statut: 'VERIFIE', Decision: 'IGNOREE' }), false, 'ligne ignorée jamais comptée');
+});
+
+test('DEV666 : entreprise déjà connue proposée (SACOME Conti ↔ SAM SACOM CONTI au SIRET français), recherche dans toute la base', () => {
+  const base = [{ id: 1, Raison_sociale: 'SAM SACOM CONTI', SIRET: '123 456 789 00012', Numero_voie: '1 AV ALBERT II', Code_postal: '98000', Commune: 'MONACO' },
+    { id: 2, Raison_sociale: 'TITAN ENGINEERING MONACO', NIS: '7112B19343', Commune: 'Monaco' }, { id: 3, Raison_sociale: 'GARAGE DU PORT', SIRET: '11111111100011' }];
+  const aide = ligneJoan(30, 'S0013', { Eleve_match_id: 30, Entreprise_saisie: 'SACOME Conti', NIS_normalise: '' });
+  const depot = ligneJoan(31, 'S0040', { Eleve_match_id: 31, Eleve_match_libelle: 'Sandro M', Pays_officiel: 'FR', Entreprise_identifiant_type: '', NIS_normalise: '', SIRET_normalise: '99999999900099', SIRET_statut: 'VERIFIE', Niveau_controle: 'VERT', Decision: 'A_VALIDER', Raison_sociale_officielle: 'CONTI ESPRESSO' });
+  const k = contexte([aide, depot], { base }), r = J(k.EUC_DEV665_lister().soumissions), x = r.find(s => s.numero === 'S0013');
+  assert.equal(x.suggestions[0].siret, '12345678900012', 'SIRET français de la base proposé en premier'); assert.equal(x.suggestions[0].nom, 'SAM SACOM CONTI');
+  assert.ok(x.suggestions.some(s => s.siret === '99999999900099' && /dépôt S0040/.test(s.source)), 'dépôt déjà vérifié proposé aussi');
+  assert.ok(!x.suggestions.some(s => s.nom === 'GARAGE DU PORT'));
+  assert.equal(r.find(s => s.numero === 'S0040').suggestions, undefined, 'rien proposé pour une soumission déjà dans le suivi');
+  assert.equal(J(k.EUC_DEV666_chercherBase({ nom: 'titan' })).resultats[0].nis, '7112B19343', 'Monaco aussi');
+  assert.throws(() => k.EUC_DEV666_chercherBase({ nom: 'sa' }), /3 lettres/);
+});
+
+test('DEV666 : NIS enregistré par le bureau : entreprise ajoutée à la base, soumission sortie de « à traiter »', () => {
+  const k = contexte([ligneJoan(11, 'PFMP-2026-S0018')]);
+  const r = J(k.EUC_DEV665_enregistrerMonaco({ id: 11, nis: '7112B19343', nom: 'TITAN ENGINEERING MONACO', adresse: '2 RUE DU GABIAN' }));
+  assert.equal(r.soumission.dansSuivi, true); assert.equal(r.soumission.aTraiter, false); assert.equal(r.baseMonaco, 'ajoutée à la base des entreprises');
+  assert.ok(k.__appels.some(a => a[0] === 'creerMonaco' && a[1].nis === '7112B19343'));
+  const h = read('apps-script/Soumissions_A_Traiter_DEV665.html');
+  assert.match(h, /FILTRE='atraiter'/, 'vue par défaut : à traiter'); assert.match(h, /appel\('EUC_DEV666_chercherBase',\{nom:q\},30000,/);
+  assert.match(h, /x\.aTraiter&&x\.pret&&!x\.doublonDe\?bouton\('valider'/, 'pas de validation à faire pour un dépôt déjà dans le suivi');
+});
 console.log(n + ' tests DEV665 réussis.');
