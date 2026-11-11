@@ -3,7 +3,7 @@ var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_CONVENTION_assurerTableAcces_(){
-  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V660';
+  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V526';
   try{if(cache.get(schemaKey)==='OK')return {cache:true};}catch(eCache){}
   var t=EUC_CONVENTION_ACCES_TABLE_,c=EUC_CONVENTION_colonne_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;});
   var cols=[

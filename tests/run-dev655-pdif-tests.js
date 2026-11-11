@@ -133,6 +133,7 @@ test('DEV660 : relance d’une classe : conventions déjà éditées hors du PDF
   const pdf = read('apps-script/EUC_CONVENTION_PFMP_PdfV95.gs');
   assert.match(pdf, /Drive_pdf_rang:ids\.length>1\?\(i\+1\)\+'\/'\+ids\.length:''/); assert.match(pdf, /function EUC_PDF_dossierDriveV660\(\)\{EUC_PDF_exigerAdmin_\(\)/);
   assert.match(read('apps-script/EUC_CONVENTION_PFMP_Service.gs'), /c\('Drive_pdf_rang','Rang dans le PDF archivé'\)/);
+  assert.ok(pdf.indexOf('EUC_PDF_assurerRangV661_();') > 0 && pdf.indexOf('EUC_PDF_assurerRangV661_();') < pdf.indexOf("EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records})"), 'colonne du rang assurée avant l’écriture');
   const ens = read('apps-script/EUC_SUIVI2_Enseignants.js');
   assert.match(ens, /if \(!admin\) \(vue\.classes \|\| \[\]\)\.forEach[\s\S]*p\.lignes\[k\]\[6\] = 0/, 'liens Drive retirés pour les enseignants');
   assert.ok(ens.indexOf('if (!admin) (vue.classes') < ens.lastIndexOf('t.donnees = JSON.stringify(vue)'), 'données écrites après le retrait');
