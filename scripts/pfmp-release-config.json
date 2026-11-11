@@ -30,6 +30,7 @@
     {"page": "saisies-conventions-pfmp", "scope": "admin", "expected": "Contrôle des saisies"},
     {"page": "conventions-generees-pfmp", "scope": "admin", "expected": "Conventions générées"},
     {"page": "entreprises-monaco-pfmp", "scope": "admin", "expected": "Entreprises de Monaco"},
+    {"page": "soumissions-a-traiter-pfmp", "scope": "admin", "expected": "Soumissions à traiter"},
     {"page": "acces-inpi-pfmp", "scope": "admin", "expected": "Accès INPI"},
     {"page": "mes-visites-pfmp", "scope": "admin", "expected": "Mes visites"},
     {"page": "apprentis-classes-pfmp", "scope": "admin", "expected": "Apprentis par classe entière"},

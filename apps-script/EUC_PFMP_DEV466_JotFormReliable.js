@@ -267,7 +267,9 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
   selected.forEach(function(row){
     var label=EUC_DEV466_safeLabel_(row);
     try{
-      if(!EUC_DEV466_verifiedSiret_(row))throw new Error('SIRET non vérifié.');
+      /* DEV665 : entreprise de Monaco validée par le bureau (NIS, nom, adresse) : convention créée avec son NIS, jamais un faux SIRET. */
+      var nisRow=typeof EUC_DEV665_nisPret_==='function'?EUC_DEV665_nisPret_(row):'';
+      if(!nisRow&&!EUC_DEV466_verifiedSiret_(row))throw new Error('SIRET non vérifié.');
       var studentId=Number(row.Eleve_match_id)||0,student=studentBy[studentId],genStudent=genBy[studentId];
       if(!studentId||!student||!genStudent)throw new Error('Élève rapproché introuvable dans EUC_ELEVES_PFMP.');
       var realClassId=EUC_DEV466_ref_(student.Classe),chosenClassId=Number(row.Classe_match_id)||0;
@@ -281,18 +283,24 @@ function EUC_DEV466_prepare_(selected,ctx,payload){
       var periodId=Number(periodRes.period&&periodRes.period.id)||0;
       if(!periodId)throw new Error('Identifiant de période officielle absent.');
       var period=periodMetaBy[periodId]||{id:periodId,libelle:EUC_DEV466_txt_(periodRes.period.Libelle_periode||periodRes.period.Code_periode||periodRes.period.Type),debut:periodRes.start,fin:periodRes.end};
-      var siret=EUC_DEV466_txt_(row.SIRET_normalise||row.SIRET_brut).replace(/\D/g,'');
-      if(siret.length!==14)throw new Error('SIRET invalide : 14 chiffres attendus.');
+      var siret=nisRow?'':EUC_DEV466_txt_(row.SIRET_normalise||row.SIRET_brut).replace(/\D/g,'');
+      if(!nisRow&&siret.length!==14)throw new Error('SIRET invalide : 14 chiffres attendus.');
       var key=EUC_DEV466_key_(studentId,realClassId,periodId,year);
       if(seen[key])throw new Error('Deux lignes sélectionnées visent le même élève, la même classe et la même période. Ne conservez qu’une ligne.');
       seen[key]=true;
       var existing=(byKey[key]||[])[0]||null,existingSiret=EUC_DEV466_txt_(existing&&existing.Entreprise_siret).replace(/\D/g,'');
-      if(existing&&EUC_DEV466_isSubmitted_(existing)&&existingSiret&&existingSiret!==siret){
+      var existingNis=EUC_DEV466_txt_(existing&&existing.Entreprise_nis).toUpperCase().replace(/[\s-]+/g,'');
+      if(nisRow&&existing&&EUC_DEV466_isSubmitted_(existing)&&(existingSiret||existingNis&&existingNis!==nisRow)){
+        throw new Error('Conflit : une convention existe déjà pour cette période avec une autre entreprise. Aucune donnée n’a été écrasée.');
+      }
+      if(!nisRow&&existing&&EUC_DEV466_isSubmitted_(existing)&&existingSiret&&existingSiret!==siret){
         throw new Error('Conflit QR/JotForm : une convention existe déjà avec un autre SIRET. Aucune donnée n’a été écrasée.');
       }
       var prepared=EUC_CONVENTION_preparerRecordAcces_(ctx,genStudent,classBy[realClassId],period,year,{lot:'MIGRATION_JOTFORM_DEV466'});
       var preparedFields=(prepared.record&&prepared.record.fields)||prepared.record||{};
-      var companyFields=typeof EUC_DEV528_companyFields_==='function'?EUC_DEV528_companyFields_(row,ctx,columns):EUC_DEV307_companyFields_(row,ctx,columns),specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
+      var companyFields=typeof EUC_DEV528_companyFields_==='function'?EUC_DEV528_companyFields_(row,ctx,columns):EUC_DEV307_companyFields_(row,ctx,columns);
+      if(nisRow)companyFields=Object.assign(companyFields,EUC_DEV307_filterFields_(EUC_DEV665_champsMonaco_(row),columns));
+      var specialFields=EUC_DEV503_specialFields_(periodRes,period),mode='CREATE',fields=null,accessId=0;
       if(existing&&EUC_DEV466_isSubmitted_(existing)){
         mode='EXISTING';fields={};accessId=Number(existing.id)||0;
         /* DEV648 : convention déjà importée avec le masque INSEE [NON-DIFFUSIBLE] : seuls ces champs

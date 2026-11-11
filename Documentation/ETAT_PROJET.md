@@ -1,11 +1,21 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV665 : « Soumissions à traiter (bureau G205) »
+
+- Décision de l'utilisateur (11/11) : un panneau pour traiter toutes les soumissions du formulaire en ligne (France ou Monaco, vérifiées ou demandes d'aide), corriger à la main le SIRET ou le NIS, valider, écarter les doublons ; liens « Soumissions reçues » et « Entreprises de Monaco » déplacés dans le bloc Entreprises (paramétrage).
+- Page `soumissions-a-traiter-pfmp` (`EUC_DEV665_DemandesAide.js`, `Soumissions_A_Traiter_DEV665.html`), lien dans le bloc Entreprises de l'administration.
+- France : SIRET corrigé → vérifié (base Grist ou annuaire officiel relu côté navigateur) → coordonnées officielles dans la ligne d'attente, statut VERIFIE.
+- Monaco : NIS contrôlé (4 chiffres, 1 lettre, 5 chiffres, ou EUC-MC-0001), nom, adresse ; recherche par nom dans la base Monaco ; colonnes NIS de la table d'attente créées au besoin.
+- Valider : `EUC_DEV466_importSelection` sur la seule ligne (même import que « 3. Valider la sélection »), étendu aux lignes NIS prêtes (`EUC_DEV665_nisPret_`, `EUC_DEV665_champsMonaco_` : Entreprise_nis, jamais de faux SIRET ; conflit si une autre entreprise est déjà enregistrée). Numéro du dépôt conservé et élève prévenu (`EUC_DEV603_apresValidation_`, existant). Entreprise de Monaco ajoutée à la base (`EUC_DEV646_creerMonaco`) si son NIS n'y est pas.
+- Sans suite : Decision REJETEE + motif dans Alertes ; aucune suppression.
+- « Entreprises de Monaco » reconnaît aussi un code postal 980xx écrit dans l'adresse (MES « 98000 MOACO »).
+- Correction d'un constat de DEV664 : `EUC_DEV330_markMonaco` existe dans le socle complet du paquet (commit de récupération `18addabe`), pas dans les sources suivies.
+
 ## Mise à jour du 11 novembre 2026 — DEV664 : plus de doublon de demande d'aide
 
 - Constat (Joan DUVAL, S0017 puis S0018) : la demande d'aide (« Mon SIRET ne fonctionne pas », Monaco, étranger) créait une nouvelle ligne et un nouveau numéro à chaque envoi, sans aucun contrôle ; seule la déclaration complète évitait les doublons.
 - Désormais, mêmes règles pour les deux parcours (`EUC_DEV603_conventionPeriode_`, `EUC_DEV603_enAttente_`) : convention déjà enregistrée pour la période → refus avec son numéro et renvoi au G205 ; dépôt encore en attente pour la période → mis à jour sous le même numéro, l'élève voit « Tu avais déjà envoyé… mise à jour, inutile de la renvoyer ».
 - Les doublons déjà présents (S0017/S0018) restent dans « Soumissions reçues » : rien n'est supprimé.
-- En attente de décision : écran « Demandes d'aide à traiter (G205) » ; constat : le cadre « Cas Monaco » de « Soumissions reçues » appelle `EUC_DEV330_markMonaco`, absente du projet.
 
 ## Mise à jour du 11 novembre 2026 — DEV663 : copie des dépôts pour l'équipe avec le tableau de la classe
 

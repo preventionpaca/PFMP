@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Soumissions à traiter — PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--alerte-fond:#fff4ed;--rouge:#b42318;--rouge-fond:#fde8e8;--jaune:#fff3b0}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1150px;margin:0 auto;padding:0 16px 40px}
+section,.carte{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+.carte.aide{border-left:5px solid var(--rouge)}.carte.pret{border-left:5px solid var(--vert)}.carte.doublon{border-left:5px solid #98a2b3;opacity:.92}
+h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:10px 0 4px;color:var(--vert)}
+ol{margin:6px 0 0;padding-left:20px}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 14px}
+.champs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px}
+label{display:block;font-weight:700;font-size:13px}
+input{width:100%;font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:7px}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:8px 12px;background:var(--vert);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{background:#eef0f2;color:#344054}
+.note{color:var(--gris);font-size:13px}
+.pastille{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--vert-clair);color:var(--vert);font-weight:700;font-size:12px;margin-right:4px}
+.pastille.rouge{background:var(--rouge-fond);color:var(--rouge)}.pastille.gris{background:#eef0f2;color:#475467}.pastille.jaune{background:var(--jaune);color:#713f12}
+.officiel{background:var(--vert-clair);border-radius:8px;padding:8px 10px;margin-top:6px}
+.message{font-weight:700}.message.erreur{color:var(--alerte)}.message.ok{color:var(--vert)}
+.onglets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.onglets button{background:#eef0f2;color:#344054}.onglets button[aria-pressed="true"]{background:var(--vert);color:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed var(--bord)}
+.choix button{display:block;width:100%;text-align:left;margin-top:4px;background:#f2f4f7;color:var(--texte);font-weight:400}
+.spin{display:none;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tour .7s linear infinite;vertical-align:-2px;margin-right:6px}
+.busy .spin{display:inline-block}
+@keyframes tour{to{transform:rotate(360deg)}}
+@media (max-width:600px){main{padding:0 10px 30px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Soumissions à traiter — bureau G205</h1>
+  <p>Toutes les déclarations du formulaire en ligne en attente : France ou Monaco, SIRET vérifié ou demande d’aide.</p>
+</header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Soumissions à traiter</nav>
+<main>
+  <section>
+    <h2>Procédure</h2>
+    <ol>
+      <li><b>Identifier l’entreprise</b> : France → corrigez le SIRET puis « Vérifier le SIRET » ; Monaco → saisissez le NIS (4 chiffres, 1 lettre, 5 chiffres, ex. 7112B19343, à vérifier sur monentreprise.gouv.mc), le nom et l’adresse, puis « Enregistrer l’entreprise de Monaco ».</li>
+      <li><b>Valider</b> : la convention est créée sous le numéro déjà donné à l’élève, qui est prévenu par courriel ; elle apparaît dans le suivi et l’administration des conventions.</li>
+      <li><b>Doublon ou abandon</b> : « Classer sans suite ». Rien n’est effacé.</li>
+    </ol>
+    <div class="onglets" role="group" aria-label="Filtre">
+      <button type="button" data-filtre="tout" aria-pressed="true">Toutes</button><button type="button" data-filtre="aide" aria-pressed="false">Demandes d’aide</button><button type="button" data-filtre="pret" aria-pressed="false">Prêtes à valider</button><button type="button" data-filtre="doublon" aria-pressed="false">Doublons</button>
+      <button type="button" id="actualiser" class="leger"><span class="spin"></span><span class="txt">Actualiser</span></button>
+    </div>
+    <p class="note"><span id="compte"></span> <span id="mListe" class="message" role="status" aria-live="polite"></span></p>
+  </section>
+  <div id="liste"><p class="note busy"><span class="spin"></span>Chargement…</p></div>
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);},LISTE=[],FILTRE='tout',MODE={};
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function dfr(v){var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'');}
+  /* Appel serveur avec délai maximal : le bouton retrouve toujours son état. */
+  function appel(nom,arg,delai,ok,ko){
+    var fini=false,timer=setTimeout(function(){if(fini)return;fini=true;ko(new Error('Pas de réponse après '+Math.round(delai/1000)+' s : actualisez la liste avant de réessayer.'));},delai);
+    google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(timer);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(timer);ko(e);})[nom](arg);
+  }
+  function occupe(b,on,texte){var t=b.querySelector('.txt');if(!b.dataset.libelle)b.dataset.libelle=t.textContent;b.disabled=on;b.classList.toggle('busy',on);t.textContent=on?texte:b.dataset.libelle;}
+  function msg(id,t,cls){var m=$('m'+id);if(m){m.textContent=t||'';m.className='message'+(cls?' '+cls:'');}}
+  function bouton(action,id,texte,cls){return '<button type="button" class="'+(cls||'')+'" data-action="'+action+'" data-id="'+id+'"><span class="spin"></span><span class="txt">'+texte+'</span></button>';}
+  function personne(x){return [x.nom,x.tel,x.mail].filter(Boolean).map(esc).join(' · ')||'—';}
+  function carte(x){
+    var mode=MODE[x.id]||(x.pays==='MC'?'MC':'FR'),o=x.officiel,s=x.saisie;
+    var badges=(x.aide?'<span class="pastille rouge">Demande d’aide</span>':'')+(x.pret?'<span class="pastille">Prête à valider</span>':'<span class="pastille jaune">Entreprise à identifier</span>')+(x.doublonDe?'<span class="pastille gris">Doublon de '+esc(x.doublonDe)+'</span>':'')+'<span class="pastille gris">'+(x.pays==='MC'?'Monaco':x.pays==='AUTRE'?'Étranger'+(x.paysNom?' ('+esc(x.paysNom)+')':''):'France')+'</span>';
+    var h='<div class="carte '+(x.doublonDe?'doublon':x.pret?'pret':x.aide?'aide':'')+'" id="c'+x.id+'">'+
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b style="font-size:16px">'+esc(x.eleve)+'</b> — '+esc(x.classe)+' — '+esc(x.periode)+(x.debut?' <span class="note">('+dfr(x.debut)+' → '+dfr(x.fin)+')</span>':'')+'<br><span class="note">N° '+esc(x.numero)+(x.depose?' · déposé le '+dfr(x.depose):'')+(x.email?' · '+esc(x.email):'')+'</span></div><div>'+badges+'</div></div>'+
+      '<h3>Saisi par l’élève</h3><div class="grille"><div><b>'+esc(s.nom||'—')+'</b><br>'+esc([s.adresse,[s.cp,s.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'—')+'<br><span class="note">Numéro saisi : '+esc(x.numeroSaisi||'aucun')+'</span></div>'+
+      '<div><span class="note">Responsable :</span> '+personne(x.contact)+'<br><span class="note">Tuteur :</span> '+personne(x.tuteur)+(x.lieu?'<br><span class="note">Lieu du stage :</span> '+esc(x.lieu):'')+'</div></div>'+
+      (x.alertes?'<p class="note" style="margin:6px 0 0">'+esc(x.alertes)+'</p>':'')+
+      '<h3>Entreprise retenue</h3>'+(o.nom?'<div class="officiel"><b>'+esc(o.nom)+'</b>'+(o.enseigne&&o.enseigne!==o.nom?' — '+esc(o.enseigne):'')+'<br>'+esc([o.adresse,[o.cp,o.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+'<br><span class="note">'+(x.pays==='MC'?'NIS ':'SIRET ')+esc(x.numeroSaisi)+(x.pret?' — vérifié':' — pas encore vérifié')+'</span></div>':'<p class="note">Pas encore identifiée.</p>')+
+      '<div class="onglets" role="group" aria-label="Pays de l’entreprise"><button type="button" data-mode="FR" data-id="'+x.id+'" aria-pressed="'+(mode==='FR')+'">France (SIRET)</button><button type="button" data-mode="MC" data-id="'+x.id+'" aria-pressed="'+(mode==='MC')+'">Monaco (NIS)</button></div>';
+    if(mode==='FR')h+='<div class="champs"><div><label for="s'+x.id+'">SIRET (14 chiffres)</label><input id="s'+x.id+'" inputmode="numeric" autocomplete="off" value="'+esc(x.pays!=='MC'?String(x.numeroSaisi||'').replace(/\D/g,''):'')+'"></div><div style="align-self:end">'+bouton('siret',x.id,'Vérifier le SIRET','leger')+'</div></div>';
+    else h+='<div class="champs"><div><label for="n'+x.id+'">NIS *</label><input id="n'+x.id+'" autocomplete="off" placeholder="7112B19343" value="'+esc(x.pays==='MC'?x.numeroSaisi:'')+'"></div><div><label for="nom'+x.id+'">Nom *</label><input id="nom'+x.id+'" autocomplete="off" value="'+esc(o.nom||s.nom)+'"></div><div><label for="adr'+x.id+'">Adresse *</label><input id="adr'+x.id+'" autocomplete="off" value="'+esc(o.adresse||s.adresse)+'"></div><div><label for="cp'+x.id+'">Code postal</label><input id="cp'+x.id+'" autocomplete="off" value="'+esc(o.cp||s.cp||'98000')+'"></div><div><label for="v'+x.id+'">Ville</label><input id="v'+x.id+'" autocomplete="off" value="'+esc(o.ville||'Monaco')+'"></div></div>'+
+      '<p>'+bouton('monaco',x.id,'Enregistrer l’entreprise de Monaco','leger')+' '+bouton('chercher',x.id,'Chercher ce nom dans la base Monaco','gris')+'</p><div class="choix" id="choix'+x.id+'"></div>';
+    h+='<div class="actions">'+bouton('valider',x.id,'Valider : créer la convention')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
+    return h;
+  }
+  function dessiner(){
+    var l=LISTE.filter(function(x){return FILTRE==='tout'||(FILTRE==='aide'&&x.aide)||(FILTRE==='pret'&&x.pret)||(FILTRE==='doublon'&&x.doublonDe);});
+    $('compte').textContent=l.length+' soumission(s) affichée(s) sur '+LISTE.length+' en attente.';
+    $('liste').innerHTML=l.length?l.map(carte).join(''):'<section><p class="note">Aucune soumission en attente'+(FILTRE==='tout'?'':' pour ce filtre')+'.</p></section>';
+  }
+  function remplacer(x){LISTE=LISTE.map(function(y){return y.id===x.id?Object.assign({},x,{doublonDe:y.doublonDe}):y;});dessiner();}
+  function charger(){
+    var b=$('actualiser');occupe(b,true,'Chargement…');msg('Liste','');
+    appel('EUC_DEV665_lister',{},60000,function(r){occupe(b,false);LISTE=r.soumissions||[];dessiner();},function(e){occupe(b,false);$('liste').innerHTML='';msg('Liste',(e&&e.message)||'Lecture impossible.','erreur');});
+  }
+  $('actualiser').onclick=charger;
+  document.querySelectorAll('[data-filtre]').forEach(function(b){b.onclick=function(){FILTRE=b.dataset.filtre;document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});dessiner();};});
+  function verifierSiret(b,id,siret,reponseApi){
+    appel('EUC_DEV665_verifierSiret',{id:id,siret:siret,reponseApi:reponseApi||null},60000,function(r){
+      if(r.aVerifierNavigateur){
+        var ctl=typeof AbortController==='function'?new AbortController():null,minu=setTimeout(function(){if(ctl)ctl.abort();},8000);
+        fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){return x.json();}).then(function(json){clearTimeout(minu);verifierSiret(b,id,siret,json);})
+          .catch(function(){clearTimeout(minu);occupe(b,false);msg(id,'Le service de vérification ne répond pas. Réessayez dans un instant.','erreur');});
+        return;
+      }
+      occupe(b,false);remplacer(r.soumission);msg(id,r.ferme?'SIRET vérifié — attention : établissement fermé selon l’INSEE.':'SIRET vérifié : vous pouvez valider.',r.ferme?'erreur':'ok');
+    },function(e){occupe(b,false);msg(id,(e&&e.message)||'Vérification impossible.','erreur');});
+  }
+  $('liste').addEventListener('click',function(ev){
+    var b=ev.target.closest('button');if(!b)return;var id=Number(b.dataset.id),x=LISTE.filter(function(y){return y.id===id;})[0];if(!x)return;
+    if(b.dataset.mode){MODE[id]=b.dataset.mode;dessiner();return;}
+    var a=b.dataset.action;
+    if(a==='siret'){var s=$('s'+id).value.replace(/\D/g,'');if(s.length!==14){msg(id,'Le SIRET doit avoir 14 chiffres.','erreur');return;}occupe(b,true,'Vérification…');msg(id,'');verifierSiret(b,id,s);}
+    if(a==='monaco'){occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV665_enregistrerMonaco',{id:id,nis:$('n'+id).value,nom:$('nom'+id).value,adresse:$('adr'+id).value,cp:$('cp'+id).value,ville:$('v'+id).value},60000,
+        function(r){occupe(b,false);remplacer(r.soumission);msg(id,'Entreprise de Monaco enregistrée : vous pouvez valider.','ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    if(a==='chercher'){occupe(b,true,'Recherche…');msg(id,'');
+      appel('EUC_DEV665_chercherMonaco',{nom:$('nom'+id).value},30000,function(r){occupe(b,false);var l=r.resultats||[];
+        $('choix'+id).innerHTML=l.length?l.map(function(f,i){return '<button type="button" data-choix="'+i+'">'+esc(f.nom)+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc(f.adresse)+' '+esc(f.ville)+' · <b>'+esc(f.nis)+'</b></button>';}).join(''):'<p class="note">Aucune entreprise de Monaco de ce nom dans la base : saisissez le NIS.</p>';
+        $('choix'+id).querySelectorAll('[data-choix]').forEach(function(c){c.onclick=function(){var f=l[Number(c.dataset.choix)];$('n'+id).value=f.nis;$('nom'+id).value=f.nom;$('adr'+id).value=f.adresse;$('v'+id).value=f.ville||'Monaco';msg(id,'Coordonnées reprises de la base : cliquez « Enregistrer l’entreprise de Monaco ».','ok');};});
+      },function(e){occupe(b,false);msg(id,(e&&e.message)||'Recherche impossible.','erreur');});}
+    if(a==='valider'){
+      if(!x.pret){msg(id,x.pays==='MC'?'Enregistrez d’abord l’entreprise de Monaco (NIS, nom, adresse).':'Vérifiez d’abord le SIRET.','erreur');return;}
+      if(!confirm('Créer la convention de '+x.eleve+' ('+x.classe+', '+x.periode+') avec '+x.officiel.nom+' ?\n\nNuméro : '+x.numero+'\nL’élève sera prévenu par courriel.'))return;
+      occupe(b,true,'Création de la convention…');msg(id,'Création en cours : jusqu’à 2 minutes.');
+      appel('EUC_DEV665_valider',{id:id},300000,function(r){occupe(b,false);LISTE=LISTE.filter(function(y){return y.id!==id;});dessiner();
+        msg('Liste','Convention '+r.numero+' de '+r.eleve+' : '+(r.creees?'créée':r.completees?'complétée':'déjà existante')+(r.baseMonaco?' ; entreprise '+r.baseMonaco:'')+(r.avertissements?' (le suivi peut mettre quelques minutes à l’afficher)':'')+'.','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Validation impossible.','erreur');});}
+    if(a==='sansSuite'){
+      var motif=prompt('Classer sans suite la soumission '+x.numero+' de '+x.eleve+' ?\nMotif :',x.doublonDe?'doublon de '+x.doublonDe:'');if(motif===null)return;
+      occupe(b,true,'Classement…');msg(id,'');
+      appel('EUC_DEV665_sansSuite',{id:id,motif:motif},60000,function(){occupe(b,false);LISTE=LISTE.filter(function(y){return y.id!==id;});dessiner();msg('Liste','Soumission '+x.numero+' classée sans suite.','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Classement impossible.','erreur');});}
+  });
+  charger();
+})();
+</script>
+</body>
+</html>

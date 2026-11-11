@@ -74,12 +74,15 @@
       <div class="links">
         <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp">Book des entreprises<small>Filtres combinés et historique des accueils</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=contacts">Répertoire entreprises et contacts<small>Corriger les noms, rechercher et exporter pour Excel ou PDF</small></a>
+        <a class="link" target="_top" href="<?= adminBase ?>?page=soumissions-a-traiter-pfmp">Soumissions à traiter (bureau G205)<small>Déclarations et demandes d’aide du formulaire en ligne : corriger le SIRET ou le NIS (Monaco), valider, classer les doublons</small></a>
       </div>
       <div class="param">
         <h3>Paramétrage entreprises</h3>
         <div class="links">
           <a class="link" target="_top" href="<?= adminBase ?>?page=book-entreprises-pfmp&amp;outil=portees">Diffusion des actions entreprises<small>Visibilité administration, professeurs, élèves et familles</small></a>
           <a class="link" target="_top" href="<?= adminBase ?>?page=geocodage-pfmp-admin">Entreprises et cartographie<small>Géocodage France, validation manuelle Monaco / étranger</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=entreprises-monaco-pfmp">Entreprises de Monaco<small>Corriger l’adresse d’une entreprise monégasque, numéro interne pour une entreprise sans NIS connu</small></a>
+          <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Soumissions reçues (formulaire de secours et JotForm)<small>Ancien écran d’import : contrôle détaillé et import JotForm</small></a>
         </div>
       </div>
     </section>
@@ -185,7 +188,6 @@
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-prof-classes-pfmp">Synchroniser professeurs &amp; classes</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=diplomes-classes-pfmp">Diplômes par classe</a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=import-ypareo-pfmp">Importer les apprentis Yparéo<small>CSV, XLS ou XLSX — prévisualisation obligatoire</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=migration-jotform-pfmp">Soumissions reçues (formulaire de secours et JotForm)<small>Contrôler puis valider : la convention et son numéro sont créés</small></a>
         <a class="link" target="_blank" rel="noopener" href="<?= adminBase ?>?page=declaration-entreprise">Formulaire de secours « Déclarer mon entreprise »<small>Ouvrir le formulaire depuis l’administration</small></a>
         <a class="link" target="_blank" rel="noopener" href="__LIEN_ENREGISTRER__">Adresse Atrium du formulaire : __HOTE_ENREGISTRER__<small>Lien public, ouvert sans compte du lycée, à mettre dans Atrium</small></a>
       </div>
@@ -225,7 +227,6 @@
         </details>
         <a class="link" target="_top" href="<?= adminBase ?>?page=saisies-conventions-pfmp">Contrôle des saisies<small>Ce qui a vraiment été saisi par classe, et pourquoi une coordonnée ne s’affiche pas</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=conventions-generees-pfmp">Conventions générées<small>Par année, niveau, classe et période ; élèves sans convention générée</small></a>
-        <a class="link" target="_top" href="<?= adminBase ?>?page=entreprises-monaco-pfmp">Entreprises de Monaco<small>Numéro interne pour une entreprise sans NIS connu ; retrouvée par son nom depuis le QR code</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=acces-inpi-pfmp">Accès INPI<small>Entreprises non diffusibles : nom et adresse lus au registre de l’INPI ; identifiants et essai</small></a>
         <a class="link" target="_top" href="<?= adminBase ?>?page=controle-chiffres-pfmp">Vérifier les chiffres du suivi<small>Moteur, codes postaux, diagnostic de classe, mesures</small></a>
         <a class="link" target="_top" id="euc-snapshot-setting" href="<?= adminBase ?>?page=snapshot-pfmp-admin">Maintenance Snapshot PFMP<small>Synchroniser ou contrôler les snapshots</small></a>

@@ -18,7 +18,9 @@ function EUC_DEV646_table_() { return typeof EUC_V161F8_tableEntreprise_ === 'fu
 /* Entreprise de Monaco (même règle que le suivi) : pays, commune ou code postal 980xx de Monaco, ou NIS renseigné. Calcul pur. */
 function EUC_DEV646_monaco_(r) {
   var lieu = EUC_DEV646_n_([r.Pays, r.Commune, r.Ville].join(' '));
-  return /\bmonaco\b|\bmonte carlo\b/.test(lieu) || /^mc$/i.test(EUC_DEV646_t_(r.Pays)) || /^980\d\d$/.test(EUC_DEV646_t_(r.Code_postal)) || !!EUC_DEV646_t_(r.NIS);
+  /* DEV665 : code postal 980xx écrit dans l'adresse (ex. « 416 avenue Albert III 98000 MOACO ») : reconnue aussi, pour pouvoir la corriger. */
+  var adresse = EUC_DEV646_t_([r.Numero_voie, r.Adresse, r.Adresse_complete].join(' '));
+  return /\bmonaco\b|\bmonte carlo\b/.test(lieu) || /^mc$/i.test(EUC_DEV646_t_(r.Pays)) || /^980\d\d$/.test(EUC_DEV646_t_(r.Code_postal)) || /(^|\D)980\d\d(\D|$)/.test(adresse) || !!EUC_DEV646_t_(r.NIS);
 }
 function EUC_DEV646_fiche_(r) {
   return { id: Number(r.id) || 0, nis: EUC_DEV646_t_(r.NIS), interne: EUC_DEV646_interne_(r.NIS), nom: EUC_DEV646_t_(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: EUC_DEV646_t_(r.Enseigne),
