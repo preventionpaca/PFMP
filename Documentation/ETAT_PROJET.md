@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV664 : plus de doublon de demande d'aide
+
+- Constat (Joan DUVAL, S0017 puis S0018) : la demande d'aide (« Mon SIRET ne fonctionne pas », Monaco, étranger) créait une nouvelle ligne et un nouveau numéro à chaque envoi, sans aucun contrôle ; seule la déclaration complète évitait les doublons.
+- Désormais, mêmes règles pour les deux parcours (`EUC_DEV603_conventionPeriode_`, `EUC_DEV603_enAttente_`) : convention déjà enregistrée pour la période → refus avec son numéro et renvoi au G205 ; dépôt encore en attente pour la période → mis à jour sous le même numéro, l'élève voit « Tu avais déjà envoyé… mise à jour, inutile de la renvoyer ».
+- Les doublons déjà présents (S0017/S0018) restent dans « Soumissions reçues » : rien n'est supprimé.
+- En attente de décision : écran « Demandes d'aide à traiter (G205) » ; constat : le cadre « Cas Monaco » de « Soumissions reçues » appelle `EUC_DEV330_markMonaco`, absente du projet.
+
 ## Mise à jour du 11 novembre 2026 — DEV663 : copie des dépôts pour l'équipe avec le tableau de la classe
 
 - Décision de l'utilisateur (11/11) : à chaque dépôt, deux envois séparés : l'élève et ses parents d'un côté (accusé seul), l'équipe de l'autre (BFE, administration cochée « Dépôts et numéros de convention », professeur principal), avec le tableau à jour de la classe et de la période en PDF.

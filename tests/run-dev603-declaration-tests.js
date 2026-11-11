@@ -239,6 +239,7 @@ test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger
   assert.strictEqual(d.courriel, 'l…@ex.org');
   assert.deepStrictEqual(k.__mails.map(m => m.to), ['lea@ex.org', 'bureau@example.org']);
   assert.match(k.__mails[0].subject, /numéro d’enregistrement PFMP-2026-S0001/); assert.match(k.__mails[0].body, /recopie-le sur ta convention/); assert.match(k.__mails[1].subject, /^\[Dépôt\] PFMP-2026-S0001 — Léa DUPONT \(1MVA1\)/);
+  t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'VALIDEE'; /* DEV664 : un dépôt encore en attente serait mis à jour, pas doublé */
   const a = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Garage Rives', ville: 'Monaco', pays: 'MC', telephone: '+377 93 15 00 00', courriel: 'contact@rives.mc', message: 'Pas de SIRET' });
   assert.match(a.bureau, /G205/); assert.strictEqual(a.numero, 'PFMP-2026-S0002');
   const f = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields;
@@ -248,6 +249,22 @@ test('DEV605 : téléphone et courriel — France, Monaco (ou France), étranger
   assert.throws(() => k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: '', ville: '' }), /nom de l’entreprise/);
   const page = read('apps-script/Declaration_Entreprise_DEV603.html');
   for (const x of ['EUC_DEV603_signalerProbleme', 'Mon SIRET ne fonctionne pas', 'value="MC"', 'surveiller(', 'mailErr(']) assert.ok(page.includes(x), x);
+});
+
+test('DEV664 : pas de doublon : demande d’aide renvoyée → mise à jour sous le même numéro ; convention déjà enregistrée → refus', () => {
+  const t = base(), k = contexte(t), jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  const q = { jeton, periodeId: 100, entreprise: 'TITAN ENGINEERING MONACO', ville: 'Monaco', pays: 'MC', siret: '7112Y19343', telephone: '+377 99 92 60 50' };
+  const a = k.EUC_DEV603_signalerProbleme(q);
+  assert.strictEqual(a.remplace, false); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 1);
+  const b = k.EUC_DEV603_signalerProbleme(Object.assign({}, q, { siret: '7112B19343', adresse: '2 RUE DU GABIAN' }));
+  assert.strictEqual(b.numero, a.numero); assert.strictEqual(b.remplace, true);
+  assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 1, 'une seule ligne'); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Adresse_entreprise, '2 RUE DU GABIAN', 'dernière saisie gardée');
+  t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'REJETEE';
+  assert.strictEqual(k.EUC_DEV603_signalerProbleme(q).remplace, false, 'demande close : nouvelle demande'); assert.strictEqual(t.EUC_MIGRATION_JOTFORM_PFMP.length, 2);
+  (t.EUC_ACCES_FORMULAIRES_PFMP = t.EUC_ACCES_FORMULAIRES_PFMP || []).push({ id: 55, fields: { Eleve: 7, Periode: 100, Entreprise_nis: '7112B19343', Numero_enregistrement: 'PFMP-2026-S0018' } });
+  assert.throws(() => k.EUC_DEV603_signalerProbleme(q), /déjà enregistrée pour cette période \(PFMP-2026-S0018\)[^]*G205/);
+  const page = read('apps-script/Declaration_Entreprise_DEV603.html');
+  assert.ok(/r\.remplace\?'<p class="note"><b>Tu avais déjà envoyé une demande/.test(page) && /r\.remplace\?'<p class="note"><b>Tu avais déjà fait un dépôt/.test(page), 'message à l’élève dans les deux parcours');
 });
 
 test('DEV605 : copies selon « Destinataires & envois » — dépôts et validations des tuteurs par rubrique cochée, secours sinon ; page et accueil', () => {

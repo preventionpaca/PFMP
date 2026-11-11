@@ -172,6 +172,17 @@ function EUC_DEV603_numero_(annee) {
   var p = PropertiesService.getScriptProperties(), k = 'EUC_DEV603_COMPTEUR_' + annee, n = Number(p.getProperty(k) || 0) + 1;
   p.setProperty(k, String(n)); return 'PFMP-' + annee.slice(0, 4) + '-S' + String(n).padStart(4, '0');
 }
+/* DEV664 : numéro de la convention déjà enregistrée (SIRET ou NIS) pour l'élève et la période, sinon ''. */
+function EUC_DEV603_conventionPeriode_(eleveId, periodeId) {
+  var acces = EUC_ENT_grist('get', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ Eleve: [eleveId] }))).records || [];
+  var deja = acces.filter(function(r) { var f = r.fields || {}; return Number(f.Periode) === Number(periodeId) && f.Revoked !== true && EUC_DEV603_t_(f.Entreprise_siret || f.Entreprise_nis); })[0];
+  return deja ? EUC_CONVENTION_numeroEnregistrementV568_(Object.assign({ id: deja.id }, deja.fields)) : '';
+}
+/* DEV664 : dépôt du formulaire (déclaration ou demande d'aide) encore en attente pour l'élève et la période. */
+function EUC_DEV603_enAttente_(eleveId, periodeLibelle) {
+  var tampon = EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ Eleve_match_id: [eleveId] }))).records || [];
+  return tampon.filter(function(r) { var f = r.fields || {}; return /^SECOURS-/.test(EUC_DEV603_t_(f.Submission_ID)) && EUC_DEV603_t_(f.Periode_numero) === EUC_DEV603_t_(periodeLibelle) && ['VALIDEE', 'REJETEE', 'REFUSEE'].indexOf(EUC_DEV603_t_(f.Decision).toUpperCase()) < 0; })[0] || null;
+}
 function EUC_DEV603_deposer(q) {
   q = q || {};
   var j = EUC_DEV603_lireJeton_(q.jeton), m = EUC_SUIVI2_modele_(''), c = EUC_DEV603_classesModele_(m).filter(function(x) { return Number(x.id) === j.classeId; })[0];
@@ -208,11 +219,9 @@ function EUC_DEV603_deposer(q) {
   var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Beaucoup d’envois en même temps : réessayez dans un instant.');
   try {
     /* Une convention déjà enregistrée pour cette période n'est jamais doublée. */
-    var acces = EUC_ENT_grist('get', '/tables/' + EUC_CONVENTION_ACCES_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ Eleve: [j.eleveId] }))).records || [];
-    var deja = acces.filter(function(r) { var f = r.fields || {}; return Number(f.Periode) === Number(periode.id) && f.Revoked !== true && EUC_DEV603_t_(f.Entreprise_siret || f.Entreprise_nis); })[0];
-    if (deja) throw new Error('Une entreprise est déjà enregistrée pour cette période (' + EUC_CONVENTION_numeroEnregistrementV568_(Object.assign({ id: deja.id }, deja.fields)) + '). Contactez le bureau des entreprises pour la modifier.');
-    var tampon = EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/records?filter=' + encodeURIComponent(JSON.stringify({ Eleve_match_id: [j.eleveId] }))).records || [];
-    var enAttente = tampon.filter(function(r) { var f = r.fields || {}; return /^SECOURS-/.test(EUC_DEV603_t_(f.Submission_ID)) && EUC_DEV603_t_(f.Periode_numero) === EUC_DEV603_t_(periode.libelle) && ['VALIDEE', 'REJETEE', 'REFUSEE'].indexOf(EUC_DEV603_t_(f.Decision).toUpperCase()) < 0; })[0];
+    var deja = EUC_DEV603_conventionPeriode_(j.eleveId, periode.id);
+    if (deja) throw new Error('Une entreprise est déjà enregistrée pour cette période (' + deja + '). Contactez le bureau des entreprises pour la modifier.');
+    var enAttente = EUC_DEV603_enAttente_(j.eleveId, periode.libelle);
     var numero = enAttente ? EUC_DEV603_t_((enAttente.fields || {}).Submission_ID).replace(/^SECOURS-/, '') : EUC_DEV603_numero_(m.annee);
     var ligne = EUC_DEV603_ligne_(numero, m.annee, eleve, { id: Number(c.id), nom: c.nom }, periode, ent, resp, tut, emailEleve);
     if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, ent);
@@ -323,9 +332,16 @@ function EUC_DEV603_signalerProbleme(q) {
     emailEleve = EUC_DEV603_t_(q.emailEleve).toLowerCase() || EUC_DEV603_t_(ef.Email_eleve || ef.Courriel || ef.Email).toLowerCase();
   }
   var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Beaucoup d’envois en même temps : réessaie dans un instant.');
-  var numero;
+  var numero, enAttente = null;
   try {
-    numero = j.eleveId ? EUC_DEV603_numero_(m.annee) : 'ESSAI-' + Utilities.formatDate(new Date(), 'Europe/Paris', 'yyyyMMdd-HHmmss');
+    /* DEV664 : comme la déclaration complète, jamais de doublon : convention déjà enregistrée → refus ;
+     * demande déjà en attente pour la même période → mise à jour sous le même numéro. */
+    if (j.eleveId && periode.id) {
+      var dejaAcces = EUC_DEV603_conventionPeriode_(j.eleveId, periode.id);
+      if (dejaAcces) throw new Error('Une entreprise est déjà enregistrée pour cette période (' + dejaAcces + '). Passe au bureau G205 pour la modifier.');
+      enAttente = EUC_DEV603_enAttente_(j.eleveId, periode.libelle);
+    }
+    numero = enAttente ? EUC_DEV603_t_((enAttente.fields || {}).Submission_ID).replace(/^SECOURS-/, '') : j.eleveId ? EUC_DEV603_numero_(m.annee) : 'ESSAI-' + Utilities.formatDate(new Date(), 'Europe/Paris', 'yyyyMMdd-HHmmss');
     var vide = { civilite: '', prenom: '', nom: EUC_DEV603_t_(q.contact).slice(0, 120), fonction: '', telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel).toLowerCase() };
     var ligne = EUC_DEV603_ligne_(numero, m.annee, eleve, { id: Number(c.id), nom: c.nom }, periode, { siret: EUC_DEV603_t_(q.siret).replace(/\D/g, ''), raisonSociale: entreprise, enseigne: '', adresse: EUC_DEV603_t_(q.adresse).slice(0, 250), complement: '', codePostal: '', commune: ville, actif: true }, vide, vide, emailEleve);
     ligne.Submission_ID = j.eleveId ? 'SECOURS-' + numero : numero; ligne.SIRET_statut = 'A_CONTROLER'; ligne.SIRET_source = 'Non vérifié (' + ({ FR: 'France', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ')';
@@ -337,12 +353,13 @@ function EUC_DEV603_signalerProbleme(q) {
     if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, { lieu: lieuAide });
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
-    EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
+    if (enAttente) EUC_ENT_grist('patch', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ id: enAttente.id, fields: fields }] });
+    else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
   EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id,
     { ent: { siret: EUC_DEV603_t_(q.siret), raisonSociale: entreprise, adresse: EUC_DEV603_t_(q.adresse), commune: ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) },
       resp: { nom: EUC_DEV603_t_(q.contact) }, tut: {}, tuteurEstResponsable: true, periode: periode, fiche: typeof ef === 'undefined' ? {} : ef, message: message });
-  return { ok: true, numero: numero, bureau: EUC_DEV603_BUREAU_ };
+  return { ok: true, numero: numero, remplace: !!enAttente, bureau: EUC_DEV603_BUREAU_ };
 }
 
 /* ---------- DEV606 : code de secours imprimé sur la convention (QR illisible ou convention perdue) ---------- */
