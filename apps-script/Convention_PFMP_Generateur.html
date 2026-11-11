@@ -14,6 +14,7 @@
     <span>›</span><a href="__LIEN_ACCUEIL__" target="_top">Administration PFMP</a>
     <span>›</span><strong>Générer les conventions</strong>
   </nav>
+  <a id="dossierDrive" class="home-button" style="margin-left:auto" target="_blank" rel="noopener" hidden title="PDF archivés par année, niveau, classe et période">📁 Dossier Drive des conventions</a>
   <a id="homeButton" class="home-button" href="__LIEN_ACCUEIL__" target="_top">← Retour à l’accueil PFMP</a>
 </div>
 <p class="eyebrow">LYCÉE LES EUCALYPTUS</p><h1>Générer des conventions PFMP</h1>
@@ -100,6 +101,8 @@ document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>setMode(
 function messageErreur(e){return String(e&&e.message||e||'erreur inconnue')}
 /* DEV655 : choix de fin de Terminale déjà enregistrés (page « Fin de Terminale »), pour pré-remplir les listes. */
 let modesFTAnnee='';
+/* DEV660 : lien vers le dossier Drive des conventions archivées (affiché dès qu'il est connu). */
+google.script.run.withSuccessHandler(r=>{const d=$('#dossierDrive');if(r&&r.url){d.href=r.url;d.hidden=false}}).withFailureHandler(()=>{}).EUC_PDF_dossierDriveV660();
 function chargerModesFT(){const an=annee.value.trim();if(!/^20\d{2}-20\d{2}$/.test(an)||an===modesFTAnnee)return;modesFTAnnee=an;google.script.run.withSuccessHandler(r=>{if(annee.value.trim()!==an)return;modesFT=(r&&r.modes)||{};renderBatch();updateButton()}).withFailureHandler(()=>{modesFTAnnee=''}).EUC_DEV655_modesFinTerminale(an)}
 function finChargement(nom,valeur){if(nom==='meta')meta=valeur||{classes:[],periodes:[]};else if(nom==='eleves')eleves=valeur||[];else groupes=valeur||[];chargements[nom]=true;maybeReady()}
 function echecChargement(nom,label,e){erreursChargement.push(label+' : '+messageErreur(e));chargements[nom]=true;maybeReady()}

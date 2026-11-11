@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.660'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.661'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -203,6 +203,13 @@ function EUC_SUIVI2_edition_(liste) {
   if (!valables.length) return '';
   var dates = valables.map(function(x) { return EUC_SUIVI2_date_(x.Drive_pdf_date); }).filter(Boolean).sort();
   return dates.length ? dates[dates.length - 1] : '-';
+}
+/* DEV660 : PDF archivé de la convention valable (la plus récemment éditée, sinon la plus récente) :
+ * [identifiant, lien Drive, rang dans le PDF de classe]. Sert à réimprimer une convention perdue. */
+function EUC_SUIVI2_pdf_(liste) {
+  var v = (liste || []).filter(function(x) { var c = EUC_SUIVI2_statut_(x); return c !== 'ANNULEE' && c !== 'INTERROMPUE' && c !== 'SUPPRIMEE' && x.Revoked !== true; })
+    .sort(function(a, b) { return String(EUC_SUIVI2_date_(b.Drive_pdf_date)).localeCompare(String(EUC_SUIVI2_date_(a.Drive_pdf_date))) || Number(b.id) - Number(a.id); })[0];
+  return v ? [Number(v.id), EUC_SUIVI2_t_(v.Drive_pdf_url), EUC_SUIVI2_t_(v.Drive_pdf_rang)] : null;
 }
 function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   if (!a) return null;
@@ -542,7 +549,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     c.eleves.sort(function(a, b) { return a.libelle.localeCompare(b.libelle, 'fr'); });
     c.eleves.forEach(function(e) { e.apprentissage = EUC_SUIVI2_statutApprenti_(episodes[e.id], aujourdhui); });
     c.periodes.forEach(function(p) {
-      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {}, editions: {} };
+      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {}, editions: {}, pdfs: {} };
       c.eleves.forEach(function(e) {
         var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
         /* DEV581 — classe entière d'apprentis : on suit des contrats, pas des conventions.
@@ -567,14 +574,14 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           (m === EUC_SUIVI2_MODE_ENTREPRISE_ ? r.entreprise : m === EUC_SUIVI2_MODE_LYCEE_ ? r.lycee : r.aDefinir).push(e.id);
           r.statuts[e.id] = m === EUC_SUIVI2_MODE_ENTREPRISE_ ? 'PDIF_ENTREPRISE' : m === EUC_SUIVI2_MODE_LYCEE_ ? 'PDIF_LYCEE' : 'PDIF_A_DEFINIR';
           var dp = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
-          if (r.statuts[e.id] === 'PDIF_ENTREPRISE' && EUC_SUIVI2_edition_(dp)) r.editions[e.id] = EUC_SUIVI2_edition_(dp);
+          if (r.statuts[e.id] === 'PDIF_ENTREPRISE' && EUC_SUIVI2_edition_(dp)) { r.editions[e.id] = EUC_SUIVI2_edition_(dp); r.pdfs[e.id] = EUC_SUIVI2_pdf_(dp); }
           var fp = EUC_SUIVI2_ficheDossier_(dp.filter(function(x) { return EUC_SUIVI2_vautConvention_(x, entreprises); })[0] || dp[0], entreprises);
           if (fp && fp.entreprise) r.fiches[e.id] = fp;
           return;
         }
         if (apprenti) { r.apprentis.push(e.id); return; }
         var liste = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
-        if (EUC_SUIVI2_edition_(liste)) r.editions[e.id] = EUC_SUIVI2_edition_(liste);
+        if (EUC_SUIVI2_edition_(liste)) { r.editions[e.id] = EUC_SUIVI2_edition_(liste); r.pdfs[e.id] = EUC_SUIVI2_pdf_(liste); }
         /* Dossier retenu : un dossier actif qui vaut convention (le plus récent),
          * sinon le dossier actif le plus récent, sinon le plus récent. */
         var actifs = liste.filter(function(x) { var code = EUC_SUIVI2_statut_(x); return code !== 'ANNULEE' && code !== 'INTERROMPUE' && code !== 'SUPPRIMEE' && x.Revoked !== true; });

@@ -34,7 +34,7 @@ function EUC_SUIVI2_vueEnseignants_(m) {
         var r = p.resume || {}, lignes = {};
         c.eleves.forEach(function(e) {
           var su = (r.suivis || {})[e.id] || {}, mx = (r.mixtes || {})[e.id];
-          lignes[e.id] = [(r.statuts || {})[e.id] || 'SANS', fiche((r.fiches || {})[e.id]), su.tel || '', su.visite || '', mx ? [mx.debut || '', mx.fin || ''] : 0, (r.editions || {})[e.id] || ''];
+          lignes[e.id] = [(r.statuts || {})[e.id] || 'SANS', fiche((r.fiches || {})[e.id]), su.tel || '', su.visite || '', mx ? [mx.debut || '', mx.fin || ''] : 0, (r.editions || {})[e.id] || '', (r.pdfs || {})[e.id] || 0];
         });
         return {
           id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, pdif: !!p.pdif,
@@ -64,6 +64,9 @@ function EUC_SUIVI2_pageEnseignants_(e) {
   var courriel = '';
   try { courriel = String(Session.getActiveUser().getEmail() || ''); } catch (eMail) { courriel = ''; }
   if (courriel || EUC_SUIVI2_t_(p.admin) === '1') { try { admin = !!(typeof EUC_V156_contexteAdmin_ === 'function' && EUC_V156_contexteAdmin_()); } catch (eAdm) { admin = false; } }
+  /* DEV660 : liens Drive et réimpression des conventions réservés à l'administration. */
+  if (!admin) (vue.classes || []).forEach(function(c) { (c.periodes || []).forEach(function(p) { Object.keys(p.lignes || {}).forEach(function(k) { if (p.lignes[k][6]) p.lignes[k][6] = 0; }); }); });
+  t.donnees = JSON.stringify(vue).replace(/</g, '\\u003c').replace(new RegExp('\\u2028', 'g'), '\\u2028').replace(new RegExp('\\u2029', 'g'), '\\u2029');
   t.config = JSON.stringify({ base: base, wrapper: EUC_SUIVI2_t_(p.wrapper) === '1', admin: admin, depart: { c: Number(p.cl) || 0, p: Number(p.pe) || 0 } }).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('Suivi des PFMP')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')

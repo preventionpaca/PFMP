@@ -9,6 +9,7 @@
 - Limite : une convention imprimée sans archivage Drive réussi (ou avant DEV525) apparaît « pas encore éditée ».
 - Correctif du 11/11 : version du modèle du suivi portée à dev.660 (le cache par version servait l'ancien calcul sans dates d'édition) ; pastille « 🖨 Éditée le … » / « Non éditée » sur chaque élève scolaire ; compteurs « Conventions éditées » et « Conventions non éditées » (noms au clic) ; lien « ← Administration PFMP » du bandeau lisible (fond blanc, texte vert).
 - L'administration des conventions ne liste que les dossiers enregistrés : la liste comparative éditées / non éditées est dans le suivi par classe.
+- DEV661 (convention perdue) : dans le suivi, en administration seulement, lien « 📄 PDF Drive » (avec le rang « convention 3/24 du PDF de la classe », nouvelle colonne `Drive_pdf_rang` posée à l'archivage, schéma V660) et « 🖨 Réimprimer sa convention » (page d'impression de la seule convention, même numéro et même QR, confirmation si déjà éditée). Générateur : bouton « 📁 Dossier Drive des conventions » (`EUC_PDF_dossierDriveV660`). Modèle du suivi dev.661.
 
 ## Mise à jour du 11 novembre 2026 — DEV659 : lieu de stage recopié du siège
 

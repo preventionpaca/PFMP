@@ -122,9 +122,21 @@ test('DEV660 : relance d’une classe : conventions déjà éditées hors du PDF
   assert.match(read('apps-script/EUC_SUIVI2_Enseignants.js'), /\(r\.editions \|\| \{\}\)\[e\.id\]/);
   const se = read('apps-script/Suivi_Enseignants_DEV576.html'); assert.match(se, /🖨 Éditée le/); assert.match(se, /Non éditée/); assert.match(se, /\['Conventions éditées',oui\.length/); assert.match(se, /\['Conventions non éditées',non\.length,non\]/);
   assert.match(se, /id="versAdmin"[^>]*color:#0b4f40;background:#fff/, 'lien de retour lisible sur le bandeau clair');
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.660'/, 'modèle du suivi recalculé (cache par version)');
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.661'/, 'modèle du suivi recalculé (cache par version)');
   const ad = read('apps-script/Admin_Conventions_PFMP.html'); assert.match(ad, /id="edition"/); assert.match(ad, /déjà été éditée le/);
   assert.match(read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs'), /editeeLe:EUC_IMPORT_dateExistanteISO_\(a\.Drive_pdf_date\)/);
   const g = read('apps-script/Convention_PFMP_Generateur.html'); assert.match(g, /id="batchPrintTout"/); assert.match(g, /pas encore éditée/);
+  /* Réimpression d'une convention perdue : PDF Drive (rang dans le PDF de classe) et impression de la seule convention. */
+  assert.deepEqual(J(m.EUC_SUIVI2_pdf_([{ id: 4, Statut_administratif: 'CONVENTION_GENEREE', Drive_pdf_date: 1794300000, Drive_pdf_url: 'https://drive/f', Drive_pdf_rang: '3/24' }, { id: 9, Statut_administratif: 'ANNULEE_AVANT_DEMARRAGE', Drive_pdf_date: 1794400000 }])), [4, 'https://drive/f', '3/24']);
+  assert.deepEqual(J(m.EUC_SUIVI2_pdf_([{ id: 5, Statut_administratif: 'CONVENTION_GENEREE' }])), [5, '', ''], 'convention jamais éditée : impression possible');
+  assert.equal(m.EUC_SUIVI2_pdf_([]), null);
+  const pdf = read('apps-script/EUC_CONVENTION_PFMP_PdfV95.gs');
+  assert.match(pdf, /Drive_pdf_rang:ids\.length>1\?\(i\+1\)\+'\/'\+ids\.length:''/); assert.match(pdf, /function EUC_PDF_dossierDriveV660\(\)\{EUC_PDF_exigerAdmin_\(\)/);
+  assert.match(read('apps-script/EUC_CONVENTION_PFMP_Service.gs'), /c\('Drive_pdf_rang','Rang dans le PDF archivé'\)/);
+  const ens = read('apps-script/EUC_SUIVI2_Enseignants.js');
+  assert.match(ens, /if \(!admin\) \(vue\.classes \|\| \[\]\)\.forEach[\s\S]*p\.lignes\[k\]\[6\] = 0/, 'liens Drive retirés pour les enseignants');
+  assert.ok(ens.indexOf('if (!admin) (vue.classes') < ens.lastIndexOf('t.donnees = JSON.stringify(vue)'), 'données écrites après le retrait');
+  assert.match(se, /CFG\.admin&&l\[6\]&&l\[6\]\[0\]/); assert.match(se, /page=convention-pfmp-print&rid=/); assert.match(se, /a\.reimp\[data-date\]/);
+  assert.match(g, /id="dossierDrive"[^>]*hidden/); assert.match(g, /\.EUC_PDF_dossierDriveV660\(\)/);
 });
 console.log(n + ' tests DEV655 réussis.');

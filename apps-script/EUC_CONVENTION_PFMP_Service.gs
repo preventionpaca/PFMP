@@ -3,7 +3,7 @@ var EUC_CONVENTION_ACCES_TABLE_='EUC_ACCES_FORMULAIRES_PFMP';
 
 function EUC_CONVENTION_colonne_(id,label,type){return {id:id,fields:{label:label,type:type||'Text'}};}
 function EUC_CONVENTION_assurerTableAcces_(){
-  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V526';
+  var cache=CacheService.getScriptCache(),schemaKey='EUC_CONVENTION_SCHEMA_V660';
   try{if(cache.get(schemaKey)==='OK')return {cache:true};}catch(eCache){}
   var t=EUC_CONVENTION_ACCES_TABLE_,c=EUC_CONVENTION_colonne_,tables=EUC_ENT_grist('get','/tables').tables||[],exists=tables.some(function(x){return x.id===t;});
   var cols=[
@@ -12,7 +12,7 @@ function EUC_CONVENTION_assurerTableAcces_(){
     c('Type_sequence','Type de séquence'),c('Numero_sequence','Numéro de séquence','Int'),c('Convention_origine','Convention d’origine','Ref:EUC_ACCES_FORMULAIRES_PFMP'),c('Convention_remplacement','Convention de remplacement','Ref:EUC_ACCES_FORMULAIRES_PFMP'),
     c('PDIF_periode','Période PDIF','Ref:Planning_Periodes'),c('PDIF_mode','Parcours différencié'),c('Lot_generation','Lot de génération'),
     c('Statut','Statut'),c('Tentatives_echec','Tentatives échouées','Int'),c('Bloque_jusqua','Bloqué jusqu’à','DateTime'),c('Date_creation','Date création','DateTime'),c('Date_derniere_utilisation','Dernière utilisation','DateTime'),c('Auteur','Auteur'),c('Reference_convention','Référence convention'),c('Revoked','Révoqué','Bool'),
-    c('Drive_pdf_file_id','Identifiant PDF Drive'),c('Drive_pdf_url','URL PDF Drive'),c('Drive_pdf_nom','Nom PDF Drive'),c('Drive_pdf_date','Date archivage PDF','DateTime'),c('Drive_pdf_taille','Taille PDF','Int'),
+    c('Drive_pdf_file_id','Identifiant PDF Drive'),c('Drive_pdf_url','URL PDF Drive'),c('Drive_pdf_nom','Nom PDF Drive'),c('Drive_pdf_date','Date archivage PDF','DateTime'),c('Drive_pdf_taille','Taille PDF','Int'),c('Drive_pdf_rang','Rang dans le PDF archivé'),
     /* DEV649 : lieu de stage distinct du siège, entreprise non diffusible. */
     c('Lieu_stage_adresse','Lieu de stage — adresse'),c('Lieu_stage_code_postal','Lieu de stage — code postal'),c('Lieu_stage_commune','Lieu de stage — commune'),c('Entreprise_non_diffusible','Entreprise non diffusible','Bool')
   ];
