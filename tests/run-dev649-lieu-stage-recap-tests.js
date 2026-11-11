@@ -166,4 +166,26 @@ test('DEV656 : accusé de dépôt identique (QR et formulaire) : « Déclaration
   const src = read('apps-script/EUC_DEV649_LieuStageRecap.js') + read('apps-script/EUC_DEV603_Declaration.js');
   assert.ok(!/va la vérifier|confirmera la validation|quand elle sera validée/.test(src), 'plus d’annonce de validation par courriel');
 });
+test('DEV659 : lieu de stage recopié du siège ignoré, numéro ajouté gardé sans alerte, vrai autre lieu signalé', () => {
+  const C = (l, s) => k.EUC_DEV659_comparerLieu_(l, s);
+  const barberis = { adresse: '33 RUE BARBERIS', commune: 'NICE' };
+  assert.equal(C({ adresse: '33 RUE BARBERIS, NICE, 06300', cp: '', commune: 'NICE' }, barberis), 'IDENTIQUE', 'cas INSERRA');
+  assert.equal(C({ adresse: '33 rue Barbéris', cp: '06300', commune: 'Nice' }, { adresse: '33 RUE BARBERIS 06300 NICE', commune: 'NICE' }), 'IDENTIQUE');
+  assert.equal(C({ adresse: 'Rue Barberis', cp: '', commune: 'NICE' }, barberis), 'IDENTIQUE', 'sans numéro');
+  const baumettes = { adresse: 'AVENUE DES BAUMETTES', commune: 'VILLENEUVE-LOUBET' };
+  assert.equal(C({ adresse: '62 Avenue des Baume Hes, 62 AVENUE DES BAUMET', cp: '', commune: 'Villeneuve-loubet' }, baumettes), 'PRECISION', 'cas SARATHO');
+  assert.equal(C({ adresse: '45 RUE BARBERIS', cp: '', commune: 'NICE' }, barberis), 'DIFFERENT', 'autre numéro');
+  assert.equal(C({ adresse: '12 AVENUE JEAN MEDECIN', cp: '', commune: 'NICE' }, barberis), 'DIFFERENT', 'autre voie');
+  assert.equal(C({ adresse: '33 RUE BARBERIS', cp: '', commune: 'CANNES' }, barberis), 'DIFFERENT', 'autre ville');
+  assert.equal(C({ adresse: '1 RUE A', cp: '', commune: 'NICE' }, { adresse: '1 RUE B', commune: 'NICE' }), 'DIFFERENT', 'noms courts : aucune tolérance');
+  assert.equal(C({ adresse: '', cp: '', commune: '' }, barberis), 'VIDE');
+  assert.deepEqual(J(k.EUC_DEV659_lieuRetenu_({ adresse: '33 RUE BARBERIS', cp: '', commune: 'NICE' }, barberis)), { adresse: '', cp: '', commune: '' });
+  const r = k.EUC_DEV649_recap_({ numero: 'N', entreprise: { nom: 'X', adresse: 'AVENUE DES BAUMETTES' }, lieu: '62 AVENUE DES BAUMETTES, VILLENEUVE-LOUBET', lieuPrecision: true });
+  assert.ok(!/différent du siège/i.test(r.html) && !/DIFFÉRENT DU SIÈGE/.test(r.texte), 'pas d’alerte pour une simple précision');
+  assert.ok(/Adresse précise du stage/.test(r.html) && /Adresse précise du stage : 62/.test(r.texte));
+  assert.ok(/différent du siège/i.test(k.EUC_DEV649_recap_({ numero: 'N', lieu: '12 AVENUE JEAN MEDECIN, NICE' }).html), 'vrai autre lieu : alerte maintenue');
+  const qr = read('apps-script/EUC_CONVENTION_PFMP_QRPublicV85.gs'), dec = read('apps-script/EUC_DEV603_Declaration.js');
+  assert.match(qr, /lieu=EUC_DEV659_lieuRetenu_\(lieu,/); assert.equal((dec.match(/EUC_DEV659_lieuRetenu_\(/g) || []).length, 2, 'formulaire : SIRET et demande d’aide');
+  ['apps-script/Declaration_Entreprise_DEV603.html', 'apps-script/PFMP_Acces_QR_V116.html'].forEach(f => { const h = read(f); assert.ok(/Tu travailles ailleurs qu’au siège/.test(h) && !/Le stage a lieu à une autre adresse/.test(h), f); });
+});
 console.log(n + ' tests DEV649 réussis.');

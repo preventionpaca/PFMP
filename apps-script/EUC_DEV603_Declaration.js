@@ -194,6 +194,8 @@ function EUC_DEV603_deposer(q) {
     if (!ent.raisonSociale || !ent.adresse || !ent.commune) throw new Error('Entreprise non diffusible : indique son nom, son adresse et sa ville.');
   }
   ent.lieu = typeof EUC_DEV649_lieuSaisi_ === 'function' ? EUC_DEV649_lieuSaisi_(q.lieu) : { adresse: '', cp: '', commune: '' };
+  /* DEV659 : lieu identique au siège (recopié par l'élève) ignoré. */
+  if (typeof EUC_DEV659_lieuRetenu_ === 'function') ent.lieu = EUC_DEV659_lieuRetenu_(ent.lieu, { adresse: [ent.adresse, ent.complement].filter(Boolean).join(', '), commune: ent.commune });
   if (!ent.raisonSociale || !ent.commune) throw new Error('Données officielles de l’entreprise incomplètes : faites valider par le bureau des entreprises.');
   var resp = EUC_DEV603_personne_('Responsable de l’entreprise', q.responsable, true);
   var tut = q.tuteurEstResponsable === true ? resp : EUC_DEV603_personne_('Tuteur', q.tuteur, true);
@@ -310,6 +312,7 @@ function EUC_DEV603_signalerProbleme(q) {
   var entreprise = EUC_DEV603_t_(q.entreprise).slice(0, 200), ville = EUC_DEV603_t_(q.ville).slice(0, 120), message = EUC_DEV603_t_(q.message).slice(0, 1500);
   if (!entreprise || !ville) throw new Error('Indique au moins le nom de l’entreprise et sa ville.');
   var lieuAide = typeof EUC_DEV649_lieuSaisi_ === 'function' ? EUC_DEV649_lieuSaisi_(q.lieu) : { adresse: '', cp: '', commune: '' };
+  if (typeof EUC_DEV659_lieuRetenu_ === 'function') lieuAide = EUC_DEV659_lieuRetenu_(lieuAide, { adresse: EUC_DEV603_t_(q.adresse), commune: ville });
   var tel = EUC_DEV603_t_(q.telephone) ? EUC_DEV603_telephone_(q.telephone, pays) : { ok: true, format: '' };
   if (!tel.ok) throw new Error('Téléphone de l’entreprise : ' + tel.erreur);
   if (EUC_DEV603_t_(q.courriel) && !EUC_DEV603_courriel_(q.courriel).ok) throw new Error('Courriel de l’entreprise : ' + EUC_DEV603_courriel_(q.courriel).erreur);

@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV659 : lieu de stage recopié du siège
+
+- Constat (courriels [Dépôt] S0014, S0016) : aucun bug de saisie, le bloc « lieu du stage » est facultatif et vide ; des élèves y recopiaient le siège et le courriel annonçait toujours « lieu différent du siège ».
+- Comparaison lieu / siège côté serveur (`EUC_DEV659_comparerLieu_`, QR et formulaire en ligne, y compris la demande d'aide) : même voie et même ville → lieu ignoré, visites au siège ; même voie avec un numéro absent du siège → gardé comme « Adresse précise du stage », sans alerte ; autre voie, ville ou numéro → alerte inchangée. Majuscules, accents, type de voie, code postal et ville recopiés ignorés, faute de frappe légère tolérée.
+- Libellé des deux formulaires : « Tu travailles ailleurs qu’au siège (chantier, autre atelier…) ? Sinon, ne remplis rien. » Les déclarations déjà reçues ne sont pas modifiées.
+
 ## Mise à jour du 10 novembre 2026 — DEV658 : impression de la page « Import des apprentis Yparéo »
 
 - Bouton « Imprimer / PDF » (`window.print()` depuis la page : le Ctrl+P du navigateur n'imprime qu'une partie de l'iframe Apps Script). Style `@media print` dans `Import_Ypareo_DEV566.html` : boutons, choix de fichiers, lien de retour et bandeau LIVE/DRY_RUN masqués ; année scolaire en haut ; couples groupe Yparéo + classe jamais coupés ; en-tête du tableau répété à chaque page ; colonnes de largeur fixe pour que la colonne « Contrôle » reste visible. Aucune logique d'import modifiée. Rendu validé par l'utilisateur.

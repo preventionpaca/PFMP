@@ -523,6 +523,8 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     Date_derniere_utilisation:now
   };
   if(nonDiffusible)fields.Entreprise_non_diffusible=true;
+  /* DEV659 : lieu identique au siège (recopié par l'élève) ignoré. */
+  if(typeof EUC_DEV659_lieuRetenu_==='function')lieu=EUC_DEV659_lieuRetenu_(lieu,{adresse:[adresse,txt(d.entrepriseComplement,250)].filter(Boolean).join(', '),commune:commune});
   if(lieu.adresse||lieu.commune){fields.Lieu_stage_adresse=lieu.adresse;fields.Lieu_stage_code_postal=lieu.cp;fields.Lieu_stage_commune=lieu.commune;}
   if((nonDiffusible||lieu.adresse||lieu.commune)&&typeof EUC_DEV649_assurerColonnesAcces_==='function')EUC_DEV649_assurerColonnesAcces_();
 

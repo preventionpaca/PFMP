@@ -25,6 +25,62 @@ function EUC_DEV649_lieuTexte_(a) {
   var adr = EUC_DEV649_t_(a.Lieu_stage_adresse), ville = [EUC_DEV649_t_(a.Lieu_stage_code_postal), EUC_DEV649_t_(a.Lieu_stage_commune)].filter(Boolean).join(' ');
   return [adr, ville].filter(Boolean).join(', ');
 }
+/* DEV659 : lieu saisi comparé au siège (calcul pur). Des élèves recopient le siège dans « lieu du stage » :
+ * le courriel annonçait alors à tort « lieu différent du siège ».
+ *  - 'VIDE'       : rien de saisi ;
+ *  - 'IDENTIQUE'  : même voie, même ville, même numéro (ou aucun numéro saisi) → lieu ignoré, visites au siège ;
+ *  - 'PRECISION'  : même voie, même ville, mais un numéro que le siège n'a pas → gardé comme adresse précise, sans alerte ;
+ *  - 'DIFFERENT'  : autre voie, autre ville ou autre numéro → alerte « lieu différent du siège ».
+ * Majuscules, accents, ponctuation, type de voie (rue, avenue…), code postal et ville recopiés dans l'adresse sont
+ * ignorés ; une faute de frappe légère sur le nom de la voie est tolérée (une erreur pour quatre lettres). */
+var EUC_DEV659_MOTS_VOIE_ = ['RUE', 'R', 'AVENUE', 'AV', 'AVE', 'BOULEVARD', 'BD', 'BLVD', 'CHEMIN', 'CH', 'CHE', 'ROUTE', 'RTE', 'RT', 'PLACE', 'PL', 'ALLEE', 'ALL', 'IMPASSE', 'IMP', 'QUAI', 'COURS', 'CRS', 'MONTEE', 'TRAVERSE', 'TRAV', 'SQUARE', 'SQ', 'ESPLANADE', 'PROMENADE', 'PROM', 'CORNICHE', 'LOTISSEMENT', 'LOT', 'RESIDENCE', 'RES', 'VOIE', 'DE', 'DES', 'DU', 'LA', 'LE', 'LES', 'L', 'D', 'ET', 'AUX', 'AU'];
+function EUC_DEV659_norm_(v) { return EUC_DEV649_t_(v).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9,]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+function EUC_DEV659_ville_(v) { return EUC_DEV659_norm_(v).replace(/\bCEDEX\b.*$/, '').replace(/[^A-Z]/g, '').replace(/^ST(?=[A-Z])/, 'SAINT'); }
+/* Voies d'une adresse : pour chaque morceau entre virgules, { voie, numeros } ; la ville et le code postal sont retirés. */
+function EUC_DEV659_voies_(adresse, communes) {
+  var villes = (communes || []).map(EUC_DEV659_ville_).filter(Boolean);
+  return EUC_DEV659_norm_(adresse).split(',').map(function(m) {
+    m = m.trim().replace(/\s\d{5}(\s.*)?$/, '').replace(/^\d{5}(\s.*)?$/, '').trim();
+    if (!m || villes.indexOf(m.replace(/[^A-Z]/g, '').replace(/^ST(?=[A-Z])/, 'SAINT')) >= 0) return null;
+    var numeros = [], mots = [];
+    m.split(' ').forEach(function(x) {
+      if (/^\d{1,4}[A-Z]?$/.test(x)) numeros.push(x.replace(/[A-Z]$/, ''));
+      else if (/^(BIS|TER|B|T)$/.test(x) && numeros.length) return;
+      else if (EUC_DEV659_MOTS_VOIE_.indexOf(x) < 0) mots.push(x);
+    });
+    return mots.length ? { voie: mots.join(''), numeros: numeros } : null;
+  }).filter(Boolean);
+}
+function EUC_DEV659_distance_(a, b) {
+  var d = [], i, j;
+  for (i = 0; i <= a.length; i++) d[i] = [i];
+  for (j = 0; j <= b.length; j++) d[0][j] = j;
+  for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function EUC_DEV659_comparerLieu_(lieu, siege) {
+  lieu = lieu || {}; siege = siege || {};
+  if (!EUC_DEV649_t_(lieu.adresse) && !EUC_DEV649_t_(lieu.commune)) return 'VIDE';
+  var vl = EUC_DEV659_ville_(lieu.commune), vs = EUC_DEV659_ville_(siege.commune);
+  if (!vl || !vs || vl !== vs) return 'DIFFERENT';
+  var communes = [lieu.commune, siege.commune];
+  var sv = EUC_DEV659_voies_(siege.adresse, communes), lv = EUC_DEV659_voies_(lieu.adresse, communes);
+  if (!sv.length || !lv.length) return 'DIFFERENT';
+  var s = sv[0], meilleur = null;
+  lv.forEach(function(l) {
+    var dist = EUC_DEV659_distance_(l.voie, s.voie);
+    if (dist <= Math.floor(Math.max(l.voie.length, s.voie.length) / 4) && (!meilleur || dist < meilleur.dist)) meilleur = { dist: dist, numeros: l.numeros };
+  });
+  if (!meilleur) return 'DIFFERENT';
+  var nl = meilleur.numeros.filter(function(n, i, a) { return a.indexOf(n) === i; }), ns = s.numeros;
+  if (!nl.length) return 'IDENTIQUE';
+  if (!ns.length) return 'PRECISION';
+  return nl.every(function(n) { return ns.indexOf(n) >= 0; }) ? 'IDENTIQUE' : 'DIFFERENT';
+}
+/* Lieu à enregistrer : vidé s'il recopie le siège. */
+function EUC_DEV659_lieuRetenu_(lieu, siege) {
+  return EUC_DEV659_comparerLieu_(lieu, siege) === 'IDENTIQUE' ? { adresse: '', cp: '', commune: '' } : (lieu || { adresse: '', cp: '', commune: '' });
+}
 /* Adresse à visiter (calcul pur) : le lieu de stage s'il existe, sinon le siège. */
 function EUC_DEV649_adresseVisite_(lieu, siege) { return EUC_DEV649_t_(lieu) || EUC_DEV649_t_(siege); }
 
@@ -63,7 +119,7 @@ var EUC_DEV649_RAPPEL_SIGNATURES_ = 'Rappel : l’original papier de la conventi
 function EUC_DEV649_recap_(info) {
   info = info || {};
   var T = EUC_DEV649_t_, H = EUC_DEV649_html_, e = info.eleve || {}, p = info.periode || {}, ent = info.entreprise || {}, g = info.g205 || {};
-  var resp = EUC_DEV649_personne_(info.responsable), tut = info.tuteurEstResponsable ? resp : EUC_DEV649_personne_(info.tuteur), lieu = T(info.lieu);
+  var resp = EUC_DEV649_personne_(info.responsable), tut = info.tuteurEstResponsable ? resp : EUC_DEV649_personne_(info.tuteur), lieu = T(info.lieu), precis = !!info.lieuPrecision;
   var dates = [EUC_DEV649_dateFr_(p.debut), EUC_DEV649_dateFr_(p.fin)].filter(Boolean).join(' au ');
   var blocs = [
     ['Élève', [['Nom', [T(e.prenom), T(e.nom)].filter(Boolean).join(' ')], ['Date de naissance', EUC_DEV649_dateFr_(e.naissance)], ['Classe', e.classe], ['Adresse personnelle', e.adresse], ['Téléphone', e.telephone], ['Courriel', e.courriel]]],
@@ -81,12 +137,12 @@ function EUC_DEV649_recap_(info) {
   if (T(info.intro)) lignes.push(T(info.intro).replace(/ {2,}/g, ' '), '');
   lignes.push('Numéro d’enregistrement : ' + T(info.numero) + (T(info.source) ? ' (' + T(info.source) + ')' : ''), '');
   if (g205) lignes.push('!!! ' + g205, '');
-  if (lieu) lignes.push('!!! LIEU DU STAGE DIFFÉRENT DU SIÈGE — les visites se font à cette adresse : ' + lieu, '');
+  if (lieu && !precis) lignes.push('!!! LIEU DU STAGE DIFFÉRENT DU SIÈGE — les visites se font à cette adresse : ' + lieu, '');
   if (nd) { lignes.push('!!! ' + nd); if (inpi) lignes.push('Fiche INPI : ' + inpi); lignes.push(''); }
   blocs.forEach(function(b) {
     lignes.push('— ' + b[0] + ' —');
     b[1].forEach(function(l) { if (T(l[1])) lignes.push(l[0] + ' : ' + T(l[1])); });
-    if (b[0].indexOf('Entreprise') === 0 && lieu) lignes.push('LIEU DU STAGE : ' + lieu);
+    if (b[0].indexOf('Entreprise') === 0 && lieu) lignes.push((precis ? 'Adresse précise du stage : ' : 'LIEU DU STAGE : ') + lieu);
     lignes.push('');
   });
   if ((info.pp || []).length) lignes.push('Professeur principal : ' + info.pp.join(' / '), '');
@@ -98,11 +154,12 @@ function EUC_DEV649_recap_(info) {
   if (T(info.intro)) html.push('<p>' + H(info.intro).replace(/\n/g, '<br>') + '</p>');
   html.push('<p style="font-size:16px">Numéro d’enregistrement : <b>' + H(info.numero) + '</b>' + (T(info.source) ? ' <span style="color:#5b6b66">(' + H(info.source) + ')</span>' : '') + '</p>');
   if (g205) html.push(alerte('⚠ ' + g205, '#fde8e8', '#b42318'));
-  if (lieu) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px"><div style="font-weight:bold;color:#92400e;text-transform:uppercase">⚠ Lieu du stage différent du siège</div><div style="font-size:16px;font-weight:bold;margin-top:4px">' + H(lieu) + '</div><div style="color:#92400e;margin-top:4px">Les visites du professeur se font à cette adresse. Prendre rendez-vous par téléphone avec le tuteur.</div></div>');
+  if (lieu && !precis) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px"><div style="font-weight:bold;color:#92400e;text-transform:uppercase">⚠ Lieu du stage différent du siège</div><div style="font-size:16px;font-weight:bold;margin-top:4px">' + H(lieu) + '</div><div style="color:#92400e;margin-top:4px">Les visites du professeur se font à cette adresse. Prendre rendez-vous par téléphone avec le tuteur.</div></div>');
   if (nd) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px;font-weight:bold;color:#3b0d0c">' + H('⚠ ' + nd) + (inpi ? '<div style="margin-top:6px"><a href="' + H(inpi) + '" style="color:#0b5cad">Ouvrir la fiche de l’entreprise sur data.inpi.fr</a></div>' : '') + '</div>');
   blocs.forEach(function(b) {
     var rows = b[1].filter(function(l) { return T(l[1]); }).map(function(l) { return '<tr><td style="padding:4px 10px 4px 0;color:#5b6b66;vertical-align:top;white-space:nowrap">' + H(l[0]) + '</td><td style="padding:4px 0">' + H(l[1]) + '</td></tr>'; });
-    if (b[0].indexOf('Entreprise') === 0 && lieu) rows.push('<tr><td style="padding:4px 10px 4px 0;color:#92400e;font-weight:bold;white-space:nowrap">Lieu du stage</td><td style="padding:4px 0;font-weight:bold;color:#92400e">' + H(lieu) + '</td></tr>');
+    if (b[0].indexOf('Entreprise') === 0 && lieu && precis) rows.push('<tr><td style="padding:4px 10px 4px 0;color:#5b6b66;vertical-align:top;white-space:nowrap">Adresse précise du stage</td><td style="padding:4px 0">' + H(lieu) + '</td></tr>');
+    else if (b[0].indexOf('Entreprise') === 0 && lieu) rows.push('<tr><td style="padding:4px 10px 4px 0;color:#92400e;font-weight:bold;white-space:nowrap">Lieu du stage</td><td style="padding:4px 0;font-weight:bold;color:#92400e">' + H(lieu) + '</td></tr>');
     if (rows.length) html.push('<h3 style="margin:16px 0 4px;font-size:15px;color:#0b6b4f">' + H(b[0]) + '</h3><table style="border-collapse:collapse">' + rows.join('') + '</table>');
   });
   if ((info.pp || []).length) html.push('<p style="color:#5b6b66">Professeur principal : ' + H(info.pp.join(' / ')) + '</p>');
@@ -144,6 +201,7 @@ function EUC_DEV649_infoAcces_(d, intro, signature) {
       adresse: [T(a.Entreprise_adresse), T(a.Entreprise_complement), [T(a.Entreprise_code_postal), T(a.Entreprise_commune)].filter(Boolean).join(' '), monaco ? 'Monaco' : ''].filter(Boolean).join(', '),
       telephone: a.Entreprise_telephone, courriel: a.Entreprise_courriel, nonDiffusible: nd },
     lieu: EUC_DEV649_lieuTexte_(a),
+    lieuPrecision: EUC_DEV659_comparerLieu_({ adresse: a.Lieu_stage_adresse, cp: a.Lieu_stage_code_postal, commune: a.Lieu_stage_commune }, { adresse: [T(a.Entreprise_adresse), T(a.Entreprise_complement)].filter(Boolean).join(', '), commune: a.Entreprise_commune }) === 'PRECISION',
     responsable: { civilite: a.Responsable_civilite, prenom: a.Responsable_prenom, nom: a.Responsable_nom, fonction: a.Responsable_fonction, telephone: a.Responsable_telephone, courriel: a.Responsable_courriel },
     tuteur: { civilite: a.Tuteur_civilite, prenom: a.Tuteur_prenom, nom: a.Tuteur_nom, fonction: a.Tuteur_fonction, telephone: a.Tuteur_telephone, courriel: a.Tuteur_courriel },
     tuteurEstResponsable: a.Tuteur_est_responsable === true,
@@ -188,6 +246,7 @@ function EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, class
       entreprise: { nom: ent.raisonSociale, enseigne: ent.enseigne, identifiant: ent.siret, adresse: [T(ent.adresse), T(ent.complement), [T(ent.codePostal), T(ent.commune)].filter(Boolean).join(' '), ent.pays === 'MC' ? 'Monaco' : ''].filter(Boolean).join(', '),
         telephone: ent.telephone, courriel: ent.courriel, nonDiffusible: !!ent.nonDiffusible },
       lieu: EUC_DEV649_lieuTexte_({ Lieu_stage_adresse: (ent.lieu || {}).adresse, Lieu_stage_code_postal: (ent.lieu || {}).cp, Lieu_stage_commune: (ent.lieu || {}).commune }),
+      lieuPrecision: EUC_DEV659_comparerLieu_(ent.lieu, { adresse: [T(ent.adresse), T(ent.complement)].filter(Boolean).join(', '), commune: ent.commune }) === 'PRECISION',
       responsable: detail.resp, tuteur: detail.tut, tuteurEstResponsable: detail.tuteurEstResponsable,
       g205: { requis: motifs.length > 0, motif: motifs.join(' ; ') },
       signature: 'Bureau des formations et des entreprises — bureau G205\nLycée Les Eucalyptus'
