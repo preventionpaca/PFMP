@@ -18,20 +18,48 @@ vm.createContext(ctx);
 vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), ctx);
 vm.runInContext(read('apps-script/EUC_DEV663_TableauDepot.js'), ctx);
 
-test('tableau de la classe : élèves, statuts, entreprise, lieu de stage, tuteur, suivi, dépôt mis en évidence', () => {
-  const t = ctx.EUC_DEV663_tableau_(VUE, 7, 40, 3, 'PFMP-2026-S0017', '11/11/2026 18:20');
-  assert.ok(t && /Classe 1TEST — PFMP n°1/.test(t.html));
-  assert.match(t.html, /Du 23\/11\/2026 au 18\/12\/2026/); assert.match(t.html, /tableau au 11\/11\/2026 18:20/); assert.match(t.html, /2 \/ 3 en entreprise/); assert.match(t.html, /Professeur principal : M\. PROF/);
-  assert.match(t.html, /NICE FESTIVITES/); assert.match(t.html, /Éditée 10\/11\/2026/); assert.match(t.html, /Non éditée/);
-  assert.match(t.html, /Lieu du stage : 29 Avenue Y/); assert.ok(!/Lieu du stage : 33/.test(t.html), 'lieu vide non affiché');
-  assert.match(t.html, /Milia CACIT/); assert.match(t.html, /Fany L/, 'sans tuteur : contact de l’entreprise');
-  assert.match(t.html, /Visite : M\. VISITEUR/); assert.match(t.html, /Téléphone : Mme TEL/);
-  assert.match(t.html, /background:#fff3b0;"><td><b>GAMMA Joan<\/b><br>◀ dépôt reçu/); assert.match(t.html, /Dépôt PFMP-2026-S0017/);
-  assert.equal(t.nom, 'Classe 1TEST — PFMP n°1 — 11-11-2026');
-  assert.equal(ctx.EUC_DEV663_tableau_(VUE, 7, 99, 3, '', ''), null); assert.equal(ctx.EUC_DEV663_tableau_(VUE, 8, 40, 3, '', ''), null);
-  const x = ctx.EUC_DEV663_tableau_({ annee: '', fiches: [], classes: [{ id: 1, nom: '<b>', eleves: [[1, '<script>']], periodes: [{ id: 2, libelle: 'P', lignes: {} }] }] }, 1, 2, 0, '', '');
-  assert.ok(!/<script>/.test(x.html) && /&lt;script&gt;/.test(x.html), 'noms échappés');
+test('tableau de la classe : colonnes de l’export du suivi, une ligne par élève, dépôt présent même avant validation', () => {
+  const d = ctx.EUC_DEV663_donnees_(VUE, 7, 40, 3, { numero: 'PFMP-2026-S0018', aTraiter: true, entreprise: 'TITAN ENGINEERING MONACO', adresse: '2 RUE DU GABIAN, Monaco', contact: { nom: 'RENAULT GUILLAUME', tel: '+377 99 92 60 50', mail: 'c@ex.test' }, tuteur: { nom: 'RENAULT GUILLAUME' } }, '11/11/2026 18:20');
+  assert.deepEqual(JSON.parse(JSON.stringify(d.entetes)), ['Élève', 'Convention / statut', 'Entreprise', 'Adresse entreprise', 'Coordonnées entreprise', 'Coordonnées tuteur', 'Professeur principal', 'Suivi téléphonique', 'Professeur visiteur']);
+  assert.equal(d.largeurs.reduce((x, y) => x + y, 0) <= 786, true, 'largeur utile A4 paysage');
+  assert.equal(d.titre, '1TEST — PFMP n°1'); assert.match(d.sousTitre, /Du 23\/11\/2026 au 18\/12\/2026 · 2026-2027 · Professeur principal : M\. PROF · Tableau au 11\/11\/2026 18:20/);
+  assert.equal(d.resume, 'Effectif : 3 · En entreprise : 2 / 3 · Avec convention : 2 · Sans convention : 1 · Conventions éditées : 1 / 2');
+  assert.equal(d.lignes.length, 3); d.lignes.forEach(l => assert.equal(l.cellules.length, 9));
+  const [a, b, c] = d.lignes.map(l => l.cellules);
+  assert.deepEqual(a.slice(0, 3), ['ALPHA Jules', 'Convention enregistrée\nPFMP-2026-S0014\nÉditée le 10/11/2026', 'NICE FESTIVITES']);
+  assert.equal(a[5], 'Milia CACIT\n06 00 00 00 01\nt@ex.test'); assert.equal(a[6], 'M. PROF'); assert.equal(a[8], 'M. VISITEUR');
+  assert.equal(b[3], '18 RUE X, 44300 NANTES\nLIEU DU STAGE : 29 Avenue Y, 06200 Nice'); assert.equal(b[4], 'Fany L\n06 00 00 00 02'); assert.equal(b[5], ''); assert.equal(b[7], 'Mme TEL'); assert.match(b[1], /Non éditée/);
+  assert.equal(c[0], 'GAMMA Joan\n◀ dépôt reçu'); assert.equal(c[1], 'Demande reçue — à valider au bureau G205\nPFMP-2026-S0018'); assert.equal(c[2], 'TITAN ENGINEERING MONACO');
+  assert.equal(c[4], 'RENAULT GUILLAUME\n+377 99 92 60 50\nc@ex.test'); assert.equal(d.lignes[2].moi, true); assert.equal(d.lignes[2].sans, false);
+  assert.match(ctx.EUC_DEV663_donnees_(VUE, 7, 40, 1, { numero: 'X9' }, '').lignes[0].cellules[1], /\nDépôt X9$/, 'dossier déjà enregistré : numéro du dépôt ajouté');
+  assert.equal(ctx.EUC_DEV663_donnees_(VUE, 7, 40, 0, null, '').lignes[2].sans, true);
+  assert.equal(d.nom, '1TEST — PFMP n°1 — 11-11-2026');
+  assert.equal(ctx.EUC_DEV663_donnees_(VUE, 7, 99, 3, null, ''), null); assert.equal(ctx.EUC_DEV663_donnees_(VUE, 8, 40, 3, null, ''), null);
+  const dep = ctx.EUC_DEV663_depot_({ entreprise: { nom: 'TITAN', adresse: '2 rue', telephone: '+377', courriel: 'c@t' }, responsable: { nom: 'RENAULT' }, tuteurEstResponsable: true, g205: { requis: true }, lieu: '1 chantier, Nice' }, 'S18');
+  assert.deepEqual(JSON.parse(JSON.stringify(dep)), { numero: 'S18', aTraiter: true, entreprise: 'TITAN', adresse: '2 rue', lieu: '1 chantier, Nice', contact: { nom: 'RENAULT', tel: '+377', mail: 'c@t' }, tuteur: { nom: 'RENAULT', fonction: '', tel: '', mail: '' } });
 });
+
+/* Document Google simulé : enregistre la mise en page appliquée. */
+function docSimule(journal) {
+  const texte = () => { const o = { t: '' }; ['setFontFamily', 'setFontSize', 'setBold', 'setForegroundColor'].forEach(m => o[m] = v => { (journal.texte = journal.texte || []).push([m, v]); return o; }); o.getText = () => o.t; return o; };
+  const par = (t) => { const p = { t }; ['setSpacingBefore', 'setSpacingAfter', 'setLineSpacing'].forEach(m => p[m] = () => p); p.setText = x => { p.t = x; return p; }; p.editAsText = () => { const x = texte(); x.t = p.t; return x; }; p.getType = () => 'PARAGRAPH'; p.asParagraph = () => p; return p; };
+  const corps = { paras: [par('')], tables: [] };
+  ['setPageWidth', 'setPageHeight', 'setMarginTop', 'setMarginBottom', 'setMarginLeft', 'setMarginRight'].forEach(m => corps[m] = v => { journal[m] = v; return corps; });
+  corps.getParagraphs = () => corps.paras; corps.appendParagraph = t => { const p = par(t); corps.paras.push(p); return p; };
+  corps.appendTable = rows => {
+    const cell = t => { const c = { t, fond: '' }; ['setPaddingTop', 'setPaddingBottom', 'setPaddingLeft', 'setPaddingRight', 'setVerticalAlignment'].forEach(m => c[m] = () => c); c.getNumChildren = () => 1; c.getChild = () => par(t); c.editAsText = () => { const x = texte(); x.t = t; return x; }; c.setBackgroundColor = v => { c.fond = v; return c; }; return c; };
+    const tab = { rows: rows.map(r => r.map(cell)), largeurs: [] };
+    tab.setBorderColor = () => tab; tab.setBorderWidth = () => tab; tab.setColumnWidth = (i, w) => { tab.largeurs[i] = w; return tab; };
+    tab.getNumRows = () => tab.rows.length; tab.getRow = i => ({ getNumCells: () => tab.rows[i].length, getCell: k => tab.rows[i][k] });
+    journal.table = tab; return tab;
+  };
+  return {
+    DocumentApp: { VerticalAlignment: { TOP: 'TOP' }, ElementType: { PARAGRAPH: 'PARAGRAPH' },
+      create: nom => { journal.nom = nom; return { getBody: () => corps, getId: () => 'doc1', addFooter: () => ({ appendParagraph: t => { journal.pied = t; return par(t); } }), saveAndClose: () => { journal.ferme = true; } }; } },
+    DriveApp: { getFileById: () => ({ getAs: m => ({ mime: m, setName(x) { this.nom = x; return this; } }), setTrashed: v => { journal.corbeille = v; } }) },
+    MimeType: { PDF: 'application/pdf' }
+  };
+}
 
 test('courriel de l’équipe : rédigé pour elle, tableau joint ; sans tableau, le dépôt n’échoue pas', () => {
   const info = { numero: 'N1', intro: 'Demande reçue.', g205: { requis: true, motif: 'entreprise non vérifiée' }, entreprise: { nom: 'X' } };
@@ -45,11 +73,16 @@ test('courriel de l’équipe : rédigé pour elle, tableau joint ; sans tableau
   vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), s); vm.runInContext(read('apps-script/EUC_DEV663_TableauDepot.js'), s);
   const q = s.EUC_DEV663_recapEquipe_(info, 7, 40, 3, 'N1');
   assert.equal(q.pj.length, 0); assert.match(q.texte, /Tableau de la classe indisponible/);
-  const ok = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, EUC_SUIVI2_modele_: () => ({}), EUC_SUIVI2_vueEnseignants_: () => VUE,
-    Utilities: { formatDate: () => '11/11/2026 18:20', newBlob: (h, t, nom) => ({ getAs: m => ({ mime: m, html: h, setName(x) { this.nom = x; return this; } }) }) } };
+  const journal = {}, sim = docSimule(journal);
+  const ok = Object.assign({ console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, EUC_SUIVI2_modele_: () => ({}), EUC_SUIVI2_vueEnseignants_: () => VUE,
+    Utilities: { formatDate: () => '11/11/2026 18:20' } }, sim);
   vm.createContext(ok); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), ok); vm.runInContext(read('apps-script/EUC_DEV663_TableauDepot.js'), ok);
   const w = ok.EUC_DEV663_recapEquipe_(info, 7, 40, 3, 'N1');
-  assert.equal(w.pj.length, 1); assert.equal(w.pj[0].mime, 'application/pdf'); assert.equal(w.pj[0].nom, 'Classe 1TEST — PFMP n°1 — 11-11-2026.pdf');
+  assert.equal(w.pj.length, 1); assert.equal(w.pj[0].mime, 'application/pdf'); assert.equal(w.pj[0].nom, '1TEST — PFMP n°1 — 11-11-2026.pdf');
+  assert.ok(journal.setPageWidth > journal.setPageHeight, 'A4 paysage'); assert.equal(journal.ferme, true); assert.equal(journal.corbeille, true, 'document temporaire à la corbeille');
+  const tab = journal.table; assert.equal(tab.rows.length, 4); assert.equal(tab.rows[0].length, 9); assert.deepEqual(tab.largeurs, [86, 100, 95, 112, 112, 112, 68, 50, 50]);
+  assert.equal(tab.rows[0][0].fond, '#0b6b4f', 'en-tête vert'); assert.equal(tab.rows[3][0].fond, '#fff3b0', 'élève du dépôt surligné'); assert.equal(tab.rows[1][0].fond, '');
+  assert.match(journal.pied, /joint au dépôt N1/);
   assert.match(w.html, /tableau à jour de la classe 1TEST pour la période PFMP n°1/);
 });
 

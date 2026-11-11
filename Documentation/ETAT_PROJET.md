@@ -7,6 +7,7 @@
 - Formulaire en ligne : l'envoi de l'élève reste inchangé (élève seul, comme avant) ; la copie de l'équipe est rédigée pour elle (« Copie pour l'équipe… », « À FAIRE PAR L'ÉLÈVE : passer au bureau G205 ») et porte le tableau.
 - Tableau (`EUC_DEV663_TableauDepot.js`) : construit depuis la vue du suivi (modèle recalculé si Grist a changé, dépôt compris) ; élève, statut, édition, entreprise, adresse et lieu de stage, tuteur, suivi ; élève du dépôt surligné. Si le tableau échoue, la copie part sans pièce jointe avec une mention, le dépôt n'échoue jamais. Le tableau n'est jamais envoyé à la famille.
 - Coût : un recalcul du modèle du suivi par dépôt (le suivi ouvert ensuite profite du cache).
+- DEV663b (retour utilisateur, modèle = export PDF du suivi) : A4 paysage par document Google temporaire (mis à la corbeille après export, comme `EUC_DEV368_pdf`), colonnes de l'export (élève, convention/statut, entreprise, adresse, coordonnées entreprise, coordonnées tuteur, professeur principal, suivi téléphonique, professeur visiteur), une ligne par élève, plusieurs pages si besoin. L'élève du dépôt figure toujours, avec l'entreprise déclarée, même quand la demande n'est pas encore validée (« Demande reçue — à valider au bureau G205 »).
 
 ## Mise à jour du 11 novembre 2026 — DEV662 : lieu de stage recopié du siège masqué à l'affichage
 
