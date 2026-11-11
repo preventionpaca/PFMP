@@ -646,6 +646,7 @@ function EUC_ADMIN_WORKFLOW_listerDossiersV146(){
       statut:String(a.Statut_administratif||'INFORMATIONS_ENREGISTREES'),
       dateDebut:EUC_IMPORT_dateExistanteISO_(a.Date_debut),
       dateFin:EUC_IMPORT_dateExistanteISO_(a.Date_fin),
+      editeeLe:EUC_IMPORT_dateExistanteISO_(a.Drive_pdf_date),
       recherche:[EUC_ADMIN_WORKFLOW_numeroV144_(a),nom,prenom,a.Classe_convention_nom||'',a.Entreprise_raison_sociale||''].join(' ').toLowerCase()
     };
   }).sort(function(a,b){return String(b.numero||'').localeCompare(String(a.numero||''),'fr');});
@@ -664,6 +665,8 @@ function EUC_ADMIN_WORKFLOW_vueV146(accesId){
   base.urlImpression=serviceUrl+'?page=convention-pfmp-print&rid='+encodeURIComponent(rid);
   base.urlFormulaire=serviceUrl+'?page=pfmp&rid='+encodeURIComponent(rid);
   base.drivePdf={url:String(a.Drive_pdf_url||''),nom:String(a.Drive_pdf_nom||''),date:String(a.Drive_pdf_date||''),taille:Number(a.Drive_pdf_taille||0)};
+  /* DEV660 : date de la dernière édition du PDF (archivé dans Drive à chaque génération). */
+  base.editeeLe=EUC_IMPORT_dateExistanteISO_(a.Drive_pdf_date);
   if(base.remplacement&&base.remplacement.id){
     var rr=(EUC_CONVENTION_lireAccesFraisV108_()||[]).filter(function(x){return Number(x.id)===Number(base.remplacement.id);})[0]||{};
     base.remplacement.urlImpression=serviceUrl+'?page=convention-pfmp-print&rid='+encodeURIComponent(base.remplacement.id);

@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV660 : conventions déjà éditées
+
+- Source : `Drive_pdf_date`, posé sur chaque convention à chaque PDF généré (archivage Drive automatique, DEV525). Aucun compteur : seule la date de la dernière édition est affichée.
+- Suivi des PFMP par classe : sous le statut de chaque élève, « 🖨 Convention éditée le … » ou « Convention pas encore éditée » (convention valable sans PDF). Conventions annulées, interrompues ou supprimées ignorées.
+- Administration des conventions : case « PDF de la convention » (éditée le … / pas encore éditée), mention dans la recherche ; « Rééditer / imprimer le PDF » demande confirmation si déjà éditée.
+- Générateur, relance d'une classe : le PDF de la classe ne contient plus que les conventions pas encore éditées ; lien séparé « Rééditer toute la classe » (confirmation). Chaque élève déjà édité est signalé avec sa date.
+- Limite : une convention imprimée sans archivage Drive réussi (ou avant DEV525) apparaît « pas encore éditée ».
+
 ## Mise à jour du 11 novembre 2026 — DEV659 : lieu de stage recopié du siège
 
 - Constat (courriels [Dépôt] S0014, S0016) : aucun bug de saisie, le bloc « lieu du stage » est facultatif et vide ; des élèves y recopiaient le siège et le courriel annonçait toujours « lieu différent du siège ».

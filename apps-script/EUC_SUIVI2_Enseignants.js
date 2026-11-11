@@ -34,7 +34,7 @@ function EUC_SUIVI2_vueEnseignants_(m) {
         var r = p.resume || {}, lignes = {};
         c.eleves.forEach(function(e) {
           var su = (r.suivis || {})[e.id] || {}, mx = (r.mixtes || {})[e.id];
-          lignes[e.id] = [(r.statuts || {})[e.id] || 'SANS', fiche((r.fiches || {})[e.id]), su.tel || '', su.visite || '', mx ? [mx.debut || '', mx.fin || ''] : 0];
+          lignes[e.id] = [(r.statuts || {})[e.id] || 'SANS', fiche((r.fiches || {})[e.id]), su.tel || '', su.visite || '', mx ? [mx.debut || '', mx.fin || ''] : 0, (r.editions || {})[e.id] || ''];
         });
         return {
           id: p.id, libelle: p.libelle, debut: p.debut, fin: p.fin, pdif: !!p.pdif,

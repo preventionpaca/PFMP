@@ -144,7 +144,7 @@ function EUC_CONVENTION_preparerAccesClasseNom(payload) {
     var pd = estPdif ? {type:per.type,debut:per.debut,fin:per.fin} : (pdif ? {type:pdif.type,debut:pdif.debut,fin:pdif.fin} : null);
     if (ex) {
       reprises++;
-      items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:String(ex.Reference_convention||''),token:'',accessId:Number(ex.id),reprise:true,urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(ex.id),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(ex.id),annee:annee,classe:cl.nom,debut:EUC_IMPORT_dateExistanteISO_(ex.Date_debut)||per.debut,fin:EUC_IMPORT_dateExistanteISO_(ex.Date_fin)||per.fin,pdifMode:String(ex.PDIF_mode||mode||''),conventionPdif:estPdif,pdif:pd});
+      items.push({eleveId:e.id,nom:e.nom,prenom:e.prenom,dateNaissance:e.dateNaissance,reference:String(ex.Reference_convention||''),token:'',accessId:Number(ex.id),reprise:true,editeeLe:EUC_IMPORT_dateExistanteISO_(ex.Drive_pdf_date),urlFormulaire:base+'?page=pfmp&rid='+encodeURIComponent(ex.id),urlImpression:base+'?page=convention-pfmp-print&rid='+encodeURIComponent(ex.id),annee:annee,classe:cl.nom,debut:EUC_IMPORT_dateExistanteISO_(ex.Date_debut)||per.debut,fin:EUC_IMPORT_dateExistanteISO_(ex.Date_fin)||per.fin,pdifMode:String(ex.PDIF_mode||mode||''),conventionPdif:estPdif,pdif:pd});
       return;
     }
     var a = EUC_CONVENTION_preparerRecordAcces_(ctx,e,cl,per,annee,{pdif:estPdif?null:pdif,pdifMode:mode,lot:lot});
@@ -167,8 +167,12 @@ function EUC_CONVENTION_preparerAccesClasseNom(payload) {
    * second appel du navigateur, exactement comme pour une convention seule. */
   if (records.length) EUC_ENT_grist('post','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{records:records});
   var refresh = EUC_CONVENTION_debutRafraichissementV511_({Annee_scolaire:annee,Classe_convention:cl.id,Periode:p.id},'creation-lot-conventions');
-  CacheService.getScriptCache().put('EUC_CONV_LOT_'+lot,JSON.stringify({lot:lot,classe:cl.nom,classeEleves:classeElevesNom,annee:annee,periode:p,items:items}),21600);
-  return {ok:true,total:items.length,creees:records.length,reprises:reprises,pdifEntreprise:pdifEntreprise,pdifLycee:pdifLycee,pdifAAnnuler:aAnnuler,periodePdif:!!periodePdif,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot),refreshToken:refresh};
+  /* DEV660 : le PDF de la classe ne reprend pas les conventions déjà éditées (évite une réimpression inutile) ;
+   * un second lot, « -TOUT », permet de tout rééditer. */
+  var aImprimer = items.filter(function(i){ return !i.editeeLe; }), dejaEditees = items.length - aImprimer.length, cache = CacheService.getScriptCache();
+  cache.put('EUC_CONV_LOT_'+lot,JSON.stringify({lot:lot,classe:cl.nom,classeEleves:classeElevesNom,annee:annee,periode:p,items:aImprimer}),21600);
+  if (dejaEditees) cache.put('EUC_CONV_LOT_'+lot+'-TOUT',JSON.stringify({lot:lot+'-TOUT',classe:cl.nom,classeEleves:classeElevesNom,annee:annee,periode:p,items:items}),21600);
+  return {ok:true,total:items.length,dejaEditees:dejaEditees,urlImpressionLotTout:dejaEditees?base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot+'-TOUT'):'',creees:records.length,reprises:reprises,pdifEntreprise:pdifEntreprise,pdifLycee:pdifLycee,pdifAAnnuler:aAnnuler,periodePdif:!!periodePdif,lot:lot,classeElevesNom:classeElevesNom,classeConvention:cl.nom,periode:p,anneeConvention:annee,items:items,urlImpressionLot:aImprimer.length?base+'?page=conventions-pfmp-batch-print&lot='+encodeURIComponent(lot):'',refreshToken:refresh};
 }
 
 /* DEV646 — Convention active d'un élève pour une période et une année (mêmes règles que EUC_CONVENTION_accesActifsV525_).

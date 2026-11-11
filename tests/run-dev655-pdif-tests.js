@@ -13,13 +13,13 @@ const ELEVES = [{ id: 11, nom: 'UN', prenom: 'Élève', classe: 'TMELEC' }, { id
 
 const payload = () => ({ meta: META, eleves: ELEVES, groupes: [{ key: 'TMELEC', nom: 'TMELEC', effectif: 2 }, { key: '1MELEC', nom: '1MELEC', effectif: 1 }, { key: 'TCAP', nom: 'TCAP EQB', effectif: 5 }] });
 function contexte(acces, pdifRows) {
-  const posts = [], patchs = [];
+  const posts = [], patchs = [], lots = {};
   let seq = 0;
   const k = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, encodeURIComponent,
     Utilities: { getUuid: () => 'uuid-' + (++seq), computeDigest: () => [1, 2, 3], DigestAlgorithm: { SHA_256: 1 }, Charset: { UTF_8: 1 } },
     ScriptApp: { getService: () => ({ getUrl: () => 'https://exec' }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
-    CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
+    CacheService: { getScriptCache: () => ({ get: () => null, put(k2, v) { lots[k2] = JSON.parse(v); } }) },
     EUC_PFMP_ref_: v => Array.isArray(v) ? v[1] : v,
     EUC_IMPORT_dateExistanteISO_: v => String(v || '').slice(0, 10),
     EUC_IMPORT_exigerAdminTexte_: () => ({ email: 'ddfpt@test', role: 'DDFPT', autorise: true }),
@@ -33,7 +33,7 @@ function contexte(acces, pdifRows) {
   vm.createContext(k);
   ['apps-script/EUC_CONVENTION_PFMP_Service.gs', 'apps-script/EUC_CONVENTION_PFMP_GroupesClasses.gs', 'apps-script/EUC_DEV655_FinTerminale.js'].forEach(f => vm.runInContext(read(f), k));
   Object.assign(k, { EUC_DEV526_generateurPayload_: payload, EUC_CONVENTION_assurerTableAcces_() {}, EUC_CONVENTION_debutRafraichissementV511_: () => null, EUC_CONVENTION_token_: () => 'tok' + (++seq), EUC_CONVENTION_hash_: t => 'h' + t });
-  return { k, posts, patchs };
+  return { k, posts, patchs, lots };
 }
 const conventionsCreees = posts => [].concat(...posts.filter(p => /EUC_ACCES_FORMULAIRES_PFMP/.test(decodeURIComponent(p.url))).map(p => p.body.records)).map(r => r.fields);
 const choixEcrits = (posts, patchs) => [].concat(...posts.concat(patchs).filter(p => /EUC_PARCOURS_DIFFERENCIE_PFMP/.test(p.url)).map(p => p.body.records)).map(r => r.fields);
@@ -99,5 +99,30 @@ test('générateur : périodes PDIF proposées en Terminale, choix pré-remplis,
   const p = read('apps-script/Parcours_Differencie_PFMP_V190X.html');
   assert.ok(!/Poursuite PFMP2<small>/.test(p)); assert.match(p, /PDIF en entreprise<small>Convention PDIF séparée/);
   assert.match(read('apps-script/EUC_PFMP_DEV190X_CleanModules.js'), /terminalOnly&&!rows\.length&&typeof EUC_DEV655_terminales_==='function'/);
+});
+test('DEV660 : relance d’une classe : conventions déjà éditées hors du PDF de la classe, lot complet à part', () => {
+  const acces = [
+    { id: 1, Eleve: 11, Periode: 20, Annee_scolaire: ANNEE, Date_debut: '2027-03-01', Date_fin: '2027-03-19', Date_officielle_debut: '2027-03-01', Statut: 'CONVENTION_GENEREE', Drive_pdf_date: '2026-11-10T08:00:00Z' },
+    { id: 2, Eleve: 12, Periode: 20, Annee_scolaire: ANNEE, Date_debut: '2027-03-01', Date_fin: '2027-03-19', Date_officielle_debut: '2027-03-01', Statut: 'CONVENTION_GENEREE' }
+  ];
+  const { k, lots } = contexte(acces, []);
+  const r = J(k.EUC_CONVENTION_preparerAccesClasseNom({ classeElevesNom: 'TMELEC', anneeConvention: ANNEE, classeConventionId: 3, periodeId: 20 }));
+  assert.equal(r.dejaEditees, 1); assert.equal(r.items.find(i => i.eleveId === 11).editeeLe, '2026-11-10'); assert.equal(r.items.find(i => i.eleveId === 12).editeeLe, '');
+  assert.deepEqual(lots['EUC_CONV_LOT_' + r.lot].items.map(i => i.eleveId), [12], 'PDF de la classe : seulement la convention pas encore éditée');
+  assert.deepEqual(lots['EUC_CONV_LOT_' + r.lot + '-TOUT'].items.map(i => i.eleveId).sort(), [11, 12]);
+  assert.match(r.urlImpressionLotTout, /-TOUT$/); assert.ok(r.urlImpressionLot);
+  acces[1].Drive_pdf_date = '2026-11-09T10:00:00Z';
+  const x = contexte(acces, []), r2 = J(x.k.EUC_CONVENTION_preparerAccesClasseNom({ classeElevesNom: 'TMELEC', anneeConvention: ANNEE, classeConventionId: 3, periodeId: 20 }));
+  assert.equal(r2.dejaEditees, 2); assert.equal(r2.urlImpressionLot, '', 'tout est déjà édité : pas de PDF de classe par défaut');
+  const m = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isNaN, isFinite }; vm.createContext(m); vm.runInContext(read('apps-script/EUC_SUIVI2_Moteur.js'), m);
+  assert.equal(m.EUC_SUIVI2_edition_([{ id: 1, Statut_administratif: 'CONVENTION_GENEREE', Drive_pdf_date: 1794300000 }]), '2026-11-10');
+  assert.equal(m.EUC_SUIVI2_edition_([{ id: 1, Statut_administratif: 'CONVENTION_GENEREE' }]), '-', 'convention sans PDF édité');
+  assert.equal(m.EUC_SUIVI2_edition_([{ id: 1, Statut_administratif: 'ANNULEE_AVANT_DEMARRAGE', Drive_pdf_date: 1794300000 }]), '', 'convention annulée ignorée');
+  assert.equal(m.EUC_SUIVI2_edition_([]), '');
+  assert.match(read('apps-script/EUC_SUIVI2_Enseignants.js'), /\(r\.editions \|\| \{\}\)\[e\.id\]/);
+  const se = read('apps-script/Suivi_Enseignants_DEV576.html'); assert.match(se, /Convention éditée le/); assert.match(se, /Convention pas encore éditée/);
+  const ad = read('apps-script/Admin_Conventions_PFMP.html'); assert.match(ad, /id="edition"/); assert.match(ad, /déjà été éditée le/);
+  assert.match(read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs'), /editeeLe:EUC_IMPORT_dateExistanteISO_\(a\.Drive_pdf_date\)/);
+  const g = read('apps-script/Convention_PFMP_Generateur.html'); assert.match(g, /id="batchPrintTout"/); assert.match(g, /pas encore éditée/);
 });
 console.log(n + ' tests DEV655 réussis.');

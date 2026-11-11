@@ -108,6 +108,7 @@
         <div class="info"><span>Classe</span><b id="class">—</b></div>
         <div class="info"><span>Entreprise</span><b id="company">—</b></div>
         <div class="info"><span>Période PFMP</span><b id="period">—</b></div>
+        <div class="info"><span>PDF de la convention</span><b id="edition">—</b></div>
       </div>
       <div id="documentActions" class="document-actions">
         <a id="reprintConvention" class="print" target="_blank" rel="noopener">Rééditer / imprimer le PDF</a>
@@ -240,6 +241,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   const reprintConvention=document.getElementById('reprintConvention');
   const openConventionQr=document.getElementById('openConventionQr');
   const openConventionDrive=document.getElementById('openConventionDrive');
+  const edition=document.getElementById('edition');
   const steps=document.getElementById('steps');
   const history=document.getElementById('history');
   const status=document.getElementById('status');
@@ -263,7 +265,8 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   function esc(v){const d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML}
   function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
   function setStatus(t,k){status.className=k||'';status.textContent=t||''}
-  function label(d){return [d.numero,d.jeune,d.classe,d.entreprise].filter(Boolean).join(' — ')}
+  function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):''}
+  function label(d){return [d.numero,d.jeune,d.classe,d.entreprise,d.editeeLe?'éditée le '+dfr(d.editeeLe):'pas encore éditée'].filter(Boolean).join(' — ')}
 
   function askConfirm(titleText,bodyText,confirmText){
     return new Promise(function(resolve){
@@ -757,6 +760,10 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
     company.textContent=detailCompany;
     period.textContent=detailPeriod;
     reprintConvention.href=v.urlImpression||'#';
+    /* DEV660 : convention déjà éditée : la date est affichée et une réédition demande confirmation. */
+    edition.textContent=v.editeeLe?'Éditée le '+dfr(v.editeeLe):'Pas encore éditée';
+    edition.style.color=v.editeeLe?'#0b6b4f':'#b45309';
+    reprintConvention.onclick=v.editeeLe?function(ev){if(!confirm('Cette convention a déjà été éditée le '+dfr(v.editeeLe)+'. La rééditer quand même ?'))ev.preventDefault();}:null;
     openConventionQr.href=v.urlFormulaire||'#';
     const drivePdf=v.drivePdf||{};
     openConventionDrive.classList.toggle('hidden',!drivePdf.url);

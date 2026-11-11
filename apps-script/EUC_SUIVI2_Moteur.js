@@ -195,6 +195,15 @@ function EUC_SUIVI2_entrepriseValidee_(a, entreprises) { return !!EUC_SUIVI2_ide
 /* DEV576 — fiche d'un élève pour une période (tableau des enseignants). */
 /* DEV651 : une valeur masquée par l'annuaire (« [NON-DIFFUSIBLE] ») n'est jamais retenue : la suivante l'est. */
 function EUC_SUIVI2_premier_() { for (var i = 0; i < arguments.length; i++) { var v = EUC_SUIVI2_t_(arguments[i]); if (v && !/NON[\s_-]*DIFFUSIBLE/i.test(v)) return v; } return ''; }
+/* DEV660 : édition de la convention (calcul pur). Chaque PDF de convention généré est archivé dans Drive et
+ * date la convention (Drive_pdf_date). Rend la date de la dernière édition d'une convention encore valable,
+ * '-' si une convention valable existe sans PDF édité, '' s'il n'y a aucune convention valable. */
+function EUC_SUIVI2_edition_(liste) {
+  var valables = (liste || []).filter(function(x) { var c = EUC_SUIVI2_statut_(x); return c !== 'ANNULEE' && c !== 'INTERROMPUE' && c !== 'SUPPRIMEE' && x.Revoked !== true; });
+  if (!valables.length) return '';
+  var dates = valables.map(function(x) { return EUC_SUIVI2_date_(x.Drive_pdf_date); }).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : '-';
+}
 function EUC_SUIVI2_ficheDossier_(a, entreprises) {
   if (!a) return null;
   var P = EUC_SUIVI2_premier_, sr = EUC_SUIVI2_t_(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, '');
@@ -533,7 +542,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     c.eleves.sort(function(a, b) { return a.libelle.localeCompare(b.libelle, 'fr'); });
     c.eleves.forEach(function(e) { e.apprentissage = EUC_SUIVI2_statutApprenti_(episodes[e.id], aujourdhui); });
     c.periodes.forEach(function(p) {
-      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {} };
+      var r = { effectif: c.eleves.length, apprentis: [], avec: [], sans: [], annulees: [], lycee: [], entreprise: [], aDefinir: [], mixtes: {}, fiches: {}, statuts: {}, editions: {} };
       c.eleves.forEach(function(e) {
         var ap = EUC_SUIVI2_apprentiPeriode_(episodes[e.id], p), apprenti = ap.code === 'APPRENTI';
         /* DEV581 — classe entière d'apprentis : on suit des contrats, pas des conventions.
@@ -558,12 +567,14 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
           (m === EUC_SUIVI2_MODE_ENTREPRISE_ ? r.entreprise : m === EUC_SUIVI2_MODE_LYCEE_ ? r.lycee : r.aDefinir).push(e.id);
           r.statuts[e.id] = m === EUC_SUIVI2_MODE_ENTREPRISE_ ? 'PDIF_ENTREPRISE' : m === EUC_SUIVI2_MODE_LYCEE_ ? 'PDIF_LYCEE' : 'PDIF_A_DEFINIR';
           var dp = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
+          if (r.statuts[e.id] === 'PDIF_ENTREPRISE' && EUC_SUIVI2_edition_(dp)) r.editions[e.id] = EUC_SUIVI2_edition_(dp);
           var fp = EUC_SUIVI2_ficheDossier_(dp.filter(function(x) { return EUC_SUIVI2_vautConvention_(x, entreprises); })[0] || dp[0], entreprises);
           if (fp && fp.entreprise) r.fiches[e.id] = fp;
           return;
         }
         if (apprenti) { r.apprentis.push(e.id); return; }
         var liste = (dossiers[e.id + '|' + p.id] || []).slice().sort(function(a, b) { return Number(b.id) - Number(a.id); });
+        if (EUC_SUIVI2_edition_(liste)) r.editions[e.id] = EUC_SUIVI2_edition_(liste);
         /* Dossier retenu : un dossier actif qui vaut convention (le plus récent),
          * sinon le dossier actif le plus récent, sinon le plus récent. */
         var actifs = liste.filter(function(x) { var code = EUC_SUIVI2_statut_(x); return code !== 'ANNULEE' && code !== 'INTERROMPUE' && code !== 'SUPPRIMEE' && x.Revoked !== true; });
