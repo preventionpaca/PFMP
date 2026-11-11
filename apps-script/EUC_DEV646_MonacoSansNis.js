@@ -23,7 +23,7 @@ function EUC_DEV646_monaco_(r) {
   return /\bmonaco\b|\bmonte carlo\b/.test(lieu) || /^mc$/i.test(EUC_DEV646_t_(r.Pays)) || /^980\d\d$/.test(EUC_DEV646_t_(r.Code_postal)) || /(^|\D)980\d\d(\D|$)/.test(adresse) || !!EUC_DEV646_t_(r.NIS);
 }
 function EUC_DEV646_fiche_(r) {
-  return { id: Number(r.id) || 0, nis: EUC_DEV646_t_(r.NIS), interne: EUC_DEV646_interne_(r.NIS), nom: EUC_DEV646_t_(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: EUC_DEV646_t_(r.Enseigne),
+  return { id: Number(r.id) || 0, nis: EUC_DEV646_t_(r.NIS), siret: EUC_DEV646_siret_(r), interne: EUC_DEV646_interne_(r.NIS), nom: EUC_DEV646_t_(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: EUC_DEV646_t_(r.Enseigne),
     adresse: EUC_DEV646_t_(r.Numero_voie || r.Adresse || r.Adresse_complete), cp: EUC_DEV646_t_(r.Code_postal), ville: EUC_DEV646_t_(r.Commune) || 'Monaco', telephone: EUC_DEV646_t_(r.Telephone), email: EUC_DEV646_t_(r.Courriel || r.Email) };
 }
 
@@ -32,12 +32,14 @@ function EUC_DEV646_filtrerParNom_(rows, q) {
   var mots = EUC_DEV646_n_(q).split(' ').filter(function(m) { return m.length >= 2; });
   if (EUC_DEV646_n_(q).replace(/ /g, '').length < 3 || !mots.length) throw new Error('Écris au moins 3 lettres du nom de l’entreprise.');
   return (rows || []).filter(function(r) {
-    if (!EUC_DEV646_monaco_(r) || !EUC_DEV646_t_(r.NIS)) return false;
+    /* DEV667 : une entreprise située à Monaco mais immatriculée en France (ex. SAM SACOM CONTI) est proposée avec son SIRET. */
+    if (!EUC_DEV646_monaco_(r) || !(EUC_DEV646_t_(r.NIS) || EUC_DEV646_siret_(r))) return false;
     var nom = ' ' + EUC_DEV646_n_([r.Raison_sociale, r.Nom, r.Entreprise, r.Enseigne].join(' ')) + ' ';
     return mots.every(function(m) { return nom.indexOf(m) >= 0; });
   }).map(EUC_DEV646_fiche_).sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).slice(0, 8)
-    .map(function(f) { return { nis: f.nis, nom: f.nom, enseigne: f.enseigne, adresse: f.adresse, ville: f.ville }; });
+    .map(function(f) { return { nis: f.siret ? '' : f.nis, siret: f.siret, nom: f.nom, enseigne: f.enseigne, adresse: f.adresse, ville: f.ville }; });
 }
+function EUC_DEV646_siret_(r) { var s = EUC_DEV646_t_(r && (r.SIRET || r.Siret)).replace(/\D/g, ''); return s.length === 14 ? s : ''; }
 
 /* Page QR (publique, sans compte) : seulement nom, enseigne, adresse et NIS d'entreprises, aucune donnée d'élève. */
 function EUC_DEV646_rechercherMonacoParNom(q) {

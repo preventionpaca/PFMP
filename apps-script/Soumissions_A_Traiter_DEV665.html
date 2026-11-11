@@ -49,6 +49,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     <ol>
       <li><b>Rien à faire pour un dépôt au SIRET vérifié</b> : il apparaît déjà « Convention enregistrée » dans le suivi. Il n’est pas listé ici (filtre « Déjà dans le suivi » pour le consulter).</li>
       <li><b>Identifier l’entreprise</b> : si elle est déjà connue, cliquez sa proposition (« Déjà connue dans la base »). Sinon : France → corrigez le SIRET puis « Vérifier le SIRET » ; Monaco → saisissez le NIS (4 chiffres, 1 lettre, 5 chiffres, ex. 7112B19343, à vérifier sur monentreprise.gouv.mc), le nom et l’adresse, puis « Enregistrer l’entreprise de Monaco ». Une fois identifiée, la soumission passe dans le suivi : c’est fini.</li>
+      <li><b>Monaco sans NIS connu</b> : « Chercher au registre de Monaco (RCI) » reprend nom, adresse et NIS de la fiche publique (le NIS du RCI est indicatif : en cas de doute, celui de monentreprise.gouv.mc fait foi). Introuvable : « Pas de NIS : numéro interne » (EUC-MC-0001…).</li>
       <li><b>Doublon ou abandon</b> : « Classer sans suite ». Rien n’est effacé.</li>
     </ol>
     <div class="onglets" role="group" aria-label="Filtre">
@@ -87,7 +88,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       '<div class="onglets" role="group" aria-label="Pays de l’entreprise"><button type="button" data-mode="FR" data-id="'+x.id+'" aria-pressed="'+(mode==='FR')+'">France (SIRET)</button><button type="button" data-mode="MC" data-id="'+x.id+'" aria-pressed="'+(mode==='MC')+'">Monaco (NIS)</button></div>';
     if(mode==='FR')h+='<div class="champs"><div><label for="s'+x.id+'">SIRET (14 chiffres)</label><input id="s'+x.id+'" inputmode="numeric" autocomplete="off" value="'+esc(x.pays!=='MC'?String(x.numeroSaisi||'').replace(/\D/g,''):'')+'"></div><div style="align-self:end">'+bouton('siret',x.id,'Vérifier le SIRET','leger')+'</div></div>';
     else h+='<div class="champs"><div><label for="n'+x.id+'">NIS *</label><input id="n'+x.id+'" autocomplete="off" placeholder="7112B19343" value="'+esc(x.pays==='MC'?x.numeroSaisi:'')+'"></div><div><label for="nom'+x.id+'">Nom *</label><input id="nom'+x.id+'" autocomplete="off" value="'+esc(o.nom||s.nom)+'"></div><div><label for="adr'+x.id+'">Adresse *</label><input id="adr'+x.id+'" autocomplete="off" value="'+esc(o.adresse||s.adresse)+'"></div><div><label for="cp'+x.id+'">Code postal</label><input id="cp'+x.id+'" autocomplete="off" value="'+esc(o.cp||s.cp||'98000')+'"></div><div><label for="v'+x.id+'">Ville</label><input id="v'+x.id+'" autocomplete="off" value="'+esc(o.ville||'Monaco')+'"></div></div>'+
-      '<p>'+bouton('monaco',x.id,'Enregistrer l’entreprise de Monaco','leger')+' '+bouton('chercher',x.id,'Chercher ce nom dans la base Monaco','gris')+'</p><div class="choix" id="choix'+x.id+'"></div>';
+      '<p>'+bouton('monaco',x.id,'Enregistrer l’entreprise de Monaco','leger')+' '+bouton('chercher',x.id,'Chercher ce nom dans la base Monaco','gris')+' '+bouton('rci',x.id,'Chercher au registre de Monaco (RCI)','gris')+' '+bouton('interne',x.id,'Pas de NIS : numéro interne','gris')+'</p><div class="choix" id="choix'+x.id+'"></div>';
     h+='<div class="champs" style="margin-top:8px"><div><label for="q'+x.id+'">Chercher dans la base des entreprises (France et Monaco)</label><input id="q'+x.id+'" autocomplete="off" value="'+esc(s.nom||o.nom)+'"></div><div style="align-self:end">'+bouton('base',x.id,'Chercher','gris')+'</div></div><div class="choix" id="base'+x.id+'"></div>';
     /* Valider (import dans Grist) : seulement pour une soumission à traiter déjà identifiée (ex. établissement fermé à confirmer). */
     h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
@@ -102,7 +103,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     $('liste').innerHTML=l.length?l.map(carte).join(''):'<section><p class="note">'+(FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':'Aucune soumission pour ce filtre.')+'</p></section>';
   }
   /* Carte corrigée : reste affichée jusqu'à l'actualisation, avec son message. */
-  var PROPS={},GARDER={};
+  var PROPS={},GARDER={},RCI={};
   function utiliser(id,f){
     if(f.siret){MODE[id]='FR';dessiner();$('s'+id).value=f.siret;var b=document.querySelector('#c'+id+' [data-action="siret"]');occupe(b,true,'Vérification…');msg(id,'');verifierSiret(b,id,f.siret);}
     else{MODE[id]='MC';dessiner();$('n'+id).value=f.nis;$('nom'+id).value=f.nom;$('adr'+id).value=f.adresse;$('cp'+id).value=f.cp||'98000';$('v'+id).value=f.ville||'Monaco';msg(id,'Coordonnées reprises : cliquez « Enregistrer l’entreprise de Monaco ».','ok');}
@@ -129,6 +130,9 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
   $('liste').addEventListener('click',function(ev){
     var b=ev.target.closest('button');if(!b)return;var id=Number(b.dataset.id),x=LISTE.filter(function(y){return y.id===id;})[0];if(!x)return;
     if(b.dataset.mode){MODE[id]=b.dataset.mode;dessiner();return;}
+    if(b.dataset.rci){var c=(RCI[id]||[])[Number(b.dataset.rci)];if(!c||b.disabled)return;b.disabled=true;msg(id,'Lecture de la fiche '+c.rci+'…');
+      appel('EUC_DEV667_ficheRci',{rci:c.rci},30000,function(f){b.disabled=false;$('n'+id).value=f.nis||'';$('nom'+id).value=f.nom||c.nom;$('adr'+id).value=f.adresse||'';$('cp'+id).value=f.cp||'98000';$('v'+id).value=f.ville||'Monaco';
+        msg(id,'Fiche RCI '+c.rci+' reprise'+(f.nis?' (NIS '+f.nis+' à titre indicatif : comparez avec monentreprise.gouv.mc)':' — pas de NIS : « Pas de NIS : numéro interne »')+', puis « Enregistrer l’entreprise de Monaco ».','ok');},function(e){b.disabled=false;msg(id,(e&&e.message)||'Fiche illisible.','erreur');});return;}
     if(b.dataset.prop){var f=(b.dataset.prop==='sug'?x.suggestions:PROPS[id]||[])[Number(b.dataset.i)];if(f)utiliser(id,f);return;}
     var a=b.dataset.action;
     if(a==='siret'){var s=$('s'+id).value.replace(/\D/g,'');if(s.length!==14){msg(id,'Le SIRET doit avoir 14 chiffres.','erreur');return;}occupe(b,true,'Vérification…');msg(id,'');verifierSiret(b,id,s);}
@@ -140,6 +144,13 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
         $('choix'+id).innerHTML=l.length?l.map(function(f,i){return '<button type="button" data-choix="'+i+'">'+esc(f.nom)+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc(f.adresse)+' '+esc(f.ville)+' · <b>'+esc(f.nis)+'</b></button>';}).join(''):'<p class="note">Aucune entreprise de Monaco de ce nom dans la base : saisissez le NIS.</p>';
         $('choix'+id).querySelectorAll('[data-choix]').forEach(function(c){c.onclick=function(){var f=l[Number(c.dataset.choix)];$('n'+id).value=f.nis;$('nom'+id).value=f.nom;$('adr'+id).value=f.adresse;$('v'+id).value=f.ville||'Monaco';msg(id,'Coordonnées reprises de la base : cliquez « Enregistrer l’entreprise de Monaco ».','ok');};});
       },function(e){occupe(b,false);msg(id,(e&&e.message)||'Recherche impossible.','erreur');});}
+    /* DEV667 : registre de Monaco : nom, adresse et NIS repris de la fiche publique (NIS « à titre d’information » : l’IMSEE fait foi). */
+    if(a==='rci'){occupe(b,true,'Recherche…');msg(id,'');
+      appel('EUC_DEV667_rechercherRci',{nom:$('nom'+id).value},30000,function(r){occupe(b,false);var l=r.resultats||[];RCI[id]=l;
+        $('choix'+id).innerHTML=l.length?l.map(function(f,i){return '<button type="button" data-rci="'+i+'" data-id="'+id+'"><b>'+esc(f.nom)+'</b>'+(f.sigle?' ('+esc(f.sigle)+')':'')+' · RCI '+esc(f.rci)+' · '+esc(f.forme)+(f.actif?'':' · <b>'+esc(f.etat)+'</b>')+' <span class="note">— reprendre la fiche</span></button>';}).join(''):'<p class="note">Aucune entreprise de ce nom au registre de Monaco.</p>';
+      },function(e){occupe(b,false);msg(id,(e&&e.message)||'Registre de Monaco indisponible.','erreur');});}
+    if(a==='interne'){occupe(b,true,'Attribution…');msg(id,'');
+      appel('EUC_DEV667_numeroInterne',{},30000,function(r){occupe(b,false);$('n'+id).value=r.nis;msg(id,'Numéro interne '+r.nis+' : vérifiez nom et adresse puis « Enregistrer l’entreprise de Monaco ».','ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Attribution impossible.','erreur');});}
     if(a==='base'){var q=$('q'+id).value;occupe(b,true,'Recherche…');msg(id,'');
       appel('EUC_DEV666_chercherBase',{nom:q},30000,function(r){occupe(b,false);PROPS[id]=r.resultats||[];
         $('base'+id).innerHTML=PROPS[id].length?PROPS[id].map(function(f,i){return proposition(f,'base',id,i);}).join(''):'<p class="note">Aucune entreprise de ce nom dans la base : saisissez le SIRET ou le NIS.</p>';

@@ -17,7 +17,7 @@ var EUC_DEV583_GEOCODAGE_LOT_ = 15;
 
 function EUC_DEV583_t_(v) { return v == null ? '' : String(v).trim(); }
 function EUC_DEV583_siret_(v) { var s = EUC_DEV583_t_(v).replace(/\D/g, ''); return s.length === 14 ? s : ''; }
-function EUC_DEV583_valide_(g) { return g && isFinite(Number(g.Latitude)) && isFinite(Number(g.Longitude)) && g.Latitude !== null && g.Longitude !== null && g.Latitude !== '' && (g.Statut === 'GEOCODE_AUTOMATIQUE' || g.Statut === 'VALIDE_MANUELLEMENT'); }
+function EUC_DEV583_valide_(g) { return g && (typeof EUC_DEV667_coordOk_ !== 'function' || EUC_DEV667_coordOk_(g.Latitude, g.Longitude)) && isFinite(Number(g.Latitude)) && isFinite(Number(g.Longitude)) && g.Latitude !== null && g.Longitude !== null && g.Latitude !== '' && (g.Statut === 'GEOCODE_AUTOMATIQUE' || g.Statut === 'VALIDE_MANUELLEMENT'); }
 
 /* Index de la table de géocodage : SIRET, identité nom + adresse, empreinte d'adresse. */
 function EUC_DEV583_indexGeo_(rows) {

@@ -80,7 +80,8 @@ test('recherche par nom : entreprises de Monaco avec un numéro, sans accent ni 
   assert.deepEqual(J(m.EUC_DEV646_filtrerParNom_(ENT, 'spelugues')), [], 'on cherche sur le nom, pas l’adresse');
   assert.deepEqual(J(m.EUC_DEV646_filtrerParNom_(ENT, 'Monte Carlo')).map(x => x.nom), ['SAM HOTEL FAIRMONT MONTE-CARLO']);
   assert.deepEqual(J(m.EUC_DEV646_filtrerParNom_(ENT, 'boulangerie')), [], 'sans numéro, introuvable : bureau G205');
-  assert.deepEqual(Object.keys(J(m.EUC_DEV646_filtrerParNom_(ENT, 'garage'))[0]).sort(), ['adresse', 'enseigne', 'nis', 'nom', 'ville']);
+  /* DEV667 : SIRET (donnée publique d'entreprise) ajouté pour une entreprise de Monaco immatriculée en France. */
+  assert.deepEqual(Object.keys(J(m.EUC_DEV646_filtrerParNom_(ENT, 'garage'))[0]).sort(), ['adresse', 'enseigne', 'nis', 'nom', 'siret', 'ville']);
   assert.throws(() => m.EUC_DEV646_filtrerParNom_(ENT, 'ab'), /3 lettres/);
 });
 

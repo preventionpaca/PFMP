@@ -235,11 +235,27 @@ $('aPays').onchange=function(){$('aPaysAutre').hidden=this.value!=='AUTRE';$('aM
 $('aMonacoGo').onclick=function(){var b=this,t=$('aMonacoQ').value.trim();if(b.disabled)return;
   if(t.replace(/\s/g,'').length<3){$('aMonacoR').textContent='Écris au moins 3 lettres du nom de l’entreprise.';return;}
   occupe(b,'Recherche…');$('aMonacoR').textContent='';
-  appel('EUC_DEV646_rechercherMonacoParNom',t,function(r){libre(b);var l=(r&&r.resultats)||[];
-    if(!l.length){$('aMonacoR').innerHTML='<b>Cette entreprise n’est pas encore dans notre base.</b> Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.';return;}
-    $('aMonacoR').innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0">'+esc(x.nom)+(x.enseigne?' — '+esc(x.enseigne):'')+'<br><span class="note">'+esc([x.adresse,x.ville].filter(Boolean).join(', '))+'</span></button>';}).join('');
-    $('aMonacoR').querySelectorAll('button[data-i]').forEach(function(bt){bt.onclick=function(){var x=l[Number(bt.dataset.i)];$('aEnt').value=x.nom;$('aAdr').value=x.adresse||'';$('aVille').value=x.ville||'Monaco';$('aSiret').value=x.nis;$('aMonacoR').innerHTML='✓ '+esc(x.nom)+' — numéro '+esc(x.nis)+'.';};});
+  appel('EUC_DEV646_rechercherMonacoParNom',t,function(r){var l=(r&&r.resultats)||[];
+    if(!l.length){rciMonaco(b,t);return;}
+    libre(b);
+    $('aMonacoR').innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0">'+esc(x.nom)+(x.enseigne?' — '+esc(x.enseigne):'')+'<br><span class="note">'+esc([x.adresse,x.ville].filter(Boolean).join(', '))+(x.siret?' · SIRET français':'')+'</span></button>';}).join('')+
+      '<p style="margin:4px 0"><button type="button" id="aMonacoRci">Elle n’est pas dans la liste : chercher au registre de Monaco</button></p>';
+    $('aMonacoR').querySelectorAll('button[data-i]').forEach(function(bt){bt.onclick=function(){var x=l[Number(bt.dataset.i)];
+      /* DEV667 : entreprise de Monaco immatriculée en France (ex. Conti) : on revient au SIRET, vérifié comme les autres. */
+      if(x.siret){etape(3);$('siret').value=x.siret;$('m3').textContent='Cette entreprise a un SIRET français : vérification…';$('verifier').click();return;}
+      $('aEnt').value=x.nom;$('aAdr').value=x.adresse||'';$('aVille').value=x.ville||'Monaco';$('aSiret').value=x.nis;$('aMonacoR').innerHTML='✓ '+esc(x.nom)+' — numéro '+esc(x.nis)+'.';};});
+    $('aMonacoRci').onclick=function(){if(this.disabled)return;occupe(this,'Recherche…');rciMonaco(this,t);};
   },function(e){libre(b);$('aMonacoR').textContent=msgErr(e);});};
+/* DEV667 : registre officiel de Monaco (RCI) : nom, adresse et NIS repris de la fiche publique. */
+function rciMonaco(b,t){
+  appel('EUC_DEV667_rechercherRci',t,function(r){libre(b);var l=(r&&r.resultats)||[];
+    if(!l.length){$('aMonacoR').innerHTML='<b>Cette entreprise n’est pas encore dans notre base, ni au registre de Monaco.</b> Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.';return;}
+    $('aMonacoR').innerHTML='<p style="margin:4px 0">Registre de Monaco — clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-r="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0">'+esc(x.nom)+(x.sigle?' ('+esc(x.sigle)+')':'')+'<br><span class="note">'+esc(x.forme)+(x.actif?'':' · '+esc(x.etat))+'</span></button>';}).join('')+'<p class="note">Pas dans la liste ? Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.</p>';
+    $('aMonacoR').querySelectorAll('button[data-r]').forEach(function(bt){bt.onclick=function(){if(bt.disabled)return;var x=l[Number(bt.dataset.r)];occupe(bt,'Lecture de la fiche…');
+      appel('EUC_DEV667_ficheRci',x.rci,function(f){libre(bt);$('aEnt').value=f.nom||x.nom;$('aAdr').value=f.adresse||'';$('aVille').value=f.ville||'Monaco';$('aSiret').value=f.nis||'';
+        $('aMonacoR').innerHTML='✓ '+esc(f.nom||x.nom)+(f.nis?' — NIS '+esc(f.nis):'')+' (registre de Monaco). Vérifie l’adresse puis envoie.';},function(e){libre(bt);$('aMonacoR').textContent=msgErr(e);});};});
+  },function(e){libre(b);$('aMonacoR').innerHTML='<b>Le registre de Monaco ne répond pas.</b> Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.';});
+}
 surveiller($('aTel'),function(){return $('aPays').value;});surveiller($('aMail'));
 $('aEnvoyer').onclick=function(){var b=this;$('mA').textContent='';occupe(b,'Envoi…');
   appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value,lieu:lireLieu('a')},

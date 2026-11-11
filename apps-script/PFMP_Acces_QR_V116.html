@@ -2007,6 +2007,42 @@ init();
     res.innerHTML='';
     search.disabled=false;search.click();
   }
+  /* DEV667 : entreprise de Monaco immatriculée en France (ex. Conti) : recherche par son SIRET, vérifié comme les autres. */
+  function choisirSiret(siret){
+    country.value='France';country.dispatchEvent(new Event('change',{bubbles:true}));
+    setTimeout(function(){ident.value=siret;ident.dispatchEvent(new Event('input',{bubbles:true}));res.innerHTML='';search.disabled=false;search.click();},0);
+  }
+  /* DEV667 : fiche du registre de Monaco (RCI) : NIS cherché dans notre base ; absente, la saisie manuelle est préremplie. */
+  function choisirRci(f){
+    if(!f.nis){res.innerHTML='<b>'+e(f.nom)+'</b> : pas de NIS au registre de Monaco. Passe au bureau G205 avec son nom et son adresse.';return;}
+    choisir(f.nis);
+    var essais=0,t=setInterval(function(){
+      var html=document.documentElement;essais++;
+      if(html.dataset.eucMonacoManual==='1'){clearInterval(t);
+        [['entrepriseRaisonSociale',f.nom],['entrepriseEnseigne',f.enseigne&&f.enseigne!==f.nom?f.enseigne:''],['entrepriseAdresse',f.adresse],['entrepriseCodePostal',f.cp||'98000'],['entrepriseCommune',f.ville||'Monaco']].forEach(function(c){
+          var el=document.getElementById(c[0]);if(el&&c[1]&&!el.value){el.value=c[1];el.dispatchEvent(new Event('input',{bubbles:true}));}});
+        res.innerHTML='✓ Coordonnées reprises du registre de Monaco : vérifie-les.';}
+      else if(essais>50)clearInterval(t);
+    },300);
+  }
+  function chercherRci(texte,bt){
+    bt=bt||go;busy(bt,true,'Recherche…');
+    var fini=false,minu=setTimeout(function(){if(fini)return;fini=true;busy(bt,false);res.innerHTML='<b>Le registre de Monaco ne répond pas.</b> Passe au bureau G205 — bureau des formations et des entreprises — avec son nom et son adresse.';},30000);
+    google.script.run.withSuccessHandler(function(r){
+      if(fini)return;fini=true;clearTimeout(minu);busy(bt,false);
+      var l=(r&&r.resultats)||[];
+      if(!l.length){res.innerHTML='<b>Cette entreprise n’est pas encore dans notre base, ni au registre de Monaco.</b> Passe au bureau G205 — bureau des formations et des entreprises — avec son nom et son adresse : elle y sera enregistrée.';return;}
+      res.innerHTML='<p style="margin:4px 0">Registre de Monaco — clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-r="'+i+'" style="display:block;width:100%;max-width:520px;text-align:left;margin:4px 0">'+e(x.nom)+(x.sigle?' ('+e(x.sigle)+')':'')+'<br><small>'+e(x.forme)+(x.actif?'':' · '+e(x.etat))+'</small></button>';}).join('')+
+        '<p style="margin:4px 0;font-size:13px">Elle n’est pas dans la liste ? Passe au bureau G205.</p>';
+      res.querySelectorAll('button[data-r]').forEach(function(b){b.addEventListener('click',function(){
+        if(b.disabled)return;busy(b,true,'Lecture de la fiche…');
+        google.script.run.withSuccessHandler(function(f){busy(b,false);choisirRci(f);}).withFailureHandler(function(err){busy(b,false);res.textContent=String(err&&err.message||err||'Fiche illisible.');}).EUC_DEV667_ficheRci(l[Number(b.dataset.r)].rci);
+      });});
+    }).withFailureHandler(function(){
+      if(fini)return;fini=true;clearTimeout(minu);busy(bt,false);
+      res.innerHTML='<b>Le registre de Monaco ne répond pas.</b> Passe au bureau G205 — bureau des formations et des entreprises — avec son nom et son adresse.';
+    }).EUC_DEV667_rechercherRci(texte);
+  }
   go.addEventListener('click',function(){
     if(go.disabled)return;
     var texte=String(q.value||'').trim();
@@ -2016,10 +2052,11 @@ init();
     google.script.run.withSuccessHandler(function(r){
       if(fini)return;fini=true;clearTimeout(minu);busy(go,false);
       var l=(r&&r.resultats)||[];
-      if(!l.length){res.innerHTML='<b>Cette entreprise n’est pas encore dans notre base.</b> Passe au bureau G205 — bureau des formations et des entreprises — avec son nom et son adresse : elle y sera enregistrée.';return;}
-      res.innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;max-width:520px;text-align:left;margin:4px 0">'+e(x.nom)+(x.enseigne?' — '+e(x.enseigne):'')+'<br><small>'+e([x.adresse,x.ville].filter(Boolean).join(', '))+'</small></button>';}).join('')+
-        '<p style="margin:4px 0;font-size:13px">Elle n’est pas dans la liste ? Passe au bureau G205.</p>';
-      res.querySelectorAll('button[data-i]').forEach(function(b){b.addEventListener('click',function(){choisir(l[Number(b.dataset.i)].nis);});});
+      if(!l.length){chercherRci(texte);return;}
+      res.innerHTML='<p style="margin:4px 0">Clique sur ton entreprise :</p>'+l.map(function(x,i){return '<button type="button" data-i="'+i+'" style="display:block;width:100%;max-width:520px;text-align:left;margin:4px 0">'+e(x.nom)+(x.enseigne?' — '+e(x.enseigne):'')+'<br><small>'+e([x.adresse,x.ville].filter(Boolean).join(', '))+(x.siret?' · SIRET français':'')+'</small></button>';}).join('')+
+        '<p style="margin:4px 0;font-size:13px"><button type="button" id="monacoRciDev667">Elle n’est pas dans la liste : chercher au registre de Monaco</button></p>';
+      res.querySelectorAll('button[data-i]').forEach(function(b){b.addEventListener('click',function(){var x=l[Number(b.dataset.i)];if(x.siret)choisirSiret(x.siret);else choisir(x.nis);});});
+      document.getElementById('monacoRciDev667').addEventListener('click',function(){if(this.disabled)return;chercherRci(texte,this);});
     }).withFailureHandler(function(err){
       if(fini)return;fini=true;clearTimeout(minu);busy(go,false);
       res.textContent=String(err&&err.message||err||'Recherche impossible.');

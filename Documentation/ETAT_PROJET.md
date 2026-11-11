@@ -1,5 +1,31 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV667 : registre de Monaco (RCI), Monaco au SIRET français, numéro interne, carte
+
+- **Registre de Monaco (RCI, teleservice.gouv.mc/rci)**, dans `EUC_DEV667_RciMonaco.js`.
+  - La recherche par nom est publique et sans compte (`recherche/page?value=…&page=1&size=10`, JSON). Elle donne le numéro RCI, le nom, l'état et la forme juridique ; les entreprises actives viennent d'abord.
+  - La fiche gratuite (`extrait/<RCI>`, HTML lu en français ou en anglais) donne l'enseigne, l'adresse, le code postal, la ville et le NIS.
+  - Résultats gardés en cache : 6 h pour une recherche, 24 h pour une fiche. Aucune donnée d'élève n'est transmise.
+  - Le NIS du RCI est « à titre d'information » ; seule l'IMSEE fait foi. Pour TITAN ENGINEERING MONACO, le RCI donne 7112Y19343 et l'IMSEE (monentreprise.gouv.mc) 7112B19343. La base garde 7112B19343 en attendant la décision du bureau.
+- **Formulaire en ligne et page du QR code** (synchronisés) :
+  - la recherche Monaco par nom propose aussi les entreprises de la base situées à Monaco et immatriculées en France, avec leur SIRET (cas SAM SACOM CONTI) ; un clic repart sur la vérification du SIRET, sans demande d'aide ;
+  - absente de la base : recherche au RCI, puis la fiche préremplit nom, adresse et NIS (QR : saisie manuelle Monaco préremplie) ;
+  - absente des deux : bureau G205, comme avant.
+- **Soumissions à traiter** :
+  - « Chercher au registre de Monaco (RCI) » reprend la fiche ;
+  - « Pas de NIS : numéro interne » attribue le numéro interne suivant (EUC-MC-0001…), réservé au bureau.
+- **Carte** :
+  - une coordonnée vide lue comme 0 plaçait l'entreprise au point 0,0, dans le golfe de Guinée (cas Renault Retail Group, Nice-Riquier) ;
+  - `EUC_DEV667_coordOk_` n'accepte que la France métropolitaine (Corse comprise) et Monaco, pour le book, sa carte, la carte du suivi et les ordres de mission ;
+  - un point enregistré hors zone repasse « à regéocoder » dans la page Géocodage, et un résultat BAN hors zone est refusé.
+- **Tests** :
+  - 1252 au total, dont 6 tests DEV667 (`run-dev667-tests.js`) ;
+  - le test DEV646 des champs publics de la recherche Monaco inclut désormais `siret`.
+- **Parcours réels non exécutés** :
+  - appel du RCI depuis les serveurs Google : à vérifier en usage, avec un message de repli « registre indisponible → bureau G205 » ;
+  - dépôt d'un élève ;
+  - regéocodage.
+
 ## Mise à jour du 12 novembre 2026 — DEV666 : n'afficher que les soumissions à traiter ; entreprise déjà connue proposée ; numéro ajouté au siège
 
 - **Seulement ce qui est à traiter** : un dépôt compte dans le suivi (« Convention enregistrée ») dès que son SIRET est vérifié ou son NIS validé. C'est la même règle que `EUC_SUIVI2_modele_`, reprise dans `EUC_DEV666_dansSuivi_`. Ces dépôts ne sont plus listés par défaut ; on les retrouve sous le filtre « Déjà dans le suivi (rien à faire) ». Restent à traiter : les demandes d'aide, un SIRET non vérifié, un NIS manquant, un établissement fermé, un doublon (y compris le doublon d'un dépôt déjà enregistré).
