@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 11 novembre 2026 — DEV663 : copie des dépôts pour l'équipe avec le tableau de la classe
+
+- Décision de l'utilisateur (11/11) : à chaque dépôt, deux envois séparés : l'élève et ses parents d'un côté (accusé seul), l'équipe de l'autre (BFE, administration cochée « Dépôts et numéros de convention », professeur principal), avec le tableau à jour de la classe et de la période en PDF.
+- Page du QR code (`EUC_NOTIF_envoisSeparesV663_`) : auparavant un seul courriel élève + parents + équipe en copie ; désormais famille (à l'élève, parents en copie, réponse à l'équipe) puis équipe (« [Dépôt] » ou « [À traiter au bureau G205] »). `Destinataires_courriel` enregistre `{famille, equipe}`.
+- Formulaire en ligne : l'envoi de l'élève reste inchangé (élève seul, comme avant) ; la copie de l'équipe est rédigée pour elle (« Copie pour l'équipe… », « À FAIRE PAR L'ÉLÈVE : passer au bureau G205 ») et porte le tableau.
+- Tableau (`EUC_DEV663_TableauDepot.js`) : construit depuis la vue du suivi (modèle recalculé si Grist a changé, dépôt compris) ; élève, statut, édition, entreprise, adresse et lieu de stage, tuteur, suivi ; élève du dépôt surligné. Si le tableau échoue, la copie part sans pièce jointe avec une mention, le dépôt n'échoue jamais. Le tableau n'est jamais envoyé à la famille.
+- Coût : un recalcul du modèle du suivi par dépôt (le suivi ouvert ensuite profite du cache).
+
 ## Mise à jour du 11 novembre 2026 — DEV662 : lieu de stage recopié du siège masqué à l'affichage
 
 - DEV659 ne vidait le lieu recopié du siège qu'aux nouveaux dépôts : les dossiers déjà enregistrés (ex. S0014, 33 rue Barberis) gardaient l'alerte « Lieu du stage » dans le suivi.

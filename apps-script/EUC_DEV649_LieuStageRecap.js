@@ -133,7 +133,7 @@ function EUC_DEV649_recap_(info) {
   ];
   var nd = ent.nonDiffusible ? 'Entreprise « non diffusible » sur l’annuaire data.gouv (INSEE) : nom et adresse saisis par l’élève, à vérifier sur le registre de l’INPI.' : '';
   var inpi = ent.nonDiffusible ? EUC_DEV649_lienInpi_(ent.identifiant) : '';
-  var g205 = g.requis ? 'À FAIRE : passer au bureau G205 (bureau des formations et des entreprises) pour finaliser la convention' + (T(g.motif) ? ' — ' + T(g.motif) : '') + '.' : '';
+  var g205 = g.requis ? (info.equipe ? 'À FAIRE PAR L’ÉLÈVE : passer' : 'À FAIRE : passer') + ' au bureau G205 (bureau des formations et des entreprises) pour finaliser la convention' + (T(g.motif) ? ' — ' + T(g.motif) : '') + '.' : '';
   var suite = EUC_DEV649_RAPPEL_SIGNATURES_;
   /* Texte brut */
   var lignes = [];
@@ -258,8 +258,10 @@ function EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, class
     var copie = EUC_DEV649_copieDepots_();
     if (typeof EUC_DEV603_ppEmails_ === 'function') copie = copie.concat(EUC_DEV603_ppEmails_(classeId));
     copie = copie.filter(function(v, i, a) { return v && a.indexOf(v) === i && v !== T(email).toLowerCase(); });
+    /* DEV663 : l'équipe reçoit un courriel séparé, rédigé pour elle, avec le tableau à jour de la classe et de la période. */
+    var equipe = copie.length && typeof EUC_DEV663_recapEquipe_ === 'function' ? EUC_DEV663_recapEquipe_(info, classeId, detail.periode && detail.periode.id, eleve.id, numero) : { texte: r.texte, html: r.html, pj: [] };
     if (email) MailApp.sendEmail({ to: email, replyTo: copie.join(',') || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta convention de stage — numéro d’enregistrement ') + numero, body: r.texte, htmlBody: r.html });
-    if (copie.length) MailApp.sendEmail({ to: copie.join(','), name: 'Lycée Les Eucalyptus — PFMP', subject: sujet, body: r.texte, htmlBody: r.html });
+    if (copie.length) MailApp.sendEmail({ to: copie.join(','), name: 'Lycée Les Eucalyptus — PFMP', subject: sujet, body: equipe.texte, htmlBody: equipe.html, attachments: equipe.pj.length ? equipe.pj : undefined });
   } catch (e) { console.log('DEV649 accusé : ' + (e && e.message || e)); }
 }
 

@@ -324,11 +324,18 @@ function EUC_NOTIF_preparerV143_(accesId,acces,params){
     body=r.texte;htmlBody=r.html;
   }else if(sign)body+='\n\n'+sign;
 
+  /* DEV663 : deux envois séparés : l'élève et ses parents (accusé seul), puis l'équipe (BFE, administration,
+   * professeur principal) avec le tableau à jour de la classe et de la période. */
+  var famille=EUC_NOTIF_uniqueV143_((d.eleve.email?[d.eleve.email]:[]).concat(d.parents));
+  var equipe=EUC_NOTIF_uniqueV143_(d.pp.concat(bfe?[bfe]:[]).concat(typeof EUC_DEV649_copieDepots_==='function'?EUC_DEV649_copieDepots_():[])).filter(function(x){return famille.indexOf(x)<0;});
+
   return {
     dossier:d,
     params:p,
     to:to,
     cc:cc,
+    famille:famille,
+    equipe:equipe,
     subject:EUC_NOTIF_renderV143_(p.NOTIF_OBJET,vars),
     body:body,
     htmlBody:htmlBody,
@@ -392,25 +399,19 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
   }
 
   try{
-    MailApp.sendEmail({
-      to:n.to.join(','),
-      cc:n.cc.join(','),
-      subject:n.subject,
-      body:n.body,
-      htmlBody:n.htmlBody||undefined,
-      name:'Lycée Les Eucalyptus — PFMP'
-    });
+    var envois=EUC_NOTIF_envoisSeparesV663_(n);
+    envois.forEach(function(m){MailApp.sendEmail(m);});
 
     EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
       records:[{id:a.id,fields:{
         Etat_courriel_confirmation:'ENVOYE',
         Date_courriel_confirmation:now,
         Erreur_courriel_confirmation:'',
-        Destinataires_courriel:JSON.stringify({to:n.to,cc:n.cc})
+        Destinataires_courriel:JSON.stringify({famille:n.famille,equipe:n.equipe})
       }}]
     });
 
-    return {envoye:true,numero:stable,to:n.to,cc:n.cc};
+    return {envoye:true,numero:stable,to:n.famille,cc:n.equipe};
 
   }catch(err){
     var detail=String(err&&err.message?err.message:err).slice(0,1000);
@@ -426,6 +427,23 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
 
     return {envoye:false,numero:stable,erreur:detail,to:n.to,cc:n.cc};
   }
+}
+
+/* DEV663 : courriels à envoyer (la pièce jointe n'est construite que pour l'équipe). */
+function EUC_NOTIF_envoisSeparesV663_(n){
+  var a=(n.dossier&&n.dossier.acces)||{},nom='Lycée Les Eucalyptus — PFMP',envois=[];
+  if(n.famille.length)envois.push({to:n.famille[0],cc:n.famille.slice(1).join(',')||undefined,replyTo:n.equipe.join(',')||undefined,subject:n.subject,body:n.body,htmlBody:n.htmlBody||undefined,name:nom});
+  if(n.equipe.length){
+    var eq={texte:n.body,html:n.htmlBody,pj:[]},info=null;
+    if(typeof EUC_DEV663_recapEquipe_==='function'&&typeof EUC_DEV649_infoAcces_==='function'){
+      var vars=EUC_NOTIF_variablesV143_(n.dossier);info=EUC_DEV649_infoAcces_(n.dossier,EUC_NOTIF_renderV143_(n.params.NOTIF_CORPS,vars),EUC_NOTIF_renderV143_(n.params.NOTIF_SIGNATURE,vars));
+      info.parents=n.famille.length>1;
+      eq=EUC_DEV663_recapEquipe_(info,Number(EUC_PFMP_ref_(a.Classe_convention)),Number(EUC_PFMP_ref_(a.Periode)),Number(EUC_PFMP_ref_(a.Eleve)),n.dossier.numero);
+    }
+    var d=n.dossier||{},el=d.eleve||{};
+    envois.push({to:n.equipe.join(','),subject:(info&&info.g205&&info.g205.requis?'[À traiter au bureau G205] ':'[Dépôt] ')+d.numero+' — '+[el.prenom,el.nom].filter(Boolean).join(' ')+(d.classe?' ('+d.classe+')':''),body:eq.texte,htmlBody:eq.html||undefined,attachments:eq.pj.length?eq.pj:undefined,name:nom});
+  }
+  return envois;
 }
 
 function DIAGNOSTIC_DEV143_PFMP_000223(){
