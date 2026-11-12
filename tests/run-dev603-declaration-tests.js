@@ -267,6 +267,19 @@ test('DEV664 : pas de doublon : demande d’aide renvoyée → mise à jour sous
   assert.ok(/r\.remplace\?'<p class="note"><b>Tu avais déjà envoyé une demande/.test(page) && /r\.remplace\?'<p class="note"><b>Tu avais déjà fait un dépôt/.test(page), 'message à l’élève dans les deux parcours');
 });
 
+test('DEV668 : demande d’aide Monaco avec un NIS reconnu (base ou registre, à la lettre près) : entreprise identifiée, sans passage au bureau', () => {
+  const t = base(), k = contexte(t), jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  k.EUC_DEV668_verifierNis_ = nis => /19343$/.test(nis) ? { trouve: true, source: 'RCI', nis: '7112B19343', nisRegistre: '7112Y19343', nom: 'TITAN ENGINEERING MONACO', enseigne: '', adresse: '2 Rue du Gabian', cp: '98000', ville: 'Monaco', rci: '17S07483' } : { trouve: false };
+  const r = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Titan', ville: 'Monaco', pays: 'MC', siret: '7112B19343' });
+  const f = t.EUC_MIGRATION_JOTFORM_PFMP[0].fields;
+  assert.strictEqual(r.nisReconnu.nom, 'TITAN ENGINEERING MONACO');
+  assert.strictEqual(f.Niveau_controle, 'VERT'); assert.strictEqual(f.Decision, 'A_VALIDER'); assert.strictEqual(f.SIRET_statut, 'NIS_MONACO');
+  assert.strictEqual(f.Raison_sociale_officielle, 'TITAN ENGINEERING MONACO'); assert.match(f.Alertes, /NIS reconnu \(registre de Monaco, 7112Y19343 au registre\)/);
+  t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'REJETEE';
+  k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Inconnue', ville: 'Monaco', pays: 'MC', siret: '9999Z00001' });
+  const g = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields; assert.strictEqual(g.Niveau_controle, 'ROUGE'); assert.strictEqual(g.Decision, 'A_CONTROLER', 'NIS inconnu : bureau G205 comme avant');
+});
+
 test('DEV605 : copies selon « Destinataires & envois » — dépôts et validations des tuteurs par rubrique cochée, secours sinon ; page et accueil', () => {
   const k = contexte(base());
   k.EUC_V158_TABLE_ = 'EUC_DESTINATAIRES_ENVOIS_PFMP';

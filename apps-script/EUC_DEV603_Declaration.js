@@ -347,19 +347,32 @@ function EUC_DEV603_signalerProbleme(q) {
     ligne.Submission_ID = j.eleveId ? 'SECOURS-' + numero : numero; ligne.SIRET_statut = 'A_CONTROLER'; ligne.SIRET_source = 'Non vérifié (' + ({ FR: 'France', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ')';
     ligne.Raison_sociale_officielle = ''; ligne.Adresse_officielle = ''; ligne.CP_officiel = ''; ligne.Ville_officielle = ''; ligne.Pays_officiel = pays === 'AUTRE' ? EUC_DEV603_t_(q.paysNom).slice(0, 60) : pays;
     /* DEV648 : Monaco — le numéro saisi ou trouvé par le nom (NIS ou EUC-MC-0001) est gardé tel quel. */
+    var nisOk = null;
     if (pays === 'MC' && EUC_DEV603_t_(q.siret)) { var nis = EUC_DEV603_t_(q.siret).toUpperCase().slice(0, 40); ligne.SIRET_brut = ''; ligne.SIRET_normalise = ''; ligne.NIS_brut = nis; ligne.NIS_normalise = nis.replace(/[\s-]+/g, ''); ligne.Entreprise_identifiant_type = 'NIS'; }
-    ligne.Niveau_controle = 'ROUGE'; ligne.Decision = j.eleveId ? 'A_CONTROLER' : 'ESSAI';
-    ligne.Alertes = 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
+    if (pays === 'MC' && ligne.NIS_brut) {
+      /* DEV668 : NIS reconnu (notre base ou registre de Monaco, à la lettre près) : entreprise identifiée, pas de passage au bureau. */
+      try { nisOk = typeof EUC_DEV668_verifierNis_ === 'function' ? EUC_DEV668_verifierNis_(nis) : null; } catch (eNis) { nisOk = null; }
+      if (nisOk && nisOk.trouve) {
+        ligne.NIS_brut = nisOk.nis; ligne.NIS_normalise = EUC_DEV603_t_(nisOk.nis).toUpperCase().replace(/[\s-]+/g, ''); ligne.NIS_statut = 'VALIDE_' + nisOk.source; ligne.SIRET_statut = 'NIS_MONACO';
+        ligne.SIRET_source = nisOk.source === 'BASE' ? 'Base des entreprises (NIS)' : 'Registre de Monaco (RCI ' + nisOk.rci + ')';
+        ligne.Raison_sociale_officielle = nisOk.nom; ligne.Nom_commercial = nisOk.enseigne || nisOk.nom; ligne.Adresse_officielle = nisOk.adresse; ligne.CP_officiel = nisOk.cp; ligne.Ville_officielle = nisOk.ville;
+      } else nisOk = null;
+    }
+    ligne.Niveau_controle = nisOk ? 'VERT' : 'ROUGE'; ligne.Decision = !j.eleveId ? 'ESSAI' : nisOk ? 'A_VALIDER' : 'A_CONTROLER';
+    ligne.Alertes = nisOk ? 'NIS reconnu (' + (nisOk.source === 'BASE' ? 'base des entreprises' : 'registre de Monaco') + (nisOk.nisRegistre && nisOk.nisRegistre !== ligne.NIS_normalise ? ', ' + nisOk.nisRegistre + ' au registre' : '') + ')' + (message ? ' — message : ' + message : '')
+      : 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
     if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, { lieu: lieuAide });
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
     if (enAttente) EUC_ENT_grist('patch', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ id: enAttente.id, fields: fields }] });
     else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, entreprise + ' (' + ville + ')', periode.libelle, true, c.id,
-    { ent: { siret: EUC_DEV603_t_(q.siret), raisonSociale: entreprise, adresse: EUC_DEV603_t_(q.adresse), commune: ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) },
+  /* DEV668 : NIS reconnu : accusé de dépôt ordinaire (coordonnées de la base ou du registre), sans renvoi au bureau. */
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, (nisOk ? nisOk.nom : entreprise) + ' (' + (nisOk ? nisOk.ville : ville) + ')', periode.libelle, !nisOk, c.id,
+    { ent: nisOk ? { siret: nisOk.nis, raisonSociale: nisOk.nom, enseigne: nisOk.enseigne, adresse: nisOk.adresse, codePostal: nisOk.cp, commune: nisOk.ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) }
+      : { siret: EUC_DEV603_t_(q.siret), raisonSociale: entreprise, adresse: EUC_DEV603_t_(q.adresse), commune: ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) },
       resp: { nom: EUC_DEV603_t_(q.contact) }, tut: {}, tuteurEstResponsable: true, periode: periode, fiche: typeof ef === 'undefined' ? {} : ef, message: message });
-  return { ok: true, numero: numero, remplace: !!enAttente, bureau: EUC_DEV603_BUREAU_ };
+  return { ok: true, numero: numero, remplace: !!enAttente, bureau: EUC_DEV603_BUREAU_, nisReconnu: nisOk ? { nom: nisOk.nom, nis: nisOk.nis, source: nisOk.source } : null };
 }
 
 /* ---------- DEV606 : code de secours imprimé sur la convention (QR illisible ou convention perdue) ---------- */

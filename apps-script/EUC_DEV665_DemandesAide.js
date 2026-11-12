@@ -142,7 +142,7 @@ function EUC_DEV666_racine_(m) { return m.length >= 5 ? m.slice(0, 5) : m; }
 /* Entreprises connues (calcul pur) : base des entreprises (SIRET ou NIS) puis dépôts vérifiés ; une entrée par identifiant. */
 function EUC_DEV666_connues_(entreprises, lignes) {
   var T = EUC_DEV665_t_, vus = {}, l = [];
-  function ajouter(e) { var k = e.siret ? 'S' + e.siret : 'N' + EUC_DEV665_nis_(e.nis); if (!(e.siret || e.nis) || vus[k] || !e.nom) return; vus[k] = true; e.mots = EUC_DEV666_mots_(e.nom + ' ' + e.enseigne); l.push(e); }
+  function ajouter(e) { var k = e.siret ? 'S' + e.siret : 'N' + (typeof EUC_DEV668_cle_ === 'function' ? EUC_DEV668_cle_(e.nis) : EUC_DEV665_nis_(e.nis)); if (!(e.siret || e.nis) || vus[k] || !e.nom) return; vus[k] = true; e.mots = EUC_DEV666_mots_(e.nom + ' ' + e.enseigne); l.push(e); }
   (entreprises || []).forEach(function(r) {
     var siret = T(r.SIRET || r.Siret).replace(/\D/g, ''), nis = T(r.NIS);
     ajouter({ siret: siret.length === 14 ? siret : '', nis: siret.length === 14 ? '' : nis, nom: T(r.Raison_sociale || r.Nom || r.Entreprise), enseigne: T(r.Enseigne),
@@ -218,7 +218,10 @@ function EUC_DEV665_enregistrerMonaco(q) {
   EUC_DEV665_patch_(r.id, champs);
   /* DEV666 : l'entreprise entre aussi dans la base (recherche par nom du QR code et des prochains dépôts). */
   var base = EUC_DEV665_ajouterBaseMonaco_(Object.assign({}, f, champs));
-  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), baseMonaco: base };
+  /* DEV668 : existence contrôlée (base ou registre de Monaco, à la lettre près), sans bloquer : l'IMSEE n'est pas interrogeable. */
+  var controle = null; try { controle = typeof EUC_DEV668_verifierNis_ === 'function' && !/^EUC/.test(nis) ? EUC_DEV668_verifierNis_(nis) : null; } catch (eV) { controle = null; }
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), baseMonaco: base,
+    controle: controle ? { trouve: !!controle.trouve, source: controle.source || '', nisRegistre: controle.nisRegistre || '', nom: controle.nom || '' } : null };
 }
 /* DEV666 : vue d'un dépôt après correction (calcul pur) : identifié, il alimente le suivi et sort de la liste à traiter. */
 function EUC_DEV666_finir_(id, fields) {
@@ -241,7 +244,8 @@ function EUC_DEV665_valider(q) {
 function EUC_DEV665_ajouterBaseMonaco_(f) {
   try {
     var nis = EUC_DEV665_nis_(f.NIS_normalise), rows = EUC_IMPORT_lireRecords_(EUC_DEV646_table_());
-    if (rows.some(function(x) { return EUC_DEV665_nis_(x.NIS) === nis; })) return 'déjà dans la base des entreprises';
+    /* DEV668 : même NIS à la lettre près = même entreprise, jamais créée deux fois. */
+    if (rows.some(function(x) { return EUC_DEV665_nis_(x.NIS) === nis || (typeof EUC_DEV668_memeNis_ === 'function' && EUC_DEV668_memeNis_(x.NIS, nis)); })) return 'déjà dans la base des entreprises';
     EUC_DEV646_creerMonaco({ nom: f.Raison_sociale_officielle, enseigne: f.Nom_commercial !== f.Raison_sociale_officielle ? f.Nom_commercial : '', nis: f.NIS_brut || nis, adresse: f.Adresse_officielle, cp: f.CP_officiel, ville: f.Ville_officielle, telephone: f.Telephone_entreprise, email: f.Email_entreprise });
     return 'ajoutée à la base des entreprises';
   } catch (e) { return 'non ajoutée à la base des entreprises : ' + EUC_DEV665_t_(e && e.message || e); }

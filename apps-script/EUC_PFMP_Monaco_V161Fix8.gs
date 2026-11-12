@@ -22,10 +22,16 @@ function EUC_V161_rechercherEntrepriseMonaco(nis){
   var rows=EUC_IMPORT_lireRecords_(table);
   var hit=rows.filter(function(r){
     var rn=String(r.NIS||'').trim().toUpperCase().replace(/[\s-]+/g,'');
-    return rn===nis;
+    /* DEV668 : même NIS à la lettre près (registre RCI et IMSEE peuvent différer d'une lettre). */
+    return rn===nis||(typeof EUC_DEV668_memeNis_==='function'&&EUC_DEV668_memeNis_(rn,nis));
   })[0];
 
-  if(!hit)return {found:false,nis:nis};
+  if(!hit){
+    /* DEV668 : absente de notre base : existence vérifiée au registre de Monaco (id 0 : créée à l'enregistrement). */
+    var v=typeof EUC_DEV668_verifierNis_==='function'?EUC_DEV668_verifierNis_(nis):{trouve:false};
+    if(v&&v.trouve&&v.source==='RCI')return {found:true,id:0,source:'RCI',pays:'Monaco',nis:nis,rci:v.rci||'',nom:v.nom,enseigne:v.enseigne&&v.enseigne!==v.nom?v.enseigne:'',adresse:v.adresse,complement:'',cp:v.cp||'98000',ville:v.ville||'Monaco',email:'',telephone:'',statut:'VERIFIE_RCI'};
+    return {found:false,nis:nis};
+  }
 
   return {
     found:true,
@@ -47,7 +53,7 @@ function EUC_V161_rechercherEntrepriseMonaco(nis){
 function EUC_V161_enregistrerEntrepriseMonacoSiNouvelle_(d){
   d=d||{};if(EUC_V161F8_txt_(d.entreprisePays).toLowerCase()!=='monaco')return {created:false};
   var nis=EUC_V161F8_txt_(d.entrepriseSiret);if(!nis)return {created:false};
-  var existing=EUC_V161_rechercherEntrepriseMonaco(nis);if(existing&&existing.found)return {created:false,id:existing.id};
+  var existing=EUC_V161_rechercherEntrepriseMonaco(nis);if(existing&&existing.found&&existing.id)return {created:false,id:existing.id};
   var table=EUC_V161F8_assurerColonnesMonaco_();
   var cols=EUC_ENT_grist('get','/tables/'+encodeURIComponent(table)+'/columns').columns||[];var have={};cols.forEach(function(c){have[c.id]=true;});
   var fields={};function put(k,v){if(have[k]&&v!==undefined&&v!==null)fields[k]=v;}

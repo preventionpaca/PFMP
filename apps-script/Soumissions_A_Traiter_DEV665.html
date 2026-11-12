@@ -138,7 +138,8 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     if(a==='siret'){var s=$('s'+id).value.replace(/\D/g,'');if(s.length!==14){msg(id,'Le SIRET doit avoir 14 chiffres.','erreur');return;}occupe(b,true,'Vérification…');msg(id,'');verifierSiret(b,id,s);}
     if(a==='monaco'){occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV665_enregistrerMonaco',{id:id,nis:$('n'+id).value,nom:$('nom'+id).value,adresse:$('adr'+id).value,cp:$('cp'+id).value,ville:$('v'+id).value},60000,
-        function(r){occupe(b,false);remplacer(r.soumission);msg(id,'Entreprise de Monaco enregistrée'+(r.baseMonaco?' ('+r.baseMonaco+')':'')+'.'+fini(r.soumission),'ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+        function(r){occupe(b,false);remplacer(r.soumission);var c=r.controle,ctl=!c?'':c.trouve?' NIS reconnu ('+(c.source==='RCI'?'registre de Monaco'+(c.nisRegistre?' : '+c.nisRegistre:''):'base des entreprises')+(c.nom?', '+c.nom:'')+').':' Attention : NIS introuvable au registre de Monaco, même à la lettre près — vérifiez-le sur monentreprise.gouv.mc.';
+          msg(id,'Entreprise de Monaco enregistrée'+(r.baseMonaco?' ('+r.baseMonaco+')':'')+'.'+ctl+fini(r.soumission),c&&!c.trouve?'erreur':'ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     if(a==='chercher'){occupe(b,true,'Recherche…');msg(id,'');
       appel('EUC_DEV665_chercherMonaco',{nom:$('nom'+id).value},30000,function(r){occupe(b,false);var l=r.resultats||[];
         $('choix'+id).innerHTML=l.length?l.map(function(f,i){return '<button type="button" data-choix="'+i+'">'+esc(f.nom)+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc(f.adresse)+' '+esc(f.ville)+' · <b>'+esc(f.nis)+'</b></button>';}).join(''):'<p class="note">Aucune entreprise de Monaco de ce nom dans la base : saisissez le NIS.</p>';

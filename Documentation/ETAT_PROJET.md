@@ -1,5 +1,21 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV668 : NIS de Monaco reconnu à la lettre près
+
+- **Décision du bureau** : le NIS sert à prouver que l'entreprise existe. Deux NIS qui ne diffèrent que par la lettre (mêmes 4 + 5 chiffres) désignent la même entreprise. Exemple TITAN : 7112Y19343 au registre RCI, 7112B19343 à l'IMSEE.
+- **`EUC_DEV668_NisEquivalent.js`** :
+  - la clé de comparaison retient les 9 chiffres ;
+  - recherche dans notre base à la lettre près ;
+  - sinon, recherche au registre de Monaco : le NIS saisi puis les 25 autres lettres, en appels parallèles (`UrlFetchApp.fetchAll`), avec la fiche relue qui doit porter les mêmes chiffres ;
+  - résultat gardé 24 h (1 h s'il est négatif) ;
+  - l'IMSEE refuse les appels automatiques (403) et n'est pas interrogée.
+- **Page du QR code** : le NIS est reconnu à la lettre près dans la base. Absent de la base mais trouvé au registre, l'entreprise est retrouvée avec les coordonnées du registre, puis créée dans la base à l'enregistrement.
+- **Formulaire en ligne** : une demande d'aide Monaco dont le NIS est reconnu devient une entreprise identifiée : SIRET_statut NIS_MONACO, niveau VERT, accusé ordinaire, plus de passage au bureau G205. Un NIS inconnu reste une demande d'aide, comme avant.
+- **Soumissions à traiter** :
+  - le NIS enregistré par le bureau est contrôlé (base ou registre) et le résultat est affiché, sans bloquer ;
+  - une entreprise n'est jamais ajoutée deux fois à la base pour une simple différence de lettre.
+- Tests : 1258, dont 5 tests DEV668 et 1 test DEV603 (parcours de la demande d'aide avec un NIS reconnu).
+
 ## Mise à jour du 12 novembre 2026 — DEV667 : registre de Monaco (RCI), Monaco au SIRET français, numéro interne, carte
 
 - **Registre de Monaco (RCI, teleservice.gouv.mc/rci)**, dans `EUC_DEV667_RciMonaco.js`.
