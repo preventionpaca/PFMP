@@ -148,7 +148,7 @@ function EUC_DEV670_afficher(e) {
     var r = EUC_DEV663_pdf_(t.classe.id, t.periode.id, 0, null);
     if (!r) throw new Error('Données du tableau introuvables.');
     corps = '<p>Tableau de <b>' + h(r.classe) + '</b> — ' + h(r.periode) + '</p><p><a class="b" download="' + h(r.blob.getName()) + '" href="data:application/pdf;base64,' + Utilities.base64Encode(r.blob.getBytes()) + '">Télécharger le PDF</a></p>';
-  } catch (x) { corps = '<p class="err"><b>Tableau impossible :</b> ' + h(x && x.message || x) + '</p>'; }
+  } catch (x) { corps = '<p class="err"><b>Tableau impossible :</b> ' + h(x && x.message || x) + '</p><pre style="font-size:12px;white-space:pre-wrap">' + h(x && x.stack || '') + '</pre>'; }
   return HtmlService.createHtmlOutput('<!doctype html><meta charset="utf-8"><style>body{font:15px Arial,sans-serif;margin:24px;color:#16302a}.b{background:#0b6b4f;color:#fff;padding:9px 14px;border-radius:7px;text-decoration:none;font-weight:700}.err{color:#9a3412}</style><h1>Tableau de la classe</h1>' + corps)
     .setTitle('Tableau de la classe — PFMP');
 }
