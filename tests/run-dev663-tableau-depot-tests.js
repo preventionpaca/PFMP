@@ -42,7 +42,7 @@ test('tableau de la classe : colonnes de l’export du suivi, une ligne par él�
 /* Document Google simulé : enregistre la mise en page appliquée. */
 function docSimule(journal) {
   const texte = () => { const o = { t: '' }; ['setFontFamily', 'setFontSize', 'setBold', 'setForegroundColor'].forEach(m => o[m] = v => { (journal.texte = journal.texte || []).push([m, v]); return o; }); o.getText = () => o.t; return o; };
-  const par = (t) => { const p = { t }; ['setSpacingBefore', 'setSpacingAfter', 'setLineSpacing'].forEach(m => p[m] = () => p); p.setText = x => { p.t = x; return p; }; p.editAsText = () => { const x = texte(); x.t = p.t; return x; }; p.getType = () => 'PARAGRAPH'; p.asParagraph = () => p; return p; };
+  const par = (t) => { const p = { t }; ['setSpacingBefore', 'setSpacingAfter', 'setLineSpacing'].forEach(m => p[m] = () => p); p.setText = x => { p.t = x; }; /* comme Google Docs : ne renvoie rien (DEV670) */ p.editAsText = () => { const x = texte(); x.t = p.t; return x; }; p.getType = () => 'PARAGRAPH'; p.asParagraph = () => p; return p; };
   const corps = { paras: [par('')], tables: [] };
   ['setPageWidth', 'setPageHeight', 'setMarginTop', 'setMarginBottom', 'setMarginLeft', 'setMarginRight'].forEach(m => corps[m] = v => { journal[m] = v; return corps; });
   corps.getParagraphs = () => corps.paras; corps.appendParagraph = t => { const p = par(t); corps.paras.push(p); return p; };

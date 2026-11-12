@@ -69,7 +69,8 @@ function EUC_DEV663_pdfDoc_(d) {
   var doc = DocumentApp.create(d.nom), b = doc.getBody(), vert = '#0b6b4f';
   b.setPageWidth(841.89).setPageHeight(595.28).setMarginTop(28).setMarginBottom(28).setMarginLeft(28).setMarginRight(28);
   var style = function(par, taille, gras, couleur) { par.setSpacingBefore(0).setSpacingAfter(3).setLineSpacing(1); par.editAsText().setFontFamily('Arial').setFontSize(taille).setBold(gras).setForegroundColor(couleur); return par; };
-  style(b.getParagraphs()[0].setText(d.titre), 16, false, vert);
+  /* Paragraph.setText ne renvoie rien (API Google Docs) : le paragraphe est repris avant d'être mis en forme. */
+  var premier = b.getParagraphs()[0]; premier.setText(d.titre); style(premier, 16, false, vert);
   style(b.appendParagraph(d.sousTitre), 9, false, '#16302a');
   style(b.appendParagraph(d.resume), 9, false, '#16302a');
   var t = b.appendTable([d.entetes].concat(d.lignes.map(function(l) { return l.cellules; })));
