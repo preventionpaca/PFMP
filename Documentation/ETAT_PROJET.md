@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV670 : tableau de la classe joint aux dépôts réparé
+
+- **Constat** : depuis DEV663, aucun tableau n'était joint aux courriels de l'équipe (BFE, professeur principal, administration). L'erreur réelle était « Cannot read properties of null (reading 'setSpacingBefore') » : dans Google Docs, `Paragraph.setText` ne renvoie rien, et la simulation des tests renvoyait le paragraphe.
+- **Correction** : le code et la simulation des tests sont alignés sur l'API réelle. Le test échoue sur l'ancien code.
+- **Diagnostic** :
+  - le courriel de l'équipe indique la cause quand le tableau manque ;
+  - nouvelle page d'administration `?page=tableau-classe-pfmp&classe=<nom ou id>&periode=<id, rang ou libellé>`, qui produit le PDF à la demande ou affiche l'erreur avec la pile d'appels.
+- **Vérifié sur le vert (@1224)** : la page produit le tableau de 2BTS MV — Stage n°1 et propose « Télécharger le PDF ». Le contenu du PDF n'a pas été ouvert. Le prochain dépôt réel doit arriver avec la pièce jointe.
+
 ## Mise à jour du 12 novembre 2026 — DEV669 : courriel « Problème résolu » à l'élève
 
 - **Constat** : depuis DEV666, une demande d'aide résolue dans « Soumissions à traiter » (SIRET vérifié ou NIS enregistré) passe dans le suivi sans courriel. Seule l'ancienne validation par import (`EUC_DEV603_apresValidation_`) prévenait l'élève.
