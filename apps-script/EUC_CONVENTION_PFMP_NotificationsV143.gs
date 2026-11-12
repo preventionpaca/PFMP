@@ -400,7 +400,7 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
 
   try{
     var envois=EUC_NOTIF_envoisSeparesV663_(n);
-    envois.forEach(function(m){MailApp.sendEmail(m);});
+    envois.forEach(function(m){if(typeof EUC_DEV671_expedier_==='function')EUC_DEV671_expedier_(m);else MailApp.sendEmail(EUC_NOTIF_immediatV671_(m));});
 
     EUC_ENT_grist('patch','/tables/'+encodeURIComponent(EUC_CONVENTION_ACCES_TABLE_)+'/records',{
       records:[{id:a.id,fields:{
@@ -429,19 +429,28 @@ function EUC_CONVENTION_apresEnregistrementV143_(accesId,numero,options){
   }
 }
 
-/* DEV663 : courriels à envoyer (la pièce jointe n'est construite que pour l'équipe). */
+/* DEV671 : courriel de l'équipe construit tout de suite (secours si la file d'attente n'existe pas). */
+function EUC_NOTIF_immediatV671_(m){
+  if(!m||!m.differe)return m;
+  var p=m.differe,eq=EUC_DEV663_recapEquipe_(p.info,p.classeId,p.periodeId,p.eleveId,p.numero);
+  return {to:p.to,subject:p.subject,body:eq.texte,htmlBody:eq.html||undefined,attachments:eq.pj.length?eq.pj:undefined,name:p.name};
+}
+
+/* DEV663 : courriels à envoyer (la pièce jointe n'est construite que pour l'équipe).
+ * DEV671 : la famille d'abord ; le courriel de l'équipe (tableau joint) est différé, construit en arrière-plan. */
 function EUC_NOTIF_envoisSeparesV663_(n){
   var a=(n.dossier&&n.dossier.acces)||{},nom='Lycée Les Eucalyptus — PFMP',envois=[];
   if(n.famille.length)envois.push({to:n.famille[0],cc:n.famille.slice(1).join(',')||undefined,replyTo:n.equipe.join(',')||undefined,subject:n.subject,body:n.body,htmlBody:n.htmlBody||undefined,name:nom});
   if(n.equipe.length){
-    var eq={texte:n.body,html:n.htmlBody,pj:[]},info=null;
+    var info=null,d=n.dossier||{},el=d.eleve||{};
     if(typeof EUC_DEV663_recapEquipe_==='function'&&typeof EUC_DEV649_infoAcces_==='function'){
       var vars=EUC_NOTIF_variablesV143_(n.dossier);info=EUC_DEV649_infoAcces_(n.dossier,EUC_NOTIF_renderV143_(n.params.NOTIF_CORPS,vars),EUC_NOTIF_renderV143_(n.params.NOTIF_SIGNATURE,vars));
       info.parents=n.famille.length>1;
-      eq=EUC_DEV663_recapEquipe_(info,Number(EUC_PFMP_ref_(a.Classe_convention)),Number(EUC_PFMP_ref_(a.Periode)),Number(EUC_PFMP_ref_(a.Eleve)),n.dossier.numero);
     }
-    var d=n.dossier||{},el=d.eleve||{};
-    envois.push({to:n.equipe.join(','),subject:(info&&info.g205&&info.g205.requis?'[À traiter au bureau G205] ':'[Dépôt] ')+d.numero+' — '+[el.prenom,el.nom].filter(Boolean).join(' ')+(d.classe?' ('+d.classe+')':''),body:eq.texte,htmlBody:eq.html||undefined,attachments:eq.pj.length?eq.pj:undefined,name:nom});
+    var sujet=(info&&info.g205&&info.g205.requis?'[À traiter au bureau G205] ':'[Dépôt] ')+d.numero+' — '+[el.prenom,el.nom].filter(Boolean).join(' ')+(d.classe?' ('+d.classe+')':'');
+    if(info)envois.push({to:n.equipe.join(','),subject:sujet,name:nom,differe:{to:n.equipe.join(','),subject:sujet,name:nom,info:info,
+      classeId:Number(EUC_PFMP_ref_(a.Classe_convention)),periodeId:Number(EUC_PFMP_ref_(a.Periode)),eleveId:Number(EUC_PFMP_ref_(a.Eleve)),numero:d.numero}});
+    else envois.push({to:n.equipe.join(','),subject:sujet,body:n.body,htmlBody:n.htmlBody||undefined,name:nom});
   }
   return envois;
 }

@@ -97,20 +97,28 @@ test('page du QR code : deux envois, élève + parents sans tableau, équipe ave
   const env = s.EUC_NOTIF_envoisSeparesV663_(nDoss);
   assert.equal(env.length, 2);
   assert.equal(env[0].to, 'eleve@ex.test'); assert.equal(env[0].cc, 'parent@ex.test'); assert.equal(env[0].attachments, undefined, 'jamais de tableau pour la famille'); assert.equal(env[0].replyTo, 'pp@ex.test,bfe@ex.test');
-  assert.equal(env[1].to, 'pp@ex.test,bfe@ex.test'); assert.equal(env[1].cc, undefined); assert.deepEqual(env[1].attachments, [{ pdf: '7|40|3|PFMP-2026-000321' }]);
-  assert.equal(env[1].subject, '[Dépôt] PFMP-2026-000321 — Joan GAMMA (1TEST)'); assert.equal(env[1].body, 'EQ');
+  assert.equal(env[1].to, 'pp@ex.test,bfe@ex.test'); assert.equal(env[1].cc, undefined);
+  assert.equal(env[1].attachments, undefined, 'DEV671 : le tableau n’est pas construit pendant le dépôt'); assert.equal(env[1].body, undefined);
+  assert.equal(env[1].differe.to, 'pp@ex.test,bfe@ex.test'); assert.equal(env[1].differe.numero, 'PFMP-2026-000321');
+  assert.deepEqual([env[1].differe.classeId, env[1].differe.periodeId, env[1].differe.eleveId], [7, 40, 3]);
+  assert.equal(env[1].subject, '[Dépôt] PFMP-2026-000321 — Joan GAMMA (1TEST)'); assert.equal(env[1].differe.subject, env[1].subject);
+  const imm = s.EUC_NOTIF_immediatV671_(env[1]);
+  assert.deepEqual(imm.attachments, [{ pdf: '7|40|3|PFMP-2026-000321' }], 'secours : tableau construit et joint'); assert.equal(imm.body, 'EQ'); assert.equal(imm.to, 'pp@ex.test,bfe@ex.test');
+  assert.equal(s.EUC_NOTIF_immediatV671_(env[0]), env[0], 'courriel de la famille inchangé');
   assert.ok(!env[0].to.includes('pp@') && !(env[0].cc || '').includes('bfe@'), 'l’équipe n’est pas dans l’envoi de la famille');
   assert.equal(s.EUC_NOTIF_envoisSeparesV663_(Object.assign({}, nDoss, { famille: [] })).length, 1, 'sans adresse de famille : seulement l’équipe');
   assert.equal(s.EUC_NOTIF_envoisSeparesV663_(Object.assign({}, nDoss, { equipe: [] })).length, 1, 'sans équipe : seulement la famille');
   const src = read('apps-script/EUC_CONVENTION_PFMP_NotificationsV143.gs');
-  assert.match(src, /var envois=EUC_NOTIF_envoisSeparesV663_\(n\);\s*envois\.forEach\(function\(m\)\{MailApp\.sendEmail\(m\);\}\);/);
+  assert.match(src, /var envois=EUC_NOTIF_envoisSeparesV663_\(n\);\s*envois\.forEach\(function\(m\)\{if\(typeof EUC_DEV671_expedier_==='function'\)EUC_DEV671_expedier_\(m\);else MailApp\.sendEmail\(EUC_NOTIF_immediatV671_\(m\)\);\}\);/);
   assert.match(src, /equipe=EUC_NOTIF_uniqueV143_\(d\.pp\.concat\(bfe\?\[bfe\]:\[\]\)\.concat\([^]*\.filter\(function\(x\)\{return famille\.indexOf\(x\)<0;\}\)/);
 });
 
-test('formulaire en ligne : tableau joint à la copie de l’équipe seulement, calculé seulement s’il y a une copie', () => {
+test('formulaire en ligne : élève d’abord, sans tableau ; copie de l’équipe différée, seulement s’il y a une copie', () => {
   const d = read('apps-script/EUC_DEV649_LieuStageRecap.js');
-  assert.match(d, /var equipe = copie\.length && typeof EUC_DEV663_recapEquipe_ === 'function' \? EUC_DEV663_recapEquipe_\(info, classeId, detail\.periode && detail\.periode\.id, eleve\.id, numero\)/);
-  assert.match(d, /if \(copie\.length\) MailApp\.sendEmail\(\{ to: copie\.join\(','\), [^}]*body: equipe\.texte, htmlBody: equipe\.html, attachments: equipe\.pj\.length \? equipe\.pj : undefined \}\)/);
+  const eleve = d.indexOf('if (email) MailApp.sendEmail({ to: email'), equipe = d.indexOf('if (copie.length && typeof EUC_DEV671_expedier_');
+  assert.ok(eleve > 0 && equipe > eleve, 'DEV671 : l’accusé de l’élève part avant le courriel de l’équipe');
+  assert.match(d, /if \(copie\.length && typeof EUC_DEV671_expedier_ === 'function' && typeof EUC_DEV663_recapEquipe_ === 'function'\) EUC_DEV671_expedier_\(\{ to: copie\.join\(','\), subject: sujet,\s*differe: \{ to: copie\.join\(','\), subject: sujet, name: 'Lycée Les Eucalyptus — PFMP', info: info, classeId: classeId, periodeId: detail\.periode && detail\.periode\.id, eleveId: eleve\.id, numero: numero \} \}\)/);
+  assert.doesNotMatch(d, /EUC_DEV663_recapEquipe_\(info/, 'le tableau n’est plus construit pendant le dépôt');
   assert.match(d, /if \(email\) MailApp\.sendEmail\(\{ to: email, replyTo: copie\.join\(','\) \|\| undefined, [^}]*body: r\.texte, htmlBody: r\.html \}\)/, 'accusé de l’élève sans pièce jointe');
 });
 test('DEV670 : tableau à la demande : classe par nom ou id, période par id, rang ou libellé ; causes explicites', () => {

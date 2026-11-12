@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV671 : courriel de l'équipe envoyé en arrière-plan
+
+- Constat : la fabrication du tableau de la classe prend plusieurs secondes ; elle se faisait pendant le dépôt, avant l'accusé de l'élève, qui attendait d'autant.
+- Désormais (formulaire en ligne et page du QR code) : l'élève et sa famille reçoivent leur accusé tout de suite, sans tableau ; le courriel de l'équipe (BFE, administration, professeur principal) est mis en file (`EUC_DEV671_EquipeDifferee.js`, propriétés de script) et part une à deux minutes plus tard, tableau joint, par un déclencheur ponctuel `EUC_DEV671_traiterFile` (un seul déclencheur pour plusieurs dépôts, retiré après passage).
+- Secours : déclencheur impossible, verrou indisponible ou données > 8,5 Ko → courriel de l'équipe envoyé immédiatement, comme avant. Panne du courriel : trois essais puis abandon journalisé. Déclencheur perdu : replanifié au dépôt suivant après 15 minutes. Un courriel est retiré de la file avant l'envoi (jamais deux fois).
+- Tests : `tests/run-dev671-tests.js` (5) ; tests DEV663 alignés (tableau non construit pendant le dépôt, secours avec tableau, ordre élève puis équipe).
+- Non vérifié en réel : aucun dépôt réel effectué ; premier dépôt à surveiller (courriel de l'équipe 1 à 2 minutes après l'accusé de l'élève).
+
 ## Mise à jour du 12 novembre 2026 — DEV670 : tableau de la classe joint aux dépôts réparé
 
 - **Constat** : depuis DEV663, aucun tableau n'était joint aux courriels de l'équipe (BFE, professeur principal, administration). L'erreur réelle était « Cannot read properties of null (reading 'setSpacingBefore') » : dans Google Docs, `Paragraph.setText` ne renvoie rien, et la simulation des tests renvoyait le paragraphe.
