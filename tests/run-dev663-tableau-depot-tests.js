@@ -72,7 +72,7 @@ test('courriel de l’équipe : rédigé pour elle, tableau joint ; sans tableau
   const s = { console: { log() {} }, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, EUC_SUIVI2_modele_: () => { throw new Error('Grist indisponible'); } };
   vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV649_LieuStageRecap.js'), s); vm.runInContext(read('apps-script/EUC_DEV663_TableauDepot.js'), s);
   const q = s.EUC_DEV663_recapEquipe_(info, 7, 40, 3, 'N1');
-  assert.equal(q.pj.length, 0); assert.match(q.texte, /Tableau de la classe indisponible/);
+  assert.equal(q.pj.length, 0); assert.match(q.texte, /Tableau de la classe indisponible/); assert.match(q.texte, /indisponible pour ce dépôt : le consulter dans le suivi des PFMP\. Cause : [^)]+\.\)/, 'DEV670 : cause donnée à l’équipe');
   const journal = {}, sim = docSimule(journal);
   const ok = Object.assign({ console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, EUC_SUIVI2_modele_: () => ({}), EUC_SUIVI2_vueEnseignants_: () => VUE,
     Utilities: { formatDate: () => '11/11/2026 18:20' } }, sim);
@@ -112,5 +112,14 @@ test('formulaire en ligne : tableau joint à la copie de l’équipe seulement, 
   assert.match(d, /var equipe = copie\.length && typeof EUC_DEV663_recapEquipe_ === 'function' \? EUC_DEV663_recapEquipe_\(info, classeId, detail\.periode && detail\.periode\.id, eleve\.id, numero\)/);
   assert.match(d, /if \(copie\.length\) MailApp\.sendEmail\(\{ to: copie\.join\(','\), [^}]*body: equipe\.texte, htmlBody: equipe\.html, attachments: equipe\.pj\.length \? equipe\.pj : undefined \}\)/);
   assert.match(d, /if \(email\) MailApp\.sendEmail\(\{ to: email, replyTo: copie\.join\(','\) \|\| undefined, [^}]*body: r\.texte, htmlBody: r\.html \}\)/, 'accusé de l’élève sans pièce jointe');
+});
+test('DEV670 : tableau à la demande : classe par nom ou id, période par id, rang ou libellé ; causes explicites', () => {
+  const s = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp }; vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV663_TableauDepot.js'), s);
+  const vue = { classes: [{ id: 41, nom: '2BTS MV', periodes: [{ id: 900, libelle: 'Stage n°1' }, { id: 901, libelle: 'Stage n°2' }] }] };
+  assert.equal(s.EUC_DEV670_trouver_(vue, '2bts mv', '').periode.id, 900);
+  assert.equal(s.EUC_DEV670_trouver_(vue, '41', '2').periode.id, 901); assert.equal(s.EUC_DEV670_trouver_(vue, '41', '900').periode.id, 900);
+  assert.equal(s.EUC_DEV670_trouver_(vue, '2BTS MV', 'stage n°2').periode.id, 901);
+  assert.match(s.EUC_DEV670_trouver_(vue, '1MELEC', '').erreur, /Classe introuvable/); assert.match(s.EUC_DEV670_trouver_(vue, '41', '7').erreur, /900 = Stage n°1/);
+  assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'tableau-classe-pfmp':\n      return EUC_DEV670_afficher\(e\);/);
 });
 console.log(n + ' tests DEV663 réussis.');

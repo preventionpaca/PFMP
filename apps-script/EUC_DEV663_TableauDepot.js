@@ -115,10 +115,39 @@ function EUC_DEV663_depot_(info, numero) {
 
 /* Courriel de l'équipe : récapitulatif rédigé pour elle + tableau joint. Le dépôt n'échoue jamais à cause du tableau. */
 function EUC_DEV663_recapEquipe_(info, classeId, periodeId, eleveId, numero) {
-  var joint = null;
-  try { joint = EUC_DEV663_pdf_(classeId, periodeId, eleveId, EUC_DEV663_depot_(info, numero)); } catch (e) { console.log('DEV663 tableau : ' + (e && e.message || e)); }
+  var joint = null, cause = '';
+  try { joint = EUC_DEV663_pdf_(classeId, periodeId, eleveId, EUC_DEV663_depot_(info, numero)); if (!joint) cause = 'classe ' + classeId + ' ou période ' + periodeId + ' absente du suivi'; }
+  catch (e) { cause = EUC_DEV663_t_(e && e.message || e); console.log('DEV663 tableau : ' + cause); }
   var x = EUC_DEV663_infoEquipe_(info, joint);
-  if (!joint) x.intro += '\n(Tableau de la classe indisponible pour ce dépôt : le consulter dans le suivi des PFMP.)';
+  /* DEV670 : la cause est donnée à l'équipe (jamais à l'élève) pour pouvoir corriger. */
+  if (!joint) x.intro += '\n(Tableau de la classe indisponible pour ce dépôt : le consulter dans le suivi des PFMP. Cause : ' + (cause || 'inconnue') + '.)';
   var r = EUC_DEV649_recap_(x);
   return { texte: r.texte, html: r.html, pj: joint ? [joint.blob] : [] };
+}
+
+/* DEV670 — Tableau d'une classe à la demande (administration) : même PDF que celui joint aux dépôts.
+ * ?page=tableau-classe-pfmp&classe=<id ou nom>&periode=<id, rang ou début du libellé>. Affiche la cause en cas d'échec. */
+function EUC_DEV670_trouver_(vue, classe, periode) {
+  var T = EUC_DEV663_t_, n = function(v) { return T(v).toUpperCase().replace(/\s+/g, ''); };
+  var c = (vue.classes || []).filter(function(x) { return String(x.id) === T(classe) || n(x.nom) === n(classe); })[0];
+  if (!c) return { erreur: 'Classe introuvable dans le suivi : ' + T(classe) };
+  var ps = c.periodes || [], p = ps.filter(function(x) { return String(x.id) === T(periode); })[0]
+    || (/^\d{1,2}$/.test(T(periode)) ? ps[Number(periode) - 1] : null)
+    || ps.filter(function(x) { return T(periode) && n(x.libelle).indexOf(n(periode)) === 0; })[0] || (!T(periode) ? ps[0] : null);
+  if (!p) return { erreur: 'Période introuvable pour ' + c.nom + ' : ' + T(periode) + ' (périodes : ' + ps.map(function(x) { return x.id + ' = ' + x.libelle; }).join(', ') + ')' };
+  return { classe: c, periode: p };
+}
+function EUC_DEV670_afficher(e) {
+  EUC_IMPORT_exigerAdminTexte_();
+  var q = (e && e.parameter) || {}, h = function(v) { return EUC_DEV663_t_(v).replace(/[&<>"]/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var corps;
+  try {
+    var vue = EUC_SUIVI2_vueEnseignants_(EUC_SUIVI2_modele_('')), t = EUC_DEV670_trouver_(vue, q.classe, q.periode);
+    if (t.erreur) throw new Error(t.erreur);
+    var r = EUC_DEV663_pdf_(t.classe.id, t.periode.id, 0, null);
+    if (!r) throw new Error('Données du tableau introuvables.');
+    corps = '<p>Tableau de <b>' + h(r.classe) + '</b> — ' + h(r.periode) + '</p><p><a class="b" download="' + h(r.blob.getName()) + '" href="data:application/pdf;base64,' + Utilities.base64Encode(r.blob.getBytes()) + '">Télécharger le PDF</a></p>';
+  } catch (x) { corps = '<p class="err"><b>Tableau impossible :</b> ' + h(x && x.message || x) + '</p>'; }
+  return HtmlService.createHtmlOutput('<!doctype html><meta charset="utf-8"><style>body{font:15px Arial,sans-serif;margin:24px;color:#16302a}.b{background:#0b6b4f;color:#fff;padding:9px 14px;border-radius:7px;text-decoration:none;font-weight:700}.err{color:#9a3412}</style><h1>Tableau de la classe</h1>' + corps)
+    .setTitle('Tableau de la classe — PFMP');
 }
