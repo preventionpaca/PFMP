@@ -53,7 +53,9 @@ function EUC_DEV665_vue_(r) {
     lieu: [T(f.Lieu_stage_adresse), [T(f.Lieu_stage_code_postal), T(f.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     alertes: T(f.Alertes), decision: T(f.Decision).toUpperCase(),
     /* DEV666 : déjà compté « Convention enregistrée » dans le suivi : rien à faire au bureau. */
-    dansSuivi: EUC_DEV666_dansSuivi_(f), ferme: T(f.Niveau_controle).toUpperCase() === 'ORANGE'
+    dansSuivi: EUC_DEV666_dansSuivi_(f), ferme: T(f.Niveau_controle).toUpperCase() === 'ORANGE',
+    /* DEV669 : demande d'aide résolue, élève pas encore prévenu par courriel. */
+    aPrevenir: typeof EUC_DEV669_aPrevenir_ === 'function' ? EUC_DEV669_aPrevenir_(f) : false
   };
 }
 /* DEV666 : même règle que le suivi (EUC_SUIVI2_modele_) pour compter un dépôt comme convention enregistrée :
@@ -196,7 +198,8 @@ function EUC_DEV665_verifierSiret(q) {
     Alertes: EUC_DEV665_trace_(f.Alertes, 'SIRET corrigé par le bureau : ' + siret + (actif ? '' : ' — établissement fermé selon l’INSEE'))
   };
   EUC_DEV665_patch_(r.id, champs);
-  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), ferme: !actif };
+  var apres = EUC_DEV669_apresCorrection_(r.id, Object.assign({}, f, champs));
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, apres.fields), ferme: !actif, prevenu: apres.prevenu };
 }
 
 /* Monaco : NIS (ou numéro interne) saisi ou corrigé par le bureau, avec nom et adresse. */
@@ -220,8 +223,17 @@ function EUC_DEV665_enregistrerMonaco(q) {
   var base = EUC_DEV665_ajouterBaseMonaco_(Object.assign({}, f, champs));
   /* DEV668 : existence contrôlée (base ou registre de Monaco, à la lettre près), sans bloquer : l'IMSEE n'est pas interrogeable. */
   var controle = null; try { controle = typeof EUC_DEV668_verifierNis_ === 'function' && !/^EUC/.test(nis) ? EUC_DEV668_verifierNis_(nis) : null; } catch (eV) { controle = null; }
-  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)), baseMonaco: base,
+  var apres = EUC_DEV669_apresCorrection_(r.id, Object.assign({}, f, champs));
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, apres.fields), baseMonaco: base, prevenu: apres.prevenu,
     controle: controle ? { trouve: !!controle.trouve, source: controle.source || '', nisRegistre: controle.nisRegistre || '', nom: controle.nom || '' } : null };
+}
+/* DEV669 : demande d'aide résolue par le bureau : l'élève est prévenu tout de suite (jamais bloquant). */
+function EUC_DEV669_apresCorrection_(id, fields) {
+  try {
+    if (typeof EUC_DEV669_prevenir_ === 'function' && EUC_DEV669_prevenir_({ id: id, fields: fields }))
+      return { prevenu: true, fields: Object.assign({}, fields, { Alertes: EUC_DEV665_trace_(fields.Alertes, EUC_DEV669_TRACE_) }) };
+  } catch (e) { console.log('DEV669 : ' + (e && e.message || e)); }
+  return { prevenu: false, fields: fields };
 }
 /* DEV666 : vue d'un dépôt après correction (calcul pur) : identifié, il alimente le suivi et sort de la liste à traiter. */
 function EUC_DEV666_finir_(id, fields) {

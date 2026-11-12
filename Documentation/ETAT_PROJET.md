@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 12 novembre 2026 — DEV669 : courriel « Problème résolu » à l'élève
+
+- **Constat** : depuis DEV666, une demande d'aide résolue dans « Soumissions à traiter » (SIRET vérifié ou NIS enregistré) passe dans le suivi sans courriel. Seule l'ancienne validation par import (`EUC_DEV603_apresValidation_`) prévenait l'élève.
+- **`EUC_DEV669_Resolution.js`** : quand le bureau identifie l'entreprise d'une demande d'aide (« élève envoyé au bureau G205 »), l'élève reçoit « Problème résolu : ta convention de stage est enregistrée — n° … ». Le courriel donne l'entreprise, l'adresse, le SIRET ou NIS, la période et le même numéro, et dit qu'il n'y a plus besoin de passer au G205.
+  - L'envoi est automatique au moment de la correction.
+  - Pour les demandes résolues avant DEV669 : filtre « Élèves à prévenir », bouton par élève et « Prévenir les N élèves », chacun avec une confirmation qui liste les élèves.
+  - Il n'y a jamais deux envois : la trace « Élève prévenu par courriel » est gardée dans les alertes de la soumission.
+- **Convention imprimée** : l'impression utilise uniquement le modèle **PDF** maître (Paramètres de la convention › « Modèle PDF maître — impression »). Le modèle Word ne sert plus qu'à la réédition Word historique, avec les anciens liens.
+- Tests : 1262, dont 4 tests DEV669.
+- Parcours réels : aucun courriel envoyé par Claude. L'envoi aux élèves déjà résolus est laissé au bureau, par bouton.
+
 ## Mise à jour du 12 novembre 2026 — DEV668 : NIS de Monaco reconnu à la lettre près
 
 - **Décision du bureau** : le NIS sert à prouver que l'entreprise existe. Deux NIS qui ne diffèrent que par la lettre (mêmes 4 + 5 chiffres) désignent la même entreprise. Exemple TITAN : 7112Y19343 au registre RCI, 7112B19343 à l'IMSEE.
