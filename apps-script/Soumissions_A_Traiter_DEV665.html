@@ -142,7 +142,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     appel('EUC_DEV665_verifierSiret',{id:id,siret:siret,reponseApi:reponseApi||null},60000,function(r){
       if(r.aVerifierNavigateur){
         var ctl=typeof AbortController==='function'?new AbortController():null,minu=setTimeout(function(){if(ctl)ctl.abort();},8000);
-        fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){return x.json();}).then(function(json){clearTimeout(minu);verifierSiret(b,id,siret,json);})
+        fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){if(!x.ok)throw new Error('erreur '+x.status);return x.json();}).then(function(json){clearTimeout(minu);verifierSiret(b,id,siret,json);})
           .catch(function(){clearTimeout(minu);occupe(b,false);msg(id,'Le service de vérification ne répond pas. Réessayez dans un instant.','erreur');});
         return;
       }

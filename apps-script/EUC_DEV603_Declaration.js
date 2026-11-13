@@ -331,6 +331,8 @@ function EUC_DEV603_signalerProbleme(q) {
     eleve = { id: j.eleveId, nom: EUC_DEV603_nom_(ef.Nom), prenom: EUC_DEV603_prenom_(ef.Prenom_usage || ef.Prenom), naissance: EUC_SUIVI2_date_(ef.Date_naissance) };
     emailEleve = EUC_DEV603_t_(q.emailEleve).toLowerCase() || EUC_DEV603_t_(ef.Email_eleve || ef.Courriel || ef.Email).toLowerCase();
   }
+  /* DEV673 : SIRET français de 14 chiffres : vérifié à nouveau à l'envoi (base, puis annuaire officiel lu par le navigateur). */
+  var siretOk = pays === 'FR' && typeof EUC_DEV673_verifierSiret_ === 'function' ? EUC_DEV673_verifierSiret_(q.siret, q.reponseApi) : null;
   var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Beaucoup d’envois en même temps : réessaie dans un instant.');
   var numero, enAttente = null;
   try {
@@ -358,9 +360,15 @@ function EUC_DEV603_signalerProbleme(q) {
         ligne.Raison_sociale_officielle = nisOk.nom; ligne.Nom_commercial = nisOk.enseigne || nisOk.nom; ligne.Adresse_officielle = nisOk.adresse; ligne.CP_officiel = nisOk.cp; ligne.Ville_officielle = nisOk.ville;
       } else nisOk = null;
     }
+    if (siretOk) EUC_DEV673_appliquer_(ligne, siretOk);
+    var cause = EUC_DEV603_t_(q.echec).slice(0, 200);
     ligne.Niveau_controle = nisOk ? 'VERT' : 'ROUGE'; ligne.Decision = !j.eleveId ? 'ESSAI' : nisOk ? 'A_VALIDER' : 'A_CONTROLER';
     ligne.Alertes = nisOk ? 'NIS reconnu (' + (nisOk.source === 'BASE' ? 'base des entreprises' : 'registre de Monaco') + (nisOk.nisRegistre && nisOk.nisRegistre !== ligne.NIS_normalise ? ', ' + nisOk.nisRegistre + ' au registre' : '') + ')' + (message ? ' — message : ' + message : '')
       : 'Entreprise non vérifiée (' + ({ FR: 'SIRET qui ne fonctionne pas', MC: 'Monaco', AUTRE: 'étranger' })[pays] + ') — élève envoyé au bureau G205' + (message ? ' — message : ' + message : '');
+    /* DEV673 : cause de l'échec vu par l'élève (annuaire indisponible, SIRET introuvable…) gardée pour le bureau. */
+    if (cause && !siretOk) ligne.Alertes += ' — cause côté élève : ' + cause;
+    if (siretOk) { ligne.Niveau_controle = 'VERT'; ligne.Decision = !j.eleveId ? 'ESSAI' : 'A_VALIDER';
+      ligne.Alertes = 'SIRET reconnu à l’envoi de la demande d’aide (' + siretOk.source + ')' + (cause ? ' — échec précédent côté élève : ' + cause : '') + (message ? ' — message : ' + message : ''); }
     if (typeof EUC_DEV649_ligneTampon_ === 'function') EUC_DEV649_ligneTampon_(ligne, { lieu: lieuAide });
     var cols = (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).map(function(x) { return x.id; }), fields = {};
     Object.keys(ligne).forEach(function(k) { if (cols.indexOf(k) >= 0) fields[k] = ligne[k]; });
@@ -368,11 +376,14 @@ function EUC_DEV603_signalerProbleme(q) {
     else EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/records', { records: [{ fields: fields }] });
   } finally { lock.releaseLock(); }
   /* DEV668 : NIS reconnu : accusé de dépôt ordinaire (coordonnées de la base ou du registre), sans renvoi au bureau. */
-  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, (nisOk ? nisOk.nom : entreprise) + ' (' + (nisOk ? nisOk.ville : ville) + ')', periode.libelle, !nisOk, c.id,
-    { ent: nisOk ? { siret: nisOk.nis, raisonSociale: nisOk.nom, enseigne: nisOk.enseigne, adresse: nisOk.adresse, codePostal: nisOk.cp, commune: nisOk.ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) }
+  var ok = nisOk || (siretOk ? { nom: siretOk.nom, ville: siretOk.ville } : null);
+  EUC_DEV603_accuseDepot_(emailEleve, eleve, c.nom, numero, (ok ? ok.nom : entreprise) + ' (' + (ok ? ok.ville : ville) + ')', periode.libelle, !ok, c.id,
+    { ent: siretOk ? { siret: siretOk.siret, raisonSociale: siretOk.nom, enseigne: siretOk.enseigne, adresse: siretOk.adresse, codePostal: siretOk.cp, commune: siretOk.ville, pays: 'FR', lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) }
+      : nisOk ? { siret: nisOk.nis, raisonSociale: nisOk.nom, enseigne: nisOk.enseigne, adresse: nisOk.adresse, codePostal: nisOk.cp, commune: nisOk.ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) }
       : { siret: EUC_DEV603_t_(q.siret), raisonSociale: entreprise, adresse: EUC_DEV603_t_(q.adresse), commune: ville, pays: pays, lieu: lieuAide, telephone: tel.format, courriel: EUC_DEV603_t_(q.courriel) },
       resp: { nom: EUC_DEV603_t_(q.contact) }, tut: {}, tuteurEstResponsable: true, periode: periode, fiche: typeof ef === 'undefined' ? {} : ef, message: message });
-  return { ok: true, numero: numero, remplace: !!enAttente, bureau: EUC_DEV603_BUREAU_, nisReconnu: nisOk ? { nom: nisOk.nom, nis: nisOk.nis, source: nisOk.source } : null };
+  return { ok: true, numero: numero, remplace: !!enAttente, bureau: EUC_DEV603_BUREAU_, nisReconnu: nisOk ? { nom: nisOk.nom, nis: nisOk.nis, source: nisOk.source } : null,
+    siretReconnu: siretOk ? { nom: siretOk.nom, siret: siretOk.siret } : null };
 }
 
 /* ---------- DEV606 : code de secours imprimé sur la convention (QR illisible ou convention perdue) ---------- */

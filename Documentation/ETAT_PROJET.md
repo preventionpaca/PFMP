@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 13 novembre 2026 — DEV673 : SIRET valable refusé chez l'élève (annuaire indisponible lu comme « introuvable »)
+
+- Cas : PFMP-2026-S0023 (GARAGE DE LA COLLE, SIRET 10375242400012, établissement actif créé le 13/04/2026). L'élève a fini en demande d'aide ; le même SIRET a été vérifié sans difficulté au bureau. L'annuaire le trouve aujourd'hui.
+- Cause : l'annuaire officiel (Recherche d'entreprises) refuse `UrlFetchApp` (502, cf. `API_RECHERCHE_ENTREPRISES.md`) ; il est lu par le navigateur de l'élève, avec un délai de 8 s, sans contrôle du statut HTTP : une réponse 429 (limite 7 requêtes/s par adresse IP, partagée par tout le réseau du lycée) ou 5xx était lue comme « Aucune entreprise trouvée pour ce SIRET ». Rien n'enregistrait la cause. La demande d'aide ne revérifiait pas le SIRET (seul le NIS de Monaco l'était, DEV668).
+- Formulaire en ligne : `annuaire()` contrôle le statut, deux nouveaux essais espacés (Retry-After respecté, 5 s max), délai 15 s ; message « Ce n'est pas ton SIRET : réessaie dans une minute ». À l'envoi d'une demande d'aide France avec 14 chiffres, le SIRET est vérifié à nouveau (base, puis annuaire lu par le navigateur) : reconnu, en activité, nom et adresse connus → ligne VERIFIE/VERT/A_VALIDER, accusé ordinaire, pas de passage au bureau (`EUC_DEV673_SiretAide.js`). Sinon : bureau G205 comme avant, cause de l'échec ajoutée aux alertes. Fermé ou non diffusible : jamais reconnu automatiquement.
+- Soumissions à traiter : même contrôle du statut HTTP ; date de dépôt lisible (Grist renvoie des secondes : « déposé le 1794557601 »).
+- Tests : 2 nouveaux tests DEV603 ; test DEV668 aligné (accusé ordinaire si NIS ou SIRET reconnu).
+- Non vérifié en réel : aucun dépôt réel ; le comportement face à une vraie erreur 429 de l'annuaire est simulé.
+
 ## Mise à jour du 13 novembre 2026 — DEV672 : lien « Vérifier l'entreprise et corriger la saisie » dans le courriel de l'équipe
 
 - Le courriel de l'équipe (jamais celui de l'élève) porte un bouton vers la page d'administration ouverte sur ce dépôt (`EUC_DEV672_LienCorrection.js`, adresse d'administration reprise de `EUC_DEV459_ADMIN_URL_`) :

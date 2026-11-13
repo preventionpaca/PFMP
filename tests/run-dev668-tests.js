@@ -50,7 +50,7 @@ test('formulaire en ligne : NIS reconnu → entreprise identifiée, plus de pass
   const d = read('apps-script/EUC_DEV603_Declaration.js');
   assert.match(d, /ligne\.Niveau_controle = nisOk \? 'VERT' : 'ROUGE'; ligne\.Decision = !j\.eleveId \? 'ESSAI' : nisOk \? 'A_VALIDER' : 'A_CONTROLER';/);
   assert.match(d, /ligne\.NIS_statut = 'VALIDE_' \+ nisOk\.source; ligne\.SIRET_statut = 'NIS_MONACO';/);
-  assert.match(d, /periode\.libelle, !nisOk, c\.id,/, 'accusé ordinaire');
+  assert.match(d, /var ok = nisOk \|\| \(siretOk \? \{ nom: siretOk\.nom, ville: siretOk\.ville \} : null\);\s*EUC_DEV603_accuseDepot_\([^]*?periode\.libelle, !ok, c\.id,/, 'accusé ordinaire (NIS reconnu, ou DEV673 SIRET reconnu)');
   assert.match(read('apps-script/Declaration_Entreprise_DEV603.html'), /r\.nisReconnu\?'<p>Numéro d’enregistrement/);
   assert.match(read('apps-script/Soumissions_A_Traiter_DEV665.html'), /NIS introuvable au registre de Monaco, même à la lettre près/);
   assert.match(read('apps-script/EUC_DEV665_DemandesAide.js'), /EUC_DEV668_memeNis_\(x\.NIS, nis\)/, 'jamais créée deux fois');

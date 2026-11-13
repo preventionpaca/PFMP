@@ -204,7 +204,18 @@ $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérifica
 /* Étape 2 */
 $('b2').onclick=function(){if(!$('periode').value){erreur('m2','Choisis ta période de stage.');return;}var m=$('emailEleve').value.trim();if(m&&!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(m)){erreur('m2','Adresse courriel invalide.');return;}$('m2').textContent='';etape(3);};
 /* Étape 3 : même vérification que le QR code (fiche connue ou Recherche d'entreprises). */
-var ND=false;
+var ND=false,ECHEC='';
+/* DEV673 : annuaire officiel (Recherche d'entreprises), interrogé depuis le navigateur (il refuse les serveurs Google).
+ * Une erreur du service (429 trop de demandes, 5xx, délai, réseau) n'est jamais lue comme « SIRET introuvable » :
+ * deux nouveaux essais espacés, puis la cause est donnée. */
+function annuaire(url,ok,ko,essai){essai=essai||1;
+  var ctl=typeof AbortController==='function'?new AbortController():null,fini=false,minu=setTimeout(function(){if(ctl)ctl.abort();},15000);
+  function rate(cause,attente){if(fini)return;fini=true;clearTimeout(minu);if(essai<3){setTimeout(function(){annuaire(url,ok,ko,essai+1);},Math.min(attente||1500*essai,5000));return;}ko(cause);}
+  fetch(url,Object.assign({headers:{Accept:'application/json'}},ctl?{signal:ctl.signal}:{})).then(function(x){
+    if(!x.ok){rate('erreur '+x.status,Number(x.headers.get('Retry-After'))*1000);return null;}
+    return x.json().then(function(json){if(fini)return;if(!json||!Array.isArray(json.results)){rate('réponse illisible');return;}fini=true;clearTimeout(minu);ok(json);});
+  }).catch(function(e){rate(e&&e.name==='AbortError'?'délai dépassé':'réseau');});
+}
 $('siret').addEventListener('input',function(){SIRET=null;REPONSE_API=null;ND=false;$('ndBloc').hidden=true;$('b3').disabled=true;$('officiel').innerHTML='';});
 /* DEV650 : recherche avancée INPI par SIRET (même lien que EUC_DEV649_lienInpi_ côté serveur). */
 function EUC_DEV650_lienInpi(n){n=String(n||'').replace(/\D/g,'');if(n.length!==14)return n.length===9?'https://data.inpi.fr/entreprises/'+n:'';var c=[];['personneMorale','personnePhysique'].forEach(function(t){['etablissementPrincipal','autresEtablissements'].forEach(function(e){var x='formality.content.'+t+'.'+e+'.descriptionEtablissement.siret';c.push(x,x+'.whitespace_remove');});});
@@ -221,9 +232,9 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
       $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
       if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
     if(r.entreprise){montrer(r.entreprise);return;}
-    var ctl=typeof AbortController==='function'?new AbortController():null,minu=setTimeout(function(){if(ctl)ctl.abort();},8000);
-    fetch(r.url,ctl?{signal:ctl.signal}:{}).then(function(x){return x.json();}).then(function(json){clearTimeout(minu);REPONSE_API=json;
-      appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});}).catch(function(){clearTimeout(minu);libre(b);erreur('m3','Le service de vérification ne répond pas. Réessaie dans un instant.');});
+    annuaire(r.url,function(json){REPONSE_API=json;
+      appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){if(!(t&&t.entreprise))ECHEC='SIRET '+s+' introuvable dans l’annuaire officiel';montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});},
+      function(cause){ECHEC='annuaire officiel indisponible ('+cause+') pour le SIRET '+s;libre(b);erreur('m3','Le service officiel de vérification des entreprises ne répond pas pour le moment ('+cause+'). Ce n’est pas ton SIRET : réessaie dans une minute. Si ça continue, clique sur « Mon entreprise ne fonctionne pas » : elle sera vérifiée à l’envoi.');});
   },function(e){libre(b);erreur('m3',e);});};
 $('b3').onclick=function(){if(!SIRET)return;$('m3').textContent='';
   if(ND&&!($('ndNom').value.trim()&&$('ndAdr').value.trim()&&$('ndVille').value.trim())){erreur('m3','Entreprise non diffusible : indique son nom, son adresse et sa ville.');return;}
@@ -257,10 +268,17 @@ function rciMonaco(b,t){
   },function(e){libre(b);$('aMonacoR').innerHTML='<b>Le registre de Monaco ne répond pas.</b> Remplis ce que tu sais ci-dessous : le bureau G205 l’enregistrera.';});
 }
 surveiller($('aTel'),function(){return $('aPays').value;});surveiller($('aMail'));
-$('aEnvoyer').onclick=function(){var b=this;$('mA').textContent='';occupe(b,'Envoi…');
-  appel('EUC_DEV603_signalerProbleme',{jeton:JETON,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value,lieu:lireLieu('a')},
-    function(r){libre(b);$('recu').innerHTML=(r.remplace?'<p class="note"><b>Tu avais déjà envoyé une demande pour cette période : elle a été mise à jour, sous le même numéro. Inutile de la renvoyer.</b></p>':'')+(r.nisReconnu?'<p>Numéro d’enregistrement : <b style="font-size:20px">'+esc(r.numero)+'</b> — recopie-le sur ta convention.</p><p class="ok">✓ Entreprise reconnue : '+esc(r.nisReconnu.nom)+' (NIS '+esc(r.nisReconnu.nis)+'). Inutile de passer au bureau pour l’identifier.</p>':'<p>Numéro de demande : <b style="font-size:20px">'+esc(r.numero)+'</b></p><p class="erreur" style="font-size:18px">Passe au plus vite au '+esc(r.bureau)+'.</p><p class="note">Le bureau des entreprises a reçu ta demande.</p>');etape(5);},
-    function(e){libre(b);erreur('mA',e);});};
+$('aEnvoyer').onclick=function(){var b=this;if(b.disabled)return;$('mA').textContent='';occupe(b,'Envoi…');
+  /* DEV673 : SIRET français de 14 chiffres : nouvelle vérification à l'envoi ; reconnu → convention enregistrée sans passage au bureau. */
+  var sa=$('aSiret').value.replace(/\D/g,'');
+  if($('aPays').value==='FR'&&sa.length===14){occupe(b,'Vérification du SIRET…');
+    appel('EUC_ENT_rechercherSiret',sa,function(r){if(r&&r.url&&!r.entreprise){annuaire(r.url,function(json){envoyerAide(b,json);},function(cause){ECHEC=ECHEC||'annuaire officiel indisponible ('+cause+')';envoyerAide(b,null);});}else envoyerAide(b,null);},
+      function(){envoyerAide(b,null);});return;}
+  envoyerAide(b,null);};
+function envoyerAide(b,reponseApi){occupe(b,'Envoi…');
+  appel('EUC_DEV603_signalerProbleme',{jeton:JETON,reponseApi:reponseApi,echec:ECHEC,periodeId:Number($('periode').value),emailEleve:$('emailEleve').value.trim(),entreprise:$('aEnt').value,adresse:$('aAdr').value,ville:$('aVille').value,pays:$('aPays').value,paysNom:$('aPaysNom').value,siret:$('aSiret').value,contact:$('aContact').value,telephone:$('aTel').value,courriel:$('aMail').value,message:$('aMsg').value,lieu:lireLieu('a')},
+    function(r){libre(b);if(r.siretReconnu&&!r.nisReconnu)r.nisReconnu={nom:r.siretReconnu.nom,nis:r.siretReconnu.siret,type:'SIRET'};$('recu').innerHTML=(r.remplace?'<p class="note"><b>Tu avais déjà envoyé une demande pour cette période : elle a été mise à jour, sous le même numéro. Inutile de la renvoyer.</b></p>':'')+(r.nisReconnu?'<p>Numéro d’enregistrement : <b style="font-size:20px">'+esc(r.numero)+'</b> — recopie-le sur ta convention.</p><p class="ok">✓ Entreprise reconnue : '+esc(r.nisReconnu.nom)+' ('+(r.nisReconnu.type||'NIS')+' '+esc(r.nisReconnu.nis)+'). Inutile de passer au bureau pour l’identifier.</p>':'<p>Numéro de demande : <b style="font-size:20px">'+esc(r.numero)+'</b></p><p class="erreur" style="font-size:18px">Passe au plus vite au '+esc(r.bureau)+'.</p><p class="note">Le bureau des entreprises a reçu ta demande.</p>');etape(5);},
+    function(e){libre(b);erreur('mA',e);});}
 /* Étape 4 */
 personne('resp');personne('tut');
 $('meme').onchange=function(){$('blocTuteur').hidden=this.checked;};

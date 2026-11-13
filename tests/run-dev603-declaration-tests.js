@@ -280,6 +280,52 @@ test('DEV668 : demande d’aide Monaco avec un NIS reconnu (base ou registre, à
   const g = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields; assert.strictEqual(g.Niveau_controle, 'ROUGE'); assert.strictEqual(g.Decision, 'A_CONTROLER', 'NIS inconnu : bureau G205 comme avant');
 });
 
+test('DEV673 : demande d’aide avec un SIRET valable (échec passager de l’annuaire chez l’élève) : SIRET vérifié à l’envoi, convention enregistrée sans passage au bureau ; sinon cause gardée', () => {
+  const garage = { raisonSociale: 'GARAGE DE LA COLLE', enseigne: '', adresseComplete: '69 RUE YVES KLEIN', codePostal: '06480', commune: 'LA COLLE-SUR-LOUP', etat: 'Actif', siret: '10375242400012' };
+  const t = base(), k = contexte(t, { siret: { source: 'api_navigateur', url: 'https://annuaire.test/?q=10375242400012' } });
+  vm.runInContext(read('apps-script/EUC_DEV673_SiretAide.js'), k);
+  k.EUC_ENT_traiterReponseApiNavigateur = (json, s) => ({ entreprise: json && json.results && json.results.length ? Object.assign({}, garage, { siret: s }) : null });
+  const jeton = k.EUC_DEV603_jeton_(7, 10, Date.now() + 3600000);
+  const r = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Garage de la colle', adresse: '69 rue yues klein', ville: 'Colles sur loup', pays: 'FR', siret: '103 752 424 00012',
+    reponseApi: { results: [{}] }, echec: 'annuaire officiel indisponible (erreur 429) pour le SIRET 10375242400012' });
+  const f = t.EUC_MIGRATION_JOTFORM_PFMP[0].fields;
+  assert.deepStrictEqual(J(r.siretReconnu), { nom: 'GARAGE DE LA COLLE', siret: '10375242400012' }); assert.strictEqual(r.nisReconnu, null);
+  assert.strictEqual(f.SIRET_statut, 'VERIFIE'); assert.strictEqual(f.SIRET_normalise, '10375242400012'); assert.strictEqual(f.Niveau_controle, 'VERT'); assert.strictEqual(f.Decision, 'A_VALIDER');
+  assert.strictEqual(f.Raison_sociale_officielle, 'GARAGE DE LA COLLE'); assert.strictEqual(f.Ville_officielle, 'LA COLLE-SUR-LOUP'); assert.strictEqual(f.Pays_officiel, 'FR');
+  assert.match(f.Alertes, /^SIRET reconnu à l’envoi de la demande d’aide \(annuaire officiel\) — échec précédent côté élève : annuaire officiel indisponible \(erreur 429\)/);
+  assert.ok(!/G205/.test(k.__mails[0].subject), 'accusé ordinaire, pas de renvoi au bureau : ' + k.__mails[0].subject);
+  /* Annuaire toujours indisponible : bureau G205 comme avant, avec la cause. */
+  t.EUC_MIGRATION_JOTFORM_PFMP[0].fields.Decision = 'REJETEE';
+  const r2 = k.EUC_DEV603_signalerProbleme({ jeton, periodeId: 100, entreprise: 'Garage', ville: 'Biot', pays: 'FR', siret: '10375242400012', reponseApi: null, echec: 'annuaire officiel indisponible (délai dépassé)' });
+  const g = t.EUC_MIGRATION_JOTFORM_PFMP[1].fields;
+  assert.strictEqual(r2.siretReconnu, null); assert.strictEqual(g.Niveau_controle, 'ROUGE'); assert.strictEqual(g.Decision, 'A_CONTROLER');
+  assert.match(g.Alertes, /SIRET qui ne fonctionne pas\) — élève envoyé au bureau G205 — cause côté élève : annuaire officiel indisponible \(délai dépassé\)$/);
+  /* Fermé, non diffusible, autre SIRET, mauvais nombre de chiffres : jamais reconnu automatiquement. */
+  const R = (e, s) => k.EUC_DEV673_retenir_(e, s || '10375242400012', 'x');
+  assert.ok(R(garage)); assert.strictEqual(R(Object.assign({}, garage, { etat: 'Fermé' })), null); assert.strictEqual(R(Object.assign({}, garage, { nonDiffusible: true })), null);
+  assert.strictEqual(R(Object.assign({}, garage, { siret: '99999999999999' })), null); assert.strictEqual(R(Object.assign({}, garage, { commune: '' })), null);
+  assert.strictEqual(k.EUC_DEV673_verifierSiret_('1037524240001', { results: [{}] }), null);
+  /* Fiche complète de la base : reconnue sans l’annuaire. */
+  k.EUC_ENT_rechercherSiret = () => ({ source: 'grist', entreprise: garage });
+  assert.strictEqual(k.EUC_DEV673_verifierSiret_('10375242400012', null).source, 'base des entreprises');
+});
+
+test('DEV673 : page — erreur de l’annuaire jamais lue comme « SIRET introuvable » : deux nouveaux essais, cause donnée ; vérification à l’envoi de la demande d’aide', () => {
+  const p = read('apps-script/Declaration_Entreprise_DEV603.html');
+  assert.match(p, /function annuaire\(url,ok,ko,essai\)\{[^]*if\(!x\.ok\)\{rate\('erreur '\+x\.status/);
+  assert.match(p, /if\(essai<3\)\{setTimeout\(function\(\)\{annuaire\(url,ok,ko,essai\+1\);\}/);
+  assert.match(p, /!Array\.isArray\(json\.results\)\)\{rate\('réponse illisible'\)/);
+  assert.match(p, /Ce n’est pas ton SIRET : réessaie dans une minute/);
+  assert.doesNotMatch(p, /fetch\(r\.url,ctl\?\{signal:ctl\.signal\}:\{\}\)\.then\(function\(x\)\{return x\.json\(\);\}\)/, 'ancien appel sans contrôle du statut');
+  assert.match(p, /if\(\$\('aPays'\)\.value==='FR'&&sa\.length===14\)\{occupe\(b,'Vérification du SIRET…'\);/);
+  assert.match(p, /appel\('EUC_DEV603_signalerProbleme',\{jeton:JETON,reponseApi:reponseApi,echec:ECHEC,/);
+  assert.match(p, /if\(r\.siretReconnu&&!r\.nisReconnu\)r\.nisReconnu=\{nom:r\.siretReconnu\.nom,nis:r\.siretReconnu\.siret,type:'SIRET'\}/);
+  assert.match(p, /\$\('aEnvoyer'\)\.onclick=function\(\)\{var b=this;if\(b\.disabled\)return;/, 'double clic');
+  assert.match(read('apps-script/Soumissions_A_Traiter_DEV665.html'), /if\(!x\.ok\)throw new Error\('erreur '\+x\.status\)/, 'panneau du bureau : même contrôle');
+  const k = { String, Number, Date, RegExp }; vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV665_DemandesAide.js'), k);
+  assert.strictEqual(k.EUC_DEV673_jour_(1794557601), '2026-11-13'); assert.strictEqual(k.EUC_DEV673_jour_('2026-11-12T10:00:00Z'), '2026-11-12'); assert.strictEqual(k.EUC_DEV673_jour_(''), '');
+});
+
 test('DEV605 : copies selon « Destinataires & envois » — dépôts et validations des tuteurs par rubrique cochée, secours sinon ; page et accueil', () => {
   const k = contexte(base());
   k.EUC_V158_TABLE_ = 'EUC_DESTINATAIRES_ENVOIS_PFMP';

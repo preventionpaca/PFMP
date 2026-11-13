@@ -36,6 +36,12 @@ function EUC_DEV665_champsMonaco_(row) {
     Entreprise_adresse: T(row.Adresse_officielle), Entreprise_code_postal: T(row.CP_officiel) || '98000', Entreprise_commune: T(row.Ville_officielle) || 'Monaco', Entreprise_pays: 'MONACO' };
 }
 /* Ligne d'attente → vue du panneau (calcul pur). */
+/* DEV673 : date de dépôt lisible (Grist renvoie une date en secondes depuis 1970, ex. 1794557601). Calcul pur. */
+function EUC_DEV673_jour_(v) {
+  var t = EUC_DEV665_t_(v);
+  if (/^\d{9,11}(\.\d+)?$/.test(t)) { var d = new Date(Number(t) * 1000); return typeof Utilities !== 'undefined' ? Utilities.formatDate(d, 'Europe/Paris', 'yyyy-MM-dd') : d.toISOString().slice(0, 10); }
+  return t.slice(0, 10);
+}
 function EUC_DEV665_vue_(r) {
   var f = r.fields || r, T = EUC_DEV665_t_;
   var monaco = /^(MC|MONACO)$/i.test(T(f.Pays_officiel)) || T(f.Entreprise_identifiant_type).toUpperCase() === 'NIS';
@@ -44,7 +50,7 @@ function EUC_DEV665_vue_(r) {
   return {
     id: Number(r.id) || 0, numero: T(f.Submission_ID).replace(/^SECOURS-/, ''), eleveId: Number(f.Eleve_match_id) || 0,
     eleve: T(f.Eleve_match_libelle) || [T(f.Prenom_eleve), T(f.Nom_eleve)].filter(Boolean).join(' '), classe: T(f.Classe_match_libelle || f.Classe_saisie),
-    periode: T(f.Periode_numero), debut: T(f.Date_debut_brut), fin: T(f.Date_fin_brut), depose: T(f.Date_import).slice(0, 10), email: T(f.Email_eleve),
+    periode: T(f.Periode_numero), debut: T(f.Date_debut_brut), fin: T(f.Date_fin_brut), depose: EUC_DEV673_jour_(f.Date_import), email: T(f.Email_eleve),
     pays: monaco ? 'MC' : T(f.Pays_officiel) && !/^FR$/i.test(T(f.Pays_officiel)) ? 'AUTRE' : 'FR', paysNom: T(f.Pays_officiel),
     numeroSaisi: T(f.NIS_normalise || f.NIS_brut || f.SIRET_normalise || f.SIRET_brut), statut: statut || 'A_CONTROLER', pret: pret, aide: T(f.Niveau_controle).toUpperCase() === 'ROUGE',
     saisie: { nom: T(f.Entreprise_saisie), adresse: T(f.Adresse_entreprise), cp: T(f.CP_entreprise), ville: T(f.Ville_entreprise) },
