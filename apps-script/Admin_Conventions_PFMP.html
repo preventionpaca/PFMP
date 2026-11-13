@@ -866,6 +866,14 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
       .EUC_ADMIN_WORKFLOW_vueV146(selected.id);
   };
 
+  /* DEV672 : lien direct du courriel de l'équipe (?numero=…) : le dossier s'ouvre tout seul, prêt à corriger. */
+  if(C.numero){
+    const cible=dossiers.find(function(d){return String(d.numero||'')===String(C.numero)});
+    if(cible){selected=cible;search.value=label(cible);selectedHint.textContent='Sélectionné : '+label(cible);openBtn.disabled=false;openBtn.onclick();
+      const t0=Date.now(),iv=setInterval(function(){if(!detail.classList.contains('hidden')){clearInterval(iv);const c=document.getElementById('correctionAdminV149');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});}else if(Date.now()-t0>60000)clearInterval(iv);},300);}
+    else{search.value=C.numero;renderSuggestions();selectedHint.textContent='Dossier '+C.numero+' introuvable pour l’année affichée : choisissez-le dans la liste ou changez d’année.';}
+  }
+
   document.getElementById('cancelBtn').onclick=async function(){
     if(!current)return;
     const btn=this;

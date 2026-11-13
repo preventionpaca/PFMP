@@ -49,7 +49,8 @@ function EUC_DEV665_vue_(r) {
     numeroSaisi: T(f.NIS_normalise || f.NIS_brut || f.SIRET_normalise || f.SIRET_brut), statut: statut || 'A_CONTROLER', pret: pret, aide: T(f.Niveau_controle).toUpperCase() === 'ROUGE',
     saisie: { nom: T(f.Entreprise_saisie), adresse: T(f.Adresse_entreprise), cp: T(f.CP_entreprise), ville: T(f.Ville_entreprise) },
     officiel: { nom: T(f.Raison_sociale_officielle), enseigne: T(f.Nom_commercial), adresse: T(f.Adresse_officielle), cp: T(f.CP_officiel), ville: T(f.Ville_officielle) },
-    contact: { nom: T(f.Nom_responsable), tel: T(f.Telephone_entreprise), mail: T(f.Email_entreprise) }, tuteur: { nom: T(f.Nom_tuteur), tel: T(f.Telephone_tuteur), mail: T(f.Email_tuteur) },
+    contact: { nom: T(f.Nom_responsable), tel: T(f.Telephone_entreprise), mail: T(f.Email_entreprise) }, tuteur: { nom: T(f.Nom_tuteur), fonction: T(f.Fonction_tuteur), tel: T(f.Telephone_tuteur), mail: T(f.Email_tuteur) },
+    lieuDetail: { adresse: T(f.Lieu_stage_adresse), cp: T(f.Lieu_stage_code_postal), commune: T(f.Lieu_stage_commune) },
     lieu: [T(f.Lieu_stage_adresse), [T(f.Lieu_stage_code_postal), T(f.Lieu_stage_commune)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     alertes: T(f.Alertes), decision: T(f.Decision).toUpperCase(),
     /* DEV666 : déjà compté « Convention enregistrée » dans le suivi : rien à faire au bureau. */
@@ -120,6 +121,8 @@ function EUC_DEV665_afficher(e) {
   EUC_IMPORT_exigerAdminTexte_();
   var t = HtmlService.createTemplateFromFile('Soumissions_A_Traiter_DEV665');
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
+  /* DEV672 : lien direct du courriel de l'équipe : cette soumission seule, formulaire de correction ouvert. */
+  t.numero = typeof EUC_DEV672_numero_ === 'function' ? EUC_DEV672_numero_(e) : '';
   return t.evaluate().setTitle('Soumissions à traiter — PFMP').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 function EUC_DEV665_lister() {

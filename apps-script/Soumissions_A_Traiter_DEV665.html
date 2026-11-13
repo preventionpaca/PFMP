@@ -17,6 +17,7 @@ section,.carte{background:#fff;border:1px solid var(--bord);border-radius:10px;p
 h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:10px 0 4px;color:var(--vert)}
 ol{margin:6px 0 0;padding-left:20px}
 .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 14px}
+.corriger{margin-top:10px;border-top:1px dashed var(--bord);padding-top:8px}.corriger summary{cursor:pointer;padding:4px 0}
 .champs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px}
 label{display:block;font-weight:700;font-size:13px}
 input{width:100%;font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);border-radius:7px}
@@ -57,13 +58,16 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       <button type="button" id="actualiser" class="leger"><span class="spin"></span><span class="txt">Actualiser</span></button>
     </div>
     <p id="blocPrevenir" hidden><button type="button" id="prevenirTous"><span class="spin"></span><span class="txt">Prévenir les élèves dont le problème est résolu</span></button> <span class="note">Courriel « Problème résolu : ta convention de stage est enregistrée — n° … », une seule fois par élève.</span></p>
+    <p id="blocCible" class="message ok" hidden>Dépôt ouvert depuis le courriel de l’équipe. <button type="button" id="voirTout" class="leger"><span class="spin"></span><span class="txt">Voir toutes les soumissions à traiter</span></button></p>
     <p class="note"><span id="compte"></span> <span id="mListe" class="message" role="status" aria-live="polite"></span></p>
   </section>
   <div id="liste"><p class="note busy"><span class="spin"></span>Chargement…</p></div>
 </main>
 <script>
 (function(){
-  var $=function(id){return document.getElementById(id);},LISTE=[],FILTRE='atraiter',MODE={};
+  var $=function(id){return document.getElementById(id);},LISTE=[],FILTRE='atraiter',MODE={},CIBLE='<?= numero ?>';
+  /* DEV672 : ouvert depuis le courriel de l'équipe (?numero=…) : cette soumission seule, correction dépliée. */
+  if(CIBLE)FILTRE='cible';
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function dfr(v){var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'');}
   /* Appel serveur avec délai maximal : le bouton retrouve toujours son état. */
@@ -91,6 +95,14 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     else h+='<div class="champs"><div><label for="n'+x.id+'">NIS *</label><input id="n'+x.id+'" autocomplete="off" placeholder="7112B19343" value="'+esc(x.pays==='MC'?x.numeroSaisi:'')+'"></div><div><label for="nom'+x.id+'">Nom *</label><input id="nom'+x.id+'" autocomplete="off" value="'+esc(o.nom||s.nom)+'"></div><div><label for="adr'+x.id+'">Adresse *</label><input id="adr'+x.id+'" autocomplete="off" value="'+esc(o.adresse||s.adresse)+'"></div><div><label for="cp'+x.id+'">Code postal</label><input id="cp'+x.id+'" autocomplete="off" value="'+esc(o.cp||s.cp||'98000')+'"></div><div><label for="v'+x.id+'">Ville</label><input id="v'+x.id+'" autocomplete="off" value="'+esc(o.ville||'Monaco')+'"></div></div>'+
       '<p>'+bouton('monaco',x.id,'Enregistrer l’entreprise de Monaco','leger')+' '+bouton('chercher',x.id,'Chercher ce nom dans la base Monaco','gris')+' '+bouton('rci',x.id,'Chercher au registre de Monaco (RCI)','gris')+' '+bouton('interne',x.id,'Pas de NIS : numéro interne','gris')+'</p><div class="choix" id="choix'+x.id+'"></div>';
     h+='<div class="champs" style="margin-top:8px"><div><label for="q'+x.id+'">Chercher dans la base des entreprises (France et Monaco)</label><input id="q'+x.id+'" autocomplete="off" value="'+esc(s.nom||o.nom)+'"></div><div style="align-self:end">'+bouton('base',x.id,'Chercher','gris')+'</div></div><div class="choix" id="base'+x.id+'"></div>';
+    /* DEV672 : correction de la saisie de l'élève (entreprise, responsable, tuteur, lieu du stage). */
+    var ld=x.lieuDetail||{},ch=function(cle,lib,val,type){return '<div><label for="k'+cle+x.id+'">'+lib+'</label><input id="k'+cle+x.id+'" data-champ="'+cle+'" autocomplete="off"'+(type?' type="'+type+'"':'')+' value="'+esc(val)+'"></div>';};
+    h+='<details class="corriger" id="d'+x.id+'"'+(FILTRE==='cible'?' open':'')+'><summary><b>Corriger ce que l’élève a saisi</b> <span class="note">(entreprise, responsable, tuteur, lieu du stage)</span></summary>'+
+      '<h3>Entreprise</h3><div class="champs">'+ch('Entreprise_saisie','Nom',s.nom)+ch('Adresse_entreprise','Adresse',s.adresse)+ch('CP_entreprise','Code postal',s.cp)+ch('Ville_entreprise','Ville',s.ville)+'</div>'+
+      '<h3>Responsable</h3><div class="champs">'+ch('Nom_responsable','Prénom et nom',x.contact.nom)+ch('Telephone_entreprise','Téléphone',x.contact.tel,'tel')+ch('Email_entreprise','Courriel',x.contact.mail,'email')+'</div>'+
+      '<h3>Tuteur</h3><div class="champs">'+ch('Nom_tuteur','Prénom et nom',x.tuteur.nom)+ch('Fonction_tuteur','Fonction',x.tuteur.fonction)+ch('Telephone_tuteur','Téléphone',x.tuteur.tel,'tel')+ch('Email_tuteur','Courriel',x.tuteur.mail,'email')+'</div>'+
+      '<h3>Lieu du stage <span class="note">(vide si identique à l’adresse de l’entreprise)</span></h3><div class="champs">'+ch('Lieu_stage_adresse','Adresse',ld.adresse)+ch('Lieu_stage_code_postal','Code postal',ld.cp)+ch('Lieu_stage_commune','Commune',ld.commune)+'</div>'+
+      '<p>'+bouton('corriger',x.id,'Enregistrer les corrections','leger')+' <span class="note">Le SIRET ou le NIS se corrigent plus haut (« Vérifier le SIRET » ou Monaco).</span></p></details>';
     /* Valider (import dans Grist) : seulement pour une soumission à traiter déjà identifiée (ex. établissement fermé à confirmer). */
     h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
@@ -98,11 +110,12 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
   /* Entreprise connue (base ou dépôt vérifié) : un clic reprend son SIRET ou son NIS. */
   function proposition(f,groupe,id,i){return '<button type="button" data-prop="'+groupe+'" data-id="'+id+'" data-i="'+i+'"><b>'+esc(f.nom)+'</b>'+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc([f.adresse,[f.cp,f.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+' · <b>'+(f.siret?'SIRET '+esc(f.siret):'NIS '+esc(f.nis))+'</b> <span class="note">('+esc(f.source)+') — utiliser</span></button>';}
   function dessiner(){
-    var l=LISTE.filter(function(x){return GARDER[x.id]||FILTRE==='tout'||(FILTRE==='atraiter'&&x.aTraiter)||(FILTRE==='aide'&&x.aide&&x.aTraiter)||(FILTRE==='doublon'&&x.doublonDe)||(FILTRE==='suivi'&&!x.aTraiter)||(FILTRE==='prevenir'&&x.aPrevenir);});
+    var l=LISTE.filter(function(x){return GARDER[x.id]||FILTRE==='tout'||(FILTRE==='atraiter'&&x.aTraiter)||(FILTRE==='aide'&&x.aide&&x.aTraiter)||(FILTRE==='doublon'&&x.doublonDe)||(FILTRE==='suivi'&&!x.aTraiter)||(FILTRE==='prevenir'&&x.aPrevenir)||(FILTRE==='cible'&&x.numero===CIBLE);});
     var np=LISTE.filter(function(x){return x.aPrevenir;}).length;$('blocPrevenir').hidden=!np;$('prevenirTous').querySelector('.txt').textContent='Prévenir les '+np+' élève(s) dont le problème est résolu';
     var n=LISTE.filter(function(x){return x.aTraiter;}).length;
     $('compte').textContent=n+' soumission(s) à traiter · '+(LISTE.length-n)+' déjà dans le suivi (rien à faire).';
-    $('liste').innerHTML=l.length?l.map(carte).join(''):'<section><p class="note">'+(FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':'Aucune soumission pour ce filtre.')+'</p></section>';
+    $('blocCible').hidden=FILTRE!=='cible';
+    $('liste').innerHTML=l.length?l.map(carte).join(''):'<section><p class="note">'+(FILTRE==='cible'?'Dépôt '+esc(CIBLE)+' introuvable parmi les soumissions en attente : il a peut-être déjà été validé ou classé (filtre « Toutes » pour vérifier).':FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':'Aucune soumission pour ce filtre.')+'</p></section>';
   }
   /* Carte corrigée : reste affichée jusqu'à l'actualisation, avec son message. */
   var PROPS={},GARDER={},RCI={};
@@ -117,6 +130,8 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     appel('EUC_DEV665_lister',{},60000,function(r){occupe(b,false);LISTE=r.soumissions||[];dessiner();},function(e){occupe(b,false);$('liste').innerHTML='';msg('Liste',(e&&e.message)||'Lecture impossible.','erreur');});
   }
   $('actualiser').onclick=charger;
+  $('voirTout').onclick=function(){FILTRE='atraiter';document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.filtre==='atraiter'));});dessiner();};
+  if(FILTRE==='cible')document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed','false');});
   $('prevenirTous').onclick=function(){var b=this,l=LISTE.filter(function(x){return x.aPrevenir;});if(b.disabled||!l.length)return;
     if(!confirm('Envoyer le courriel « Problème résolu » à '+l.length+' élève(s) ?\n\n'+l.map(function(x){return '• '+x.eleve+' ('+x.classe+') — '+x.numero;}).join('\n')))return;
     occupe(b,true,'Envoi en cours…');msg('Liste','');
@@ -174,6 +189,11 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       appel('EUC_DEV665_valider',{id:id},300000,function(r){occupe(b,false);LISTE=LISTE.filter(function(y){return y.id!==id;});dessiner();
         msg('Liste','Convention '+r.numero+' de '+r.eleve+' : '+(r.creees?'créée':r.completees?'complétée':'déjà existante')+(r.baseMonaco?' ; entreprise '+r.baseMonaco:'')+(r.avertissements?' (le suivi peut mettre quelques minutes à l’afficher)':'')+'.','ok');},
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Validation impossible.','erreur');});}
+    if(a==='corriger'){var champs={};$('d'+id).querySelectorAll('[data-champ]').forEach(function(i){champs[i.dataset.champ]=i.value;});
+      occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV672_corrigerSaisie',{id:id,champs:champs},60000,function(r){occupe(b,false);remplacer(r.soumission);var d=$('d'+id);if(d)d.open=true;
+        msg(id,r.inchange?'Aucune modification à enregistrer.':'Corrigé : '+r.corriges.join(', ')+'.'+(r.ignores?' ('+r.ignores+' champ(s) absent(s) de la table, non enregistré(s).)':''),r.ignores?'erreur':'ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     if(a==='sansSuite'){
       var motif=prompt('Classer sans suite la soumission '+x.numero+' de '+x.eleve+' ?\nMotif :',x.doublonDe?'doublon de '+x.doublonDe:'');if(motif===null)return;
       occupe(b,true,'Classement…');msg(id,'');

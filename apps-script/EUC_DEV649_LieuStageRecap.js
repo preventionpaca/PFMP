@@ -155,6 +155,9 @@ function EUC_DEV649_recap_(info) {
   if (T(info.intro)) lignes.push(T(info.intro).replace(/ {2,}/g, ' '), '');
   lignes.push('Numéro d’enregistrement : ' + T(info.numero) + (T(info.source) ? ' (' + T(info.source) + ')' : ''), '');
   if (g205) lignes.push('!!! ' + g205, '');
+  /* DEV672 : courriel de l'équipe : lien direct pour vérifier l'entreprise et corriger la saisie (jamais dans celui de l'élève). */
+  var corr = info.equipe ? T(info.lienCorrection) : '';
+  if (corr) lignes.push('Vérifier l’entreprise et corriger la saisie (entreprise, SIRET, responsable, tuteur, lieu du stage) : ' + corr, '');
   if (lieu && !precis) lignes.push('!!! LIEU DU STAGE DIFFÉRENT DU SIÈGE — les visites se font à cette adresse : ' + lieu, '');
   if (nd) { lignes.push('!!! ' + nd); if (inpi) lignes.push('Fiche INPI : ' + inpi); lignes.push(''); }
   blocs.forEach(function(b) {
@@ -172,6 +175,7 @@ function EUC_DEV649_recap_(info) {
   if (T(info.intro)) html.push('<p>' + H(info.intro).replace(/\n/g, '<br>') + '</p>');
   html.push('<p style="font-size:16px">Numéro d’enregistrement : <b>' + H(info.numero) + '</b>' + (T(info.source) ? ' <span style="color:#5b6b66">(' + H(info.source) + ')</span>' : '') + '</p>');
   if (g205) html.push(alerte('⚠ ' + g205, '#fde8e8', '#b42318'));
+  if (corr) html.push('<p style="margin:12px 0"><a href="' + H(corr) + '" style="display:inline-block;padding:10px 16px;background:#0b6b4f;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold">Vérifier l’entreprise et corriger la saisie</a><br><span style="color:#5b6b66;font-size:12px">Entreprise, SIRET ou NIS, responsable, tuteur, lieu du stage — réservé à l’administration.</span></p>');
   if (lieu && !precis) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px"><div style="font-weight:bold;color:#92400e;text-transform:uppercase">⚠ Lieu du stage différent du siège</div><div style="font-size:16px;font-weight:bold;margin-top:4px">' + H(lieu) + '</div><div style="color:#92400e;margin-top:4px">Les visites du professeur se font à cette adresse. Prendre rendez-vous par téléphone avec le tuteur.</div></div>');
   if (nd) html.push('<div style="margin:12px 0;padding:12px 14px;background:#fff7d6;border:2px solid #d97706;border-radius:8px;font-weight:bold;color:#3b0d0c">' + H('⚠ ' + nd) + (inpi ? '<div style="margin-top:6px"><a href="' + H(inpi) + '" style="color:#0b5cad">Ouvrir la fiche de l’entreprise sur data.inpi.fr</a></div>' : '') + '</div>');
   blocs.forEach(function(b) {
@@ -273,6 +277,8 @@ function EUC_DEV649_accuseComplet_(email, eleve, classe, numero, probleme, class
     var copie = EUC_DEV649_copieDepots_();
     if (typeof EUC_DEV603_ppEmails_ === 'function') copie = copie.concat(EUC_DEV603_ppEmails_(classeId));
     copie = copie.filter(function(v, i, a) { return v && a.indexOf(v) === i && v !== T(email).toLowerCase(); });
+    /* DEV672 : lien direct vers la soumission (courriel de l'équipe seulement ; l'accusé de l'élève est déjà rédigé). */
+    if (typeof EUC_DEV672_lien_ === 'function') info.lienCorrection = EUC_DEV672_lien_('soumissions-a-traiter-pfmp', numero);
     if (email) MailApp.sendEmail({ to: email, replyTo: copie.join(',') || undefined, name: 'Lycée Les Eucalyptus — PFMP', subject: (probleme ? 'Ta demande d’aide pour ton entreprise de stage — ' : 'Ta convention de stage — numéro d’enregistrement ') + numero, body: r.texte, htmlBody: r.html });
     /* DEV663 : l'équipe reçoit un courriel séparé, rédigé pour elle, avec le tableau à jour de la classe et de la période.
      * DEV671 : ce courriel part en arrière-plan (le tableau prend du temps) : l'élève a sa confirmation tout de suite. */

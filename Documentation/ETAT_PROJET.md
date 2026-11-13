@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 13 novembre 2026 — DEV672 : lien « Vérifier l'entreprise et corriger la saisie » dans le courriel de l'équipe
+
+- Le courriel de l'équipe (jamais celui de l'élève) porte un bouton vers la page d'administration ouverte sur ce dépôt (`EUC_DEV672_LienCorrection.js`, adresse d'administration reprise de `EUC_DEV459_ADMIN_URL_`) :
+  - formulaire en ligne → « Soumissions à traiter » `?numero=…` : seule cette soumission est affichée (bouton « Voir toutes les soumissions à traiter »), avec SIRET/NIS/base comme avant et un nouveau bloc « Corriger ce que l'élève a saisi » (entreprise, responsable, tuteur, lieu du stage) déplié ; `EUC_DEV672_corrigerSaisie` n'écrit que ces colonnes, seulement les valeurs modifiées, contrôle les courriels et trace la correction dans les alertes ;
+  - page du QR code → « Administration des conventions » `?numero=…` : le dossier s'ouvre seul et la page descend au bloc de correction historisé existant ; dossier introuvable → recherche préremplie.
+- Pages réservées à l'administration : un professeur principal non administrateur ne peut pas les ouvrir.
+- Tests : `tests/run-dev672-tests.js` (5).
+- Non vérifié en réel : aucune correction réelle enregistrée ; ouverture des deux pages par le lien à contrôler sur le vert.
+
 ## Mise à jour du 12 novembre 2026 — DEV671 : courriel de l'équipe envoyé en arrière-plan
 
 - Constat : la fabrication du tableau de la classe prend plusieurs secondes ; elle se faisait pendant le dépôt, avant l'accusé de l'élève, qui attendait d'autant.

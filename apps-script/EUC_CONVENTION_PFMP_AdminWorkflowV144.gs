@@ -724,7 +724,9 @@ function EUC_ADMIN_CONVENTIONS_afficherV146(e){
   var ctxAnnee=EUC_PFMP_contexteAnneeV148();
 
   tpl.config=JSON.stringify({
-    baseUrl:ScriptApp.getService().getUrl()
+    baseUrl:ScriptApp.getService().getUrl(),
+    /* DEV672 : lien direct du courriel de l'équipe : ce dossier s'ouvre tout seul. */
+    numero:typeof EUC_DEV672_numero_==='function'?EUC_DEV672_numero_(e):''
   });
   tpl.anneeContextJson=JSON.stringify(ctxAnnee);
   tpl.dossiersJson=JSON.stringify(EUC_DEV578_dossiersAdminEnCache_(ctxAnnee.active));

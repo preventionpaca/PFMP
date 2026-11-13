@@ -446,6 +446,8 @@ function EUC_NOTIF_envoisSeparesV663_(n){
     if(typeof EUC_DEV663_recapEquipe_==='function'&&typeof EUC_DEV649_infoAcces_==='function'){
       var vars=EUC_NOTIF_variablesV143_(n.dossier);info=EUC_DEV649_infoAcces_(n.dossier,EUC_NOTIF_renderV143_(n.params.NOTIF_CORPS,vars),EUC_NOTIF_renderV143_(n.params.NOTIF_SIGNATURE,vars));
       info.parents=n.famille.length>1;
+      /* DEV672 : lien direct vers le dossier dans « Administration des conventions ». */
+      if(typeof EUC_DEV672_lien_==='function')info.lienCorrection=EUC_DEV672_lien_('admin-conventions-pfmp',d.numero);
     }
     var sujet=(info&&info.g205&&info.g205.requis?'[À traiter au bureau G205] ':'[Dépôt] ')+d.numero+' — '+[el.prenom,el.nom].filter(Boolean).join(' ')+(d.classe?' ('+d.classe+')':'');
     if(info)envois.push({to:n.equipe.join(','),subject:sujet,name:nom,differe:{to:n.equipe.join(','),subject:sujet,name:nom,info:info,
