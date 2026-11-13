@@ -74,4 +74,12 @@ test('page « Administration des conventions » : le dossier du courriel s’ouv
   assert.match(h, /if\(C\.numero\)\{\s*const cible=dossiers\.find\(function\(d\)\{return String\(d\.numero\|\|''\)===String\(C\.numero\)\}\);\s*if\(cible\)\{selected=cible;[^]*openBtn\.onclick\(\);[^]*correctionAdminV149[^]*else\{search\.value=C\.numero;renderSuggestions\(\);/);
   assert.match(read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), /case 'admin-conventions-pfmp':\s*return EUC_DEV498_afficherAdminConventions_\(e\);/);
 });
+test('pages de correction réservées à l’administration : un professeur reconnu (ENSEIGNANT, LECTURE_SEULE) est refusé', () => {
+  const g = read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs');
+  const debut = g.indexOf('var EUC_ADMIN_WORKFLOW_ROLES_V672_'), fin = g.indexOf('function EUC_ADMIN_WORKFLOW_defsV144_');
+  const garde = r => { const s = { Error, EUC_PFMP_contexteAdmin_: () => r }; vm.createContext(s); vm.runInContext(g.slice(debut, fin), s); return s.EUC_ADMIN_WORKFLOW_ctxV144_(); };
+  ['ADMIN_PFMP', 'DDFPT', 'BUREAU_ENTREPRISES'].forEach(role => assert.equal(garde({ autorise: true, role }).role, role));
+  [{ autorise: true, role: 'ENSEIGNANT' }, { autorise: true, role: 'LECTURE_SEULE' }, { autorise: false }, null].forEach(c => assert.throws(() => garde(c), /Accès administrateur requis/));
+  assert.match(read('apps-script/EUC_IMPORT_PFMP_TextService.gs'), /\['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'\]\.indexOf\(ctx\.role\)<0\) throw new Error\('Accès non autorisé\.'\)/, 'Soumissions à traiter : mêmes rôles');
+});
 console.log(n + ' tests DEV672 réussis.');

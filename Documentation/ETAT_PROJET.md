@@ -5,8 +5,8 @@
 - Le courriel de l'équipe (jamais celui de l'élève) porte un bouton vers la page d'administration ouverte sur ce dépôt (`EUC_DEV672_LienCorrection.js`, adresse d'administration reprise de `EUC_DEV459_ADMIN_URL_`) :
   - formulaire en ligne → « Soumissions à traiter » `?numero=…` : seule cette soumission est affichée (bouton « Voir toutes les soumissions à traiter »), avec SIRET/NIS/base comme avant et un nouveau bloc « Corriger ce que l'élève a saisi » (entreprise, responsable, tuteur, lieu du stage) déplié ; `EUC_DEV672_corrigerSaisie` n'écrit que ces colonnes, seulement les valeurs modifiées, contrôle les courriels et trace la correction dans les alertes ;
   - page du QR code → « Administration des conventions » `?numero=…` : le dossier s'ouvre seul et la page descend au bloc de correction historisé existant ; dossier introuvable → recherche préremplie.
-- Pages réservées à l'administration : un professeur principal non administrateur ne peut pas les ouvrir.
-- Tests : `tests/run-dev672-tests.js` (5).
+- Pages réservées à l'administration (rôles DDFPT, ADMIN_PFMP, BUREAU_ENTREPRISES) : « Administration des conventions » n'exigeait qu'un compte reconnu (un ENSEIGNANT inscrit dans `EUC_UTILISATEURS_PFMP` passait) ; sa garde `EUC_ADMIN_WORKFLOW_ctxV144_` exige désormais les mêmes rôles que « Soumissions à traiter ».
+- Tests : `tests/run-dev672-tests.js` (6).
 - Non vérifié en réel : aucune correction réelle enregistrée ; ouverture des deux pages par le lien à contrôler sur le vert.
 
 ## Mise à jour du 12 novembre 2026 — DEV671 : courriel de l'équipe envoyé en arrière-plan

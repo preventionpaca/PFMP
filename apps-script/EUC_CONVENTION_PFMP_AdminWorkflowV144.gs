@@ -15,9 +15,12 @@ function EUC_ADMIN_WORKFLOW_nowV144_(){
   return new Date().toISOString();
 }
 
+/* DEV672 : administration seulement (mêmes rôles que « Soumissions à traiter ») : un professeur inscrit
+ * dans les utilisateurs du suivi (rôle ENSEIGNANT ou LECTURE_SEULE) est refusé, même connecté. */
+var EUC_ADMIN_WORKFLOW_ROLES_V672_=['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'];
 function EUC_ADMIN_WORKFLOW_ctxV144_(){
   var ctx=EUC_PFMP_contexteAdmin_();
-  if(!ctx||!ctx.autorise)throw new Error('Accès administrateur requis.');
+  if(!ctx||!ctx.autorise||EUC_ADMIN_WORKFLOW_ROLES_V672_.indexOf(ctx.role)<0)throw new Error('Accès administrateur requis.');
   return ctx;
 }
 
