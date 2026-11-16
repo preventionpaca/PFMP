@@ -28,6 +28,15 @@ test('signature du courriel : signataires renseignés, sinon « L’équipe PFMP
   assert.deepEqual(J(k.EUC_DEV676_signature_({ adjointNom: 'Mme X' })), ['Mme X', 'Proviseur adjoint']);
   const corps = k.EUC_DEV444_ppMailBody_({ classe: '1CAR', periode: 'PFMP n°1', debut: '23/11/2026', fin: '18/12/2026', adjointNom: '', ddfNom: '' }, { nom: 'M. A' }, { code: 'C', expiration: '2026-12-18T22:59:59Z' });
   assert.match(corps, /Cordialement,\n\nL’équipe PFMP\nLycée Les Eucalyptus$/); assert.doesNotMatch(corps, /\nProviseur adjoint/);
+  /* DEV680 : formule d'appel personnelle (civilité + nom de famille), sans « M. PRENOM NOM ». */
+  const B = p => k.EUC_DEV444_ppMailBody_({ classe: '1CAR', periode: 'PFMP n°1', debut: '', fin: '', adjointNom: '', ddfNom: '' }, p, { code: 'C', expiration: '2026-12-18T22:59:59Z' }).split('\n')[0];
+  assert.equal(B({ nom: 'M. LUDOVIC LEGROS', civilite: 'M.', prenom: 'LUDOVIC', nomFamille: 'LEGROS' }), 'Bonjour Monsieur Legros,');
+  assert.equal(B({ nom: 'Mme FREDERIQUE MARTI', civilite: 'Mme', prenom: 'FREDERIQUE', nomFamille: 'MARTI' }), 'Bonjour Madame Marti,');
+  assert.equal(B({ civilite: 'M.', nomFamille: 'FELIDE-DE GUELTZL' }), 'Bonjour Monsieur Felide-de Gueltzl,');
+  assert.equal(B({ civilite: 'Mme', nomFamille: "D'ARC" }), "Bonjour Madame D'Arc,");
+  assert.equal(B({ prenom: 'PAUL', nomFamille: 'DURAND' }), 'Bonjour Paul Durand,');
+  assert.equal(B({ nom: 'M. LUDOVIC LEGROS' }), 'Bonjour Monsieur Ludovic Legros,');
+  assert.equal(B({ nom: 'M. X', salutation: 'Madame Y' }), 'Bonjour Madame Y,');
   /* DEV680 : l'accès normal passe par Atrium ; le site pfmp n'est qu'un secours (lui aussi sous code). */
   assert.match(corps, /1\. Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP »\./); assert.doesNotMatch(corps, /Rendez-vous sur|https?:\/\//);
 });

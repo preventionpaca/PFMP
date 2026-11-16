@@ -3,7 +3,8 @@
 ## Mise à jour du 16 novembre 2026 — DEV680 : courriel des codes, accès par Atrium
 
 - Le courriel envoyé aux professeurs principaux indiquait « Rendez-vous sur » le site pfmp, qui n'est qu'un accès de secours (lui aussi sous code) quand Atrium est indisponible. Étape 1 remplacée par « Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP » » (`EUC_DEV444_ppMailBody_`). Aucune adresse dans le corps du courriel.
-- Tests : `tests/run-dev676-tests.js` (assertion ajoutée).
+- Formule d'appel personnelle (DEV680b) : « Bonjour Monsieur Legros, » / « Bonjour Madame Marti, » au lieu de « Bonjour M. LUDOVIC LEGROS, ». Civilité, prénom et nom séparés sont repris de `EUC_PROFESSEURS_PFMP` (`EUC_DEV448_professeurs_`, `EUC_DEV455_principaux_`) ; nom en casse normale, particules en minuscules ; sans civilité : prénom et nom ; données en cache anciennes : déduite du nom complet (`EUC_DEV680_salutation_`).
+- Tests : `tests/run-dev676-tests.js` (assertions ajoutées), `tests/run-dev677-tests.js` (formule attendue mise à jour).
 
 ## Mise à jour du 16 novembre 2026 — DEV679 : ajout manuel d'un professeur principal refusé par Grist
 
