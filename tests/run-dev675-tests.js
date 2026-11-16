@@ -61,10 +61,10 @@ test('import Pronote sans professeur principal pour la classe : le lien manuel e
   assert.ok(!importer('1MELEC2;', MANUEL()).some(r => r.id === 3 && r.fields.Actif === false));
   const p = importer('1MELEC2;DURAND Paul', MANUEL()); const r = p.find(x => x.id === 3); assert.equal(r.fields.Actif, true); assert.notEqual(r.fields.Source_Pronote, 'MANUEL_PFMP');
 });
-test('page : choix dans la liste importée, ajout et retrait protégés, saisies des signataires gardées', () => {
+test('page : choix dans la liste importée, ajout et retrait protégés, message du courriel gardé au rafraîchissement', () => {
   const h = read('apps-script/Acces_PP_Admin_DEV441.html');
   assert.match(h, /\+ Ajouter un professeur principal…/); assert.match(h, /'EUC_DEV675_ajouterPp'/); assert.match(h, /'EUC_DEV675_retirerPp'/); assert.match(h, /EUC_DEV675_professeurs\(\)/);
-  assert.match(h, /appel\(b,'Ajout…'/); assert.match(h, /const garde=saisies\(\)/); assert.match(h, /remplacé par Pronote au prochain import/);
+  assert.match(h, /appel\(b,'Ajout…'/); assert.match(h, /function rafraichirLot\(msg\)\{if\(!LOT\)return;garderPerso\(\);/); assert.match(h, /remplacé par Pronote au prochain import/);
   assert.match(read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js'), /EUC_DEV675_marquer_\(classes\)/);
 });
 console.log(n + ' tests DEV675 réussis.');

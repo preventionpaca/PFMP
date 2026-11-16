@@ -62,6 +62,6 @@ test('page : sélecteur Niveau, lot par niveau, boutons protégés avec indicate
   assert.match(h, /'EUC_DEV444_sendCampaign',lot,/, 'le lot envoyé est celui affiché, pas les filtres modifiés depuis');
   assert.match(h, /\$\('periode'\)\.onchange=\(\)=>\{razLot\(\);inspect\(\)\}/, 'changer de période efface le lot préparé');
   assert.match(h, /href="__LIEN_ACCUEIL__"/);
-  assert.match(h, /Recopier la première ligne remplie sur les autres classes/); assert.match(h, /if\(!i\.value\.trim\(\)&&v\.trim\(\)\)\{i\.value=v;n\+\+\}/, 'recopie sans écraser une saisie existante');
+  assert.match(h, /lot=\{\.\.\.LOT,\.\.\.perso\(\)\}/, 'DEV677 : lot affiché + message saisi');
 });
 console.log(n + ' tests DEV674 réussis.');

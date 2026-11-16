@@ -33,9 +33,9 @@ test('enregistrement des signataires : lignes vides ignorées, plus d’erreur',
   const k = ctx([]); k.EUC_DEV444_saveCampaignSignatures(Object.assign({}, Q, { classes: [{ annee: '2026-2027', classeId: 1, classe: '1CAR', adjointNom: '', adjointEmail: '', ddfNom: '', ddfEmail: '' }, { annee: '2026-2027', classeId: 2, classe: '1MELEC2', adjointNom: 'Mme X', adjointEmail: '', ddfNom: '', ddfEmail: '' }] }));
   const posts = k.__appels.filter(a => a.m === 'post' && /records/.test(a.u)); assert.equal(posts.length, 1); assert.equal(posts[0].b.records[0].fields.Classe_id, 2);
 });
-test('page : signature masquée par défaut, bouton pour la personnaliser', () => {
+test('page : plus de signataires par classe dans le lot, signature générique annoncée', () => {
   const h = read('apps-script/Acces_PP_Admin_DEV441.html');
-  assert.match(h, /\.sans-sign \.sign\{display:none\}/);
-  const df = new Function('return ' + h.match(/function dateFr\(v\)\{[^\n]*?toLocaleDateString\('fr-FR'\)\}/)[0])(); assert.equal(df('1792187999'), new Date(1792187999000).toLocaleDateString('fr-FR')); assert.equal(df(''), ''); assert.match(h, /Personnaliser la signature \(facultatif\)/); assert.match(h, /signé « L’équipe PFMP — Lycée Les Eucalyptus »/);
+  assert.doesNotMatch(h, /data-f="adjointNom"|Enregistrer les signataires/);
+  const df = new Function('return ' + h.match(/function dateFr\(v\)\{[^\n]*?toLocaleDateString\('fr-FR'\)\}/)[0])(); assert.equal(df('1792187999'), new Date(1792187999000).toLocaleDateString('fr-FR')); assert.equal(df(''), ''); assert.match(h, /signé « L’équipe PFMP — Lycée Les Eucalyptus »/);
 });
 console.log(n + ' tests DEV676 réussis.');

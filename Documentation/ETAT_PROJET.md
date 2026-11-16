@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV677 : courriel des codes personnalisé, aperçu et confirmation
+
+- Demande : personnaliser le courriel envoyé à tous les professeurs principaux (petit texte explicatif, signature) et confirmer dans une fenêtre que l'envoi part bien avec ce texte.
+- Lot : la zone « Courriel envoyé aux professeurs principaux » remplace les colonnes de signataires par classe : « Message ajouté au courriel » (placé après « Bonjour … », 2000 caractères) et « Signature » (300 caractères ; à défaut, signataires déjà enregistrés pour la classe, sinon « L’équipe PFMP — Lycée Les Eucalyptus »). Texte mémorisé dans ce navigateur seulement.
+- « Aperçu et envoi » : `EUC_DEV677_apercu` construit le courriel exact du premier destinataire (code masqué XXXXX) avec le compte réellement expéditeur (`Session.getEffectiveUser`), l'objet et le nombre de destinataires ; la fenêtre « Vérifier le courriel avant l’envoi » propose Annuler / Confirmer. Le lot et le texte envoyés sont ceux de l'aperçu.
+- `EUC_DEV444_ppMailBody_` reçoit le message et la signature (`EUC_DEV677_perso_` : texte brut nettoyé, borné).
+- Tests : `tests/run-dev677-tests.js` (5) ; assertions de page DEV674/675/676 alignées (colonnes de signataires retirées).
+
 ## Mise à jour du 16 novembre 2026 — DEV676 : codes par lot sans signataires obligatoires
 
 - Décision métier (16/11/2026) : le proviseur adjoint et la direction déléguée ne sont plus exigés pour générer les codes des professeurs principaux. Seuls « aucun professeur principal » et « courriel manquant » bloquent le lot.
