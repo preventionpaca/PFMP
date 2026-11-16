@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV684 : codes direction permanents
+
+- Demande : permettre au proviseur et aux adjoints d'affecter eux-mêmes les professeurs en dernier recours, par un code comme les professeurs principaux, mais permanent et révocable (piratage, départ).
+- Administration (« Accès professeurs principaux ») : section « Codes direction (permanents) » : nom (et courriel facultatif) → code généré, affiché une seule fois (copie possible) ; liste des codes avec état et bouton « Révoquer » (confirmation, effet immédiat).
+- Stockage `EUC_ACCES_PP_PFMP` : Famille = DIRECTION, Classe_id = 0, Periode_id = 0, échéance 31/12/2099, code haché comme les codes PP (`EUC_DEV684_CodeDirection.js`). Non concerné par les campagnes, les révocations de classe ni la liste « Accès de la période ».
+- Utilisation : Suivi PFMP (Atrium) → classe et période → « Accès professeur principal » → code. `EUC_DEV448_lookupPp_(code, q)` transforme un code direction en accès à la classe et à la période choisies (famille transmise par la page) ; affectations tracées « DIRECTION:<id>:<nom> » ; envoi du tableau signé « direction de l’établissement ». Un code PP reste limité à sa classe et à sa période.
+- Tests : `tests/run-dev684-tests.js` (3), `tests/run-dev448-assignment-tests.js` (1 nouveau).
+- Non vérifié en réel : création d'un code direction et déverrouillage (création = écriture en production, à faire par l'administration).
+
 ## Mise à jour du 16 novembre 2026 — DEV683 : codes PP valides refusés « Ce code a expiré »
 
 - Constat réel : sur le site des professeurs, le code actif reçu par courriel (1MP3D, PFMP n°1, échéance 18/12/2026) était refusé « Ce code a expiré ».

@@ -83,6 +83,20 @@ test('DEV683 : échéance Grist en secondes (DateTime) acceptée ; code réellem
   assert.throws(()=>h.ctx.EUC_DEV448_unlockPp({code:'VALIDCODE1234567890',annee:'2026-2027',classeId:28,periodeId:65}),/expiré/);
   assert.match(code,/var expire=EUC_DEV448_dateMs_\(row\.Expiration\)/);assert.doesNotMatch(code,/Date\.parse\(row\.Expiration/);
 });
+test('DEV684 : code direction permanent : toute classe et période choisies, auteur tracé, révocation immédiate',()=>{
+  const dir=()=>({id:32,fields:{Actif:true,Annee_scolaire:'',Famille:'DIRECTION',Classe_id:0,Periode_id:0,Professeur_id:0,Professeur_nom:'Mme Direction',Professeur_email:'dir@example.test',Expiration:Math.floor(Date.UTC(2099,11,31)/1000),Code_salt:'s',Code_hash:'DIRECTIONCODE1234567'}});
+  const f=fixture();f.tables.EUC_ACCES_PP_PFMP.push(dir());
+  const q={code:'DIRECTIONCODE1234567',annee:'2026-2027',famille:'BACPRO',classeId:28,periodeId:65};
+  const r=f.ctx.EUC_DEV448_unlockPp(q);
+  assert.equal(r.scope.direction,true);assert.equal(r.scope.classe,'TMP3D');assert.equal(r.scope.periode,'PFMP n°1');assert.equal(r.scope.professeurPrincipal,'Mme Direction');assert.equal(r.lignes.length,12);
+  assert.throws(()=>f.ctx.EUC_DEV448_unlockPp({code:'DIRECTIONCODE1234567',annee:'2026-2027',classeId:28,periodeId:65}),/Ouvrez d’abord la classe/);
+  const a=f.ctx.EUC_DEV448_affecterPp(Object.assign({type:'VISITE',profId:7,eleveIds:[1,2]},q));assert.equal(a.ok,true);
+  assert.ok(f.tables.EUC_AFFECTATIONS_SUIVI_PFMP.length>=2&&f.tables.EUC_AFFECTATIONS_SUIVI_PFMP.every(x=>/^DIRECTION:32:Mme Direction$/.test(x.fields.Affecte_par)));
+  assert.notEqual(f.ctx.EUC_DEV448_ppScopeCacheKey_({id:32,_direction:true,Classe_id:28,Periode_id:65}),f.ctx.EUC_DEV448_ppScopeCacheKey_({id:32,_direction:true,Classe_id:29,Periode_id:65}),'périmètre mis en cache par classe');
+  f.tables.EUC_ACCES_PP_PFMP[1].fields.Actif=false;
+  assert.throws(()=>f.ctx.EUC_DEV448_unlockPp(q),/inconnu ou révoqué/);
+  const g=fixture();const pp=f.ctx.EUC_DEV448_lookupPp_('VALIDCODE1234567890',q);assert.equal(pp._direction,undefined,'un code PP reste limité à sa classe');
+});
 test('l’autocomplétion administrateur charge et mémorise la liste des professeurs',()=>{
   const f=fixture(),first=f.ctx.EUC_DEV435_professeursDisponibles();
   assert.equal(first.ok,true);assert.equal(first.professeurs.length,1);assert.equal(first.professeurs[0].nom,'M. Alex MARTIN');assert.equal(f.calls.length,1);

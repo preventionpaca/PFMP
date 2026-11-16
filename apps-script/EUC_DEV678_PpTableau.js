@@ -13,7 +13,7 @@ var EUC_DEV678_DELAI_ENVOI_S_ = 120; /* un envoi au plus toutes les deux minutes
 
 function EUC_DEV678_acces_(q) {
   q = q || {};
-  var access = EUC_DEV448_lookupPp_(q.code);
+  var access = EUC_DEV448_lookupPp_(q.code, q);
   EUC_DEV448_assertPpScope_(access, q);
   var detail = EUC_SUIVI_CLASSE_detailV162(EUC_DEV448_t_(access.Annee_scolaire), EUC_DEV448_n_(access.Classe_id), EUC_DEV448_n_(access.Periode_id));
   if (!detail || !detail.periode) throw new Error('Période introuvable pour ce code.');
@@ -48,7 +48,7 @@ function EUC_DEV678_envoyerTableauPp(q) {
   if (cache.get(cle)) throw new Error('Le tableau vient d’être envoyé. Patientez deux minutes avant un nouvel envoi.');
   var e = function(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
   var html = '<div style="font-family:Arial,sans-serif">' + e(p.message).replace(/\\n|\n/g, '<br>') + '</div>'
-    + '<p style="font-family:Arial,sans-serif;color:#667085">Envoyé par ' + e(p.professeurPrincipal) + ', professeur principal.</p>'
+    + '<p style="font-family:Arial,sans-serif;color:#667085">Envoyé par ' + e(p.professeurPrincipal) + (a.access._direction ? ', direction de l’établissement.' : ', professeur principal.') + '</p>'
     + EUC_V157_htmlTable_(a.detail) + EUC_V161F3_historiqueHtml_(a.detail);
   var replyTo = EUC_DEV448_t_(a.access.Professeur_email);
   MailApp.sendEmail({ to: p.to.join(','), cc: p.cc.join(','), subject: p.objet, htmlBody: html, name: 'PFMP — Lycée Les Eucalyptus', replyTo: replyTo.indexOf('@') > 0 ? replyTo : undefined });

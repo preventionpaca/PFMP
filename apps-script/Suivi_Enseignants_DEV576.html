@@ -233,11 +233,11 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function accesPP(c,p){
     var m=document.getElementById('ppModal');
     if(!m){document.body.insertAdjacentHTML('beforeend','<div id="ppModal" class="pp-modal" role="dialog" aria-modal="true" aria-labelledby="ppTitre"><div class="pp-carte"><h2 id="ppTitre">Accès professeur principal</h2><p id="ppPortee" class="note"></p>'+
-      '<div id="ppConnexion"><label>Code temporaire <input id="ppCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label> <button class="btn" type="button" id="ppOuvrir">Déverrouiller</button></div><p id="ppEtat" role="status"></p>'+
+      '<div id="ppConnexion"><label>Code d’accès <input id="ppCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label> <button class="btn" type="button" id="ppOuvrir">Déverrouiller</button></div><p id="ppEtat" role="status"></p>'+
       '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button> <button class="btn" type="button" id="ppRetirer" hidden>Retirer ce type de suivi aux élèves cochés</button></div><div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF</button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs</button></div><div class="tableau"><table id="ppTable"></table></div></div>'+
       '<p style="text-align:right"><button class="btn" type="button" id="ppFermer">Fermer</button></p></div></div>');m=document.getElementById('ppModal');
       m.onclick=function(e){if(e.target===m)m.hidden=true;};document.getElementById('ppFermer').onclick=function(){m.hidden=true;};}
-    var portee={annee:String(D.annee||''),classeId:Number(c.id),periodeId:Number(p.id)},code=document.getElementById('ppCode'),etatPP=document.getElementById('ppEtat'),espace=document.getElementById('ppEspace'),donnees=null,modifie=false;
+    var portee={annee:String(D.annee||''),famille:String(c.familleBase||c.famille||''),classeId:Number(c.id),periodeId:Number(p.id)},code=document.getElementById('ppCode'),etatPP=document.getElementById('ppEtat'),espace=document.getElementById('ppEspace'),donnees=null,modifie=false;
     document.getElementById('ppPortee').textContent=c.nom+' — '+p.libelle;espace.hidden=true;etatPP.textContent='';m.hidden=false;
     try{code.value=sessionStorage.getItem('eucPpCode')||'';}catch(e){}
     document.getElementById('ppConnexion').hidden=!!CFG.admin;
@@ -247,7 +247,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
         .withFailureHandler(function(e){etatPP.textContent='Erreur : '+(e&&e.message||e);}).EUC_DEV435_professeursDisponibles();}
     else setTimeout(function(){code.focus();},0);
     function afficher(d){donnees=d;if(!CFG.admin){try{sessionStorage.setItem('eucPpCode',code.value.trim());}catch(e){}}espace.hidden=false;var pa=document.getElementById('ppPartage');pa.hidden=!!CFG.admin;pa.style.display=CFG.admin?'none':'';
-      document.getElementById('ppPortee').textContent=d.scope.classe+' — '+d.scope.periode+' · accès de '+d.scope.professeurPrincipal+' · valable jusqu’au '+d.scope.expiration;
+      document.getElementById('ppPortee').textContent=d.scope.classe+' — '+d.scope.periode+' · accès de '+d.scope.professeurPrincipal+(d.scope.direction?' · code direction (valable jusqu’à révocation)':' · valable jusqu’au '+d.scope.expiration);
       document.getElementById('ppProf').innerHTML=(d.professeurs||[]).map(function(x){return '<option value="'+x.id+'">'+esc(x.nom)+(x.discipline?' — '+esc(x.discipline):'')+'</option>';}).join('');
       document.getElementById('ppTable').innerHTML='<thead><tr><th><input id="ppTous" type="checkbox" aria-label="Tout cocher"></th><th>Élève</th><th>Statut</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+(d.lignes||[]).map(function(x){return '<tr><td><input class="ppEleve" type="checkbox" value="'+x.eleveId+'"></td><td><b>'+esc(x.eleve)+'</b></td><td>'+esc(x.statut)+'</td><td>'+esc(x.telephone||'—')+'</td><td>'+esc(x.visite||'—')+'</td></tr>';}).join('')+'</tbody>';
       document.getElementById('ppTous').onchange=function(){var v=this.checked;document.querySelectorAll('.ppEleve').forEach(function(x){x.checked=v;});};}

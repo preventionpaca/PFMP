@@ -124,7 +124,7 @@ function EUC_DEV448_allowedIds_(allowedIds,ids){
   if((ids||[]).some(function(id){return!allowed[EUC_DEV448_n_(id)];}))throw new Error('Un élève est hors de la classe ou de la période autorisée.');
   return true;
 }
-function EUC_DEV448_ppScopeCacheKey_(access){return'EUC_DEV448_PP_SCOPE_'+EUC_DEV448_n_(access&&access.id);}
+function EUC_DEV448_ppScopeCacheKey_(access){return'EUC_DEV448_PP_SCOPE_'+EUC_DEV448_n_(access&&access.id)+(access&&access._direction?'_'+EUC_DEV448_n_(access.Classe_id)+'_'+EUC_DEV448_n_(access.Periode_id):'');}
 function EUC_DEV448_cacheAllowed_(access,record){
   var ids=((record&&record.detail&&record.detail.lignes)||[]).map(function(x){return EUC_DEV448_n_(x.eleveId);}).filter(Boolean);
   try{CacheService.getScriptCache().put(EUC_DEV448_ppScopeCacheKey_(access),JSON.stringify(ids),21600);}catch(e){}
@@ -192,7 +192,7 @@ function EUC_DEV448_affecterAdmin(q){
   q=q||{};
   return EUC_DEV448_core_({annee:q.annee,famille:q.famille,classeId:q.classeId,periodeId:q.periodeId,type:q.type,profId:q.profId,eleveIds:q.eleveIds,_allowedIds:q.scopeIds||[],_skipDetailWrite:true},EUC_DEV448_t_(ctx.email)||'ADMIN');
 }
-function EUC_DEV448_lookupPp_(code){
+function EUC_DEV448_lookupPp_(code,q){
   var canonical=EUC_DEV441_codeCanon_(code);if(canonical.length<16)throw new Error('Code invalide.');
   var rows=EUC_DEV448_rows_(EUC_DEV441_PP_TABLE_,{Actif:[true]}),now=Date.now(),row=rows.filter(function(r){return r.Actif!==false&&EUC_DEV441_codeHash_(canonical,r.Code_salt)===EUC_DEV448_t_(r.Code_hash);})[0];
   if(!row)throw new Error('Code inconnu ou révoqué.');
@@ -200,7 +200,14 @@ function EUC_DEV448_lookupPp_(code){
      Repli sur la fin de période si l'échéance est illisible (même règle que EUC_DEV441). */
   var expire=EUC_DEV448_dateMs_(row.Expiration);if(!isFinite(expire)&&row.Date_fin){var f=EUC_DEV448_dateMs_(row.Date_fin);if(isFinite(f))expire=f+86399000;}
   if(!isFinite(expire)||expire<now)throw new Error('Ce code a expiré.');
+  /* DEV684 : code direction permanent : valable pour la classe et la période choisies sur la page. */
+  if(EUC_DEV448_t_(row.Famille).toUpperCase()==='DIRECTION')return EUC_DEV448_accesDirection_(row,q);
   return row;
+}
+function EUC_DEV448_accesDirection_(row,q){
+  q=q||{};var annee=EUC_DEV448_t_(q.annee),famille=EUC_DEV448_family_(q.famille),cid=EUC_DEV448_n_(q.classeId),pid=EUC_DEV448_n_(q.periodeId);
+  if(!annee||!famille||!cid||!pid)throw new Error('Ouvrez d’abord la classe et la période, puis saisissez le code direction.');
+  return{id:EUC_DEV448_n_(row.id),_direction:true,Actif:true,Annee_scolaire:annee,Famille:famille,Classe_id:cid,Classe_nom:'',Periode_id:pid,Periode_libelle:'',Professeur_id:0,Professeur_nom:EUC_DEV448_t_(row.Professeur_nom),Professeur_email:EUC_DEV448_t_(row.Professeur_email),Expiration:''};
 }
 function EUC_DEV448_dateMs_(v){
   if(Array.isArray(v))v=v.filter(function(x){return typeof x==='number'||typeof x==='string';})[0];
@@ -218,17 +225,17 @@ function EUC_DEV448_scope_(access,record){
   var annee=EUC_DEV448_t_(access.Annee_scolaire),classeId=EUC_DEV448_n_(access.Classe_id),periodeId=EUC_DEV448_n_(access.Periode_id),assignments=EUC_DEV448_rows_(EUC_DEV448_ASSIGN_TABLE_,{Annee_scolaire:[annee],Classe:[classeId],Periode:[periodeId],Actif:[true]}),by={};
   assignments.forEach(function(a){if(a.Actif===false)return;var id=EUC_DEV448_ref_(a.Eleve),type=EUC_DEV448_t_(a.Type_suivi).toUpperCase();if(id&&type)by[id+'|'+type]=a;});
   var lignes=((record.detail&&record.detail.lignes)||[]).map(function(x){var id=EUC_DEV448_n_(x.eleveId),tel=by[id+'|TELEPHONE'],vis=by[id+'|VISITE'];return{eleveId:id,eleve:[x.nom,x.prenom].filter(Boolean).join(' '),statut:EUC_DEV448_t_(x.statut),telephone:tel?EUC_DEV448_t_(tel.Nom_professeur_snapshot):EUC_DEV448_t_(x.professeurTelephone),visite:vis?EUC_DEV448_t_(vis.Nom_professeur_snapshot):EUC_DEV448_t_(x.professeurVisiteur)};});
-  return{ok:true,version:EUC_DEV448_VERSION_,scope:{annee:annee,famille:EUC_DEV448_family_(access.Famille),classeId:classeId,classe:EUC_DEV448_t_(access.Classe_nom),periodeId:periodeId,periode:EUC_DEV448_t_(access.Periode_libelle),expiration:EUC_DEV448_t_(access.Expiration),professeurPrincipal:EUC_DEV448_t_(access.Professeur_nom)},professeurs:EUC_DEV448_professeurs_(),lignes:lignes};
+  return{ok:true,version:EUC_DEV448_VERSION_,scope:{annee:annee,famille:EUC_DEV448_family_(access.Famille),classeId:classeId,classe:EUC_DEV448_t_(access.Classe_nom)||EUC_DEV448_t_(record.detail&&record.detail.classe&&record.detail.classe.nom),periodeId:periodeId,periode:EUC_DEV448_t_(access.Periode_libelle)||EUC_DEV448_t_(record.detail&&record.detail.periode&&record.detail.periode.libelle),expiration:EUC_DEV448_t_(access.Expiration),professeurPrincipal:EUC_DEV448_t_(access.Professeur_nom),direction:!!access._direction},professeurs:EUC_DEV448_professeurs_(),lignes:lignes};
 }
 function EUC_DEV448_unlockPp(q){
-  q=q||{};var started=Date.now(),access=EUC_DEV448_lookupPp_(q.code);EUC_DEV448_assertPpScope_(access,q);
+  q=q||{};var started=Date.now(),access=EUC_DEV448_lookupPp_(q.code,q);EUC_DEV448_assertPpScope_(access,q);
   var record=EUC_DEV448_detailRecord_(access.Annee_scolaire,access.Famille,access.Classe_id,access.Periode_id);EUC_DEV448_cacheAllowed_(access,record);
   var result=EUC_DEV448_scope_(access,record);result.durationMs=Date.now()-started;return result;
 }
 function EUC_DEV448_affecterPp(q){
-  q=q||{};var access=EUC_DEV448_lookupPp_(q.code);EUC_DEV448_assertPpScope_(access,q);
+  q=q||{};var access=EUC_DEV448_lookupPp_(q.code,q);EUC_DEV448_assertPpScope_(access,q);
   var allowed=EUC_DEV448_cachedAllowed_(access);
   if(!allowed){var record=EUC_DEV448_detailRecord_(access.Annee_scolaire,access.Famille,access.Classe_id,access.Periode_id);allowed=EUC_DEV448_cacheAllowed_(access,record);}
   var scoped={annee:EUC_DEV448_t_(access.Annee_scolaire),famille:EUC_DEV448_family_(access.Famille),classeId:EUC_DEV448_n_(access.Classe_id),periodeId:EUC_DEV448_n_(access.Periode_id),type:q.type,profId:q.profId,eleveIds:q.eleveIds,_allowedIds:allowed,_skipDetailWrite:true};
-  return EUC_DEV448_core_(scoped,'PP_TEMP:'+EUC_DEV448_n_(access.Professeur_id));
+  return EUC_DEV448_core_(scoped,access._direction?'DIRECTION:'+EUC_DEV448_n_(access.id)+':'+EUC_DEV448_t_(access.Professeur_nom):'PP_TEMP:'+EUC_DEV448_n_(access.Professeur_id));
 }
