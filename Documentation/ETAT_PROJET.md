@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV674 : codes des professeurs principaux par niveau
+
+- Demande : sur « Accès professeurs principaux », générer en une fois les codes de tous les professeurs principaux d'un même niveau pour une période, au lieu de classe par classe.
+- Page : sélecteurs Année, Famille, **Niveau** (Seconde, Première, Terminale ; 1re/2e année BTS ; 1re/2e année CAP), Classe (facultative), Période. Sans classe, la période liste les périodes du niveau (libellé · dates · nombre de classes). « Afficher les accès » liste alors les codes de toutes les classes du niveau.
+- Campagne (DEV444 inchangée sur le fond : un code et un courriel individuel par professeur principal, anciens codes révoqués) : avec `periodeCle`, `EUC_DEV444_campaignTargets_` délègue à `EUC_DEV674_cible_` (famille, niveau, classe facultative, clé libellé|début|fin). Classe choisie : lot limité à la classe ; « Tous les niveaux » : toute la famille (ancien comportement). Sans `periodeCle`, l'ancien lot par classe de référence reste disponible.
+- Niveau déduit du nom de la classe (même règle que les pages famille) : `EUC_DEV674_niveau_` ; le catalogue admin porte `niveau` et la clé `cle` de chaque période.
+- Sûreté : le lot envoyé est celui affiché (mémorisé à la préparation) ; tout changement de filtre efface le lot préparé. Boutons asynchrones : désactivés, indicateur tournant, délai de 5 min 30, état rétabli.
+- Tests : `tests/run-dev674-tests.js` (6). Aucun code réellement généré ni courriel envoyé lors de la vérification.
+
 ## Mise à jour du 13 novembre 2026 — DEV673 : SIRET valable refusé chez l'élève (annuaire indisponible lu comme « introuvable »)
 
 - Cas : PFMP-2026-S0023 (GARAGE DE LA COLLE, SIRET 10375242400012, établissement actif créé le 13/04/2026). L'élève a fini en demande d'aide ; le même SIRET a été vérifié sans difficulté au bureau. L'annuaire le trouve aujourd'hui.
