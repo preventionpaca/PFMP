@@ -35,6 +35,7 @@ test('enregistrement des signataires : lignes vides ignorées, plus d’erreur',
 });
 test('page : signature masquée par défaut, bouton pour la personnaliser', () => {
   const h = read('apps-script/Acces_PP_Admin_DEV441.html');
-  assert.match(h, /\.sans-sign \.sign\{display:none\}/); assert.match(h, /Personnaliser la signature \(facultatif\)/); assert.match(h, /signé « L’équipe PFMP — Lycée Les Eucalyptus »/);
+  assert.match(h, /\.sans-sign \.sign\{display:none\}/);
+  const df = new Function('return ' + h.match(/function dateFr\(v\)\{[^\n]*?toLocaleDateString\('fr-FR'\)\}/)[0])(); assert.equal(df('1792187999'), new Date(1792187999000).toLocaleDateString('fr-FR')); assert.equal(df(''), ''); assert.match(h, /Personnaliser la signature \(facultatif\)/); assert.match(h, /signé « L’équipe PFMP — Lycée Les Eucalyptus »/);
 });
 console.log(n + ' tests DEV676 réussis.');
