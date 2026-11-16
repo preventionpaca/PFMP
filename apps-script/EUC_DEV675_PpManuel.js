@@ -35,6 +35,14 @@ function EUC_DEV675_marquer_(classes) {
   return classes;
 }
 function EUC_DEV675_oublierCache_(classeId) { try { CacheService.getScriptCache().remove('DEV455_PP_' + classeId); } catch (e) {} }
+/* DEV679 : seules les colonnes présentes dans Grist sont écrites. Annee_scolaire et Retire_le ne sont créées que par
+   l'import Pronote (DEV595) : tant qu'il n'a pas tourné, les envoyer ferait refuser l'ajout (400 « Invalid column »). */
+function EUC_DEV675_champs_(fields) {
+  var cols = {};
+  try { (EUC_ENT_grist('get', '/tables/' + EUC_DEV675_TABLE_ + '/columns').columns || []).forEach(function(c) { if (c && c.id) cols[c.id] = true; }); } catch (e) { return fields; }
+  if (!Object.keys(cols).length) return fields;
+  var out = {}; Object.keys(fields).forEach(function(k) { if (cols[k]) out[k] = fields[k]; }); return out;
+}
 
 function EUC_DEV675_ajouterPp(q) {
   var ctx = EUC_DEV441_admin_(); q = q || {};
@@ -50,7 +58,7 @@ function EUC_DEV675_ajouterPp(q) {
     var deja = (EUC_IMPORT_lireRecords_(EUC_DEV675_TABLE_) || []).filter(function(l) { return l.Actif !== false && EUC_DEV441_t_(l.Role) === 'PROFESSEUR_PRINCIPAL' && EUC_DEV441_n_(EUC_PFMP_ref_(l.Classe)) === classeId && EUC_DEV441_n_(EUC_PFMP_ref_(l.Professeur)) === profId; })[0];
     if (deja) return { ok: true, deja: true, classe: classe.classe, professeur: EUC_DEV675_nom_(prof) };
     var now = new Date().toISOString();
-    EUC_ENT_grist('post', '/tables/' + EUC_DEV675_TABLE_ + '/records', { records: [{ fields: { Classe: classeId, Professeur: profId, Role: 'PROFESSEUR_PRINCIPAL', Source_Pronote: EUC_DEV675_SOURCE_, Annee_scolaire: annee, Actif: true, Date_modification: now } }] });
+    EUC_ENT_grist('post', '/tables/' + EUC_DEV675_TABLE_ + '/records', { records: [{ fields: EUC_DEV675_champs_({ Classe: classeId, Professeur: profId, Role: 'PROFESSEUR_PRINCIPAL', Source_Pronote: EUC_DEV675_SOURCE_, Annee_scolaire: annee, Actif: true, Date_modification: now }) }] });
   } finally { lock.releaseLock(); }
   EUC_DEV675_oublierCache_(classeId);
   console.log('DEV675 professeur principal ajouté : classe ' + classeId + ', professeur ' + profId + ', par ' + EUC_DEV441_t_(ctx.email));
@@ -64,7 +72,7 @@ function EUC_DEV675_retirerPp(q) {
   if (!l || l.Actif === false) throw new Error('Lien introuvable ou déjà retiré.');
   if (EUC_DEV441_t_(l.Source_Pronote) !== EUC_DEV675_SOURCE_) throw new Error('Ce professeur principal vient de Pronote : corrigez-le par l’import.');
   var now = new Date().toISOString();
-  EUC_ENT_grist('patch', '/tables/' + EUC_DEV675_TABLE_ + '/records', { records: [{ id: id, fields: { Actif: false, Retire_le: now, Date_modification: now } }] });
+  EUC_ENT_grist('patch', '/tables/' + EUC_DEV675_TABLE_ + '/records', { records: [{ id: id, fields: EUC_DEV675_champs_({ Actif: false, Retire_le: now, Date_modification: now }) }] });
   EUC_DEV675_oublierCache_(EUC_DEV441_n_(EUC_PFMP_ref_(l.Classe)));
   return { ok: true };
 }

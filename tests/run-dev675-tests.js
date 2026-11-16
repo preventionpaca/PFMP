@@ -4,14 +4,14 @@ const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 let n = 0; const test = (nom, fn) => { fn(); n++; console.log('ok - ' + nom); };
 const J = x => JSON.parse(JSON.stringify(x));
 const PROFS = [{ id: 7, Civilite: 'M.', Prenom: 'Paul', Nom: 'DURAND', Email: 'p.durand@ac-nice.fr' }, { id: 8, Nom: 'MARTIN', Prenom: 'Léa', Email: '' }, { id: 9, Nom: 'ANCIEN', Actif: false, Email: 'a@ac-nice.fr' }];
-function ctx(liens) {
+function ctx(liens, colonnes) {
   const appels = [], removed = [];
   const k = { console: { log() {} }, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isFinite, __appels: appels, __removed: removed,
     EUC_DEV368_year: y => y || '2026-2027', EUC_DEV368_admin: () => ({ email: 'admin' }), EUC_DEV368_catalog: () => ({ classes: [] }),
     EUC_DEV456_familyCacheGet_: (y, f) => f === 'BACPRO' ? { classes: [{ classeId: 12, classe: '1MELEC2', periodes: [] }] } : { classes: [] },
     EUC_PFMP_ref_: v => Array.isArray(v) ? v[1] : v, Utilities: { formatDate: () => '' },
     EUC_IMPORT_lireRecords_: t => t === 'EUC_PROFESSEURS_PFMP' ? PROFS : t === 'EUC_CLASSES_PROFESSEURS_PFMP' ? liens : [],
-    EUC_ENT_grist: (m, u, b) => { appels.push({ m, u, b }); return { records: [{ id: 99 }] }; },
+    EUC_ENT_grist: (m, u, b) => { appels.push({ m, u, b }); if (colonnes && m === 'get' && /\/columns$/.test(u)) return { columns: colonnes.map(id => ({ id })) }; return { records: [{ id: 99 }] }; },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ remove: c => removed.push(c) }) } };
   vm.createContext(k); vm.runInContext(read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js'), k); vm.runInContext(read('apps-script/EUC_DEV675_PpManuel.js'), k);
@@ -54,6 +54,16 @@ function importer(lignes, liens) {
   return appels.filter(a => a.m === 'patch').flatMap(a => a.b.records);
 }
 const MANUEL = () => [{ id: 3, fields: { Classe: 12, Professeur: 7, Role: 'PROFESSEUR_PRINCIPAL', Source_Pronote: 'MANUEL_PFMP', Annee_scolaire: '2026-2027', Actif: true } }];
+test('DEV679 : table sans Annee_scolaire ni Retire_le (import Pronote pas encore passé) : ajout et retrait sans colonne inconnue', () => {
+  const cols = ['Classe', 'Professeur', 'Role', 'Source_Pronote', 'Actif', 'Date_modification'];
+  const k = ctx([], cols); k.EUC_DEV675_ajouterPp({ annee: '2026-2027', classeId: 12, profId: 7 });
+  const f = k.__appels.find(a => a.m === 'post').b.records[0].fields;
+  assert.deepEqual(Object.keys(f).sort(), cols.slice().sort()); assert.equal(f.Source_Pronote, 'MANUEL_PFMP'); assert.equal(f.Annee_scolaire, undefined);
+  const k2 = ctx([{ id: 3, Classe: 12, Professeur: 7, Role: 'PROFESSEUR_PRINCIPAL', Source_Pronote: 'MANUEL_PFMP', Actif: true }], cols); k2.EUC_DEV675_retirerPp({ lienId: 3 });
+  const g = k2.__appels.find(a => a.m === 'patch').b.records[0].fields; assert.equal(g.Actif, false); assert.equal(g.Retire_le, undefined);
+  const k3 = ctx([], cols.concat(['Annee_scolaire'])); k3.EUC_DEV675_ajouterPp({ annee: '2026-2027', classeId: 12, profId: 7 });
+  assert.equal(k3.__appels.find(a => a.m === 'post').b.records[0].fields.Annee_scolaire, '2026-2027');
+});
 test('import Pronote prioritaire : un professeur principal fourni remplace le lien manuel', () => {
   const p = importer('1MELEC2;MARTIN Léa', MANUEL()); assert.ok(p.some(r => r.id === 3 && r.fields.Actif === false), 'lien manuel désactivé');
 });

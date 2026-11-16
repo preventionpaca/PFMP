@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV679 : ajout manuel d'un professeur principal refusé par Grist
+
+- Constat réel (page « Accès professeurs principaux », lot PFMP n°1 de première) : « Ajouter » renvoyait « Invalid column "Annee_scolaire" » (400) sur `EUC_CLASSES_PROFESSEURS_PFMP`. Les colonnes `Annee_scolaire` et `Retire_le` ne sont créées que par l'import Pronote professeurs (DEV595), qui n'a pas tourné depuis sur cette table.
+- Correction `EUC_DEV675_PpManuel.js` : `EUC_DEV675_champs_` lit les colonnes de la table et n'écrit que celles qui existent (ajout et retrait) ; si la lecture échoue, comportement inchangé. Sans année, un lien actif compte déjà comme professeur principal (moteur DEV595). Aucune colonne n'est créée par l'application.
+- Tests : `tests/run-dev675-tests.js` (8, dont 1 nouveau).
+
 ## Mise à jour du 16 novembre 2026 — DEV678 : accès professeur principal, envoi du tableau et export PDF
 
 - Demande : avec son code, le professeur principal doit pouvoir envoyer le tableau de suivi aux professeurs qui y figurent (suivi téléphonique, visite) et l'exporter en PDF. Jusqu'ici le bouton « Envoyer le tableau par email » n'existait que côté administration (masqué pour les professeurs).
