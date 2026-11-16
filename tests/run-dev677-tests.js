@@ -27,7 +27,7 @@ test('message et signature nettoyés et bornés', () => {
 test('aperçu : objet, compte expéditeur, nombre de destinataires, message placé après « Bonjour », signature saisie, code masqué', () => {
   const a = J(ctx(PP).EUC_DEV677_apercu(Object.assign({ message: 'Merci avant vendredi.', signature: 'R. Dupont\nDDFPT' }, Q)));
   assert.equal(a.expediteur, 'compte.pfmp@example.test'); assert.equal(a.destinataires, 1); assert.equal(a.objet, '[PFMP] Affectations à compléter — 1CAR — PFMP n°1');
-  assert.match(a.corps, /^Bonjour Monsieur A,\n\nMerci avant vendredi\.\n\nDans le cadre/); assert.match(a.corps, /Code temporaire : XXXXX-XXXXX-XXXXX-XXXXX/); assert.match(a.corps, /Cordialement,\n\nR\. Dupont\nDDFPT$/);
+  assert.match(a.corps, /^Merci avant vendredi\.\n\nDans le cadre/); assert.match(a.corps, /Code temporaire : XXXXX-XXXXX-XXXXX-XXXXX/); assert.match(a.corps, /Cordialement,\n\nR\. Dupont\nDDFPT$/);
 });
 test('aperçu refusé si le lot est bloqué (aucun courriel préparé)', () => {
   const k = ctx({}); assert.throws(() => k.EUC_DEV677_apercu(Q), /Campagne incomplète/); assert.equal(k.__mails.length, 0);

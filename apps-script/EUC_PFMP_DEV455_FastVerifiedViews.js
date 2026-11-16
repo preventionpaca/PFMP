@@ -100,7 +100,7 @@ function EUC_DEV455_principaux_(classe){
     links.forEach(function(r){
       var f=r.fields||r;if(f.Actif===false||EUC_DEV455_t_(f.Role)!=='PROFESSEUR_PRINCIPAL')return;
       var p=by[EUC_DEV455_ref_(f.Professeur)];if(!p)return;
-      out.push({id:Number(p.id)||0,nom:EUC_DEV455_t_(p.nom),email:EUC_DEV455_t_(p.email),civilite:EUC_DEV455_t_(p.civilite),prenom:EUC_DEV455_t_(p.prenom),nomFamille:EUC_DEV455_t_(p.nomFamille)});
+      out.push({id:Number(p.id)||0,nom:EUC_DEV455_t_(p.nom),email:EUC_DEV455_t_(p.email)});
     });
     out=out.filter(function(p){return p.id&&p.nom;});
     try{cache.put(key,JSON.stringify(out),1800);}catch(e3){}

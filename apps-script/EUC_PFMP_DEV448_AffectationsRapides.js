@@ -74,7 +74,7 @@ function EUC_DEV448_professeurs_(){
   try{raw=cache.get(EUC_DEV448_PROF_CACHE_)||'';}catch(e){}
   if(raw){try{return JSON.parse(raw)||[];}catch(e2){}}
   var rows=EUC_DEV448_rows_(EUC_DEV448_PROF_TABLE_,{Actif:[true]}).filter(function(p){return p.Actif!==false;}).map(function(p){
-    return{id:EUC_DEV448_n_(p.id),nom:[p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' ').trim(),email:EUC_DEV448_t_(p.Email),discipline:EUC_DEV448_t_(p.Discipline),civilite:EUC_DEV448_t_(p.Civilite),prenom:EUC_DEV448_t_(p.Prenom),nomFamille:EUC_DEV448_t_(p.Nom)};
+    return{id:EUC_DEV448_n_(p.id),nom:[p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' ').trim(),email:EUC_DEV448_t_(p.Email),discipline:EUC_DEV448_t_(p.Discipline)};
   }).filter(function(p){return p.id&&p.nom;}).sort(function(a,b){return a.nom.localeCompare(b.nom,'fr');});
   try{cache.put(EUC_DEV448_PROF_CACHE_,JSON.stringify(rows),21600);}catch(e3){}
   return rows;
