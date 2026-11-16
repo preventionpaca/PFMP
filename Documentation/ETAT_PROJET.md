@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV681 : un compte enseignant n'est jamais administrateur
+
+- Signalement : un professeur connecté arrivait sur la page des professeurs en « mode administration » (affectation directe sans code).
+- Cause trouvée dans `EUC_PFMP_contexteAdmin_` (`EUC_PFMP_AdminAuth.gs`) : hors recette, un compte reconnu de `EUC_UTILISATEURS_PFMP` avec un rôle ENSEIGNANT ou LECTURE_SEULE était renvoyé avec `autorise: true`, et `EUC_V156_contexteAdmin_` le traitait comme administrateur (page DEV576, affectations admin, autres écrans utilisant ce contexte).
+- Correction : seuls DDFPT, ADMIN_PFMP, BUREAU_ENTREPRISES (et la liste de recette) sont administrateurs ; les autres reçoivent `autorise: false`. `EUC_ADMIN_contexte_` (lecture seule de l'administration) n'est pas modifié.
+- Reste à confirmer : le compte du test réel (navigateur Falkon) ; si ce navigateur est connecté à un compte Google administrateur, le mode administration y reste normal.
+- Tests : `tests/run-dev681-admin-role-tests.js` (4).
+
 ## Mise à jour du 16 novembre 2026 — DEV680 : courriel des codes, accès par Atrium
 
 - Le courriel envoyé aux professeurs principaux indiquait « Rendez-vous sur » le site pfmp, qui n'est qu'un accès de secours (lui aussi sous code) quand Atrium est indisponible. Étape 1 remplacée par « Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP » » (`EUC_DEV444_ppMailBody_`). Aucune adresse dans le corps du courriel.

@@ -4,6 +4,9 @@ function EUC_PFMP_contexteAdmin_() {
   try{var __blue=EUC_RELEASE_blueEditorContext_();if(__blue)return __blue;}catch(__eBlue){}
   var ctx = EUC_SUIVI_contexteCourant_();
   if (ctx && ctx.autorise && ['DDFPT','ADMIN_PFMP','BUREAU_ENTREPRISES'].indexOf(ctx.role) >= 0) return ctx;
+  /* DEV681 : un compte reconnu mais sans rôle d'administration (ENSEIGNANT, LECTURE_SEULE) n'est jamais administrateur :
+     auparavant son contexte « autorisé » était renvoyé tel quel et ouvrait le mode administration. */
+  if (ctx && ctx.autorise) ctx = { autorise: false, email: ctx.email, role: ctx.role, message: 'Accès administrateur requis.' };
   var cfg = EUC_ENT_lireConfiguration();
   if (String(cfg.EUC_ENT_ENVIRONMENT || '').toLowerCase() !== 'recette') return ctx;
   var email = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase();
