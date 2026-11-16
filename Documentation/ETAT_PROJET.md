@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV676 : codes par lot sans signataires obligatoires
+
+- Décision métier (16/11/2026) : le proviseur adjoint et la direction déléguée ne sont plus exigés pour générer les codes des professeurs principaux. Seuls « aucun professeur principal » et « courriel manquant » bloquent le lot.
+- Courriel : signature avec les signataires renseignés pour la classe, sinon « L’équipe PFMP — Lycée Les Eucalyptus » (`EUC_DEV676_signature_`) ; réponse au proviseur adjoint seulement si son courriel est connu.
+- Page : colonnes de signature masquées par défaut (bouton « Personnaliser la signature (facultatif) »), affichées d'office si une classe du lot en a déjà ; l'enregistrement accepte des lignes incomplètes et ignore les lignes vides.
+- Tests : `tests/run-dev676-tests.js` (4).
+
 ## Mise à jour du 16 novembre 2026 — DEV675 : professeur principal ajouté dans l'application
 
 - Besoin : classe sans professeur principal (1MELEC2 mal codée au départ dans Pronote) sans refaire l'import.
