@@ -28,6 +28,8 @@ test('signature du courriel : signataires renseignés, sinon « L’équipe PFMP
   assert.deepEqual(J(k.EUC_DEV676_signature_({ adjointNom: 'Mme X' })), ['Mme X', 'Proviseur adjoint']);
   const corps = k.EUC_DEV444_ppMailBody_({ classe: '1CAR', periode: 'PFMP n°1', debut: '23/11/2026', fin: '18/12/2026', adjointNom: '', ddfNom: '' }, { nom: 'M. A' }, { code: 'C', expiration: '2026-12-18T22:59:59Z' });
   assert.match(corps, /Cordialement,\n\nL’équipe PFMP\nLycée Les Eucalyptus$/); assert.doesNotMatch(corps, /\nProviseur adjoint/);
+  /* DEV680 : l'accès normal passe par Atrium ; le site pfmp n'est qu'un secours (lui aussi sous code). */
+  assert.match(corps, /1\. Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP »\./); assert.doesNotMatch(corps, /Rendez-vous sur|https?:\/\//);
 });
 test('enregistrement des signataires : lignes vides ignorées, plus d’erreur', () => {
   const k = ctx([]); k.EUC_DEV444_saveCampaignSignatures(Object.assign({}, Q, { classes: [{ annee: '2026-2027', classeId: 1, classe: '1CAR', adjointNom: '', adjointEmail: '', ddfNom: '', ddfEmail: '' }, { annee: '2026-2027', classeId: 2, classe: '1MELEC2', adjointNom: 'Mme X', adjointEmail: '', ddfNom: '', ddfEmail: '' }] }));

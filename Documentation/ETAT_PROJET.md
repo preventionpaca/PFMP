@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV680 : courriel des codes, accès par Atrium
+
+- Le courriel envoyé aux professeurs principaux indiquait « Rendez-vous sur » le site pfmp, qui n'est qu'un accès de secours (lui aussi sous code) quand Atrium est indisponible. Étape 1 remplacée par « Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP » » (`EUC_DEV444_ppMailBody_`). Aucune adresse dans le corps du courriel.
+- Tests : `tests/run-dev676-tests.js` (assertion ajoutée).
+
 ## Mise à jour du 16 novembre 2026 — DEV679 : ajout manuel d'un professeur principal refusé par Grist
 
 - Constat réel (page « Accès professeurs principaux », lot PFMP n°1 de première) : « Ajouter » renvoyait « Invalid column "Annee_scolaire" » (400) sur `EUC_CLASSES_PROFESSEURS_PFMP`. Les colonnes `Annee_scolaire` et `Retire_le` ne sont créées que par l'import Pronote professeurs (DEV595), qui n'a pas tourné depuis sur cette table.
