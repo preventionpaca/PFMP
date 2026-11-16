@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV678 : accès professeur principal, envoi du tableau et export PDF
+
+- Demande : avec son code, le professeur principal doit pouvoir envoyer le tableau de suivi aux professeurs qui y figurent (suivi téléphonique, visite) et l'exporter en PDF. Jusqu'ici le bouton « Envoyer le tableau par email » n'existait que côté administration (masqué sur la page publique).
+- Fenêtre « Accès professeur principal » (page de classe) : une fois le code accepté, boutons « Exporter PDF » et « Envoyer le tableau par email ». L'envoi affiche d'abord les destinataires (professeurs du tableau, professeurs principaux, copies institutionnelles paramétrées — mêmes règles que l'envoi administrateur `EUC_V157`) puis demande confirmation.
+- Serveur `EUC_DEV678_PpTableau.js` : le code est revérifié et limité à sa classe et à sa période à chaque appel ; tableau relu en direct (affectations juste saisies comprises) ; réponse adressée au professeur principal ; mention « Envoyé par … » ; un envoi au plus toutes les deux minutes par code.
+- PDF : le tableau relu en direct est imprimé seul (« Enregistrer au format PDF »), indépendamment de l'instantané affiché par la page publique.
+- Tests : `tests/run-dev678-tests.js` (6).
+
 ## Mise à jour du 16 novembre 2026 — DEV677 : courriel des codes personnalisé, aperçu et confirmation
 
 - Demande : personnaliser le courriel envoyé à tous les professeurs principaux (petit texte explicatif, signature) et confirmer dans une fenêtre que l'envoi part bien avec ce texte.

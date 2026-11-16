@@ -500,6 +500,53 @@ function statusPill(x){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
+<style id="EUC_DEV678_PP_STYLE">
+#euc678Confirm{border:1px solid #c8e1da;border-radius:10px;padding:14px;margin-top:14px;background:#f6fbfa}
+#euc678Confirm .euc678-list{margin:4px 0 10px;font-size:14px}#euc678Confirm .euc678-actions{display:flex;gap:10px;justify-content:flex-end}
+.euc678-spin{display:inline-block;width:12px;height:12px;margin-right:6px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:euc678r .8s linear infinite}
+@keyframes euc678r{to{transform:rotate(360deg)}}
+#euc678Print{display:none}
+@media print{body.euc678-printing>*:not(#euc678Print){display:none!important}body.euc678-printing #euc678Print{display:block!important}#euc678Print h1{font:700 16px Arial,sans-serif}#euc678Print table{font-size:9px}}
+</style>
+<script id="EUC_DEV678_PP_SCRIPT">
+(function(){
+  var DELAI=330000;
+  function h(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function q(){return{code:(document.getElementById('euc444PpCode')||{}).value||'',annee:String(detail&&detail.annee||''),classeId:Number(detail&&detail.classe&&detail.classe.id||0),periodeId:Number(detail&&detail.periode&&detail.periode.id||0)}}
+  function msg(t){var s=document.getElementById('euc444PpStatus');if(s)s.textContent=t}
+  /* Bouton asynchrone : désactivé, indicateur visible, état initial rendu en succès, erreur et délai dépassé. */
+  function appel(b,libelle,fn,arg,ok,ko){
+    var init=b.innerHTML,fini=false;b.disabled=true;b.innerHTML='<span class="euc678-spin" aria-hidden="true"></span>'+h(libelle);
+    function fin(){if(fini)return false;fini=true;clearTimeout(t);b.disabled=false;b.innerHTML=init;return true}
+    var t=setTimeout(function(){if(fin())ko({message:'Délai dépassé, réessayez.'})},DELAI);
+    google.script.run.withSuccessHandler(function(r){if(fin())ok(r)}).withFailureHandler(function(e){if(fin())ko(e)})[fn](arg);
+  }
+  function liste(a){return a&&a.length?a.map(function(x){return'<div>'+h(x)+'</div>'}).join(''):'<div>Aucune</div>'}
+  function install(){
+    var foot=document.getElementById('euc444PpFoot'),logout=document.getElementById('euc444PpLogout');
+    if(!foot||!logout||document.getElementById('euc678Envoi'))return!!document.getElementById('euc678Envoi');
+    foot.insertAdjacentHTML('afterbegin','<button id="euc678Pdf" type="button" class="euc444-hidden">Exporter PDF</button><button id="euc678Envoi" type="button" class="euc444-hidden">Envoyer le tableau par email</button>');
+    foot.insertAdjacentHTML('beforebegin','<div id="euc678Confirm" class="euc444-hidden" role="region" aria-label="Confirmation de l’envoi"><b>Envoyer le tableau de suivi ?</b><p id="euc678Sujet" class="euc678-list"></p><b>Destinataires professeurs</b><div id="euc678To" class="euc678-list"></div><b>Copies institutionnelles</b><div id="euc678Cc" class="euc678-list"></div><div class="euc678-actions"><button id="euc678Annuler" type="button">Annuler</button><button id="euc678Confirmer" type="button">Envoyer</button></div></div>');
+    if(!document.getElementById('euc678Print'))document.body.insertAdjacentHTML('beforeend','<div id="euc678Print"></div>');
+    var pdf=document.getElementById('euc678Pdf'),env=document.getElementById('euc678Envoi'),conf=document.getElementById('euc678Confirm');
+    function sync(){var on=!logout.classList.contains('euc444-hidden');pdf.classList.toggle('euc444-hidden',!on);env.classList.toggle('euc444-hidden',!on);if(!on)conf.classList.add('euc444-hidden')}
+    new MutationObserver(sync).observe(logout,{attributes:true,attributeFilter:['class']});sync();
+    env.onclick=function(){appel(env,'Préparation…','EUC_DEV678_preparerEnvoiPp',q(),function(r){
+      document.getElementById('euc678Sujet').textContent=r.objet||('Classe '+r.classe+' — '+r.periode);document.getElementById('euc678To').innerHTML=liste(r.to);document.getElementById('euc678Cc').innerHTML=liste(r.cc);
+      document.getElementById('euc678Confirmer').disabled=!(r.to&&r.to.length);conf.classList.remove('euc444-hidden');msg(r.to&&r.to.length?'Vérifiez les destinataires puis confirmez.':'Aucun professeur affecté avec une adresse email : rien à envoyer.');
+    },function(e){msg('Erreur : '+(e&&e.message||e))})};
+    document.getElementById('euc678Annuler').onclick=function(){conf.classList.add('euc444-hidden');msg('Envoi annulé.')};
+    document.getElementById('euc678Confirmer').onclick=function(){var b=this,ann=document.getElementById('euc678Annuler');ann.disabled=true;appel(b,'Envoi en cours…','EUC_DEV678_envoyerTableauPp',q(),function(r){ann.disabled=false;conf.classList.add('euc444-hidden');msg('Tableau envoyé à '+(r.to||[]).length+' professeur(s)'+((r.cc||[]).length?' et '+r.cc.length+' copie(s)':'')+'.')},function(e){ann.disabled=false;msg('Erreur d’envoi : '+(e&&e.message||e))})};
+    pdf.onclick=function(){appel(pdf,'Préparation du PDF…','EUC_DEV678_tableauPdfPp',q(),function(r){
+      var box=document.getElementById('euc678Print');box.innerHTML='<h1>Tableau de suivi PFMP — '+h(r.classe)+' — '+h(r.periode)+'</h1>'+r.html;
+      document.body.classList.add('euc678-printing');var off=function(){document.body.classList.remove('euc678-printing');window.removeEventListener('afterprint',off)};window.addEventListener('afterprint',off);
+      setTimeout(function(){window.print();setTimeout(off,1500)},50);msg('Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF ».');
+    },function(e){msg('Erreur : '+(e&&e.message||e))})};
+    return true;
+  }
+  if(!install()){var n=0,i=setInterval(function(){if(install()||++n>60)clearInterval(i)},500)}
+})();
+</script>
 
 
 <!-- EUC_DEV417_DETAIL_KPI_LISTS -->
