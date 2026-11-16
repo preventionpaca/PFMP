@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV682 : campagne de codes PP envoyée deux fois
+
+- Constat réel : un seul clic sur « Confirmer l’envoi » (lot PFMP n°1 de première, 10 classes), mais deux séries de courriels. La liste « Accès de la période » montre pour chaque professeur principal un code « Révoqué » et un code « Actif » : `EUC_DEV444_sendCampaign` a été exécutée deux fois. Seuls les codes du second courriel sont valables.
+- Cause : le bouton est bien désactivé dès le clic (pas de second appel par la page) ; l'appel serveur a donc été rejoué hors de la page (navigateur ou `google.script.run` pendant un envoi long) ou lancé depuis un second onglet. La cause exacte ne peut pas être prouvée a posteriori.
+- Correction : identifiant d'envoi créé à l'aperçu (`envoiId`) ; le serveur mémorise le résultat 6 h et renvoie « Envoi déjà effectué » sans nouveaux codes ni courriels si le même envoi est rejoué ; une classe dont les codes ont été créés par une campagne il y a moins de 10 minutes est refusée (`EUC_DEV682_recents_`), y compris depuis un autre onglet.
+- Tests : `tests/run-dev677-tests.js` (1 nouveau), `tests/run-dev674-tests.js` (assertion du lot mise à jour).
+
 ## Mise à jour du 16 novembre 2026 — DEV681 : un compte enseignant n'est jamais administrateur
 
 - Signalement : un professeur connecté arrivait sur la page des professeurs en « mode administration » (affectation directe sans code).

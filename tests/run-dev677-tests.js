@@ -36,6 +36,17 @@ test('envoi : le courriel envoyé contient le message et la signature confirmés
   const k = ctx(PP); k.EUC_DEV444_sendCampaign(Object.assign({ message: 'Merci avant vendredi.', signature: 'R. Dupont' }, Q));
   assert.equal(k.__mails.length, 1); assert.match(k.__mails[0].body, /Merci avant vendredi\./); assert.match(k.__mails[0].body, /R\. Dupont$/); assert.doesNotMatch(k.__mails[0].body, /XXXXX/); assert.equal(k.__mails[0].replyTo, undefined);
 });
+test('DEV682 : envoi rejoué avec le même identifiant : aucun nouveau code ni courriel ; classe envoyée il y a moins de 10 minutes refusée', () => {
+  const k = ctx(PP), store = {}; k.CacheService = { getScriptCache: () => ({ get: c => store[c] || null, put: (c, v) => { store[c] = v; } }) };
+  const lot = Object.assign({ envoiId: 'abc123', message: 'Cher collègue,' }, Q);
+  const r1 = J(k.EUC_DEV444_sendCampaign(lot)); assert.equal(k.__mails.length, 1); assert.ok(!r1.deja);
+  const r2 = J(k.EUC_DEV444_sendCampaign(lot)); assert.equal(k.__mails.length, 1, 'pas de second courriel'); assert.equal(r2.deja, true); assert.equal(r2.campaignId, r1.campaignId);
+  const recent = [{ id: 5, Actif: true, Annee_scolaire: '2026-2027', Classe_id: 1, Periode_id: 11, Campagne_id: 'PP-x', Date_creation: new Date(Date.now() - 2 * 60000).toISOString() }];
+  assert.deepEqual(J(k.EUC_DEV682_recents_([{ annee: '2026-2027', classeId: 1, periodeId: 11, classe: '1CAR' }], recent, Date.now())), ['1CAR']);
+  recent[0].Date_creation = new Date(Date.now() - 11 * 60000).toISOString();
+  assert.deepEqual(J(k.EUC_DEV682_recents_([{ annee: '2026-2027', classeId: 1, periodeId: 11, classe: '1CAR' }], recent, Date.now())), []);
+  const h = read('apps-script/Acces_PP_Admin_DEV441.html'); assert.match(h, /envoiId:Date\.now\(\)\.toString\(36\)/); assert.match(h, /r\.deja\?'Envoi déjà effectué/);
+});
 test('page : zone de message, signature, fenêtre d’aperçu avec confirmation et annulation', () => {
   const h = read('apps-script/Acces_PP_Admin_DEV441.html');
   assert.match(h, /id="msgPerso"/); assert.match(h, /id="signPerso"/); assert.match(h, /role="dialog" aria-modal="true"/);
