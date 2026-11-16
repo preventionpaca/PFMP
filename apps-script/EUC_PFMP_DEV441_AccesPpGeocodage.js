@@ -159,6 +159,7 @@ function EUC_DEV444_campaignPreview(q){
   EUC_DEV441_admin_();var campaign=EUC_DEV444_campaignTargets_(q),saved=EUC_DEV444_signRows_(),by={};
   saved.forEach(function(r){if(r.Actif!==false)by[EUC_DEV441_t_(r.Annee_scolaire)+'|'+EUC_DEV441_n_(r.Classe_id)]=r;});
   var classes=campaign.targets.map(function(t){var s=by[t.annee+'|'+t.classeId]||{},pp=EUC_V155_professeursPrincipaux_(t.classeId)||[];return{annee:t.annee,famille:t.famille,classeId:t.classeId,classe:t.classe,periodeId:t.periode.id,periode:t.periode.libelle,debut:t.periode.debut,fin:t.periode.fin,principaux:pp.map(function(p){return{id:EUC_DEV441_n_(p.id),nom:EUC_DEV441_t_(p.nom),email:EUC_DEV444_email_(p.email)};}),adjointNom:EUC_DEV441_t_(s.Adjoint_nom),adjointEmail:EUC_DEV444_email_(s.Adjoint_email),ddfNom:EUC_DEV441_t_(s.Ddf_nom),ddfEmail:EUC_DEV444_email_(s.Ddf_email)};});
+  if(typeof EUC_DEV675_marquer_==='function')EUC_DEV675_marquer_(classes);
   var recipients=0,blocking=[];classes.forEach(function(c){if(!c.principaux.length)blocking.push(c.classe+' : aucun professeur principal');c.principaux.forEach(function(p){if(p.email)recipients++;else blocking.push(c.classe+' : courriel manquant pour '+p.nom);});if(!c.adjointNom||!c.adjointEmail||!c.ddfNom)blocking.push(c.classe+' : signataires incomplets');});
   return{ok:true,anchor:campaign.anchor,classes:classes,recipients:recipients,blocking:blocking,siteUrl:EUC_DEV444_publicSite_()};
 }

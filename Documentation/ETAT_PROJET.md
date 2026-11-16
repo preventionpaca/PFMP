@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV675 : professeur principal ajouté dans l'application
+
+- Besoin : classe sans professeur principal (1MELEC2 mal codée au départ dans Pronote) sans refaire l'import.
+- Lot de « Accès professeurs principaux » : sous chaque classe, menu « + Ajouter un professeur principal… » alimenté par `EUC_PROFESSEURS_PFMP` (aucun nom retapé ; professeur sans courriel refusé) ; bouton « Retirer » réservé aux liens ajoutés ici. Saisies de signataires non enregistrées conservées au rafraîchissement du lot.
+- Donnée : lien `EUC_CLASSES_PROFESSEURS_PFMP` avec `Source_Pronote = MANUEL_PFMP`, année scolaire, actif ; cache `DEV455_PP_<classe>` oublié. Les vues famille déjà construites affichent le changement à leur prochaine reconstruction.
+- Pronote prioritaire (décision métier du 16/11/2026) : l'import « Classes » désactive le lien manuel dès qu'il fournit un professeur principal pour la classe (ou le reprend tel quel si c'est le même professeur) ; un import sans professeur principal pour la classe ne l'efface pas.
+- Tests : `tests/run-dev675-tests.js` (7, dont l'import simulé).
+
 ## Mise à jour du 16 novembre 2026 — DEV674 : codes des professeurs principaux par niveau
 
 - Demande : sur « Accès professeurs principaux », générer en une fois les codes de tous les professeurs principaux d'un même niveau pour une période, au lieu de classe par classe.
