@@ -196,8 +196,18 @@ function EUC_DEV448_lookupPp_(code){
   var canonical=EUC_DEV441_codeCanon_(code);if(canonical.length<16)throw new Error('Code invalide.');
   var rows=EUC_DEV448_rows_(EUC_DEV441_PP_TABLE_,{Actif:[true]}),now=Date.now(),row=rows.filter(function(r){return r.Actif!==false&&EUC_DEV441_codeHash_(canonical,r.Code_salt)===EUC_DEV448_t_(r.Code_hash);})[0];
   if(!row)throw new Error('Code inconnu ou révoqué.');
-  if((Date.parse(row.Expiration||'')||0)<now)throw new Error('Ce code a expiré.');
+  /* DEV683 : Grist renvoie une colonne DateTime en secondes (nombre) : Date.parse() donnait NaN, donc tout code « expiré ».
+     Repli sur la fin de période si l'échéance est illisible (même règle que EUC_DEV441). */
+  var expire=EUC_DEV448_dateMs_(row.Expiration);if(!isFinite(expire)&&row.Date_fin){var f=EUC_DEV448_dateMs_(row.Date_fin);if(isFinite(f))expire=f+86399000;}
+  if(!isFinite(expire)||expire<now)throw new Error('Ce code a expiré.');
   return row;
+}
+function EUC_DEV448_dateMs_(v){
+  if(Array.isArray(v))v=v.filter(function(x){return typeof x==='number'||typeof x==='string';})[0];
+  if(typeof v==='number')return isFinite(v)?(Math.abs(v)<1e12?v*1000:v):NaN;
+  var s=EUC_DEV448_t_(v);if(!s)return NaN;
+  if(/^\d+(?:\.\d+)?$/.test(s)){var n=Number(s);return Math.abs(n)<1e12?n*1000:n;}
+  return Date.parse(s);
 }
 function EUC_DEV448_assertPpScope_(access,q){
   q=q||{};if(q.annee&&EUC_DEV448_t_(access.Annee_scolaire)!==EUC_DEV448_t_(q.annee))throw new Error('Ce code appartient à une autre année.');

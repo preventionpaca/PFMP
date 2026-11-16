@@ -71,6 +71,18 @@ test('accès PP se déverrouille en trois lectures après amorçage professeurs'
   assert.equal(r.lignes.length,12);assert.equal(r.scope.classe,'TMP3D');assert.equal(f.calls.length,3);assert.ok(f.calls.every(x=>x.method==='get'));
 });
 
+test('DEV683 : échéance Grist en secondes (DateTime) acceptée ; code réellement expiré refusé',()=>{
+  const f=fixture(),row=f.tables?null:null;
+  const k={};vm.createContext(k);vm.runInContext('function EUC_DEV448_t_(v){return String(v==null?"":v).trim();}'+code.match(/function EUC_DEV448_dateMs_[\s\S]*?\n}/)[0],k);
+  const futur=Math.floor(Date.UTC(2099,11,31,23,59,59)/1000);
+  assert.equal(k.EUC_DEV448_dateMs_(futur),futur*1000);assert.equal(k.EUC_DEV448_dateMs_(String(futur)),futur*1000);
+  assert.equal(k.EUC_DEV448_dateMs_('2099-12-31T23:59:59.000Z'),Date.UTC(2099,11,31,23,59,59));assert.ok(isNaN(k.EUC_DEV448_dateMs_('')));
+  const g=fixture();g.tables.EUC_ACCES_PP_PFMP[0].fields.Expiration=futur;
+  assert.equal(g.ctx.EUC_DEV448_unlockPp({code:'VALIDCODE1234567890',annee:'2026-2027',classeId:28,periodeId:65}).scope.classe,'TMP3D','code valide avec échéance en secondes');
+  const h=fixture();h.tables.EUC_ACCES_PP_PFMP[0].fields.Expiration=Math.floor(Date.UTC(2020,0,1)/1000);
+  assert.throws(()=>h.ctx.EUC_DEV448_unlockPp({code:'VALIDCODE1234567890',annee:'2026-2027',classeId:28,periodeId:65}),/expiré/);
+  assert.match(code,/var expire=EUC_DEV448_dateMs_\(row\.Expiration\)/);assert.doesNotMatch(code,/Date\.parse\(row\.Expiration/);
+});
 test('l’autocomplétion administrateur charge et mémorise la liste des professeurs',()=>{
   const f=fixture(),first=f.ctx.EUC_DEV435_professeursDisponibles();
   assert.equal(first.ok,true);assert.equal(first.professeurs.length,1);assert.equal(first.professeurs[0].nom,'M. Alex MARTIN');assert.equal(f.calls.length,1);

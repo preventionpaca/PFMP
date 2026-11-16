@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 16 novembre 2026 — DEV683 : codes PP valides refusés « Ce code a expiré »
+
+- Constat réel : sur le site des professeurs, le code actif reçu par courriel (1MP3D, PFMP n°1, échéance 18/12/2026) était refusé « Ce code a expiré ».
+- Cause : `EUC_DEV448_lookupPp_` (déverrouillage, affectations PP, envoi du tableau DEV678) lisait l'échéance avec `Date.parse()`, alors que Grist renvoie la colonne DateTime `Expiration` en secondes (nombre) → NaN → tout code jugé expiré. Le contrôle de `EUC_DEV441` lisait déjà les secondes (`EUC_DEV463_dateMs_`). Les tests utilisaient une échéance en texte ISO et ne voyaient pas le défaut.
+- Correction : `EUC_DEV448_dateMs_` (secondes, millisecondes ou texte), repli sur la fin de période.
+- Tests : `tests/run-dev448-assignment-tests.js` (1 nouveau : échéance en secondes acceptée, code réellement expiré refusé).
+
 ## Mise à jour du 16 novembre 2026 — DEV682 : campagne de codes PP envoyée deux fois
 
 - Constat réel : un seul clic sur « Confirmer l’envoi » (lot PFMP n°1 de première, 10 classes), mais deux séries de courriels. La liste « Accès de la période » montre pour chaque professeur principal un code « Révoqué » et un code « Actif » : `EUC_DEV444_sendCampaign` a été exécutée deux fois. Seuls les codes du second courriel sont valables.
