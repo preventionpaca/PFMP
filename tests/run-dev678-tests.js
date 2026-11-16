@@ -35,7 +35,7 @@ test('code inconnu, autre classe ou autre période : refus, aucun courriel', () 
   const k = ctx();
   assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Object.assign({}, Q, { code: 'FAUX' })), /Code inconnu/);
   assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Object.assign({}, Q, { classeId: 2 })), /autre classe/);
-  assert.throws(() => k.EUC_DEV678_tableauPdfPp(Object.assign({}, Q, { periodeId: 12 })), /autre période/);
+  assert.throws(() => k.EUC_DEV678_preparerEnvoiPp(Object.assign({}, Q, { periodeId: 12 })), /autre période/);
   assert.equal(k.__mails.length, 0);
 });
 test('envoi : tableau en direct, échappé, réponse au professeur principal, mention de l’expéditeur ; second envoi immédiat bloqué', () => {
@@ -51,15 +51,18 @@ test('sans professeur affecté, seul le professeur principal est destinataire ; 
   /* le professeur principal reste destinataire comme dans l'envoi administrateur ; le contrôle bloque seulement une liste vide */
   k.EUC_V157_profMails_ = () => []; assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Q), /Aucun professeur destinataire/); assert.equal(k.__mails.length, 0);
 });
-test('export PDF : tableau en direct pour la classe et la période du code', () => {
-  const r = J(ctx().EUC_DEV678_tableauPdfPp(Q)); assert.equal(r.classe, '1MELEC2'); assert.equal(r.periode, 'PFMP n°1'); assert.match(r.html, /Professeur visiteur/); assert.match(r.html, /Mme TEL/);
+test('page des professeurs (DEV576) : « Exporter PDF » et « Envoyer le tableau aux professeurs » dans l’accès professeur principal, une fois le code accepté', () => {
+  const h = read('apps-script/Suivi_Enseignants_DEV576.html');
+  assert.match(h, /<div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF<\/button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs<\/button><\/div>/);
+  assert.match(h, /espace\.hidden=false;document\.getElementById\('ppPartage'\)\.hidden=!!CFG\.admin;/, 'visible seulement après déverrouillage, pour le professeur principal');
+  assert.match(h, /document\.getElementById\('ppPdf'\)\.onclick=function\(\)\{exporterPdf\(this,c,p\);\};/);
+  assert.match(h, /appelPP\(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,[^]*?if\(!confirm\('Envoyer le tableau '[^]*?\)\)return;\s*appelPP\(b,'Envoi…','EUC_DEV678_envoyerTableauPp',q,/, 'destinataires confirmés avant l’envoi');
+  assert.match(h, /function appelPP\(b,txt,fn,arg,ok,ko\)\{var fini=false,t=setTimeout\([^]*?330000\);occupe\(b,true,txt\);/, 'bouton occupé, indicateur, délai dépassé');
+  assert.match(h, /if\(CFG\.admin\)document\.getElementById\('envoiTableau'\)\.onclick/, 'envoi administrateur inchangé');
 });
-test('page : boutons visibles une fois le code accepté, confirmation des destinataires, indicateur de chargement, délai et impression du seul tableau', () => {
-  const h = read('apps-script/Suivi_PFMP_Classe_Detail_V156.html');
-  assert.match(h, /id="EUC_DEV678_PP_SCRIPT"/); assert.match(h, /id="euc678Pdf"[^>]*>Exporter PDF/); assert.match(h, /id="euc678Envoi"[^>]*>Envoyer le tableau par email/);
-  assert.match(h, /'EUC_DEV678_preparerEnvoiPp'/); assert.match(h, /'EUC_DEV678_envoyerTableauPp'/); assert.match(h, /'EUC_DEV678_tableauPdfPp'/);
-  assert.match(h, /b\.disabled=true;b\.innerHTML='<span class="euc678-spin"/); assert.match(h, /var DELAI=330000/); assert.match(h, /Délai dépassé/);
-  assert.match(h, /new MutationObserver\(sync\)\.observe\(logout/); assert.match(h, /body\.euc678-printing>\*:not\(#euc678Print\)\{display:none!important\}/);
-  assert.match(h, /Destinataires professeurs/); assert.match(h, /id="euc678Confirmer"/);
+test('affectation par le professeur principal : données de la page mises à jour, le PDF reprend les professeurs juste affectés', () => {
+  const h = read('apps-script/Suivi_Enseignants_DEV576.html');
+  assert.match(h, /Object\.keys\(sel\)\.forEach\(function\(id\)\{var l=p\.lignes\[id\]\|\|\(p\.lignes\[id\]=\['SANS',-1,'','',0\]\);l\[r\.type==='TELEPHONE'\?2:3\]=r\.professeur\.nom;\}\);/);
+  assert.match(h, /c\.pp\.join\('\\n'\),l\[2\]\|\|'',l\[3\]\|\|''\]\);/, 'colonnes du PDF : suivi téléphonique l[2], visiteur l[3]');
 });
 console.log(n + ' tests DEV678 réussis.');

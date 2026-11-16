@@ -5,8 +5,8 @@
  *  - envoyer le tableau de suivi aux professeurs qui y figurent (suivi téléphonique, visite)
  *    et aux professeurs principaux de la classe, avec les copies institutionnelles paramétrées,
  *    exactement comme le bouton « Envoyer le tableau par email » de l'administration ;
- *  - exporter ce tableau en PDF.
- * Le tableau est toujours relu en direct (affectations qu'il vient de saisir comprises).
+ *  - (l'export PDF existe déjà sur la page de la classe, accessible à tous les professeurs).
+ * Le tableau envoyé est relu en direct (affectations qu'il vient de saisir comprises).
  * Le code est contrôlé à chaque appel et limité à sa classe et à sa période.
  */
 var EUC_DEV678_DELAI_ENVOI_S_ = 120; /* un envoi au plus toutes les deux minutes par code */
@@ -54,10 +54,4 @@ function EUC_DEV678_envoyerTableauPp(q) {
   MailApp.sendEmail({ to: p.to.join(','), cc: p.cc.join(','), subject: p.objet, htmlBody: html, name: 'PFMP — Lycée Les Eucalyptus', replyTo: replyTo.indexOf('@') > 0 ? replyTo : undefined });
   cache.put(cle, '1', EUC_DEV678_DELAI_ENVOI_S_);
   return { ok: true, to: p.to, cc: p.cc, objet: p.objet };
-}
-
-/* Tableau à imprimer en PDF, relu en direct. */
-function EUC_DEV678_tableauPdfPp(q) {
-  var a = EUC_DEV678_acces_(q), d = a.detail;
-  return { ok: true, classe: d.classe && d.classe.nom || '', periode: d.periode && d.periode.libelle || '', html: EUC_V157_htmlTable_(d) + EUC_V161F3_historiqueHtml_(d) };
 }
