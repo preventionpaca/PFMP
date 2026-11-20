@@ -30,6 +30,7 @@
     .card.public{border-top:4px solid #7c3aed}
     .card.public .link{background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6}
     .card.transverse{border-top:4px solid #0891b2}
+    .card.stats{border-top:4px solid #0f766e}
     .card.plannings{border-top:4px solid #be185d}
     .card.dev{border-top:4px solid #94a3b8;background:#fbfcfd}
     .card.dev .link{background:#fff;border-color:#e2e8f0;color:#475569;font-weight:700}
@@ -154,6 +155,13 @@
           <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pJours">Jours particuliers<small>Samedis travaillés, jours non travaillés, journées banalisées</small></a>
           <a class="link" target="_top" href="<?= adminBase ?>?page=plannings-pfmp&amp;onglet=pPublication">Versions et publication<small>Historique, aperçu puis publication dans le calendrier des PFMP</small></a>
         </div>
+      </div>
+    </section>
+    <section class="card stats">
+      <h2>Statistiques</h2>
+      <p>Lieux de stage, entreprises, filières, déroulement des stages et évolution sur plusieurs années.</p>
+      <div class="links">
+        <a class="link" target="_top" href="<?= adminBase ?>?page=statistiques-pfmp">Statistiques PFMP<small>Accueil par entreprise, communes, filières, débuts décalés, interruptions, entreprises fidèles ou à relancer</small></a>
       </div>
     </section>
     <section class="card transverse">

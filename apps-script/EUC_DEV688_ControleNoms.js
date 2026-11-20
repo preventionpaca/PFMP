@@ -107,24 +107,38 @@ function EUC_DEV688_controleNoms(q) {
   return { ok: true, annee: annee, total: out.length, avecAnomalie: out.filter(function(x) { return x.anomalies.length; }).length, conventions: out };
 }
 
+/* DEV698 : fiches de la base des entreprises par id (SIRET ou NIS absent de la convention). */
+function EUC_DEV689_fiches_() {
+  var fiches = {};
+  try { (EUC_IMPORT_lireRecords_(typeof EUC_V161F8_tableEntreprise_ === 'function' ? EUC_V161F8_tableEntreprise_() : 'EUC_ENTREPRISES') || []).forEach(function(f) { fiches[Number(f.id)] = f; }); } catch (eEnt) {}
+  return fiches;
+}
+/* Identité d'une entreprise d'accueil (calcul pur) : SIRET, sinon NIS de Monaco (à la lettre près), sinon nom + commune ;
+ * un lieu de stage distinct du siège est compté à part. null si rien ne l'identifie. */
+function EUC_DEV689_ident_(a, fiches) {
+  var t = function(v) { return String(v == null ? '' : v).trim(); };
+  var fiche = (fiches || {})[Number(EUC_PFMP_ref_(a.Entreprise)) || 0] || {};
+  var siret = t(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, '');
+  if (siret.length !== 14) siret = t(fiche.SIRET || fiche.Siret).replace(/\D/g, '');
+  var nis = siret.length === 14 ? '' : t(a.Entreprise_nis || a.Entreprise_nis_snapshot || fiche.NIS || fiche.Nis || (/[A-Z]/i.test(t(a.Entreprise_siret)) ? a.Entreprise_siret : '')).toUpperCase().replace(/[\s-]+/g, ''), lieu = t(a.Lieu_stage_adresse) ? [t(a.Lieu_stage_adresse), t(a.Lieu_stage_code_postal), t(a.Lieu_stage_commune)].filter(Boolean).join(' ') : '';
+  var commune = t(a.Lieu_stage_commune) || t(a.Entreprise_commune), nomCle = EUC_DEV688_norm_(t(a.Entreprise_raison_sociale) || t(a.Entreprise_enseigne));
+  if (!nomCle && siret.length !== 14 && !nis) return null;
+  var r = { siret: siret.length === 14 ? siret : '', nis: nis, enseigne: t(a.Entreprise_enseigne), commune: commune, lieu: lieu };
+  r.identifiant = r.siret ? 'SIRET ' + r.siret : nis ? 'NIS ' + nis : '';
+  /* DEV697 : même NIS à la lettre près = même entreprise (TITAN : 7112B19343 / 7112Y19343), règle DEV668. */
+  var nisCle = /^\d{4}[A-Z]\d{5}$/.test(nis) ? nis.slice(0, 4) + nis.slice(5) : nis;
+  r.entreprise = r.siret ? 'S' + r.siret : nis ? 'M' + nisCle : 'N' + nomCle + '|' + EUC_DEV688_norm_(commune);
+  r.cle = r.entreprise + (lieu ? '|L' + EUC_DEV688_norm_(lieu) : '');
+  return r;
+}
+
 /* DEV689 — Élèves par entreprise / lieu de stage : une ligne par convention, regroupée côté page (filtres niveau, période, classe). */
 function EUC_DEV689_lieuxStage(q) {
   EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
-  var annee = String(q.annee || '').trim(), t = function(v) { return String(v == null ? '' : v).trim(); }, out = [];
-  /* DEV697 : fiches de la base des entreprises, pour le SIRET ou le NIS (Monaco) absent de la convention. */
-  var fiches = {};
-  try { (EUC_IMPORT_lireRecords_(typeof EUC_V161F8_tableEntreprise_ === 'function' ? EUC_V161F8_tableEntreprise_() : 'EUC_ENTREPRISES') || []).forEach(function(f) { fiches[Number(f.id)] = f; }); } catch (eEnt) {}
+  var annee = String(q.annee || '').trim(), out = [], fiches = EUC_DEV689_fiches_();
   EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
-    var fiche = fiches[Number(EUC_PFMP_ref_(a.Entreprise)) || 0] || {};
-    var siret = t(a.Entreprise_siret || a.Entreprise_siret_snapshot).replace(/\D/g, '');
-    if (siret.length !== 14) siret = t(fiche.SIRET || fiche.Siret).replace(/\D/g, '');
-    var nis = siret.length === 14 ? '' : t(a.Entreprise_nis || a.Entreprise_nis_snapshot || fiche.NIS || fiche.Nis || (/[A-Z]/i.test(t(a.Entreprise_siret)) ? a.Entreprise_siret : '')).toUpperCase().replace(/[\s-]+/g, ''), lieu = t(a.Lieu_stage_adresse) ? [t(a.Lieu_stage_adresse), t(a.Lieu_stage_code_postal), t(a.Lieu_stage_commune)].filter(Boolean).join(' ') : '';
-    var commune = t(a.Lieu_stage_commune) || t(a.Entreprise_commune), nomCle = EUC_DEV688_norm_(t(a.Entreprise_raison_sociale) || t(a.Entreprise_enseigne));
-    if (!nomCle && !siret && !nis) return;
-    base.siret = siret.length === 14 ? siret : ''; base.nis = nis; base.identifiant = base.siret ? 'SIRET ' + base.siret : nis ? 'NIS ' + nis : ''; base.enseigne = t(a.Entreprise_enseigne); base.commune = commune; base.lieu = lieu;
-    /* DEV697 : même NIS à la lettre près = même entreprise (TITAN : 7112B19343 / 7112Y19343), règle DEV668. */
-    var nisCle = /^\d{4}[A-Z]\d{5}$/.test(nis) ? nis.slice(0, 4) + nis.slice(5) : nis;
-    base.cle = (base.siret ? 'S' + base.siret : nis ? 'M' + nisCle : 'N' + nomCle + '|' + EUC_DEV688_norm_(commune)) + (lieu ? '|L' + EUC_DEV688_norm_(lieu) : '');
+    var x = EUC_DEV689_ident_(a, fiches); if (!x) return;
+    base.siret = x.siret; base.nis = x.nis; base.identifiant = x.identifiant; base.enseigne = x.enseigne; base.commune = x.commune; base.lieu = x.lieu; base.cle = x.cle;
     out.push(base);
   });
   EUC_DEV688_tri_(out);

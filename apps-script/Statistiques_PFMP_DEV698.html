@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Statistiques PFMP</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--bleu:#2563eb;--orange:#d97706;--rouge:#b42318}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1150px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:17px;margin:0 0 4px}h3{font-size:14px;margin:14px 0 6px;color:var(--vert)}
+.note{color:var(--gris);font-size:13px;margin:2px 0 10px}
+.filtres{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end}
+label{display:block;font-weight:700;font-size:13px}
+select{width:100%;font:14px Arial,sans-serif;padding:7px 8px;border:1px solid var(--bord);border-radius:7px;background:#fff;margin-top:3px}
+.annees{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-weight:400}.annees label{font-weight:400;display:inline-flex;gap:5px;align-items:center}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:8px 12px;background:var(--vert);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}button.leger{background:var(--vert-clair);color:var(--vert)}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tuile{background:var(--vert-clair);border-radius:9px;padding:10px 12px}.tuile b{display:block;font-size:24px;color:var(--vert)}.tuile span{font-size:13px;color:var(--gris)}
+.barres{display:grid;grid-template-columns:minmax(120px,240px) 1fr 70px;gap:5px 10px;align-items:center}
+.barres .lib{font-size:13px;overflow-wrap:anywhere}.barres .val{font-weight:700;text-align:right;font-size:13px}
+.barre{height:16px;background:#eef3f1;border-radius:5px;overflow:hidden}.barre span{display:block;height:100%;background:var(--vert);border-radius:5px}
+.barre.b span{background:var(--bleu)}.barre.o span{background:var(--orange)}.barre.r span{background:var(--rouge)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 7px;border-bottom:1px solid #e6efeb;vertical-align:top}th{color:var(--gris);font-size:12px}
+td.n,th.n{text-align:right}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.outils{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.etat{font-weight:700}.etat.erreur{color:var(--alerte)}
+details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
+.vide{color:var(--gris);font-style:italic}
+@media(max-width:760px){.deux{grid-template-columns:1fr}.barres{grid-template-columns:110px 1fr 50px}header,nav{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<header><h1>Statistiques PFMP</h1><p>Lieux de stage, entreprises, filières, déroulement des stages et évolution d’une année à l’autre. Lecture seule.</p></header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Statistiques</nav>
+<main>
+  <section>
+    <h2>Périmètre</h2>
+    <p class="note">Choisissez l’année analysée, puis éventuellement des années à comparer. Les filtres s’appliquent à toutes les années.</p>
+    <div class="filtres">
+      <label>Année analysée<select id="annee"></select></label>
+      <label>Période<select id="fPeriode"><option value="">Toutes les périodes</option></select></label>
+      <label>Niveau de diplôme<select id="fFamille"><option value="">Tous (CAP, bac pro, BTS…)</option></select></label>
+      <label>Filière / diplôme<select id="fDiplome"><option value="">Toutes les filières</option></select></label>
+      <label>Classe<select id="fClasse"><option value="">Toutes les classes</option></select></label>
+    </div>
+    <div style="margin-top:10px"><b>Comparer avec</b><div id="comparer" class="annees"></div></div>
+    <div class="outils"><button id="calculer" type="button">Calculer les statistiques</button><span id="etat" class="etat"></span></div>
+  </section>
+  <div id="resultats" hidden>
+    <section><h2>Chiffres clés</h2><p class="note" id="perimetre"></p><div id="cles" class="tuiles"></div></section>
+    <section>
+      <h2>Accueil par entreprise</h2>
+      <p class="note">Nombre d’entreprises selon le nombre d’élèves accueillis en stage (un élève compté une fois par entreprise).</p>
+      <div id="accueil"></div>
+      <div class="deux">
+        <div><h3>Stagiaires et apprentis dans la même entreprise</h3><div id="mixte"></div></div>
+        <div><h3>Diplômes accueillis ensemble</h3><p class="note">Entreprises qui accueillent plusieurs niveaux ou statuts (scolaire, apprenti).</p><div id="melange"></div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Lieux de stage par commune</h2>
+      <p class="note">Commune du lieu de stage (à défaut celle de l’entreprise).</p>
+      <div class="outils"><button class="leger" id="xCommunes" type="button">Exporter en Excel</button></div>
+      <div id="communes"></div>
+    </section>
+    <section>
+      <h2>Filières et diplômes</h2>
+      <p class="note">Élèves en stage et entreprises sollicitées par filière ; une entreprise peut accueillir plusieurs filières.</p>
+      <div id="filieres"></div>
+      <h3>Entreprises qui accueillent plusieurs filières</h3><div id="multi"></div>
+    </section>
+    <section>
+      <h2>Déroulement des stages</h2>
+      <p class="note">Conventions de l’administration : début plus tard que la date officielle, fin prolongée ou convention de rattrapage, interruption et suite donnée.</p>
+      <div id="deroulement"></div>
+    </section>
+    <section>
+      <h2>Évolution et pistes de prospection</h2>
+      <p class="note">Taxe d’apprentissage, partenariats, jurys d’examen : entreprises fidèles, nouvelles, à relancer, qui accueillent stagiaires et apprentis.</p>
+      <div id="evolution"></div>
+      <div class="outils"><label style="font-weight:700">Liste<select id="liste" style="min-width:280px"></select></label><button class="leger" id="xListe" type="button">Exporter la liste en Excel</button></div>
+      <div id="listeTable"></div>
+    </section>
+  </div>
+</main>
+<script>
+(function(){
+  const $=function(id){return document.getElementById(id)};
+  const esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  const FAM={BACPRO:'Bac pro',BTS:'BTS',CAP:'CAP',BP:'BP',MC:'Mention complémentaire'};
+  const famLib=function(f){return FAM[f]||f||'Autre'};
+  const CAUSES={ENTREPRISE:'Côté entreprise (fermeture, activité)',ELEVE:'Côté élève (comportement, absences, renvoi)',SANTE:'Santé, accident',AUTRE:'Autre motif',NON_PRECISE:'Motif non précisé'};
+  const DATA={};let ANNEES=[];let LISTES={};
+  const pct=function(a,b){return b?Math.round(a*100/b)+' %':'—'};
+  function barres(items,cls){const max=Math.max.apply(null,items.map(function(x){return x.v}).concat([1]));return items.length?'<div class="barres">'+items.map(function(x){return '<div class="lib">'+esc(x.l)+'</div><div class="barre '+(cls||'')+'"><span style="width:'+Math.max(2,Math.round(x.v*100/max))+'%"></span></div><div class="val">'+esc(x.t!=null?x.t:x.v)+'</div>'}).join('')+'</div>':'<p class="vide">Aucune donnée pour ces filtres.</p>'}
+  function tableau(entetes,lignes,num){return lignes.length?'<table><thead><tr>'+entetes.map(function(h,i){return '<th'+((num||[]).indexOf(i)>=0?' class="n"':'')+'>'+esc(h)+'</th>'}).join('')+'</tr></thead><tbody>'+lignes.map(function(l){return '<tr>'+l.map(function(c,i){return '<td'+((num||[]).indexOf(i)>=0?' class="n"':'')+'>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>':'<p class="vide">Aucune entreprise pour ces filtres.</p>'}
+
+  /* Filtres communs à toutes les années. */
+  function garde(x,avecPeriode){return(!fFamille.value||x.famille===fFamille.value)&&(!fDiplome.value||x.diplome===fDiplome.value)&&(!fClasse.value||x.classe===fClasse.value)&&(!avecPeriode||!fPeriode.value||x.periode===fPeriode.value)}
+  /* Entreprises d'une année : élèves en stage (convention non annulée) et apprentis, après filtres. */
+  function entreprises(m){
+    const g=new Map(),conv=(m.conventions||[]).filter(function(x){return garde(x,true)}),acc=conv.filter(function(x){return x.statut!=='ANNULEE'&&x.k});
+    const parNom={};
+    acc.forEach(function(x){let e=g.get(x.k);if(!e){e={k:x.k,nom:x.nom,commune:x.commune,identifiant:x.identifiant,eleves:new Set(),apprentis:0,etiquettes:new Set(),diplomes:new Set(),classes:new Set()};g.set(x.k,e)}e.eleves.add(x.e||x.id);e.etiquettes.add(famLib(x.famille)+' (stage)');if(x.diplome)e.diplomes.add(x.diplome);e.classes.add(x.classe);if(!e.commune&&x.commune)e.commune=x.commune;if(x.nn)parNom[x.nn]=e});
+    (m.apprentis||[]).filter(function(x){return garde(x,false)}).forEach(function(a){let e=g.get(a.k)||parNom[a.nn];if(!e){e={k:a.k,nom:a.nom,commune:a.commune,identifiant:a.identifiant,eleves:new Set(),apprentis:0,etiquettes:new Set(),diplomes:new Set(),classes:new Set()};g.set(a.k,e);if(a.nn)parNom[a.nn]=e}e.apprentis++;e.etiquettes.add(famLib(a.famille)+' (apprenti)');if(a.diplome)e.diplomes.add(a.diplome);e.classes.add(a.classe)});
+    return{conv:conv,acc:acc,liste:Array.from(g.values())};
+  }
+
+  function rendre(){
+    const m=DATA[annee.value];if(!m)return;
+    const E=entreprises(m),stage=E.liste.filter(function(e){return e.eleves.size}),both=E.liste.filter(function(e){return e.eleves.size&&e.apprentis}),eleves=new Set(E.acc.map(function(x){return x.e||x.id}));
+    const app=E.liste.reduce(function(s,e){return s+e.apprentis},0),communes=new Set(stage.map(function(e){return(e.commune||'').toUpperCase()}).filter(Boolean));
+    $('perimetre').textContent=annee.value+' · '+[fPeriode,fFamille,fDiplome,fClasse].filter(function(s){return s.value}).map(function(s){return s.options[s.selectedIndex].text}).join(' · ')+(fPeriode.value||fFamille.value||fDiplome.value||fClasse.value?'':'toutes classes et périodes')+' · calculé le '+new Date(m.calculeLe).toLocaleString('fr-FR');
+    $('cles').innerHTML=[[eleves.size,'élèves en stage'],[E.acc.length,'conventions'],[stage.length,'entreprises d’accueil'],[communes.size,'communes'],[app,'apprentis (contrat en cours)'],[both.length,'entreprises avec stagiaire et apprenti']].map(function(t){return '<div class="tuile"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span></div>'}).join('');
+    /* Accueil par entreprise */
+    const n=[0,0,0,0,0];stage.forEach(function(e){n[Math.min(e.eleves.size,5)-1]++});
+    $('accueil').innerHTML=barres(['1 élève','2 élèves','3 élèves','4 élèves','5 élèves et plus'].map(function(l,i){return{l:l,v:n[i],t:n[i]+' ('+pct(n[i],stage.length)+')'}}));
+    const combos={};both.forEach(function(e){const c=Math.min(e.eleves.size,3)+(e.eleves.size>3?'+':'')+' stagiaire'+(e.eleves.size>1?'s':'')+' + '+Math.min(e.apprentis,3)+(e.apprentis>3?'+':'')+' apprenti'+(e.apprentis>1?'s':'');combos[c]=(combos[c]||0)+1});
+    $('mixte').innerHTML=barres(Object.keys(combos).sort(function(a,b){return combos[b]-combos[a]}).map(function(c){return{l:c,v:combos[c]}}),'o')+(app?'':'<p class="note">Aucun apprenti avec contrat en cours pour ces filtres (les apprentis ne sont connus que pour l’année en cours).</p>');
+    const mel={};E.liste.forEach(function(e){if(e.etiquettes.size<2)return;const c=Array.from(e.etiquettes).sort().join(' + ');mel[c]=(mel[c]||0)+1});
+    $('melange').innerHTML=barres(Object.keys(mel).sort(function(a,b){return mel[b]-mel[a]}).slice(0,12).map(function(c){return{l:c,v:mel[c]}}),'b');
+    /* Communes */
+    const com={};stage.forEach(function(e){const c=(e.commune||'Commune non renseignée').toUpperCase();const x=com[c]=com[c]||{e:0,s:new Set()};x.e++;e.eleves.forEach(function(v){x.s.add(v)})});
+    const cl=Object.keys(com).sort(function(a,b){return com[b].e-com[a].e||a.localeCompare(b,'fr')});
+    LISTES.communes={titre:'Lieux de stage par commune',entetes:['Commune','Entreprises','Élèves en stage'],lignes:cl.map(function(c){return[c,com[c].e,com[c].s.size]})};
+    $('communes').innerHTML=barres(cl.slice(0,15).map(function(c){return{l:c,v:com[c].e,t:com[c].e+' / '+com[c].s.size}}))+'<p class="note">Entreprises / élèves.</p>'+(cl.length>15?'<details><summary>Voir les '+cl.length+' communes</summary>'+tableau(LISTES.communes.entetes,LISTES.communes.lignes,[1,2])+'</details>':'');
+    /* Filières */
+    const fil={};E.acc.forEach(function(x){const d=x.diplome||famLib(x.famille);const f=fil[d]=fil[d]||{s:new Set(),k:new Set(),c:0};f.s.add(x.e||x.id);f.k.add(x.k);f.c++});
+    const fl=Object.keys(fil).sort(function(a,b){return fil[b].k.size-fil[a].k.size});
+    $('filieres').innerHTML=fl.length?tableau(['Filière / diplôme','Élèves en stage','Entreprises sollicitées','Élèves par entreprise'],fl.map(function(d){return[d,fil[d].s.size,fil[d].k.size,(fil[d].s.size/Math.max(1,fil[d].k.size)).toFixed(1).replace('.',',')]}),[1,2,3])+barres(fl.map(function(d){return{l:d,v:fil[d].k.size}}),'b'):'<p class="vide">Aucune donnée.</p>';
+    const multi=E.liste.filter(function(e){return e.diplomes.size>1}).sort(function(a,b){return b.diplomes.size-a.diplomes.size||a.nom.localeCompare(b.nom,'fr')});
+    $('multi').innerHTML=multi.length?'<details><summary>'+multi.length+' entreprise(s) : voir la liste</summary>'+tableau(['Entreprise','Commune','Filières'],multi.map(function(e){return[e.nom,e.commune,Array.from(e.diplomes).sort().join(' · ')]}))+'</details>':'<p class="vide">Aucune.</p>';
+    deroulement(E.conv);
+    evolution();
+  }
+
+  /* Déroulement : décalage, prolongation, rattrapage, interruption et suite. */
+  function deroulement(conv){
+    const c=conv.filter(function(x){return x.src==='C'}),actives=c.filter(function(x){return x.statut!=='ANNULEE'});
+    const dec=actives.filter(function(x){return x.decalage>0}),pro=actives.filter(function(x){return x.prolongation>0||x.sequence==='RATTRAPAGE'}),rat=actives.filter(function(x){return x.sequence==='RATTRAPAGE'});
+    const inter=c.filter(function(x){return x.statut==='INTERROMPUE'}),ann=c.filter(function(x){return x.statut==='ANNULEE'});
+    const tr=function(d){return d<=7?'1 à 7 jours':d<=14?'8 à 14 jours':'15 jours et plus'};const td={};dec.forEach(function(x){const k=tr(x.decalage);td[k]=(td[k]||0)+1});
+    const causes={};inter.forEach(function(x){causes[x.cause]=(causes[x.cause]||0)+1});
+    /* Après une interruption : autre convention du même élève pour la même période, commencée après. */
+    let retrouve=0,avecPro=0,memeEnt=0;const suites=inter.map(function(x){const r=actives.filter(function(y){return y.id!==x.id&&y.e===x.e&&y.e&&y.periode===x.periode&&y.statut==='EN_COURS'&&(!x.debut||!y.debut||y.debut>=x.debut)});const ok=r.length>0,p=r.some(function(y){return y.prolongation>0||y.sequence==='RATTRAPAGE'});if(ok)retrouve++;if(p)avecPro++;if(r.some(function(y){return y.k===x.k}))memeEnt++;return{x:x,ok:ok,p:p}});
+    $('deroulement').innerHTML='<div class="tuiles">'+[[dec.length,'débuts décalés ('+pct(dec.length,actives.length)+')'],[pro.length,'prolongations ou rattrapages'],[rat.length,'dont conventions de rattrapage'],[inter.length,'stages interrompus'],[ann.length,'conventions annulées avant le début']].map(function(t){return '<div class="tuile"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span></div>'}).join('')+'</div>'+
+      '<div class="deux"><div><h3>Retard au démarrage</h3>'+barres(['1 à 7 jours','8 à 14 jours','15 jours et plus'].map(function(l){return{l:l,v:td[l]||0}}),'o')+'</div>'+
+      '<div><h3>Causes des interruptions</h3>'+barres(Object.keys(CAUSES).filter(function(k){return causes[k]}).map(function(k){return{l:CAUSES[k],v:causes[k]}}),'r')+'</div></div>'+
+      '<h3>Après une interruption</h3>'+(inter.length?barres([{l:'Nouvelle entreprise trouvée',v:retrouve,t:retrouve+' ('+pct(retrouve,inter.length)+')'},{l:'dont avec prolongation / rattrapage',v:avecPro,t:avecPro+' ('+pct(avecPro,inter.length)+')'},{l:'Reprise dans la même entreprise',v:memeEnt},{l:'Pas de nouvelle convention',v:inter.length-retrouve,t:(inter.length-retrouve)+' ('+pct(inter.length-retrouve,inter.length)+')'}],'b')+
+      '<details><summary>Motifs saisis ('+inter.length+')</summary>'+tableau(['Classe','Période','Entreprise','Cause','Motif','Suite'],suites.map(function(s){return[s.x.classe,s.x.periode,s.x.nom,CAUSES[s.x.cause]||'',s.x.motif,s.ok?(s.p?'Nouvelle convention, prolongée':'Nouvelle convention'):'Aucune'] }))+'</details>':'<p class="vide">Aucun stage interrompu pour ces filtres.</p>');
+  }
+
+  /* Évolution entre l'année analysée et les années comparées ; listes de prospection. */
+  function evolution(){
+    const ans=[annee.value].concat(choisies()).filter(function(a){return DATA[a]}).sort();
+    const parAn={};ans.forEach(function(a){parAn[a]=entreprises(DATA[a])});
+    const lignes=ans.map(function(a){const E=parAn[a],st=E.liste.filter(function(e){return e.eleves.size});return[a,new Set(E.acc.map(function(x){return x.e||x.id})).size,E.acc.length,st.length,E.liste.reduce(function(s,e){return s+e.apprentis},0),E.conv.filter(function(x){return x.statut==='INTERROMPUE'}).length]});
+    $('evolution').innerHTML=ans.length>1?tableau(['Année','Élèves en stage','Conventions','Entreprises d’accueil','Apprentis','Stages interrompus'],lignes,[1,2,3,4,5]):'<p class="note">Cochez une ou plusieurs années dans « Comparer avec » pour voir l’évolution et les entreprises fidèles, nouvelles ou perdues.</p>';
+    const cur=parAn[annee.value],avant=ans.filter(function(a){return a<annee.value}),present=function(a,e){return parAn[a].liste.some(function(x){return x.eleves.size&&(x.k===e.k)})};
+    const st=cur.liste.filter(function(e){return e.eleves.size});
+    const ligne=function(e,extra){return[e.nom,e.identifiant,e.commune,e.eleves.size,e.apprentis,Array.from(e.diplomes).sort().join(' · ')].concat(extra||[])};
+    const ent=['Entreprise','SIRET / NIS','Commune','Élèves en stage','Apprentis','Filières'];
+    LISTES.fideles={titre:'Entreprises fidèles (accueil cette année et une année comparée)',entetes:ent.concat(['Années d’accueil']),lignes:avant.length?st.map(function(e){const y=avant.filter(function(a){return present(a,e)});return y.length?ligne(e,[[annee.value].concat(y).sort().join(', ')]):null}).filter(Boolean):[]};
+    LISTES.nouvelles={titre:'Nouvelles entreprises (absentes des années comparées)',entetes:ent,lignes:avant.length?st.filter(function(e){return!avant.some(function(a){return present(a,e)})}).map(function(e){return ligne(e)}):[]};
+    LISTES.perdues={titre:'Entreprises à relancer (accueil une année comparée, pas cette année)',entetes:['Entreprise','SIRET / NIS','Commune','Dernière année d’accueil','Élèves accueillis cette année-là'],lignes:(function(){const vu={},out=[];avant.slice().reverse().forEach(function(a){parAn[a].liste.forEach(function(e){if(!e.eleves.size||vu[e.k]||st.some(function(x){return x.k===e.k}))return;vu[e.k]=true;out.push([e.nom,e.identifiant,e.commune,a,e.eleves.size])})});return out})()};
+    LISTES.plusieurs={titre:'Entreprises qui accueillent 3 élèves ou plus',entetes:ent,lignes:st.filter(function(e){return e.eleves.size>=3}).sort(function(a,b){return b.eleves.size-a.eleves.size}).map(function(e){return ligne(e)})};
+    LISTES.mixtes={titre:'Entreprises qui accueillent stagiaires et apprentis',entetes:ent,lignes:cur.liste.filter(function(e){return e.eleves.size&&e.apprentis}).map(function(e){return ligne(e)})};
+    LISTES.apprentissage={titre:'Entreprises d’apprentis sans stagiaire (pistes pour les stages)',entetes:ent,lignes:cur.liste.filter(function(e){return!e.eleves.size&&e.apprentis}).map(function(e){return ligne(e)})};
+    const choix=[['fideles','Entreprises fidèles'],['nouvelles','Nouvelles entreprises'],['perdues','Entreprises à relancer'],['plusieurs','3 élèves ou plus'],['mixtes','Stagiaires et apprentis'],['apprentissage','Apprentis sans stagiaire']];
+    const avantChoix=liste.value||'plusieurs';liste.innerHTML=choix.map(function(c){return '<option value="'+c[0]+'">'+esc(c[1])+' ('+LISTES[c[0]].lignes.length+')</option>'}).join('');liste.value=avantChoix;afficherListe();
+  }
+  function afficherListe(){const l=LISTES[liste.value];if(!l)return;const besoin=['fideles','nouvelles','perdues'].indexOf(liste.value)>=0&&!choisies().some(function(a){return a<annee.value&&DATA[a]});$('listeTable').innerHTML='<p class="note">'+esc(l.titre)+' — '+l.lignes.length+' entreprise(s).</p>'+(besoin?'<p class="vide">Cochez une année antérieure dans « Comparer avec », puis recalculez.</p>':tableau(l.entetes,l.lignes.slice(0,200),[3,4]))}
+
+  /* Export Excel (SheetJS chargé à la demande, bouton bloqué et indicateur). */
+  const XLSX_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  function exporter(btn,def){if(btn.disabled)return;const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Export…';let fini=false;const fin=function(){fini=true;clearTimeout(tm);btn.disabled=false;btn.innerHTML=old};const tm=setTimeout(function(){if(fini)return;fin();alert('L’export n’a pas abouti à temps : réessayez.')},60000);
+    (window.XLSX?Promise.resolve():new Promise(function(ok,ko){const s=document.createElement('script');s.src=XLSX_URL;s.onload=ok;s.onerror=function(){ko(new Error('bibliothèque d’export indisponible'))};document.head.appendChild(s)})).then(function(){if(fini)return;const d=def();const ws=window.XLSX.utils.aoa_to_sheet([[d.titre],[$('perimetre').textContent],[],d.entetes].concat(d.lignes));const wb=window.XLSX.utils.book_new();window.XLSX.utils.book_append_sheet(wb,ws,'Statistiques');window.XLSX.writeFile(wb,'Statistiques_PFMP_'+annee.value+'_'+new Date().toISOString().slice(0,10)+'.xlsx');fin()}).catch(function(e){if(fini)return;fin();alert('Export impossible : '+(e&&e.message||e))})}
+  $('xCommunes').onclick=function(){exporter($('xCommunes'),function(){return LISTES.communes})};
+  $('xListe').onclick=function(){exporter($('xListe'),function(){return LISTES[liste.value]})};
+  liste.onchange=afficherListe;
+
+  function choisies(){return Array.from(document.querySelectorAll('#comparer input:checked')).map(function(i){return i.value}).filter(function(a){return a!==annee.value})}
+  function remplir(sel,valeurs,lib){const v=sel.value,premier=sel.options[0].outerHTML;sel.innerHTML=premier+valeurs.map(function(x){return '<option value="'+esc(x)+'">'+esc(lib?lib(x):x)+'</option>'}).join('');if(valeurs.indexOf(v)>=0)sel.value=v}
+  function filtres(){const m=DATA[annee.value];if(!m)return;const l=(m.conventions||[]).concat(m.apprentis||[]),u=function(k){return Array.from(new Set(l.map(function(x){return x[k]}).filter(Boolean))).sort(function(a,b){return String(a).localeCompare(String(b),'fr',{numeric:true})})};
+    remplir(fPeriode,u('periode'));remplir(fFamille,u('famille'),famLib);remplir(fDiplome,u('diplome'));remplir(fClasse,u('classe'))}
+  [fPeriode,fFamille,fDiplome,fClasse].forEach(function(s){s.onchange=rendre});
+  annee.onchange=function(){comparer();};
+
+  /* Chargement : année analysée et années comparées, une par une (mises en cache côté serveur). */
+  calculer.onclick=function(){if(calculer.disabled)return;const old=calculer.innerHTML,ans=[annee.value].concat(choisies()).filter(function(a){return!DATA[a]});calculer.disabled=true;calculer.innerHTML='<span class="spinner"></span>Calcul en cours…';$('etat').className='etat';$('etat').textContent='';let fini=false;
+    const fin=function(msg,err){fini=true;clearTimeout(tm);calculer.disabled=false;calculer.innerHTML=old;$('etat').className='etat'+(err?' erreur':'');$('etat').textContent=msg||''};
+    const tm=setTimeout(function(){if(fini)return;fin('Le calcul a dépassé 3 minutes : réessayez (les années déjà calculées sont gardées).',true)},180000);
+    const suite=function(i){if(fini)return;if(i>=ans.length){fin('');filtres();$('resultats').hidden=false;rendre();return}$('etat').textContent='Lecture de '+ans[i]+'…';
+      google.script.run.withSuccessHandler(function(m){if(fini)return;DATA[ans[i]]=m;suite(i+1)}).withFailureHandler(function(e){if(fini)return;fin('Erreur : '+(e&&e.message||e),true)}).EUC_DEV698_annee({annee:ans[i]})};
+    suite(0)};
+
+  function comparer(){$('comparer').innerHTML=ANNEES.filter(function(a){return a!==annee.value}).map(function(a){return '<label><input type="checkbox" value="'+esc(a)+'">'+esc(a)+'</label>'}).join('')||'<span class="vide">Aucune autre année disponible.</span>'}
+  $('etat').innerHTML='<span class="spinner"></span>Chargement des années…';calculer.disabled=true;
+  google.script.run.withSuccessHandler(function(r){ANNEES=r.annees||[];annee.innerHTML=ANNEES.map(function(a){return '<option>'+esc(a)+'</option>'}).join('');annee.value=r.active||ANNEES[0]||'';comparer();calculer.disabled=false;$('etat').textContent='';calculer.click()})
+    .withFailureHandler(function(e){calculer.disabled=false;$('etat').className='etat erreur';$('etat').textContent='Erreur : '+(e&&e.message||e)}).EUC_DEV698_annees();
+})();
+</script>
+</body>
+</html>

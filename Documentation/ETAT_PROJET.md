@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV698 : vignette « Statistiques » (page `statistiques-pfmp`)
+
+- Accueil d'administration, partie « Transversal » : vignette « Statistiques ». Page en lecture seule, route `statistiques-pfmp` ajoutée au contrôle de publication.
+- `EUC_DEV698_annee({annee})` : une ligne par convention de l'année (y compris interrompues et annulées, et dépôts en ligne), sans nom d'élève ; entreprise identifiée comme dans « Élèves par entreprise » (`EUC_DEV689_ident_`) ; décalage du début et prolongation de la fin par rapport aux dates officielles (convention ou période), type de séquence (initiale, rattrapage, remplacement après rupture), cause de l'interruption déduite du motif (entreprise, élève, santé, autre). Apprentis en contrat de l'année avec leur entreprise. Cache par témoin Grist.
+- Page : filtres période, niveau (CAP, bac pro, BTS), filière, classe ; comparaison avec d'autres années ; chiffres clés, entreprises par nombre d'élèves, stagiaires + apprentis, mélange des diplômes, communes, filières, débuts décalés, prolongations, interruptions et suite (nouvelle entreprise, avec prolongation), évolution, listes exportables en Excel (fidèles, nouvelles, à relancer, 3 élèves ou plus, stagiaires et apprentis, apprentis sans stagiaire).
+- Limites : les apprentis ne sont connus que pour l'année en cours ; la distance domicile → stage n'est pas encore calculée (lot suivant, à l'adresse exacte).
+
 ## Mise à jour du 20 novembre 2026 — DEV697 : colonne « SIRET / NIS » dans « Élèves par entreprise »
 
 - `EUC_DEV689_lieuxStage` renvoie `identifiant` (« SIRET … » ou « NIS … ») : SIRET de la convention, sinon de la fiche entreprise liée ; à défaut NIS de la convention, de la fiche entreprise ou du dépôt en ligne (`NIS_normalise`).
