@@ -165,3 +165,17 @@ function EUC_DEV694_aFaire() {
   var l = EUC_DEV665_enAttente_(EUC_DEV665_lignes_());
   return { ok: true, points: EUC_DEV694_compter_(l), page: 'soumissions-a-traiter-pfmp' };
 }
+
+/* Dépôts en ligne de l'année ajoutés à la recherche « Rechercher une convention » de l'Administration des conventions
+ * (même lecture et même dédoublonnage que le contrôle des noms : un dépôt devenu convention n'est pas compté deux fois). */
+function EUC_DEV694_listeDepots(q) {
+  EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
+  var annee = EUC_DEV694_t_(q.annee), out = [];
+  EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
+    if (base.source !== 'SOUMISSION') return;
+    var n = Number(String(base.id).replace(/^S/, '')) || 0; if (!n) return;
+    out.push({ id: 'S' + n, depot: n, numero: base.numero, jeune: base.eleve, classe: base.classe, entreprise: base.entreprise, periode: base.periode, statut: base.statut,
+      recherche: [base.numero, base.eleve, base.classe, base.entreprise, 'depot en ligne'].join(' ') });
+  });
+  return out.sort(function(x, y) { return x.classe.localeCompare(y.classe, 'fr') || x.jeune.localeCompare(y.jeune, 'fr'); });
+}

@@ -143,4 +143,19 @@ test('accueil d’administration : bandeau masqué par défaut, affiché seuleme
   assert.ok(a.includes("if(!l.length){z.hidden=true;return;}") && a.includes('.withFailureHandler(function(){z.hidden=true;}).EUC_DEV694_aFaire();'));
 });
 
+test('recherche de l’Administration : dépôts en ligne de l’année ajoutés (n° S, classe, entreprise), ouverts dans l’éditeur de dépôt', () => {
+  const k = ctx([]);
+  k.EUC_DEV688_parcourir_ = (annee, fn) => { assert.equal(annee, '2026-2027');
+    fn({}, {}, {}, { id: 812, source: 'CONVENTION', numero: 'PFMP-2026-001180', eleve: 'Zoé MARTIN', classe: '1MELEC', entreprise: 'ORECA' });
+    fn({}, {}, {}, { id: 'S226', source: 'SOUMISSION', statut: 'Dépôt en ligne', numero: 'PFMP-2026-S0053', eleve: 'Camille ELEVETEST', classe: '1MELEC', entreprise: 'HOTEL EXEMPLE', periode: 'PFMP n°1' });
+    fn({}, {}, {}, { id: 'S12', source: 'SOUMISSION', statut: 'Dépôt en ligne', numero: 'PFMP-2026-S0003', eleve: 'Adam TEST', classe: '1CAR', entreprise: 'AZUR', periode: 'PFMP n°1' }); };
+  const l = J(k.EUC_DEV694_listeDepots({ annee: '2026-2027' }));
+  assert.deepEqual(l.map(x => x.id + ':' + x.depot + ':' + x.numero), ['S12:12:PFMP-2026-S0003', 'S226:226:PFMP-2026-S0053'], 'seulement les dépôts, triés par classe puis élève');
+  assert.match(l[1].recherche, /PFMP-2026-S0053 Camille ELEVETEST 1MELEC HOTEL EXEMPLE depot en ligne/);
+  const h = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.ok(h.includes("    if(selected.depot){ouvrirDepot({id:selected.depot});return}"), 'Ouvrir le dossier : dépôt ouvert dans l’éditeur');
+  assert.ok(h.includes(".EUC_DEV694_listeDepots({annee:annee})") && h.includes("dossiers=dossiers.filter(function(d){return !d.depot})"), 'dépôts rechargés au changement d’année, sans doublon');
+  assert.ok(h.includes("d.depot?'dépôt en ligne':"), 'mention « dépôt en ligne » dans la recherche');
+  assert.ok(h.includes("(dépôts en ligne indisponibles : "), 'erreur affichée sans bloquer les conventions');
+});
 console.log(n + ' tests DEV694 réussis.');

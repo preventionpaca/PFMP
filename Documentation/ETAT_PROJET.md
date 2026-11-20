@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV696 : dépôts en ligne dans la recherche de l'Administration des conventions
+
+- « Rechercher une convention » propose aussi les dépôts en ligne de l'année (n° …-S…, mention « dépôt en ligne ») ; « Ouvrir le dossier » ouvre la carte de correction du dépôt. Chargés après l'affichage (`EUC_DEV694_listeDepots`, même lecture et même dédoublonnage que le contrôle des noms), rechargés au changement d'année ; en cas d'erreur, les conventions restent disponibles.
+- Constat : la convention imprimée (`EUC_CONVENTION_donneesImpressionParIdV525`) lit uniquement le dossier de l'administration, jamais la table des dépôts.
+- Tests : `tests/run-dev694-tests.js` (+1).
+
 ## Mise à jour du 20 novembre 2026 — DEV695 : « Responsable de l’entreprise » et « Tuteur de stage » dans les formulaires élèves
 
 - Des élèves confondaient le responsable et le tuteur de l'entreprise avec leur responsable ou tuteur légal. Les quatre formulaires élèves (QR code, suite du QR, « Déclarer mon entreprise », formulaire ouvert par le code de convention `PFMP.html`) affichent « Responsable de l’entreprise » et « Tuteur de stage », chacun avec une phrase d'aide (« Ce n’est pas ton responsable légal (parent…) » / « Ce n’est pas ton tuteur légal ni un parent »). Case « même personne » et récapitulatif envoyé renommés de même.

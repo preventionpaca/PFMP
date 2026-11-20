@@ -303,7 +303,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   function norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
   function setStatus(t,k){status.className=k||'';status.textContent=t||''}
   function dfr(iso){return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):''}
-  function label(d){return [d.numero,d.jeune,d.classe,d.entreprise,d.editeeLe?'éditée le '+dfr(d.editeeLe):'pas encore éditée'].filter(Boolean).join(' — ')}
+  function label(d){return [d.numero,d.jeune,d.classe,d.entreprise,d.depot?'dépôt en ligne':d.editeeLe?'éditée le '+dfr(d.editeeLe):'pas encore éditée'].filter(Boolean).join(' — ')}
 
   function askConfirm(titleText,bodyText,confirmText){
     return new Promise(function(resolve){
@@ -730,6 +730,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
 
   renderSchoolYears();
             selectedHint.textContent=dossiers.length+' dossier(s) disponible(s) pour '+yearContext.active+'.';
+            chargerDepots();
           })
           .withFailureHandler(function(e){
             schoolYearSelect.disabled=false;
@@ -881,6 +882,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
 
   openBtn.onclick=function(){
     if(!selected)return;
+    if(selected.depot){ouvrirDepot({id:selected.depot});return}
 
     const oldText=openBtn.innerHTML;
     openBtn.disabled=true;
@@ -1071,6 +1073,14 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
 
   renderSchoolYears();
   selectedHint.textContent=dossiers.length+' dossier(s) disponible(s) pour '+(yearContext.active||'année active')+'.';
+  /* DEV694 : dépôts en ligne (n° …-S…) ajoutés à la recherche, chargés après l'affichage. */
+  function chargerDepots(){const annee=yearContext.active;dossiers=dossiers.filter(function(d){return !d.depot});const nb=dossiers.length;
+    selectedHint.textContent=nb+' dossier(s) disponible(s) pour '+(annee||'année active')+' — chargement des dépôts en ligne…';
+    google.script.run.withSuccessHandler(function(l){if(annee!==yearContext.active)return;dossiers=dossiers.filter(function(d){return !d.depot}).concat(Array.isArray(l)?l:[]);
+        selectedHint.textContent=nb+' dossier(s) et '+(Array.isArray(l)?l.length:0)+' dépôt(s) en ligne disponibles pour '+(annee||'année active')+'.';if(search.value&&!selected)renderSuggestions()})
+      .withFailureHandler(function(e){selectedHint.textContent=nb+' dossier(s) disponible(s) pour '+(annee||'année active')+' (dépôts en ligne indisponibles : '+(e&&e.message||e)+').'})
+      .EUC_DEV694_listeDepots({annee:annee})}
+  chargerDepots();
 
   // DEV.153 — handlers TOP LEVEL correction / suppression.
   // IMPORTANT : ce bloc est injecté juste avant la fermeture de l'IIFE,
