@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV697 : colonne « SIRET / NIS » dans « Élèves par entreprise »
+
+- `EUC_DEV689_lieuxStage` renvoie `identifiant` (« SIRET … » ou « NIS … ») : SIRET de la convention, sinon de la fiche entreprise liée ; à défaut NIS de la convention, de la fiche entreprise ou du dépôt en ligne (`NIS_normalise`).
+- Une entreprise de Monaco sans SIRET est regroupée par son NIS (clé `M…`) au lieu du nom + commune.
+- Page, recherche et exports PDF / Excel : colonne « SIRET / NIS ». Lecture seule, aucune écriture.
+
 ## Mise à jour du 20 novembre 2026 — DEV696 : dépôts en ligne dans la recherche de l'Administration des conventions
 
 - « Rechercher une convention » propose aussi les dépôts en ligne de l'année (n° …-S…, mention « dépôt en ligne ») ; « Ouvrir le dossier » ouvre la carte de correction du dépôt. Chargés après l'affichage (`EUC_DEV694_listeDepots`, même lecture et même dédoublonnage que le contrôle des noms), rechargés au changement d'année ; en cas d'erreur, les conventions restent disponibles.

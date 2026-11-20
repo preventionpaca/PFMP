@@ -69,6 +69,20 @@ test('DEV689 : élèves par entreprise : une ligne par convention avec clé SIRE
   assert.match(h, /lsCharger\.disabled=true;lsCharger\.innerHTML='<span class="spinner"><\/span>Comptage en cours…'/); assert.match(h, /\.EUC_DEV689_lieuxStage\(\{annee:schoolYearSelect\.value\}\)/);
   assert.match(h, /b\.eleves\.size-a\.eleves\.size/, 'tri par nombre d’élèves décroissant');
 });
+test('DEV697 : colonne SIRET / NIS : NIS de Monaco (convention, fiche entreprise ou dépôt), SIRET prioritaire, clé par NIS', () => {
+  const convs = [
+    { id: 1, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 10, Classe_convention_nom: '1CAR', Entreprise_raison_sociale: 'SAM Garage', Entreprise_nis: '4511 Z 12345', Entreprise_commune: 'Monaco' },
+    { id: 2, Eleve: 2, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TCAR', Entreprise_raison_sociale: 'SAM GARAGE', Entreprise: 7, Entreprise_commune: 'Monaco' },
+    { id: 3, Eleve: 2, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TCAR', Entreprise_raison_sociale: 'SAM Sacom', Entreprise_siret: '12345678900012', Entreprise_nis: '9999Z00001', Entreprise_commune: 'Monaco' },
+    { id: 4, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 10, Classe_convention_nom: '1CAR', Entreprise_raison_sociale: 'Bar X', Entreprise: 8, Entreprise_commune: 'Nice' } ];
+  const k = ctx(convs), lire = k.EUC_IMPORT_lireRecords_;
+  k.EUC_IMPORT_lireRecords_ = t => t === 'EUC_ENTREPRISES' ? [{ id: 7, NIS: '4511Z12345' }, { id: 8, SIRET: '987 654 321 00019' }] : lire(t);
+  const r = J(k.EUC_DEV689_lieuxStage({ annee: '2026-2027' })), x = id => r.conventions.find(c => c.id === id);
+  assert.equal(x(1).identifiant, 'NIS 4511Z12345'); assert.equal(x(2).identifiant, 'NIS 4511Z12345', 'NIS lu sur la fiche entreprise');
+  assert.equal(x(1).cle, x(2).cle, 'même NIS = même entreprise'); assert.equal(x(3).identifiant, 'SIRET 12345678900012'); assert.equal(x(4).identifiant, 'SIRET 98765432100019', 'SIRET de la fiche');
+  const h = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.match(h, /<th>SIRET \/ NIS<\/th>/); assert.match(h, /'SIRET \/ NIS','Nombre d’élèves'/); assert.match(h, /esc\(e\.identifiant\|\|'—'\)/);
+});
 test('DEV690 : un clic sur un filtre avant le chargement lance le contrôle / le comptage (listes remplies ensuite)', () => {
   const h = read('apps-script/Admin_Conventions_PFMP.html');
   assert.match(h, /\[cnNiveau,cnPeriode,cnClasse,cnType,cnTexte,cnTout\]\.forEach\(function\(s\)\{s\.addEventListener\('mousedown',function\(\)\{if\(!CN\)cnLancer\.click\(\)\}\)/);
