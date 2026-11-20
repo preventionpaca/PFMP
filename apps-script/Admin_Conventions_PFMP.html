@@ -122,10 +122,11 @@
   <section class="card hidden" id="depotV694" aria-live="polite">
     <style>.dep-grid{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-top:8px}.dep-grid label{font-size:13px;font-weight:700}.dep-grid input{margin-top:4px;padding:9px 10px}.dep-role{margin:16px 0 0;font-size:16px}.dep-hist{margin-top:14px;font-size:13px}.dep-hist li{margin:4px 0}@media(max-width:900px){.dep-grid{grid-template-columns:1fr 1fr}}</style>
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap"><h2 style="margin:0">Corriger un dépôt en ligne <span id="depNumero" class="sub" style="font-size:15px"></span></h2><button id="depFermer" class="secondary" type="button">Fermer</button></div>
-    <div class="sub">Convention déposée par l’élève (« Déclarer mon entreprise ») : elle compte déjà dans le suivi des PFMP. Les corrections du responsable et du tuteur sont enregistrées sur ce dépôt avec un motif obligatoire et l’historique avant / après ; elles apparaissent dans le suivi dès l’enregistrement.</div>
+    <div class="sub">Convention déposée par l’élève (« Déclarer mon entreprise ») : elle compte déjà dans le suivi des PFMP. Les corrections du SIRET / NIS, du responsable et du tuteur sont enregistrées sur ce dépôt avec un motif obligatoire et l’historique avant / après ; elles apparaissent dans le suivi dès l’enregistrement.</div>
     <div id="depEtat" class="sub" style="margin-top:10px"></div>
     <div id="depCorps" class="hidden">
       <div class="identity" style="margin-top:12px"><div class="info"><span>Jeune</span><b id="depEleve">—</b></div><div class="info"><span>Classe</span><b id="depClasse">—</b></div><div class="info"><span>Entreprise</span><b id="depEntreprise">—</b></div><div class="info"><span>Période PFMP</span><b id="depPeriode">—</b></div></div>
+      <div class="dep-grid" style="margin-top:12px"><label>SIRET de l’entreprise (ou NIS à Monaco)<input data-dep="Entreprise_identifiant" autocomplete="off" placeholder="14 chiffres, ou NIS ex. 7112B19343"></label></div>
       <h3 class="dep-role">Responsable de l’entreprise</h3>
       <div class="dep-grid"><label>Prénom<input data-dep="Responsable_prenom" autocomplete="off"></label><label>Nom<input data-dep="Responsable_nom" autocomplete="off"></label><label>Fonction<input data-dep="Responsable_fonction" autocomplete="off"></label><label>Téléphone<input data-dep="Responsable_telephone" inputmode="tel" autocomplete="off"></label><label>Courriel<input data-dep="Responsable_courriel" type="email" autocomplete="off"></label></div>
       <h3 class="dep-role">Tuteur</h3>
@@ -956,7 +957,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   const depBtn=document.getElementById('depEnregistrer'),depMotif=document.getElementById('depMotif'),depHist=document.getElementById('depHistorique');
   let DEP=null;
   const DEP_LIB={prenom:'prénom',nom:'nom',fonction:'fonction',telephone:'téléphone',courriel:'courriel'};
-  function depLibelle(k){const r=k.split('_')[0];return (r==='Tuteur'?'Tuteur':'Responsable')+' — '+(DEP_LIB[k.slice(r.length+1)]||k)}
+  function depLibelle(k){const r=k.split('_')[0];if(k==='Entreprise_identifiant')return 'SIRET / NIS de l’entreprise';return (r==='Tuteur'?'Tuteur':'Responsable')+' — '+(DEP_LIB[k.slice(r.length+1)]||k)}
   function depStatus(t,k){depStatut.className=k||'';depStatut.textContent=t||''}
   function depRemplir(v){DEP=v;document.getElementById('depNumero').textContent=v.numero?'· '+v.numero:'';document.getElementById('depEleve').textContent=v.eleve||'—';document.getElementById('depClasse').textContent=v.classe||'—';document.getElementById('depEntreprise').textContent=v.entreprise||'—';document.getElementById('depPeriode').textContent=v.periode||'—';
     depCarte.querySelectorAll('[data-dep]').forEach(function(i){const k=i.dataset.dep,r=k.split('_')[0];i.value=(v[r]||{})[k.slice(r.length+1)]||''});

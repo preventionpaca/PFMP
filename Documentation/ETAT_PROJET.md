@@ -5,6 +5,8 @@
 - `EUC_DEV689_lieuxStage` renvoie `identifiant` (« SIRET … » ou « NIS … ») : SIRET de la convention, sinon de la fiche entreprise liée ; à défaut NIS de la convention, de la fiche entreprise ou du dépôt en ligne (`NIS_normalise`).
 - Une entreprise de Monaco sans SIRET est regroupée par son NIS (clé `M…`) au lieu du nom + commune.
 - Page, recherche et exports PDF / Excel : colonne « SIRET / NIS ». Lecture seule, aucune écriture.
+- Même NIS à la lettre près = même entreprise (règle DEV668 : TITAN 7112B19343 / 7112Y19343 regroupés).
+- Carte de correction d'un dépôt en ligne : champ « SIRET de l'entreprise (ou NIS à Monaco) » (SIRET contrôlé, NIS au format 4 chiffres + lettre + 5 chiffres), motif et historique, sans changer la décision ni prévenir l'élève.
 
 ## Mise à jour du 20 novembre 2026 — DEV696 : dépôts en ligne dans la recherche de l'Administration des conventions
 

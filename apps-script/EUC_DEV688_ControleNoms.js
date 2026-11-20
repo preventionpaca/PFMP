@@ -122,7 +122,9 @@ function EUC_DEV689_lieuxStage(q) {
     var commune = t(a.Lieu_stage_commune) || t(a.Entreprise_commune), nomCle = EUC_DEV688_norm_(t(a.Entreprise_raison_sociale) || t(a.Entreprise_enseigne));
     if (!nomCle && !siret && !nis) return;
     base.siret = siret.length === 14 ? siret : ''; base.nis = nis; base.identifiant = base.siret ? 'SIRET ' + base.siret : nis ? 'NIS ' + nis : ''; base.enseigne = t(a.Entreprise_enseigne); base.commune = commune; base.lieu = lieu;
-    base.cle = (base.siret ? 'S' + base.siret : nis ? 'M' + nis : 'N' + nomCle + '|' + EUC_DEV688_norm_(commune)) + (lieu ? '|L' + EUC_DEV688_norm_(lieu) : '');
+    /* DEV697 : même NIS à la lettre près = même entreprise (TITAN : 7112B19343 / 7112Y19343), règle DEV668. */
+    var nisCle = /^\d{4}[A-Z]\d{5}$/.test(nis) ? nis.slice(0, 4) + nis.slice(5) : nis;
+    base.cle = (base.siret ? 'S' + base.siret : nis ? 'M' + nisCle : 'N' + nomCle + '|' + EUC_DEV688_norm_(commune)) + (lieu ? '|L' + EUC_DEV688_norm_(lieu) : '');
     out.push(base);
   });
   EUC_DEV688_tri_(out);

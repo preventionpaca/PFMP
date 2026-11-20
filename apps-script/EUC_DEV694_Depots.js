@@ -6,6 +6,7 @@
  * (DEV666) : il reste dans la table d'attente EUC_MIGRATION_JOTFORM_PFMP, que l'Administration des conventions
  * ne lisait pas. Ses coordonnées (responsable et tuteur : prénom, nom, fonction, téléphone, courriel) se corrigent
  * maintenant là où elles sont, avec un motif obligatoire et un historique avant/après, sans créer de convention.
+ * DEV697 : le SIRET (ou le NIS de Monaco) manquant se corrige aussi, sans changer la décision ni prévenir l'élève.
  * Les colonnes lues en priorité par le suivi (Responsable_*, Tuteur_*) sont écrites, ainsi que les anciennes
  * colonnes et le texte d'origine (Raw_JSON), pour que tous les écrans affichent la même valeur.
  *
@@ -40,7 +41,7 @@ function EUC_DEV694_vue_(r) {
   var pers = function(x) { return { prenom: T(x.prenom), nom: T(x.nom), fonction: T(x.fonction), telephone: T(x.tel), courriel: T(x.mail) }; };
   return { id: Number(r && r.id) || 0, numero: EUC_DEV694_numero_(f), eleve: T(f.Eleve_match_libelle) || [T(f.Prenom_eleve), T(f.Nom_eleve)].filter(Boolean).join(' '),
     classe: T(f.Classe_match_libelle || f.Classe_saisie), periode: T(f.Periode_numero), entreprise: T(f.Raison_sociale_officielle) || T(f.Nom_commercial) || T(f.Entreprise_saisie),
-    siret: T(f.SIRET_normalise || f.NIS_normalise), decision: T(f.Decision).toUpperCase(),
+    siret: T(f.SIRET_normalise || f.NIS_normalise), Entreprise: { identifiant: T(f.SIRET_normalise || f.SIRET_brut).replace(/\D/g, '') || T(f.NIS_normalise || f.NIS_brut) }, decision: T(f.Decision).toUpperCase(),
     dansSuivi: typeof EUC_DEV666_dansSuivi_ === 'function' ? EUC_DEV666_dansSuivi_(f) : true,
     Responsable: pers(c.responsable), Tuteur: pers(c.tuteur), historique: Array.isArray(h) ? h.slice(-20).reverse() : [] };
 }
@@ -50,6 +51,19 @@ function EUC_DEV694_vue_(r) {
 function EUC_DEV694_preparer_(vue, changements, pays, eleve) {
   var T = EUC_DEV694_t_, avant = {}, apres = {}, roles = {};
   changements = changements || {};
+  /* DEV697 : SIRET (14 chiffres) ou NIS de Monaco manquant ou erroné (ex. convention saisie sans SIRET). */
+  if (Object.prototype.hasOwnProperty.call(changements, 'Entreprise_identifiant')) {
+    var brut = T(changements.Entreprise_identifiant), ancienId = T((vue.Entreprise || {}).identifiant);
+    if (brut && brut.replace(/[\s.-]+/g, '').toUpperCase() !== ancienId.toUpperCase()) {
+      var nisN = brut.toUpperCase().replace(/[\s.-]+/g, '');
+      if (/^\d{4}[A-Z]\d{5}$/.test(nisN) || /^EUCMC\d{4,}$/.test(nisN)) { avant.Entreprise_identifiant = ancienId; apres.Entreprise_identifiant = nisN; }
+      else {
+        var sv = EUC_ENT_validerSiret(brut);
+        if (!sv.valide) throw new Error('SIRET / NIS : ' + sv.message + ' (NIS de Monaco : 4 chiffres, une lettre, 5 chiffres).');
+        avant.Entreprise_identifiant = ancienId; apres.Entreprise_identifiant = sv.siret;
+      }
+    } else if (!brut && ancienId) throw new Error('Le SIRET / NIS ne peut pas être vidé (corrigez-le plutôt).');
+  }
   EUC_DEV694_cles_().forEach(function(k) {
     if (!Object.prototype.hasOwnProperty.call(changements, k)) return;
     var role = k.split('_')[0], part = k.slice(role.length + 1), ancien = T(vue[role][part]), nv = T(changements[k]).slice(0, 150);
@@ -89,6 +103,12 @@ function EUC_DEV694_champs_(f, ch, motif, auteur, maintenant) {
   var champs = {}, raw = null;
   try { raw = JSON.parse(EUC_DEV694_t_(f.Raw_JSON) || '{}'); } catch (e) { raw = null; }
   Object.keys(ch.apres).forEach(function(k) {
+    if (k === 'Entreprise_identifiant') {
+      var id = ch.apres[k];
+      if (/^\d{14}$/.test(id)) { champs.SIRET_brut = id; champs.SIRET_normalise = id; }
+      else { champs.NIS_brut = id; champs.NIS_normalise = id; champs.Entreprise_identifiant_type = 'NIS'; }
+      return;
+    }
     var v = ch.apres[k], e = EUC_DEV694_ECHOS_[k] || {};
     champs[k] = v;
     (e.col || []).forEach(function(c) { champs[c] = v; });
@@ -130,7 +150,7 @@ function EUC_DEV694_corrigerDepot(q) {
   var ch = EUC_DEV694_preparer_(EUC_DEV694_vue_(r), q.changements, pays, eleve);
   var champs = EUC_DEV694_champs_(f, ch, motif, T(ctx && ctx.email), new Date().toISOString());
   var have = {}; (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).forEach(function(c) { have[c.id] = true; });
-  var manque = EUC_DEV694_cles_().concat(EUC_DEV694_SUIVI_).filter(function(k) { return !have[k] && Object.prototype.hasOwnProperty.call(champs, k); });
+  var manque = EUC_DEV694_cles_().concat(EUC_DEV694_SUIVI_, ['SIRET_brut', 'SIRET_normalise', 'NIS_brut', 'NIS_normalise', 'Entreprise_identifiant_type']).filter(function(k) { return !have[k] && Object.prototype.hasOwnProperty.call(champs, k); });
   if (manque.length) {
     EUC_ENT_grist('post', '/tables/' + EUC_V160_TABLE_ + '/columns', { columns: manque.map(function(k) { return { id: k, fields: { label: k.replace(/_/g, ' '), type: 'Text' } }; }) });
     manque.forEach(function(k) { have[k] = true; });

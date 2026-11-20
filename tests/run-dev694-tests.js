@@ -8,7 +8,7 @@ function ctx(lignes, colonnes) {
   const k = { console: { log() {} }, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isFinite, encodeURIComponent, decodeURIComponent,
     Utilities: { formatDate: d => new Date(d).toISOString().slice(0, 16), getUuid: () => 'u' }, __appels: [] };
   vm.createContext(k);
-  ['apps-script/EUC_SUIVI2_Moteur.js', 'apps-script/EUC_DEV602_Identites.js', 'apps-script/EUC_DEV603_Declaration.js', 'apps-script/EUC_DEV665_DemandesAide.js', 'apps-script/EUC_DEV694_Depots.js']
+  ['apps-script/EUC_SUIVI2_Moteur.js', 'apps-script/EUC_DEV602_Identites.js', 'apps-script/EUC_DEV603_Declaration.js', 'apps-script/EUC_DEV665_DemandesAide.js', 'apps-script/EUC_DEV694_Depots.js', 'apps-script/EUC_ENT_Validation.gs']
     .forEach(f => vm.runInContext(read(f), k, { filename: f }));
   const cols = new Set(colonnes || ['Submission_ID', 'Nom_tuteur', 'Telephone_tuteur', 'Email_tuteur', 'Fonction_tuteur', 'Nom_responsable', 'Telephone_entreprise', 'Email_entreprise', 'Raw_JSON', 'Decision', 'Prenom_eleve', 'Nom_eleve']);
   k.EUC_V160_TABLE_ = 'EUC_MIGRATION_JOTFORM_PFMP';
@@ -64,6 +64,18 @@ test('correction : tuteur remplacé, mis en forme, colonnes créées au besoin, 
   assert.equal(J(k.EUC_DEV694_vueDepot({ id: 53 })).historique[0].apres.Tuteur_nom, 'DUPONT');
 });
 
+test('DEV697 : SIRET manquant ajouté (ou NIS de Monaco), sans changer la décision ; SIRET faux ou vidé refusé ; carte avec le champ', () => {
+  const lignes = [depot(60, { SIRET_normalise: '', SIRET_brut: '' })], k = ctx(lignes);
+  const v = J(k.EUC_DEV694_corrigerDepot({ id: 60, motif: 'SIRET manquant, même entreprise que les autres conventions', changements: { Entreprise_identifiant: '408 228 773 00060' } }));
+  const f = lignes[0].fields; assert.equal(f.SIRET_normalise, '40822877300060'); assert.equal(f.SIRET_brut, '40822877300060'); assert.equal(f.Decision, 'A_VALIDER'); assert.equal(f.SIRET_statut, 'VERIFIE');
+  assert.equal(v.Entreprise.identifiant, '40822877300060'); const h = JSON.parse(f.Historique_admin_JSON).pop(); assert.deepEqual(h.avant, { Entreprise_identifiant: '' }); assert.deepEqual(h.apres, { Entreprise_identifiant: '40822877300060' });
+  assert.throws(() => k.EUC_DEV694_corrigerDepot({ id: 60, motif: 'x', changements: { Entreprise_identifiant: '40822877300061' } }), /SIRET \/ NIS : Le SIRET est mathématiquement incorrect/);
+  assert.throws(() => k.EUC_DEV694_corrigerDepot({ id: 60, motif: 'x', changements: { Entreprise_identifiant: '' } }), /ne peut pas être vidé/);
+  const l2 = [depot(61, { SIRET_normalise: '', Pays_officiel: 'MC' })], k2 = ctx(l2);
+  k2.EUC_DEV694_corrigerDepot({ id: 61, motif: 'NIS', changements: { Entreprise_identifiant: '7112 b 19343' } });
+  assert.equal(l2[0].fields.NIS_normalise, '7112B19343'); assert.equal(l2[0].fields.Entreprise_identifiant_type, 'NIS');
+  const h2 = read('apps-script/Admin_Conventions_PFMP.html'); assert.match(h2, /data-dep="Entreprise_identifiant"/); assert.match(h2, /if\(k==='Entreprise_identifiant'\)return 'SIRET \/ NIS de l’entreprise'/);
+});
 test('correction refusée : motif absent, rien de changé, champ vidé, élève comme tuteur, chiffres dans le nom, téléphone ou courriel faux, dépôt classé', () => {
   const k = ctx([depot(53), depot(54, { Decision: 'REJETEE' })]);
   assert.throws(() => k.EUC_DEV694_corrigerDepot({ id: 53, motif: ' ', changements: { Tuteur_nom: 'Dupont' } }), /Motif de correction obligatoire/);
