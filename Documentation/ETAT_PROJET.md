@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV689 : élèves par entreprise (lieux de stage)
+
+- Administration des conventions : rubrique « Élèves par entreprise (lieux de stage) » (année sélectionnée) : nombre d'élèves par entreprise, trié du plus grand au plus petit ; filtres niveau, période, classe, minimum d'élèves, recherche (entreprise, commune, SIRET, élève) ; « Voir les élèves » (classe, période, n° de convention). Entreprise reconnue par son SIRET, à défaut par son nom et sa commune ; un lieu de stage distinct du siège est compté à part ; élèves distincts comptés (conventions en plus indiquées). Lecture seule (`EUC_DEV689_lieuxStage`, parcours commun `EUC_DEV688_parcourir_`).
+- Contrôle des noms (DEV688) : case « Afficher aussi les conventions sans anomalie » réalignée.
+- Vérifié en réel (DEV688, lecture seule, @1246) : 208 conventions 2026-2027, 135 avec au moins une alerte (élève inscrit comme responsable ou tuteur, téléphone à la place du nom…).
+- Tests : `tests/run-dev688-tests.js` (1 nouveau).
+
 ## Mise à jour du 20 novembre 2026 — DEV687 : élèves démissionnaires ; DEV688 : contrôle des noms responsable / tuteur
 
 - DEV687 (`EUC_DEV687_Demission.js`) : dans le suivi des PFMP en mode administration, bouton « Démissionnaire » sous chaque élève (confirmation, motif facultatif) : l'élève est masqué tout de suite (Actif = faux, colonnes `Demission_app`, `Date_demission_app`, `Demission_par`, `Demission_motif` créées si absentes). Bouton « Élèves démissionnaires » de la classe : liste, état (masqué en attente de Pronote / archivé), « Rétablir » tant que non archivé.

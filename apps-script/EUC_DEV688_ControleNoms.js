@@ -43,10 +43,28 @@ function EUC_DEV688_analyser_(champ, p, eleve, parents) {
   var vu = {}; return out.filter(function(x) { if (vu[x.code]) return false; vu[x.code] = true; return true; });
 }
 
+/* Conventions de l'année visibles dans l'administration (ni supprimées ni révoquées), avec élève et niveau. */
+function EUC_DEV688_parcourir_(annee, fn) {
+  var t = function(v) { return String(v == null ? '' : v).trim(); };
+  var byEleve = {}; (EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP') || []).forEach(function(e) { byEleve[Number(e.id)] = e; });
+  var niveaux = {};
+  try {
+    EUC_DEV368_catalog(annee).classes.forEach(function(c) { var code = EUC_DEV371_levelOf_(c.classe, c.famille); niveaux[Number(c.classeId)] = { code: code, libelle: EUC_DEV371_levelLabel_(code) || code }; });
+  } catch (eCat) {}
+  (EUC_CONVENTION_lireAccesFraisV108_() || []).forEach(function(a) {
+    if (!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)) return;
+    if (annee && EUC_PFMP_anneeDossierV148_(a) !== annee) return;
+    if (a.Revoked === true || a.Supprimee_admin === true || t(a.Statut_administratif).toUpperCase() === 'SUPPRIMEE_ADMIN') return;
+    var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), cid = Number(EUC_PFMP_ref_(a.Classe_convention)) || 0, nv = niveaux[cid] || {};
+    fn(a, id, byEleve[Number(id.id)] || {}, { id: Number(a.id), numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), eleveId: Number(id.id) || 0,
+      nomEleve: t(id.nom), prenomEleve: t(id.prenom), classe: t(a.Classe_convention_nom), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(a.Periode_libelle), entreprise: t(a.Entreprise_raison_sociale) });
+  });
+}
+function EUC_DEV688_tri_(l) { return l.sort(function(x, y) { return x.classe.localeCompare(y.classe, 'fr') || (x.nomEleve + ' ' + x.prenomEleve).localeCompare(y.nomEleve + ' ' + y.prenomEleve, 'fr'); }); }
+
 function EUC_DEV688_controleNoms(q) {
   EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
   var annee = String(q.annee || '').trim(), t = function(v) { return String(v == null ? '' : v).trim(); };
-  var byEleve = {}; (EUC_IMPORT_lireRecords_('EUC_ELEVES_PFMP') || []).forEach(function(e) { byEleve[Number(e.id)] = e; });
   var parents = {};
   try {
     (EUC_IMPORT_lireRecords_(typeof EUC_IMPORT_RESP_TABLE_ === 'string' ? EUC_IMPORT_RESP_TABLE_ : 'EUC_RESPONSABLES_ELEVES_PFMP') || []).forEach(function(r) {
@@ -54,25 +72,31 @@ function EUC_DEV688_controleNoms(q) {
       (parents[id] = parents[id] || []).push({ nom: r.Nom, prenom: r.Prenom, tels: [r.Telephone_portable, r.Telephone_fixe, r.Telephone_professionnel] });
     });
   } catch (eResp) {}
-  var niveaux = {};
-  try {
-    EUC_DEV368_catalog(annee).classes.forEach(function(c) { var code = EUC_DEV371_levelOf_(c.classe, c.famille); niveaux[Number(c.classeId)] = { code: code, libelle: EUC_DEV371_levelLabel_(code) || code }; });
-  } catch (eCat) {}
   var out = [];
-  (EUC_CONVENTION_lireAccesFraisV108_() || []).forEach(function(a) {
-    if (!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)) return;
-    if (annee && EUC_PFMP_anneeDossierV148_(a) !== annee) return;
-    if (a.Revoked === true || a.Supprimee_admin === true || t(a.Statut_administratif).toUpperCase() === 'SUPPRIMEE_ADMIN') return;
-    var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), e = byEleve[Number(id.id)] || {};
+  EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
     var eleve = { nom: id.nom, prenom: id.prenom, tels: [e.Telephone_portable, e.Portable, e.Telephone, e.Telephone_eleve] };
     var resp = { nom: a.Responsable_nom, prenom: a.Responsable_prenom, telephone: a.Responsable_telephone };
     var tut = { nom: a.Tuteur_nom, prenom: a.Tuteur_prenom, telephone: a.Tuteur_telephone };
-    var anomalies = EUC_DEV688_analyser_('Responsable', resp, eleve, parents[Number(id.id)]).concat(EUC_DEV688_analyser_('Tuteur', tut, eleve, parents[Number(id.id)]));
-    var cid = Number(EUC_PFMP_ref_(a.Classe_convention)) || 0, nv = niveaux[cid] || {};
-    out.push({ id: Number(a.id), numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), nomEleve: id.nom, prenomEleve: id.prenom,
-      classe: t(a.Classe_convention_nom), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(a.Periode_libelle), entreprise: t(a.Entreprise_raison_sociale),
-      responsable: [t(a.Responsable_prenom), t(a.Responsable_nom)].filter(Boolean).join(' '), tuteur: [t(a.Tuteur_prenom), t(a.Tuteur_nom)].filter(Boolean).join(' '), anomalies: anomalies });
+    base.anomalies = EUC_DEV688_analyser_('Responsable', resp, eleve, parents[base.eleveId]).concat(EUC_DEV688_analyser_('Tuteur', tut, eleve, parents[base.eleveId]));
+    base.responsable = [t(a.Responsable_prenom), t(a.Responsable_nom)].filter(Boolean).join(' '); base.tuteur = [t(a.Tuteur_prenom), t(a.Tuteur_nom)].filter(Boolean).join(' ');
+    out.push(base);
   });
-  out.sort(function(x, y) { return x.classe.localeCompare(y.classe, 'fr') || (x.nomEleve + ' ' + x.prenomEleve).localeCompare(y.nomEleve + ' ' + y.prenomEleve, 'fr'); });
+  EUC_DEV688_tri_(out);
   return { ok: true, annee: annee, total: out.length, avecAnomalie: out.filter(function(x) { return x.anomalies.length; }).length, conventions: out };
+}
+
+/* DEV689 — Élèves par entreprise / lieu de stage : une ligne par convention, regroupée côté page (filtres niveau, période, classe). */
+function EUC_DEV689_lieuxStage(q) {
+  EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
+  var annee = String(q.annee || '').trim(), t = function(v) { return String(v == null ? '' : v).trim(); }, out = [];
+  EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
+    var siret = t(a.Entreprise_siret).replace(/\D/g, ''), lieu = t(a.Lieu_stage_adresse) ? [t(a.Lieu_stage_adresse), t(a.Lieu_stage_code_postal), t(a.Lieu_stage_commune)].filter(Boolean).join(' ') : '';
+    var commune = t(a.Lieu_stage_commune) || t(a.Entreprise_commune), nomCle = EUC_DEV688_norm_(t(a.Entreprise_raison_sociale) || t(a.Entreprise_enseigne));
+    if (!nomCle && !siret) return;
+    base.siret = siret.length === 14 ? siret : ''; base.enseigne = t(a.Entreprise_enseigne); base.commune = commune; base.lieu = lieu;
+    base.cle = (base.siret ? 'S' + base.siret : 'N' + nomCle + '|' + EUC_DEV688_norm_(commune)) + (lieu ? '|L' + EUC_DEV688_norm_(lieu) : '');
+    out.push(base);
+  });
+  EUC_DEV688_tri_(out);
+  return { ok: true, annee: annee, total: out.length, conventions: out };
 }

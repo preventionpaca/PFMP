@@ -52,4 +52,21 @@ test('page : rubrique dans l’administration des conventions, filtres, bouton a
   assert.match(h, /cnLancer\.disabled=true;cnLancer\.innerHTML='<span class="spinner"><\/span>Contrôle en cours…'/);
   assert.match(h, /\.EUC_DEV688_controleNoms\(\{annee:schoolYearSelect\.value\}\)/); assert.match(h, /openBtn\.onclick\(\);/); assert.match(h, /Ouvrir pour corriger/);
 });
+test('DEV689 : élèves par entreprise : une ligne par convention avec clé SIRET (sinon nom + commune), lieu distinct compté à part', () => {
+  const convs = [
+    { id: 1, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 10, Classe_convention_nom: '1CAR', Periode_libelle: 'PFMP n°1', Entreprise_raison_sociale: 'Garage A', Entreprise_siret: '123 456 789 00012', Entreprise_commune: 'Nice' },
+    { id: 2, Eleve: 2, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TCAR', Periode_libelle: 'PFMP n°1', Entreprise_raison_sociale: 'GARAGE A', Entreprise_siret: '12345678900012', Entreprise_commune: 'Nice' },
+    { id: 3, Eleve: 2, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TCAR', Entreprise_raison_sociale: 'Boulangerie', Entreprise_commune: 'Cagnes' },
+    { id: 4, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 10, Classe_convention_nom: '1CAR', Entreprise_raison_sociale: 'Garage A', Entreprise_siret: '12345678900012', Lieu_stage_adresse: '5 rue X', Lieu_stage_commune: 'Antibes' },
+    { id: 5, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention_nom: '1CAR', Entreprise_raison_sociale: 'Garage A', Entreprise_siret: '12345678900012', Revoked: true } ];
+  const r = J(ctx(convs).EUC_DEV689_lieuxStage({ annee: '2026-2027' }));
+  assert.equal(r.total, 4); const cle = id => r.conventions.find(x => x.id === id).cle;
+  assert.equal(cle(1), cle(2), 'même SIRET = même entreprise'); assert.notEqual(cle(1), cle(4), 'lieu de stage distinct compté à part'); assert.match(cle(3), /^NBOULANGERIE\|CAGNES$/);
+  assert.equal(r.conventions.find(x => x.id === 4).lieu, '5 rue X Antibes'); assert.equal(r.conventions[0].niveauLibelle, 'Première');
+  assert.throws(() => ctx(convs, false).EUC_DEV689_lieuxStage({ annee: '2026-2027' }), /administrateur/);
+  const h = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.match(h, /Élèves par entreprise \(lieux de stage\)/); ['lsNiveau', 'lsPeriode', 'lsClasse', 'lsMin', 'lsTexte'].forEach(id => assert.match(h, new RegExp('id="' + id + '"')));
+  assert.match(h, /lsCharger\.disabled=true;lsCharger\.innerHTML='<span class="spinner"><\/span>Comptage en cours…'/); assert.match(h, /\.EUC_DEV689_lieuxStage\(\{annee:schoolYearSelect\.value\}\)/);
+  assert.match(h, /b\.eleves\.size-a\.eleves\.size/, 'tri par nombre d’élèves décroissant');
+});
 console.log(n + ' tests DEV688 réussis.');
