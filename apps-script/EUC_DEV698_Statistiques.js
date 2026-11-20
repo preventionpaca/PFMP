@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.698';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.699';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -53,7 +53,8 @@ function EUC_DEV698_classes_(annee) {
   (cat.classes || []).forEach(function(c) {
     var cid = Number(c.classeId) || 0, dip = '';
     try { dip = typeof EUC_DEV564_diplomaForClass_ === 'function' ? EUC_DEV564_diplomaForClass_({ id: cid, classe: c.classe, famille: c.famille }, diplomes[cid]) : ''; } catch (eDip) { dip = ''; }
-    var x = { cid: cid, classe: EUC_DEV698_t_(c.classe), famille: EUC_DEV698_t_(c.famille).toUpperCase(), diplome: EUC_DEV698_t_(dip) || EUC_DEV698_t_(c.famille) };
+    var x = { cid: cid, classe: EUC_DEV698_t_(c.classe), famille: EUC_DEV698_t_(c.famille).toUpperCase(), diplome: EUC_DEV698_t_(dip) || EUC_DEV698_t_(c.famille),
+      periodes: (c.periodes || []).map(function(p) { return { id: Number(p.id) || 0, libelle: EUC_DEV698_t_(p.libelle), debut: EUC_DEV698_date_(p.debut), fin: EUC_DEV698_date_(p.fin) }; }) };
     parId[cid] = x; parNom[x.classe.toUpperCase()] = x;
     (c.periodes || []).forEach(function(p) { periodes[Number(p.id) || 0] = { debut: EUC_DEV698_date_(p.debut), fin: EUC_DEV698_date_(p.fin), libelle: EUC_DEV698_t_(p.libelle) }; });
   });
@@ -62,7 +63,7 @@ function EUC_DEV698_classes_(annee) {
 
 /* Ligne de statistiques d'une convention (calcul pur). */
 function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
-  var T = EUC_DEV698_t_, x = cl || {}, p = periodes[Number(EUC_PFMP_ref_(a.Periode)) || 0] || {};
+  var T = EUC_DEV698_t_, x = cl || {}, p = base.periodeId ? { debut: base.periodeDebut, fin: base.periodeFin, libelle: base.periode } : periodes[Number(EUC_PFMP_ref_(a.Periode)) || 0] || {};
   var debut = EUC_DEV698_date_(a.Date_debut), fin = EUC_DEV698_date_(a.Date_fin);
   var offDebut = EUC_DEV698_date_(a.Date_officielle_debut) || p.debut || '', offFin = EUC_DEV698_date_(a.Date_officielle_fin) || p.fin || '';
   var statut = base.source === 'SOUMISSION' ? 'EN_COURS' : EUC_DEV698_statut_(a), seq = base.source === 'SOUMISSION' ? 'INITIALE' : EUC_DEV698_sequence_(a);
@@ -70,8 +71,8 @@ function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
   return {
     id: String(base.id), src: base.source === 'SOUMISSION' ? 'S' : 'C', e: Number(base.eleveId) || 0,
     classe: T(base.classe) || x.classe || '', famille: x.famille || '', diplome: x.diplome || '', niveau: T(base.niveauLibelle), periode: T(base.periode) || p.libelle || '',
-    k: ident ? ident.entreprise : '', nom: T(base.entreprise) || (ident && ident.enseigne) || '', identifiant: ident ? ident.identifiant : '', commune: ident ? T(ident.commune) : '', nn: EUC_DEV688_norm_(T(base.entreprise) || (ident && ident.enseigne) || ''),
-    statut: statut, sequence: seq, debut: debut, fin: fin, finReelle: finReelle,
+    k: ident ? ident.entreprise : '', nom: T(base.entreprise) || (ident && ident.enseigne) || '', identifiant: ident ? ident.identifiant : '', commune: ident ? T(ident.commune) : '', cp: ident ? T(ident.cp) : '', nn: EUC_DEV688_norm_(T(base.entreprise) || (ident && ident.enseigne) || ''),
+    statut: statut, sequence: seq, debut: debut, fin: fin, finReelle: finReelle, debutOfficiel: offDebut,
     decalage: base.source === 'SOUMISSION' ? 0 : Math.max(0, EUC_DEV698_jours_(offDebut, debut)),
     prolongation: base.source === 'SOUMISSION' ? 0 : Math.max(0, EUC_DEV698_jours_(offFin, fin)),
     cause: statut === 'INTERROMPUE' ? EUC_DEV698_cause_(a.Motif_interruption) : '', motif: statut === 'INTERROMPUE' ? T(a.Motif_interruption).slice(0, 300) : statut === 'ANNULEE' ? T(a.Motif_annulation).slice(0, 300) : ''
@@ -98,6 +99,9 @@ function EUC_DEV698_calcul_(annee) {
     var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), x = cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || {};
     var base = { id: Number(a.id), source: 'CONVENTION', eleveId: Number(id.id) || 0, classe: T(a.Classe_convention_nom), niveauLibelle: '', periode: T(a.Periode_libelle), entreprise: T(a.Entreprise_raison_sociale) };
     try { var nv = EUC_DEV371_levelOf_(x.classe || base.classe, x.famille); base.niveauLibelle = EUC_DEV371_levelLabel_(nv) || nv; } catch (eN) {}
+    /* DEV699 : même rattachement à la période officielle que les autres conventions. */
+    var d1 = EUC_DEV698_date_(a.Date_debut), d2 = EUC_DEV698_date_(a.Date_fin_reelle || a.Date_fin);
+    if (typeof EUC_DEV688_periodeOfficielle_ === 'function') EUC_DEV688_dates_(base, EUC_DEV688_periodeOfficielle_((x.cid ? x : classeDe(base, a) || {}).periodes, EUC_PFMP_ref_(a.Periode), d1, d2, a.Periode_libelle), d1, d2, a.Periode_libelle);
     lignes.push(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), x.cid ? x : classeDe(base, a), cls.periodes));
   });
   var apprentis = [];
@@ -108,8 +112,10 @@ function EUC_DEV698_calcul_(annee) {
       var l = parClasse[cid] || {}, x = cls.parId[Number(cid)] || {};
       (m.cartes[cid] || []).forEach(function(c) {
         if (c.statut !== 'APPRENTI' || !c.fiche) return;
-        var siret = T(c.fiche.siret).replace(/\D/g, ''), nom = T(c.fiche.entreprise) || T(c.fiche.enseigne), commune = (T(c.fiche.adresse).match(/\b\d{5}\s+([^,]+)$/) || [])[1] || '';
-        apprentis.push({ k: siret.length === 14 ? 'S' + siret : 'N' + EUC_DEV688_norm_(nom) + '|' + EUC_DEV688_norm_(commune), nn: EUC_DEV688_norm_(nom), nom: nom, commune: T(commune), identifiant: siret.length === 14 ? 'SIRET ' + siret : '',
+        var siret = T(c.fiche.siret).replace(/\D/g, ''), nom = T(c.fiche.entreprise) || T(c.fiche.enseigne), mcp = T(c.fiche.adresse).match(/\b(\d{5})\s+([^,]+)$/) || [], commune = mcp[2] || '';
+        /* DEV699 : apprenti sans entreprise connue : compté comme apprenti, jamais comme une entreprise sans nom. */
+        var connue = siret.length === 14 || !!EUC_DEV688_norm_(nom);
+        apprentis.push({ k: !connue ? '' : siret.length === 14 ? 'S' + siret : 'N' + EUC_DEV688_norm_(nom) + '|' + EUC_DEV688_norm_(commune), nn: EUC_DEV688_norm_(nom), nom: nom, commune: T(commune), cp: mcp[1] || '', identifiant: siret.length === 14 ? 'SIRET ' + siret : '',
           classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '' });
       });
     });

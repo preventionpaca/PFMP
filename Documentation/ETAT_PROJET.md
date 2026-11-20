@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 novembre 2026 — DEV699 : période officielle et dates décalées, « Ne pas prévenir l'élève », statistiques détaillées
+
+- `EUC_DEV688_parcourir_` rattache chaque convention et chaque dépôt à la période officielle de sa classe (`EUC_DEV688_periodeOfficielle_` : référence, sinon dates — chevauchement ou départ à moins de 21 jours —, sinon numéro seul, sinon libellé). Le libellé saisi (« PFMP n°1 », « 1 », dates individuelles) ne fait plus disparaître un élève quand on filtre une période. Champs ajoutés : `periodeId`, `periodeDebut`, `periodeFin`, `periodeBrute`, `debut`, `fin`, `decale`.
+- Administration des conventions (contrôle des noms, élèves par entreprise) : périodes triées par date, mention « ⚠ dates décalées : jj/mm → jj/mm » (et dans les exports).
+- Soumissions à traiter : bouton « Ne pas prévenir l'élève » (`EUC_DEV669_nePasPrevenir`) : ajoute seulement la trace « Élève non prévenu (choix du bureau) », l'alerte et le bandeau disparaissent ; décision, SIRET et suivi inchangés, aucun courriel. « Classer sans suite » reste réservé aux doublons et abandons (décision REJETEE).
+- Statistiques : détail de chaque chiffre clé au survol ou au clic (fenêtre défilante) : élèves par niveau et par classe, conventions par filière et niveau, entreprises par filière, communes, apprentis par classe, entreprises stagiaires + apprentis ; tableaux triables ; communes détaillées par code postal (secteurs de Nice 06000 à 06300) ; « Classes accueillies ensemble » avec les noms de classes ; totaux ; filière inconnue affichée « Classe X (diplôme non renseigné) » au lieu de « Autre » ; apprenti sans entreprise jamais compté comme une entreprise sans nom.
+
 ## Mise à jour du 20 novembre 2026 — DEV698 : vignette « Statistiques » (page `statistiques-pfmp`)
 
 - Accueil d'administration, partie « Transversal » : vignette « Statistiques ». Page en lecture seule, route `statistiques-pfmp` ajoutée au contrôle de publication.

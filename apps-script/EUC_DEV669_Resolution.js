@@ -9,11 +9,13 @@
  * Un seul courriel par soumission : la trace « Élève prévenu par courriel » est gardée dans ses alertes.
  */
 var EUC_DEV669_TRACE_ = 'Élève prévenu par courriel';
+/* DEV699 : le bureau choisit de ne pas écrire à l'élève : l'alerte disparaît, rien d'autre ne change. */
+var EUC_DEV669_SANS_COURRIEL_ = 'Élève non prévenu (choix du bureau)';
 function EUC_DEV669_t_(v) { return v == null ? '' : String(v).replace(/\s+/g, ' ').trim(); }
 /* Demande d'aide (élève envoyé au bureau G205) aujourd'hui dans le suivi, élève pas encore prévenu (calcul pur). */
 function EUC_DEV669_aPrevenir_(f) {
   f = f || {}; var a = EUC_DEV669_t_(f.Alertes);
-  return /envoyé au bureau G205/.test(a) && a.indexOf(EUC_DEV669_TRACE_) < 0 && !!EUC_DEV669_t_(f.Email_eleve) && EUC_DEV666_dansSuivi_(f)
+  return /envoyé au bureau G205/.test(a) && a.indexOf(EUC_DEV669_TRACE_) < 0 && a.indexOf(EUC_DEV669_SANS_COURRIEL_) < 0 && !!EUC_DEV669_t_(f.Email_eleve) && EUC_DEV666_dansSuivi_(f)
     && ['REJETEE', 'REFUSEE', 'ESSAI', 'IGNOREE'].indexOf(EUC_DEV669_t_(f.Decision).toUpperCase()) < 0;
 }
 /* Courriel à l'élève (calcul pur). */
@@ -43,6 +45,15 @@ function EUC_DEV669_prevenir(q) {
   if (!EUC_DEV669_aPrevenir_(f)) throw new Error(f.Email_eleve ? 'Rien à envoyer : entreprise pas encore identifiée, ou élève déjà prévenu.' : 'Pas d’adresse courriel pour cet élève.');
   EUC_DEV669_prevenir_(r);
   return { ok: true, id: Number(r.id), soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, { Alertes: EUC_DEV665_trace_(f.Alertes, EUC_DEV669_TRACE_) })) };
+}
+/* DEV699 : ne pas prévenir l'élève : seule une trace est ajoutée (décision, SIRET et suivi inchangés, aucun courriel). */
+function EUC_DEV669_nePasPrevenir(q) {
+  EUC_IMPORT_exigerAdminTexte_();
+  var r = EUC_DEV665_ligne_(q && q.id), f = r.fields || {};
+  if (!EUC_DEV669_aPrevenir_(f)) throw new Error('Rien à faire : cet élève n’est pas en attente d’un courriel.');
+  var alertes = EUC_DEV665_trace_(f.Alertes, EUC_DEV669_SANS_COURRIEL_);
+  EUC_DEV665_patch_(r.id, { Alertes: alertes });
+  return { ok: true, id: Number(r.id), soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, { Alertes: alertes })) };
 }
 /* Bureau : tous les élèves dont la demande d'aide est résolue sans qu'ils aient été prévenus. */
 function EUC_DEV669_prevenirTous() {

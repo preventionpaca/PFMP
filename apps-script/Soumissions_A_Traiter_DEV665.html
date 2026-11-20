@@ -104,7 +104,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       '<h3>Lieu du stage <span class="note">(vide si identique à l’adresse de l’entreprise)</span></h3><div class="champs">'+ch('Lieu_stage_adresse','Adresse',ld.adresse)+ch('Lieu_stage_code_postal','Code postal',ld.cp)+ch('Lieu_stage_commune','Commune',ld.commune)+'</div>'+
       '<p>'+bouton('corriger',x.id,'Enregistrer les corrections','leger')+' <span class="note">Le SIRET ou le NIS se corrigent plus haut (« Vérifier le SIRET » ou Monaco).</span></p></details>';
     /* Valider (import dans Grist) : seulement pour une soumission à traiter déjà identifiée (ex. établissement fermé à confirmer). */
-    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
+    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
   }
   /* Entreprise connue (base ou dépôt vérifié) : un clic reprend son SIRET ou son NIS. */
@@ -172,6 +172,9 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     if(a==='prevenir'){if(!confirm('Envoyer à '+x.eleve+' ('+(x.email||'sans adresse')+') le courriel « Problème résolu : ta convention de stage est enregistrée — n° '+x.numero+' » ?'))return;
       occupe(b,true,'Envoi…');msg(id,'');
       appel('EUC_DEV669_prevenir',{id:id},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,x.eleve+' a été prévenu par courriel.','ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Envoi impossible.','erreur');});}
+    /* DEV699 : ne pas écrire à l'élève : l'alerte « Élève à prévenir » disparaît, rien d'autre ne change. */
+    if(a==='nePasPrevenir'){occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV669_nePasPrevenir',{id:id},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,x.eleve+' ne sera pas prévenu ; l’alerte est retirée.','ok');},function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     if(a==='rci'){occupe(b,true,'Recherche…');msg(id,'');
       appel('EUC_DEV667_rechercherRci',{nom:$('nom'+id).value},30000,function(r){occupe(b,false);var l=r.resultats||[];RCI[id]=l;
         $('choix'+id).innerHTML=l.length?l.map(function(f,i){return '<button type="button" data-rci="'+i+'" data-id="'+id+'"><b>'+esc(f.nom)+'</b>'+(f.sigle?' ('+esc(f.sigle)+')':'')+' · RCI '+esc(f.rci)+' · '+esc(f.forme)+(f.actif?'':' · <b>'+esc(f.etat)+'</b>')+' <span class="note">— reprendre la fiche</span></button>';}).join(''):'<p class="note">Aucune entreprise de ce nom au registre de Monaco.</p>';
