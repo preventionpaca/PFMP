@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV686 : élèves sans convention, « Toutes les classes »
+
+- Page « Élèves sans convention » : la liste Classe propose « Toutes les classes » (dès que le niveau et la période comptent plusieurs classes). Affichage : toutes les classes du niveau ayant cette période, un bloc par classe, classes puis élèves par ordre alphabétique ; le choix d'une seule classe reste possible ; l'export PDF suit le même filtre.
+- Serveur inchangé : `EUC_DEV371_sansConvention` acceptait déjà une classe et une période vides (toutes les classes du niveau et du type de période) et triait par classe puis par élève.
+- Tests : `tests/run-dev686-tests.js` (2).
+- En attente (demandés le 19/11, reportés par l'utilisateur) : génération individuelle de convention (symptôme exact à préciser) ; élèves démissionnaires encore dans Pronote (masquage dans le suivi, archivage à l'import suivant).
+
 ## Mise à jour du 16 novembre 2026 — DEV684 : codes direction permanents
 
 - Demande : permettre au proviseur et aux adjoints d'affecter eux-mêmes les professeurs en dernier recours, par un code comme les professeurs principaux, mais permanent et révocable (piratage, départ).
