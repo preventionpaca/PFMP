@@ -69,4 +69,10 @@ test('DEV689 : élèves par entreprise : une ligne par convention avec clé SIRE
   assert.match(h, /lsCharger\.disabled=true;lsCharger\.innerHTML='<span class="spinner"><\/span>Comptage en cours…'/); assert.match(h, /\.EUC_DEV689_lieuxStage\(\{annee:schoolYearSelect\.value\}\)/);
   assert.match(h, /b\.eleves\.size-a\.eleves\.size/, 'tri par nombre d’élèves décroissant');
 });
+test('DEV690 : un clic sur un filtre avant le chargement lance le contrôle / le comptage (listes remplies ensuite)', () => {
+  const h = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.match(h, /\[cnNiveau,cnPeriode,cnClasse,cnType,cnTexte,cnTout\]\.forEach\(function\(s\)\{s\.addEventListener\('mousedown',function\(\)\{if\(!CN\)cnLancer\.click\(\)\}\)/);
+  assert.match(h, /\[lsNiveau,lsPeriode,lsClasse,lsMin,lsTexte\]\.forEach\(function\(s\)\{s\.addEventListener\('mousedown',function\(\)\{if\(!LS\)lsCharger\.click\(\)\}\)/);
+  assert.match(h, /if\(cnLancer\.disabled\)return;/); assert.match(h, /if\(lsCharger\.disabled\)return;/);
+});
 console.log(n + ' tests DEV688 réussis.');

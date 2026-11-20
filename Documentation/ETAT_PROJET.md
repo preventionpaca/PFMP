@@ -4,6 +4,7 @@
 
 - Administration des conventions : rubrique « Élèves par entreprise (lieux de stage) » (année sélectionnée) : nombre d'élèves par entreprise, trié du plus grand au plus petit ; filtres niveau, période, classe, minimum d'élèves, recherche (entreprise, commune, SIRET, élève) ; « Voir les élèves » (classe, période, n° de convention). Entreprise reconnue par son SIRET, à défaut par son nom et sa commune ; un lieu de stage distinct du siège est compté à part ; élèves distincts comptés (conventions en plus indiquées). Lecture seule (`EUC_DEV689_lieuxStage`, parcours commun `EUC_DEV688_parcourir_`).
 - Contrôle des noms (DEV688) : case « Afficher aussi les conventions sans anomalie » réalignée.
+- DEV690 : signalé « filtres vides » : les listes niveau / période / classe / anomalie se remplissent à partir des conventions chargées ; un clic (ou le focus) sur un filtre avant le chargement lance désormais le contrôle ou le comptage, avec message « les filtres se remplissent ensuite ».
 - Vérifié en réel (DEV688, lecture seule, @1246) : 208 conventions 2026-2027, 135 avec au moins une alerte (élève inscrit comme responsable ou tuteur, téléphone à la place du nom…).
 - Tests : `tests/run-dev688-tests.js` (1 nouveau).
 
