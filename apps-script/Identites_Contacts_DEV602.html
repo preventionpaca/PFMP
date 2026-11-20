@@ -7,6 +7,7 @@
   function n(v){return t(v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z' -]/g,'').trim();}
   function probleme(v,quoi){var s=t(v),x=n(s),l=x.replace(/[^a-z]/g,'');
     if(!s)return quoi+' manquant';
+    if(/[0-9]/.test(s))return quoi+' « '+s+' » : ce champ ne contient que des lettres, aucun chiffre';
     if(/[0-9@_\/\\:;!?()\[\]{}<>=+*#%&$€]/.test(s))return quoi+' « '+s+' » contient des caractères non autorisés';
     if(l.length<2)return quoi+' « '+s+' » est trop court (initiale seule ?)';
     if(INTERDITS.indexOf(l)>=0)return quoi+' « '+s+' » n’est pas un vrai '+quoi.toLowerCase();

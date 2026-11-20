@@ -16,7 +16,8 @@ test('DEV602 : noms refusés — initiale, chiffres, « chef », civilité dans 
   assert.match(v('Paul', ''), /Nom manquant/);
   assert.match(v('Paul', 'Chef'), /n’est pas un vrai nom/);
   assert.match(v('Patron', 'Martin'), /n’est pas un vrai prénom/);
-  assert.match(v('Paul', 'Martin2'), /caractères non autorisés/);
+  assert.match(v('Paul', 'Martin2'), /ce champ ne contient que des lettres, aucun chiffre/); /* DEV691 : message compris par les élèves */
+  assert.match(v('Paul', 'Mar@tin'), /caractères non autorisés/);
   assert.match(v('Paul', 'M. Martin'), /civilité dans la liste/);
   assert.match(v('Rais', 'Rais'), /identiques/);
   assert.match(v('Paul', 'Paul Martin'), /reprend le prénom/);

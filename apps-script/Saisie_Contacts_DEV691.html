@@ -1,0 +1,26 @@
+<script id="EUC_DEV691_SAISIE">
+/* DEV691 : responsable et tuteur, dès la frappe (formulaire du QR code et « Déclarer mon entreprise »).
+ * Nom et prénom : lettres seulement (accents, espace, apostrophe et trait d'union acceptés), aucun chiffre.
+ * Téléphone : chiffres seulement, avec le « + » de l'indicatif international en tête (ex. +377), espaces tolérés.
+ * Le caractère refusé n'est pas écrit et un message clair s'affiche sous le champ. Le serveur refait les mêmes contrôles. */
+(function(){
+  'use strict';
+  var NOMS='input[name=responsableNom],input[name=responsablePrenom],input[name=tuteurNom],input[name=tuteurPrenom],input.nom,input.pre';
+  var TELS='input[name=responsableTelephone],input[name=tuteurTelephone],input.tel,#aTel';
+  var MSG_NOM='Ce champ ne contient que des lettres, aucun chiffre.';
+  var MSG_TEL='Ce champ n’accepte que des chiffres (et le + de l’indicatif international, ex. +377).';
+  function lettres(v){return String(v||'').replace(/[^A-Za-zÀ-ÖØ-öø-ÿŒœÆæ' ’-]/g,'');}
+  function chiffres(v){var s=String(v||''),plus=/^\s*\+/.test(s);s=s.replace(/[^0-9 ]/g,'');return (plus?'+':'')+s.replace(/^\s+/,'');}
+  function aide(input,texte){var a=input.parentNode&&input.parentNode.querySelector('.dev691-aide');
+    if(!a){a=document.createElement('span');a.className='dev691-aide';a.setAttribute('role','alert');a.style.cssText='display:block;color:#b42318;font-size:13px;font-weight:700;margin-top:3px';input.insertAdjacentElement('afterend',a);}
+    a.textContent=texte;clearTimeout(a._t);a._t=setTimeout(function(){a.textContent='';},5000);}
+  function filtrer(input,fn,msg){var v=input.value,w=fn(v);if(w===v)return;var pos=input.selectionStart,ecart=v.length-w.length;input.value=w;
+    try{if(pos!=null)input.setSelectionRange(Math.max(0,pos-ecart),Math.max(0,pos-ecart));}catch(e){}aide(input,msg);}
+  document.addEventListener('input',function(ev){var el=ev.target;if(!el||el.tagName!=='INPUT')return;
+    if(el.matches(NOMS))filtrer(el,lettres,MSG_NOM);else if(el.matches(TELS))filtrer(el,chiffres,MSG_TEL);},true);
+  /* Saisie prévisible sur mobile : clavier téléphonique pour les numéros. */
+  function claviers(){document.querySelectorAll(TELS).forEach(function(x){x.setAttribute('inputmode','tel');});}
+  document.addEventListener('DOMContentLoaded',claviers);document.addEventListener('focusin',function(ev){if(ev.target&&ev.target.matches&&ev.target.matches(TELS))ev.target.setAttribute('inputmode','tel');});
+  window.EUC_DEV691={lettres:lettres,chiffres:chiffres,MSG_NOM:MSG_NOM,MSG_TEL:MSG_TEL};
+})();
+</script>

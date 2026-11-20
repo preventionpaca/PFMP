@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV691 : saisie verrouillée du responsable et du tuteur (formulaires élèves)
+
+- Constat : des élèves écrivent un numéro de téléphone à la place du nom du responsable ou du tuteur. Le serveur refusait déjà les chiffres dans les noms depuis le 19/10 (DEV602, QR et « Déclarer mon entreprise ») : les conventions erronées sont antérieures ou viennent de l'ancien JotForm (à corriger avec le contrôle DEV688).
+- Dès la frappe (`Saisie_Contacts_DEV691.html`, inclus dans le formulaire QR `PFMP_Acces_QR_V116`, sa reprise `PFMP_Continuation_QR_V117` et `Declaration_Entreprise_DEV603`) : nom et prénom n'acceptent que des lettres (accents, espace, apostrophe, trait d'union) ; un chiffre n'est pas écrit et « Ce champ ne contient que des lettres, aucun chiffre. » s'affiche. Téléphone : chiffres et espaces, « + » de l'indicatif en tête ; sinon « Ce champ n’accepte que des chiffres (et le + de l’indicatif international, ex. +377). » ; clavier téléphonique sur mobile.
+- Serveur : message « ce champ ne contient que des lettres, aucun chiffre » (DEV602) ; formulaire QR : téléphones du responsable et du tuteur désormais contrôlés et mis en forme comme dans « Déclarer mon entreprise » (France, Monaco, international selon le pays de l'entreprise).
+- Obligatoires (déjà exigés par le serveur dans les deux formulaires : civilité, nom, prénom, fonction, téléphone, courriel) : astérisques ajoutés sur tous ces champs.
+- Tests : `tests/run-dev691-tests.js` (4) ; `tests/run-dev602-identites-tests.js` : message attendu mis à jour (le refus reste vérifié, cas « @ » ajouté).
+- Non vérifié en réel : dépôt d'un formulaire élève (écriture convention).
+
 ## Mise à jour du 20 novembre 2026 — DEV689 : élèves par entreprise (lieux de stage)
 
 - Administration des conventions : rubrique « Élèves par entreprise (lieux de stage) » (année sélectionnée) : nombre d'élèves par entreprise, trié du plus grand au plus petit ; filtres niveau, période, classe, minimum d'élèves, recherche (entreprise, commune, SIRET, élève) ; « Voir les élèves » (classe, période, n° de convention). Entreprise reconnue par son SIRET, à défaut par son nom et sa commune ; un lieu de stage distinct du siège est compté à part ; élèves distincts comptés (conventions en plus indiquées). Lecture seule (`EUC_DEV689_lieuxStage`, parcours commun `EUC_DEV688_parcourir_`).

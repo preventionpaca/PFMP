@@ -450,25 +450,25 @@ Nom *
 </label>
 
 <label>
-Prénom
+Prénom *
 <input name="responsablePrenom"
        autocomplete="given-name"
        autocapitalize="words">
 </label>
 
 <label>
-Fonction
+Fonction *
 <input name="responsableFonction">
 </label>
 
 <label>
-Téléphone
+Téléphone *
 <input name="responsableTelephone"
        type="tel">
 </label>
 
 <label class="wide">
-Courriel
+Courriel *
 <input name="responsableCourriel"
        type="email">
 </label>
@@ -499,25 +499,25 @@ Nom *
 </label>
 
 <label>
-Prénom
+Prénom *
 <input name="tuteurPrenom"
        autocomplete="given-name"
        autocapitalize="words">
 </label>
 
 <label>
-Fonction
+Fonction *
 <input name="tuteurFonction">
 </label>
 
 <label>
-Téléphone
+Téléphone *
 <input name="tuteurTelephone"
        type="tel">
 </label>
 
 <label class="wide">
-Courriel
+Courriel *
 <input name="tuteurCourriel"
        type="email">
 </label>
@@ -2086,6 +2086,7 @@ window.EUC_DEV649_nonDiffusible=function(){
 };
 document.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='siret'){var b=document.getElementById('ndNoteDev649');if(b)b.remove();}},true);
 </script>
+<?!= HtmlService.createHtmlOutputFromFile('Saisie_Contacts_DEV691').getContent() ?>
 <?!= HtmlService.createHtmlOutputFromFile('Identites_Contacts_DEV602').getContent() ?>
 </body>
 </html>

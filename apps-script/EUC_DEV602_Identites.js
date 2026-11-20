@@ -30,6 +30,8 @@ function EUC_DEV602_civilite_(v) {
 function EUC_DEV602_probleme_(valeur, quoi) {
   var v = EUC_DEV602_t_(valeur), n = EUC_DEV602_n_(v);
   if (!v) return quoi + ' manquant';
+  /* DEV691 : message compris par les élèves. */
+  if (/[0-9]/.test(v)) return quoi + ' « ' + v + ' » : ce champ ne contient que des lettres, aucun chiffre';
   if (/[0-9@_/\\:;!?()[\]{}<>=+*#%&$€]/.test(v)) return quoi + ' « ' + v + ' » contient des caractères non autorisés';
   if (n.replace(/[^a-z]/g, '').length < 2) return quoi + ' « ' + v + ' » est trop court (initiale seule ?)';
   if (EUC_DEV602_INTERDITS_.indexOf(n.replace(/[^a-z]/g, '')) >= 0 || EUC_DEV602_INTERDITS_.indexOf(n.split(' ')[0]) >= 0 && n.split(' ').length === 1) return quoi + ' « ' + v + ' » n’est pas un vrai ' + quoi.toLowerCase();

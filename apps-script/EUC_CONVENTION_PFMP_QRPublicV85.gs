@@ -478,6 +478,15 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     throw new Error('Nom, prénom, fonction, téléphone et e-mail du tuteur sont obligatoires.');
   }
 
+  /* DEV691 : téléphones du responsable et du tuteur : chiffres seulement (+ indicatif), mêmes règles que « Déclarer mon entreprise ». */
+  if(typeof EUC_DEV603_telephone_==='function'){
+    var paysTel=estMonaco?'MC':(/^(france|fr|)$/i.test(String(pays||'').trim())?'FR':'AUTRE'),telR=EUC_DEV603_telephone_(respTelephone,paysTel);
+    if(!telR.ok)throw new Error('Téléphone du responsable de l’entreprise : '+telR.erreur+' Ce champ n’accepte que des chiffres.');
+    respTelephone=telR.format;
+    if(tuteurEst)tTelephone=respTelephone;
+    else{var telT=EUC_DEV603_telephone_(tTelephone,paysTel);if(!telT.ok)throw new Error('Téléphone du tuteur : '+telT.erreur+' Ce champ n’accepte que des chiffres.');tTelephone=telT.format;}
+  }
+
   /* DEV602 : identités réutilisables (pas d'initiale seule, de « chef », de prénom = nom) et civilité. */
   var respCivilite='',tCivilite='';
   if(typeof EUC_DEV602_verifierPersonne_==='function'){
