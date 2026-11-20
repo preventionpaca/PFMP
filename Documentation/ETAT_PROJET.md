@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV693 : téléphones monégasques dans tous les formulaires
+
+- Portables monégasques à 8 chiffres commençant par 4 (+377 4x xx xx xx) ajoutés, en plus des fixes en 9 et des portables en 6 (+377 6 xx xx xx xx).
+- Formulaires concernés : QR code et « Déclarer mon entreprise » (`EUC_DEV603_telephone_` et sa copie navigateur `tel()`), ancien formulaire direct (`EUC_PFMP_validerTelephone_` et `phoneResult` : indicatif +33 / +377 / 0033 / 00377 désormais accepté en tête, portables en 4 et 6, mise en forme « +377 … »), validation du bilan de visite et du livret par le tuteur (`EUC_DEV693_telValide_` : France, Monaco ou international ; l'ancienne règle « 9 chiffres au moins » refusait les numéros monégasques à 8 chiffres sans indicatif). Le formulaire « entreprise » (Index) n'impose aucun format : inchangé.
+- Tests : `tests/run-dev693-tests.js` (4).
+
 ## Mise à jour du 20 novembre 2026 — DEV692 : contrôles étendus aux soumissions, élève refusé comme responsable, exports PDF / Excel
 
 - Signalé : une élève de première (convention en S) inscrite comme responsable et tuteur, absente du contrôle des noms. Cause : les conventions arrivées par JotForm ou « Déclarer mon entreprise » (n° en S, table `EUC_MIGRATION_JOTFORM_PFMP`) sont comptées par le suivi mais n'étaient pas lues par le contrôle (DEV688) ni par le comptage par entreprise (DEV689), qui ne lisaient que les dossiers de l'administration des conventions.

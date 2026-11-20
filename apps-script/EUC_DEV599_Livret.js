@@ -327,7 +327,7 @@ function EUC_DEV599_valider(q) {
       if (!sig.nom || !sig.prenom) throw new Error('Indiquez votre nom et votre prénom.');
       if (!sig.email && !sig.telephone) throw new Error('Indiquez un téléphone ou un courriel.');
       if (sig.email && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(sig.email)) throw new Error('Adresse courriel invalide.');
-      if (sig.telephone && EUC_DEV598_normContact_(sig.telephone).length < 9) throw new Error('Numéro de téléphone invalide.');
+      if (sig.telephone && !EUC_DEV693_telValide_(sig.telephone)) throw new Error('Numéro de téléphone invalide : chiffres seulement, avec l’indicatif pour l’étranger (ex. 06 12 34 56 78, +377 93 15 00 00).');
       var image = EUC_DEV599_t_(q.signature);
       if (!/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(image) || image.length < 400) throw new Error('Signez dans le cadre avant de valider.');
       if (image.length > 90000) throw new Error('Signature trop volumineuse : effacez et signez de nouveau.');

@@ -126,6 +126,11 @@ function EUC_DEV598_modele_(classe, lignes) {
     });
   return m;
 }
+/* DEV693 : téléphone du signataire : français, monégasque (fixe 9…, portables 4… et 6…) ou international, mêmes règles que les formulaires élèves. */
+function EUC_DEV693_telValide_(v) {
+  if (typeof EUC_DEV603_telephone_ === 'function') return ['FR', 'MC', 'AUTRE'].some(function(p) { return EUC_DEV603_telephone_(v, p).ok; });
+  return String(v == null ? '' : v).replace(/\D/g, '').length >= 8;
+}
 function EUC_DEV598_normContact_(v) {
   v = EUC_DEV598_t_(v).toLowerCase();
   if (v.indexOf('@') > 0) return v.replace(/\s+/g, '');
@@ -276,7 +281,7 @@ function EUC_DEV598_valider(q) {
   if (!sig.nom || !sig.prenom) throw new Error('Indiquez votre nom et votre prénom.');
   if (!sig.email && !sig.telephone) throw new Error('Indiquez un téléphone ou un courriel.');
   if (sig.email && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(sig.email)) throw new Error('Adresse courriel invalide.');
-  if (sig.telephone && EUC_DEV598_normContact_(sig.telephone).length < 9) throw new Error('Numéro de téléphone invalide.');
+  if (sig.telephone && !EUC_DEV693_telValide_(sig.telephone)) throw new Error('Numéro de téléphone invalide : chiffres seulement, avec l’indicatif pour l’étranger (ex. 06 12 34 56 78, +377 93 15 00 00).');
   var image = EUC_DEV598_t_(q.signature);
   if (!/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(image) || image.length < 400) throw new Error('Signez dans le cadre avant de valider.');
   if (image.length > 90000) throw new Error('Signature trop volumineuse : effacez et signez de nouveau.');

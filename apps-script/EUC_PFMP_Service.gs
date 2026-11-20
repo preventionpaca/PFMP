@@ -54,12 +54,15 @@ function EUC_PFMP_normaliserPays_(p){return EUC_PFMP_nettoyer_(p,100).toLowerCas
 function EUC_PFMP_formaterTelephone_(chiffres){return String(chiffres).replace(/(\d{2})(?=\d)/g,'$1 ').trim();}
 function EUC_PFMP_validerTelephone_(valeur,pays,obligatoire){
   var brut=EUC_PFMP_nettoyer_(valeur,40);if(!brut)return obligatoire?{valide:false,message:'Téléphone obligatoire.'}:{valide:true,normalise:''};
+  /* DEV693 : indicatif accepté en tête (+33 / 0033 → France, +377 / 00377 → Monaco), comme dans les autres formulaires. */
+  var ind=brut.replace(/^\s+/,'').match(/^(?:\+|00)\s*(33|377)\s*(.*)$/);if(ind){brut=ind[1]==='33'?'0'+ind[2].replace(/^\(0\)\s*/,''):ind[2];pays=ind[1]==='33'?'France':'Monaco';}
   if(!/^[0-9 .()\-]+$/.test(brut)||brut.indexOf('+')>=0)return {valide:false,message:'Le téléphone contient des caractères interdits.'};
   var ouvert=(brut.match(/\(/g)||[]).length,ferme=(brut.match(/\)/g)||[]).length;if(ouvert!==ferme||ouvert>1)return {valide:false,message:'Parenthèses téléphoniques invalides.'};
   var chiffres=brut.replace(/[ .()\-]/g,''),p=EUC_PFMP_normaliserPays_(pays);
   if(p==='france'){if(!/^0[1-9]\d{8}$/.test(chiffres))return {valide:false,message:'Format France attendu : 10 chiffres commençant par 01 à 09.'};}
-  else if(p==='monaco'){var fixe=/^(?:87\d{6}|9\d{7})$/.test(chiffres),mobileCourt=/^(?:3\d{7}|(?:44|45|46)\d{6})$/.test(chiffres),mobileNational=/^0[67]\d{8}$/.test(chiffres),mobileLong=/^2\d{11}$/.test(chiffres);if(!(fixe||mobileCourt||mobileNational||mobileLong))return {valide:false,message:'Numéro national monégasque invalide.'};}
+  else if(p==='monaco'){var fixe=/^(?:87\d{6}|9\d{7})$/.test(chiffres),mobileCourt=/^(?:3\d{7}|4\d{7}|6\d{8})$/.test(chiffres),mobileNational=/^0[67]\d{8}$/.test(chiffres),mobileLong=/^2\d{11}$/.test(chiffres);if(!(fixe||mobileCourt||mobileNational||mobileLong))return {valide:false,message:'Numéro national monégasque invalide.'};}
   else if(!/^\d{6,15}$/.test(chiffres))return {valide:false,message:'Le téléphone national doit contenir de 6 à 15 chiffres.'};
+  if(p==='monaco'&&/^(?:[3489]\d{7}|6\d{8})$/.test(chiffres))return {valide:true,normalise:'+377 '+(chiffres.length===9?'6 '+EUC_PFMP_formaterTelephone_(chiffres.slice(1)):EUC_PFMP_formaterTelephone_(chiffres))};
   return {valide:true,normalise:EUC_PFMP_formaterTelephone_(chiffres)};
 }
 function EUC_PFMP_validerTelephoneProfessionnel_(valeur,pays){var national=EUC_PFMP_validerTelephone_(valeur,pays,false);if(national.valide||!EUC_PFMP_nettoyer_(valeur,40)||EUC_PFMP_normaliserPays_(pays)==='france')return national;return EUC_PFMP_validerTelephone_(valeur,'France',false);}
