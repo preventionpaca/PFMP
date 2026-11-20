@@ -51,6 +51,17 @@ function EUC_DEV602_verifierPersonne_(role, civilite, prenom, nom) {
   return { civilite: EUC_DEV602_civilite_(civilite), prenom: EUC_DEV602_t_(prenom), nom: EUC_DEV602_t_(nom) };
 }
 
+/* DEV692 : le responsable ou le tuteur ne peut pas être l'élève lui-même (même prénom et même nom). Un même nom de famille
+   reste accepté : un parent peut réellement être le responsable de l'entreprise. */
+function EUC_DEV692_pasLEleve_(role, prenom, nom, eleve) {
+  eleve = eleve || {};
+  var ep = EUC_DEV602_n_(eleve.prenom), en = EUC_DEV602_n_(eleve.nom), p = EUC_DEV602_n_(prenom), n = EUC_DEV602_n_(nom);
+  if (!ep || !en) return true;
+  if ((p === ep && n === en) || (p === en && n === ep) || (n === (ep + ' ' + en)) || (n === (en + ' ' + ep)))
+    throw new Error(role + ' : indique le nom de la personne de l’entreprise, pas le tien.');
+  return true;
+}
+
 /* Un nom complet affiché dans le répertoire est-il exploitable (prénom + nom) ? */
 function EUC_DEV602_nomIncomplet_(nomComplet) {
   var mots = EUC_DEV602_n_(nomComplet).split(/[ ]+/).filter(function(w) { return w.replace(/[^a-z]/g, '').length >= 2; });

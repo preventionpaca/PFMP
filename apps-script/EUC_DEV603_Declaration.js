@@ -214,6 +214,8 @@ function EUC_DEV603_deposer(q) {
   var el = (EUC_ENT_grist('get', '/tables/EUC_ELEVES_PFMP/records?filter=' + encodeURIComponent(JSON.stringify({ id: [j.eleveId] }))).records || [])[0];
   if (!el) throw new Error('Élève introuvable.');
   var ef = el.fields || {}, eleve = { id: j.eleveId, nom: EUC_DEV603_nom_(ef.Nom), prenom: EUC_DEV603_prenom_(ef.Prenom_usage || ef.Prenom), naissance: EUC_SUIVI2_date_(ef.Date_naissance) };
+  /* DEV692 : l'élève ne s'inscrit pas lui-même comme responsable ou tuteur. */
+  if (typeof EUC_DEV692_pasLEleve_ === 'function') { EUC_DEV692_pasLEleve_('Responsable de l’entreprise', resp.prenom, resp.nom, eleve); if (q.tuteurEstResponsable !== true) EUC_DEV692_pasLEleve_('Tuteur', tut.prenom, tut.nom, eleve); }
   var emailEleve = EUC_DEV603_t_(q.emailEleve).toLowerCase() || EUC_DEV603_t_(ef.Email_eleve || ef.Courriel || ef.Email).toLowerCase();
   if (emailEleve && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(emailEleve)) throw new Error('Votre adresse courriel est invalide.');
   var lock = LockService.getScriptLock(); if (!lock.tryLock(15000)) throw new Error('Beaucoup d’envois en même temps : réessayez dans un instant.');

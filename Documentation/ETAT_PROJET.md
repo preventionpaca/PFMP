@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV692 : contrôles étendus aux soumissions, élève refusé comme responsable, exports PDF / Excel
+
+- Signalé : une élève de première (convention en S) inscrite comme responsable et tuteur, absente du contrôle des noms. Cause : les conventions arrivées par JotForm ou « Déclarer mon entreprise » (n° en S, table `EUC_MIGRATION_JOTFORM_PFMP`) sont comptées par le suivi mais n'étaient pas lues par le contrôle (DEV688) ni par le comptage par entreprise (DEV689), qui ne lisaient que les dossiers de l'administration des conventions.
+- `EUC_DEV688_parcourir_` lit aussi ces soumissions (non ignorées, de l'année ; validées ou en attente, statut affiché), sans double compte avec un dossier du même élève et du même SIRET ; « Corriger dans les soumissions reçues » ouvre la page des soumissions.
+- Formulaires (QR et « Déclarer mon entreprise ») : `EUC_DEV692_pasLEleve_` refuse le responsable ou le tuteur qui porte le prénom et le nom de l'élève (« indique le nom de la personne de l’entreprise, pas le tien ») ; un même nom de famille reste accepté (parent employeur).
+- Exports : « Exporter PDF » et « Exporter Excel » dans les deux rubriques, sur la liste filtrée affichée (filtres rappelés en tête) ; jsPDF + AutoTable et SheetJS chargés à la demande ; bouton désactivé avec indicateur pendant l'export.
+- Tests : `tests/run-dev692-tests.js` (4).
+
 ## Mise à jour du 20 novembre 2026 — DEV691 : saisie verrouillée du responsable et du tuteur (formulaires élèves)
 
 - Constat : des élèves écrivent un numéro de téléphone à la place du nom du responsable ou du tuteur. Le serveur refusait déjà les chiffres dans les noms depuis le 19/10 (DEV602, QR et « Déclarer mon entreprise ») : les conventions erronées sont antérieures ou viennent de l'ancien JotForm (à corriger avec le contrôle DEV688).
@@ -66,7 +74,7 @@
 ## Mise à jour du 16 novembre 2026 — DEV680 : courriel des codes, accès par Atrium
 
 - Le courriel envoyé aux professeurs principaux indiquait « Rendez-vous sur » le site pfmp, qui n'est qu'un accès de secours (lui aussi sous code) quand Atrium est indisponible. Étape 1 remplacée par « Connectez-vous à Atrium, puis ouvrez l’application « Suivi PFMP » » (`EUC_DEV444_ppMailBody_`). Aucune adresse dans le corps du courriel.
-- DEV680c : plus de nom du professeur dans la formule d'appel (« Bonjour M. LUDOVIC LEGROS, » retiré, essai « Monsieur Legros » abandonné à la demande). Un message saisi ouvre le courriel et porte sa propre formule (« Cher collègue, ») ; sans message : « Bonjour, ». Indication ajoutée sous la case Message.
+- DEV680c : plus de nom du professeur dans la formule d'appel (« Bonjour M. PRÉNOM NOM, » retiré, essai « Monsieur Nom » abandonné à la demande). Un message saisi ouvre le courriel et porte sa propre formule (« Cher collègue, ») ; sans message : « Bonjour, ». Indication ajoutée sous la case Message.
 - Tests : `tests/run-dev676-tests.js` (assertions ajoutées), `tests/run-dev677-tests.js` (début du courriel attendu mis à jour).
 
 ## Mise à jour du 16 novembre 2026 — DEV679 : ajout manuel d'un professeur principal refusé par Grist

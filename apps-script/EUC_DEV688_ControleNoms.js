@@ -51,13 +51,35 @@ function EUC_DEV688_parcourir_(annee, fn) {
   try {
     EUC_DEV368_catalog(annee).classes.forEach(function(c) { var code = EUC_DEV371_levelOf_(c.classe, c.famille); niveaux[Number(c.classeId)] = { code: code, libelle: EUC_DEV371_levelLabel_(code) || code }; });
   } catch (eCat) {}
+  var vus = {};
   (EUC_CONVENTION_lireAccesFraisV108_() || []).forEach(function(a) {
     if (!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)) return;
     if (annee && EUC_PFMP_anneeDossierV148_(a) !== annee) return;
     if (a.Revoked === true || a.Supprimee_admin === true || t(a.Statut_administratif).toUpperCase() === 'SUPPRIMEE_ADMIN') return;
     var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), cid = Number(EUC_PFMP_ref_(a.Classe_convention)) || 0, nv = niveaux[cid] || {};
-    fn(a, id, byEleve[Number(id.id)] || {}, { id: Number(a.id), numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), eleveId: Number(id.id) || 0,
+    vus[(Number(id.id) || 0) + '|' + t(a.Entreprise_siret).replace(/\D/g, '')] = true;
+    fn(a, id, byEleve[Number(id.id)] || {}, { id: Number(a.id), source: 'CONVENTION', statut: '', numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), eleveId: Number(id.id) || 0,
       nomEleve: t(id.nom), prenomEleve: t(id.prenom), classe: t(a.Classe_convention_nom), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(a.Periode_libelle), entreprise: t(a.Entreprise_raison_sociale) });
+  });
+  /* DEV692 : conventions arrivées par JotForm ou « Déclarer mon entreprise » (n° PFMP-…-S…), table d'attente
+     EUC_MIGRATION_JOTFORM_PFMP, comptées par le suivi des PFMP mais absentes de l'administration des conventions. */
+  var lignes = []; try { lignes = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eJ) { lignes = []; }
+  lignes.forEach(function(j) {
+    var decision = t(j.Decision).toUpperCase(); if (decision === 'IGNOREE') return;
+    var eid = Number(EUC_PFMP_ref_(j.Eleve_match_id || j.Eleve || j.Eleve_id)) || 0, e = byEleve[eid]; if (!eid || !e) return;
+    var depot = t(j.Submission_ID), numero = /^SECOURS-/.test(depot) ? depot.replace(/^SECOURS-/, '') : depot;
+    var an = t(j.Annee_scolaire); if (!/^20\d{2}-20\d{2}$/.test(an)) { var m = numero.match(/PFMP-(20\d{2})-/); an = m ? m[1] + '-' + (Number(m[1]) + 1) : ''; }
+    if (annee && an && an !== annee) return;
+    var siret = t(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, ''); if (vus[eid + '|' + siret]) return;
+    var importee = j.Importer === true || /^(1|OUI|YES|TRUE|VRAI)$/i.test(t(j.Importer)), statutSiret = t(j.SIRET_statut).toUpperCase();
+    var valide = decision === 'VALIDEE' || statutSiret === 'VERIFIE' || importee || statutSiret === 'NIS_MONACO';
+    var c = typeof EUC_SUIVI2_contactsTampon_ === 'function' ? EUC_SUIVI2_contactsTampon_(j) : { responsable: { prenom: j.Responsable_prenom, nom: j.Responsable_nom, tel: j.Responsable_telephone }, tuteur: { prenom: j.Tuteur_prenom, nom: j.Tuteur_nom, tel: j.Tuteur_telephone } };
+    var a = { Responsable_nom: c.responsable.nom, Responsable_prenom: c.responsable.prenom, Responsable_telephone: c.responsable.tel, Tuteur_nom: c.tuteur.nom, Tuteur_prenom: c.tuteur.prenom, Tuteur_telephone: c.tuteur.tel,
+      Entreprise_raison_sociale: t(j.Raison_sociale_officielle) || t(j.Nom_commercial) || t(j.Entreprise_saisie), Entreprise_enseigne: t(j.Nom_commercial), Entreprise_siret: siret, Entreprise_commune: t(j.Ville_officielle),
+      Lieu_stage_adresse: j.Lieu_stage_adresse, Lieu_stage_code_postal: j.Lieu_stage_code_postal, Lieu_stage_commune: j.Lieu_stage_commune };
+    var cid = Number(EUC_PFMP_ref_(e.Classe)) || 0, nv = niveaux[cid] || {}, prenom = t(e.Prenom_usage || e.Prenom), nom = t(e.Nom);
+    fn(a, { id: eid, nom: nom, prenom: prenom, jeune: [prenom, nom].filter(Boolean).join(' ') }, e, { id: 'S' + Number(j.id), source: 'SOUMISSION', statut: valide ? 'Soumission validée' : 'Soumission en attente', numero: numero, eleve: [prenom, nom].filter(Boolean).join(' '), eleveId: eid,
+      nomEleve: nom, prenomEleve: prenom, classe: t(e.Code_classe_importe) || t(j.Classe_brut), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(j.Periode_libelle) || (Number(j.Periode_numero) ? 'PFMP n°' + Number(j.Periode_numero) : ''), entreprise: a.Entreprise_raison_sociale });
   });
 }
 function EUC_DEV688_tri_(l) { return l.sort(function(x, y) { return x.classe.localeCompare(y.classe, 'fr') || (x.nomEleve + ' ' + x.prenomEleve).localeCompare(y.nomEleve + ' ' + y.prenomEleve, 'fr'); }); }

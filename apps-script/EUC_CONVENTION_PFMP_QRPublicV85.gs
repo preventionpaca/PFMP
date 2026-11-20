@@ -495,6 +495,11 @@ function EUC_CONVENTION_enregistrerEntrepriseV117(token,d){
     respNom=EUC_DEV602_nomCapitales_(respNom);tNom=EUC_DEV602_nomCapitales_(tNom);
     tCivilite=tuteurEst?respCivilite:EUC_DEV602_verifierPersonne_('Tuteur',d.tuteurCivilite,tPrenom,tNom).civilite;
   }
+  /* DEV692 : l'élève ne s'inscrit pas lui-même comme responsable ou tuteur. */
+  if(typeof EUC_DEV692_pasLEleve_==='function'){
+    var elQr=null;try{var eidQr=Number(EUC_PFMP_ref_(a.Eleve))||0;if(eidQr)elQr=((EUC_ENT_grist('get','/tables/EUC_ELEVES_PFMP/records?filter='+encodeURIComponent(JSON.stringify({id:[eidQr]}))).records||[])[0]||{}).fields||null;}catch(eEl){elQr=null;}
+    if(elQr){var idQr={prenom:elQr.Prenom_usage||elQr.Prenom,nom:elQr.Nom};EUC_DEV692_pasLEleve_('Responsable de l’entreprise',respPrenom,respNom,idQr);if(!tuteurEst)EUC_DEV692_pasLEleve_('Tuteur',tPrenom,tNom,idQr);}
+  }
 
   var numeroEnregistrement=EUC_CONVENTION_numeroEnregistrementV568_(a);
   var now=new Date().toISOString();
