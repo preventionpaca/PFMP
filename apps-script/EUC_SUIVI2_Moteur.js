@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.666'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.694'; /* DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) ; DEV694 : identifiants du dossier ou du dépôt (« Éditer la fiche ») */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -227,6 +227,8 @@ function EUC_SUIVI2_ficheDossier_(a, entreprises) {
     lieuPar: P(a.Lieu_stage_modifie_par) ? 'modifié par ' + P(a.Lieu_stage_modifie_par) + (P(a.Lieu_stage_modifie_le) ? ' le ' + P(a.Lieu_stage_modifie_le).slice(0, 10).split('-').reverse().join('/') : '') : '',
     contact: { nom: resp || tut, tel: P(a.Responsable_telephone, a.Entreprise_telephone, a.Entreprise_telephone_snapshot, f.Telephone, a.Tuteur_telephone), mail: P(a.Responsable_courriel, a.Entreprise_courriel, a.Entreprise_courriel_snapshot, f.Courriel, a.Tuteur_courriel) },
     tuteur: { nom: tut, tel: P(a.Tuteur_telephone), mail: P(a.Tuteur_courriel) },
+    /* DEV694 : dossier corrigé par « Éditer la fiche » (administration). */
+    dossier: Number(a.id) || 0,
     numero: P(a.Numero_enregistrement, a.Reference_convention), siret: sr.length === 14 ? sr : EUC_SUIVI2_t_(f.SIRET || f.Siret).replace(/\D/g, ''),
     debut: EUC_SUIVI2_date_(a.Date_debut), fin: EUC_SUIVI2_date_(a.Date_fin_reelle || a.Date_fin),
     enregistreLe: EUC_SUIVI2_date_(a.Date_enregistrement || a.Date_saisie_entreprise || a.Date_creation)
@@ -283,7 +285,9 @@ function EUC_SUIVI2_ficheTampon_(j, siret) {
     lieu: EUC_SUIVI2_lieu_(j.Lieu_stage_adresse, j.Lieu_stage_code_postal, j.Lieu_stage_commune, P(j.Adresse_officielle, j.Adresse_entreprise), P(j.Ville_officielle)),
     contact: { nom: n(c.responsable) || n(c.tuteur), tel: c.responsable.tel || c.tuteur.tel, mail: c.responsable.mail || c.tuteur.mail },
     tuteur: { nom: n(c.tuteur), tel: c.tuteur.tel, mail: c.tuteur.mail },
-    numero: secours ? depot.replace(/^SECOURS-/, '') : '', siret: siret || '', enregistreLe: secours ? EUC_SUIVI2_date_(j.Date_import) : '' };
+    numero: secours ? depot.replace(/^SECOURS-/, '') : '', siret: siret || '', enregistreLe: secours ? EUC_SUIVI2_date_(j.Date_import) : '',
+    /* DEV694 : dépôt en ligne corrigé par « Éditer la fiche » (administration). */
+    depot: Number(j.id) || 0 };
 }
 /* Complète une fiche de dossier sans écraser ce qu'elle porte déjà. */
 function EUC_SUIVI2_completerFiche_(f, t) {

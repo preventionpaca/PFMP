@@ -729,7 +729,10 @@ function EUC_ADMIN_CONVENTIONS_afficherV146(e){
   tpl.config=JSON.stringify({
     baseUrl:ScriptApp.getService().getUrl(),
     /* DEV672 : lien direct du courriel de l'équipe : ce dossier s'ouvre tout seul. */
-    numero:typeof EUC_DEV672_numero_==='function'?EUC_DEV672_numero_(e):''
+    numero:typeof EUC_DEV672_numero_==='function'?EUC_DEV672_numero_(e):'',
+    /* DEV694 : bouton « Éditer la fiche » du suivi des PFMP : dossier (convention) ou dépôt en ligne ouvert directement. */
+    dossier:Number(e&&e.parameter&&e.parameter.dossier)||0,
+    depot:Number(e&&e.parameter&&e.parameter.depot)||0
   });
   tpl.anneeContextJson=JSON.stringify(ctxAnnee);
   tpl.dossiersJson=JSON.stringify(EUC_DEV578_dossiersAdminEnCache_(ctxAnnee.active));

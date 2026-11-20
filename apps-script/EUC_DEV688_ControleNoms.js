@@ -78,7 +78,7 @@ function EUC_DEV688_parcourir_(annee, fn) {
       Entreprise_raison_sociale: t(j.Raison_sociale_officielle) || t(j.Nom_commercial) || t(j.Entreprise_saisie), Entreprise_enseigne: t(j.Nom_commercial), Entreprise_siret: siret, Entreprise_commune: t(j.Ville_officielle),
       Lieu_stage_adresse: j.Lieu_stage_adresse, Lieu_stage_code_postal: j.Lieu_stage_code_postal, Lieu_stage_commune: j.Lieu_stage_commune };
     var cid = Number(EUC_PFMP_ref_(e.Classe)) || 0, nv = niveaux[cid] || {}, prenom = t(e.Prenom_usage || e.Prenom), nom = t(e.Nom);
-    fn(a, { id: eid, nom: nom, prenom: prenom, jeune: [prenom, nom].filter(Boolean).join(' ') }, e, { id: 'S' + Number(j.id), source: 'SOUMISSION', statut: valide ? 'Soumission validée' : 'Soumission en attente', numero: numero, eleve: [prenom, nom].filter(Boolean).join(' '), eleveId: eid,
+    fn(a, { id: eid, nom: nom, prenom: prenom, jeune: [prenom, nom].filter(Boolean).join(' ') }, e, { id: 'S' + Number(j.id), source: 'SOUMISSION', statut: valide ? 'Dépôt en ligne' : 'Dépôt en ligne — entreprise à vérifier', numero: numero, eleve: [prenom, nom].filter(Boolean).join(' '), eleveId: eid,
       nomEleve: nom, prenomEleve: prenom, classe: t(e.Code_classe_importe) || t(j.Classe_brut), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(j.Periode_libelle) || (Number(j.Periode_numero) ? 'PFMP n°' + Number(j.Periode_numero) : ''), entreprise: a.Entreprise_raison_sociale });
   });
 }

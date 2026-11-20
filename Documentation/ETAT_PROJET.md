@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV694 : dépôts en ligne corrigeables, « Éditer la fiche » du suivi, bandeau « À faire »
+
+- Constat (lecture seule sur le vert) : 74 dépôts « Déclarer mon entreprise » (n° PFMP-2026-S…) ; un seul importé dans l'Administration des conventions. Les autres restent dans la table d'attente `EUC_MIGRATION_JOTFORM_PFMP` : ceux au SIRET vérifié (ou NIS reconnu) comptent déjà « Convention enregistrée » dans le suivi (règle DEV666, vérifiée sur le tableau 1MELEC), mais l'Administration ne les ouvrait pas. Aucun import n'est donc nécessaire.
+- Constat technique : la page « Soumissions reçues » (ancien import JotForm) et le bouton « Valider » de « Soumissions à traiter » appellent l'ancien moteur d'import (`EUC_DEV466_importSelection` → `EUC_DEV298_*`, `EUC_DEV307_*`, `EUC_DEV322_*`…) absent de l'historique Git actuel : erreur avant toute écriture. Non corrigé dans ce lot (JotForm terminé ; « Valider » n'apparaît que pour un établissement fermé à confirmer) — suite à décider.
+- `EUC_DEV694_Depots.js` : `EUC_DEV694_vueDepot` (par id ou n°) et `EUC_DEV694_corrigerDepot` : responsable et tuteur (prénom, nom, fonction, téléphone, courriel), motif obligatoire, contrôles des formulaires élèves (lettres, élève refusé comme tuteur, téléphone France / Monaco / international mis en forme, courriel), champ jamais vidé, colonnes `Responsable_*` / `Tuteur_*` créées au besoin, anciennes colonnes et `Raw_JSON` tenus à jour, historique avant / après (`Historique_admin_JSON`). Dépôt classé (rejeté, essai) refusé.
+- Administration des conventions : carte « Corriger un dépôt en ligne » (chargement, succès, erreur, délai dépassé ; bouton désactivé avec indicateur) ; ouverte depuis le contrôle des noms, par `?depot=`, `?dossier=` ou un lien `?numero=…-S…`. Statut affiché « Dépôt en ligne » (au lieu de « Soumission validée », qui voulait seulement dire SIRET vérifié).
+- Suivi des PFMP (administration seulement) : bouton « Éditer la fiche » par élève, vers la convention (`dossier`) ou le dépôt (`depot`) ; identifiants retirés de la vue des enseignants ; version du moteur 1.0.0-dev.694 (cache recalculé).
+- Accueil d'administration : bandeau « À faire » (`EUC_DEV694_aFaire`, même calcul que « Soumissions à traiter ») : demandes d'aide, SIRET à vérifier, NIS de Monaco, établissements fermés, doublons, élèves à prévenir ; recalculé à chaque ouverture, masqué quand il n'y a plus rien à faire ou en cas d'erreur.
+- Non vérifié : la convention imprimée d'un dépôt se fonde sur le dossier préparé du générateur, pas sur le dépôt ; une correction de dépôt n'y est pas garantie.
+- Tests : `tests/run-dev694-tests.js` (9) ; `run-dev692-tests.js` adapté au nouveau libellé et à l'ouverture du dépôt dans la page.
+
 ## Mise à jour du 20 novembre 2026 — DEV693 : téléphones monégasques dans tous les formulaires
 
 - Portables monégasques à 8 chiffres commençant par 4 (+377 4x xx xx xx) ajoutés, en plus des fixes en 9 et des portables en 6 (+377 6 xx xx xx xx).

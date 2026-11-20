@@ -24,9 +24,9 @@ const JOT = () => [
 test('contrôle des noms : une soumission (n° S…) dont le responsable est l’élève apparaît ; ignorées et autres années exclues ; statut et source indiqués', () => {
   const r = J(ctx([], JOT()).EUC_DEV688_controleNoms({ annee: '2026-2027' }));
   assert.deepEqual(r.conventions.map(x => x.id), ['S53', 'S56']);
-  const d = r.conventions[0]; assert.equal(d.source, 'SOUMISSION'); assert.equal(d.numero, 'PFMP-2026-S0053'); assert.equal(d.statut, 'Soumission validée'); assert.equal(d.classe, '1MELEC'); assert.equal(d.periode, 'PFMP n°1');
+  const d = r.conventions[0]; assert.equal(d.source, 'SOUMISSION'); assert.equal(d.numero, 'PFMP-2026-S0053'); assert.equal(d.statut, 'Dépôt en ligne'); assert.equal(d.classe, '1MELEC'); assert.equal(d.periode, 'PFMP n°1');
   assert.deepEqual(d.anomalies.map(a => a.champ + ':' + a.code), ['Responsable:NOM_ELEVE', 'Tuteur:NOM_ELEVE']);
-  assert.equal(r.conventions[1].statut, 'Soumission en attente'); assert.deepEqual(r.conventions[1].anomalies, []);
+  assert.equal(r.conventions[1].statut, 'Dépôt en ligne — entreprise à vérifier'); assert.deepEqual(r.conventions[1].anomalies, []);
 });
 test('pas de double compte : une soumission déjà devenue convention (même élève, même SIRET) n’est lue qu’une fois ; comptage par entreprise inclut les soumissions', () => {
   const convs = [{ id: 7, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 10, Classe_convention_nom: '1MELEC', Entreprise_raison_sociale: 'HOTEL EXEMPLE', Entreprise_siret: '11122233300044', Responsable_nom: 'Durand', Responsable_prenom: 'Anne', Tuteur_nom: 'Durand', Tuteur_prenom: 'Anne' }];
@@ -48,6 +48,6 @@ test('page : exports PDF et Excel de la liste filtrée (désactivés avant charg
   ['cnPdf', 'cnXlsx', 'lsPdf', 'lsXlsx'].forEach(id => assert.match(h, new RegExp('id="' + id + '" class="secondary" type="button" disabled')));
   assert.match(h, /function exporter\(btn,format,def\)\{if\(btn\.disabled\)return;const old=btn\.innerHTML;btn\.disabled=true;btn\.innerHTML='<span class="spinner"><\/span>Export…'/);
   assert.match(h, /function cnExport\(\)\{const l=cnFiltrees\(\)/); assert.match(h, /function lsExport\(\)\{const g=lsGroupes\(\)/);
-  assert.match(h, /jspdf@2\.5\.1/); assert.match(h, /xlsx@0\.18\.5/); assert.match(h, /page=migration-jotform-pfmp/);
+  assert.match(h, /jspdf@2\.5\.1/); assert.match(h, /xlsx@0\.18\.5/); assert.ok(h.includes("if(x.source==='SOUMISSION'){ouvrirDepot({id:Number(String(x.id).replace(/^S/,''))});return}"), 'DEV694 : un dépôt s’ouvre dans l’éditeur de dépôt de la page');
 });
 console.log(n + ' tests DEV692 réussis.');
