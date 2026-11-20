@@ -97,12 +97,16 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
 (function(){
   const $=function(id){return document.getElementById(id)};
   const esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
-  const FAM={BACPRO:'Bac pro',BTS:'BTS',CAP:'CAP',BP:'BP',MC:'Mention complémentaire'};
+  const FAM={BACPRO:'Bac pro',BTS:'BTS',CAP:'CAP',BP:'BP',MC:'Mention complémentaire',AUTRES_FORMATIONS:'Autres formations'};
+  /* Même commune ou même filière écrite autrement (accents, tirets, « ST ») : une seule valeur, la première rencontrée. */
+  const CANON={};const cleTexte=function(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\bST\b/g,'SAINT').replace(/\bSTE\b/g,'SAINTE').trim()};
+  const canon=function(t,v){if(!v)return v;const k=t+'|'+cleTexte(v);return CANON[k]||(CANON[k]=v)};
+  function normaliser(m){(m.conventions||[]).concat(m.apprentis||[]).forEach(function(x){x.commune=canon('C',String(x.commune||'').toUpperCase());x.diplome=canon('D',x.diplome)});return m}
   const famLib=function(f){return FAM[f]||f||'Autre'};
   const CAUSES={ENTREPRISE:'Côté entreprise (fermeture, activité)',ELEVE:'Côté élève (comportement, absences, renvoi)',SANTE:'Santé, accident',AUTRE:'Autre motif',NON_PRECISE:'Motif non précisé'};
   const DATA={};let ANNEES=[];let LISTES={};
   const pct=function(a,b){return b?Math.round(a*100/b)+' %':'—'};
-  function barres(items,cls){const max=Math.max.apply(null,items.map(function(x){return x.v}).concat([1]));return items.length?'<div class="barres">'+items.map(function(x){return '<div class="lib">'+esc(x.l)+'</div><div class="barre '+(cls||'')+'"><span style="width:'+Math.max(2,Math.round(x.v*100/max))+'%"></span></div><div class="val">'+esc(x.t!=null?x.t:x.v)+'</div>'}).join('')+'</div>':'<p class="vide">Aucune donnée pour ces filtres.</p>'}
+  function barres(items,cls){const max=Math.max.apply(null,items.map(function(x){return x.v}).concat([1]));return items.length?'<div class="barres">'+items.map(function(x){return '<div class="lib">'+esc(x.l)+'</div><div class="barre '+(cls||'')+'"><span style="width:'+(x.v?Math.max(2,Math.round(x.v*100/max)):0)+'%"></span></div><div class="val">'+esc(x.t!=null?x.t:x.v)+'</div>'}).join('')+'</div>':'<p class="vide">Aucune donnée pour ces filtres.</p>'}
   function tableau(entetes,lignes,num){return lignes.length?'<table><thead><tr>'+entetes.map(function(h,i){return '<th'+((num||[]).indexOf(i)>=0?' class="n"':'')+'>'+esc(h)+'</th>'}).join('')+'</tr></thead><tbody>'+lignes.map(function(l){return '<tr>'+l.map(function(c,i){return '<td'+((num||[]).indexOf(i)>=0?' class="n"':'')+'>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table>':'<p class="vide">Aucune entreprise pour ces filtres.</p>'}
 
   /* Filtres communs à toutes les années. */
@@ -165,7 +169,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const ans=[annee.value].concat(choisies()).filter(function(a){return DATA[a]}).sort();
     const parAn={};ans.forEach(function(a){parAn[a]=entreprises(DATA[a])});
     const lignes=ans.map(function(a){const E=parAn[a],st=E.liste.filter(function(e){return e.eleves.size});return[a,new Set(E.acc.map(function(x){return x.e||x.id})).size,E.acc.length,st.length,E.liste.reduce(function(s,e){return s+e.apprentis},0),E.conv.filter(function(x){return x.statut==='INTERROMPUE'}).length]});
-    $('evolution').innerHTML=ans.length>1?tableau(['Année','Élèves en stage','Conventions','Entreprises d’accueil','Apprentis','Stages interrompus'],lignes,[1,2,3,4,5]):'<p class="note">Cochez une ou plusieurs années dans « Comparer avec » pour voir l’évolution et les entreprises fidèles, nouvelles ou perdues.</p>';
+    const sans=ans.filter(function(a){return!(DATA[a].conventions||[]).length});
+    $('evolution').innerHTML=ans.length>1?tableau(['Année','Élèves en stage','Conventions','Entreprises d’accueil','Apprentis','Stages interrompus'],lignes,[1,2,3,4,5])+(sans.length?'<p class="note">Aucune convention enregistrée dans l’application pour '+esc(sans.join(', '))+' : ces années ne peuvent pas être comparées.</p>':''):'<p class="note">Cochez une ou plusieurs années dans « Comparer avec » pour voir l’évolution et les entreprises fidèles, nouvelles ou perdues.</p>';
     const cur=parAn[annee.value],avant=ans.filter(function(a){return a<annee.value}),present=function(a,e){return parAn[a].liste.some(function(x){return x.eleves.size&&(x.k===e.k)})};
     const st=cur.liste.filter(function(e){return e.eleves.size});
     const ligne=function(e,extra){return[e.nom,e.identifiant,e.commune,e.eleves.size,e.apprentis,Array.from(e.diplomes).sort().join(' · ')].concat(extra||[])};
@@ -201,7 +206,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const fin=function(msg,err){fini=true;clearTimeout(tm);calculer.disabled=false;calculer.innerHTML=old;$('etat').className='etat'+(err?' erreur':'');$('etat').textContent=msg||''};
     const tm=setTimeout(function(){if(fini)return;fin('Le calcul a dépassé 3 minutes : réessayez (les années déjà calculées sont gardées).',true)},180000);
     const suite=function(i){if(fini)return;if(i>=ans.length){fin('');filtres();$('resultats').hidden=false;rendre();return}$('etat').textContent='Lecture de '+ans[i]+'…';
-      google.script.run.withSuccessHandler(function(m){if(fini)return;DATA[ans[i]]=m;suite(i+1)}).withFailureHandler(function(e){if(fini)return;fin('Erreur : '+(e&&e.message||e),true)}).EUC_DEV698_annee({annee:ans[i]})};
+      google.script.run.withSuccessHandler(function(m){if(fini)return;DATA[ans[i]]=normaliser(m);suite(i+1)}).withFailureHandler(function(e){if(fini)return;fin('Erreur : '+(e&&e.message||e),true)}).EUC_DEV698_annee({annee:ans[i]})};
     suite(0)};
 
   function comparer(){$('comparer').innerHTML=ANNEES.filter(function(a){return a!==annee.value}).map(function(a){return '<label><input type="checkbox" value="'+esc(a)+'">'+esc(a)+'</label>'}).join('')||'<span class="vide">Aucune autre année disponible.</span>'}

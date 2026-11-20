@@ -71,9 +71,9 @@ test('apprentis de l’année : entreprise par SIRET, sinon nom ; seuls les cont
   assert.equal(r.conventions[0].k, r.apprentis[0].k, 'stagiaire et apprenti dans la même entreprise');
 });
 
-test('années disponibles : année en cours d’abord', () => {
-  const k = ctx([]); k.EUC_DEV368_boot = () => ({ current: '2026-2027', years: ['2025-2026', '2026-2027', 'x'] });
-  assert.deepEqual(J(k.EUC_DEV698_annees()), { annees: ['2026-2027', '2025-2026'], active: '2026-2027' });
+test('années disponibles : année en cours puis les cinq précédentes, pas les années futures', () => {
+  const k = ctx([]); k.EUC_DEV368_boot = () => ({ current: '2026-2027', years: ['2026-2027', '2027-2028', '2028-2029', 'x'] });
+  assert.deepEqual(J(k.EUC_DEV698_annees()), { annees: ['2026-2027', '2025-2026', '2024-2025', '2023-2024', '2022-2023', '2021-2022'], active: '2026-2027' }, 'années passées, jamais futures');
 });
 
 test('page : chargement avec indicateur et délai, filtres, sections, exports Excel bloqués pendant l’export, aucune adresse en dur', () => {
@@ -84,7 +84,12 @@ test('page : chargement avec indicateur et délai, filtres, sections, exports Ex
   assert.match(h, /withFailureHandler\(function\(e\)\{if\(fini\)return;fin\('Erreur : '/);
   assert.match(h, /btn\.disabled=true;btn\.innerHTML='<span class="spinner"><\/span>Export…'/);
   ['Accueil par entreprise', 'Lieux de stage par commune', 'Filières et diplômes', 'Déroulement des stages', 'Évolution et pistes de prospection', 'Après une interruption', 'Causes des interruptions'].forEach(t => assert.ok(h.includes(t), t));
-  assert.match(h, /href="<\?= adminBase \?>\?page=admin-pfmp"/); assert.ok(!/lycee-les-eucalyptus|loucodi/.test(h));
+  assert.match(h, /href="<\?= adminBase \?>\?page=admin-pfmp"/);
+  /* Même commune / même filière écrite autrement regroupée (fonction de la page exécutée). */
+  const src = h.match(/const cleTexte=[^;]+;/)[0]; const cle = vm.runInNewContext(src + 'cleTexte', {});
+  assert.equal(cle('CAGNES-SUR-MER'), cle('Cagnes sur Mer')); assert.equal(cle('ST LAURENT DU VAR'), cle('Saint-Laurent-du-Var'));
+  assert.equal(cle("BAC PRO Métiers de l'Électricité"), cle("BAC PRO Metiers de l'Electricité")); assert.notEqual(cle('NICE'), cle('NIZZA'));
+  assert.match(h, /DATA\[ans\[i\]\]=normaliser\(m\)/); assert.match(h, /AUTRES_FORMATIONS:'Autres formations'/); assert.ok(!/lycee-les-eucalyptus|loucodi/.test(h));
 });
 
 test('route, contrôle de publication et vignette de l’accueil d’administration', () => {

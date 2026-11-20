@@ -135,8 +135,11 @@ function EUC_DEV698_annees() {
   EUC_ADMIN_WORKFLOW_ctxV144_();
   var b = {};
   try { b = EUC_DEV368_boot() || {}; } catch (e) { b = {}; }
-  var l = (b.years || []).map(EUC_DEV698_t_).filter(function(y, i, a) { return /^20\d{2}-20\d{2}$/.test(y) && a.indexOf(y) === i; }).sort().reverse();
-  var active = EUC_DEV698_t_(b.current) || l[0] || '';
+  var l = (b.years || []).map(EUC_DEV698_t_).filter(function(y, i, a) { return /^20\d{2}-20\d{2}$/.test(y) && a.indexOf(y) === i; });
+  var active = EUC_DEV698_t_(b.current) || l.slice().sort()[0] || '';
+  /* Années à comparer : l'année en cours et les cinq précédentes (jamais les années futures, sans convention). */
+  if (/^20\d{2}-20\d{2}$/.test(active)) for (var i = 1; i <= 5; i++) { var d = Number(active.slice(0, 4)) - i, y = d + '-' + (d + 1); if (l.indexOf(y) < 0) l.push(y); }
+  l = l.filter(function(y) { return !active || y <= active; }).sort().reverse();
   return { annees: l, active: active };
 }
 
