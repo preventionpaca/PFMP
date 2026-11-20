@@ -68,7 +68,7 @@ test('récapitulatif : toutes les rubriques, lieu de stage et bureau G205 mis en
   assert.match(r.texte, /!!! À FAIRE : passer au bureau G205/); assert.match(r.texte, /!!! LIEU DU STAGE DIFFÉRENT DU SIÈGE — les visites se font à cette adresse : 2 avenue/);
   assert.match(r.html, /border:2px solid #d97706[^]*Lieu du stage différent du siège[^]*2 avenue du Chantier/);
   assert.match(r.html, /#fde8e8;border:2px solid #b42318[^]*passer au bureau G205/);
-  assert.match(r.html, /Tuteur \(le responsable\)/);
+  assert.match(r.html, /Tuteur de stage \(le responsable de l’entreprise\)/);
   assert.ok(!k.EUC_DEV649_recap_(Object.assign({}, INFO, { lieu: '', g205: { requis: false }, entreprise: { nom: 'X' } })).texte.includes('!!!'), 'rien de signalé sans lieu ni G205');
   assert.ok(!k.EUC_DEV649_recap_({ eleve: { nom: '<b>x</b>' } }).html.includes('<b>x</b>'), 'échappement HTML');
 });

@@ -143,8 +143,8 @@ function EUC_DEV649_recap_(info) {
     ['Élève', [['Nom', [T(e.prenom), T(e.nom)].filter(Boolean).join(' ')], ['Date de naissance', EUC_DEV649_dateFr_(e.naissance)], ['Classe', e.classe], ['Adresse personnelle', e.adresse], ['Téléphone', e.telephone], ['Courriel', e.courriel]]],
     ['Période de stage', [['Période', p.libelle], ['Dates', dates]]],
     ['Entreprise (siège, signataire de la convention)', [['Nom', [T(ent.nom), T(ent.enseigne) && T(ent.enseigne) !== T(ent.nom) ? '(' + T(ent.enseigne) + ')' : ''].filter(Boolean).join(' ')], ['SIRET / NIS', ent.identifiant], ['Adresse du siège', ent.adresse], ['Téléphone', ent.telephone], ['Courriel', ent.courriel]]],
-    ['Responsable dans l’entreprise', [['Nom', resp.nom], ['Fonction', resp.fonction], ['Téléphone', resp.tel], ['Courriel', resp.mail]]],
-    ['Tuteur' + (info.tuteurEstResponsable ? ' (le responsable)' : ''), [['Nom', tut.nom], ['Fonction', tut.fonction], ['Téléphone', tut.tel], ['Courriel', tut.mail]]]
+    ['Responsable de l’entreprise', [['Nom', resp.nom], ['Fonction', resp.fonction], ['Téléphone', resp.tel], ['Courriel', resp.mail]]],
+    ['Tuteur de stage' + (info.tuteurEstResponsable ? ' (le responsable de l’entreprise)' : ''), [['Nom', tut.nom], ['Fonction', tut.fonction], ['Téléphone', tut.tel], ['Courriel', tut.mail]]]
   ];
   var nd = ent.nonDiffusible ? 'Entreprise « non diffusible » sur l’annuaire data.gouv (INSEE) : nom et adresse saisis par l’élève, à vérifier sur le registre de l’INPI.' : '';
   var inpi = ent.nonDiffusible ? EUC_DEV649_lienInpi_(ent.identifiant) : '';

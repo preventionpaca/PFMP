@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV695 : « Responsable de l’entreprise » et « Tuteur de stage » dans les formulaires élèves
+
+- Des élèves confondaient le responsable et le tuteur de l'entreprise avec leur responsable ou tuteur légal. Les quatre formulaires élèves (QR code, suite du QR, « Déclarer mon entreprise », formulaire ouvert par le code de convention `PFMP.html`) affichent « Responsable de l’entreprise » et « Tuteur de stage », chacun avec une phrase d'aide (« Ce n’est pas ton responsable légal (parent…) » / « Ce n’est pas ton tuteur légal ni un parent »). Case « même personne » et récapitulatif envoyé renommés de même.
+- Tests : `tests/run-dev695-tests.js` (2) ; `run-tests.js` et `run-dev649-lieu-stage-recap-tests.js` adaptés aux nouveaux libellés.
+
 ## Mise à jour du 20 novembre 2026 — DEV694 : dépôts en ligne corrigeables, « Éditer la fiche » du suivi, bandeau « À faire »
 
 - Constat (lecture seule sur le vert) : 74 dépôts « Déclarer mon entreprise » (n° PFMP-2026-S…) ; un seul importé dans l'Administration des conventions. Les autres restent dans la table d'attente `EUC_MIGRATION_JOTFORM_PFMP` : ceux au SIRET vérifié (ou NIS reconnu) comptent déjà « Convention enregistrée » dans le suivi (règle DEV666, vérifiée sur le tableau 1MELEC), mais l'Administration ne les ouvrait pas. Aucun import n'est donc nécessaire.

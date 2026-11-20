@@ -44,7 +44,7 @@ select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
 <header><h1>Enregistrer ma PFMP</h1><p>Lycée Les Eucalyptus — 7 avenue des Eucalyptus, 06200 Nice<br>Bureau des formations et des entreprises : <a id="courrielBfe" href="#">bfe (arobase) lycee-les-eucalyptus.org</a> · <a href="tel:+33492293065">04 92 29 30 65</a><br><b>Pour toute question, passe au bureau des formations et des entreprises, en G205.</b></p>
 <script>/* Adresse assemblée à l’affichage : absente du code de la page, elle n’est pas ramassée par les robots. */
 (function(){var a=document.getElementById('courrielBfe'),c=['bfe',['lycee','les','eucalyptus'].join('-')+'.'+'org'].join(String.fromCharCode(64));a.textContent=c;a.href='mail'+'to:'+c;})();</script>
-<div class="etapes"><span id="e1" class="on">1. Moi</span><span id="e2">2. Période</span><span id="e3">3. Entreprise</span><span id="e4">4. Responsable et tuteur</span></div></header>
+<div class="etapes"><span id="e1" class="on">1. Moi</span><span id="e2">2. Période</span><span id="e3">3. Entreprise</span><span id="e4">4. Responsable et tuteur de stage</span></div></header>
 <main>
   <div id="etat" class="note" role="status">Chargement…</div>
 
@@ -129,18 +129,18 @@ select:focus{outline:3px solid #9fd8c9;outline-offset:1px;border-color:#07866e}
       <label for="aLieuAdr">Adresse du lieu de stage</label><input id="aLieuAdr" autocomplete="off">
       <div class="deux"><div><label for="aLieuCp">Code postal</label><input id="aLieuCp" autocomplete="off"></div><div><label for="aLieuVille">Ville</label><input id="aLieuVille" autocomplete="off"></div></div>
     </details>
-    <label for="aContact">Nom de ton tuteur</label><input id="aContact">
+    <label for="aContact">Nom de ton tuteur de stage (dans l’entreprise)</label><input id="aContact">
     <div class="deux"><div><label for="aTel">Téléphone de l’entreprise</label><input id="aTel" type="tel" inputmode="tel"></div><div><label for="aMail">Courriel de l’entreprise</label><input id="aMail" type="email"></div></div>
     <label for="aMsg">Ton message</label><textarea id="aMsg" rows="3" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--bord);border-radius:8px"></textarea>
     <button type="button" class="plein" id="aEnvoyer">Envoyer au bureau des entreprises</button> <button type="button" id="aRetour">Retour</button><p id="mA" role="status"></p>
   </section>
 
   <section id="s4" hidden>
-    <h2>4. Responsable et tuteur</h2>
-    <p class="note">Demande à ton tuteur d’écrire lui-même son nom si tu as un doute. Prénom et nom dans deux cases différentes.</p>
-    <h3>Responsable de l’entreprise</h3><div id="resp"></div>
-    <label style="font-weight:400"><input type="checkbox" id="meme" style="width:auto"> Le tuteur est aussi le responsable</label>
-    <div id="blocTuteur"><h3>Tuteur</h3><div id="tut"></div></div>
+    <h2>4. Responsable de l’entreprise et tuteur de stage</h2>
+    <p class="note">Demande à ton tuteur de stage d’écrire lui-même son nom si tu as un doute. Prénom et nom dans deux cases différentes.</p>
+    <h3>Responsable de l’entreprise</h3><p class="role-aide" style="margin:2px 0 10px;color:#5b6b7f;font-size:14px;line-height:1.35">La personne qui dirige l’entreprise (ou le service) qui t’accueille. <b>Ce n’est pas ton responsable légal</b> (parent ou personne qui s’occupe de toi).</p><div id="resp"></div>
+    <label style="font-weight:400"><input type="checkbox" id="meme" style="width:auto"> Le tuteur de stage est aussi le responsable de l’entreprise</label>
+    <div id="blocTuteur"><h3>Tuteur de stage</h3><p class="role-aide" style="margin:2px 0 10px;color:#5b6b7f;font-size:14px;line-height:1.35">La personne de l’entreprise qui t’encadre pendant le stage. <b>Ce n’est pas ton tuteur légal</b> ni un parent.</p><div id="tut"></div></div>
     <button type="button" class="plein" id="b4">Envoyer ma déclaration</button><p id="m4" role="status"></p>
   </section>
 
