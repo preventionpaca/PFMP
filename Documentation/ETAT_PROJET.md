@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 20 novembre 2026 — DEV687 : élèves démissionnaires ; DEV688 : contrôle des noms responsable / tuteur
+
+- DEV687 (`EUC_DEV687_Demission.js`) : dans le suivi des PFMP en mode administration, bouton « Démissionnaire » sous chaque élève (confirmation, motif facultatif) : l'élève est masqué tout de suite (Actif = faux, colonnes `Demission_app`, `Date_demission_app`, `Demission_par`, `Demission_motif` créées si absentes). Bouton « Élèves démissionnaires » de la classe : liste, état (masqué en attente de Pronote / archivé), « Rétablir » tant que non archivé.
+- Import Pronote complet (`EUC_IMPORT_PFMP_RichData.gs`) : un démissionnaire encore présent dans l'export reste masqué ; un démissionnaire absent du nouvel export (même année, même source) est archivé : `Statut_scolarite = SORTI`, `Sortie_confirmee`, `Present_dernier_import = faux`. Rien n'est supprimé (`aucuneSuppression`), compteur `demissionnairesArchives`.
+- DEV688 (`EUC_DEV688_ControleNoms.js`) : rubrique « Contrôler les noms des responsables et des tuteurs » dans l'administration des conventions (année sélectionnée). Alertes : nom manquant, chiffres (téléphone), courriel, nom trop court, mot générique (papa, maman, moi, xxx…), nom ou prénom de l'élève, même nom de famille que l'élève, nom d'un responsable légal (Pronote), téléphone de l'élève ou d'un responsable légal. Filtres sur place : niveau, période, classe, type d'anomalie, recherche ; option « toutes les conventions ». « Ouvrir pour corriger » ouvre le dossier sur la correction. Lecture seule.
+- Tests : `tests/run-dev687-tests.js` (4), `tests/run-dev688-tests.js` (3).
+- Non vérifié en réel : marquage d'un vrai élève (écriture élève, à faire par l'administration) ; import Pronote réel.
+
 ## Mise à jour du 20 novembre 2026 — DEV686 : élèves sans convention, « Toutes les classes »
 
 - Page « Élèves sans convention » : la liste Classe propose « Toutes les classes » (dès que le niveau et la période comptent plusieurs classes). Affichage : toutes les classes du niveau ayant cette période, un bloc par classe, classes puis élèves par ordre alphabétique ; le choix d'une seule classe reste possible ; l'export PDF suit le même filtre.
