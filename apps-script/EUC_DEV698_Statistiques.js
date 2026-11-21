@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.700';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.701';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -89,8 +89,11 @@ function EUC_DEV698_calcul_(annee) {
   var T = EUC_DEV698_t_, cls = EUC_DEV698_classes_(annee), fiches = EUC_DEV689_fiches_(), lignes = [], vus = {};
   /* DEV700 : classe de la convention, sinon classe de l'élève (dépôts), sinon par le nom. */
   var classeDe = function(base, a) { return cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parId[Number(base.classeId) || 0] || cls.parNom[T(base.classe).toUpperCase().replace(/\s+/g, ' ')] || null; };
+  /* DEV701 : élève ou classe d'essai (« TEST PFMP », Donnee_test) : jamais dans les statistiques. */
+  var essai = function(e, classe) { return (e && (e.Donnee_test === true || /^RECETTE/i.test(T(e.Mode_donnee)))) || /^TEST\b/i.test(T(classe)); };
   EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
     vus[String(base.id)] = true;
+    if (essai(e, base.classe)) return;
     lignes.push(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), classeDe(base, a), cls.periodes));
   });
   /* Conventions interrompues ou annulées (révoquées, donc absentes du parcours ordinaire). */
@@ -102,6 +105,7 @@ function EUC_DEV698_calcul_(annee) {
     if (!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)) return;
     if (annee && EUC_PFMP_anneeDossierV148_(a) !== annee) return;
     if (a.Supprimee_admin === true || T(a.Statut_administratif).toUpperCase() === 'SUPPRIMEE_ADMIN') return;
+    if (essai(byEleve[Number(EUC_PFMP_ref_(a.Eleve))], a.Classe_convention_nom)) return;
     var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), x = cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parId[Number(EUC_PFMP_ref_((byEleve[Number(id.id)] || {}).Classe)) || 0] || {};
     var base = { id: Number(a.id), source: 'CONVENTION', eleveId: Number(id.id) || 0, eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), classeId: Number(EUC_PFMP_ref_((byEleve[Number(id.id)] || {}).Classe)) || 0, classe: T(a.Classe_convention_nom) || T((byEleve[Number(id.id)] || {}).Code_classe_importe), niveauLibelle: '', periode: T(a.Periode_libelle), entreprise: T(a.Entreprise_raison_sociale) };
     try { var nv = EUC_DEV371_levelOf_(x.classe || base.classe, x.famille); base.niveauLibelle = EUC_DEV371_levelLabel_(nv) || nv; } catch (eN) {}

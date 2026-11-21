@@ -12,6 +12,7 @@
 - Apprentis : par établissement (LP, LGT), modalité (mixité, classe entière, formation continue) et organisme (CFA RAN, CFAI, GRETA, donneur d'ordre).
 - Listes de prospection : colonnes adaptées à chaque liste (plus de colonne « Élèves en stage » à 0 pour les entreprises d'apprentis sans stagiaire).
 - DEV701 : deux périodes de même nom (« PFMP n°1 » de Première et de Terminale) restent deux choix distincts dans les filtres (clé nom + date de début officielle, dates affichées), dans l'Administration des conventions et les statistiques.
+- DEV701 : élève ou classe d'essai (« TEST PFMP », `Donnee_test`, `Mode_donnee` RECETTE) exclus des statistiques ; classe d'apprentis sans organisme réglé affichée « Organisme à régler pour la classe ».
 
 ## Mise à jour du 21 novembre 2026 — DEV699 : période officielle et dates décalées, « Ne pas prévenir l'élève », statistiques détaillées
 

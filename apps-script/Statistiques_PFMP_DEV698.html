@@ -172,8 +172,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     apprentis:function(E){
       /* Établissement de rattachement (LP, LGT), modalité (mixité, classe entière, formation continue), organismes (CFA RAN, CFAI, GRETA). */
       const MODE={MIXITE:'Mixité',CLASSE_ENTIERE:'Classe entière',FORMATION_CONTINUE:'Formation continue'};
-      const etab=function(a){return a.etablissement||'Établissement non renseigné'},org=function(a){return a.gestionnaire?(a.gestionnaire+(a.donneur&&a.donneur!==a.gestionnaire?' (donneur d’ordre '+a.donneur+')':'')):'Organisme non renseigné'};
-      const parEtab=compter(E.app,etab),parOrg=compter(E.app,function(a){return a.gestionnaire||'Organisme non renseigné'}),parMode=compter(E.app,function(a){return MODE[a.mode]||'Modalité non renseignée'});
+      const etab=function(a){return a.etablissement||'Établissement non renseigné'},org=function(a){return a.gestionnaire?(a.gestionnaire+(a.donneur&&a.donneur!==a.gestionnaire?' (donneur d’ordre '+a.donneur+')':'')):'Organisme à régler pour la classe'};
+      const parEtab=compter(E.app,etab),parOrg=compter(E.app,function(a){return a.gestionnaire||'Organisme à régler pour la classe'}),parMode=compter(E.app,function(a){return MODE[a.mode]||'Modalité non renseignée'});
       const o={};E.app.forEach(function(a){const k=[etab(a),MODE[a.mode]||'—',org(a),a.classe,filiere(a)].join('|');o[k]=(o[k]||0)+1});
       const sans=E.app.filter(function(a){return!a.k}),orgs=E.app.filter(function(a){return a.organisme});
       return '<p class="note">'+E.app.length+' apprentis dont le contrat est en cours aujourd’hui (même source que « Gestion des apprentis »).'+(sans.length?' '+sans.length+' sans entreprise employeuse identifiée'+(orgs.length?', dont '+orgs.length+' avec un organisme de formation inscrit comme employeur ('+esc(Array.from(new Set(orgs.map(function(a){return a.organisme}))).join(', '))+')':'')+'.':'')+'</p>'+

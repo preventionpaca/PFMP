@@ -44,6 +44,13 @@ test('dépôt en ligne : classe et diplôme repris de la classe de l’élève (
   assert.equal(x.classe, '2 BTS MV'); assert.equal(x.famille, 'BTS'); assert.equal(x.diplome, 'BTS MV'); assert.equal(x.niveau, '2e année'); assert.equal(x.eleve, 'A UN');
 });
 
+test('DEV701 : élève ou classe d’essai (TEST PFMP, Donnee_test) exclus des statistiques', () => {
+  const k = ctx([{ id: 1, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TEST PFMP', Entreprise_raison_sociale: 'Essai', Entreprise_siret: '12345678900012' },
+    { id: 2, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: '2BTS MV', Entreprise_raison_sociale: 'Vrai', Entreprise_siret: '12345678900012' }]);
+  assert.deepEqual(J(k.EUC_DEV698_annee({ annee: '2026-2027' })).conventions.map(c => c.id), ['2']);
+  const lire = k.EUC_IMPORT_lireRecords_; k.EUC_IMPORT_lireRecords_ = t => t === 'EUC_ELEVES_PFMP' ? [{ id: 1, Nom: 'UN', Prenom: 'A', Classe: 20, Donnee_test: true }] : lire(t);
+  assert.deepEqual(J(k.EUC_DEV698_annee({ annee: '2026-2027' })).conventions, []);
+});
 test('page : même période ou année, Nice par secteur dans la vue synthétique, listes du déroulement, données à corriger, apprentis par établissement, colonnes adaptées', () => {
   const h = read('apps-script/Statistiques_PFMP_DEV698.html');
   assert.match(h, /<select id="portee"[^>]*><option value="annee">Sur l’année scolaire<\/option><option value="periode">En même temps \(même période de stage\)<\/option>/);
