@@ -48,6 +48,11 @@ test('DEV701 : élève ou classe d’essai (TEST PFMP, Donnee_test) exclus des s
   const k = ctx([{ id: 1, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: 'TEST PFMP', Entreprise_raison_sociale: 'Essai', Entreprise_siret: '12345678900012' },
     { id: 2, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: '2BTS MV', Entreprise_raison_sociale: 'Vrai', Entreprise_siret: '12345678900012' }]);
   assert.deepEqual(J(k.EUC_DEV698_annee({ annee: '2026-2027' })).conventions.map(c => c.id), ['2']);
+  /* Nom de classe vide sur la convention, classe « TEST PFMP » venue du catalogue. */
+  const k2 = ctx([{ id: 3, Eleve: 1, Annee_scolaire: '2026-2027', Classe_convention: 20, Classe_convention_nom: '', Entreprise_raison_sociale: 'Essai', Entreprise_siret: '12345678900012' }]);
+  const cat = k2.EUC_DEV368_catalog; k2.EUC_DEV368_catalog = () => { const c = cat(); c.classes[0].classe = 'TEST PFMP'; return c; };
+  const l2 = k2.EUC_IMPORT_lireRecords_; k2.EUC_IMPORT_lireRecords_ = t => t === 'EUC_ELEVES_PFMP' ? [{ id: 1, Nom: 'UN', Prenom: 'A', Classe: 20 }] : l2(t);
+  assert.deepEqual(J(k2.EUC_DEV698_annee({ annee: '2026-2027' })).conventions, []);
   const lire = k.EUC_IMPORT_lireRecords_; k.EUC_IMPORT_lireRecords_ = t => t === 'EUC_ELEVES_PFMP' ? [{ id: 1, Nom: 'UN', Prenom: 'A', Classe: 20, Donnee_test: true }] : lire(t);
   assert.deepEqual(J(k.EUC_DEV698_annee({ annee: '2026-2027' })).conventions, []);
 });
