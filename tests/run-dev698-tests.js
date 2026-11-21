@@ -56,7 +56,8 @@ test('année : conventions (y compris interrompues et annulées, révoquées), d
   assert.equal(x(2).statut, 'INTERROMPUE'); assert.equal(x(2).cause, 'ENTREPRISE'); assert.equal(x(2).diplome, 'BTS MV'); assert.equal(x(2).niveau, 'Première');
   assert.equal(x(3).sequence, 'REMPLACEMENT'); assert.equal(x(3).decalage, 14); assert.equal(x(3).prolongation, 7); assert.equal(x(3).k, 'M711219343', 'NIS à la lettre près');
   assert.equal(x(4).statut, 'ANNULEE'); assert.equal(x(8).sequence, 'RATTRAPAGE');
-  const texte = JSON.stringify(r); assert.ok(!/UN|DEUX|Élève/.test(texte), 'aucun nom d’élève');
+  /* DEV700 : nom de l'élève et n° présents pour les listes de l'administration (débuts décalés, interruptions…) ; page réservée à l'administration. */
+  assert.equal(x(2).eleve, 'Élève DEUX'); assert.equal(x(1).numero, 'N1');
   assert.throws(() => ctx(convs, [], null, false).EUC_DEV698_annee({ annee: '2026-2027' }), /administrateur/);
   assert.throws(() => k.EUC_DEV698_annee({ annee: 'x' }), /Année scolaire invalide/);
 });

@@ -74,6 +74,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
       <h2>Accueil par entreprise</h2>
       <p class="note">Nombre d’entreprises selon le nombre d’élèves accueillis en stage (un élève compté une fois par entreprise).</p>
       <div id="accueil"></div>
+      <div class="outils" style="margin-top:14px"><label style="font-weight:700">Stagiaires, apprentis et classes accueillis ensemble<select id="portee" style="min-width:330px"><option value="annee">Sur l’année scolaire</option><option value="periode">En même temps (même période de stage)</option></select></label></div>
+      <p class="note" id="porteeNote"></p>
       <div class="deux">
         <div><h3>Stagiaires et apprentis dans la même entreprise</h3><div id="mixte"></div></div>
         <div><h3>Classes accueillies ensemble</h3><p class="note">Entreprises qui accueillent des élèves de plusieurs classes ou statuts (stage, apprentissage).</p><div id="melange"></div></div>
@@ -96,6 +98,12 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
       <h2>Déroulement des stages</h2>
       <p class="note">Conventions de l’administration : début plus tard que la date officielle, fin prolongée ou convention de rattrapage, interruption et suite donnée.</p>
       <div id="deroulement"></div>
+      <div id="derDetail" hidden style="margin-top:10px"><div class="outils"><b id="derTitre"></b><button type="button" class="leger" id="derFermer">Fermer</button></div><div id="derCorps"></div></div>
+    </section>
+    <section id="qualite" hidden>
+      <h2>Données à corriger</h2>
+      <p class="note">Conventions dont la classe ou le diplôme n’est pas reconnu : elles apparaissent en « Classe non renseignée » ou « diplôme non renseigné ». À corriger dans la convention (classe) ou dans « Diplômes par classe ».</p>
+      <div id="qualiteCorps"></div>
     </section>
     <section>
       <h2>Évolution et pistes de prospection</h2>
@@ -142,9 +150,10 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   /* Entreprises d'une année : élèves en stage (convention non annulée) et apprentis, après filtres. */
   function entreprises(m){
     const g=new Map(),conv=(m.conventions||[]).filter(function(x){return garde(x,true)}),acc=conv.filter(function(x){return x.statut!=='ANNULEE'&&x.k}),app=(m.apprentis||[]).filter(function(x){return garde(x,false)});
-    const parNom={},nouv=function(x){return{k:x.k,nom:x.nom,commune:x.commune,cp:x.cp,identifiant:x.identifiant,eleves:new Set(),apprentis:0,etiquettes:new Set(),diplomes:new Set(),classesStage:new Set(),classesApp:new Set()}};
-    acc.forEach(function(x){let e=g.get(x.k);if(!e){e=nouv(x);g.set(x.k,e)}e.eleves.add(x.e||x.id);e.etiquettes.add(x.classe+' (stage)');e.diplomes.add(filiere(x));e.classesStage.add(x.classe);if(!e.commune&&x.commune)e.commune=x.commune;if(!e.cp&&x.cp)e.cp=x.cp;if(x.nn)parNom[x.nn]=e});
-    app.forEach(function(a){if(!a.k)return;let e=g.get(a.k)||parNom[a.nn];if(!e){e=nouv(a);g.set(a.k,e);if(a.nn)parNom[a.nn]=e}e.apprentis++;e.etiquettes.add(a.classe+' (apprenti)');e.diplomes.add(filiere(a));e.classesApp.add(a.classe)});
+    const parNom={},parSiren={},siren=function(k){return/^S\d{14}$/.test(k||'')?k.slice(1,10):''},nouv=function(x){return{k:x.k,nom:x.nom,commune:x.commune,cp:x.cp,identifiant:x.identifiant,eleves:new Set(),apprentis:0,etiquettes:new Set(),diplomes:new Set(),classesStage:new Set(),classesApp:new Set(),stages:[],apps:[]}};
+    acc.forEach(function(x){let e=g.get(x.k);if(!e){e=nouv(x);g.set(x.k,e)}e.eleves.add(x.e||x.id);e.etiquettes.add(x.classe+' (stage)');e.diplomes.add(filiere(x));e.classesStage.add(x.classe);e.stages.push(x);if(!e.commune&&x.commune)e.commune=x.commune;if(!e.cp&&x.cp)e.cp=x.cp;if(x.nn)parNom[x.nn]=e;if(siren(x.k)&&!parSiren[siren(x.k)])parSiren[siren(x.k)]=e});
+    /* Apprenti rattaché à l'entreprise d'un stagiaire : même SIRET, sinon même SIREN (autre établissement, ex. ENEDIS), sinon même nom. */
+    app.forEach(function(a){if(!a.k)return;let e=g.get(a.k)||parSiren[siren(a.k)]||parNom[a.nn];if(!e){e=nouv(a);g.set(a.k,e);if(a.nn)parNom[a.nn]=e;if(siren(a.k))parSiren[siren(a.k)]=e}e.apprentis++;e.etiquettes.add(a.classe+' (apprenti)');e.diplomes.add(filiere(a));e.classesApp.add(a.classe);e.apps.push(a)});
     return{conv:conv,acc:acc,app:app,liste:Array.from(g.values())};
   }
   const classesTxt=function(s){return Array.from(s).sort(function(a,b){return a.localeCompare(b,'fr',{numeric:true})}).join(', ')};
@@ -159,11 +168,19 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     entreprises:function(E){const o={};E.liste.filter(function(e){return e.eleves.size}).forEach(function(e){e.diplomes.forEach(function(d){o[d]=(o[d]||0)+1})});
       return '<p class="note">Une entreprise qui accueille plusieurs filières est comptée dans chacune.</p>'+tableau('dEnt',['Filière / diplôme','Entreprises d’accueil'],Object.keys(o).map(function(k){return[k,o[k]]}),[1],[1,-1])},
     communes:function(E){return tableauCommunes('dCom',E)},
-    apprentis:function(E){const o={};E.app.forEach(function(a){const k=a.classe+'|'+filiere(a);o[k]=(o[k]||0)+1});const sans=E.app.filter(function(a){return!a.k}).length;
-      return '<p class="note">Apprentis dont le contrat est en cours aujourd’hui, par classe (même source que « Gestion des apprentis »)'+(sans?' ; '+sans+' sans entreprise renseignée':'')+'.</p>'+tableau('dApp',['Classe','Filière','Apprentis'],Object.keys(o).map(function(k){const p=k.split('|');return[p[0],p[1],o[k]]}),[2],[0,1])},
+    apprentis:function(E){
+      /* Établissement de rattachement (LP, LGT), modalité (mixité, classe entière, formation continue), organismes (CFA RAN, CFAI, GRETA). */
+      const MODE={MIXITE:'Mixité',CLASSE_ENTIERE:'Classe entière',FORMATION_CONTINUE:'Formation continue'};
+      const etab=function(a){return a.etablissement||'Établissement non renseigné'},org=function(a){return a.gestionnaire?(a.gestionnaire+(a.donneur&&a.donneur!==a.gestionnaire?' (donneur d’ordre '+a.donneur+')':'')):'Organisme non renseigné'};
+      const parEtab=compter(E.app,etab),parOrg=compter(E.app,function(a){return a.gestionnaire||'Organisme non renseigné'}),parMode=compter(E.app,function(a){return MODE[a.mode]||'Modalité non renseignée'});
+      const o={};E.app.forEach(function(a){const k=[etab(a),MODE[a.mode]||'—',org(a),a.classe,filiere(a)].join('|');o[k]=(o[k]||0)+1});
+      const sans=E.app.filter(function(a){return!a.k}),orgs=E.app.filter(function(a){return a.organisme});
+      return '<p class="note">'+E.app.length+' apprentis dont le contrat est en cours aujourd’hui (même source que « Gestion des apprentis »).'+(sans.length?' '+sans.length+' sans entreprise employeuse identifiée'+(orgs.length?', dont '+orgs.length+' avec un organisme de formation inscrit comme employeur ('+esc(Array.from(new Set(orgs.map(function(a){return a.organisme}))).join(', '))+')':'')+'.':'')+'</p>'+
+        '<div class="deux"><div><h3>Par établissement</h3>'+barres(Object.keys(parEtab).sort().map(function(k){return{l:k,v:parEtab[k]}}))+'<h3>Par modalité</h3>'+barres(Object.keys(parMode).sort().map(function(k){return{l:k,v:parMode[k]}}),'b')+'</div><div><h3>Par organisme gestionnaire</h3>'+barres(Object.keys(parOrg).sort().map(function(k){return{l:k,v:parOrg[k]}}),'o')+'</div></div>'+
+        '<h3>Détail par classe</h3>'+tableau('dApp',['Établissement','Modalité','Organisme','Classe','Filière','Apprentis'],Object.keys(o).map(function(k){const p=k.split('|');return[p[0],p[1],p[2],p[3],p[4],o[k]]}),[5],[0,1])},
     mixtes:function(E){return tableau('dMix',['Entreprise','Commune','Stagiaires','Classes en stage','Apprentis','Classes en apprentissage'],E.liste.filter(function(e){return e.eleves.size&&e.apprentis}).map(function(e){return[e.nom,e.commune,e.eleves.size,classesTxt(e.classesStage),e.apprentis,classesTxt(e.classesApp)]}),[2,4],[2,-1])}
   };
-  const TITRES={eleves:'Élèves en stage',conventions:'Conventions',entreprises:'Entreprises d’accueil par filière',communes:'Communes des lieux de stage',apprentis:'Apprentis (contrat en cours) par classe',mixtes:'Entreprises avec stagiaire et apprenti'};
+  const TITRES={eleves:'Élèves en stage',conventions:'Conventions',entreprises:'Entreprises d’accueil par filière',communes:'Communes des lieux de stage',apprentis:'Apprentis (contrat en cours) par établissement, modalité et organisme',mixtes:'Entreprises avec stagiaire et apprenti'};
   let FIGE='',minuteur=0;
   function montrer(cle,figer){if(!E0||!DETAILS[cle])return;FIGE=figer?cle:FIGE;$('detailTitre').textContent=TITRES[cle];$('detailCorps').innerHTML=DETAILS[cle](E0);$('detail').hidden=false;document.querySelectorAll('.tuile').forEach(function(t){t.setAttribute('aria-expanded',String(t.dataset.detail===cle))})}
   function cacher(){FIGE='';$('detail').hidden=true;document.querySelectorAll('.tuile').forEach(function(t){t.setAttribute('aria-expanded','false')})}
@@ -181,20 +198,29 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const E=E0=entreprises(m),stage=E.liste.filter(function(e){return e.eleves.size}),both=E.liste.filter(function(e){return e.eleves.size&&e.apprentis}),eleves=new Set(E.acc.map(function(x){return x.e||x.id}));
     const communes=Object.keys(communesDe(E));
     $('perimetre').textContent=annee.value+' · '+([fPeriode,fFamille,fDiplome,fClasse].filter(function(s){return s.value}).map(function(s){return s.options[s.selectedIndex].text}).join(' · ')||'toutes classes et périodes')+' · calculé le '+new Date(m.calculeLe).toLocaleString('fr-FR');
-    $('cles').innerHTML=[[eleves.size,'élèves en stage','eleves'],[E.acc.length,'conventions','conventions'],[stage.length,'entreprises d’accueil','entreprises'],[communes.length,'communes','communes'],[E.app.length,'apprentis (contrat en cours)','apprentis'],[both.length,'entreprises avec stagiaire et apprenti','mixtes']].map(function(t){return '<button type="button" class="tuile" data-detail="'+t[2]+'" aria-expanded="false"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span><i>Survoler ou cliquer : détail</i></button>'}).join('');
+    $('cles').innerHTML=[[eleves.size,'élèves en stage','eleves'],[E.acc.length,'conventions','conventions'],[stage.length,'entreprises d’accueil','entreprises'],[communes.length,'communes','communes'],[E.app.length,'apprentis (contrat en cours)','apprentis'],[both.length,'entreprises avec stagiaire et apprenti (sur l’année)','mixtes']].map(function(t){return '<button type="button" class="tuile" data-detail="'+t[2]+'" aria-expanded="false"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span><i>Survoler ou cliquer : détail</i></button>'}).join('');
     if(FIGE)montrer(FIGE,true);else cacher();
     /* Accueil par entreprise */
     const n=[0,0,0,0,0];stage.forEach(function(e){n[Math.min(e.eleves.size,5)-1]++});
     $('accueil').innerHTML=barres(['1 élève','2 élèves','3 élèves','4 élèves','5 élèves et plus'].map(function(l,i){return{l:l,v:n[i],t:n[i]+' ('+pct(n[i],stage.length)+')'}}))+'<p class="total">Total : '+stage.length+' entreprises d’accueil</p>';
-    const combos={};both.forEach(function(e){const c=Math.min(e.eleves.size,3)+(e.eleves.size>3?'+':'')+' stagiaire'+(e.eleves.size>1?'s':'')+' + '+Math.min(e.apprentis,3)+(e.apprentis>3?'+':'')+' apprenti'+(e.apprentis>1?'s':'');combos[c]=(combos[c]||0)+1});
-    $('mixte').innerHTML=barres(Object.keys(combos).sort(function(a,b){return combos[b]-combos[a]}).map(function(c){return{l:c,v:combos[c]}}),'o')+(both.length?'<p class="total">Total : '+both.length+' entreprises avec au moins un stagiaire et un apprenti</p>':'')+(E.app.length?'':'<p class="note">Aucun apprenti avec contrat en cours pour ces filtres (les apprentis ne sont connus que pour l’année en cours).</p>');
-    const mel={};E.liste.forEach(function(e){if(e.etiquettes.size<2)return;const c=Array.from(e.etiquettes).sort(function(a,b){return a.localeCompare(b,'fr',{numeric:true})}).join(' + ');mel[c]=(mel[c]||0)+1});
+    /* Sur l'année : tous les stagiaires et apprentis de l'entreprise. En même temps : stagiaires d'une même période
+     * et apprentis dont le contrat couvre au moins un jour de cette période. */
+    const memeTemps=portee.value==='periode';
+    $('porteeNote').textContent=memeTemps?'Calcul par période de stage : stagiaires d’une même période et apprentis dont le contrat couvre au moins un jour de cette période.':'Calcul sur l’année scolaire : tous les stagiaires de l’année (toutes périodes) et les apprentis en contrat.';
+    const groupes=memeTemps?[].concat.apply([],E.liste.map(function(e){const parP={};e.stages.forEach(function(x){(parP[x.periode]=parP[x.periode]||[]).push(x)});return Object.keys(parP).map(function(p){const st=parP[p],d1=st.reduce(function(m,x){return!m||(x.debut&&x.debut<m)?x.debut:m},''),d2=st.reduce(function(m,x){return!m||(x.fin&&x.fin>m)?x.fin:m},'');const ap=e.apps.filter(function(a){return(!a.debut||!d2||a.debut<=d2)&&(!a.fin||!d1||a.fin>=d1)});return{e:e,stag:new Set(st.map(function(x){return x.e||x.id})).size,app:ap.length,etiquettes:new Set(st.map(function(x){return x.classe+' (stage)'}).concat(ap.map(function(a){return a.classe+' (apprenti)'})))}})})):E.liste.map(function(e){return{e:e,stag:e.eleves.size,app:e.apprentis,etiquettes:e.etiquettes}});
+    const combos={},vuMix=new Set();groupes.forEach(function(x){if(!x.stag||!x.app)return;vuMix.add(x.e.k);const c=Math.min(x.stag,3)+(x.stag>3?'+':'')+' stagiaire'+(x.stag>1?'s':'')+' + '+Math.min(x.app,3)+(x.app>3?'+':'')+' apprenti'+(x.app>1?'s':'');combos[c]=(combos[c]||0)+1});
+    const nComb=Object.keys(combos).reduce(function(s,c){return s+combos[c]},0);
+    $('mixte').innerHTML=barres(Object.keys(combos).sort(function(a,b){return combos[b]-combos[a]}).map(function(c){return{l:c,v:combos[c]}}),'o')+(vuMix.size?'<p class="total">Total : '+vuMix.size+' entreprises avec au moins un stagiaire et un apprenti '+(memeTemps?'en même temps'+(nComb>vuMix.size?' ('+nComb+' périodes)':''):'sur l’année scolaire')+'</p>':'')+(E.app.length?'':'<p class="note">Aucun apprenti avec contrat en cours pour ces filtres (les apprentis ne sont connus que pour l’année en cours).</p>');
+    const mel={};groupes.forEach(function(x){if(x.etiquettes.size<2)return;const c=Array.from(x.etiquettes).sort(function(a,b){return a.localeCompare(b,'fr',{numeric:true})}).join(' + ');mel[c]=(mel[c]||0)+1});
     const melL=Object.keys(mel).sort(function(a,b){return mel[b]-mel[a]||a.localeCompare(b,'fr')});
-    $('melange').innerHTML=barres(melL.slice(0,12).map(function(c){return{l:c,v:mel[c]}}),'b')+(melL.length?'<p class="total">Total : '+melL.reduce(function(s,c){return s+mel[c]},0)+' entreprises</p>':'')+(melL.length>12?'<details><summary>Voir les '+melL.length+' combinaisons</summary>'+tableau('melange',['Classes accueillies ensemble','Entreprises'],melL.map(function(c){return[c,mel[c]]}),[1],[1,-1])+'</details>':'');
+    $('melange').innerHTML=barres(melL.slice(0,12).map(function(c){return{l:c,v:mel[c]}}),'b')+(melL.length?'<p class="total">Total : '+melL.reduce(function(s,c){return s+mel[c]},0)+(memeTemps?' accueils (entreprise et période)':' entreprises sur l’année scolaire')+'</p>':'')+(melL.length>12?'<details><summary>Voir les '+melL.length+' combinaisons</summary>'+tableau('melange',['Classes accueillies ensemble','Entreprises'],melL.map(function(c){return[c,mel[c]]}),[1],[1,-1])+'</details>':'');
     /* Communes */
     const com=communesDe(E),cl=Object.keys(com).sort(function(a,b){return com[b].e-com[a].e||a.localeCompare(b,'fr')});
     LISTES.communes={titre:'Lieux de stage par commune',entetes:['Commune','Code postal / secteur','Entreprises','Élèves en stage'],lignes:[].concat.apply([],cl.map(function(c){const x=com[c],cps=Object.keys(x.cps).sort();return[[c,cps.length>1?'Toute la commune':cpLib(cps[0]),x.e,x.s.size]].concat(cps.length>1?cps.map(function(cp){return[c,cpLib(cp),x.cps[cp].e,x.cps[cp].s.size]}):[])}))};
-    $('communesBarres').innerHTML=barres(cl.slice(0,15).map(function(c){return{l:c,v:com[c].e,t:com[c].e+' / '+com[c].s.size}}))+'<p class="note">Entreprises / élèves.</p>';
+    /* Vue synthétique : Nice directement par secteur (centre, nord, ouest, est). */
+    const synth=[];cl.forEach(function(c){const x=com[c],cps=Object.keys(x.cps).sort();if(cps.length>1&&cps.some(function(cp){return SECTEURS[cp]}))cps.forEach(function(cp){synth.push({l:SECTEURS[cp]?SECTEURS[cp]+' ('+cp+')':c+' '+cpLib(cp),v:x.cps[cp].e,t:x.cps[cp].e+' / '+x.cps[cp].s.size})});else synth.push({l:c,v:x.e,t:x.e+' / '+x.s.size})});
+    synth.sort(function(a,b){return b.v-a.v||a.l.localeCompare(b.l,'fr')});
+    $('communesBarres').innerHTML=barres(synth.slice(0,15))+'<p class="note">Entreprises / élèves. Dépliez pour toutes les communes.</p>';
     $('communesResume').textContent='Toutes les communes ('+cl.length+'), triables, avec les secteurs de Nice';$('communes').innerHTML=tableauCommunes('communes',E);
     /* Filières */
     const fil={};E.acc.forEach(function(x){const d=filiere(x);const f=fil[d]=fil[d]||{s:new Set(),k:new Set()};f.s.add(x.e||x.id);f.k.add(x.k)});
@@ -203,6 +229,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const multi=E.liste.filter(function(e){return e.diplomes.size>1});
     $('multi').innerHTML=multi.length?'<details><summary>'+multi.length+' entreprise(s) : voir la liste</summary>'+tableau('multi',['Entreprise','Commune','Code postal','Nombre de filières','Filières'],multi.map(function(e){return[e.nom,e.commune,cpLib(e.cp),e.diplomes.size,Array.from(e.diplomes).sort().join(' · ')]}),[3],[3,-1])+'</details>':'<p class="vide">Aucune.</p>';
     deroulement(E.conv);
+    qualite(E);
     evolution();
   }
 
@@ -215,13 +242,23 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const causes=compter(inter,function(x){return x.cause});
     /* Après une interruption : autre convention du même élève pour la même période, commencée après. */
     let retrouve=0,avecPro=0,memeEnt=0;const suites=inter.map(function(x){const r=actives.filter(function(y){return y.id!==x.id&&y.e===x.e&&y.e&&y.periode===x.periode&&y.statut==='EN_COURS'&&(!x.debut||!y.debut||y.debut>=x.debut)});const ok=r.length>0,p=r.some(function(y){return y.prolongation>0||y.sequence==='RATTRAPAGE'});if(ok)retrouve++;if(p)avecPro++;if(r.some(function(y){return y.k===x.k}))memeEnt++;return{x:x,ok:ok,p:p}});
-    $('deroulement').innerHTML='<div class="tuiles">'+[[dec.length,'débuts décalés ('+pct(dec.length,actives.length)+')'],[pro.length,'prolongations ou rattrapages'],[rat.length,'dont conventions de rattrapage'],[inter.length,'stages interrompus'],[ann.length,'conventions annulées avant le début']].map(function(t){return '<div class="tuile" style="cursor:default"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span></div>'}).join('')+'</div>'+
+    DER={dec:{t:'Débuts décalés',l:dec},pro:{t:'Prolongations ou rattrapages',l:pro},rat:{t:'Conventions de rattrapage',l:rat},inter:{t:'Stages interrompus',l:inter},ann:{t:'Conventions annulées avant le début',l:ann}};
+    $('deroulement').innerHTML='<div class="tuiles">'+[[dec.length,'débuts décalés ('+pct(dec.length,actives.length)+')','dec'],[pro.length,'prolongations ou rattrapages','pro'],[rat.length,'dont conventions de rattrapage','rat'],[inter.length,'stages interrompus','inter'],[ann.length,'conventions annulées avant le début','ann']].map(function(t){return '<button type="button" class="tuile" data-der="'+t[2]+'"><b>'+t[0]+'</b><span>'+esc(t[1])+'</span><i>Cliquer : liste des élèves</i></button>'}).join('')+'</div>'+
       '<div class="deux"><div><h3>Retard au démarrage</h3>'+barres(['1 à 7 jours','8 à 14 jours','15 jours et plus'].map(function(l){return{l:l,v:td[l]||0}}),'o')+'</div>'+
       '<div><h3>Causes des interruptions</h3>'+barres(Object.keys(CAUSES).filter(function(k){return causes[k]}).map(function(k){return{l:CAUSES[k],v:causes[k]}}),'r')+'</div></div>'+
       '<h3>Après une interruption</h3>'+(inter.length?barres([{l:'Nouvelle entreprise trouvée',v:retrouve,t:retrouve+' ('+pct(retrouve,inter.length)+')'},{l:'dont avec prolongation / rattrapage',v:avecPro,t:avecPro+' ('+pct(avecPro,inter.length)+')'},{l:'Reprise dans la même entreprise',v:memeEnt},{l:'Pas de nouvelle convention',v:inter.length-retrouve,t:(inter.length-retrouve)+' ('+pct(inter.length-retrouve,inter.length)+')'}],'b')+
       '<details><summary>Motifs saisis ('+inter.length+')</summary>'+tableau('motifs',['Classe','Période','Entreprise','Cause','Motif','Suite'],suites.map(function(s){return[s.x.classe,s.x.periode,s.x.nom,CAUSES[s.x.cause]||'',s.x.motif,s.ok?(s.p?'Nouvelle convention, prolongée':'Nouvelle convention'):'Aucune'] }))+'</details>':'<p class="vide">Aucun stage interrompu pour ces filtres.</p>');
   }
 
+  let DER={};
+  const jj=function(d){return d?d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4):''};
+  function derListe(k){const d=DER[k];if(!d)return;$('derTitre').textContent=d.t+' ('+d.l.length+')';$('derDetail').hidden=false;
+    $('derCorps').innerHTML=tableau('der',['Élève','Classe','Période','Entreprise','Dates de la convention','Retard au début (jours)','Prolongation (jours)','N°','Motif'],d.l.map(function(x){return[x.eleve,x.classe,x.periode,x.nom,jj(x.debut)+' → '+jj(x.fin),x.decalage,x.prolongation,x.numero,x.motif||'']}),[5,6],[1,1])}
+  $('deroulement').addEventListener('click',function(ev){const t=ev.target.closest('[data-der]');if(t)derListe(t.dataset.der)});
+  $('derFermer').onclick=function(){$('derDetail').hidden=true};
+  /* Données à corriger : classe ou diplôme non reconnu. */
+  function qualite(E){const l=E.conv.filter(function(x){return!x.classe||!x.diplome||!x.famille});$('qualite').hidden=!l.length;
+    $('qualiteCorps').innerHTML=tableau('qualite',['Élève','Classe','Problème','Période','Entreprise','N°'],l.map(function(x){return[x.eleve,x.classe||'—',!x.classe?'Classe non renseignée':!x.famille?'Classe inconnue dans la liste des classes de l’année':'Diplôme non renseigné pour cette classe',x.periode,x.nom,x.numero]}),[],[1,1])}
   /* Évolution entre l'année analysée et les années comparées ; listes de prospection. */
   function evolution(){
     const ans=[annee.value].concat(choisies()).filter(function(a){return DATA[a]}).sort();
@@ -238,11 +275,13 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     LISTES.perdues={titre:'Entreprises à relancer (accueil une année comparée, pas cette année)',entetes:['Entreprise','SIRET / NIS','Commune','Code postal / secteur','Dernière année d’accueil','Élèves accueillis cette année-là'],lignes:(function(){const vu={},out=[];avant.slice().reverse().forEach(function(a){parAn[a].liste.forEach(function(e){if(!e.eleves.size||vu[e.k]||st.some(function(x){return x.k===e.k}))return;vu[e.k]=true;out.push([e.nom,e.identifiant,e.commune,cpLib(e.cp),a,e.eleves.size])})});return out})()};
     LISTES.plusieurs={titre:'Entreprises qui accueillent 3 élèves ou plus',entetes:ent,lignes:st.filter(function(e){return e.eleves.size>=3}).map(function(e){return ligne(e)})};
     LISTES.mixtes={titre:'Entreprises qui accueillent stagiaires et apprentis',entetes:ent,lignes:cur.liste.filter(function(e){return e.eleves.size&&e.apprentis}).map(function(e){return ligne(e)})};
-    LISTES.apprentissage={titre:'Entreprises d’apprentis sans stagiaire (pistes pour les stages)',entetes:ent,lignes:cur.liste.filter(function(e){return!e.eleves.size&&e.apprentis}).map(function(e){return ligne(e)})};
+    LISTES.apprentissage={titre:'Entreprises qui emploient des apprentis mais n’accueillent aucun stagiaire cette année (pistes pour les stages)',entetes:['Entreprise','SIRET / NIS','Commune','Code postal / secteur','Apprentis','Classes des apprentis'],num:[4],lignes:cur.liste.filter(function(e){return!e.eleves.size&&e.apprentis}).map(function(e){return[e.nom,e.identifiant,e.commune,cpLib(e.cp),e.apprentis,classesTxt(e.classesApp)]})};
+    LISTES.mixtes.entetes=['Entreprise','SIRET / NIS','Commune','Code postal / secteur','Stagiaires','Classes en stage','Apprentis','Classes des apprentis'];LISTES.mixtes.num=[4,6];LISTES.mixtes.lignes=cur.liste.filter(function(e){return e.eleves.size&&e.apprentis}).map(function(e){return[e.nom,e.identifiant,e.commune,cpLib(e.cp),e.eleves.size,classesTxt(e.classesStage),e.apprentis,classesTxt(e.classesApp)]});
+    LISTES.plusieurs.entetes=['Entreprise','SIRET / NIS','Commune','Code postal / secteur','Stagiaires','Classes en stage','Filières'];LISTES.plusieurs.num=[4];LISTES.plusieurs.lignes=st.filter(function(e){return e.eleves.size>=3}).map(function(e){return[e.nom,e.identifiant,e.commune,cpLib(e.cp),e.eleves.size,classesTxt(e.classesStage),Array.from(e.diplomes).sort().join(' · ')]});
     const choix=[['fideles','Entreprises fidèles'],['nouvelles','Nouvelles entreprises'],['perdues','Entreprises à relancer'],['plusieurs','3 élèves ou plus'],['mixtes','Stagiaires et apprentis'],['apprentissage','Apprentis sans stagiaire']];
     const avantChoix=liste.value||'plusieurs';liste.innerHTML=choix.map(function(c){return '<option value="'+c[0]+'">'+esc(c[1])+' ('+LISTES[c[0]].lignes.length+')</option>'}).join('');liste.value=avantChoix;afficherListe();
   }
-  function afficherListe(){const l=LISTES[liste.value];if(!l)return;const besoin=['fideles','nouvelles','perdues'].indexOf(liste.value)>=0&&!choisies().some(function(a){return a<annee.value&&DATA[a]});const num=liste.value==='perdues'?[5]:[4,5];
+  function afficherListe(){const l=LISTES[liste.value];if(!l)return;const besoin=['fideles','nouvelles','perdues'].indexOf(liste.value)>=0&&!choisies().some(function(a){return a<annee.value&&DATA[a]});const num=l.num||(liste.value==='perdues'?[5]:[4,5]);
     $('listeTable').innerHTML='<p class="note">'+esc(l.titre)+' — '+l.lignes.length+' entreprise(s). Cliquez sur un titre de colonne pour trier (commune puis secteur, élèves, apprentis…).</p>'+(besoin?'<p class="vide">Cochez une année antérieure dans « Comparer avec », puis recalculez.</p>':tableau('liste',l.entetes,l.lignes,num,[num[0],-1]))}
 
   /* Export Excel (SheetJS chargé à la demande, bouton bloqué et indicateur). */
@@ -259,7 +298,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     /* Périodes officielles triées par date de début. */
     const deb={};(m.conventions||[]).forEach(function(x){if(x.periode&&!deb[x.periode])deb[x.periode]=x.debutOfficiel||x.debut||'9'});
     remplir(fPeriode,u('periode').sort(function(a,b){return String(deb[a]).localeCompare(String(deb[b]))||a.localeCompare(b,'fr')}));remplir(fFamille,u('famille'),famLib);remplir(fDiplome,u('diplome'));remplir(fClasse,u('classe'))}
-  [fPeriode,fFamille,fDiplome,fClasse].forEach(function(s){s.onchange=rendre});
+  [fPeriode,fFamille,fDiplome,fClasse,portee].forEach(function(s){s.onchange=rendre});
   annee.onchange=function(){comparer();};
 
   /* Chargement : année analysée et années comparées, une par une (mises en cache côté serveur). */

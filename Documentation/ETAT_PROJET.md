@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 novembre 2026 — DEV700 : statistiques vérifiées sur les données réelles
+
+- Organisme de formation inscrit comme employeur d'apprentis (AFPI PROVENCE pour 12 CQPM, CFA, CFAI, GRETA, UIMM) : n'est plus compté comme une entreprise (`EUC_DEV698_organisme_`) ; signalé dans le détail des apprentis.
+- Apprenti rattaché à l'entreprise d'un stagiaire par SIRET, sinon SIREN (autre établissement, ex. ENEDIS), sinon nom.
+- Classe et diplôme des dépôts en ligne repris de la classe de l'élève (`classeId` dans `EUC_DEV688_parcourir_`) : plus de « Autre — 2e année ».
+- « Stagiaires et apprentis » et « Classes accueillies ensemble » : au choix sur l'année scolaire ou en même temps (même période de stage, apprenti en contrat pendant au moins un jour de la période).
+- Lieux de stage : vue synthétique avec Nice par secteur (centre, nord, ouest, est).
+- Déroulement : clic sur chaque chiffre (débuts décalés, prolongations, rattrapages, interruptions, annulations) : élève, classe, période, entreprise, dates, retard, prolongation, n°, motif.
+- Section « Données à corriger » : conventions dont la classe ou le diplôme n'est pas reconnu.
+- Apprentis : par établissement (LP, LGT), modalité (mixité, classe entière, formation continue) et organisme (CFA RAN, CFAI, GRETA, donneur d'ordre).
+- Listes de prospection : colonnes adaptées à chaque liste (plus de colonne « Élèves en stage » à 0 pour les entreprises d'apprentis sans stagiaire).
+
 ## Mise à jour du 21 novembre 2026 — DEV699 : période officielle et dates décalées, « Ne pas prévenir l'élève », statistiques détaillées
 
 - `EUC_DEV688_parcourir_` rattache chaque convention et chaque dépôt à la période officielle de sa classe (`EUC_DEV688_periodeOfficielle_` : référence, sinon dates — chevauchement ou départ à moins de 21 jours —, sinon numéro seul, sinon libellé). Le libellé saisi (« PFMP n°1 », « 1 », dates individuelles) ne fait plus disparaître un élève quand on filtre une période. Champs ajoutés : `periodeId`, `periodeDebut`, `periodeFin`, `periodeBrute`, `debut`, `fin`, `decale`.

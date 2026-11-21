@@ -80,7 +80,8 @@ test('page des statistiques : détails des chiffres clés (survol ou clic, fenê
   assert.match(h, /#detail \.corps\{max-height:60vh;overflow:auto/); assert.match(h, /addEventListener\('mouseover'/); assert.match(h, /addEventListener\('click',function\(ev\)\{const t=ev\.target\.closest\('\.tuile'\)/);
   assert.match(h, /button\[data-tri\]/); assert.match(h, /'06000':'Nice centre','06100':'Nice nord','06200':'Nice ouest','06300':'Nice est'/);
   assert.match(h, /e\.etiquettes\.add\(x\.classe\+' \(stage\)'\)/); assert.match(h, /e\.etiquettes\.add\(a\.classe\+' \(apprenti\)'\)/);
-  assert.match(h, /Total : '\+both\.length\+' entreprises avec au moins un stagiaire et un apprenti/);
+  /* DEV700 : total précisé « sur l'année scolaire » ou « en même temps ». */
+  assert.match(h, /Total : '\+vuMix\.size\+' entreprises avec au moins un stagiaire et un apprenti '\+\(memeTemps\?'en même temps'/);
   assert.match(h, /x\.classe\?'Classe '\+x\.classe\+' \(diplôme non renseigné\)'/);
   /* Tri : exécution réelle du composant de tableau. */
   const src = h.match(/const TABLES=\{\};[\s\S]*?function rendreTable\(id\)\{[\s\S]*?\n  document\.addEventListener/)[0].replace(/\n  document\.addEventListener$/, '');

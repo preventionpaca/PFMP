@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.699';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.700';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -25,6 +25,11 @@ function EUC_DEV698_date_(v) {
 function EUC_DEV698_jours_(a, b) {
   if (!a || !b) return 0;
   return Math.round((Date.UTC(+b.slice(0, 4), +b.slice(5, 7) - 1, +b.slice(8, 10)) - Date.UTC(+a.slice(0, 4), +a.slice(5, 7) - 1, +a.slice(8, 10))) / 86400000);
+}
+/* DEV700 : nom d'un organisme de formation (calcul pur). */
+function EUC_DEV698_organisme_(nom) {
+  var n = ' ' + EUC_DEV698_t_(nom).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ') + ' ';
+  return /\s(AFPI|CFAI|CFA|GRETA|UIMM|POLE FORMATION)\s/.test(n);
 }
 /* Cause d'une interruption d'après le motif saisi (calcul pur). */
 function EUC_DEV698_cause_(motif) {
@@ -69,7 +74,7 @@ function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
   var statut = base.source === 'SOUMISSION' ? 'EN_COURS' : EUC_DEV698_statut_(a), seq = base.source === 'SOUMISSION' ? 'INITIALE' : EUC_DEV698_sequence_(a);
   var finReelle = EUC_DEV698_date_(a.Date_fin_reelle);
   return {
-    id: String(base.id), src: base.source === 'SOUMISSION' ? 'S' : 'C', e: Number(base.eleveId) || 0,
+    id: String(base.id), src: base.source === 'SOUMISSION' ? 'S' : 'C', e: Number(base.eleveId) || 0, eleve: T(base.eleve), numero: T(base.numero),
     classe: T(base.classe) || x.classe || '', famille: x.famille || '', diplome: x.diplome || '', niveau: T(base.niveauLibelle), periode: T(base.periode) || p.libelle || '',
     k: ident ? ident.entreprise : '', nom: T(base.entreprise) || (ident && ident.enseigne) || '', identifiant: ident ? ident.identifiant : '', commune: ident ? T(ident.commune) : '', cp: ident ? T(ident.cp) : '', nn: EUC_DEV688_norm_(T(base.entreprise) || (ident && ident.enseigne) || ''),
     statut: statut, sequence: seq, debut: debut, fin: fin, finReelle: finReelle, debutOfficiel: offDebut,
@@ -82,7 +87,8 @@ function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
 /* Calcul d'une année : conventions (y compris interrompues et annulées) et apprentis. */
 function EUC_DEV698_calcul_(annee) {
   var T = EUC_DEV698_t_, cls = EUC_DEV698_classes_(annee), fiches = EUC_DEV689_fiches_(), lignes = [], vus = {};
-  var classeDe = function(base, a) { return cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parNom[T(base.classe).toUpperCase()] || null; };
+  /* DEV700 : classe de la convention, sinon classe de l'élève (dépôts), sinon par le nom. */
+  var classeDe = function(base, a) { return cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parId[Number(base.classeId) || 0] || cls.parNom[T(base.classe).toUpperCase().replace(/\s+/g, ' ')] || null; };
   EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
     vus[String(base.id)] = true;
     lignes.push(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), classeDe(base, a), cls.periodes));
@@ -96,8 +102,8 @@ function EUC_DEV698_calcul_(annee) {
     if (!EUC_ADMIN_WORKFLOW_estDossierVisibleV522_(a)) return;
     if (annee && EUC_PFMP_anneeDossierV148_(a) !== annee) return;
     if (a.Supprimee_admin === true || T(a.Statut_administratif).toUpperCase() === 'SUPPRIMEE_ADMIN') return;
-    var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), x = cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || {};
-    var base = { id: Number(a.id), source: 'CONVENTION', eleveId: Number(id.id) || 0, classe: T(a.Classe_convention_nom), niveauLibelle: '', periode: T(a.Periode_libelle), entreprise: T(a.Entreprise_raison_sociale) };
+    var id = EUC_ADMIN_WORKFLOW_identiteEleveV521_(a, byEleve), x = cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parId[Number(EUC_PFMP_ref_((byEleve[Number(id.id)] || {}).Classe)) || 0] || {};
+    var base = { id: Number(a.id), source: 'CONVENTION', eleveId: Number(id.id) || 0, eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), classeId: Number(EUC_PFMP_ref_((byEleve[Number(id.id)] || {}).Classe)) || 0, classe: T(a.Classe_convention_nom) || T((byEleve[Number(id.id)] || {}).Code_classe_importe), niveauLibelle: '', periode: T(a.Periode_libelle), entreprise: T(a.Entreprise_raison_sociale) };
     try { var nv = EUC_DEV371_levelOf_(x.classe || base.classe, x.famille); base.niveauLibelle = EUC_DEV371_levelLabel_(nv) || nv; } catch (eN) {}
     /* DEV699 : même rattachement à la période officielle que les autres conventions. */
     var d1 = EUC_DEV698_date_(a.Date_debut), d2 = EUC_DEV698_date_(a.Date_fin_reelle || a.Date_fin);
@@ -106,7 +112,9 @@ function EUC_DEV698_calcul_(annee) {
   });
   var apprentis = [];
   try {
-    var m = EUC_DEV577_modele_(annee), parClasse = {};
+    var m = EUC_DEV577_modele_(annee), parClasse = {}, etabs = {};
+    /* DEV700 : établissement de rattachement (LP, LGT) de chaque classe d'apprentis. */
+    try { (typeof EUC_DEV579_classesCompletes_ === 'function' ? EUC_DEV579_classesCompletes_(annee) : []).forEach(function(c) { etabs[String(c.id)] = typeof EUC_DEV544_establishment_ === 'function' ? EUC_DEV544_establishment_(c) : T(c.etablissement); }); } catch (eEt) {}
     (m.groupes || []).forEach(function(g) { (g.lignes || []).forEach(function(l) { parClasse[l.classeId] = l; }); });
     Object.keys(m.cartes || {}).forEach(function(cid) {
       var l = parClasse[cid] || {}, x = cls.parId[Number(cid)] || {};
@@ -114,9 +122,12 @@ function EUC_DEV698_calcul_(annee) {
         if (c.statut !== 'APPRENTI' || !c.fiche) return;
         var siret = T(c.fiche.siret).replace(/\D/g, ''), nom = T(c.fiche.entreprise) || T(c.fiche.enseigne), mcp = T(c.fiche.adresse).match(/\b(\d{5})\s+([^,]+)$/) || [], commune = mcp[2] || '';
         /* DEV699 : apprenti sans entreprise connue : compté comme apprenti, jamais comme une entreprise sans nom. */
-        var connue = siret.length === 14 || !!EUC_DEV688_norm_(nom);
+        /* DEV700 : organisme de formation inscrit comme employeur (AFPI pour les CQPM, CFA, GRETA…) : pas une entreprise. */
+        var organisme = EUC_DEV698_organisme_(nom), connue = !organisme && (siret.length === 14 || !!EUC_DEV688_norm_(nom));
         apprentis.push({ k: !connue ? '' : siret.length === 14 ? 'S' + siret : 'N' + EUC_DEV688_norm_(nom) + '|' + EUC_DEV688_norm_(commune), nn: EUC_DEV688_norm_(nom), nom: nom, commune: T(commune), cp: mcp[1] || '', identifiant: siret.length === 14 ? 'SIRET ' + siret : '',
-          classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '' });
+          classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '',
+          eleve: T(c.eleve), organisme: organisme ? nom : '', debut: T(c.dates && c.dates.debut), fin: T(c.dates && (c.dates.rupture || c.dates.fin)),
+          etablissement: etabs[String(cid)] || '', mode: T(l.mode), gestionnaire: T(l.gestionnaire), donneur: T(l.donneur) });
       });
     });
   } catch (eApp) { apprentis = []; }
