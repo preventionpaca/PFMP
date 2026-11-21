@@ -355,3 +355,4 @@ activités.
 
 
 - 21/11/2026 (DEV702) : les apprentis en mixité d'une classe de bac pro du LP dépendent tous du CFA RAN (organisme gestionnaire et donneur d'ordre), sauf réglage contraire saisi pour la classe.
+- 21/11/2026 (DEV703) : la distance domicile → lieu de stage se mesure toujours en voiture (itinéraire routier), de l'adresse exacte de l'élève (pas la commune) au lieu de stage. Seules les distances sont conservées, jamais les adresses.

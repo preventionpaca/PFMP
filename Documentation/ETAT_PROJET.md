@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 novembre 2026 — DEV703 : distance domicile → lieu de stage en voiture (Statistiques)
+
+- Nouvelle section « Distance domicile → lieu de stage (en voiture) » de la page `statistiques-pfmp` : distance et durée médianes, moyenne, trajets de 30 et 45 min et plus, tranches de distance, tableau par classe, liste triable des trajets, liste des trajets sans distance (adresse à compléter). Suit les filtres de la page.
+- `EUC_DEV703_Distances.js` : origine = adresse exacte de l'élève (Adresse_1 à 4, code postal, ville de l'import Pronote), à défaut responsable en charge puis responsable légal ; destination = lieu de stage, à défaut adresse de l'entreprise (convention, dépôt en ligne `Adresse_officielle`, fiche). Une commune seule n'est jamais utilisée.
+- Itinéraire Google en voiture (`Maps.newDirectionFinder`, comme « Mes visites »). Calcul par lots de 50 s via le bouton « Calculer les distances manquantes » (spinner, délai de 2 min, reprise) ; arrêt propre si le quota quotidien Google est atteint.
+- Aucune adresse enregistrée ni envoyée à la page : propriétés du script `EUC_DEV703_KM_<année>_*` = empreinte SHA-256 tronquée du couple d'adresses, km, minutes. Une adresse corrigée change l'empreinte (recalcul, ancienne entrée retirée). Aucune écriture Grist.
+- Tableaux triables : nombres affichés à la française, tri numérique des valeurs à virgule.
+
 ## Mise à jour du 21 novembre 2026 — DEV702 : apprentis en mixité de bac pro au LP rattachés au CFA RAN
 
 - Décision du DDFPT (21/11/2026) : les apprentis en mixité d'une classe de bac pro du LP dépendent tous du CFA RAN.
