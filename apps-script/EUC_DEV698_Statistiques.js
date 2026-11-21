@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.702b';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.704';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -119,6 +119,8 @@ function EUC_DEV698_calcul_(annee) {
     var m = EUC_DEV577_modele_(annee), parClasse = {}, etabs = {};
     /* DEV700 : établissement de rattachement (LP, LGT) de chaque classe d'apprentis. */
     try { (typeof EUC_DEV579_classesCompletes_ === 'function' ? EUC_DEV579_classesCompletes_(annee) : []).forEach(function(c) { etabs[String(c.id)] = typeof EUC_DEV544_establishment_ === 'function' ? EUC_DEV544_establishment_(c) : T(c.etablissement); }); } catch (eEt) {}
+    /* DEV704 : niveau des apprentis (même libellé que les stagiaires : Première, Terminale, 2e année…). */
+    var niveauDe = function(classe, famille) { try { var nv = EUC_DEV371_levelOf_(classe, famille); return T(EUC_DEV371_levelLabel_(nv) || nv); } catch (eNv) { return ''; } };
     (m.groupes || []).forEach(function(g) { (g.lignes || []).forEach(function(l) { parClasse[l.classeId] = l; }); });
     Object.keys(m.cartes || {}).forEach(function(cid) {
       var l = parClasse[cid] || {}, x = cls.parId[Number(cid)] || {};
@@ -130,6 +132,7 @@ function EUC_DEV698_calcul_(annee) {
         var organisme = EUC_DEV698_organisme_(nom), connue = !organisme && (siret.length === 14 || !!EUC_DEV688_norm_(nom));
         apprentis.push({ k: !connue ? '' : siret.length === 14 ? 'S' + siret : 'N' + EUC_DEV688_norm_(nom) + '|' + EUC_DEV688_norm_(commune), nn: EUC_DEV688_norm_(nom), nom: nom, commune: T(commune), cp: mcp[1] || '', identifiant: siret.length === 14 ? 'SIRET ' + siret : '',
           classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '',
+          niveau: niveauDe(T(l.classe) || x.classe || '', T(l.famille).toUpperCase() || x.famille || ''),
           eleve: T(c.eleve), organisme: organisme ? nom : '', debut: T(c.dates && c.dates.debut), fin: T(c.dates && (c.dates.rupture || c.dates.fin)),
           etablissement: etabs[String(cid)] || '', mode: T(l.mode), gestionnaire: T(l.gestionnaire), donneur: T(l.donneur) });
       });

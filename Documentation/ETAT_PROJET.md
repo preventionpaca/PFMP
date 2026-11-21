@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 novembre 2026 — DEV704 : statistiques — pôles de formation, apprentis comptés, classes accueillies en même temps
+
+- Vérification réelle : 2BTS MV = 12 scolaires avec convention + 8 apprentis = 20 « élèves en entreprise » du suivi. Pas d'erreur de dénomination ; le détail « Élèves » n'affichait que les stagiaires. Il donne désormais stagiaires, apprentis et total par niveau et par classe.
+- « Entreprises d'accueil par filière » ne comptait que les entreprises ayant un stagiaire (les employeurs d'apprentis n'apparaissaient que dans les entreprises mixtes : BTS ELEC Alt 4, TPEEB 4, CAPP 1, Bachelor 1). Colonnes : élèves en stage, apprentis, dont employeur non renseigné, entreprises de stage, employeurs d'apprentis, total distinct. Même tableau dans « Filières et diplômes ».
+- Pôles de formation (ligne de total puis filières, du CAP au Bachelor) : Automobile (bac pro MVL, BTS MV), Carrosserie (bac pro carrossier peintre, CAP peintre, CAP carrossier), Électricité (bac pro MELEC, TP TPEEB, BTS ELEC Alt), Modélisation (bac pro MP3D, BTS CPI), Productique (TRPM, microtechniques, BTS CPRP), Numérique (bac pro CIEL), Autres, Bachelor en dernier.
+- Niveaux courts : « Première bac », « Terminale bac », « BTS 2e année »…
+- « Classes accueillies dans une même entreprise (sur l'année) » + nouvelle vignette « Classes accueillies en même temps, par période » (dates de stage qui se chevauchent, apprentis en contrat pendant ces dates, détail entreprise / période / dates). Le choix « En même temps » des stagiaires + apprentis suit la même règle de chevauchement.
+- Communes : « 41 entreprises · 58 élèves » au lieu de « 41 / 58 », avec explication.
+- Distance : TECHNIDRILL (Chassieu) et CV3E06 n'ont aucun lieu de stage saisi dans l'application (suivi : adresse du siège seule) ; à renseigner par « Éditer la fiche », puis « Calculer les distances manquantes ».
+
 ## Mise à jour du 21 novembre 2026 — DEV703 : distance domicile → lieu de stage en voiture (Statistiques)
 
 - Nouvelle section « Distance domicile → lieu de stage (en voiture) » de la page `statistiques-pfmp` : distance et durée médianes, moyenne, trajets de 30 et 45 min et plus, tranches de distance, tableau par classe, liste triable des trajets, liste des trajets sans distance (adresse à compléter). Suit les filtres de la page.
