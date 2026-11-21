@@ -6,13 +6,11 @@
  * distinct, sinon adresse de l'entreprise. Itinéraire Google en voiture (même service que « Mes visites »).
  *
  * Aucune adresse n'est enregistrée ni renvoyée à la page : seule une empreinte (SHA-256 tronquée) du couple
- * d'adresses est gardée avec les kilomètres et les minutes, dans les propriétés du script, une entrée par
- * année scolaire. La page ne reçoit que les distances par convention. Une adresse modifiée change l'empreinte
+ * d'adresses est gardée avec les kilomètres et les minutes, dans un fichier Drive du compte de déploiement
+ * par année scolaire. La page ne reçoit que les distances par convention. Une adresse modifiée change l'empreinte
  * et sa distance est recalculée. Calcul par lots courts (bouton « Calculer les distances »), jamais en tâche
  * planifiée. Aucune écriture Grist.
  */
-var EUC_DEV703_PREFIXE_ = 'EUC_DEV703_KM_';
-var EUC_DEV703_TAILLE_ = 8000;
 var EUC_DEV703_BUDGET_MS_ = 50000;
 
 function EUC_DEV703_t_(v) { return v == null ? '' : String(v).trim().replace(/\s+/g, ' '); }
@@ -49,21 +47,24 @@ function EUC_DEV703_empreinte_(o, d) {
   return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, n(o) + '|' + n(d), Utilities.Charset.UTF_8)).replace(/[^A-Za-z0-9]/g, '').slice(0, 14);
 }
 
-/* ---------- Stockage : « empreinte:km:min;… » par année, découpé en morceaux (propriétés du script). ---------- */
-function EUC_DEV703_cleAnnee_(annee) { return EUC_DEV703_PREFIXE_ + String(annee || 'ALL').replace(/[^\d-]/g, ''); }
+/* ---------- Stockage : « empreinte:km:min;… » par année, dans un fichier Drive du compte de déploiement
+ * (les propriétés du script sont déjà pleines). Le fichier ne contient ni adresse ni nom. ---------- */
+function EUC_DEV703_nomFichier_(annee) { return 'Eucalyptus PFMP - distances domicile-stage ' + String(annee || 'ALL').replace(/[^\d-]/g, '') + '.txt'; }
+function EUC_DEV703_fichier_(annee, creer) {
+  var nom = EUC_DEV703_nomFichier_(annee), cache = null, id = '';
+  try { cache = CacheService.getScriptCache(); id = cache.get('EUC_DEV703_F_' + nom) || ''; } catch (eC) {}
+  if (id) { try { var f0 = DriveApp.getFileById(id); if (!f0.isTrashed()) return f0; } catch (eF) {} }
+  var it = DriveApp.getRootFolder().getFilesByName(nom), f = it.hasNext() ? it.next() : creer ? DriveApp.getRootFolder().createFile(nom, '', 'text/plain') : null;
+  try { if (f && cache) cache.put('EUC_DEV703_F_' + nom, f.getId(), 21600); } catch (eP) {}
+  return f;
+}
 function EUC_DEV703_lireStock_(annee) {
-  var p = PropertiesService.getScriptProperties(), cle = EUC_DEV703_cleAnnee_(annee), n = Number(p.getProperty(cle + '_N')) || 0, brut = '', m = {};
-  for (var i = 0; i < n; i++) brut += p.getProperty(cle + '_C' + i) || '';
-  brut.split(';').forEach(function(x) { var c = x.split(':'); if (c.length === 3 && c[0]) m[c[0]] = [Number(c[1]), Number(c[2])]; });
+  var f = EUC_DEV703_fichier_(annee, false), m = {};
+  (f ? f.getBlob().getDataAsString('UTF-8') : '').split(';').forEach(function(x) { var c = x.split(':'); if (c.length === 3 && c[0]) m[c[0]] = [Number(c[1]), Number(c[2])]; });
   return m;
 }
 function EUC_DEV703_ecrireStock_(annee, m) {
-  var p = PropertiesService.getScriptProperties(), cle = EUC_DEV703_cleAnnee_(annee), ancien = Number(p.getProperty(cle + '_N')) || 0;
-  var brut = Object.keys(m).map(function(h) { return h + ':' + m[h][0] + ':' + m[h][1]; }).join(';'), o = {}, n = Math.ceil(brut.length / EUC_DEV703_TAILLE_) || 1;
-  for (var i = 0; i < n; i++) o[cle + '_C' + i] = brut.slice(i * EUC_DEV703_TAILLE_, (i + 1) * EUC_DEV703_TAILLE_);
-  o[cle + '_N'] = String(n);
-  p.setProperties(o);
-  for (var j = n; j < ancien; j++) p.deleteProperty(cle + '_C' + j);
+  EUC_DEV703_fichier_(annee, true).setContent(Object.keys(m).map(function(h) { return h + ':' + m[h][0] + ':' + m[h][1]; }).join(';'));
 }
 
 /* Couples d'adresses de l'année, par convention (jamais renvoyés à la page). */

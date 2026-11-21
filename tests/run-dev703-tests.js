@@ -13,7 +13,10 @@ function ctx(opts) {
   Object.assign(k, {
     Utilities: { DigestAlgorithm: { SHA_256: 'sha256' }, Charset: { UTF_8: 'utf8' },
       computeDigest: (a, s) => Array.from(crypto.createHash('sha256').update(s, 'utf8').digest()), base64EncodeWebSafe: b => Buffer.from(b).toString('base64url') },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: c => props[c] == null ? null : props[c], setProperties: o => Object.assign(props, o), deleteProperty: c => { delete props[c]; } }) },
+    CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
+    DriveApp: (() => { const mk = nom => ({ getId: () => 'id-' + nom, isTrashed: () => false, getBlob: () => ({ getDataAsString: () => props[nom] }), setContent: c => { props[nom] = c; } });
+      const root = { getFilesByName: nom => { let vu = props[nom] == null; return { hasNext: () => !vu, next: () => { vu = true; return mk(nom); } }; }, createFile: (nom, c) => { props[nom] = c; return mk(nom); } };
+      return { getRootFolder: () => root, getFileById: id => { if (props[id.slice(3)] == null) throw new Error('absent'); return mk(id.slice(3)); } }; })(),
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     Maps: { DirectionFinder: { Mode: { DRIVING: 'driving' } }, newDirectionFinder: () => { const q = {}; const f = { setOrigin: o => (q.o = o, f), setDestination: d => (q.d = d, f), setMode: () => f, setLanguage: () => f,
       getDirections: () => { appels.push(q); if (opts.quota) throw new Error('Service invoked too many times for one day: route.'); if (/INCONNUE/.test(q.d)) return { status: 'NOT_FOUND', routes: [] };
@@ -59,7 +62,7 @@ test('calcul par lot : itinéraire voiture, km au dixième et minutes, stockage 
   assert.deepEqual(r.compte, { calculees: 2, aCalculer: 0, sansDomicile: 1, sansLieu: 1, introuvables: 1 }); assert.equal(r.faits, 2);
   const brut = Object.keys(k.props).map(c => c + '=' + k.props[c]).join('\n');
   assert.doesNotMatch(brut, /Lilas|Gare|NICE|CANNES|06200|06400|UN\b/i, 'aucune adresse ni nom dans le stockage');
-  assert.match(brut, /^EUC_DEV703_KM_2026-2027_N=1$/m);
+  assert.match(brut, /^Eucalyptus PFMP - distances domicile-stage 2026-2027\.txt=[\w-]{14}:12\.3:25;[\w-]{14}:-1:-1$/m, 'un fichier par année : empreinte, km, minutes');
   const r2 = J(k.EUC_DEV703_distances({ annee: '2026-2027' }));
   assert.equal(k.appels.length, 2, 'lecture seule : aucun itinéraire');
   assert.deepEqual(r2.parConvention['10'], [12.3, 25]);
@@ -77,15 +80,16 @@ test('quota Google atteint : arrêt propre, rien de faux enregistré, message de
   assert.match(r.limite, /Quota quotidien/); assert.equal(r.faits, 0); assert.equal(r.parConvention['10'], 'A_CALCULER');
 });
 
-test('stockage découpé en morceaux au-delà de la taille d’une propriété, morceaux en trop supprimés', () => {
-  const k = ctx(), m = {};
-  for (let i = 0; i < 900; i++) m['h' + String(i).padStart(13, '0')] = [i / 10, i];
+test('stockage Drive : fichier créé au premier calcul, relu, remplacé ; année sans fichier = vide', () => {
+  const k = ctx();
+  assert.deepEqual(J(k.EUC_DEV703_lireStock_('2026-2027')), {}, 'aucun fichier : rien, sans création');
+  assert.equal(Object.keys(k.props).length, 0);
+  const m = {}; for (let i = 0; i < 900; i++) m['h' + String(i).padStart(13, '0')] = [i / 10, i];
   k.EUC_DEV703_ecrireStock_('2026-2027', m);
-  assert.ok(Number(k.props['EUC_DEV703_KM_2026-2027_N']) >= 3);
   assert.equal(Object.keys(k.EUC_DEV703_lireStock_('2026-2027')).length, 900);
   k.EUC_DEV703_ecrireStock_('2026-2027', { a: [1, 2] });
-  assert.equal(k.props['EUC_DEV703_KM_2026-2027_N'], '1'); assert.equal(k.props['EUC_DEV703_KM_2026-2027_C1'], undefined);
   assert.deepEqual(J(k.EUC_DEV703_lireStock_('2026-2027')), { a: [1, 2] });
+  assert.deepEqual(Object.keys(k.props), ['Eucalyptus PFMP - distances domicile-stage 2026-2027.txt']);
 });
 
 test('page : section distance, bouton de calcul avec spinner, délai dépassé, lots répétés, aucune adresse affichée', () => {
