@@ -301,7 +301,9 @@ test('profils de classe : colonnes Grist prioritaires, table de vérité, bulles
   assert.deepEqual([p('CQPM ASC').organismes, p('TPEEB 19').organismes, p('TPMMA').mode], [['CFAI', 'GRETA'], ['GRETA'], 'FORMATION_CONTINUE']);
   assert.deepEqual(p('1CAPP').organismes, ['CFA RAN']); assert.deepEqual(p('Bachelor IP').organismes, ['CFA RAN', 'CFAI']); assert.deepEqual(p('2BTS ELEC Alt').organismes, ['CFA RAN', 'CFAI']);
   assert.deepEqual([p('1BTS CPI').mode, p('1BTS CPI').organismes], ['MIXITE', ['CFA RAN', 'CFAI']]); assert.deepEqual(p('2BTS MV').organismes, ['CFA RAN']);
-  assert.equal(p('1MELEC').source, 'ANCIEN');
+  /* DEV702 : bac pro du LP en mixité : CFA RAN par défaut (décision DDFPT du 21/11/2026) ; une classe entière garde l'ancien réglage. */
+  assert.deepEqual([p('1MELEC').source, p('1MELEC').mode, p('1MELEC').organismes], ['TABLE', 'MIXITE', ['CFA RAN']]);
+  assert.equal(JSON.parse(JSON.stringify(k.EUC_DEV579_profil_({}, '2026-2027', 999, '1MELEC', '', 'CLASSE_ENTIERE'))).source, 'ANCIEN');
   k.EUC_DEV538_records_ = t => t === 'Classes' ? [{ id: 5, fields: { Modalite_apprentissage: 'Mixité', Organisme_gestionnaire: 'CFA RAN', Organisme_donneur_ordre: 'CFAI' } }] : [];
   k.EUC_DEV579_COLONNES_MEMO_ = null;
   assert.deepEqual(JSON.parse(JSON.stringify(k.EUC_DEV579_profil_({}, '2026-2027', 5, '1MELEC', '', 'MIXITE'))), { mode: 'MIXITE', gestionnaire: 'CFA RAN', donneur: 'CFAI', organismes: ['CFA RAN', 'CFAI'], source: 'GRIST' });

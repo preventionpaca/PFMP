@@ -38,6 +38,13 @@ function EUC_DEV579_organismesValides_(l) {
   return EUC_DEV579_ORGANISMES_.filter(function(o) { return (l || []).indexOf(o) >= 0; });
 }
 
+/* DEV702 : classe de bac pro du LP (calcul pur) : 2nde, 1re ou Terminale (2…, 1…, T…), hors BTS, CAP, titres pro, CQPM, bachelor, LGT ou GRETA. */
+function EUC_DEV579_bacProLp_(classe, etab) {
+  var n = EUC_DEV579_norm_(classe), e = EUC_DEV579_norm_(etab);
+  if (e === 'LGT' || e === 'GRETA') return false;
+  if (/BTS|CAP|BACHELOR|CQPM|^TP\b|^TP |^\d?TS|^TEST\b/.test(n)) return false;
+  return /^(2|1|T) ?[A-Z]/.test(n);
+}
 /* Table de vérité par défaut (gestionnaire, donneur d'ordre). Retourne null si la classe n'y figure pas. */
 function EUC_DEV579_profilDefaut_(classe, etab) {
   var n = EUC_DEV579_norm_(classe), e = EUC_DEV579_norm_(etab);
@@ -89,6 +96,9 @@ function EUC_DEV579_profil_(config, annee, classId, classe, etab, ancienMode) {
   var saved = config && config[annee] && config[annee][String(classId)];
   if (saved && saved.mode && (saved.organismes || []).length) { var o = EUC_DEV579_organismesValides_(saved.organismes); return EUC_DEV579_fabrique_(saved.mode, o[0], o[1] || o[0], 'REGLAGE'); }
   if (d) return EUC_DEV579_fabrique_(d.mode, d.gestionnaire, d.donneur, 'TABLE');
+  /* DEV702 : apprentis en mixité d'une classe de bac pro du LP : tous dépendent du CFA RAN (décision DDFPT du 21/11/2026).
+   * Une classe réglée en classe entière, ou dont l'organisme est saisi dans Grist ou dans les réglages, garde son réglage. */
+  if (ancienMode !== 'CLASSE_ENTIERE' && EUC_DEV579_bacProLp_(classe, etab)) return EUC_DEV579_fabrique_('MIXITE', 'CFA RAN', 'CFA RAN', 'TABLE');
   return EUC_DEV579_fabrique_(ancienMode === 'CLASSE_ENTIERE' ? 'CLASSE_ENTIERE' : 'MIXITE', '', '', 'ANCIEN');
 }
 

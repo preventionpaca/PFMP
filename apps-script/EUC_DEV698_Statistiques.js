@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.701b';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.702';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 

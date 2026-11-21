@@ -353,3 +353,5 @@ activités.
 - Pour un élève en double, de préférence garder la fiche Pronote, que le prochain import
   Pronote retrouvera. Deux INE différents = deux personnes : jamais réunies.
 
+
+- 21/11/2026 (DEV702) : les apprentis en mixité d'une classe de bac pro du LP dépendent tous du CFA RAN (organisme gestionnaire et donneur d'ordre), sauf réglage contraire saisi pour la classe.

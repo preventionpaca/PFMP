@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 21 novembre 2026 — DEV702 : apprentis en mixité de bac pro au LP rattachés au CFA RAN
+
+- Décision du DDFPT (21/11/2026) : les apprentis en mixité d'une classe de bac pro du LP dépendent tous du CFA RAN.
+- `EUC_DEV579_profil_` : après les colonnes Grist (table Classes : Modalité, Organisme gestionnaire, Organisme donneur d'ordre), les réglages enregistrés et la table de vérité, une classe de bac pro du LP (`EUC_DEV579_bacProLp_` : 2…, 1…, T…, hors BTS, CAP, TSMV, titres pro, CQPM, bachelor, LGT, GRETA) non réglée en classe entière reçoit MIXITE / CFA RAN.
+- Les caches des apprentis (`EUC_DEV577_VERSION_`) et des statistiques (`EUC_DEV698_VERSION_`) sont renouvelés.
+
 ## Mise à jour du 21 novembre 2026 — DEV700 : statistiques vérifiées sur les données réelles
 
 - Organisme de formation inscrit comme employeur d'apprentis (AFPI PROVENCE pour 12 CQPM, CFA, CFAI, GRETA, UIMM) : n'est plus compté comme une entreprise (`EUC_DEV698_organisme_`) ; signalé dans le détail des apprentis.
