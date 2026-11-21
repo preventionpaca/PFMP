@@ -4,6 +4,7 @@
 
 - Décision du DDFPT (21/11/2026) : les apprentis en mixité d'une classe de bac pro du LP dépendent tous du CFA RAN.
 - `EUC_DEV579_profil_` : après les colonnes Grist (table Classes : Modalité, Organisme gestionnaire, Organisme donneur d'ordre), les réglages enregistrés et la table de vérité, une classe de bac pro du LP (`EUC_DEV579_bacProLp_` : 2…, 1…, T…, hors BTS, CAP, TSMV, titres pro, CQPM, bachelor, LGT, GRETA) non réglée en classe entière reçoit MIXITE / CFA RAN.
+- 1TSMV / 2TSMV = 1BTS MV / 2BTS MV : libellé unifié dans l'Administration des conventions et les statistiques (`EUC_DEV688_classe_`), même profil (mixité, CFA RAN). Les fiches elles-mêmes ne sont pas modifiées.
 - Les caches des apprentis (`EUC_DEV577_VERSION_`) et des statistiques (`EUC_DEV698_VERSION_`) sont renouvelés.
 
 ## Mise à jour du 21 novembre 2026 — DEV700 : statistiques vérifiées sur les données réelles

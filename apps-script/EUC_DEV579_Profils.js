@@ -57,7 +57,8 @@ function EUC_DEV579_profilDefaut_(classe, etab) {
   if (/^1CAPP$/.test(n) || /^TSEC$/.test(n)) return p(CE, 'CFA RAN');
   if (/^BACHELOR\b/.test(n) || /^[12]BTS ELEC ALT$/.test(n)) return p(CE, 'CFA RAN', 'CFAI');
   if (/^[12]BTS (CPI|CPRP)$/.test(n)) return p(MX, 'CFA RAN', 'CFAI');
-  if (/^[12]BTS MV$/.test(n)) return p(MX, 'CFA RAN');
+  /* DEV702 : 1TSMV / 2TSMV = 1BTS MV / 2BTS MV (même classe, autre libellé). */
+  if (/^[12](BTS MV|TSMV)$/.test(n)) return p(MX, 'CFA RAN');
   return null;
 }
 

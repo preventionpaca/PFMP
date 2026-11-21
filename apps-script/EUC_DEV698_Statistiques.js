@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.702';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.702b';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -137,6 +137,8 @@ function EUC_DEV698_calcul_(annee) {
   } catch (eApp) { apprentis = []; }
   /* DEV701 : classe d'essai reconnue aussi par le nom de classe final (catalogue), pas seulement le nom saisi. */
   var pasEssai = function(l) { return !/^TEST\b/i.test(T(l.classe)); };
+  /* DEV702 : 1TSMV / 2TSMV comptées avec 1BTS MV / 2BTS MV. */
+  lignes.concat(apprentis).forEach(function(l) { l.classe = EUC_DEV688_classe_(l.classe); });
   return { version: EUC_DEV698_VERSION_, annee: annee, calculeLe: new Date().toISOString(), conventions: lignes.filter(pasEssai), apprentis: apprentis.filter(pasEssai) };
 }
 

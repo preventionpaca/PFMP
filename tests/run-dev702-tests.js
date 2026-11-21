@@ -19,4 +19,10 @@ test('bac pro du LP en mixité : CFA RAN ; BTS, CAP, 2TSMV, LGT, GRETA, classe e
   const k2 = ctx({ 1: { modalite: 'MIXITE', gestionnaire: 'CFAI' } });
   assert.match(J(k2.EUC_DEV579_profil_({}, '2026-2027', 1, 'TCAR', 'LP', '')).gestionnaire, /CFAI/, 'réglage Grist prioritaire');
 });
+test('1TSMV / 2TSMV = 1BTS MV / 2BTS MV : même libellé partout et même organisme (CFA RAN, mixité)', () => {
+  const c = { String, Number, Array, Object, JSON, RegExp, Math, Date }; vm.createContext(c); vm.runInContext(read('apps-script/EUC_DEV688_ControleNoms.js'), c);
+  assert.equal(c.EUC_DEV688_classe_('2TSMV'), '2BTS MV'); assert.equal(c.EUC_DEV688_classe_('1 tsmv'), '1BTS MV'); assert.equal(c.EUC_DEV688_classe_('2BTS MV'), '2BTS MV'); assert.equal(c.EUC_DEV688_classe_('TMELEC'), 'TMELEC');
+  const k = ctx(); assert.deepEqual(J(k.EUC_DEV579_profilDefaut_('2TSMV', 'LGT')), { mode: 'MIXITE', gestionnaire: 'CFA RAN', donneur: 'CFA RAN' });
+  assert.match(read('apps-script/EUC_DEV698_Statistiques.js'), /l\.classe = EUC_DEV688_classe_\(l\.classe\)/);
+});
 console.log(n + ' tests DEV702 réussis.');

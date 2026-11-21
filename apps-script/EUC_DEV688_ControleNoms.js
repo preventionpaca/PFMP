@@ -43,6 +43,8 @@ function EUC_DEV688_analyser_(champ, p, eleve, parents) {
   var vu = {}; return out.filter(function(x) { if (vu[x.code]) return false; vu[x.code] = true; return true; });
 }
 
+/* DEV702 : même classe sous un autre libellé (calcul pur) : 1TSMV / 2TSMV = 1BTS MV / 2BTS MV. */
+function EUC_DEV688_classe_(c) { var t = String(c == null ? '' : c).trim(), m = t.match(/^([12])\s*TSMV$/i); return m ? m[1] + 'BTS MV' : t; }
 /* DEV699 : date en 'AAAA-MM-JJ' (calcul pur) : secondes Grist, millisecondes, ISO, ou JJ/MM/AAAA. */
 function EUC_DEV688_date_(v) {
   if (v == null || v === '') return '';
@@ -102,7 +104,7 @@ function EUC_DEV688_parcourir_(annee, fn) {
     var debutC = EUC_DEV688_date_(a.Date_debut), finC = EUC_DEV688_date_(a.Date_fin_reelle || a.Date_fin);
     var pC = EUC_DEV688_periodeOfficielle_(periodes[cid], EUC_PFMP_ref_(a.Periode), debutC, finC, a.Periode_libelle);
     fn(a, id, byEleve[Number(id.id)] || {}, EUC_DEV688_dates_({ id: Number(a.id), source: 'CONVENTION', statut: '', numero: EUC_ADMIN_WORKFLOW_numeroV144_(a), eleve: id.jeune || [id.prenom, id.nom].filter(Boolean).join(' '), eleveId: Number(id.id) || 0, classeId: cid,
-      nomEleve: t(id.nom), prenomEleve: t(id.prenom), classe: t(a.Classe_convention_nom) || t((byEleve[Number(id.id)] || {}).Code_classe_importe), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(a.Periode_libelle), entreprise: t(a.Entreprise_raison_sociale) }, pC, debutC, finC, a.Periode_libelle));
+      nomEleve: t(id.nom), prenomEleve: t(id.prenom), classe: EUC_DEV688_classe_(t(a.Classe_convention_nom) || t((byEleve[Number(id.id)] || {}).Code_classe_importe)), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: t(a.Periode_libelle), entreprise: t(a.Entreprise_raison_sociale) }, pC, debutC, finC, a.Periode_libelle));
   });
   /* DEV692 : conventions arrivées par JotForm ou « Déclarer mon entreprise » (n° PFMP-…-S…), table d'attente
      EUC_MIGRATION_JOTFORM_PFMP, comptées par le suivi des PFMP mais absentes de l'administration des conventions. */
@@ -124,7 +126,7 @@ function EUC_DEV688_parcourir_(annee, fn) {
     var brutS = t(j.Periode_libelle) || (Number(j.Periode_numero) ? 'PFMP n°' + Number(j.Periode_numero) : t(j.Periode_numero)), debutS = EUC_DEV688_date_(j.Date_debut || j.Date_debut_brut), finS = EUC_DEV688_date_(j.Date_fin || j.Date_fin_brut);
     var pS = EUC_DEV688_periodeOfficielle_(periodes[cid], 0, debutS, finS, brutS);
     fn(a, { id: eid, nom: nom, prenom: prenom, jeune: [prenom, nom].filter(Boolean).join(' ') }, e, EUC_DEV688_dates_({ id: 'S' + Number(j.id), source: 'SOUMISSION', statut: valide ? 'Dépôt en ligne' : 'Dépôt en ligne — entreprise à vérifier', numero: numero, eleve: [prenom, nom].filter(Boolean).join(' '), eleveId: eid, classeId: cid,
-      nomEleve: nom, prenomEleve: prenom, classe: t(e.Code_classe_importe) || t(j.Classe_brut), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: brutS, entreprise: a.Entreprise_raison_sociale }, pS, debutS, finS, brutS));
+      nomEleve: nom, prenomEleve: prenom, classe: EUC_DEV688_classe_(t(e.Code_classe_importe) || t(j.Classe_brut)), niveau: nv.code || '', niveauLibelle: nv.libelle || '', periode: brutS, entreprise: a.Entreprise_raison_sociale }, pS, debutS, finS, brutS));
   });
 }
 function EUC_DEV688_tri_(l) { return l.sort(function(x, y) { return x.classe.localeCompare(y.classe, 'fr') || (x.nomEleve + ' ' + x.prenomEleve).localeCompare(y.nomEleve + ' ' + y.prenomEleve, 'fr'); }); }
