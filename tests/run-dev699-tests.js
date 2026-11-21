@@ -47,7 +47,13 @@ test('contrôle des noms : toutes les conventions d’une même période ont le 
   assert.equal(x('S9').decale, false);
   const h = read('apps-script/Admin_Conventions_PFMP.html');
   assert.match(h, /cnOpts\(cnPeriode,perOpts\(r1\),'Toutes les périodes'\)/); assert.match(h, /cnOpts\(lsPeriode,perOpts\(r1\),'Toutes les périodes'\)/);
-  assert.match(h, /⚠ dates décalées : /); assert.match(h, /\(x\.decale\?'<br>'\+decale\(x\):''\)/); assert.match(h, /\(c\.decale\?' '\+decale\(c\):''\)/);
+  assert.match(h, /⚠ dates décalées : /);
+  /* DEV701 : « PFMP n°1 » de Première et de Terminale : deux options distinctes, filtre sur nom + date de début officielle. */
+  const src = ['jjmm\\(d\\)', 'perCle\\(x\\)', 'perOpts\\(rows\\)'].map(f => h.match(new RegExp('function ' + f + '\\{[^\\n]+'))[0]).join('\n');
+  const opts = vm.runInNewContext(src + ';perOpts', {})([{ periode: 'PFMP n°1', periodeDebut: '2026-11-23', periodeFin: '2026-12-18' }, { periode: 'PFMP n°1', periodeDebut: '2026-10-05', periodeFin: '2026-10-30' }, { periode: 'PFMP n°1', periodeDebut: '2026-11-23', periodeFin: '2026-12-18' }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(opts)), [['PFMP n°1|2026-10-05', 'PFMP n°1 (05/10 → 30/10)'], ['PFMP n°1|2026-11-23', 'PFMP n°1 (23/11 → 18/12)']]);
+  assert.match(h, /perCle\(x\)!==cnPeriode\.value/); assert.match(h, /perCle\(x\)===lsPeriode\.value/);
+  assert.match(read('apps-script/Statistiques_PFMP_DEV698.html'), /perCle\(x\)===fPeriode\.value/); assert.match(h, /\(x\.decale\?'<br>'\+decale\(x\):''\)/); assert.match(h, /\(c\.decale\?' '\+decale\(c\):''\)/);
 });
 
 test('statistiques : code postal du lieu de stage, période officielle, apprenti sans entreprise jamais compté comme entreprise', () => {

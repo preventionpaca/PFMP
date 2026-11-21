@@ -146,7 +146,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   document.addEventListener('click',function(ev){const b=ev.target.closest&&ev.target.closest('button[data-tri]');if(!b)return;const box=b.closest('.tt'),t=TABLES[box.dataset.t],col=Number(b.dataset.tri);t.dir=t.col===col?-t.dir:(t.num.indexOf(col)>=0?-1:1);t.col=col;box.innerHTML=rendreTable(box.dataset.t)});
 
   /* Filtres communs à toutes les années. */
-  function garde(x,avecPeriode){return(!fFamille.value||x.famille===fFamille.value)&&(!fDiplome.value||x.diplome===fDiplome.value)&&(!fClasse.value||x.classe===fClasse.value)&&(!avecPeriode||!fPeriode.value||x.periode===fPeriode.value)}
+  function perCle(x){return x.periode?x.periode+'|'+(x.debutOfficiel||''):''}
+  function garde(x,avecPeriode){return(!fFamille.value||x.famille===fFamille.value)&&(!fDiplome.value||x.diplome===fDiplome.value)&&(!fClasse.value||x.classe===fClasse.value)&&(!avecPeriode||!fPeriode.value||perCle(x)===fPeriode.value)}
   /* Entreprises d'une année : élèves en stage (convention non annulée) et apprentis, après filtres. */
   function entreprises(m){
     const g=new Map(),conv=(m.conventions||[]).filter(function(x){return garde(x,true)}),acc=conv.filter(function(x){return x.statut!=='ANNULEE'&&x.k}),app=(m.apprentis||[]).filter(function(x){return garde(x,false)});
@@ -296,8 +297,9 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   function remplir(sel,valeurs,lib){const v=sel.value,premier=sel.options[0].outerHTML;sel.innerHTML=premier+valeurs.map(function(x){return '<option value="'+esc(x)+'">'+esc(lib?lib(x):x)+'</option>'}).join('');if(valeurs.indexOf(v)>=0)sel.value=v}
   function filtres(){const m=DATA[annee.value];if(!m)return;const l=(m.conventions||[]).concat(m.apprentis||[]),u=function(k){return Array.from(new Set(l.map(function(x){return x[k]}).filter(Boolean))).sort(function(a,b){return String(a).localeCompare(String(b),'fr',{numeric:true})})};
     /* Périodes officielles triées par date de début. */
-    const deb={};(m.conventions||[]).forEach(function(x){if(x.periode&&!deb[x.periode])deb[x.periode]=x.debutOfficiel||x.debut||'9'});
-    remplir(fPeriode,u('periode').sort(function(a,b){return String(deb[a]).localeCompare(String(deb[b]))||a.localeCompare(b,'fr')}));remplir(fFamille,u('famille'),famLib);remplir(fDiplome,u('diplome'));remplir(fClasse,u('classe'))}
+    /* DEV701 : deux périodes de même nom (Première, Terminale) restent distinctes : nom + dates officielles. */
+    const per=new Map();(m.conventions||[]).forEach(function(x){const k=perCle(x);if(k&&!per.has(k))per.set(k,x)});
+    const pv=fPeriode.value;fPeriode.innerHTML=fPeriode.options[0].outerHTML+Array.from(per.entries()).sort(function(a,b){return String(a[1].debutOfficiel||'9').localeCompare(String(b[1].debutOfficiel||'9'))||a[0].localeCompare(b[0],'fr')}).map(function(e){const x=e[1];return '<option value="'+esc(e[0])+'">'+esc(x.periode+(x.debutOfficiel&&x.periode.indexOf(x.debutOfficiel)<0?' ('+x.debutOfficiel.slice(8,10)+'/'+x.debutOfficiel.slice(5,7)+')':''))+'</option>'}).join('');if(per.has(pv))fPeriode.value=pv;remplir(fFamille,u('famille'),famLib);remplir(fDiplome,u('diplome'));remplir(fClasse,u('classe'))}
   [fPeriode,fFamille,fDiplome,fClasse,portee].forEach(function(s){s.onchange=rendre});
   annee.onchange=function(){comparer();};
 
