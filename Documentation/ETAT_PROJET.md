@@ -7,6 +7,7 @@
 - Itinéraire Google en voiture (`Maps.newDirectionFinder`, comme « Mes visites »). Calcul par lots de 50 s via le bouton « Calculer les distances manquantes » (spinner, délai de 2 min, reprise) ; arrêt propre si le quota quotidien Google est atteint.
 - Aucune adresse enregistrée ni envoyée à la page : fichier Drive « Eucalyptus PFMP - distances domicile-stage <année>.txt » du compte de déploiement (les propriétés du script, 500 Ko, sont pleines) = empreinte SHA-256 tronquée du couple d'adresses, km, minutes. Une adresse corrigée change l'empreinte (recalcul, ancienne entrée retirée). Aucune écriture Grist.
 - Tableaux triables : nombres affichés à la française, tri numérique des valeurs à virgule.
+- Parcours réel (@1267, 21/11/2026, 2026-2027) : 300 distances calculées sur 302 conventions en 3 lots (≈ 4 min) ; 2 conventions sans adresse exacte. Médiane 7,8 km / 15 min, moyenne 17,9 km, 47 trajets ≥ 30 min. Valeurs aberrantes à vérifier (siège au lieu du lieu de stage ou adresse mal reconnue) : 769 km (Nice), 475 km ×2 (Chassieu), 191 km (Septèmes-les-Vallons). Premier essai @1266 en échec propre (quota des propriétés du script plein) → stockage Drive.
 
 ## Mise à jour du 21 novembre 2026 — DEV702 : apprentis en mixité de bac pro au LP rattachés au CFA RAN
 
