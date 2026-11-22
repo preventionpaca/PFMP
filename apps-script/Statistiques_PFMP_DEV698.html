@@ -43,6 +43,7 @@ th button{background:none;color:var(--gris);padding:0;font:700 12px Arial,sans-s
 th[aria-sort="ascending"] button::after{content:" ▲"}th[aria-sort="descending"] button::after{content:" ▼"}
 tr.enfant td{background:#f7fbf9;color:#33504a}tr.enfant td:first-child{padding-left:22px}
 td.n,th.n{text-align:right}
+#ensemble .defile{max-height:520px;overflow-y:auto;border:1px solid var(--bord);border-radius:8px}#ensemble thead th{position:sticky;top:0;background:#fff;z-index:1}#ensemble td{white-space:pre-line}
 .deux{display:grid;grid-template-columns:1fr 1fr;gap:40px}.deux>div+div{border-left:1px solid var(--bord);padding-left:24px}
 .outils{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 .etat{font-weight:700}.etat.erreur{color:var(--alerte)}
@@ -76,6 +77,10 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
       <h2>Accueil par entreprise</h2>
       <p class="note">Nombre d’entreprises selon le nombre d’élèves accueillis en stage (un élève compté une fois par entreprise).</p>
       <div id="accueil"></div>
+      <h3>Élèves accueillis ensemble : noms et professeurs</h3>
+      <p class="note">Élèves en stage dans la même entreprise à des dates qui se chevauchent, avec le professeur du suivi téléphonique et le professeur visiteur, pour qu’un seul professeur fasse la visite et un seul l’appel. Suit les filtres (classe, période…). Cliquez sur un titre de colonne pour trier.</p>
+      <div class="outils"><label style="font-weight:700">Entreprises<select id="ensembleMode" style="min-width:330px"><option value="plusieurs">Qui accueillent plusieurs élèves en même temps</option><option value="toutes">Toutes les entreprises d’accueil</option></select></label><button class="leger" id="xEnsemble" type="button">Exporter en Excel</button></div>
+      <div id="ensemble"></div>
       <div class="outils" style="margin-top:14px"><label style="font-weight:700">Stagiaires et apprentis dans la même entreprise<select id="portee" style="min-width:330px"><option value="annee">Sur l’année scolaire</option><option value="periode">En même temps (même période de stage)</option></select></label></div>
       <p class="note" id="porteeNote"></p>
       <div class="deux">
@@ -230,6 +235,21 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   function grappes(e){const out=[];e.stages.filter(function(x){return x.debut}).slice().sort(function(a,b){return a.debut<b.debut?-1:a.debut>b.debut?1:0}).forEach(function(x){const g=out[out.length-1],f=x.fin||x.debut;if(g&&x.debut<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else out.push({debut:x.debut,fin:f,l:[x]})});
     return out.map(function(g){const d1=g.debut,d2=g.fin,ap=e.apps.filter(function(a){return(!a.debut||!d2||a.debut<=d2)&&(!a.fin||!d1||a.fin>=d1)});
       return{e:e,debut:d1,fin:d2,stag:new Set(g.l.map(function(x){return x.e||x.id})).size,app:ap.length,periodes:new Set(g.l.map(function(x){return x.periode}).filter(Boolean)),etiquettes:new Set(g.l.map(function(x){return x.classe+' (stage)'}).concat(ap.map(function(a){return a.classe+' (apprenti)'})))}})}
+  /* DEV710 : élèves accueillis ensemble (dates qui se chevauchent) avec les professeurs affectés (téléphone, visite). */
+  function ensembleGroupes(E,tous){const out=[];
+    E.liste.forEach(function(e){if(!e.stages.length)return;const avec=e.stages.filter(function(x){return x.debut}).slice().sort(function(a,b){return a.debut<b.debut?-1:a.debut>b.debut?1:0}),gs=[];
+      avec.forEach(function(x){const g=gs[gs.length-1],f=x.fin||x.debut;if(g&&x.debut<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else gs.push({debut:x.debut,fin:f,l:[x]})});
+      const sans=e.stages.filter(function(x){return!x.debut});if(sans.length)gs.push({debut:'',fin:'',l:sans});
+      gs.forEach(function(g){const vu={},l=g.l.filter(function(x){const k=x.e||x.id;if(vu[k])return false;vu[k]=true;return true}).sort(function(a,b){return String(a.eleve).localeCompare(String(b.eleve),'fr')});
+        if(l.length<2&&!tous)return;
+        const profs=function(t){const c={};l.forEach(function(x){const p=String(x[t]||'').trim();c[p]=(c[p]||0)+1});return c};
+        out.push({e:e,debut:g.debut,fin:g.fin,l:l,pt:profs('pt'),pv:profs('pv'),periodes:Array.from(new Set(l.map(function(x){return x.periode}).filter(Boolean)))})})});
+    return out}
+  function profsTxt(c){const k=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b,'fr')});return k.length===1?(k[0]||'Non affecté'):k.map(function(p){return(p||'Non affecté')+' ('+c[p]+')'}).join('\n')}
+  function aVerifier(g){if(g.l.length<2){return[!Object.keys(g.pt)[0]?'Téléphone non affecté':'',!Object.keys(g.pv)[0]?'Visite non affectée':''].filter(Boolean).join('\n')}
+    const v=function(c,lib){const k=Object.keys(c);return k.length>1?lib+' : plusieurs professeurs':!k[0]?lib+' : non affecté':''};return[v(g.pt,'Téléphone'),v(g.pv,'Visite')].filter(Boolean).join('\n')}
+  function ensembleLignes(gs){return gs.map(function(g){return[g.e.nom,g.e.commune||'',g.debut?jj(g.debut)+' → '+jj(g.fin):(g.periodes.join(', ')||'Dates non renseignées'),g.l.length,g.l.map(function(x){return x.eleve+' ('+x.classe+')'}).join('\n'),profsTxt(g.pt),profsTxt(g.pv),aVerifier(g)]})}
+  const ENTETES_ENSEMBLE=['Entreprise','Commune','Dates','Élèves','Noms des élèves (classe)','Suivi téléphonique','Professeur visiteur','À vérifier'];
   function rendre(){
     const m=DATA[annee.value];if(!m)return;
     const E=E0=entreprises(m),stage=E.liste.filter(function(e){return e.eleves.size}),both=E.liste.filter(function(e){return e.eleves.size&&e.apprentis}),eleves=new Set(E.acc.map(function(x){return x.e||x.id}));
@@ -240,6 +260,9 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     /* Accueil par entreprise */
     const n=[0,0,0,0,0];stage.forEach(function(e){n[Math.min(e.eleves.size,5)-1]++});
     $('accueil').innerHTML=barres(['1 élève','2 élèves','3 élèves','4 élèves','5 élèves et plus'].map(function(l,i){return{l:l,v:n[i],t:n[i]+' ('+pct(n[i],stage.length)+')'}}))+'<p class="total">Total : '+stage.length+' entreprises d’accueil</p>';
+    const tousEns=$('ensembleMode').value==='toutes',ens=ensembleGroupes(E,tousEns),ensL=ensembleLignes(ens),nVerif=ens.filter(function(g){return aVerifier(g)}).length;
+    LISTES.ensemble={titre:'Élèves accueillis ensemble : noms et professeurs',entetes:ENTETES_ENSEMBLE,lignes:ensL};
+    $('ensemble').innerHTML=ens.length?'<p class="total">'+ens.length+(tousEns?' accueils':' accueils de plusieurs élèves en même temps')+' · '+ens.reduce(function(s,g){return s+g.l.length},0)+' élèves'+(nVerif?' · '+nVerif+' à vérifier':'')+'</p><div class="defile">'+tableau('ensemble',ENTETES_ENSEMBLE,ensL,[3],tousEns?[0,1]:[3,-1])+'</div>':'<p class="vide">'+(tousEns?'Aucune entreprise d’accueil pour ces filtres.':'Aucune entreprise n’accueille plusieurs élèves en même temps pour ces filtres.')+'</p>';
     /* Sur l'année : tous les stagiaires et apprentis de l'entreprise. En même temps : stagiaires d'une même période
      * et apprentis dont le contrat couvre au moins un jour de cette période. */
     const memeTemps=portee.value==='periode';
@@ -361,6 +384,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   const XLSX_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
   function exporter(btn,def){if(btn.disabled)return;const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Export…';let fini=false;const fin=function(){fini=true;clearTimeout(tm);btn.disabled=false;btn.innerHTML=old};const tm=setTimeout(function(){if(fini)return;fin();alert('L’export n’a pas abouti à temps : réessayez.')},60000);
     (window.XLSX?Promise.resolve():new Promise(function(ok,ko){const s=document.createElement('script');s.src=XLSX_URL;s.onload=ok;s.onerror=function(){ko(new Error('bibliothèque d’export indisponible'))};document.head.appendChild(s)})).then(function(){if(fini)return;const d=def();const ws=window.XLSX.utils.aoa_to_sheet([[d.titre],[$('perimetre').textContent],[],d.entetes].concat(d.lignes));const wb=window.XLSX.utils.book_new();window.XLSX.utils.book_append_sheet(wb,ws,'Statistiques');window.XLSX.writeFile(wb,'Statistiques_PFMP_'+annee.value+'_'+new Date().toISOString().slice(0,10)+'.xlsx');fin()}).catch(function(e){if(fini)return;fin();alert('Export impossible : '+(e&&e.message||e))})}
+  $('xEnsemble').onclick=function(){exporter($('xEnsemble'),function(){return LISTES.ensemble})};
   $('xCommunes').onclick=function(){exporter($('xCommunes'),function(){return LISTES.communes})};
   $('xListe').onclick=function(){exporter($('xListe'),function(){return LISTES[liste.value]})};
   liste.onchange=afficherListe;
@@ -372,7 +396,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     /* DEV701 : deux périodes de même nom (Première, Terminale) restent distinctes : nom + dates officielles. */
     const per=new Map();(m.conventions||[]).forEach(function(x){const k=perCle(x);if(k&&!per.has(k))per.set(k,x)});
     const pv=fPeriode.value;fPeriode.innerHTML=fPeriode.options[0].outerHTML+Array.from(per.entries()).sort(function(a,b){return String(a[1].debutOfficiel||'9').localeCompare(String(b[1].debutOfficiel||'9'))||a[0].localeCompare(b[0],'fr')}).map(function(e){const x=e[1];return '<option value="'+esc(e[0])+'">'+esc(x.periode+(x.debutOfficiel&&x.periode.indexOf(x.debutOfficiel)<0?' ('+x.debutOfficiel.slice(8,10)+'/'+x.debutOfficiel.slice(5,7)+')':''))+'</option>'}).join('');if(per.has(pv))fPeriode.value=pv;remplir(fFamille,u('famille'),famLib);remplir(fDiplome,u('diplome'));remplir(fClasse,u('classe'))}
-  [fPeriode,fFamille,fDiplome,fClasse,portee].forEach(function(s){s.onchange=rendre});
+  [fPeriode,fFamille,fDiplome,fClasse,portee].forEach(function(s){s.onchange=rendre});$('ensembleMode').onchange=rendre;
   annee.onchange=function(){comparer();};
 
   /* Chargement : année analysée et années comparées, une par une (mises en cache côté serveur). */

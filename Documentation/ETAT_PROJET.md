@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV710 : statistiques, élèves accueillis ensemble avec leurs professeurs
+
+- Section « Accueil par entreprise » de `statistiques-pfmp` : tableau « Élèves accueillis ensemble : noms et professeurs ». Pour chaque entreprise et chaque groupe de stages dont les dates se chevauchent, il donne les dates, le nombre d'élèves, leurs noms avec leur classe, le suivi téléphonique, le professeur visiteur et ce qu'il faut vérifier (plusieurs professeurs, non affecté).
+- Un sélecteur montre soit les entreprises qui accueillent plusieurs élèves en même temps, soit toutes les entreprises d'accueil. Le tableau suit les filtres (classe, période…), se trie, s'exporte en Excel et défile verticalement (520 px, en-tête fixe).
+- Serveur : `EUC_DEV698_affectations_` lit `EUC_AFFECTATIONS_SUIVI_PFMP` (dernière affectation active par élève et période, en lecture seule). Champs `pt` et `pv` ajoutés aux conventions ; version `1.0.0-dev.710`, ce qui renouvelle le cache.
+- Tests : `tests/run-dev710-tests.js` (5).
+
 ## Mise à jour du 23 novembre 2026 — DEV709 : élèves dans une même entreprise (suivi d'une classe)
 
 - Sous le tableau de suivi d'une classe et d'une période (`Suivi_PFMP_Classe_Detail_V156.html`, vues administrateur et publique), un encadré liste les entreprises qui accueillent plusieurs élèves : nombre, noms, professeur du suivi téléphonique et professeur visiteur.

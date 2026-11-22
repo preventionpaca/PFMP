@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.704';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.710';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -84,6 +84,23 @@ function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
   };
 }
 
+/* DEV710 : professeurs affectés (suivi téléphonique, visite) par élève et période, dernière affectation active. Lecture seule. */
+function EUC_DEV698_affectations_(annee) {
+  var T = EUC_DEV698_t_, out = {}, rangs = {};
+  try {
+    (EUC_IMPORT_lireRecords_('EUC_AFFECTATIONS_SUIVI_PFMP') || []).forEach(function(r) {
+      if (r.Actif === false || (annee && T(r.Annee_scolaire) !== annee)) return;
+      var ty = T(r.Type_suivi).toUpperCase(), type = ty.indexOf('TELEPHONE') >= 0 ? 'pt' : ty.indexOf('VISITE') >= 0 ? 'pv' : '';
+      var e = Number(EUC_PFMP_ref_(r.Eleve)) || 0, p = Number(EUC_PFMP_ref_(r.Periode)) || 0, nom = T(r.Nom_professeur_snapshot);
+      if (!type || !e || !p) return;
+      var k = e + '|' + p + '|' + type;
+      if (rangs[k] && rangs[k] > (Number(r.id) || 0)) return;
+      rangs[k] = Number(r.id) || 0; out[k] = nom;
+    });
+  } catch (eA) {}
+  return out;
+}
+
 /* Calcul d'une année : conventions (y compris interrompues et annulées) et apprentis. */
 function EUC_DEV698_calcul_(annee) {
   var T = EUC_DEV698_t_, cls = EUC_DEV698_classes_(annee), fiches = EUC_DEV689_fiches_(), lignes = [], vus = {};
@@ -91,10 +108,11 @@ function EUC_DEV698_calcul_(annee) {
   var classeDe = function(base, a) { return cls.parId[Number(EUC_PFMP_ref_(a.Classe_convention)) || 0] || cls.parId[Number(base.classeId) || 0] || cls.parNom[T(base.classe).toUpperCase().replace(/\s+/g, ' ')] || null; };
   /* DEV701 : élève ou classe d'essai (« TEST PFMP », Donnee_test) : jamais dans les statistiques. */
   var essai = function(e, classe) { return (e && (e.Donnee_test === true || /^RECETTE/i.test(T(e.Mode_donnee)))) || /^TEST\b/i.test(T(classe)); };
+  var aff = EUC_DEV698_affectations_(annee), profs = function(l, base, a) { var e = Number(base.eleveId) || 0, ps = [Number(base.periodeId) || 0, Number(EUC_PFMP_ref_(a.Periode)) || 0]; ['pt', 'pv'].forEach(function(t) { for (var i = 0; i < ps.length; i++) if (ps[i] && aff[e + '|' + ps[i] + '|' + t]) { l[t] = aff[e + '|' + ps[i] + '|' + t]; return; } l[t] = ''; }); return l; };
   EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
     vus[String(base.id)] = true;
     if (essai(e, base.classe)) return;
-    lignes.push(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), classeDe(base, a), cls.periodes));
+    lignes.push(profs(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), classeDe(base, a), cls.periodes), base, a));
   });
   /* Conventions interrompues ou annulées (révoquées, donc absentes du parcours ordinaire). */
   var byEleve = {};
@@ -112,7 +130,7 @@ function EUC_DEV698_calcul_(annee) {
     /* DEV699 : même rattachement à la période officielle que les autres conventions. */
     var d1 = EUC_DEV698_date_(a.Date_debut), d2 = EUC_DEV698_date_(a.Date_fin_reelle || a.Date_fin);
     if (typeof EUC_DEV688_periodeOfficielle_ === 'function') EUC_DEV688_dates_(base, EUC_DEV688_periodeOfficielle_((x.cid ? x : classeDe(base, a) || {}).periodes, EUC_PFMP_ref_(a.Periode), d1, d2, a.Periode_libelle), d1, d2, a.Periode_libelle);
-    lignes.push(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), x.cid ? x : classeDe(base, a), cls.periodes));
+    lignes.push(profs(EUC_DEV698_ligne_(a, base, EUC_DEV689_ident_(a, fiches), x.cid ? x : classeDe(base, a), cls.periodes), base, a));
   });
   var apprentis = [];
   try {
