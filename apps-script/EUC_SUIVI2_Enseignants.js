@@ -69,6 +69,8 @@ function EUC_SUIVI2_pageEnseignants_(e) {
   if (!admin) (vue.fiches || []).forEach(function(f) { if (f) { delete f.dossier; delete f.depot; } });
   if (!admin) (vue.classes || []).forEach(function(c) { (c.periodes || []).forEach(function(p) { Object.keys(p.lignes || {}).forEach(function(k) { if (p.lignes[k][6]) p.lignes[k][6] = 0; }); }); });
   t.donnees = JSON.stringify(vue).replace(/</g, '\\u003c').replace(new RegExp('\\u2028', 'g'), '\\u2028').replace(new RegExp('\\u2029', 'g'), '\\u2029');
+  /* DEV714 : calcul « même entreprise » partagé avec le PDF du courriel de dépôt. */
+  t.dev714 = typeof EUC_DEV714_source_ === 'function' ? EUC_DEV714_source_() : 'function EUC_DEV714_memeEntreprise_(){return [];}function EUC_DEV714_profsTexte_(){return \'\';}function EUC_DEV714_lignes_(){return [];}var EUC_DEV714_ENTETES_=[];';
   t.config = JSON.stringify({ base: base, wrapper: EUC_SUIVI2_t_(p.wrapper) === '1', admin: admin, depart: { c: Number(p.cl) || 0, p: Number(p.pe) || 0 } }).replace(/</g, '\\u003c');
   return t.evaluate().setTitle('Suivi des PFMP')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')

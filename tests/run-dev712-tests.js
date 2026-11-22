@@ -1,11 +1,20 @@
 'use strict';
 /* DEV712 — Suivi des enseignants (page utilisée) : sous le tableau et dans l'export PDF, élèves en stage dans une même entreprise et professeurs affectés. */
 const assert = require('assert'), fs = require('fs'), path = require('path'), vm = require('vm');
-const h = fs.readFileSync(path.join(__dirname, '..', 'apps-script/Suivi_Enseignants_DEV576.html'), 'utf8');
+const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+const h = read('apps-script/Suivi_Enseignants_DEV576.html');
 let n = 0; const test = (nom, fn) => { fn(); n++; console.log('ok - ' + nom); };
 const bloc = h.slice(h.indexOf('  function memeEntreprise(c,p){'), h.indexOf('  function classe(s){'));
 const esc = "function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[x];});}";
-function ctx(fiches) { const k = { D: { fiches } }; vm.createContext(k); vm.runInContext(esc + '\n' + bloc + '\nthis.m=memeEntreprise;this.b=blocMemeEntreprise;', k); return k; }
+/* DEV714 : le calcul est partagé avec le serveur (texte injecté dans la page) : chargé ici comme dans la page. */
+const partage = (() => { const s0 = {}; vm.createContext(s0); vm.runInContext(read('apps-script/EUC_DEV714_MemeEntreprise.js'), s0); return s0.EUC_DEV714_source_(); })();
+function ctx(fiches) {
+  const k = { D: { fiches, classes: [] } }; vm.createContext(k);
+  vm.runInContext(partage + '\n' + esc + '\n' + bloc + '\nthis.m0=memeEntreprise;this.b0=blocMemeEntreprise;', k);
+  const place = (c, p) => { c.id = c.id || 1; p.id = p.id || 1; c.periodes = [p]; k.D.classes = [c]; };
+  k.m = (c, p) => { place(c, p); return k.m0(c, p); }; k.b = (c, p) => { place(c, p); return k.b0(c, p); };
+  return k;
+}
 const F = [
   { entreprise: 'Garage Azur SARL', adresse: '1 rue du Port, 06300 NICE' },
   { entreprise: 'GARAGE AZUR', adresse: '1 rue du Port 06300 Nice' },
@@ -44,7 +53,7 @@ test('page et PDF : encadré sous le tableau (imprimé aussi) ; second tableau d
   assert.match(h, /'<\/tbody><\/table><\/div>'\+blocMemeEntreprise\(c,p\);/);
   assert.doesNotMatch(h.match(/\.meme-ent\{[^}]*\}/)[0], /display:none/); assert.match(h, /@media print\{\.meme-ent\{break-inside:avoid/);
   assert.match(h, /var mg=c\.ce\?\[\]:memeEntreprise\(c,p\);/);
-  assert.match(h, /doc\.autoTable\(\{startY:y\+3,head:\[\['Entreprise','Élèves','Suivi téléphonique','Professeur visiteur','À vérifier'\]\]/);
+  assert.match(h, /doc\.autoTable\(\{startY:y\+3,head:\[EUC_DEV714_ENTETES_\],body:EUC_DEV714_lignes_\(mg\)/);
   assert.ok(h.indexOf('var mg=c.ce') < h.indexOf("doc.save(((c.ce?'Suivi apprentis '"));
   assert.doesNotMatch(bloc, /google\.script\.run/);
 });

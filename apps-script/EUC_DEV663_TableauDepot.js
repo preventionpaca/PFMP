@@ -60,6 +60,8 @@ function EUC_DEV663_donnees_(vue, classeId, periodeId, eleveId, depot, maintenan
       + ' · Conventions éditées : ' + compte.editees + ' / ' + (compte.editees + compte.aEditer),
     pied: titre + (quand ? ' · tableau au ' + quand : '') + (T(depot.numero) ? ' · joint au dépôt ' + T(depot.numero) : ''),
     entetes: EUC_DEV663_ENTETES_.slice(), largeurs: EUC_DEV663_LARGEURS_.slice(), lignes: lignes,
+    /* DEV714 : élèves dans une même entreprise (classe et autres classes aux mêmes dates), sous le tableau. */
+    memeEntreprise: typeof EUC_DEV714_memeEntreprise_ === 'function' ? EUC_DEV714_memeEntreprise_(vue, classeId, periodeId) : [],
     nom: (titre + (quand ? ' — ' + quand.slice(0, 10).replace(/\//g, '-') : '')).replace(/[\\/:*?"<>|]+/g, '-')
   };
 }
@@ -87,6 +89,22 @@ function EUC_DEV663_pdfDoc_(d) {
     }
     var fond = !r ? vert : ligne.moi ? '#fff3b0' : '';
     if (fond) for (var k2 = 0; k2 < row.getNumCells(); k2++) row.getCell(k2).setBackgroundColor(fond);
+  }
+  /* DEV714 : second tableau, élèves dans une même entreprise et professeurs affectés. */
+  if (d.memeEntreprise && d.memeEntreprise.length && typeof EUC_DEV714_lignes_ === 'function') {
+    style(b.appendParagraph('Élèves en stage dans une même entreprise (' + d.memeEntreprise.length + ') : un seul professeur pour la visite et un seul pour l’appel'), 10, true, vert);
+    var t2 = b.appendTable([EUC_DEV714_ENTETES_].concat(EUC_DEV714_lignes_(d.memeEntreprise)));
+    t2.setBorderColor('#cfd8dc').setBorderWidth(0.5);
+    [150, 130, 150, 120, 120, 115].forEach(function(w, i) { t2.setColumnWidth(i, w); });
+    for (var r2 = 0; r2 < t2.getNumRows(); r2++) {
+      var row2 = t2.getRow(r2), g = r2 ? d.memeEntreprise[r2 - 1] : null;
+      for (var k3 = 0; k3 < row2.getNumCells(); k3++) {
+        var c2 = row2.getCell(k3); c2.setPaddingTop(2).setPaddingBottom(2).setPaddingLeft(3).setPaddingRight(3).setVerticalAlignment(DocumentApp.VerticalAlignment.TOP);
+        var tx2 = c2.editAsText(); if (!tx2.getText()) continue;
+        tx2.setFontFamily('Arial').setFontSize(r2 ? 7.5 : 8).setBold(!r2).setForegroundColor(!r2 ? '#ffffff' : (k3 === 5 && g.aVerifier.length) || (k3 === 2 && g.autres.length) ? '#a15c00' : '#16302a');
+        if (!r2) c2.setBackgroundColor(vert);
+      }
+    }
   }
   style(doc.addFooter().appendParagraph(d.pied), 7.5, false, '#5b6b66');
   doc.saveAndClose();

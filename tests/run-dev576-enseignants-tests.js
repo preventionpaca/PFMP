@@ -71,10 +71,12 @@ test('la vue enseignants ne transmet ni motifs ni garde-fou', () => {
   assert.doesNotMatch(t, /motifs|gardeFou|jotformToutes/);
 });
 
+/* DEV714 : calcul « même entreprise » injecté par le serveur (texte réel de la fonction). */
+const dev714 = () => { const s0 = {}; require('vm').createContext(s0); require('vm').runInContext(require('fs').readFileSync(require('path').join(__dirname, '..', 'apps-script/EUC_DEV714_MemeEntreprise.js'), 'utf8'), s0); return s0.EUC_DEV714_source_(); };
 test('la page reçoit les données échappées et son script est valide', () => {
   const m = page.match(/<script>([\s\S]*)<\/script>/);
   assert.ok(m && /<\?!= donnees \?>/.test(m[1]));
-  assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V)).replace('<?!= config ?>', '{"base":"https://x/exec","wrapper":false}')));
+  assert.doesNotThrow(() => new Function(m[1].replace('<?!= donnees ?>', JSON.stringify(V)).replace('<?!= config ?>', '{"base":"https://x/exec","wrapper":false}').replace('<?!= dev714 ?>', dev714())));
   assert.match(page, /closest\('a\[href\^="#"\]'\)/, 'les liens internes ne naviguent jamais la fenêtre principale');
   assert.match(page, /retour=enseignants/, 'carte filtrée avec retour vers la page enseignants');
   assert.match(page, /doc\.autoTable\(/, 'PDF construit comme un tableau (toutes les colonnes)');

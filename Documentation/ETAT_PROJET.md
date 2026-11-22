@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV714 : même entreprise, élèves d'autres classes aux mêmes dates (suivi, PDF, courriel de dépôt)
+
+- `EUC_DEV714_memeEntreprise_(vue, classe, période)` est un calcul pur sur la vue du suivi. Pour chaque entreprise de la classe, il donne les élèves de la classe et ceux d'autres classes présents aux mêmes dates (dates de la convention, à défaut de la période ; recouvrement d'au moins un jour).
+  - Il ajoute les professeurs affectés (tous élèves confondus) et ce qu'il faut vérifier (plusieurs professeurs, non affecté).
+  - Les classes entières d'apprentis et les élèves sans convention sont exclus.
+- Un seul code sert partout :
+  - la page du suivi (`Suivi_Enseignants_DEV576.html`) reçoit le texte de la fonction (`t.dev714 = EUC_DEV714_source_()`, « </ » neutralisé) ;
+  - l'encadré sous le tableau, l'export PDF et le PDF joint au courriel de dépôt (`EUC_DEV663_donnees_` / `pdfDoc_`) l'utilisent ; ce PDF est aussi celui de la page `tableau-classe-pfmp`.
+- L'encadré apparaît dans chacune des classes concernées, avec la colonne « Élèves d'autres classes (mêmes dates) ».
+- Non modifié : « Envoyer le tableau aux professeurs » (`EUC_V157_envoyerTableau`, ancien envoi).
+- Tests : `tests/run-dev714-tests.js` (5). DEV712 et DEV576 sont adaptés au calcul injecté ; le script complet de la page est validé avec le vrai code.
+
 ## Mise à jour du 23 novembre 2026 — DEV713 : SIRET corrigé = adresse officielle à jour ; dépôts en ligne dans le Book
 
 - Cas réel (détails hors Git) : deux élèves d'une même classe dans une même entreprise qui a déménagé.
