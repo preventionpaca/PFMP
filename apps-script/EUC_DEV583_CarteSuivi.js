@@ -11,7 +11,7 @@
  * la page Géocodage et n'est pas affiché. Le détail nominatif n'est servi qu'aux personnels.
  * Familles (mode PARENTS) et « toutes les années » gardent l'ancien chemin.
  */
-var EUC_DEV583_VERSION_ = '1.0.0-dev.583';
+var EUC_DEV583_VERSION_ = '1.0.0-dev.705';
 var EUC_DEV583_STATUTS_ENTREPRISE_ = { AVEC: 1, CONTRAT: 1, APPRENTI: 1, PDIF_ENTREPRISE: 1 };
 var EUC_DEV583_GEOCODAGE_LOT_ = 15;
 
@@ -58,11 +58,13 @@ function EUC_DEV583_entreprises_(m, q, nominatif) {
         var st = (r.statuts || {})[e.id], f = (r.fiches || {})[e.id];
         if (!EUC_DEV583_STATUTS_ENTREPRISE_[st] || !f || !f.entreprise) return;
         var siret = EUC_DEV583_siret_(f.siret), cle = EUC_DEV443_geoIdentity_(f.entreprise, f.adresse, siret), x = par[cle];
-        if (!x) { x = par[cle] = { cle: cle, siret: siret, entreprise: f.entreprise, adresse: f.adresse || '', eleves: {}, classes: {}, historique: [] }; liste.push(x); }
+        if (!x) { x = par[cle] = { cle: cle, siret: siret, entreprise: f.entreprise, adresse: f.adresse || '', eleves: {}, classes: {}, historique: [], lieux: {} }; liste.push(x); }
         if (!x.adresse && f.adresse) x.adresse = f.adresse;
         x.classes[c.nom] = true;
         var apprenti = st === 'APPRENTI' || st === 'CONTRAT', k = e.id + '|' + (apprenti ? 'A' : p.id);
         if (x.eleves[k]) return; x.eleves[k] = true;
+        /* DEV705 : lieu de stage distinct du siège (règles DEV649 / DEV662 / DEV666 du suivi). */
+        if (f.lieu) x.lieux[f.lieu] = (x.lieux[f.lieu] || 0) + 1;
         if (nominatif) x.historique.push({ annee: m.annee, eleve: e.libelle, classe: c.nom, periode: apprenti ? '' : p.libelle, apprenti: apprenti,
           professeurVisiteur: ((r.suivis || {})[e.id] || {}).visite || '', responsable: (f.contact || {}).nom || '', telephoneResponsable: (f.contact || {}).tel || '', courrielResponsable: (f.contact || {}).mail || '',
           tuteur: (f.tuteur || {}).nom || '', telephoneTuteur: (f.tuteur || {}).tel || '', courrielTuteur: (f.tuteur || {}).mail || '', dateSaisie: f.enregistreLe || f.contratDebut || p.debut });
@@ -82,33 +84,56 @@ function EUC_DEV583_points_(entreprises, ix, nominatif) {
     var pt = vus[k] || (vus[k] = { key: EUC_DEV441_digest_(k).slice(0, 32), entreprise: x.entreprise, adresse: x.adresse, latitude: lat, longitude: lon, pays: EUC_DEV583_t_(g.Pays), classe: '', elevesAccueillis: 0, nominatif: nominatif, source: 'SUIVI2' });
     if (points.indexOf(pt) < 0) points.push(pt);
     pt.elevesAccueillis += n; pt.classe = Object.keys(x.classes).sort().join(' / ');
+    Object.keys(x.lieux || {}).forEach(function(l) { pt._lieux = pt._lieux || {}; pt._lieux[l] = (pt._lieux[l] || 0) + x.lieux[l]; });
     if (nominatif) { pt.historique = (pt.historique || []).concat(x.historique); pt.historyLoaded = true; }
   });
   return { points: points, sansPosition: sans };
 }
 
-/* Géocodage automatique d'un lot d'entreprises sans position (adresses françaises seulement). */
+/* Géocodage automatique d'un lot d'entreprises (ou de lieux de stage, DEV705) sans position :
+ * France par la Géoplateforme (BAN), Monaco par Nominatim (DEV705, deux adresses au plus, une par seconde). */
+var EUC_DEV583_MONACO_LOT_ = 2;
 function EUC_DEV583_geocoder_(sans, ix) {
-  var lot = (sans || []).filter(function(x) { return x.statut === 'A_GEOCODER' && x.adresse && EUC_DEV441_geoClassify_(x.adresse).pays === 'FRANCE'; }).slice(0, EUC_DEV583_GEOCODAGE_LOT_);
-  if (!lot.length) return 0;
-  var reqs = lot.map(function(x) {
-    var c = EUC_DEV441_geoClassify_(x.adresse), clean = EUC_DEV443_normalizeAddress_(x.adresse);
-    x._cp = c.codePostal; x._clean = clean;
-    return { url: EUC_DEV441_GEO_URL_ + '?q=' + encodeURIComponent(clean) + '&limit=5' + (c.codePostal ? '&postcode=' + encodeURIComponent(c.codePostal) : ''), method: 'get', muteHttpExceptions: true, headers: { Accept: 'application/json' } };
-  });
-  var reps = []; try { reps = UrlFetchApp.fetchAll(reqs); } catch (e) { return 0; }
+  var aFaire = (sans || []).filter(function(x) { return x.statut === 'A_GEOCODER' && x.adresse; });
+  var lot = aFaire.filter(function(x) { return EUC_DEV441_geoClassify_(x.adresse).pays === 'FRANCE'; }).slice(0, EUC_DEV583_GEOCODAGE_LOT_);
+  var monaco = aFaire.filter(function(x) { return EUC_DEV441_geoClassify_(x.adresse).pays === 'MONACO'; }).slice(0, EUC_DEV583_MONACO_LOT_);
+  if (!lot.length && !monaco.length) return 0;
   var ecrits = [];
-  lot.forEach(function(x, i) {
-    var json = {}; try { json = JSON.parse(reps[i].getContentText() || '{}'); } catch (e) {}
-    var sel = EUC_DEV540_geoCandidate_(json.features || [], x._clean, x._cp), feat = sel && sel.feature, co = feat && feat.geometry && feat.geometry.coordinates, pr = feat && feat.properties || {}, score = Number(pr.score) || 0;
-    /* Même clé et même adresse source que la page « Géocodage des entreprises », qui retrouve ainsi la ligne. */
+  /* Même clé et même adresse source que la page « Géocodage des entreprises », qui retrouve ainsi la ligne. */
+  var cible = function(x) {
     var cleGeo = EUC_DEV441_geoKey_(x.entreprise, x._clean, x.siret), item = { key: cleGeo, siret: x.siret || '', entreprise: x.entreprise, adresse: x._clean }, existant = ix.lignes[cleGeo];
     if (existant && existant.id) item._recordId = Number(existant.id);
-    var fields = co && co.length >= 2
-      ? { Adresse_normalisee: EUC_DEV583_t_(pr.label), Pays: 'FRANCE', Code_postal: EUC_DEV443_postal_(pr.postcode || x._cp), Commune: EUC_DEV583_t_(pr.city), Latitude: Number(co[1]), Longitude: Number(co[0]), Score: score, Precision: EUC_DEV583_t_(pr.type), Fournisseur: 'Géoplateforme / BAN', Statut: score < 0.45 || !sel.specific ? 'A_VALIDER_MANUELLEMENT' : 'GEOCODE_AUTOMATIQUE', Date_geocodage: new Date().toISOString(), Commentaire: score < 0.45 || !sel.specific ? 'Résultat automatique peu précis : contrôlez le point proposé.' : '' }
-      : { Pays: 'FRANCE', Code_postal: x._cp, Latitude: null, Longitude: null, Fournisseur: 'Géoplateforme / BAN', Statut: 'COORDONNEES_A_RENSEIGNER', Date_geocodage: new Date().toISOString(), Commentaire: 'Aucun résultat cohérent avec la voie et le code postal.' };
-    ecrits.push({ item: item, fields: fields });
+    return item;
+  };
+  if (lot.length) {
+    var reqs = lot.map(function(x) {
+      var c = EUC_DEV441_geoClassify_(x.adresse), clean = EUC_DEV443_normalizeAddress_(x.adresse);
+      x._cp = c.codePostal; x._clean = clean;
+      return { url: EUC_DEV441_GEO_URL_ + '?q=' + encodeURIComponent(clean) + '&limit=5' + (c.codePostal ? '&postcode=' + encodeURIComponent(c.codePostal) : ''), method: 'get', muteHttpExceptions: true, headers: { Accept: 'application/json' } };
+    });
+    var reps = null; try { reps = UrlFetchApp.fetchAll(reqs); } catch (e) { reps = null; }
+    if (reps) lot.forEach(function(x, i) {
+      var json = {}; try { json = JSON.parse(reps[i].getContentText() || '{}'); } catch (e) {}
+      var sel = EUC_DEV540_geoCandidate_(json.features || [], x._clean, x._cp), feat = sel && sel.feature, co = feat && feat.geometry && feat.geometry.coordinates, pr = feat && feat.properties || {}, score = Number(pr.score) || 0;
+      var fields = co && co.length >= 2
+        ? { Adresse_normalisee: EUC_DEV583_t_(pr.label), Pays: 'FRANCE', Code_postal: EUC_DEV443_postal_(pr.postcode || x._cp), Commune: EUC_DEV583_t_(pr.city), Latitude: Number(co[1]), Longitude: Number(co[0]), Score: score, Precision: EUC_DEV583_t_(pr.type), Fournisseur: 'Géoplateforme / BAN', Statut: score < 0.45 || !sel.specific ? 'A_VALIDER_MANUELLEMENT' : 'GEOCODE_AUTOMATIQUE', Date_geocodage: new Date().toISOString(), Commentaire: score < 0.45 || !sel.specific ? 'Résultat automatique peu précis : contrôlez le point proposé.' : '' }
+        : { Pays: 'FRANCE', Code_postal: x._cp, Latitude: null, Longitude: null, Fournisseur: 'Géoplateforme / BAN', Statut: 'COORDONNEES_A_RENSEIGNER', Date_geocodage: new Date().toISOString(), Commentaire: 'Aucun résultat cohérent avec la voie et le code postal.' };
+      ecrits.push({ item: cible(x), fields: fields });
+    });
+  }
+  monaco.forEach(function(x, i) {
+    var c = EUC_DEV441_geoClassify_(x.adresse), json = null;
+    x._clean = EUC_DEV443_normalizeAddress_(x.adresse);
+    try {
+      if (i) Utilities.sleep(1100);
+      var res = UrlFetchApp.fetch(EUC_DEV537_MONACO_GEO_URL_ + '?format=jsonv2&addressdetails=1&limit=5&countrycodes=mc&q=' + encodeURIComponent(EUC_DEV540_monacoQuery_(x._clean)),
+        { method: 'get', muteHttpExceptions: true, headers: { Accept: 'application/json', 'Accept-Language': 'fr', 'User-Agent': 'Eucalyptus-PFMP/1.0 (' + EUC_LIEN_('accueil') + ')' } });
+      if (Number(res.getResponseCode ? res.getResponseCode() : 200) < 400) json = JSON.parse(res.getContentText() || '[]');
+    } catch (eM) { json = null; }
+    /* Service injoignable : rien n'est écrit, la ligne sera retentée à la prochaine ouverture. */
+    if (json) ecrits.push({ item: cible(x), fields: EUC_DEV537_champsMonaco_(json, c.codePostal) });
   });
+  if (!ecrits.length) return 0;
   try { return EUC_DEV445_geoBatchUpsert_(ecrits).saved.length; } catch (e) { return 0; }
 }
 
@@ -127,8 +152,12 @@ function EUC_DEV583_carte(q) {
     geocodees = EUC_DEV583_geocoder_(res.sansPosition, ix);
     if (geocodees) { ix = EUC_DEV583_indexGeo_(EUC_DEV441_geoRows_()); res = EUC_DEV583_points_(entreprises, ix, nominatif); }
   }
+  /* DEV705 : lieux de stage distincts du siège, placés par la même table de géocodage. */
+  var lx = typeof EUC_DEV705_placer_ === 'function' ? EUC_DEV705_placer_(res.points, ix, nominatif) : { lieux: 0, sansPosition: [], geocodes: 0 };
+  geocodees += lx.geocodes;
   var out = { ok: true, source: 'SUIVI2', version: EUC_DEV583_VERSION_, annee: m.annee, total: res.points.length, points: res.points, nominatif: nominatif,
-    sansPosition: nominatif ? res.sansPosition : [], sansPositionTotal: res.sansPosition.length, geocodees: geocodees, calculMs: Date.now() - t0 };
+    sansPosition: nominatif ? res.sansPosition : [], sansPositionTotal: res.sansPosition.length, geocodees: geocodees,
+    lieux: lx.lieux, lieuxSansPosition: nominatif ? lx.sansPosition : [], lieuxSansPositionTotal: lx.sansPosition.length, calculMs: Date.now() - t0 };
   /* Après un géocodage, Grist a changé : on ne fige pas ce résultat sous l'ancien témoin. */
   if (!geocodees && typeof EUC_DEV572_ecrire_ === 'function') EUC_DEV572_ecrire_(cle, out);
   return out;

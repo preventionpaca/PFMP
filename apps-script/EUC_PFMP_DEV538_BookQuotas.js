@@ -558,7 +558,9 @@ function EUC_DEV547_bookMapData(q){
     if(!parent)out.siret=EUC_DEV538_t_(c.siret);
     return out;
   });
-  return{ok:true,version:EUC_DEV538_VERSION_,nominatif:!parent,total:points.length,points:points};
+  /* DEV705 : lieux de stage distincts du siège (adresses d'entreprises et nombres d'élèves seulement). */
+  var lx={lieux:0,sansPosition:[]};if(typeof EUC_DEV705_enrichir_==='function'){try{lx=EUC_DEV705_enrichir_(points,EUC_DEV538_yearsForScope_(parent?{annee:'ALL',fenetre:3}:safe),!parent);}catch(e705){lx={lieux:0,sansPosition:[],erreur:'Lieux de stage indisponibles.'};}}
+  return{ok:true,version:EUC_DEV538_VERSION_,nominatif:!parent,total:points.length,points:points,lieux:lx.lieux||0,lieuxSansPositionTotal:(lx.sansPosition||[]).length,lieuxErreur:lx.erreur||''};
 }
 /* Une entreprise issue uniquement de l'apprentissage n'a pas nécessairement
  * encore de ligne dans la table de géocodage PFMP. La fiche publique peut
@@ -603,7 +605,7 @@ function EUC_DEV538_mapData(q){
   try{dev576Temoin=typeof EUC_SUIVI2_temoin_==='function'?EUC_SUIVI2_temoin_():'';}catch(eT){dev576Temoin='';}
   if(dev576Temoin&&typeof EUC_DEV572_lire_==='function'){
     var dev576Staff=false;try{dev576Staff=EUC_DEV538_t_(q.mode).toUpperCase()!=='PARENTS'&&EUC_DEV538_staffAllowed_();}catch(eS){}
-    dev576Cle='EUC_DEV576_CARTE_'+EUC_DEV441_digest_(JSON.stringify({a:q.annee,f:q.famille,c:q.classeId,p:q.periodeId,m:q.mode,w:q.fenetre,s:dev576Staff})).slice(0,16)+'_'+String(dev576Temoin).replace(/[^\w-]/g,'');
+    dev576Cle='EUC_DEV705_CARTE_'+EUC_DEV441_digest_(JSON.stringify({a:q.annee,f:q.famille,c:q.classeId,p:q.periodeId,m:q.mode,w:q.fenetre,s:dev576Staff})).slice(0,16)+'_'+String(dev576Temoin).replace(/[^\w-]/g,'');
     var dev576Memo=EUC_DEV572_lire_(dev576Cle);if(dev576Memo&&dev576Memo.points)return dev576Memo;
   }
   var dev576Res=EUC_DEV538_mapDataCalcul_(q);
@@ -612,6 +614,8 @@ function EUC_DEV538_mapData(q){
 }
 function EUC_DEV538_mapDataCalcul_(q){
   q=q||{};var parent=EUC_DEV538_t_(q.mode).toUpperCase()==='PARENTS',years=parent?EUC_DEV538_yearsForScope_({annee:'ALL',fenetre:3}):[],scope=parent?{annee:'ALL',famille:q.famille,classeId:q.classeId,periodeId:q.periodeId}:q,items=parent?EUC_DEV537_mergeAnnualCandidates_(years):EUC_DEV441_geoCandidates_(q),base=EUC_DEV538_mapBase_(items,scope),allowed=!parent&&EUC_DEV538_staffAllowed_();
+  /* DEV705 : lieux de stage distincts du siège, avant de retirer le SIRET (rattachement). */
+  if(typeof EUC_DEV705_enrichir_==='function'){try{var lx=EUC_DEV705_enrichir_(base.points||[],parent?years:EUC_DEV538_yearsForScope_(q),allowed);base.lieux=lx.lieux||0;base.lieuxSansPositionTotal=(lx.sansPosition||[]).length;if(lx.erreur)base.lieuxErreur=lx.erreur;}catch(e705){base.lieuxErreur='Lieux de stage indisponibles.';}}
   (base.points||[]).forEach(function(p){delete p.siret;p.nominatif=allowed;});base.nominatif=allowed;return base;
 }
 function EUC_DEV538_companyHistory(q){

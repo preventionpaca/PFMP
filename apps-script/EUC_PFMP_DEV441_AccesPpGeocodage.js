@@ -520,6 +520,12 @@ function EUC_DEV441_geocodeFrance(q){
   var remaining=all.filter(function(x){return x.pays==='FRANCE'&&(x.statut==='A_GEOCODER'||x.statut==='A_REGEOCODER');}).length;
   return{ok:!persisted.errors.length,geocodes:done,aValider:manual,traites:persisted.saved.length,restants:remaining,erreurs:persisted.errors,candidats:all};
 }
+/* DEV705 : réponse Nominatim → champs de la table de géocodage (sièges et lieux de stage, même règle). */
+function EUC_DEV537_champsMonaco_(json,codePostal){
+  var hit=Array.isArray(json)&&json[0]||null,adr=hit&&hit.address||{},lat=hit&&Number(hit.lat),lon=hit&&Number(hit.lon),isMonaco=EUC_DEV441_t_(adr.country_code).toLowerCase()==='mc'||/\bMONACO\b/i.test(EUC_DEV441_t_(hit&&hit.display_name));
+  if(hit&&isFinite(lat)&&isFinite(lon)&&isMonaco){var score=EUC_DEV443_postal_(adr.postcode)==='98000'?0.95:0.7;return{Adresse_normalisee:EUC_DEV441_t_(hit.display_name),Pays:'MONACO',Code_postal:EUC_DEV443_postal_(adr.postcode||codePostal)||'98000',Commune:EUC_DEV441_t_(adr.city||adr.town||adr.village||'Monaco'),Latitude:lat,Longitude:lon,Score:score,Precision:EUC_DEV441_t_(hit.type||hit.addresstype),Fournisseur:'OpenStreetMap / Nominatim',Statut:score>=0.8?'GEOCODE_AUTOMATIQUE':'A_VALIDER_MANUELLEMENT',Date_geocodage:new Date().toISOString(),Commentaire:score>=0.8?'':'Résultat Monaco à contrôler avant validation.'};}
+  return{Pays:'MONACO',Code_postal:codePostal||'98000',Latitude:null,Longitude:null,Fournisseur:'OpenStreetMap / Nominatim',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point monégasque exploitable trouvé automatiquement.'};
+}
 /* DEV540 — second moteur réservé aux adresses monégasques. Nominatim public
  * impose au plus une requête par seconde : le lot serveur est limité à trois,
  * exécuté séquentiellement et chaque résultat est immédiatement mis en cache
@@ -530,9 +536,7 @@ function EUC_DEV537_geocodeMonaco(q){
   c.forEach(function(x,index){
     var query=EUC_DEV540_monacoQuery_(x.adresse),url=EUC_DEV537_MONACO_GEO_URL_+'?format=jsonv2&addressdetails=1&limit=5&countrycodes=mc&q='+encodeURIComponent(query),json=[],fields;
     try{var res=UrlFetchApp.fetch(url,{method:'get',muteHttpExceptions:true,headers:{Accept:'application/json','Accept-Language':'fr','User-Agent':'Eucalyptus-PFMP/1.0 ('+EUC_LIEN_('accueil')+')'}});if(Number(res.getResponseCode?res.getResponseCode():200)<400)json=JSON.parse(res.getContentText()||'[]');}catch(eFetch){json=[];}
-    var hit=Array.isArray(json)&&json[0]||null,adr=hit&&hit.address||{},lat=hit&&Number(hit.lat),lon=hit&&Number(hit.lon),isMonaco=EUC_DEV441_t_(adr.country_code).toLowerCase()==='mc'||/\bMONACO\b/i.test(EUC_DEV441_t_(hit&&hit.display_name));
-    if(hit&&isFinite(lat)&&isFinite(lon)&&isMonaco){var score=EUC_DEV443_postal_(adr.postcode)==='98000'?0.95:0.7;fields={Adresse_normalisee:EUC_DEV441_t_(hit.display_name),Pays:'MONACO',Code_postal:EUC_DEV443_postal_(adr.postcode||x.codePostal)||'98000',Commune:EUC_DEV441_t_(adr.city||adr.town||adr.village||'Monaco'),Latitude:lat,Longitude:lon,Score:score,Precision:EUC_DEV441_t_(hit.type||hit.addresstype),Fournisseur:'OpenStreetMap / Nominatim',Statut:score>=0.8?'GEOCODE_AUTOMATIQUE':'A_VALIDER_MANUELLEMENT',Date_geocodage:new Date().toISOString(),Commentaire:score>=0.8?'':'Résultat Monaco à contrôler avant validation.'};}
-    else fields={Pays:'MONACO',Code_postal:x.codePostal||'98000',Latitude:null,Longitude:null,Fournisseur:'OpenStreetMap / Nominatim',Statut:'COORDONNEES_A_RENSEIGNER',Date_geocodage:new Date().toISOString(),Commentaire:'Aucun point monégasque exploitable trouvé automatiquement.'};
+    fields=EUC_DEV537_champsMonaco_(json,x.codePostal);
     writes.push({item:x,fields:fields});if(index<c.length-1)Utilities.sleep(1100);
   });
   var persisted=EUC_DEV445_geoBatchUpsert_(writes);persisted.saved.forEach(function(x){EUC_DEV445_geoApply_(x.item,x.fields);if(x.fields.Statut==='GEOCODE_AUTOMATIQUE')done++;else manual++;});EUC_DEV517_geoIndexStore_(q.annee,annual);

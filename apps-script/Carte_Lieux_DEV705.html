@@ -1,0 +1,40 @@
+<style id="EUC_DEV705_STYLE">
+.euc705-legende{background:#fff;border:1px solid #c8e1da;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.18);padding:8px 10px;font:12px/1.45 Arial,sans-serif;color:#172b27;max-width:270px}
+.euc705-legende b{display:block;margin-bottom:3px;font-size:12.5px}
+.euc705-legende div{display:flex;align-items:center;gap:7px;margin:3px 0}
+.euc705-legende svg{flex:0 0 auto}
+.euc705-legende .euc705-off{opacity:.55}
+.euc705-pop{font-size:12.5px;line-height:1.45}
+.euc705-pop .euc705-tag{display:inline-block;background:#fff1e6;color:#9a3412;border:1px solid #fdba74;border-radius:999px;font-size:11px;font-weight:700;padding:0 7px;margin-bottom:3px}
+.euc705-lieux{margin-top:6px;padding:5px 7px;background:#fff7ed;border-left:3px solid #e8590c;border-radius:4px;font-size:12px}
+@media (max-width:600px){.euc705-legende{max-width:200px;font-size:11px;padding:6px 8px}}
+</style>
+<script id="EUC_DEV705_CARTE_LIEUX">
+/* DEV705 — lieu de stage distinct du siège : pastille orange reliée au siège (épingle bleue) par un trait pointillé. */
+window.EUC705=(function(){
+  'use strict';
+  var COULEUR='#e8590c',SIEGE='#2a81cb';
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function pin(c){return '<svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true"><path d="M7 0C3.1 0 0 3.1 0 7c0 5.2 7 15 7 15s7-9.8 7-15c0-3.9-3.1-7-7-7z" fill="'+c+'" stroke="#1d4f7a" stroke-width=".8"/><circle cx="7" cy="7" r="2.6" fill="#fff"/></svg>'}
+  function rond(){return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="'+COULEUR+'" stroke="#fff" stroke-width="2"/><circle cx="8" cy="8" r="7" fill="none" stroke="#9a3412" stroke-width="1"/></svg>'}
+  function trait(){return '<svg width="22" height="8" viewBox="0 0 22 8" aria-hidden="true"><line x1="1" y1="4" x2="21" y2="4" stroke="'+COULEUR+'" stroke-width="2" stroke-dasharray="4 3"/></svg>'}
+  function itineraire(l){var la=Number(l.latitude),lo=Number(l.longitude);if(!isFinite(la)||!isFinite(lo))return'';return '<br><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&amp;destination='+encodeURIComponent(la+','+lo)+'">Itinéraire vers le lieu de stage</a>'}
+  function popupLieu(x,l){var n=Number(l.eleves||0);return '<div class="euc705-pop"><span class="euc705-tag">Lieu de stage</span><br><b>'+esc(x.entreprise)+'</b><br>'+esc(l.adresse)+(n?'<br>'+n+' élève'+(n>1?'s':'')+' en stage à cette adresse':'')+(x.adresse?'<br><span style="color:#667085">Siège : '+esc(x.adresse)+(l.km?' ('+Number(l.km)+' km)':'')+'</span>':'')+itineraire(l)+'</div>'}
+  /* Bloc ajouté à la bulle du siège. */
+  function resume(x){var l=x&&x.lieux||[];if(!l.length)return'';return '<div class="euc705-lieux"><b>Lieu'+(l.length>1?'x':'')+' de stage distinct'+(l.length>1?'s':'')+' du siège</b> (pastille'+(l.length>1?'s':'')+' orange) :'+l.map(function(z){return '<br>• '+esc(z.adresse)+(z.km?' — '+Number(z.km)+' km':'')}).join('')+'</div>'}
+  /* Ajoute les lieux d'un point à une couche ; renvoie leurs coordonnées (pour cadrer la carte). */
+  function ajouter(layer,x){var out=[],l=x&&x.lieux||[],la=Number(x&&x.latitude),lo=Number(x&&x.longitude);if(!layer||!window.L)return out;
+    l.forEach(function(z){var ll=[Number(z.latitude),Number(z.longitude)];if(!isFinite(ll[0])||!isFinite(ll[1]))return;
+      if(isFinite(la)&&isFinite(lo))L.polyline([[la,lo],ll],{color:COULEUR,weight:2,opacity:.85,dashArray:'6 6',interactive:true}).bindTooltip('Siège ↔ lieu de stage : '+esc(x.entreprise),{sticky:true}).addTo(layer);
+      var m=L.circleMarker(ll,{radius:8,color:'#fff',weight:2,fillColor:COULEUR,fillOpacity:1}).bindTooltip('Lieu de stage — '+esc(x.entreprise),{direction:'top',offset:[0,-6]}).bindPopup(popupLieu(x,z),{maxWidth:360}).addTo(layer);
+      m.__euc705=z;out.push(ll)});
+    return out}
+  /* Légende fixe en bas à droite ; actif = au moins un lieu distinct affiché. */
+  function legende(map,actif){if(!map||!window.L)return;var d=map.__euc705Leg;if(!d){var c=L.control({position:'bottomright'});c.onAdd=function(){var e=L.DomUtil.create('div','euc705-legende');e.setAttribute('role','note');e.setAttribute('aria-label','Légende de la carte');L.DomEvent.disableClickPropagation(e);return e};c.addTo(map);d=map.__euc705Leg=c.getContainer()}
+    d.innerHTML='<b>Légende</b><div>'+pin(SIEGE)+'<span>Siège de l’entreprise</span></div><div'+(actif?'':' class="euc705-off"')+'>'+rond()+'<span>Lieu de stage distinct du siège</span></div><div'+(actif?'':' class="euc705-off"')+'>'+trait()+'<span>relie le lieu de stage à son siège</span></div>'+(actif?'':'<div class="euc705-off"><span>Aucun lieu distinct pour ces filtres.</span></div>')}
+  /* Texte ajouté au statut de la carte. */
+  function statut(r){r=r||{};var n=Number(r.lieux||0),s=Number(r.lieuxSansPositionTotal||0),t='';if(n)t+=' · '+n+' lieu'+(n>1?'x':'')+' de stage distinct'+(n>1?'s':'')+' du siège (pastille'+(n>1?'s':'')+' orange)';if(s)t+=' · '+s+' lieu'+(s>1?'x':'')+' de stage pas encore localisé'+(s>1?'s':'');if(r.lieuxErreur)t+=' · '+String(r.lieuxErreur);return t}
+  function compter(points){return(points||[]).reduce(function(a,x){return a+((x&&x.lieux)||[]).length},0)}
+  return{ajouter:ajouter,legende:legende,statut:statut,resume:resume,popupLieu:popupLieu,compter:compter,couleur:COULEUR}
+})();
+</script>

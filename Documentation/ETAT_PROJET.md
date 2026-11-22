@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 novembre 2026 — DEV705 : lieu de stage distinct du siège sur les cartes
+
+- Constat : des entreprises ont leur siège loin du lieu de stage (TECHNIDRILL à Chassieu, élève près de Nice) ; les cartes n'affichaient que le siège.
+- Cartes concernées : « Entreprises et cartographie » (`cartographie-pfmp`, y compris ouverte depuis le suivi d'une classe, familles et toutes années), Book des entreprises administration et professeurs (carte complète et « Voir sur la carte » d'une entreprise), Book élèves et familles (idem). Non concernées : carte des apprentis (les contrats n'ont pas de lieu de stage), page Géocodage (outil des sièges).
+- Affichage : siège = épingle bleue (inchangée) ; lieu de stage distinct = pastille orange reliée à son siège par un trait pointillé orange, info-bulle « Lieu de stage — entreprise », bulle avec adresse, nombre d'élèves, siège et distance, itinéraire vers le lieu ; la bulle du siège liste ses lieux distincts ; légende en bas à droite (grisée s'il n'y a aucun lieu pour les filtres) ; statut « N lieux de stage distincts du siège (pastilles orange) · M pas encore localisés ».
+- Source : `Lieu_stage_adresse` / `Lieu_stage_code_postal` / `Lieu_stage_commune` des conventions et des dépôts en ligne (`EUC_DEV688_parcourir_`, index sans nom d'élève mis en cache par témoin Grist) ; carte du suivi : fiche du modèle EUC_SUIVI2 (`lieu`). Recopie du siège ignorée (DEV662), numéro ajouté à la voie du siège = siège (DEV666), lieu à moins de 50 m du siège non affiché.
+- Géocodage : même table et même moteur que le siège (`EUC_DEV583_geocoder_` : BAN pour la France, Nominatim pour Monaco — désormais aussi en automatique, 2 adresses au plus par ouverture). La ligne d'un lieu porte le nom de l'entreprise et l'adresse du lieu, sans SIRET, pour ne jamais déplacer le siège. Géocodage déclenché seulement pour les personnels ; un résultat peu précis reste « à valider » et n'est pas affiché. `EUC_DEV537_champsMonaco_` partagé avec la page Géocodage.
+- Rattachement d'un lieu à une entreprise du book : SIRET si les deux en ont un, sinon nom ; book et ancienne carte : lieux des années du filtre (pas de filtrage par classe ou période, contrairement à la carte du suivi qui suit exactement la classe et la période).
+- Caches renouvelés : carte du suivi (`EUC_DEV583_VERSION_` 1.0.0-dev.705), ancienne carte (`EUC_DEV705_CARTE_`).
+- Tests : `tests/run-dev705-tests.js` (7).
+- Rappel : TECHNIDRILL et CV3E06 n'ont toujours aucun lieu saisi ; il apparaîtra sur les cartes dès sa saisie par « Éditer la fiche » du suivi.
+
 ## Mise à jour du 21 novembre 2026 — DEV704 : statistiques — pôles de formation, apprentis comptés, classes accueillies en même temps
 
 - Vérification réelle : 2BTS MV = 12 scolaires avec convention + 8 apprentis = 20 « élèves en entreprise » du suivi. Pas d'erreur de dénomination ; le détail « Élèves » n'affichait que les stagiaires. Il donne désormais stagiaires, apprentis et total par niveau et par classe.
