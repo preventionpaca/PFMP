@@ -1,5 +1,19 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 novembre 2026 — DEV708 : « Tester un SIRET ou un NIS » (page `test-siret-pfmp`)
+
+- Nouvelle page admin (vignette Entreprises) : un champ unique reconnaît un SIRET (14 chiffres, espaces admis), un NIS de
+  Monaco (4 chiffres + lettre + 5 chiffres, ou numéro interne EUC-MC) ou le nom d'une entreprise de Monaco, et affiche ce
+  que l'élève obtiendrait dans « Déclarer mon entreprise », sans élève, sans captcha et sans aucune écriture.
+- Mêmes recherches que le formulaire : `EUC_ENT_rechercherSiret` (notre base), annuaire officiel interrogé depuis le
+  navigateur puis `EUC_DEV603_traiterApi`, question DEV707 « où fais-tu ton stage ? » pour un SIRET hors 06/Monaco
+  (le choix relance le test sur le SIRET choisi), `EUC_DEV668_verifierNis` (base puis RCI, lettre près),
+  `EUC_DEV646_rechercherMonacoParNom` puis `EUC_DEV667_rechercherRci` / `ficheRci`. Détails ajoutés pour le bureau :
+  siège ou établissement secondaire, état, APE, source, lien vers l'annuaire officiel.
+- SIREN seul (9 chiffres) : message explicite, l'élève doit donner les 14 chiffres.
+- Tests : `tests/run-dev708-tests.js` (6 tests : reconnaissance de la saisie, route et lien, lectures seules, bouton
+  bloqué avec indicateur rendu en succès / erreur / délai dépassé, annuaire en panne, NIS et nom).
+
 ## Mise à jour du 22 novembre 2026 — DEV707 : établissement d'accueil (SIRET du siège hors Alpes-Maritimes)
 
 - Constat (TECHNIDRILL) : l'élève recopie le SIRET du siège (Chassieu, …00064) alors que le stage a lieu dans un autre établissement de la même entreprise (ZI Carros–Le Broc, 1re avenue, 18e rue, SIRET 351 053 673 00049). Les conventions 2026-2027 PFMP-2026-000872 et 000873 portent le siège : cartes, distances (475 km) et ordres de mission partent de Chassieu. Les dépôts des années précédentes indiquaient bien Carros.

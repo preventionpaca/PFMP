@@ -51,6 +51,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV698_afficher(e);
     case 'contacts-entreprises-pfmp':
       return EUC_DEV706_afficher(e);
+    case 'test-siret-pfmp':
+      return EUC_DEV708_afficher(e);
     case 'acces-inpi-pfmp':
       return EUC_DEV651_afficher(e);
     case 'plannings-pfmp':

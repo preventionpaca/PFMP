@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tester un SIRET ou un NIS</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--rouge:#b42318;--orange:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:900px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:17px;margin:0 0 6px}
+.note{color:var(--gris);font-size:13px;margin:2px 0 10px}
+label{display:block;font-weight:700;font-size:13px}
+.saisie{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.saisie label{flex:1 1 320px}
+input{width:100%;font:16px Arial,sans-serif;padding:9px 10px;border:1px solid var(--bord);border-radius:7px;margin-top:3px;letter-spacing:.03em}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:10px 14px;background:var(--vert);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}button.leger{background:var(--vert-clair);color:var(--vert)}
+.choix{display:block;width:100%;text-align:left;margin:6px 0;background:#fff;color:var(--texte);border:1px solid var(--bord);font-weight:400}
+.choix:hover{border-color:var(--vert)}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.type{font-size:13px;color:var(--gris);margin:6px 0 0;min-height:18px}
+.officiel{border-left:4px solid var(--vert);background:#f4f8f6;padding:10px 12px;border-radius:6px;margin:8px 0}
+.officiel b.nom{font-size:16px}
+.erreur{color:var(--rouge);font-weight:700}.ok{color:#166534;font-weight:700}.attention{color:var(--orange);font-weight:700}
+dl.details{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:8px 0 0;font-size:13px}dl.details dt{color:var(--gris)}dl.details dd{margin:0}
+.vide{color:var(--gris);font-style:italic}
+ul.aide{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--gris)}
+@media(max-width:600px){header,nav{padding-left:16px;padding-right:16px}dl.details{grid-template-columns:1fr}dl.details dt{margin-top:4px}}
+</style>
+</head>
+<body>
+<header><h1>Tester un SIRET ou un NIS</h1><p>Voir exactement ce que l’élève obtiendrait dans le formulaire « Déclarer mon entreprise », sans élève et sans rien enregistrer.</p></header>
+<nav aria-label="Fil d’Ariane"><a href="__LIEN_ACCUEIL__" target="_top">Accueil PFMP</a> › <a href="<?= adminBase ?>?page=admin-pfmp" target="_top">Administration PFMP</a> › Tester un SIRET ou un NIS</nav>
+<main>
+  <section>
+    <div class="saisie">
+      <label for="q">SIRET, NIS de Monaco ou nom d’une entreprise de Monaco<input id="q" autocomplete="off" spellcheck="false" placeholder="732 829 320 00074 · 7112B19343 · nom de l’entreprise"></label>
+      <button type="button" id="tester">Tester</button>
+      <button type="button" class="leger" id="effacer">Effacer</button>
+    </div>
+    <p class="type" id="type" role="status" aria-live="polite"></p>
+    <ul class="aide">
+      <li><b>14 chiffres</b> : SIRET français, même vérification que l’élève (notre base, puis l’annuaire officiel), y compris la question « où fais-tu ton stage ? » quand le SIRET est hors des Alpes-Maritimes.</li>
+      <li><b>4 chiffres, une lettre, 5 chiffres</b> (10 caractères) : NIS de Monaco, cherché dans notre base puis au registre de Monaco (RCI).</li>
+      <li><b>Un nom</b> : recherche d’une entreprise de Monaco par son nom, comme le bouton « Chercher par le nom » de l’élève.</li>
+    </ul>
+    <p class="note">Aucune écriture : ni convention, ni dépôt, ni entreprise. Les recherches sont seulement lues.</p>
+  </section>
+  <section>
+    <h2>Résultat</h2>
+    <div id="res"><p class="vide">Saisissez un numéro puis « Tester ».</p></div>
+  </section>
+</main>
+<?!= EUC_ENT_inclure('Etablissements_DEV707') ?>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id)};
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^Exception:\s*/,'')}
+  /* Bouton asynchrone : bloqué, indicateur visible, état initial rendu en succès, erreur et délai dépassé.
+   * Renvoie fin(), à appeler une seule fois à la fin de toute la chaîne d'appels ; fin.actif() dit si elle n'a pas expiré. */
+  function occupe(btn,libelle,ms,surDelai){var old=btn.innerHTML,fait=false;btn.disabled=true;btn.innerHTML='<span class="spinner" aria-hidden="true"></span>'+esc(libelle);
+    var tm=setTimeout(function(){if(fait)return;fin();if(surDelai)surDelai()},ms);
+    function fin(){if(fait)return;fait=true;clearTimeout(tm);btn.disabled=false;btn.innerHTML=old}
+    fin.actif=function(){return !fait};fin.libelle=function(t){if(!fait)btn.innerHTML='<span class="spinner" aria-hidden="true"></span>'+esc(t)};return fin}
+  function appel(nom,arg,ok,ko){google.script.run.withSuccessHandler(ok).withFailureHandler(ko)[nom](arg)}
+  /* Type de saisie (calcul pur, exposé pour les tests). */
+  function nature(v){var t=String(v||'').trim(),c=t.replace(/[\s.\-]/g,'').toUpperCase(),d=t.replace(/\D/g,'');
+    if(!t)return'';if(/^\d{4}[A-Z]\d{5}$/.test(c)||/^EUCMC\d{4,}$/.test(c))return'NIS';
+    if(/^[\d\s.\-]+$/.test(t))return d.length===14?'SIRET':'CHIFFRES';
+    return t.replace(/[^A-Za-z0-9À-ÿ]/g,'').length>=3?'NOM':'COURT'}
+  var LIBELLES={SIRET:'SIRET français (14 chiffres)',NIS:'NIS de Monaco',NOM:'Nom d’entreprise de Monaco',CHIFFRES:'Chiffres : un SIRET en compte 14',COURT:'Écrivez au moins 3 lettres'};
+  $('q').addEventListener('input',function(){var n=nature(this.value);$('type').textContent=n?'Reconnu : '+LIBELLES[n]+(n==='CHIFFRES'?' (vous en avez saisi '+this.value.replace(/\D/g,'').length+')':''):''});
+  $('q').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('tester').click()}});
+  $('effacer').onclick=function(){$('q').value='';$('type').textContent='';$('res').innerHTML='<p class="vide">Saisissez un numéro puis « Tester ».</p>';$('q').focus()};
+  function montrer(h){$('res').innerHTML=h}
+  function erreur(t){montrer('<p class="erreur">'+esc(t)+'</p>')}
+  function lienAnnuaire(siret){var s=String(siret||'').replace(/\D/g,'').slice(0,9);return s.length===9?'<a href="https://annuaire-entreprises.data.gouv.fr/entreprise/'+s+'" target="_blank" rel="noopener noreferrer">Voir l’entreprise sur l’annuaire officiel</a>':''}
+  function ligne(k,v){return v?'<dt>'+esc(k)+'</dt><dd>'+v+'</dd>':''}
+  /* Annuaire officiel interrogé depuis le navigateur (il refuse les serveurs Google), comme le formulaire élève :
+   * deux nouveaux essais espacés en cas d'erreur du service, puis la cause. */
+  function annuaire(url,ok,ko,essai){essai=essai||1;
+    var ctl=typeof AbortController==='function'?new AbortController():null,fini=false,minu=setTimeout(function(){if(ctl)ctl.abort()},15000);
+    function rate(cause,attente){if(fini)return;fini=true;clearTimeout(minu);if(essai<3){setTimeout(function(){annuaire(url,ok,ko,essai+1)},Math.min(attente||1500*essai,5000));return}ko(cause)}
+    fetch(url,Object.assign({headers:{Accept:'application/json'}},ctl?{signal:ctl.signal}:{})).then(function(x){
+      if(!x.ok){rate('erreur '+x.status,Number(x.headers.get('Retry-After'))*1000);return null}
+      return x.json().then(function(json){if(fini)return;if(!json||!Array.isArray(json.results)){rate('réponse illisible');return}fini=true;clearTimeout(minu);ok(json)});
+    }).catch(function(e){rate(e&&e.name==='AbortError'?'délai dépassé':'réseau')})}
+
+  /* ---------- SIRET ---------- */
+  function carteSiret(s,e,source){
+    if(e.nonDiffusible===true)return '<div class="officiel" id="officiel"><b class="nom">SIRET '+esc(s)+' trouvé</b> — entreprise <b>non diffusible</b>'+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+
+      '<br><span class="note">L’élève doit saisir lui-même le nom et l’adresse ; le dossier est signalé au bureau.</span></div>';
+    var adr=[e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(function(x){return String(x||'').trim()}).join(', ');
+    return '<p class="note">Ce que voit l’élève :</p><div class="officiel" id="officiel"><b class="nom">'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc(adr)+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>'+
+      '<dl class="details">'+ligne('SIRET',esc(s))+ligne('SIREN',esc(e.siren||s.slice(0,9)))+ligne('Établissement',e.estSiege?'siège de l’entreprise':'établissement secondaire (pas le siège)')+ligne('État',e.etat==='Fermé'?'<span class="erreur">fermé</span>':'<span class="ok">actif</span>')+
+      ligne('Activité',esc(e.codeApe))+ligne('Source',source==='grist'?'fiche déjà connue dans notre base':'annuaire officiel (Recherche d’entreprises)')+ligne('Annuaire',lienAnnuaire(s))+'</dl>'}
+  function testerSiret(s,btn){var fin=occupe(btn,'Vérification du SIRET…',60000,function(){erreur('Délai dépassé : la vérification n’a pas répondu à temps. Réessayez.')});
+    montrer('<p class="vide"><span class="spinner" aria-hidden="true"></span>Vérification du SIRET '+esc(s)+'…</p>');
+    function afficher(e,source){if(!fin.actif())return;fin();
+      if(!e){montrer('<p class="note">Ce que voit l’élève :</p><p class="erreur">Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.</p><p class="note">'+lienAnnuaire(s)+'</p>');return}
+      montrer(carteSiret(s,e,source));
+      /* DEV707 : même question que l'élève quand l'adresse du SIRET est hors des Alpes-Maritimes et de Monaco. */
+      if(window.EUC707&&!e.nonDiffusible)EUC707.proposer({siret:s,nom:e.raisonSociale,cp:e.codePostal,commune:e.commune,ancre:$('officiel'),
+        choisir:function(x){$('q').value=x;$('q').dispatchEvent(new Event('input'));testerSiret(x,$('tester'))}})}
+    appel('EUC_ENT_rechercherSiret',s,function(r){if(!fin.actif())return;
+      if(r&&r.entreprise){afficher(r.entreprise,'grist');return}
+      fin.libelle('Annuaire officiel…');
+      annuaire(r.url,function(json){if(!fin.actif())return;fin.libelle('Lecture de la fiche…');
+        appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){afficher(t&&t.entreprise,'api')},function(e){if(!fin.actif())return;fin();erreur(msgErr(e))})},
+        function(cause){if(!fin.actif())return;fin();montrer('<p class="note">Ce que voit l’élève :</p><p class="erreur">Le service officiel de vérification des entreprises ne répond pas pour le moment ('+esc(cause)+').</p><p class="note">L’élève est invité à réessayer, ou à utiliser « Mon entreprise ne fonctionne pas » (vérification à l’envoi). '+lienAnnuaire(s)+'</p>')})
+    },function(e){if(!fin.actif())return;fin();montrer('<p class="note">Ce que voit l’élève :</p><p class="erreur">'+esc(msgErr(e))+'</p>')})}
+
+  /* ---------- NIS de Monaco ---------- */
+  function testerNis(n,btn){var fin=occupe(btn,'Vérification du NIS…',60000,function(){erreur('Délai dépassé : le registre de Monaco n’a pas répondu à temps. Réessayez.')});
+    montrer('<p class="vide"><span class="spinner" aria-hidden="true"></span>Recherche du NIS '+esc(n)+' dans notre base puis au registre de Monaco…</p>');
+    appel('EUC_DEV668_verifierNis',{nis:n},function(r){if(!fin.actif())return;fin();
+      if(!r||!r.trouve){montrer('<p class="attention">NIS '+esc(n)+' introuvable'+(r&&r.erreur?' (registre de Monaco indisponible : '+esc(r.erreur)+')':' dans notre base et au registre de Monaco')+'.</p><p class="note">L’élève peut l’envoyer quand même : le bureau G205 l’identifiera. Essayez aussi la recherche par le nom.</p>');return}
+      montrer('<div class="officiel"><b class="nom">'+esc(r.nom)+'</b>'+(r.enseigne?' — '+esc(r.enseigne):'')+'<br>'+esc([r.adresse,(r.cp||'')+' '+(r.ville||'')].filter(function(x){return String(x||'').trim()}).join(', '))+'</div>'+
+        '<dl class="details">'+ligne('NIS',esc(r.nis))+(r.nisRegistre&&r.nisRegistre!==r.nis?ligne('NIS au registre',esc(r.nisRegistre)+' <span class="note">(même entreprise, lettre différente)</span>'):'')+ligne('RCI',esc(r.rci))+
+        ligne('Source',r.source==='BASE'?'fiche déjà connue dans notre base':'registre de Monaco (RCI)')+ligne('Pour l’élève','<span class="ok">entreprise reconnue à l’envoi : inutile de passer au bureau pour l’identifier</span>')+'</dl>')
+    },function(e){if(!fin.actif())return;fin();erreur(msgErr(e))})}
+
+  /* ---------- Nom d'une entreprise de Monaco ---------- */
+  function testerNom(t,btn){var fin=occupe(btn,'Recherche…',60000,function(){erreur('Délai dépassé : la recherche n’a pas répondu à temps. Réessayez.')});
+    montrer('<p class="vide"><span class="spinner" aria-hidden="true"></span>Recherche de « '+esc(t)+' » parmi les entreprises de Monaco de notre base…</p>');
+    appel('EUC_DEV646_rechercherMonacoParNom',t,function(r){if(!fin.actif())return;var l=(r&&r.resultats)||[];
+      if(!l.length){fin.libelle('Registre de Monaco…');rci(t,fin,'Aucune entreprise de ce nom dans notre base.');return}
+      fin();
+      montrer('<p class="note">Ce que voit l’élève — entreprises de notre base :</p>'+l.map(function(x,i){return '<button type="button" class="choix" data-b="'+i+'"><b>'+esc(x.nom)+'</b>'+(x.enseigne?' — '+esc(x.enseigne):'')+'<br><span class="note">'+esc([x.adresse,x.ville].filter(Boolean).join(', '))+' · '+(x.siret?'SIRET français '+esc(x.siret):'NIS '+esc(x.nis||'—'))+'</span></button>'}).join('')+
+        '<p><button type="button" class="leger" id="versRci">Elle n’est pas dans la liste : chercher au registre de Monaco</button></p>');
+      $('res').querySelectorAll('button[data-b]').forEach(function(b){b.onclick=function(){var x=l[Number(b.dataset.b)];$('q').value=x.siret||x.nis||'';$('q').dispatchEvent(new Event('input'));$('tester').click()}});
+      $('versRci').onclick=function(){var b=this;if(b.disabled)return;var f=occupe(b,'Recherche…',60000,function(){erreur('Délai dépassé : le registre de Monaco n’a pas répondu à temps.')});rci(t,f,'')};
+    },function(e){if(!fin.actif())return;fin();erreur(msgErr(e))})}
+  function rci(t,fin,avant){
+    appel('EUC_DEV667_rechercherRci',t,function(r){if(!fin.actif())return;fin();var l=(r&&r.resultats)||[];
+      if(!l.length){montrer((avant?'<p class="note">'+esc(avant)+'</p>':'')+'<p class="attention">Ni dans notre base, ni au registre de Monaco.</p><p class="note">L’élève remplit ce qu’il sait ; le bureau G205 l’enregistrera.</p>');return}
+      montrer((avant?'<p class="note">'+esc(avant)+'</p>':'')+'<p class="note">Ce que voit l’élève — registre de Monaco :</p>'+l.map(function(x,i){return '<button type="button" class="choix" data-r="'+i+'"><b>'+esc(x.nom)+'</b>'+(x.sigle?' ('+esc(x.sigle)+')':'')+'<br><span class="note">'+esc(x.forme)+(x.actif?'':' · '+esc(x.etat))+' · RCI '+esc(x.rci)+'</span></button>'}).join('')+'<div id="fiche"></div>');
+      $('res').querySelectorAll('button[data-r]').forEach(function(b){b.onclick=function(){if(b.disabled)return;var x=l[Number(b.dataset.r)],f=occupe(b,'Lecture de la fiche…',60000,function(){$('fiche').innerHTML='<p class="erreur">Délai dépassé : la fiche du registre n’a pas répondu à temps.</p>'});
+        appel('EUC_DEV667_ficheRci',x.rci,function(z){if(!f.actif())return;f();$('fiche').innerHTML='<div class="officiel"><b class="nom">'+esc(z.nom||x.nom)+'</b><br>'+esc([z.adresse,(z.cp||'')+' '+(z.ville||'Monaco')].filter(function(v){return String(v||'').trim()}).join(', '))+'</div><dl class="details">'+ligne('NIS',z.nis?esc(z.nis):'<span class="attention">absent de la fiche</span>')+ligne('RCI',esc(z.rci))+ligne('Fiche',z.lien?'<a href="'+esc(z.lien)+'" target="_blank" rel="noopener noreferrer">Registre de Monaco</a>':'')+'</dl>'},
+          function(e){if(!f.actif())return;f();$('fiche').innerHTML='<p class="erreur">'+esc(msgErr(e))+'</p>'})}});
+    },function(e){if(!fin.actif())return;fin();montrer('<p class="erreur">Le registre de Monaco ne répond pas : '+esc(msgErr(e))+'</p><p class="note">L’élève remplit ce qu’il sait ; le bureau G205 l’enregistrera.</p>')})}
+
+  $('tester').onclick=function(){var b=this;if(b.disabled)return;var v=$('q').value.trim(),n=nature(v);
+    if(n==='SIRET')return testerSiret(v.replace(/\D/g,''),b);
+    if(n==='NIS')return testerNis(v.replace(/[\s.\-]/g,'').toUpperCase(),b);
+    if(n==='NOM')return testerNom(v,b);
+    if(n==='CHIFFRES')return erreur('Un SIRET compte 14 chiffres (vous en avez saisi '+v.replace(/\D/g,'').length+'). Le SIREN (9 chiffres) ne suffit pas : l’élève doit donner le SIRET de l’établissement.');
+    if(n==='COURT')return erreur('Écrivez au moins 3 lettres du nom de l’entreprise.');
+    erreur('Saisissez un SIRET, un NIS ou un nom.')};
+  window.EUC708={nature:nature};
+  try{$('q').focus()}catch(e){}
+})();
+</script>
+</body>
+</html>
