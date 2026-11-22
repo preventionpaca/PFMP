@@ -272,6 +272,22 @@ function EUC_DEV665_ajouterBaseMonaco_(f) {
   } catch (e) { return 'non ajoutée à la base des entreprises : ' + EUC_DEV665_t_(e && e.message || e); }
 }
 
+/* DEV711 : établissement fermé selon l'INSEE mais vérifié par le bureau (entreprise contactée, aucun autre SIRET actif) :
+ * le SIRET est gardé, le dépôt sort de « à traiter » comme un dépôt vérifié ordinaire (même état que « Vérifier le SIRET »
+ * sur un établissement actif). Aucune convention créée, aucun courriel ; une seule ligne de la table d'attente, motif tracé. */
+function EUC_DEV711_accepterFerme(q) {
+  EUC_IMPORT_exigerAdminTexte_();
+  q = q || {};
+  var r = EUC_DEV665_ligne_(q.id), f = r.fields || {}, v = EUC_DEV665_vue_(r), motif = EUC_DEV665_t_(q.motif).slice(0, 300);
+  if (!v.ferme) throw new Error('Ce dépôt n’a pas d’alerte « établissement fermé » : actualisez la liste.');
+  if (!v.dansSuivi) throw new Error('Vérifiez d’abord le SIRET de l’entreprise.');
+  if (!motif) throw new Error('Indiquez ce qui a été vérifié (motif).');
+  var champs = { Niveau_controle: 'VERT', Decision: 'A_VALIDER',
+    Alertes: EUC_DEV665_trace_(f.Alertes, 'Établissement fermé selon l’INSEE : SIRET ' + v.numeroSaisi + ' gardé par le bureau — ' + motif) };
+  EUC_DEV665_patch_(r.id, champs);
+  return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)) };
+}
+
 /* Sans suite (doublon, abandon) : la ligne reste dans la table, marquée REJETEE avec son motif. */
 /* Recherche par nom dans les entreprises de Monaco de la base (même recherche que le QR code). */
 function EUC_DEV665_chercherMonaco(q) {

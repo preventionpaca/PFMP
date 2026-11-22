@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV711 : « Garder ce SIRET (vérifié par le bureau) » (soumissions à traiter)
+
+- Problème : un dépôt déjà dans le suivi restait « à traiter » quand l'INSEE déclarait l'établissement fermé (`Niveau_controle` ORANGE). « Enregistrer les corrections » ne touche pas au SIRET. La seule sortie était « Valider : créer la convention », qui importe le dépôt et envoie un courriel à l'élève.
+- Exemples réels (annuaire officiel, 23/11/2026) :
+  - NETCOM CONSEIL : unité légale active, aucun établissement ouvert, siège 88514123400033 fermé. Il n'y a pas d'autre SIRET à saisir.
+  - AB AUTO : SIRET 94776920400027 de nouveau actif, au 17 avenue Sainte-Marguerite. « Vérifier le SIRET » suffit.
+- Nouveau bouton « Garder ce SIRET (vérifié par le bureau) », affiché seulement pour un établissement fermé dont le dépôt est déjà dans le suivi.
+- Il demande un motif et appelle `EUC_DEV711_accepterFerme`. La ligne de la table d'attente prend `Niveau_controle` VERT et `Decision` A_VALIDER (même état qu'un SIRET actif vérifié), avec une trace dans `Alertes`.
+- Aucune convention créée, aucun courriel.
+- Tests : `tests/run-dev711-tests.js` (4).
+
 ## Mise à jour du 23 novembre 2026 — DEV710 : statistiques, élèves accueillis ensemble avec leurs professeurs
 
 - Section « Accueil par entreprise » de `statistiques-pfmp` : tableau « Élèves accueillis ensemble : noms et professeurs ». Pour chaque entreprise et chaque groupe de stages dont les dates se chevauchent, il donne les dates, le nombre d'élèves, leurs noms avec leur classe, le suivi téléphonique, le professeur visiteur et ce qu'il faut vérifier (plusieurs professeurs, non affecté).

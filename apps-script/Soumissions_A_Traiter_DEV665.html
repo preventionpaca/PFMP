@@ -104,7 +104,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       '<h3>Lieu du stage <span class="note">(vide si identique à l’adresse de l’entreprise)</span></h3><div class="champs">'+ch('Lieu_stage_adresse','Adresse',ld.adresse)+ch('Lieu_stage_code_postal','Code postal',ld.cp)+ch('Lieu_stage_commune','Commune',ld.commune)+'</div>'+
       '<p>'+bouton('corriger',x.id,'Enregistrer les corrections','leger')+' <span class="note">Le SIRET ou le NIS se corrigent plus haut (« Vérifier le SIRET » ou Monaco).</span></p></details>';
     /* Valider (import dans Grist) : seulement pour une soumission à traiter déjà identifiée (ex. établissement fermé à confirmer). */
-    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
+    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.ferme&&x.dansSuivi&&!x.doublonDe?bouton('garderSiret',x.id,'Garder ce SIRET (vérifié par le bureau)','leger'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
   }
   /* Entreprise connue (base ou dépôt vérifié) : un clic reprend son SIRET ou son NIS. */
@@ -196,6 +196,13 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV672_corrigerSaisie',{id:id,champs:champs},60000,function(r){occupe(b,false);remplacer(r.soumission);var d=$('d'+id);if(d)d.open=true;
         msg(id,r.inchange?'Aucune modification à enregistrer.':'Corrigé : '+r.corriges.join(', ')+'.'+(r.ignores?' ('+r.ignores+' champ(s) absent(s) de la table, non enregistré(s).)':''),r.ignores?'erreur':'ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    /* DEV711 : établissement fermé vérifié par le bureau : SIRET gardé, aucune convention créée, aucun courriel. */
+    if(a==='garderSiret'){
+      var vu=prompt('Garder le SIRET '+x.numeroSaisi+' pour '+x.eleve+' malgré « établissement fermé selon l’INSEE » ?\nAucune convention n’est créée et aucun courriel n’est envoyé.\nQu’avez-vous vérifié ?','entreprise contactée : en activité à cette adresse');if(vu===null)return;
+      if(!String(vu).trim()){msg(id,'Indiquez ce qui a été vérifié.','erreur');return;}
+      occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV711_accepterFerme',{id:id,motif:vu},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'SIRET gardé : le dépôt ne demande plus d’action.','ok');},
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     if(a==='sansSuite'){
       var motif=prompt('Classer sans suite la soumission '+x.numero+' de '+x.eleve+' ?\nMotif :',x.doublonDe?'doublon de '+x.doublonDe:'');if(motif===null)return;
