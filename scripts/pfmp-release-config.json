@@ -32,6 +32,7 @@
     {"page": "entreprises-monaco-pfmp", "scope": "admin", "expected": "Entreprises de Monaco"},
     {"page": "soumissions-a-traiter-pfmp", "scope": "admin", "expected": "Soumissions à traiter"},
     {"page": "statistiques-pfmp", "scope": "admin", "expected": "Statistiques PFMP"},
+    {"page": "contacts-entreprises-pfmp", "scope": "admin", "expected": "Fiabiliser les contacts entreprises"},
     {"page": "acces-inpi-pfmp", "scope": "admin", "expected": "Accès INPI"},
     {"page": "mes-visites-pfmp", "scope": "admin", "expected": "Mes visites"},
     {"page": "apprentis-classes-pfmp", "scope": "admin", "expected": "Apprentis par classe entière"},

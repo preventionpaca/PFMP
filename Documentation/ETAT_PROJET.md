@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 novembre 2026 — DEV706 : « Fiabiliser les contacts entreprises » (page `contacts-entreprises-pfmp`)
+
+- Vignette dans l'Accueil d'administration, colonne Entreprises, sous « Répertoire entreprises et contacts ».
+- `EUC_DEV706_Contacts.js` : toutes les saisies de responsables et de tuteurs (conventions et dépôts en ligne, toutes années, hors données d'essai) regroupées par entreprise (SIRET, NIS ou nom + commune) puis par personne (même nom à l'orthographe près : accents, civilité, prénom / nom inversés, 1 ou 2 lettres, nom seul). Lieu de stage indiqué, à défaut le siège.
+- Alertes avec niveau : orthographes différentes, nom incomplet, nom générique, nom absent ; téléphone invalide (France 10 chiffres, Monaco +377), plusieurs téléphones ; courriel mal formé, domaine suspect avec proposition (gmial.com → gmail.com), plusieurs courriels ; même téléphone ou courriel pour deux personnes ; coordonnées incomplètes.
+- Tri par entreprise, lieu de stage, nom du responsable, nom du tuteur ou risque ; filtres risque, rôle, année, recherche ; export Excel de la liste fiable (coordonnées de référence, sinon les plus fréquentes).
+- Correction : « Enregistrer la référence » (nom, téléphone, courriel, motif) dans la table `EUC_CONTACTS_REFERENCE`, créée au premier enregistrement. Les conventions ne sont jamais réécrites (décision du 22/11/2026). « Retirer la validation » désactive la ligne (aucune suppression). Une nouvelle saisie différente après validation est signalée.
+- Dépôts en ligne : courriels du responsable et du tuteur désormais repris par `EUC_DEV688_parcourir_`.
+
 ## Mise à jour du 22 novembre 2026 — DEV705 : lieu de stage distinct du siège sur les cartes
 
 - Constat : des entreprises ont leur siège loin du lieu de stage (TECHNIDRILL à Chassieu, élève près de Nice) ; les cartes n'affichaient que le siège.

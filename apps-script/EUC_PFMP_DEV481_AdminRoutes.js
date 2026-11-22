@@ -49,6 +49,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV665_afficher(e);
     case 'statistiques-pfmp':
       return EUC_DEV698_afficher(e);
+    case 'contacts-entreprises-pfmp':
+      return EUC_DEV706_afficher(e);
     case 'acces-inpi-pfmp':
       return EUC_DEV651_afficher(e);
     case 'plannings-pfmp':

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Fiabiliser les contacts entreprises</title>
+<style>
+:root{--vert:#0b6b4f;--vert-clair:#e7f4ee;--texte:#16302a;--gris:#5b6b66;--bord:#cfe3da;--alerte:#9a3412;--orange:#b45309;--rouge:#b42318;--jaune:#fff7e0}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
+header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
+nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
+main{max-width:1250px;margin:0 auto;padding:0 16px 40px}
+section{background:#fff;border:1px solid var(--bord);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:17px;margin:0 0 4px}
+.note{color:var(--gris);font-size:13px;margin:2px 0 10px}
+.filtres{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px 12px;align-items:end}
+label{display:block;font-weight:700;font-size:13px}
+select,input,textarea{width:100%;font:14px Arial,sans-serif;padding:7px 8px;border:1px solid var(--bord);border-radius:7px;background:#fff;margin-top:3px}
+button{font:700 14px Arial,sans-serif;border:0;border-radius:7px;padding:8px 12px;background:var(--vert);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}button.leger{background:var(--vert-clair);color:var(--vert)}button.petit{padding:5px 9px;font-size:13px}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:t .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+.outils{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0}
+.etat{font-weight:700}.etat.erreur{color:var(--rouge)}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.tuile{background:var(--vert-clair);border-radius:9px;padding:10px 12px;border:2px solid transparent;text-align:left;color:var(--texte);font:inherit;cursor:pointer}
+.tuile:hover,.tuile[aria-pressed="true"]{border-color:var(--vert)}.tuile b{display:block;font-size:22px;color:var(--vert)}.tuile span{font-size:13px;color:var(--gris)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px;border-bottom:1px solid #e6efeb;vertical-align:top}th{color:var(--gris);font-size:12px;position:sticky;top:0;background:#fff}
+tr.ent td{background:#f1f7f4;font-weight:700;border-top:2px solid var(--bord)}
+.badge{display:inline-block;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:700;white-space:nowrap}
+.r3{background:#fde8e6;color:var(--rouge)}.r2{background:#fdf0dc;color:var(--orange)}.r1{background:#eef3f1;color:var(--gris)}.r0{background:var(--vert-clair);color:var(--vert)}
+ul.al{margin:4px 0 0;padding-left:16px;color:var(--alerte);font-size:12px}
+.var{color:var(--gris);font-size:12px}.ko{color:var(--rouge);font-weight:700}
+.corr td{background:var(--jaune)}
+.grille{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grille .large{grid-column:1/-1}
+.vide{color:var(--gris);font-style:italic}
+@media(max-width:820px){.filtres,.grille{grid-template-columns:1fr}header,nav{padding-left:16px;padding-right:16px}.tableau{overflow-x:auto}}
+</style>
+</head>
+<body>
+<header><h1>Fiabiliser les contacts entreprises</h1><p>Responsables et tuteurs saisis dans les conventions et les dépôts en ligne : repérer les fautes, les doublons et les coordonnées douteuses, puis fixer une référence par personne.</p></header>
+<nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Fiabiliser les contacts</nav>
+<main>
+  <section>
+    <p class="note">Toutes les années. Une personne = même nom dans une même entreprise, à l’orthographe près (accents, prénom et nom inversés, une ou deux lettres, nom seul). Le lieu de stage est indiqué ; à défaut, le siège. <b>Seule la base des contacts est corrigée : les conventions ne sont jamais modifiées.</b></p>
+    <div class="filtres">
+      <label>Recherche<input id="q" type="search" placeholder="Entreprise, nom, téléphone, courriel, lieu…"></label>
+      <label>Risque<select id="fRisque"><option value="">Tous</option><option value="3">Risque élevé</option><option value="2">Risque moyen</option><option value="1">Risque faible</option><option value="0">Sans alerte</option><option value="v">Validés</option><option value="av">Tout ce qui est à vérifier</option></select></label>
+      <label>Rôle<select id="fRole"><option value="">Responsables et tuteurs</option><option value="RESPONSABLE">Responsables</option><option value="TUTEUR">Tuteurs</option></select></label>
+      <label>Année<select id="fAnnee"><option value="">Toutes</option></select></label>
+      <label>Trier par<select id="tri"><option value="entreprise">Entreprise</option><option value="lieu">Lieu de stage</option><option value="responsable">Nom du responsable</option><option value="tuteur">Nom du tuteur</option><option value="risque">Risque</option></select></label>
+    </div>
+    <div class="outils"><button type="button" id="actualiser">Actualiser</button><button type="button" class="leger" id="exporter" disabled>Exporter la liste fiable (Excel)</button><span class="etat" id="etat"></span></div>
+    <div class="tuiles" id="tuiles"></div>
+  </section>
+  <section>
+    <div id="resume" class="note"></div>
+    <div class="tableau" id="liste"><p class="vide">Chargement…</p></div>
+  </section>
+</main>
+<script>
+(function(){
+  const $=function(id){return document.getElementById(id)};
+  const esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  const ROLES={RESPONSABLE:'Responsable',TUTEUR:'Tuteur'};const RISQUES={3:'Risque élevé',2:'Risque moyen',1:'Risque faible',0:'Sans alerte'};
+  let DATA=null,OUVERT='';
+  /* Bouton asynchrone : bloqué, indicateur, état initial rendu en succès, erreur et délai dépassé. */
+  function occupe(btn,libelle,ms,appel,fini){if(btn.disabled)return;const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>'+esc(libelle);let fait=false;
+    const fin=function(){fait=true;clearTimeout(tm);btn.disabled=false;btn.innerHTML=old};
+    const tm=setTimeout(function(){if(fait)return;fin();fini(new Error('Délai dépassé : l’opération n’a pas répondu à temps. Réessayez.'))},ms);
+    appel(function(r){if(fait)return;fin();fini(null,r)},function(e){if(fait)return;fin();fini(e||new Error('Erreur inconnue'))})}
+  function etat(msg,err){$('etat').className='etat'+(err?' erreur':'');$('etat').textContent=msg||''}
+  function charger(forcer){occupe($('actualiser'),'Lecture des conventions…',180000,function(ok,ko){google.script.run.withSuccessHandler(ok).withFailureHandler(ko).EUC_DEV706_liste({forcer:!!forcer})},function(e,r){if(e){etat('Erreur : '+(e.message||e),true);if(!DATA)$('liste').innerHTML='<p class="vide">Liste indisponible. Réessayez avec « Actualiser ».</p>';return}recevoir(r);etat('')})}
+  function recevoir(r){DATA=r;const an=new Set();(r.personnes||[]).forEach(function(p){p.annees.forEach(function(a){an.add(a)})});const v=$('fAnnee').value;$('fAnnee').innerHTML='<option value="">Toutes</option>'+Array.from(an).sort().reverse().map(function(a){return '<option>'+esc(a)+'</option>'}).join('');$('fAnnee').value=v;$('exporter').disabled=false;rendre()}
+  const nomRef=function(p){return p.reference?p.reference.nom:p.nom};
+  const telRef=function(p){return p.reference?p.reference.telephone:((p.tels.filter(function(t){return t.ok})[0]||p.tels[0]||{}).v||'')};
+  const mailRef=function(p){if(p.reference)return p.reference.courriel;const c=p.courriels.filter(function(c){return c.ok&&!c.suspect})[0]||p.courriels[0]||{};return c.proposition||c.v||''};
+  const lieuTxt=function(p){return p.lieux.map(function(l){return l==='SIEGE'?'Siège : '+(p.siege||'adresse non renseignée'):l}).join(' · ')};
+  function filtrees(){const q=$('q').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''),fr=$('fRisque').value,ro=$('fRole').value,an=$('fAnnee').value;
+    return(DATA.personnes||[]).filter(function(p){
+      if(ro&&p.roles.indexOf(ro)<0)return false;if(an&&p.annees.indexOf(an)<0)return false;
+      if(fr==='v'&&!p.reference)return false;if(fr==='av'&&!p.risque)return false;if(/^\d$/.test(fr)&&String(p.risque)!==fr)return false;
+      if(q){const t=[p.entreprise,p.identifiant,p.siege,p.lieux.join(' '),p.noms.map(function(x){return x.v}).join(' '),p.tels.map(function(x){return x.v+' '+x.cle}).join(' '),p.courriels.map(function(x){return x.v}).join(' ')].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');if(t.indexOf(q)<0)return false}
+      return true})}
+  function trier(l){const tri=$('tri').value,c=function(a,b){return String(a||'').localeCompare(String(b||''),'fr',{sensitivity:'base'})};
+    return l.slice().sort(function(a,b){
+      if(tri==='lieu')return c(lieuTxt(a),lieuTxt(b))||c(a.entreprise,b.entreprise)||c(nomRef(a),nomRef(b));
+      if(tri==='responsable'||tri==='tuteur'){const r=tri.toUpperCase(),x=a.roles.indexOf(r)<0,y=b.roles.indexOf(r)<0;return(x-y)||c(nomRef(a),nomRef(b))||c(a.entreprise,b.entreprise)}
+      if(tri==='risque')return b.risque-a.risque||c(a.entreprise,b.entreprise)||c(nomRef(a),nomRef(b));
+      return c(a.entreprise,b.entreprise)||c(lieuTxt(a),lieuTxt(b))||c(nomRef(a),nomRef(b))})}
+  function tuiles(){const l=DATA.personnes||[],n=function(f){return l.filter(f).length},sel=$('fRisque').value;
+    $('tuiles').innerHTML=[['',l.length,'personnes'],['3',n(function(p){return p.risque===3}),'risque élevé'],['2',n(function(p){return p.risque===2}),'risque moyen'],['1',n(function(p){return p.risque===1}),'risque faible'],['v',n(function(p){return!!p.reference}),'références validées'],['ent',new Set(l.map(function(p){return p.k})).size,'entreprises']].map(function(t){return '<button type="button" class="tuile" data-r="'+t[0]+'" aria-pressed="'+(t[0]!=='ent'&&sel===t[0])+'"><b>'+t[1]+'</b><span>'+esc(t[2])+'</span></button>'}).join('')}
+  function rendre(){if(!DATA)return;tuiles();const l=trier(filtrees()),parEnt=$('tri').value==='entreprise';
+    $('resume').textContent=l.length+' personne(s) affichée(s) sur '+(DATA.personnes||[]).length+' · calculé le '+new Date(DATA.calculeLe).toLocaleString('fr-FR')+'.';
+    if(!l.length){$('liste').innerHTML='<p class="vide">Aucune personne pour ces filtres.</p>';return}
+    let der='',h='<table><thead><tr>'+(parEnt?'':'<th>Entreprise</th>')+'<th>Lieu de stage (ou siège)</th><th>Rôle</th><th>Nom</th><th>Téléphone</th><th>Courriel</th><th>Saisies</th><th>Contrôle</th><th></th></tr></thead><tbody>';
+    l.slice(0,800).forEach(function(p){
+      if(parEnt&&p.k!==der){der=p.k;h+='<tr class="ent"><td colspan="8">'+esc(p.entreprise||'Entreprise sans nom')+(p.identifiant?' <span class="var">'+esc(p.identifiant)+'</span>':'')+'</td></tr>'}
+      const ref=p.reference,variantes=function(arr,f){return arr.length>1?'<div class="var">'+arr.map(function(x){return f(x)+' ('+x.n+')'}).join('<br>')+'</div>':''};
+      h+='<tr data-id="'+esc(p.id)+'">'+(parEnt?'':'<td>'+esc(p.entreprise)+'<div class="var">'+esc(p.identifiant)+'</div></td>')+'<td>'+esc(lieuTxt(p))+'</td><td>'+p.roles.map(function(r){return ROLES[r]}).join(' et ')+'</td>'+
+        '<td><b>'+esc(nomRef(p))+'</b>'+(ref?'':variantes(p.noms,function(x){return esc(x.v)}))+'</td>'+
+        '<td>'+(ref?esc(ref.telephone)||'—':(p.tels.length?p.tels.map(function(t){return '<span class="'+(t.ok?'':'ko')+'">'+esc(t.v)+'</span>'+(p.tels.length>1?' ('+t.n+')':'')}).join('<br>'):'—'))+'</td>'+
+        '<td>'+(ref?esc(ref.courriel)||'—':(p.courriels.length?p.courriels.map(function(c){return '<span class="'+(c.ok&&!c.suspect?'':'ko')+'">'+esc(c.v)+'</span>'+(p.courriels.length>1?' ('+c.n+')':'')}).join('<br>'):'—'))+'</td>'+
+        '<td>'+p.saisies.length+'<div class="var">'+esc(p.annees.join(', '))+'</div></td>'+
+        '<td>'+(ref?'<span class="badge r0">Validé le '+esc(ref.le)+'</span>':'')+(p.risque||!ref?'<span class="badge r'+p.risque+'">'+RISQUES[p.risque]+'</span>':'')+(p.alertes.length?'<ul class="al">'+p.alertes.map(function(a){return '<li>'+esc(a.t)+'</li>'}).join('')+'</ul>':'')+'</td>'+
+        '<td><button type="button" class="leger petit" data-corr="'+esc(p.id)+'">'+(ref?'Modifier':'Corriger')+'</button></td></tr>';
+      if(OUVERT===p.id)h+=panneau(p,parEnt?8:9);
+    });
+    h+='</tbody></table>'+(l.length>800?'<p class="note">800 premières personnes affichées : affinez la recherche.</p>':'');
+    $('liste').innerHTML=h}
+  /* Panneau de correction : nom, téléphone et courriel de référence, toutes les saisies d'origine. */
+  function panneau(p,cols){const ref=p.reference||{};
+    const opt=function(arr,f,val){return arr.map(function(x){return '<option value="'+esc(f(x))+'"'+(f(x)===val?' selected':'')+'>'+esc(f(x))+' ('+x.n+' saisie'+(x.n>1?'s':'')+')</option>'}).join('')};
+    return '<tr class="corr"><td colspan="'+cols+'"><b>Référence pour cette personne</b><p class="note">Choisissez la bonne orthographe et les bonnes coordonnées (ou tapez-les). Elles deviennent la référence de la base des contacts pour '+esc(p.entreprise)+' ; les '+p.saisies.length+' saisie(s) ci-dessous restent telles quelles dans les conventions.</p>'+
+      '<div class="grille"><label>Nom (prénom et nom)<input id="cNom" list="lNom" value="'+esc(ref.nom||nomRef(p))+'"><datalist id="lNom">'+opt(p.noms,function(x){return x.v})+'</datalist></label>'+
+      '<label>Téléphone<input id="cTel" list="lTel" value="'+esc(ref.telephone||telRef(p))+'"><datalist id="lTel">'+opt(p.tels,function(x){return x.v})+'</datalist></label>'+
+      '<label>Courriel<input id="cMail" list="lMail" value="'+esc(ref.courriel||mailRef(p))+'"><datalist id="lMail">'+opt(p.courriels,function(x){return x.v})+'</datalist></label>'+
+      '<label class="large">Motif (facultatif)<input id="cMotif" maxlength="300" placeholder="Ex. : confirmé par téléphone avec l’entreprise"></label></div>'+
+      '<div class="outils"><button type="button" id="cSave">Enregistrer la référence</button>'+(p.reference?'<button type="button" class="leger" id="cRetirer">Retirer la validation</button>':'')+'<button type="button" class="leger" id="cFermer">Fermer</button><span class="etat" id="cEtat"></span></div>'+
+      '<details style="margin-top:8px"><summary>Saisies d’origine ('+p.saisies.length+')</summary><table><thead><tr><th>Année</th><th>N°</th><th>Élève</th><th>Rôle</th><th>Nom saisi</th><th>Téléphone saisi</th><th>Courriel saisi</th><th>Lieu</th></tr></thead><tbody>'+
+      p.saisies.map(function(s){return '<tr><td>'+esc(s.annee)+'</td><td>'+esc(s.numero)+'</td><td>'+esc(s.eleve)+'</td><td>'+esc(ROLES[s.role])+'</td><td>'+esc(s.nom)+'</td><td>'+esc(s.tel)+'</td><td>'+esc(s.courriel)+'</td><td>'+esc(s.lieu||'Siège')+'</td></tr>'}).join('')+'</tbody></table></details></td></tr>'}
+  function personne(id){return(DATA.personnes||[]).filter(function(p){return p.id===id})[0]}
+  $('liste').addEventListener('click',function(ev){
+    const b=ev.target.closest('button');if(!b)return;
+    if(b.dataset.corr){OUVERT=OUVERT===b.dataset.corr?'':b.dataset.corr;rendre();return}
+    const p=personne(OUVERT);if(!p)return;
+    if(b.id==='cFermer'){OUVERT='';rendre();return}
+    if(b.id==='cSave'){const q={k:p.k,entreprise:p.entreprise,identifiant:p.identifiant,roles:p.roles,cles:p.cles,nom:$('cNom').value,telephone:$('cTel').value,courriel:$('cMail').value,motif:$('cMotif').value,referenceId:p.reference?p.reference.id:0};
+      occupe(b,'Enregistrement…',120000,function(ok,ko){google.script.run.withSuccessHandler(ok).withFailureHandler(ko).EUC_DEV706_enregistrer(q)},function(e,r){if(e){$('cEtat').className='etat erreur';$('cEtat').textContent='Erreur : '+(e.message||e);return}OUVERT='';recevoir(r);etat('Référence enregistrée pour '+q.nom+'.')})}
+    if(b.id==='cRetirer'){occupe(b,'Retrait…',120000,function(ok,ko){google.script.run.withSuccessHandler(ok).withFailureHandler(ko).EUC_DEV706_retirer({referenceId:p.reference.id})},function(e,r){if(e){$('cEtat').className='etat erreur';$('cEtat').textContent='Erreur : '+(e.message||e);return}OUVERT='';recevoir(r);etat('Validation retirée.')})}
+  });
+  $('tuiles').addEventListener('click',function(ev){const t=ev.target.closest('.tuile');if(!t||t.dataset.r==='ent')return;$('fRisque').value=$('fRisque').value===t.dataset.r?'':t.dataset.r;rendre()});
+  ['q','fRisque','fRole','fAnnee','tri'].forEach(function(id){$(id).addEventListener(id==='q'?'input':'change',rendre)});
+  $('actualiser').onclick=function(){charger(true)};
+  /* Liste fiable : une ligne par personne, coordonnées de référence (ou les plus fréquentes), statut. */
+  const XLSX_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  $('exporter').onclick=function(){const b=$('exporter');occupe(b,'Export…',60000,function(ok,ko){
+      (window.XLSX?Promise.resolve():new Promise(function(r,k){const s=document.createElement('script');s.src=XLSX_URL;s.onload=r;s.onerror=function(){k(new Error('bibliothèque d’export indisponible'))};document.head.appendChild(s)})).then(function(){
+        const l=trier(filtrees()),ws=window.XLSX.utils.aoa_to_sheet([['Contacts entreprises — '+new Date().toLocaleDateString('fr-FR')],[],['Entreprise','SIRET / NIS','Lieu de stage (ou siège)','Rôle','Nom','Téléphone','Courriel','Statut','Années']].concat(l.map(function(p){return[p.entreprise,p.identifiant,lieuTxt(p),p.roles.map(function(r){return ROLES[r]}).join(' et '),nomRef(p),telRef(p),mailRef(p),p.reference?'Validé le '+p.reference.le:RISQUES[p.risque],p.annees.join(', ')]})));
+        const wb=window.XLSX.utils.book_new();window.XLSX.utils.book_append_sheet(wb,ws,'Contacts');window.XLSX.writeFile(wb,'Contacts_entreprises_'+new Date().toISOString().slice(0,10)+'.xlsx');ok()}).catch(ko)},
+    function(e){if(e)etat('Export impossible : '+(e.message||e),true)})};
+  charger(false);
+})();
+</script>
+</body>
+</html>
