@@ -13,6 +13,12 @@
 - SIREN seul (9 chiffres) : message explicite, l'élève doit donner les 14 chiffres.
 - Tests : `tests/run-dev708-tests.js` (6 tests : reconnaissance de la saisie, route et lien, lectures seules, bouton
   bloqué avec indicateur rendu en succès / erreur / délai dépassé, annuaire en panne, NIS et nom).
+- Publié @1276 (48/48 routes ; un premier essai @1275 a été refusé puis annulé automatiquement : le texte
+  « Exception: » du script de la page était lu comme une erreur, corrigé et protégé par un test).
+- Parcours réels sur le vert (lecture seule) : SIRET du siège TECHNIDRILL (Chassieu) → fiche + question avec 3
+  établissements du 06 (Carros ×2, Castagniers), choix de Carros 00049 → nouvelle fiche « établissement secondaire »
+  (environ 20 s, annuaire compris) ; NIS 7112B19343 → TITAN ENGINEERING MONACO (notre base) ; nom « Titan » → base
+  puis registre de Monaco (liste RCI).
 
 ## Mise à jour du 22 novembre 2026 — DEV707 : établissement d'accueil (SIRET du siège hors Alpes-Maritimes)
 
