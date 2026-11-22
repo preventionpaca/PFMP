@@ -6,8 +6,10 @@
 - Décision du DDFPT (22/11/2026) : la convention porte le SIRET de l'établissement d'accueil.
 - Formulaires élèves (« Déclarer mon entreprise », QR code, suite du QR, formulaire par code de convention) : `Etablissements_DEV707.html`. Quand le SIRET vérifié est hors des Alpes-Maritimes et de Monaco, l'annuaire officiel (recherche par nom dans le 06) donne les établissements ouverts du même SIREN dans les Alpes-Maritimes ; l'élève choisit « Où fais-tu ton stage ? » (SIRET choisi revérifié comme tout SIRET) ou garde l'établissement saisi. « Déclarer mon entreprise » : « Continuer » bloqué jusqu'à la réponse. Annuaire indisponible ou aucun autre établissement : rien n'est affiché, l'élève n'est jamais bloqué.
 - Administration des conventions, « Élèves par entreprise » : mention « ⚠ hors 06 » (SIRET d'un établissement hors Alpes-Maritimes et Monaco, sans lieu de stage distinct), lien vers les établissements de l'entreprise sur l'annuaire officiel, total dans l'état ; recherche « hors 06 ». Correction du SIRET par la carte de correction du dossier (aucune correction automatique).
-- À faire par l'administration : TECHNIDRILL PFMP-2026-000872 et 000873 → SIRET 351 053 673 00049.
-- Tests : `tests/run-dev707-tests.js` (7).
+- Correction réelle (22/11/2026, autorisée explicitement par le DDFPT) : TECHNIDRILL PFMP-2026-000872 et 000873 → SIRET 351 053 673 00049, « ZI Carros Le Broc, 18ème rue, 1ère avenue », 06510 CARROS, par « Corriger la convention » (motif et avant/après dans l'historique du dossier). Book : TECHNIDRILL apparaît à Carros avec les 2 élèves de TRMO.
+- Book (`EUC_DEV538_history_`) : la convention lue en direct passe avant l'instantané DEV427 pour le même élève et la même période ; une entreprise corrigée ne reste plus en double (l'instantané gardait Chassieu). Caches du book renouvelés (`PUBLIC-BOOK-9`).
+- Autres « hors 06 » vérifiés dans l'annuaire officiel : AGIR-D2C (Draguignan) et TEAM K AUTO (La Seyne-sur-Mer) n'ont qu'un établissement ; PEDINIELLI (Manosque) n'a aucun établissement dans le 06 : vrais stages hors département, rien à corriger. CV3E06 (SIREN 844 097 808) est fermée, tous ses établissements aussi (dont deux anciens à Nice) ; l'entreprise active voisine est CV3E (SIREN 819 928 409, MIN Saint-Augustin, 06300 Nice, SIRET 819 928 409 00054) — autre entreprise, à confirmer par le DDFPT avant correction.
+- Tests : `tests/run-dev707-tests.js` (8).
 
 ## Mise à jour du 22 novembre 2026 — DEV706 : « Fiabiliser les contacts entreprises » (page `contacts-entreprises-pfmp`)
 

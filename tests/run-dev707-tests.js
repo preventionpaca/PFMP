@@ -118,6 +118,12 @@ test('administration : « Élèves par entreprise » signale un établissement h
   assert.match(read('Documentation/DECISIONS_METIER.md'), /\(DEV707\) : la convention porte le SIRET de l'établissement d'accueil/);
 });
 
+test('book : la convention en direct passe avant l’instantané (entreprise corrigée sans doublon)', () => {
+  const b = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(b, /direct707=EUC_DEV513_geoAccessDetails_\(scoped\)\.map\(function\(d\)\{return Object\.assign\(\{\},d,\{_direct707:true\}\);\}\),details=direct707\.concat\(EUC_DEV445_geoSnapshotDetails_\(scoped\)\)/, 'conventions en direct lues en premier');
+  assert.match(b, /if\(d\._direct707\)vus707\[key\]=true;else if\(vus707\[key\]\)return;var c=company\(entreprise,adresse,siret\);/, 'ligne d’instantané ignorée pour le même élève et la même période, sans créer d’entreprise vide');
+  assert.match(b, /var parts=\['PUBLIC-BOOK-9',/, 'caches du book renouvelés');
+});
 (async () => {
   for (const [nom, fn] of tests) { await fn(); n++; console.log('ok - ' + nom); }
   console.log(n + ' tests DEV707 réussis');
