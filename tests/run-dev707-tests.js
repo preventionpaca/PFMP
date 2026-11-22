@@ -121,8 +121,19 @@ test('administration : « Élèves par entreprise » signale un établissement h
 test('book : la convention en direct passe avant l’instantané (entreprise corrigée sans doublon)', () => {
   const b = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
   assert.match(b, /direct707=EUC_DEV513_geoAccessDetails_\(scoped\)\.map\(function\(d\)\{return Object\.assign\(\{\},d,\{_direct707:true\}\);\}\),details=direct707\.concat\(EUC_DEV445_geoSnapshotDetails_\(scoped\)\)/, 'conventions en direct lues en premier');
-  assert.match(b, /if\(d\._direct707\)vus707\[key\]=true;else if\(vus707\[key\]\)return;var c=company\(entreprise,adresse,siret\);/, 'ligne d’instantané ignorée pour le même élève et la même période, sans créer d’entreprise vide');
-  assert.match(b, /var parts=\['PUBLIC-BOOK-9',/, 'caches du book renouvelés');
+  const regle = b.match(/var k707=[^\n]*?var c=company\(entreprise,adresse,siret\);/);
+  assert.ok(regle, 'règle de priorité présente, avant la création de l’entreprise (pas d’entreprise vide)');
+  /* Simulation de la règle : mêmes variables que dans EUC_DEV538_history_. */
+  const run = new Function('lignes', 'EUC_DEV538_n_', 'EUC_DEV538_norm_', `var vus707={},gardees=[];lignes.forEach(function(L){var d=L.d,year=L.year,cid=L.cid,studentKey=L.st,siret=L.siret,entreprise=L.ent;(function(){${regle[0].replace('var c=company(entreprise,adresse,siret);', 'gardees.push(L.ent+" "+L.siret);')}})();});return gardees;`);
+  const N = v => Number(v) || 0, NO = v => String(v || '').toUpperCase().trim();
+  const direct = { d: { _direct707: true, periode: { id: 0 } }, year: '2026-2027', cid: 7, st: 'E1', siret: '35105367300049', ent: 'TECHNIDRILL' };
+  const instantane = Object.assign({}, direct, { d: { periode: { id: 55 } }, siret: '35105367300064' });
+  assert.deepEqual(run([direct, instantane], N, NO), ['TECHNIDRILL 35105367300049'], 'TECHNIDRILL : Chassieu de l’instantané écarté, Carros gardé');
+  const autre = Object.assign({}, instantane, { ent: 'GARAGE', siret: '11111111100011', d: { periode: { id: 56 } } });
+  assert.deepEqual(run([direct, autre], N, NO).length, 2, 'autre entreprise, autre période (dépôt seul dans l’instantané) : gardée');
+  const memePeriode = Object.assign({}, autre, { d: { periode: { id: 9 } } }), directP = Object.assign({}, direct, { d: { _direct707: true, periode: { id: 9 } } });
+  assert.deepEqual(run([directP, memePeriode], N, NO).length, 1, 'même période : la convention en direct l’emporte');
+  assert.match(b, /var parts=\['PUBLIC-BOOK-10',/, 'caches du book renouvelés');
 });
 (async () => {
   for (const [nom, fn] of tests) { await fn(); n++; console.log('ok - ' + nom); }
