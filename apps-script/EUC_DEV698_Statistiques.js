@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.710';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.715';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -69,15 +69,17 @@ function EUC_DEV698_classes_(annee) {
 /* Ligne de statistiques d'une convention (calcul pur). */
 function EUC_DEV698_ligne_(a, base, ident, cl, periodes) {
   var T = EUC_DEV698_t_, x = cl || {}, p = base.periodeId ? { debut: base.periodeDebut, fin: base.periodeFin, libelle: base.periode } : periodes[Number(EUC_PFMP_ref_(a.Periode)) || 0] || {};
-  var debut = EUC_DEV698_date_(a.Date_debut), fin = EUC_DEV698_date_(a.Date_fin);
+  /* DEV715 : un dépôt en ligne n'a pas de champ Date_debut : dates du dépôt relues par le parcours (base), sinon celles de la période. */
+  var debut = EUC_DEV698_date_(a.Date_debut) || EUC_DEV698_date_(base.debut), fin = EUC_DEV698_date_(a.Date_fin) || EUC_DEV698_date_(base.fin);
   var offDebut = EUC_DEV698_date_(a.Date_officielle_debut) || p.debut || '', offFin = EUC_DEV698_date_(a.Date_officielle_fin) || p.fin || '';
+  if (!debut) debut = EUC_DEV698_date_(offDebut); if (!fin) fin = EUC_DEV698_date_(offFin);
   var statut = base.source === 'SOUMISSION' ? 'EN_COURS' : EUC_DEV698_statut_(a), seq = base.source === 'SOUMISSION' ? 'INITIALE' : EUC_DEV698_sequence_(a);
   var finReelle = EUC_DEV698_date_(a.Date_fin_reelle);
   return {
     id: String(base.id), src: base.source === 'SOUMISSION' ? 'S' : 'C', e: Number(base.eleveId) || 0, eleve: T(base.eleve), numero: T(base.numero),
     classe: T(base.classe) || x.classe || '', famille: x.famille || '', diplome: x.diplome || '', niveau: T(base.niveauLibelle), periode: T(base.periode) || p.libelle || '',
     k: ident ? ident.entreprise : '', nom: T(base.entreprise) || (ident && ident.enseigne) || '', identifiant: ident ? ident.identifiant : '', commune: ident ? T(ident.commune) : '', cp: ident ? T(ident.cp) : '', nn: EUC_DEV688_norm_(T(base.entreprise) || (ident && ident.enseigne) || ''),
-    statut: statut, sequence: seq, debut: debut, fin: fin, finReelle: finReelle, debutOfficiel: offDebut,
+    statut: statut, sequence: seq, debut: debut, fin: fin, finReelle: finReelle, debutOfficiel: offDebut, finOfficiel: offFin,
     decalage: base.source === 'SOUMISSION' ? 0 : Math.max(0, EUC_DEV698_jours_(offDebut, debut)),
     prolongation: base.source === 'SOUMISSION' ? 0 : Math.max(0, EUC_DEV698_jours_(offFin, fin)),
     cause: statut === 'INTERROMPUE' ? EUC_DEV698_cause_(a.Motif_interruption) : '', motif: statut === 'INTERROMPUE' ? T(a.Motif_interruption).slice(0, 300) : statut === 'ANNULEE' ? T(a.Motif_annulation).slice(0, 300) : ''

@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV715 : statistiques, dates des dépôts en ligne ; noms des apprentis
+
+- Cas réel (détails hors Git) : deux élèves d'une même entreprise, l'un par convention, l'autre par dépôt en ligne. Ils n'apparaissaient pas dans « Élèves accueillis ensemble » : le dépôt n'avait pas de dates dans les statistiques, car le parcours DEV688 ne fournit pas de `Date_debut` pour un dépôt. Ses dates ne pouvaient donc chevaucher aucune autre.
+- `EUC_DEV698_ligne_` reprend maintenant les dates du dépôt relues par le parcours (`base.debut` / `base.fin`), sinon celles de la période officielle. `finOfficiel` est ajouté. La version passe à `1.0.0-dev.715`, ce qui renouvelle le cache.
+- Détail « Apprentis » : liste nominative (apprenti, classe, employeur, commune, organisme, début et fin du contrat).
+- Détail « Entreprises avec stagiaire et apprenti » : noms des stagiaires et des apprentis.
+- Tests : `tests/run-dev715-tests.js` (2).
+
 ## Mise à jour du 23 novembre 2026 — DEV714 : même entreprise, élèves d'autres classes aux mêmes dates (suivi, PDF, courriel de dépôt)
 
 - `EUC_DEV714_memeEntreprise_(vue, classe, période)` est un calcul pur sur la vue du suivi. Pour chaque entreprise de la classe, il donne les élèves de la classe et ceux d'autres classes présents aux mêmes dates (dates de la convention, à défaut de la période ; recouvrement d'au moins un jour).
