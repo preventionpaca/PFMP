@@ -64,7 +64,7 @@ ul.aide{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--gris)}
   'use strict';
   var $=function(id){return document.getElementById(id)};
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^Exception:\s*/,'')}
+  function msgErr(e){return String(e&&e.message||e||'Erreur inconnue').replace(/^Exception\s*:\s*/,'')}
   /* Bouton asynchrone : bloqué, indicateur visible, état initial rendu en succès, erreur et délai dépassé.
    * Renvoie fin(), à appeler une seule fois à la fin de toute la chaîne d'appels ; fin.actif() dit si elle n'a pas expiré. */
   function occupe(btn,libelle,ms,surDelai){var old=btn.innerHTML,fait=false;btn.disabled=true;btn.innerHTML='<span class="spinner" aria-hidden="true"></span>'+esc(libelle);

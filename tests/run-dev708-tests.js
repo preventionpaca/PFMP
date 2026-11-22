@@ -46,6 +46,7 @@ test('page, route, lien d’administration, contrôle de publication, aucune éc
   assert.match(page, /<title>Tester un SIRET ou un NIS<\/title>/);
   assert.ok(page.includes('<?!= EUC_ENT_inclure(\'Etablissements_DEV707\') ?>'), 'même question DEV707 que l’élève');
   assert.ok(page.includes('href="__LIEN_ACCUEIL__"'), 'Accueil PFMP par le jeton de liens');
+  assert.ok(!page.includes('Exception:'), 'le contrôle des routes lit « Exception: » comme une erreur Apps Script');
   const appelés = [...page.matchAll(/appel\('([A-Za-z0-9_]+)'/g)].map(m => m[1]);
   assert.deepEqual([...new Set(appelés)].sort(), LECTURES.slice().sort(), 'seulement des lectures');
   assert.match(read('apps-script/EUC_DEV708_TestSiret.js'), /function EUC_DEV708_afficher\(e\) \{\n  EUC_IMPORT_exigerAdminTexte_\(\);/);
