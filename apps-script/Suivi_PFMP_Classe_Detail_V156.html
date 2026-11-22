@@ -2359,3 +2359,77 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="EUC_DEV556_PFMP_DETAIL_NAV">
 (function(){'use strict';if(typeof C==='undefined'||!C||!C.publicMode)return;var ready=false,pending='',timer=0,allowed={'suivi-conventions-public':1,'suivi-conventions-public-famille':1,'suivi-pfmp-classe-public':1,'book-entreprises-public-pfmp':1,'cartographie-pfmp':1};function route(raw){try{var u=new URL(raw,location.href);return allowed[u.searchParams.get('page')||'']?u.toString():''}catch(e){return''}}function send(data){var w=window;for(var i=0;i<7;i++){try{w=w.parent;w.postMessage(data,'*')}catch(e){break}}}function go(){if(!pending)return;var url=pending;pending='';clearTimeout(timer);if(ready)send({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url});else window.location.href=url}function navigate(raw){var url=route(raw);if(!url)return;pending=url;if(ready){go();return}send({type:'EUC_PFMP_WRAPPER_QUERY'});clearTimeout(timer);timer=setTimeout(go,450)}window.EUC_DEV556_publicNavigate=navigate;window.EUC_DEV418_publicNavigate=navigate;addEventListener('message',function(ev){if(ev.data&&ev.data.type==='EUC_PFMP_WRAPPER_READY'){ready=true;go()}});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null,url=a&&route(a.href);if(!url)return;ev.preventDefault();ev.stopImmediatePropagation();if(a.closest('#periodTabs')){a.classList.add('euc405-loading');if(!a.querySelector('.euc405-spin'))a.insertAdjacentHTML('afterbegin','<span class="euc405-spin"></span>')}else a.classList.add('euc183-loading');a.setAttribute('aria-busy','true');navigate(url)},true);send({type:'EUC_PFMP_WRAPPER_QUERY'});setTimeout(function(){send({type:'EUC_PFMP_WRAPPER_QUERY'})},120)})();
 </script>
+<!-- DEV709 — sous le tableau : élèves en stage dans une même entreprise, pour qu'un seul professeur fasse la visite et un seul l'appel. Lecture seule. -->
+<style id="EUC_DEV709_MEME_ENTREPRISE_STYLE">
+#euc709Box{margin:14px 0 4px;padding:12px 14px;border:1px solid #d6e4df;border-radius:10px;background:#f7fbf9;font-size:13px}
+#euc709Box h3{margin:0 0 4px;font-size:14px;color:#0b5f4e}
+#euc709Box .euc709-sub{margin:0 0 8px;color:#667085}
+#euc709Box ul{margin:0;padding:0;list-style:none}
+#euc709Box li{padding:7px 0;border-top:1px solid #e3ece8}
+#euc709Box li:first-child{border-top:0}
+#euc709Box .euc709-ent{font-weight:800}
+#euc709Box .euc709-lieu{color:#667085}
+#euc709Box .euc709-prof{margin-top:3px}
+#euc709Box .euc709-ok{color:#0b745f;font-weight:700}
+#euc709Box .euc709-warn{color:#a15c00;font-weight:700}
+</style>
+<script id="EUC_DEV709_MEME_ENTREPRISE">
+(function(){
+  'use strict';
+  var FORMES=/\b(sas|sasu|sarl|eurl|sa|snc|sci|selarl|ste|societe|ets|etablissements?|groupe)\b/g;
+  function h(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function n(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
+  function cleEntreprise(nom){return n(nom).replace(FORMES,' ').replace(/\s+/g,' ').trim()}
+  function codePostal(adresse){var m=String(adresse||'').match(/\b(\d{5})\b/);return m?m[1]:''}
+  function horsStage(x){var s=n(String(x&&x.statutCode||'')+' '+String(x&&x.statut||''));return s.indexOf('annule')>=0||s.indexOf('interromp')>=0}
+  /* Profs affectés dans le groupe : {nom: nombre}, '' = non affecté. */
+  function compte(eleves,champ){var c={};eleves.forEach(function(x){var p=String(x[champ]||'').trim();c[p]=(c[p]||0)+1});return c}
+  function verdict(c){var noms=Object.keys(c);return noms.length===1&&noms[0]!==''?'UN_SEUL':(noms.length===1?'AUCUN':'PLUSIEURS')}
+  function groupes(lignes){
+    var par={},ordre=[];
+    (lignes||[]).forEach(function(x){
+      if(!x||horsStage(x))return;var cle=cleEntreprise(x.entreprise);if(!cle)return;
+      var k=cle+'|'+codePostal(x.adresseEntreprise);
+      if(!par[k]){par[k]={entreprise:String(x.entreprise||'').trim(),adresse:String(x.adresseEntreprise||'').trim(),eleves:[]};ordre.push(k)}
+      par[k].eleves.push(x);
+    });
+    return ordre.map(function(k){return par[k]}).filter(function(g){return g.eleves.length>1}).map(function(g){
+      var v=compte(g.eleves,'professeurVisiteur'),t=compte(g.eleves,'professeurTelephone');
+      return {entreprise:g.entreprise,adresse:g.adresse,nombre:g.eleves.length,
+        eleves:g.eleves.map(function(x){return [String(x.nom||'').trim(),String(x.prenom||'').trim()].filter(Boolean).join(' ')}).sort(function(a,b){return a.localeCompare(b,'fr')}),
+        visite:v,telephone:t,visiteVerdict:verdict(v),telephoneVerdict:verdict(t)};
+    }).sort(function(a,b){return b.nombre-a.nombre||a.entreprise.localeCompare(b.entreprise,'fr')});
+  }
+  function ligneProf(libelle,c,ver){
+    var noms=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b,'fr')});
+    if(ver==='UN_SEUL')return '<div class="euc709-prof">'+libelle+' : <span class="euc709-ok">'+h(noms[0])+' ✓</span></div>';
+    if(ver==='AUCUN')return '<div class="euc709-prof">'+libelle+' : <span class="euc709-warn">aucun professeur affecté</span></div>';
+    return '<div class="euc709-prof">'+libelle+' : <span class="euc709-warn">⚠ plusieurs professeurs — </span>'+noms.map(function(p){return h(p||'non affecté')+' ('+c[p]+')'}).join(', ')+'</div>';
+  }
+  function rendre(){
+    var d=window.EUC_DEV417_DETAIL_CURRENT,tb=document.getElementById('tbody');if(!tb)return;
+    var wrap=tb.closest('.table-wrap')||tb.parentNode,box=document.getElementById('euc709Box');
+    if(!box){box=document.createElement('div');box.id='euc709Box';box.setAttribute('aria-live','polite');wrap.parentNode.insertBefore(box,wrap.nextSibling)}
+    var lignes=d&&d.lignes||[];
+    if(!lignes.length){box.style.display='none';return}
+    box.style.display='';
+    var gs=groupes(lignes);
+    var html='<h3>Élèves en stage dans une même entreprise</h3>';
+    if(!gs.length){box.innerHTML=html+'<p class="euc709-sub">Aucune entreprise n’accueille plusieurs élèves de cette classe sur cette période.</p>';return}
+    var aVoir=gs.filter(function(g){return g.visiteVerdict!=='UN_SEUL'||g.telephoneVerdict!=='UN_SEUL'}).length;
+    html+='<p class="euc709-sub">'+gs.length+' entreprise'+(gs.length>1?'s accueillent':' accueille')+' plusieurs élèves. Idéalement, un seul professeur fait la visite et un seul l’appel téléphonique pour chacune'+(aVoir?' — '+aVoir+' à vérifier.':'.')+'</p><ul>';
+    gs.forEach(function(g){
+      html+='<li><div><span class="euc709-ent">'+h(g.entreprise)+'</span>'+(g.adresse?' <span class="euc709-lieu">· '+h(g.adresse)+'</span>':'')+' — <b>'+g.nombre+' élèves</b> : '+g.eleves.map(h).join(', ')+'</div>'+
+        ligneProf('Suivi téléphonique',g.telephone,g.telephoneVerdict)+ligneProf('Professeur visiteur',g.visite,g.visiteVerdict)+'</li>';
+    });
+    box.innerHTML=html+'</ul>';
+  }
+  window.EUC_DEV709_groupes=groupes;
+  function installer(){
+    var tb=document.getElementById('tbody');if(!tb)return;
+    rendre();
+    try{new MutationObserver(function(){setTimeout(rendre,0)}).observe(tb,{childList:true})}catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(installer,0)});else setTimeout(installer,0);
+})();
+</script>

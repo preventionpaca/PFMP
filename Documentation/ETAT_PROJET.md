@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV709 : élèves dans une même entreprise (suivi d'une classe)
+
+- Sous le tableau de suivi d'une classe et d'une période (`Suivi_PFMP_Classe_Detail_V156.html`, vues administrateur et publique), un encadré liste les entreprises qui accueillent plusieurs élèves : nombre, noms, professeur du suivi téléphonique et professeur visiteur.
+- Regroupement par nom d'entreprise (casse, accents et forme juridique ignorés) et code postal ; conventions annulées ou interrompues exclues.
+- Alerte « plusieurs professeurs » ou « aucun professeur affecté », pour qu'un seul professeur fasse la visite et un seul l'appel. Calcul dans la page à partir des lignes déjà chargées : aucun appel serveur, aucune écriture. L'encadré se met à jour après une affectation.
+- Tests : `tests/run-dev709-tests.js` (5).
+
 ## Mise à jour du 22 novembre 2026 — DEV708 : « Tester un SIRET ou un NIS » (page `test-siret-pfmp`)
 
 - Nouvelle page admin (vignette Entreprises) : un champ unique reconnaît un SIRET (14 chiffres, espaces admis), un NIS de
