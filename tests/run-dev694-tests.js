@@ -15,6 +15,8 @@ function ctx(lignes, colonnes) {
   k.EUC_ADMIN_WORKFLOW_ctxV144_ = () => ({ email: 'admin@exemple.test', role: 'DDFPT', autorise: true });
   k.EUC_IMPORT_exigerAdminTexte_ = () => ({ email: 'admin@exemple.test' });
   k.EUC_DEV608_prenom_ = v => v;
+  /* DEV713 : annuaire officiel simulé (entreprise du dépôt, active, inchangée). */
+  k.EUC_ENT_rechercherSiret = siret => ({ source: 'grist', entreprise: { siret, raisonSociale: 'HOTEL EXEMPLE', etat: 'Actif' } });
   k.EUC_ENT_grist = (m, url, body) => {
     k.__appels.push([m, url, body]);
     if (m === 'get' && /\/columns$/.test(url)) return { columns: [...cols].map(id => ({ id })) };
@@ -130,6 +132,31 @@ test('suivi : fiches avec l’identifiant du dossier ou du dépôt ; identifiant
   assert.ok(!/__LIEN_|https?:\/\/[a-z-]+\.lycee-les-eucalyptus/.test(s.split('Éditer la fiche')[0].slice(-400)), 'aucune adresse écrite en dur');
 });
 
+test('DEV713 : SIRET corrigé : nom, adresse, ville et état officiels repris de l’annuaire ; historique ; sinon lecture par le navigateur sans rien écrire', () => {
+  const lignes = [depot(70, { SIRET_normalise: '12345678200010', SIRET_brut: '12345678200010', Raison_sociale_officielle: 'GARAGE ANCIEN', Adresse_officielle: '1 RUE ANCIENNE', CP_officiel: '06300', Ville_officielle: 'NICE', Niveau_controle: 'ORANGE' })];
+  const COLS = ['Submission_ID', 'Raw_JSON', 'Decision', 'Prenom_eleve', 'Nom_eleve', 'SIRET_brut', 'SIRET_normalise', 'SIRET_statut', 'SIRET_source', 'Raison_sociale_officielle', 'Nom_commercial', 'Adresse_officielle', 'Complement_adresse_officielle', 'CP_officiel', 'Ville_officielle', 'Pays_officiel', 'Niveau_controle'], k = ctx(lignes, COLS);
+  k.EUC_ENT_rechercherSiret = siret => ({ source: 'api', entreprise: { siret, raisonSociale: 'GARAGE NOUVEAU', enseigne: 'GARAGE N', etat: 'Actif', adresseComplete: '2 AVENUE NOUVELLE', codePostal: '06200', commune: 'NICE' } });
+  k.EUC_DEV694_corrigerDepot({ id: 70, motif: 'déménagement', changements: { Entreprise_identifiant: '12345678200028' } });
+  const f = lignes[0].fields;
+  assert.equal(f.SIRET_normalise, '12345678200028'); assert.equal(f.Adresse_officielle, '2 AVENUE NOUVELLE'); assert.equal(f.CP_officiel, '06200'); assert.equal(f.Ville_officielle, 'NICE');
+  assert.equal(f.Raison_sociale_officielle, 'GARAGE NOUVEAU'); assert.equal(f.Niveau_controle, 'VERT'); assert.equal(f.SIRET_statut, 'VERIFIE'); assert.equal(f.Decision, 'A_VALIDER', 'décision inchangée');
+  const h = JSON.parse(f.Historique_admin_JSON).pop();
+  assert.equal(h.avant.Entreprise_officielle, 'GARAGE ANCIEN — 1 RUE ANCIENNE, 06300 NICE'); assert.equal(h.apres.Entreprise_officielle, 'GARAGE NOUVEAU — 2 AVENUE NOUVELLE, 06200 NICE');
+  assert.ok(!('Entreprise_officielle' in f), 'aucune colonne inventée');
+  const l2 = [depot(71, { SIRET_normalise: '12345678200010' })], k2 = ctx(l2, COLS), n0 = l2[0].fields.SIRET_normalise;
+  k2.EUC_ENT_rechercherSiret = siret => ({ source: 'api_navigateur', siret, url: 'https://annuaire.exemple.test/?q=' + siret });
+  k2.EUC_ENT_traiterReponseApiNavigateur = (json, siret) => ({ entreprise: { siret, raisonSociale: 'X', etat: 'Fermé', adresseComplete: '1 RUE', codePostal: '06000', commune: 'NICE' } });
+  const r = J(k2.EUC_DEV694_corrigerDepot({ id: 71, motif: 'm', changements: { Entreprise_identifiant: '12345678200028' } }));
+  assert.equal(r.aVerifierNavigateur, true); assert.equal(l2[0].fields.SIRET_normalise, n0, 'rien écrit avant la réponse de l’annuaire');
+  assert.ok(!k2.__appels.some(a => a[0] === 'patch'));
+  k2.EUC_DEV694_corrigerDepot({ id: 71, motif: 'm', changements: { Entreprise_identifiant: '12345678200028' }, reponseApi: { results: [] } });
+  assert.equal(l2[0].fields.SIRET_normalise, '12345678200028'); assert.equal(l2[0].fields.Niveau_controle, 'ORANGE', 'établissement fermé signalé');
+  const k3 = ctx([depot(72)]); k3.EUC_ENT_rechercherSiret = () => ({ source: 'api', introuvable: true });
+  assert.throws(() => k3.EUC_DEV694_corrigerDepot({ id: 72, motif: 'm', changements: { Entreprise_identifiant: '12345678200028' } }), /Aucune entreprise trouvée/);
+  const h2 = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.match(h2, /if\(v&&v\.aVerifierNavigateur\)\{/); assert.match(h2, /L’annuaire officiel ne répond pas : rien n’a été enregistré/);
+});
+
 test('administration des conventions : éditeur de dépôt (motif, double clic bloqué, indicateur, délai), ouverture directe par dépôt, dossier ou n° S', () => {
   const h = read('apps-script/Admin_Conventions_PFMP.html'), g = read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs');
   assert.match(h, /<section class="card hidden" id="depotV694"/);
@@ -139,7 +166,7 @@ test('administration des conventions : éditeur de dépôt (motif, double clic b
   assert.ok(h.includes("function retour(){fini=true;clearTimeout(minuteur);depBtn.disabled=false;depBtn.classList.remove('busy');depBtn.innerHTML=old}"));
   assert.match(h, /setTimeout\(function\(\)\{if\(fini\)return;retour\(\);depStatus\('Délai dépassé/);
   assert.ok(h.includes("if(!motif){depStatus('Motif de correction obligatoire.','err')"));
-  assert.ok(h.includes('.EUC_DEV694_corrigerDepot({id:DEP.id,changements:ch,motif:motif})'));
+  assert.ok(h.includes('.EUC_DEV694_corrigerDepot({id:DEP.id,changements:ch,motif:motif,reponseApi:reponseApi||null})'));
   assert.ok(h.includes("<span class=\"spinner\"></span>Chargement du dépôt…") && h.includes('.EUC_DEV694_vueDepot(q)'), 'état de chargement');
   assert.ok(h.includes("if(C.depot)ouvrirDepot({id:C.depot});") && h.includes('else if(C.dossier){'));
   assert.ok(h.includes("else if(/-S\\d+$/.test(String(C.numero)))ouvrirDepot({numero:C.numero});"), 'lien ?numero=…-S… : dépôt ouvert');

@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV713 : SIRET corrigé = adresse officielle à jour ; dépôts en ligne dans le Book
+
+- Cas réel (détails hors Git) : deux élèves d'une même classe dans une même entreprise qui a déménagé.
+  - Pour l'un, une convention avec la nouvelle adresse.
+  - Pour l'autre, un dépôt en ligne dont le SIRET avait été corrigé dans l'administration des conventions, mais l'adresse officielle restait l'ancienne.
+  - Le Book ne montrait qu'un élève.
+- Cause 1 : `EUC_DEV694_corrigerDepot` n'écrivait que le numéro.
+  - Désormais, un SIRET corrigé relit l'annuaire, au besoin par le navigateur et sans rien écrire avant la réponse.
+  - Il reprend la raison sociale, l'enseigne, l'adresse, le code postal, la ville et l'état (Niveau_controle VERT ou ORANGE), comme « Vérifier le SIRET » des soumissions.
+  - L'historique garde l'entreprise avant et après. La décision reste inchangée.
+- Cause 2 : le Book ne lisait que la table des conventions. Un dépôt vérifié mais pas importé (compté dans le suivi depuis DEV666) en était absent.
+  - `EUC_DEV713_depotsDetails_` ajoute ces dépôts, lus avec les conventions en direct et avant l'instantané.
+  - Les dépôts importés, validés ou classés sont ignorés.
+  - Le cache du Book est renouvelé (`PUBLIC-BOOK-11`).
+- Données personnelles : le commit DEV711 (19be09b) contenait deux SIRET réels dans cette note et dans `tests/run-dev711-tests.js`. Ils sont remplacés par des valeurs fictives ; l'historique Git n'est pas réécrit.
+- Tests : `tests/run-dev713-tests.js` (4) et DEV694 (+1 ; annuaire simulé, données fictives).
+
 ## Mise à jour du 23 novembre 2026 — DEV712 : élèves dans une même entreprise dans le suivi utilisé (`Suivi_Enseignants_DEV576.html`) et son PDF
 
 - DEV709 avait placé l'encadré dans l'ancienne vue de classe (`Suivi_PFMP_Classe_Detail_V156.html`). Le suivi réellement utilisé (administration et professeurs) est `Suivi_Enseignants_DEV576.html`.
@@ -12,9 +29,9 @@
 ## Mise à jour du 23 novembre 2026 — DEV711 : « Garder ce SIRET (vérifié par le bureau) » (soumissions à traiter)
 
 - Problème : un dépôt déjà dans le suivi restait « à traiter » quand l'INSEE déclarait l'établissement fermé (`Niveau_controle` ORANGE). « Enregistrer les corrections » ne touche pas au SIRET. La seule sortie était « Valider : créer la convention », qui importe le dépôt et envoie un courriel à l'élève.
-- Exemples réels (annuaire officiel, 23/11/2026) :
-  - NETCOM CONSEIL : unité légale active, aucun établissement ouvert, siège 88514123400033 fermé. Il n'y a pas d'autre SIRET à saisir.
-  - AB AUTO : SIRET 94776920400027 de nouveau actif, au 17 avenue Sainte-Marguerite. « Vérifier le SIRET » suffit.
+- Deux cas réels relevés le 23/11/2026 (détails hors Git) :
+  - une entreprise active sans aucun établissement ouvert à l'INSEE : il n'y a pas d'autre SIRET à saisir ;
+  - un établissement redevenu actif à une nouvelle adresse : « Vérifier le SIRET » suffit.
 - Nouveau bouton « Garder ce SIRET (vérifié par le bureau) », affiché seulement pour un établissement fermé dont le dépôt est déjà dans le suivi.
 - Il demande un motif et appelle `EUC_DEV711_accepterFerme`. La ligne de la table d'attente prend `Niveau_controle` VERT et `Decision` A_VALIDER (même état qu'un SIRET actif vérifié), avec une trace dans `Alertes`.
 - Aucune convention créée, aucun courriel.

@@ -120,7 +120,7 @@ test('administration : « Élèves par entreprise » signale un établissement h
 
 test('book : la convention en direct passe avant l’instantané (entreprise corrigée sans doublon)', () => {
   const b = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
-  assert.match(b, /direct707=EUC_DEV513_geoAccessDetails_\(scoped\)\.map\(function\(d\)\{return Object\.assign\(\{\},d,\{_direct707:true\}\);\}\),details=direct707\.concat\(EUC_DEV445_geoSnapshotDetails_\(scoped\)\)/, 'conventions en direct lues en premier');
+  assert.match(b, /direct707=EUC_DEV513_geoAccessDetails_\(scoped\)\.concat\(typeof EUC_DEV713_depotsDetails_==='function'\?EUC_DEV713_depotsDetails_\(scoped\):\[\]\)\.map\(function\(d\)\{return Object\.assign\(\{\},d,\{_direct707:true\}\);\}\),details=direct707\.concat\(EUC_DEV445_geoSnapshotDetails_\(scoped\)\)/, 'conventions en direct lues en premier');
   const regle = b.match(/var k707=[^\n]*?var c=company\(entreprise,adresse,siret\);/);
   assert.ok(regle, 'règle de priorité présente, avant la création de l’entreprise (pas d’entreprise vide)');
   /* Simulation de la règle : mêmes variables que dans EUC_DEV538_history_. */
@@ -133,7 +133,7 @@ test('book : la convention en direct passe avant l’instantané (entreprise cor
   assert.deepEqual(run([direct, autre], N, NO).length, 2, 'autre entreprise, autre période (dépôt seul dans l’instantané) : gardée');
   const memePeriode = Object.assign({}, autre, { d: { periode: { id: 9 } } }), directP = Object.assign({}, direct, { d: { _direct707: true, periode: { id: 9 } } });
   assert.deepEqual(run([directP, memePeriode], N, NO).length, 1, 'même période : la convention en direct l’emporte');
-  assert.match(b, /var parts=\['PUBLIC-BOOK-10',/, 'caches du book renouvelés');
+  assert.match(b, /var parts=\['PUBLIC-BOOK-11',/, 'caches du book renouvelés');
 });
 (async () => {
   for (const [nom, fn] of tests) { await fn(); n++; console.log('ok - ' + nom); }

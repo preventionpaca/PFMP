@@ -968,7 +968,7 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
   const depBtn=document.getElementById('depEnregistrer'),depMotif=document.getElementById('depMotif'),depHist=document.getElementById('depHistorique');
   let DEP=null;
   const DEP_LIB={prenom:'prénom',nom:'nom',fonction:'fonction',telephone:'téléphone',courriel:'courriel'};
-  function depLibelle(k){const r=k.split('_')[0];if(k==='Entreprise_identifiant')return 'SIRET / NIS de l’entreprise';return (r==='Tuteur'?'Tuteur':'Responsable')+' — '+(DEP_LIB[k.slice(r.length+1)]||k)}
+  function depLibelle(k){const r=k.split('_')[0];if(k==='Entreprise_identifiant')return 'SIRET / NIS de l’entreprise';if(k==='Entreprise_officielle')return 'Entreprise officielle (nom et adresse)';return (r==='Tuteur'?'Tuteur':'Responsable')+' — '+(DEP_LIB[k.slice(r.length+1)]||k)}
   function depStatus(t,k){depStatut.className=k||'';depStatut.textContent=t||''}
   function depRemplir(v){DEP=v;document.getElementById('depNumero').textContent=v.numero?'· '+v.numero:'';document.getElementById('depEleve').textContent=v.eleve||'—';document.getElementById('depClasse').textContent=v.classe||'—';document.getElementById('depEntreprise').textContent=v.entreprise||'—';document.getElementById('depPeriode').textContent=v.periode||'—';
     depCarte.querySelectorAll('[data-dep]').forEach(function(i){const k=i.dataset.dep,r=k.split('_')[0];i.value=(v[r]||{})[k.slice(r.length+1)]||''});
@@ -984,9 +984,15 @@ const DOSSIERS_INIT=<?!= dossiersJson ?>;
     const old=depBtn.innerHTML;let fini=false;depBtn.disabled=true;depBtn.classList.add('busy');depBtn.innerHTML='<span class="spinner"></span>Enregistrement en cours';depStatus('Enregistrement en cours…','');
     function retour(){fini=true;clearTimeout(minuteur);depBtn.disabled=false;depBtn.classList.remove('busy');depBtn.innerHTML=old}
     const minuteur=setTimeout(function(){if(fini)return;retour();depStatus('Délai dépassé : rouvrez le dépôt pour vérifier si la correction a été enregistrée.','err')},90000);
-    google.script.run.withSuccessHandler(function(v){if(fini)return;retour();depMotif.value='';depRemplir(v);depStatus('Correction enregistrée. Relancez le contrôle des noms pour actualiser la liste.','ok')})
+    /* DEV713 : SIRET corrigé : l'annuaire officiel est relu (par le navigateur si le serveur le demande) ; nom et adresse suivent. */
+    function envoyer(reponseApi){google.script.run.withSuccessHandler(function(v){if(fini)return;
+        if(v&&v.aVerifierNavigateur){depStatus('Vérification du SIRET dans l’annuaire officiel…','');const ctl=typeof AbortController==='function'?new AbortController():null,mn=setTimeout(function(){if(ctl)ctl.abort()},8000);
+          fetch(v.url,ctl?{signal:ctl.signal}:{}).then(function(x){if(!x.ok)throw new Error('erreur '+x.status);return x.json()}).then(function(j){clearTimeout(mn);if(!fini)envoyer(j)})
+            .catch(function(){clearTimeout(mn);if(fini)return;retour();depStatus('L’annuaire officiel ne répond pas : rien n’a été enregistré. Réessayez dans un instant.','err')});return}
+        retour();depMotif.value='';depRemplir(v);depStatus('Correction enregistrée'+(ch.Entreprise_identifiant?' : nom et adresse de l’entreprise repris de l’annuaire officiel pour ce SIRET':'')+'. Relancez le contrôle des noms pour actualiser la liste.','ok')})
       .withFailureHandler(function(e){if(fini)return;retour();depStatus('Erreur : '+(e&&e.message||e),'err')})
-      .EUC_DEV694_corrigerDepot({id:DEP.id,changements:ch,motif:motif})};
+      .EUC_DEV694_corrigerDepot({id:DEP.id,changements:ch,motif:motif,reponseApi:reponseApi||null})}
+    envoyer(null)};
   if(C.depot)ouvrirDepot({id:C.depot});
   else if(C.dossier){const id=Number(C.dossier),cible=dossiers.find(function(d){return Number(d.id)===id})||{id:id};selected=cible;search.value=label(cible);selectedHint.textContent='Sélectionné : '+label(cible);openBtn.disabled=false;openBtn.onclick();
     const t0=Date.now(),iv=setInterval(function(){if(!detail.classList.contains('hidden')){clearInterval(iv);const c=document.getElementById('correctionAdminV149');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});}else if(Date.now()-t0>60000)clearInterval(iv);},300);}

@@ -103,6 +103,7 @@ function EUC_DEV694_champs_(f, ch, motif, auteur, maintenant) {
   var champs = {}, raw = null;
   try { raw = JSON.parse(EUC_DEV694_t_(f.Raw_JSON) || '{}'); } catch (e) { raw = null; }
   Object.keys(ch.apres).forEach(function(k) {
+    if (k === 'Entreprise_officielle') return;
     if (k === 'Entreprise_identifiant') {
       var id = ch.apres[k];
       if (/^\d{14}$/.test(id)) { champs.SIRET_brut = id; champs.SIRET_normalise = id; }
@@ -139,6 +140,20 @@ function EUC_DEV694_vueDepot(q) {
   return EUC_DEV694_vue_(EUC_DEV694_lire_(q));
 }
 
+/* DEV713 : SIRET corrigé = entreprise officielle relue (même règle que « Vérifier le SIRET » des soumissions) :
+ * nom, adresse, code postal, ville et état (actif ou fermé) suivent le nouveau SIRET, sinon l'ancienne adresse restait.
+ * Calcul pur : e = entreprise de l'annuaire (EUC_ENT_rechercherSiret). */
+function EUC_DEV713_officiel_(e, f, siret) {
+  var T = EUC_DEV694_t_, actif = e.etat !== 'Fermé';
+  return {
+    SIRET_statut: 'VERIFIE', SIRET_source: 'Administration des conventions (correction du SIRET)',
+    Raison_sociale_officielle: T(e.raisonSociale), Nom_commercial: T(e.enseigne || (f || {}).Entreprise_saisie || e.raisonSociale),
+    Adresse_officielle: T(e.adresseComplete || e.numeroVoie || e.adresse), Complement_adresse_officielle: T(e.complementAdresse || e.complement),
+    CP_officiel: T(e.codePostal), Ville_officielle: T(e.commune), Pays_officiel: 'FR', Niveau_controle: actif ? 'VERT' : 'ORANGE'
+  };
+}
+function EUC_DEV713_adresse_(f) { var T = EUC_DEV694_t_; f = f || {}; return [T(f.Raison_sociale_officielle), [T(f.Adresse_officielle), [T(f.CP_officiel), T(f.Ville_officielle)].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(' — '); }
+
 function EUC_DEV694_corrigerDepot(q) {
   var ctx = EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
   var motif = EUC_DEV694_t_(q.motif).slice(0, 1000);
@@ -148,7 +163,22 @@ function EUC_DEV694_corrigerDepot(q) {
   var pays = /^(MC|MONACO)$/i.test(T(f.Pays_officiel)) || T(f.Entreprise_identifiant_type).toUpperCase() === 'NIS' ? 'MC' : T(f.Pays_officiel) && !/^FR$/i.test(T(f.Pays_officiel)) ? 'AUTRE' : 'FR';
   var eleve = { prenom: T(f.Prenom_eleve), nom: T(f.Nom_eleve) };
   var ch = EUC_DEV694_preparer_(EUC_DEV694_vue_(r), q.changements, pays, eleve);
+  /* DEV713 : nouveau SIRET : entreprise officielle relue avant toute écriture (annuaire relu par le navigateur au besoin). */
+  var officiel = null, nouveau = ch.apres.Entreprise_identifiant;
+  if (nouveau && /^\d{14}$/.test(nouveau)) {
+    var trouve = EUC_ENT_rechercherSiret(nouveau), e = trouve.entreprise;
+    if (!e && trouve.source === 'api_navigateur') {
+      if (!q.reponseApi) return { aVerifierNavigateur: true, url: trouve.url };
+      e = (EUC_ENT_traiterReponseApiNavigateur(q.reponseApi, nouveau) || {}).entreprise;
+    }
+    if (!e) throw new Error('Aucune entreprise trouvée pour le SIRET ' + nouveau + ' : vérifiez les 14 chiffres.');
+    if (e.nonDiffusible === true && !T(e.raisonSociale)) throw new Error('Entreprise non diffusible : nom et adresse absents de l’annuaire. Utilisez « Accès INPI ».');
+    officiel = EUC_DEV713_officiel_(e, f, nouveau);
+    var av = EUC_DEV713_adresse_(f), ap = EUC_DEV713_adresse_(officiel);
+    if (av !== ap) { ch.avant.Entreprise_officielle = av; ch.apres.Entreprise_officielle = ap + (officiel.Niveau_controle === 'ORANGE' ? ' (établissement fermé selon l’INSEE)' : ''); }
+  }
   var champs = EUC_DEV694_champs_(f, ch, motif, T(ctx && ctx.email), new Date().toISOString());
+  if (officiel) Object.keys(officiel).forEach(function(k) { champs[k] = officiel[k]; });
   var have = {}; (EUC_ENT_grist('get', '/tables/' + EUC_V160_TABLE_ + '/columns').columns || []).forEach(function(c) { have[c.id] = true; });
   var manque = EUC_DEV694_cles_().concat(EUC_DEV694_SUIVI_, ['SIRET_brut', 'SIRET_normalise', 'NIS_brut', 'NIS_normalise', 'Entreprise_identifiant_type']).filter(function(k) { return !have[k] && Object.prototype.hasOwnProperty.call(champs, k); });
   if (manque.length) {

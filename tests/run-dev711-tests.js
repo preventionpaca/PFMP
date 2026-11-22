@@ -16,7 +16,7 @@ function ctx(fields) {
   vm.createContext(s); vm.runInContext(read('apps-script/EUC_DEV665_DemandesAide.js'), s);
   s.ecrits = ecrits; return s;
 }
-const ferme = () => ({ Submission_ID: 'SECOURS-PFMP-2026-S0079', Decision: 'A_CONTROLER', Niveau_controle: 'ORANGE', SIRET_statut: 'VERIFIE', SIRET_normalise: '88514123400033', Alertes: 'Établissement fermé selon l’INSEE' });
+const ferme = () => ({ Submission_ID: 'SECOURS-PFMP-2026-S9001', Decision: 'A_CONTROLER', Niveau_controle: 'ORANGE', SIRET_statut: 'VERIFIE', SIRET_normalise: '12345678200036', Alertes: 'Établissement fermé selon l’INSEE' });
 
 test('avant : dépôt dans le suivi mais « à traiter » à cause de l’établissement fermé', () => {
   const s = ctx(ferme());
@@ -33,7 +33,7 @@ test('garder le SIRET : une seule ligne de la table d’attente, contrôle vert,
   assert.equal(body.records.length, 1); assert.equal(body.records[0].id, 79);
   assert.deepEqual(Object.keys(body.records[0].fields).sort(), ['Alertes', 'Decision', 'Niveau_controle']);
   assert.equal(body.records[0].fields.Niveau_controle, 'VERT'); assert.equal(body.records[0].fields.Decision, 'A_VALIDER');
-  assert.match(body.records[0].fields.Alertes, /SIRET 88514123400033 gardé par le bureau — entreprise contactée : en activité \(23\/11\/2026 10:00\)$/);
+  assert.match(body.records[0].fields.Alertes, /SIRET 12345678200036 gardé par le bureau — entreprise contactée : en activité \(23\/11\/2026 10:00\)$/);
   assert.equal(r.soumission.aTraiter, false); assert.equal(r.soumission.dansSuivi, true);
   const code = read('apps-script/EUC_DEV665_DemandesAide.js'), f = code.slice(code.indexOf('function EUC_DEV711_accepterFerme'), code.indexOf('/* Sans suite'));
   assert.doesNotMatch(f, /MailApp|importSelection|ACCES_TABLE/);
