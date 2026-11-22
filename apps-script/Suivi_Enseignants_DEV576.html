@@ -64,6 +64,7 @@ select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);
 .erreur{background:var(--alerte-fond);color:var(--alerte);padding:12px 16px;border-radius:10px;font-weight:700}
 @media (max-width:700px){header h1{font-size:18px}th:nth-child(4),td:nth-child(4){display:none}}
 @page{size:A4 landscape;margin:10mm}
+.meme-ent{margin-top:14px;padding:12px 14px;background:#f7fbf9;border:1px solid var(--bord);border-radius:12px}.meme-ent h3{margin:0 0 4px;font-size:15px;color:#0b6b4f}.meme-ent table{width:100%;border-collapse:collapse;font-size:13px}.meme-ent th,.meme-ent td{text-align:left;vertical-align:top;padding:6px 7px;border-bottom:1px solid #e3ece8}.meme-ent td{white-space:pre-line}.meme-ent .ok{color:#0b745f;font-weight:700}.meme-ent .alerte{color:#a15c00;font-weight:700}@media print{.meme-ent{break-inside:avoid;background:#fff}}
 @media print{header,.barre,.noprint{display:none!important}body{background:#fff;font-size:11px}.tableau{border:0;overflow:visible}th{position:static}.imprime-seul{display:block;font-weight:700}tr.apprenti td{background:#fffbe6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:inherit;text-decoration:none}}
 .pp-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}.pp-modal[hidden]{display:none}.pp-carte{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}.pp-carte h2{margin:0 0 4px}.pp-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:8px 0}.pp-carte input#ppCode{padding:7px;border:1px solid #9cc;border-radius:7px;min-width:260px}.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:ppspin .7s linear infinite}@keyframes ppspin{to{transform:rotate(360deg)}}@media print{.pp-modal{display:none!important}}.edition{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#e3f4ee;color:#0b6b4f;border:1px solid #9fd8c9}.edition.non{background:#fff4e5;color:#9a4a00;border-color:#f3c48a}.pdf-liens{display:block;margin-top:4px;font-size:12px}.pdf-liens a{display:block;margin-top:2px}
 .lieu-stage-cell{margin-top:6px;padding:6px 8px;border:2px solid #d97706;border-radius:6px;background:#fff7d6;color:#92400e;font-weight:700}
@@ -171,6 +172,35 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     if(CFG.wrapper){var w=window;for(var i=0;i<6;i++){try{w=w.parent;w.postMessage({type:'EUC_PFMP_WRAPPER_NAVIGATE',url:url},'*');}catch(e){break;}}return;}
     try{window.top.location.href=url;}catch(e){window.open(url,'_top');}
   }
+  /* DEV712 : élèves en stage dans une même entreprise sur la période (nom d'entreprise sans casse, accents ni forme juridique,
+   * et code postal du lieu de stage, à défaut de l'entreprise), avec les professeurs affectés : un seul professeur
+   * pour la visite et un seul pour l'appel. Calcul pur, à partir des lignes déjà chargées ; aucune écriture. */
+  function memeEntreprise(c,p){
+    var cle=function(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').replace(/\b(sas|sasu|sarl|eurl|sa|snc|sci|selarl|ste|societe|ets|etablissements?|groupe)\b/g,' ').replace(/\s+/g,' ').trim();};
+    var cp=function(v){var m=String(v||'').match(/\b(\d{5})\b/);return m?m[1]:'';};
+    var par={},ordre=[];
+    c.eleves.forEach(function(e){
+      var l=p.lignes[e[0]],f=l&&l[1]>=0?D.fiches[l[1]]:null;if(!l||!f||(l[0]!=='AVEC'&&l[0]!=='PDIF_ENTREPRISE'))return;
+      var k=cle(f.entreprise);if(!k)return;k+='|'+cp(f.lieu||f.adresse);
+      if(!par[k]){par[k]={entreprise:f.entreprise,adresse:f.lieu||f.adresse||'',eleves:[]};ordre.push(k);}
+      par[k].eleves.push({nom:e[1],tel:String(l[2]||'').trim(),visite:String(l[3]||'').trim()});
+    });
+    var profs=function(l,t){var o={};l.forEach(function(x){o[x[t]]=(o[x[t]]||0)+1;});return o;};
+    return ordre.map(function(k){return par[k];}).filter(function(g){return g.eleves.length>1;}).map(function(g){
+      var t=profs(g.eleves,'tel'),v=profs(g.eleves,'visite'),etat=function(o,lib){var k=Object.keys(o);return k.length>1?lib+' : plusieurs professeurs':!k[0]?lib+' : non affecté':'';};
+      return {entreprise:g.entreprise,adresse:g.adresse,eleves:g.eleves.map(function(x){return x.nom;}),tel:t,visite:v,aVerifier:[etat(t,'Téléphone'),etat(v,'Visite')].filter(Boolean)};
+    }).sort(function(a,b){return b.eleves.length-a.eleves.length||String(a.entreprise).localeCompare(String(b.entreprise),'fr');});
+  }
+  function profsTexte(o){var k=Object.keys(o).sort(function(a,b){return o[b]-o[a]||a.localeCompare(b,'fr');});return k.length===1?(k[0]||'Non affecté'):k.map(function(x){return (x||'Non affecté')+' ('+o[x]+')';}).join('\n');}
+  function blocMemeEntreprise(c,p){
+    if(c.ce)return '';
+    var g=memeEntreprise(c,p),n=g.filter(function(x){return x.aVerifier.length;}).length;
+    var h='<section class="meme-ent" aria-label="Élèves en stage dans une même entreprise"><h3>Élèves en stage dans une même entreprise</h3>';
+    if(!g.length)return h+'<p class="note">Aucune entreprise n’accueille plusieurs élèves de cette classe sur cette période.</p></section>';
+    return h+'<p class="note">'+g.length+' entreprise'+(g.length>1?'s accueillent':' accueille')+' plusieurs élèves : idéalement, un seul professeur fait la visite et un seul l’appel'+(n?' — '+n+' à vérifier':'')+'.</p>'+
+      '<table><thead><tr><th>Entreprise</th><th>Élèves</th><th>Suivi téléphonique</th><th>Professeur visiteur</th><th>À vérifier</th></tr></thead><tbody>'+
+      g.map(function(x){return '<tr><td><b>'+esc(x.entreprise)+'</b>'+(x.adresse?'<br><span class="note">'+esc(x.adresse)+'</span>':'')+'</td><td>'+x.eleves.length+' élèves :\n'+esc(x.eleves.join('\n'))+'</td><td>'+esc(profsTexte(x.tel))+'</td><td>'+esc(profsTexte(x.visite))+'</td><td>'+(x.aVerifier.length?'<span class="alerte">'+esc(x.aVerifier.join('\n'))+'</span>':'<span class="ok">✓ un seul professeur</span>')+'</td></tr>';}).join('')+'</tbody></table></section>';
+  }
   function classe(s){
     var c=parId[s.c];if(!c){aller({});return;}
     if(!c.periodes.length){app.innerHTML='<nav class="barre noprint"><a class="retour" href="#f='+c.famille+'">← '+esc(FAM[c.famille])+'</a></nav><h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+'</span></h2><p class="vide">'+(c.effectif?c.effectif+' inscrit(s), mais aucune période (appel téléphonique, visite) dans Planning_Periodes pour cette classe.':'Aucun apprenti cette année.')+'</p>';return;}
@@ -204,7 +234,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
       '<div class="tableau"><table><thead><tr><th>Élève</th><th>'+(c.ce?'Contrat':'Convention')+' / statut</th><th>Entreprise</th><th>Adresse entreprise</th><th>Coordonnées entreprise</th><th>Coordonnées tuteur</th><th>Professeur principal</th><th>Suivi téléphonique</th><th>Professeur visiteur</th></tr></thead><tbody>'+
-      (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>';
+      (lignes||'<tr><td colspan="9" class="vide">Aucun élève.</td></tr>')+'</tbody></table></div>'+blocMemeEntreprise(c,p);
     app.querySelectorAll('a.reimp[data-date]').forEach(function(x){x.onclick=function(ev){if(!confirm('Convention déjà éditée le '+x.dataset.date+'. La réimprimer (même numéro, même QR code) ?'))ev.preventDefault();};});
     var titre=document.title;
     document.getElementById('imprimer').onclick=function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();window.print();};
@@ -334,6 +364,15 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
           didParseCell:function(d){if(d.section!=='body')return;var x=styles[d.row.index];if(x.app)d.cell.styles.fillColor=[255,251,230];
             if(d.column.index===1){d.cell.styles.textColor=x.st==='AVEC'||x.st==='CONTRAT'||x.st==='PDIF_ENTREPRISE'?[22,101,52]:x.st==='APPRENTI'?[124,45,146]:x.st==='SANS'||x.st==='SANS_CONTRAT'||x.st==='PDIF_A_DEFINIR'?[154,52,18]:[60,60,60];}},
           didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(7.5);doc.setTextColor(110);doc.text(titre+' · '+edite+' · données Grist (action n° '+D.temoin+')',8,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,289,h-5,{align:'right'});}});
+        /* DEV712 : sous le tableau, élèves dans une même entreprise et professeurs affectés. */
+        var mg=c.ce?[]:memeEntreprise(c,p);
+        if(mg.length){var y=(doc.lastAutoTable&&doc.lastAutoTable.finalY||29)+8;if(y>180){doc.addPage();y=14;}
+          doc.setFontSize(11);doc.setTextColor(11,107,79);doc.text('Élèves en stage dans une même entreprise ('+mg.length+')',10,y);
+          doc.autoTable({startY:y+3,head:[['Entreprise','Élèves','Suivi téléphonique','Professeur visiteur','À vérifier']],
+            body:mg.map(function(x){return [x.entreprise+(x.adresse?'\n'+x.adresse:''),x.eleves.length+' élèves :\n'+x.eleves.join('\n'),profsTexte(x.tel),profsTexte(x.visite),x.aVerifier.join('\n')||'Un seul professeur'];}),
+            theme:'grid',margin:{left:8,right:8,bottom:12},styles:{fontSize:7.6,cellPadding:1.4,overflow:'linebreak',valign:'top',lineColor:[213,230,222],lineWidth:0.15},
+            headStyles:{fillColor:[11,107,79],textColor:255,fontStyle:'bold'},columnStyles:{0:{cellWidth:70},1:{cellWidth:70},2:{cellWidth:45},3:{cellWidth:45},4:{cellWidth:51}},
+            didParseCell:function(d){if(d.section==='body'&&d.column.index===4)d.cell.styles.textColor=mg[d.row.index].aVerifier.length?[161,92,0]:[11,116,95];}});}
         doc.save(((c.ce?'Suivi apprentis ':'PFMP ')+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf');
       }catch(e){alert('Le PDF n’a pas pu être créé : '+(e&&e.message||e)+'. Utilisez « Imprimer » puis « Enregistrer en PDF ».');}
       fin();

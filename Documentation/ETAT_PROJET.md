@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV712 : élèves dans une même entreprise dans le suivi utilisé (`Suivi_Enseignants_DEV576.html`) et son PDF
+
+- DEV709 avait placé l'encadré dans l'ancienne vue de classe (`Suivi_PFMP_Classe_Detail_V156.html`). Le suivi réellement utilisé (administration et professeurs) est `Suivi_Enseignants_DEV576.html`.
+- Sous le tableau de la classe et de la période, un encadré « Élèves en stage dans une même entreprise » donne l'entreprise et l'adresse, les noms des élèves, le suivi téléphonique, le professeur visiteur et ce qu'il faut vérifier (plusieurs professeurs, non affecté). Il apparaît aussi à l'impression.
+- Le même contenu figure dans « Exporter PDF », en second tableau.
+- Regroupement par nom d'entreprise (casse, accents et forme juridique ignorés) et code postal du lieu du stage, à défaut de l'entreprise. Seules les conventions enregistrées comptent (stage, ou P.dif. en entreprise) ; rien pour une classe d'apprentis.
+- Calcul pur à partir des données déjà chargées.
+- Tests : `tests/run-dev712-tests.js` (4).
+
 ## Mise à jour du 23 novembre 2026 — DEV711 : « Garder ce SIRET (vérifié par le bureau) » (soumissions à traiter)
 
 - Problème : un dépôt déjà dans le suivi restait « à traiter » quand l'INSEE déclarait l'établissement fermé (`Niveau_controle` ORANGE). « Enregistrer les corrections » ne touche pas au SIRET. La seule sortie était « Valider : créer la convention », qui importe le dépôt et envoie un courriel à l'élève.
