@@ -12,7 +12,7 @@
  * enregistrement). Les conventions ne sont JAMAIS réécrites (décision du DDFPT, 22/11/2026).
  */
 var EUC_DEV706_TABLE_ = 'EUC_CONTACTS_REFERENCE';
-var EUC_DEV706_VERSION_ = '1.0.0-dev.706';
+var EUC_DEV706_VERSION_ = '1.0.0-dev.706b';
 var EUC_DEV706_CIVILITES_ = ['m', 'mr', 'mme', 'mlle', 'monsieur', 'madame', 'mademoiselle', 'dr', 'docteur', 'me'];
 var EUC_DEV706_DOMAINES_SUSPECTS_ = ['gmial.com', 'gmal.com', 'gmai.com', 'gamil.com', 'gmail.co', 'gmail.cm', 'gmail.fr', 'gmaill.com', 'hotmial.com', 'hotmal.com', 'hotmail.co', 'hotmai.fr', 'hotmial.fr',
   'yahoo.f', 'yaho.fr', 'yahou.fr', 'outlok.fr', 'outlok.com', 'outloo.com', 'wanadoo.com', 'orange.f', 'free.f', 'sfr.f', 'laposte.fr', 'icloud.fr'];
@@ -66,7 +66,7 @@ function EUC_DEV706_proches_(a, b) {
 
 /* Saisies (calcul pur) : une ligne par personne citée dans une convention ou un dépôt. */
 function EUC_DEV706_saisie_(role, prenom, nom, tel, courriel, ctx) {
-  var complet = [EUC_DEV706_t_(prenom), EUC_DEV706_t_(nom)].filter(Boolean).join(' ');
+  var complet = [EUC_DEV706_t_(prenom), EUC_DEV706_t_(nom)].filter(Boolean).join(' ').replace(/^(m|mr|mme|mlle|monsieur|madame|mademoiselle)\.?\s+/i, '');
   var t = EUC_DEV706_tel_(tel), c = EUC_DEV706_courriel_(courriel);
   if (!complet && !t && !c) return null;
   return { role: role, nom: complet, cle: EUC_DEV706_cleNom_(complet), telBrut: EUC_DEV706_t_(tel), tel: t, courriel: c, k: ctx.k, entreprise: ctx.entreprise, identifiant: ctx.identifiant,
@@ -127,7 +127,7 @@ function EUC_DEV706_personne_(k, g, l) {
   var mails = EUC_DEV706_compter_(l, function(s) { return s.courriel; }, function(s) { return s.courriel; }).map(function(c) { c.ok = EUC_DEV706_courrielValide_(c.v); c.suspect = c.ok && EUC_DEV706_courrielSuspect_(c.v); c.proposition = c.suspect ? EUC_DEV706_proposition_(c.v) : ''; return c; });
   var clesNoms = []; l.forEach(function(s) { if (s.cle && clesNoms.indexOf(s.cle) < 0) clesNoms.push(s.cle); });
   if (g === '#sans-nom') al.push({ n: 3, t: 'Nom absent : téléphone ou courriel saisi sans nom de personne.' });
-  else if (noms.length > 1) {
+  else if (clesNoms.length > 1) {
     var court = clesNoms.some(function(c) { return c.split(' ').length === 1; });
     al.push({ n: court ? 2 : 3, t: (court ? 'Nom incomplet ou orthographe différente : ' : 'Orthographes différentes : ') + noms.map(function(x) { return x.v + ' (' + x.n + ')'; }).join(', ') + '.' });
   }
@@ -161,7 +161,8 @@ function EUC_DEV706_saisies_() {
   EUC_DEV688_parcourir_('', function(a, id, e, base) {
     if (e && (e.Donnee_test === true || /^RECETTE/i.test(T(e.Mode_donnee))) || /^TEST\b/i.test(T(base.classe))) return;
     var x = EUC_DEV689_ident_(a, fiches); if (!x) return;
-    var siege = [T(a.Entreprise_adresse || a.Entreprise_adresse_snapshot), [T(a.Entreprise_code_postal || a.Entreprise_code_postal_snapshot), T(a.Entreprise_commune || a.Entreprise_commune_snapshot)].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    var voie = T(a.Entreprise_adresse || a.Entreprise_adresse_snapshot), cp = T(a.Entreprise_code_postal || a.Entreprise_code_postal_snapshot), ville = [cp, T(a.Entreprise_commune || a.Entreprise_commune_snapshot)].filter(Boolean).join(' ');
+    var siege = cp && voie.indexOf(cp) >= 0 ? voie : [voie, ville].filter(Boolean).join(', ');
     var lieu = typeof EUC_DEV649_lieuTexte_ === 'function' ? T(EUC_DEV649_lieuTexte_(a)) : (T(a.Lieu_stage_adresse) ? [T(a.Lieu_stage_adresse), [T(a.Lieu_stage_code_postal), T(a.Lieu_stage_commune)].filter(Boolean).join(' ')].join(', ') : '');
     var mA = T(base.numero).match(/PFMP-(20\d{2})-/), annee = base.source === 'SOUMISSION' ? (mA ? mA[1] + '-' + (Number(mA[1]) + 1) : '') : T(EUC_PFMP_anneeDossierV148_(a));
     var ctx = { k: x.entreprise, entreprise: T(a.Entreprise_raison_sociale) || x.enseigne || '', identifiant: x.identifiant, siege: siege, lieu: lieu, annee: annee, numero: T(base.numero), eleve: T(base.eleve) };

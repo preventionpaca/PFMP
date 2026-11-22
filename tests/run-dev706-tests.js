@@ -56,6 +56,14 @@ test('regroupement : variantes d’une même personne réunies, coordonnées div
   assert.equal(d.courriels[0].proposition, 'paul@gmail.com'); assert.ok(d.alertes.some(a => /vouliez-vous dire paul@gmail\.com/.test(a.t)));
 });
 
+test('civilité, casse ou ordre seuls : pas d’orthographe différente ; siège sans code postal répété', () => {
+  const k = ctx([conv(1, { Entreprise_adresse: '69 BD MAL JUIN 06800 CAGNES SUR MER', Entreprise_code_postal: '06800', Entreprise_commune: 'CAGNES SUR MER', Responsable_prenom: 'Mr Fueri', Responsable_nom: 'Patrice', Responsable_telephone: '0493541206', Responsable_courriel: 'a@b.fr' }),
+    conv(2, { Entreprise_adresse: '69 BD MAL JUIN 06800 CAGNES SUR MER', Entreprise_code_postal: '06800', Entreprise_commune: 'CAGNES SUR MER', Responsable_prenom: 'PATRICE', Responsable_nom: 'FUERI', Responsable_telephone: '0493541206', Responsable_courriel: 'a@b.fr' })]);
+  const l = J(k.EUC_DEV706_calcul_()).personnes;
+  assert.equal(l.length, 1); assert.deepEqual(l[0].alertes, []); assert.equal(l[0].risque, 0); assert.equal(l[0].nom, 'Fueri Patrice', 'civilité retirée');
+  assert.equal(l[0].siege, '69 BD MAL JUIN 06800 CAGNES SUR MER');
+});
+
 test('même téléphone pour deux personnes différentes ; téléphone invalide ; saisie sans nom rattachée par le téléphone', () => {
   const k = ctx([conv(1, { Responsable_prenom: 'Ana', Responsable_nom: 'ROSSI', Responsable_telephone: '0493000000', Tuteur_prenom: 'Luc', Tuteur_nom: 'BLANC', Tuteur_telephone: '0493000000', Tuteur_courriel: 'luc@azur.fr' }),
     conv(2, { Responsable_prenom: '', Responsable_nom: '', Responsable_telephone: '', Responsable_courriel: 'luc@azur.fr', Tuteur_prenom: 'Luc', Tuteur_nom: 'BLANC', Tuteur_telephone: '06 12 34', Tuteur_courriel: 'luc@azur.fr' })]);
