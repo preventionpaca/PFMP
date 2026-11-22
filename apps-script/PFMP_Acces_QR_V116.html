@@ -1637,6 +1637,7 @@ init();
                     lockIdentity(true,false);
                     lockOne('entrepriseEnseigne',false);
                     status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
+                    /* DEV707 : établissement d'accueil dans les Alpes-Maritimes. */if(window.EUC707){var f707=function(n){var el=document.querySelector('[name="'+n+'"]')||document.getElementById(n);return el?el.value:'';};EUC707.proposer({siret:siret,nom:f707('entrepriseRaisonSociale'),cp:f707('entrepriseCodePostal'),commune:f707('entrepriseCommune'),ancre:search,choisir:function(x){ident.value=x;search.disabled=false;search.click();}});}
 
                     if(x.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
                   })
@@ -1682,6 +1683,7 @@ init();
             lockIdentity(true,false);
             lockOne('entrepriseEnseigne',false);
             status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
+                    /* DEV707 : établissement d'accueil dans les Alpes-Maritimes. */if(window.EUC707){var f707=function(n){var el=document.querySelector('[name="'+n+'"]')||document.getElementById(n);return el?el.value:'';};EUC707.proposer({siret:siret,nom:f707('entrepriseRaisonSociale'),cp:f707('entrepriseCodePostal'),commune:f707('entrepriseCommune'),ancre:search,choisir:function(x){ident.value=x;search.disabled=false;search.click();}});}
 
             if(r.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
           })
@@ -2089,6 +2091,7 @@ window.EUC_DEV649_nonDiffusible=function(){
 document.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='siret'){var b=document.getElementById('ndNoteDev649');if(b)b.remove();}},true);
 </script>
 <?!= HtmlService.createHtmlOutputFromFile('Saisie_Contacts_DEV691').getContent() ?>
+<?!= EUC_ENT_inclure('Etablissements_DEV707') ?>
 <?!= HtmlService.createHtmlOutputFromFile('Identites_Contacts_DEV602').getContent() ?>
 </body>
 </html>

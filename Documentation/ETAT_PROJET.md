@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 22 novembre 2026 — DEV707 : établissement d'accueil (SIRET du siège hors Alpes-Maritimes)
+
+- Constat (TECHNIDRILL) : l'élève recopie le SIRET du siège (Chassieu, …00064) alors que le stage a lieu dans un autre établissement de la même entreprise (ZI Carros–Le Broc, 1re avenue, 18e rue, SIRET 351 053 673 00049). Les conventions 2026-2027 PFMP-2026-000872 et 000873 portent le siège : cartes, distances (475 km) et ordres de mission partent de Chassieu. Les dépôts des années précédentes indiquaient bien Carros.
+- Décision du DDFPT (22/11/2026) : la convention porte le SIRET de l'établissement d'accueil.
+- Formulaires élèves (« Déclarer mon entreprise », QR code, suite du QR, formulaire par code de convention) : `Etablissements_DEV707.html`. Quand le SIRET vérifié est hors des Alpes-Maritimes et de Monaco, l'annuaire officiel (recherche par nom dans le 06) donne les établissements ouverts du même SIREN dans les Alpes-Maritimes ; l'élève choisit « Où fais-tu ton stage ? » (SIRET choisi revérifié comme tout SIRET) ou garde l'établissement saisi. « Déclarer mon entreprise » : « Continuer » bloqué jusqu'à la réponse. Annuaire indisponible ou aucun autre établissement : rien n'est affiché, l'élève n'est jamais bloqué.
+- Administration des conventions, « Élèves par entreprise » : mention « ⚠ hors 06 » (SIRET d'un établissement hors Alpes-Maritimes et Monaco, sans lieu de stage distinct), lien vers les établissements de l'entreprise sur l'annuaire officiel, total dans l'état ; recherche « hors 06 ». Correction du SIRET par la carte de correction du dossier (aucune correction automatique).
+- À faire par l'administration : TECHNIDRILL PFMP-2026-000872 et 000873 → SIRET 351 053 673 00049.
+- Tests : `tests/run-dev707-tests.js` (7).
+
 ## Mise à jour du 22 novembre 2026 — DEV706 : « Fiabiliser les contacts entreprises » (page `contacts-entreprises-pfmp`)
 
 - Vignette dans l'Accueil d'administration, colonne Entreprises, sous « Répertoire entreprises et contacts ».

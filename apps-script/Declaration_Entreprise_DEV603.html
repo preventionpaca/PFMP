@@ -230,7 +230,9 @@ $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'')
       if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});$('ndInpi').href=EUC_DEV650_lienInpi(s);if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
         $('officiel').innerHTML='<div class="officiel"><b>SIRET '+esc(s)+' trouvé</b>'+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'</div>';$('b3').disabled=false;try{$('ndNom').focus();}catch(eF){}return;}
       $('officiel').innerHTML='<div class="officiel"><b>'+esc(e.raisonSociale)+'</b>'+(e.enseigne?' — '+esc(e.enseigne):'')+'<br>'+esc([e.adresseComplete||e.numeroVoie,e.complementAdresse,(e.codePostal||'')+' '+(e.commune||'')].filter(Boolean).join(', '))+(e.etat==='Fermé'?'<br><span class="erreur">Attention : établissement indiqué comme fermé.</span>':'')+'<br><span class="note">C’est bien ton entreprise ? Sinon corrige le SIRET.</span></div>';
-      if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;}
+      if(e.enseigne&&!$('enseigne').value)$('enseigne').value=e.enseigne;$('b3').disabled=false;
+      /* DEV707 : SIRET du siège hors Alpes-Maritimes → choix de l'établissement d'accueil. */
+      if(window.EUC707)EUC707.proposer({siret:s,nom:e.raisonSociale,cp:e.codePostal,commune:e.commune,ancre:$('officiel'),bloquer:$('b3'),choisir:function(x){$('siret').value=x;SIRET=null;$('verifier').click();}});}
     if(r.entreprise){montrer(r.entreprise);return;}
     annuaire(r.url,function(json){REPONSE_API=json;
       appel('EUC_DEV603_traiterApi',{json:json,siret:s},function(t){if(!(t&&t.entreprise))ECHEC='SIRET '+s+' introuvable dans l’annuaire officiel';montrer(t&&t.entreprise);},function(e){libre(b);erreur('m3',e);});},
@@ -293,5 +295,6 @@ appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg'
 })();
 </script>
 <?!= HtmlService.createHtmlOutputFromFile('Saisie_Contacts_DEV691').getContent() ?>
+<?!= EUC_ENT_inclure('Etablissements_DEV707') ?>
 </body>
 </html>

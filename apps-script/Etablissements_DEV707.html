@@ -1,0 +1,57 @@
+<style id="EUC_DEV707_STYLE">
+.euc707{margin:10px 0;padding:12px 14px;border:2px solid #f59e0b;background:#fffbeb;border-radius:10px;color:#3b2a00;font-size:15px;line-height:1.45}
+.euc707 b.titre{display:block;font-size:16px;margin-bottom:4px}
+.euc707 button{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 11px;border-radius:8px;border:1px solid #d97706;background:#fff;color:#3b2a00;font:inherit;cursor:pointer}
+.euc707 button.euc707-non{border-color:#94a3b8;color:#334155}
+.euc707 button[disabled]{opacity:.6;cursor:wait}
+.euc707 .euc707-ok{color:#166534;font-weight:700}
+.euc707-spin{display:inline-block;width:13px;height:13px;margin-right:7px;vertical-align:-2px;border:2px solid #d97706;border-right-color:transparent;border-radius:50%;animation:euc707r .8s linear infinite}
+@keyframes euc707r{to{transform:rotate(360deg)}}
+</style>
+<script id="EUC_DEV707_ETABLISSEMENTS">
+/* DEV707 — Établissement d'accueil : l'élève recopie souvent le SIRET du siège (ex. TECHNIDRILL, siège à Chassieu)
+ * alors que son stage a lieu dans un autre établissement de la même entreprise (Carros). Quand l'adresse du SIRET
+ * vérifié est hors des Alpes-Maritimes et de Monaco, on cherche dans l'annuaire officiel les établissements ouverts
+ * de la même entreprise (même SIREN) dans les Alpes-Maritimes et on demande à l'élève où il fait son stage.
+ * Le SIRET choisi est ensuite vérifié comme tout SIRET. Décision du DDFPT (22/11/2026) : la convention porte le SIRET
+ * de l'établissement d'accueil. Un annuaire indisponible ne bloque jamais l'élève. */
+window.EUC707=(function(){
+  'use strict';
+  var BASE='https://recherche-entreprises.api.gouv.fr/search',DEPT='06';
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function chiffres(v){return String(v||'').replace(/\D/g,'')}
+  /* Hors zone : code postal français connu qui n'est ni des Alpes-Maritimes (06) ni de Monaco (98). */
+  function horsZone(cp){cp=chiffres(cp);return cp.length===5&&!/^(06|98)/.test(cp)}
+  /* Établissements ouverts du même SIREN dans la réponse de l'annuaire (calcul pur). */
+  function etablissements(json,siret){var siren=chiffres(siret).slice(0,9),vus={},out=[];
+    ((json&&json.results)||[]).forEach(function(r){if(String(r&&r.siren)!==siren)return;
+      (r.matching_etablissements||[]).forEach(function(e){var s=chiffres(e&&e.siret);if(s.length!==14||s===chiffres(siret)||vus[s]||String(e.etat_administratif||'A')!=='A')return;
+        if(e.code_postal&&String(e.code_postal).indexOf(DEPT)!==0)return;vus[s]=true;out.push({siret:s,adresse:String(e.adresse||'').trim(),commune:String(e.libelle_commune||'').trim(),enseigne:String(e.nom_commercial||((e.liste_enseignes||[])[0])||'').trim()})})});
+    return out}
+  function chercher(nom,ok,ko){var ctl=typeof AbortController==='function'?new AbortController():null,fini=false,t=setTimeout(function(){if(ctl)ctl.abort();if(!fini){fini=true;ko('délai')}},8000);
+    fetch(BASE+'?q='+encodeURIComponent(nom)+'&departement='+DEPT+'&page=1&per_page=10',Object.assign({headers:{Accept:'application/json'}},ctl?{signal:ctl.signal}:{}))
+      .then(function(r){if(!r.ok)throw new Error('erreur '+r.status);return r.json()})
+      .then(function(j){if(fini)return;fini=true;clearTimeout(t);ok(j)})
+      .catch(function(e){if(fini)return;fini=true;clearTimeout(t);ko(e&&e.message||'réseau')})}
+  function boite(ancre){var b=document.getElementById('euc707Box');if(b&&b.parentNode)b.parentNode.removeChild(b);if(!ancre)return null;b=document.createElement('div');b.id='euc707Box';b.className='euc707';b.setAttribute('role','alert');
+    if(ancre.id==='officiel'||ancre.classList&&ancre.classList.contains('euc707-dedans'))ancre.appendChild(b);else ancre.insertAdjacentElement('afterend',b);return b}
+  /* o = { siret, nom, cp, commune, ancre, choisir(siret), bloquer: bouton à désactiver tant que l'élève n'a pas répondu } */
+  function proposer(o){o=o||{};var b0=document.getElementById('euc707Box');if(b0&&b0.parentNode)b0.parentNode.removeChild(b0);
+    if(!o.ancre||!o.nom||chiffres(o.siret).length!==14||!horsZone(o.cp))return false;
+    var jeton=(proposer.n=(proposer.n||0)+1),bloque=o.bloquer&&!o.bloquer.disabled;if(bloque)o.bloquer.disabled=true;
+    var b=boite(o.ancre);b.innerHTML='<span class="euc707-spin" aria-hidden="true"></span>Cette adresse est hors des Alpes-Maritimes : recherche des autres établissements de l’entreprise…';
+    function liberer(){if(bloque&&o.bloquer)o.bloquer.disabled=false;bloque=false}
+    chercher(o.nom,function(json){if(jeton!==proposer.n)return;var l=etablissements(json,o.siret);
+      if(!l.length){b.parentNode&&b.parentNode.removeChild(b);liberer();return}
+      b.innerHTML='<b class="titre">Où fais-tu ton stage ?</b>Le SIRET que tu as saisi est celui de l’établissement de <b>'+esc(o.commune||o.cp)+'</b>. Cette entreprise a aussi '+(l.length>1?l.length+' établissements':'un établissement')+' dans les Alpes-Maritimes. Choisis celui où tu fais ton stage :'+
+        l.map(function(e,i){return '<button type="button" data-i="'+i+'">📍 '+esc(e.adresse)+(e.enseigne?' — '+esc(e.enseigne):'')+'<br><small>SIRET '+esc(e.siret)+'</small></button>'}).join('')+
+        '<button type="button" class="euc707-non">Non, je fais bien mon stage à '+esc(o.commune||'cette adresse')+'</button>';
+      b.querySelectorAll('button[data-i]').forEach(function(btn){btn.addEventListener('click',function(){if(btn.disabled)return;var e=l[Number(btn.dataset.i)];
+        b.querySelectorAll('button').forEach(function(x){x.disabled=true});btn.innerHTML='<span class="euc707-spin" aria-hidden="true"></span>Vérification du SIRET '+esc(e.siret)+'…';liberer();
+        try{o.choisir(e.siret)}catch(x){b.querySelectorAll('button').forEach(function(z){z.disabled=false})}})});
+      b.querySelector('.euc707-non').addEventListener('click',function(){b.innerHTML='<span class="euc707-ok">✓ Établissement de '+esc(o.commune||o.cp)+' conservé.</span> Si tu travailles sur un chantier ou à une autre adresse, indique-la dans « lieu de stage ».';liberer()});
+    },function(){if(jeton!==proposer.n)return;b.parentNode&&b.parentNode.removeChild(b);liberer()});
+    return true}
+  return{proposer:proposer,etablissements:etablissements,horsZone:horsZone,base:BASE}
+})();
+</script>

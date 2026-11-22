@@ -187,7 +187,7 @@ function EUC_DEV689_lieuxStage(q) {
   var annee = String(q.annee || '').trim(), out = [], fiches = EUC_DEV689_fiches_();
   EUC_DEV688_parcourir_(annee, function(a, id, e, base) {
     var x = EUC_DEV689_ident_(a, fiches); if (!x) return;
-    base.siret = x.siret; base.nis = x.nis; base.identifiant = x.identifiant; base.enseigne = x.enseigne; base.commune = x.commune; base.lieu = x.lieu; base.cle = x.cle;
+    base.siret = x.siret; base.nis = x.nis; base.identifiant = x.identifiant; base.enseigne = x.enseigne; base.commune = x.commune; base.lieu = x.lieu; base.cle = x.cle; base.cp = x.cp;
     out.push(base);
   });
   EUC_DEV688_tri_(out);
