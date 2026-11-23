@@ -234,6 +234,8 @@ function EUC_DEV665_verifierSiret(q) {
     Niveau_controle: actif ? 'VERT' : 'ORANGE', Decision: actif ? 'A_VALIDER' : 'A_CONTROLER',
     Alertes: EUC_DEV665_trace_(f.Alertes, 'SIRET corrigé par le bureau : ' + siret + (actif ? '' : ' — établissement fermé selon l’INSEE'))
   };
+  /* DEV723 : l'entreprise retenue remplace la saisie de l'élève (nom et adresse ; responsable et tuteur jamais). */
+  if (typeof EUC_DEV723_avecSaisie_ === 'function') champs = EUC_DEV723_avecSaisie_(f, champs);
   EUC_DEV665_patch_(r.id, champs);
   var apres = EUC_DEV669_apresCorrection_(r.id, Object.assign({}, f, champs));
   return { ok: true, soumission: EUC_DEV666_finir_(r.id, apres.fields), ferme: !actif, prevenu: apres.prevenu };
@@ -255,6 +257,7 @@ function EUC_DEV665_enregistrerMonaco(q) {
     Raison_sociale_officielle: nom, Nom_commercial: EUC_DEV665_t_(q.enseigne) || nom, Adresse_officielle: adresse, Complement_adresse_officielle: '', CP_officiel: cp, Ville_officielle: ville, Pays_officiel: 'MC',
     Niveau_controle: 'VERT', Decision: 'A_VALIDER', Alertes: EUC_DEV665_trace_(f.Alertes, 'NIS saisi par le bureau : ' + nis)
   };
+  if (typeof EUC_DEV723_avecSaisie_ === 'function') champs = EUC_DEV723_avecSaisie_(f, champs);
   EUC_DEV665_patch_(r.id, champs);
   /* DEV666 : l'entreprise entre aussi dans la base (recherche par nom du QR code et des prochains dépôts). */
   var base = EUC_DEV665_ajouterBaseMonaco_(Object.assign({}, f, champs));

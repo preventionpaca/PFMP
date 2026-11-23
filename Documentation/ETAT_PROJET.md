@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV723 : l'entreprise retenue remplace la saisie de l'élève ; adresse corrigée par le bureau
+
+- « Vérifier le SIRET », le choix d'une entreprise proposée (même vérification) et « Enregistrer l'entreprise de Monaco » remplacent maintenant le nom, l'adresse, le code postal et la ville saisis par l'élève par ceux de l'entreprise retenue. Le responsable, le tuteur et le lieu du stage ne sont jamais touchés, et l'ancienne saisie reste dans l'historique (`Alertes`).
+- Dépôts vérifiés avant DEV723 : bouton « Reprendre l'entreprise retenue dans la saisie de l'élève », affiché quand la saisie diffère.
+- « Corriger l'adresse de l'entreprise retenue » (ex. numéro de voie absent de l'annuaire, comme le 62 avenue des Baumettes) : le dépôt est corrigé (adresse officielle et saisie). Case cochée par défaut : la fiche existante de la base des entreprises pour le même SIRET vérifié est aussi corrigée (`Numero_voie`, `Adresse_complete`, `Code_postal`, `Commune`, seulement s'ils existent et changent), pour les prochains dépôts et conventions. Aucune fiche créée, aucun courriel.
+- Fichiers : `EUC_DEV723_EntrepriseRetenue.js`, `EUC_DEV665_DemandesAide.js`, `Soumissions_A_Traiter_DEV665.html`. Tests : `tests/run-dev723-tests.js`.
+
 ## Mise à jour du 23 novembre 2026 — DEV722 : dépôts en ligne classés sans suite, consultables et réouvrables
 
 - Constat (dépôt PFMP-2026-S0015, 1CAR) : un dépôt classé sans suite (`Decision` REJETEE/REFUSEE) n'apparaissait plus nulle part. Il sortait de « Soumissions à traiter » (filtre « Toutes » compris) et du bandeau « À faire », il n'était pas compté dans le suivi, et la fiche de l'administration des conventions renvoyait à tort vers « Soumissions à traiter ».

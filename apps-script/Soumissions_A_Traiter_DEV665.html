@@ -89,7 +89,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       (x.alertes?'<p class="note" style="margin:6px 0 0">'+esc(x.alertes)+'</p>':'')+
       '<p class="message '+(x.aTraiter?'erreur':'ok')+'" style="margin:8px 0 0">'+(x.aTraiter?'À faire : '+esc(x.raison):'Rien à faire : la convention apparaît déjà dans le suivi.')+'</p>'+
       (x.suggestions&&x.suggestions.length?'<h3>Déjà connue dans la base ?</h3><div class="choix">'+x.suggestions.map(function(f,i){return proposition(f,'sug',x.id,i);}).join('')+'</div>':'')+
-      '<h3>Entreprise retenue</h3>'+(o.nom?'<div class="officiel"><b>'+esc(o.nom)+'</b>'+(o.enseigne&&o.enseigne!==o.nom?' — '+esc(o.enseigne):'')+'<br>'+esc([o.adresse,[o.cp,o.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+'<br><span class="note">'+(x.pays==='MC'?'NIS ':'SIRET ')+esc(x.numeroSaisi)+(x.pret?' — vérifié':' — pas encore vérifié')+'</span></div>':'<p class="note">Pas encore identifiée.</p>')+
+      '<h3>Entreprise retenue</h3>'+(o.nom?'<div class="officiel"><b>'+esc(o.nom)+'</b>'+(o.enseigne&&o.enseigne!==o.nom?' — '+esc(o.enseigne):'')+'<br>'+esc([o.adresse,[o.cp,o.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+'<br><span class="note">'+(x.pays==='MC'?'NIS ':'SIRET ')+esc(x.numeroSaisi)+(x.pret?' — vérifié':' — pas encore vérifié')+'</span></div>'+retenue(x):'<p class="note">Pas encore identifiée.</p>')+
       '<div class="onglets" role="group" aria-label="Pays de l’entreprise"><button type="button" data-mode="FR" data-id="'+x.id+'" aria-pressed="'+(mode==='FR')+'">France (SIRET)</button><button type="button" data-mode="MC" data-id="'+x.id+'" aria-pressed="'+(mode==='MC')+'">Monaco (NIS)</button></div>';
     if(mode==='FR')h+='<div class="champs"><div><label for="s'+x.id+'">SIRET (14 chiffres)</label><input id="s'+x.id+'" inputmode="numeric" autocomplete="off" value="'+esc(x.pays!=='MC'?String(x.numeroSaisi||'').replace(/\D/g,''):'')+'"></div><div style="align-self:end">'+bouton('siret',x.id,'Vérifier le SIRET','leger')+'</div></div>';
     else h+='<div class="champs"><div><label for="n'+x.id+'">NIS *</label><input id="n'+x.id+'" autocomplete="off" placeholder="7112B19343" value="'+esc(x.pays==='MC'?x.numeroSaisi:'')+'"></div><div><label for="nom'+x.id+'">Nom *</label><input id="nom'+x.id+'" autocomplete="off" value="'+esc(o.nom||s.nom)+'"></div><div><label for="adr'+x.id+'">Adresse *</label><input id="adr'+x.id+'" autocomplete="off" value="'+esc(o.adresse||s.adresse)+'"></div><div><label for="cp'+x.id+'">Code postal</label><input id="cp'+x.id+'" autocomplete="off" value="'+esc(o.cp||s.cp||'98000')+'"></div><div><label for="v'+x.id+'">Ville</label><input id="v'+x.id+'" autocomplete="off" value="'+esc(o.ville||'Monaco')+'"></div></div>'+
@@ -107,6 +107,15 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.ferme&&x.dansSuivi&&!x.doublonDe?bouton('garderSiret',x.id,'Garder ce SIRET (vérifié par le bureau)','leger'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
   }
+  /* DEV723 : entreprise retenue : reprise dans la saisie de l'élève (responsable et tuteur jamais touchés) ; adresse corrigée
+   * par le bureau (dépôt et, sur demande, fiche de la base des entreprises du même SIRET). */
+  function norm(v){return String(v==null?'':v).trim().toUpperCase();}
+  function retenue(x){var o=x.officiel,s=x.saisie,ecart=norm(s.nom)!==norm(o.nom)||norm(s.adresse)!==norm(o.adresse)||norm(s.cp)!==norm(o.cp)||norm(s.ville)!==norm(o.ville);
+    return (ecart?'<p class="note" style="margin:6px 0 0">La saisie de l’élève diffère de l’entreprise retenue. '+bouton('reprendre',x.id,'Reprendre l’entreprise retenue dans la saisie de l’élève','leger')+' <span class="note">(nom et adresse seulement)</span></p>':'')+
+      '<details class="corriger" id="a'+x.id+'"><summary><b>Corriger l’adresse de l’entreprise retenue</b> <span class="note">(ex. numéro de voie absent)</span></summary><div class="champs">'+
+      '<div><label for="ra'+x.id+'">Numéro et voie</label><input id="ra'+x.id+'" autocomplete="off" value="'+esc(o.adresse)+'"></div><div><label for="rc'+x.id+'">Code postal</label><input id="rc'+x.id+'" inputmode="numeric" autocomplete="off" value="'+esc(o.cp)+'"></div><div><label for="rv'+x.id+'">Ville</label><input id="rv'+x.id+'" autocomplete="off" value="'+esc(o.ville)+'"></div></div>'+
+      (x.pays==='FR'&&x.pret?'<p><label><input type="checkbox" id="rb'+x.id+'" checked> Corriger aussi la fiche de la base des entreprises (SIRET '+esc(x.numeroSaisi)+') : les prochains dépôts et conventions reprendront cette adresse</label></p>':'')+
+      '<p>'+bouton('adresse',x.id,'Enregistrer l’adresse','leger')+' <span class="note">L’adresse saisie par l’élève est remplacée aussi ; responsable et tuteur ne changent pas.</span></p></details>';}
   /* DEV722 : dépôt classé sans suite : consultable, réouvrable (il revient dans « À traiter »). */
   function carteClassee(x){var c=x.classee||{},s=x.saisie;
     return '<div class="carte doublon" id="c'+x.id+'"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b style="font-size:16px">'+esc(x.eleve)+'</b> — '+esc(x.classe)+' — '+esc(x.periode)+(x.debut?' <span class="note">('+dfr(x.debut)+' → '+dfr(x.fin)+')</span>':'')+'<br><span class="note">N° '+esc(x.numero)+(x.depose?' · déposé le '+dfr(x.depose):'')+'</span></div><div><span class="pastille gris">'+(c.decision==='REFUSEE'?'Refusé':'Classé sans suite')+'</span></div></div>'+
@@ -212,6 +221,15 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       if(!String(vu).trim()){msg(id,'Indiquez ce qui a été vérifié.','erreur');return;}
       occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV711_accepterFerme',{id:id,motif:vu},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'SIRET gardé : le dépôt ne demande plus d’action.','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    if(a==='reprendre'){
+      occupe(b,true,'Reprise…');msg(id,'');
+      appel('EUC_DEV723_reprendre',{id:id},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,r.inchange?'La saisie correspond déjà à l’entreprise retenue.':'Saisie de l’élève remplacée par l’entreprise retenue (responsable et tuteur inchangés).','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Reprise impossible.','erreur');});}
+    if(a==='adresse'){var cb=$('rb'+id),q={id:id,adresse:$('ra'+id).value,cp:$('rc'+id).value,ville:$('rv'+id).value,base:!!(cb&&cb.checked)};
+      occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV723_corrigerAdresse',q,60000,function(r){occupe(b,false);remplacer(r.soumission);var bm=r.base&&r.base.demande?' — '+r.base.message:'';
+          msg(id,(r.inchange?'Adresse déjà à jour':'Adresse enregistrée (saisie de l’élève comprise)')+bm+'.',r.base&&r.base.demande&&!r.base.misAJour&&!/déjà à jour/.test(r.base.message)?'erreur':'ok');},
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     if(a==='rouvrir'){
       if(!confirm('Rouvrir le dépôt '+x.numero+' de '+x.eleve+' ?\nIl revient dans « À traiter » (ou dans le suivi si son SIRET est déjà vérifié). Aucun courriel n’est envoyé.'))return;
