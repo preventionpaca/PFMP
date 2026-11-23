@@ -1,0 +1,66 @@
+<style id="EUC_DEV717_STYLE">
+.euc717{margin:6px 0 12px;padding:10px 12px;border:1px solid #9fd8c9;border-radius:10px;background:#f1faf6;font-size:15px;line-height:1.35}
+.euc717 b.titre{display:block;margin-bottom:3px;color:#0b6b4f}
+.euc717 .aide717{margin:0 0 6px;color:#5b6b7f;font-size:14px}
+.euc717 label.choix717{display:flex;gap:8px;align-items:flex-start;margin:5px 0;padding:6px 8px;border:1px solid #d6e4df;border-radius:8px;background:#fff;font-weight:400;cursor:pointer}
+.euc717 label.choix717 input{width:auto;margin-top:3px}
+.euc717 .valide717{color:#0b745f;font-size:13px;font-weight:700}
+.euc717 .spin717{display:inline-block;width:12px;height:12px;border:2px solid #0b6b4f;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:spin717 .7s linear infinite}
+@keyframes spin717{to{transform:rotate(360deg)}}
+input.verrou717{background:#eef3f1!important;color:#16302a}
+button.modifier717{margin:4px 0 0;padding:3px 10px;font-size:13px;border:1px solid #0b6b4f;border-radius:7px;background:#fff;color:#0b6b4f;cursor:pointer;width:auto}
+</style>
+<script id="EUC_DEV717_SCRIPT">
+/* DEV717 : responsables et tuteurs déjà connus pour le SIRET vérifié (formulaire du QR code et « Déclarer mon entreprise »).
+ * L'élève coche la personne : prénom, nom, fonction, téléphone et courriel sont pré-remplis. Le nom est verrouillé ; le
+ * téléphone et le courriel restent en lecture seule jusqu'au clic sur « Modifier » (ils peuvent avoir changé).
+ * « Autre personne » : saisie complète. Sans réponse du serveur, le formulaire reste utilisable comme avant. */
+(function(){
+  'use strict';
+  var DELAI=30000,appelEnCours=0;
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function evenements(el){if(!el)return;['input','change','blur'].forEach(function(t){try{el.dispatchEvent(new Event(t,{bubbles:true}));}catch(e){}});}
+  function ecrire(el,v){if(!el)return;el.value=v==null?'':v;evenements(el);}
+  function ancetreCommun(a,b){if(!a)return null;if(!b)return a.parentNode;var x=a.parentNode;while(x&&!x.contains(b))x=x.parentNode;return x;}
+  function retirerModifier(el){if(el&&el._btn717){el._btn717.remove();el._btn717=null;}}
+  function verrouiller(el,avecBouton,libelle){if(!el)return;el.readOnly=true;el.classList.add('verrou717');retirerModifier(el);
+    if(!avecBouton)return;var b=document.createElement('button');b.type='button';b.className='modifier717';b.textContent='Modifier '+libelle;
+    b.onclick=function(){el.readOnly=false;el.classList.remove('verrou717');b.remove();el._btn717=null;try{el.focus();el.select();}catch(e){}};
+    el.insertAdjacentElement('afterend',b);el._btn717=b;}
+  function liberer(el){if(!el)return;el.readOnly=false;el.classList.remove('verrou717');retirerModifier(el);}
+  function trier(personnes,role){return personnes.slice().sort(function(a,b){return((b.roles||[]).indexOf(role)>=0)-((a.roles||[]).indexOf(role)>=0)||(b.valide-a.valide);});}
+  function libelle(p){return '<b>'+esc([p.prenom,p.nom].filter(Boolean).join(' '))+'</b>'+(p.fonction?' — '+esc(p.fonction):'')+
+    '<br><span>'+esc([p.telephone,p.courriel].filter(Boolean).join(' · ')||'coordonnées à compléter')+'</span>'+(p.valide?' <span class="valide717">✓ vérifié par le lycée</span>':'');}
+  function panneau(bloc,role,num){var c=bloc.champs||{},anc=bloc.ancre||ancetreCommun(c.prenom,c.mail);if(!anc||!anc.parentNode)return null;
+    var p=document.createElement('div');p.className='euc717';p.setAttribute('data-euc717',role);p.setAttribute('role','group');p.setAttribute('aria-live','polite');
+    anc.parentNode.insertBefore(p,anc);return p;}
+  function appliquer(bloc,p){var c=bloc.champs||{};
+    if(!p){['prenom','nom','fonction','tel','mail'].forEach(function(k){liberer(c[k]);if(c[k]&&c[k].dataset.rempli717==='1'){ecrire(c[k],'');delete c[k].dataset.rempli717;}});
+      if(c.civ&&c.civ.dataset.rempli717==='1'){ecrire(c.civ,'');delete c.civ.dataset.rempli717;}try{c.prenom&&c.prenom.focus();}catch(e){}return;}
+    if(c.civ&&p.civilite){ecrire(c.civ,p.civilite);c.civ.dataset.rempli717='1';}
+    [['prenom',p.prenom],['nom',p.nom],['fonction',p.fonction],['tel',p.telephone],['mail',p.courriel]].forEach(function(x){if(c[x[0]]){ecrire(c[x[0]],x[1]);c[x[0]].dataset.rempli717='1';}});
+    verrouiller(c.prenom,false);verrouiller(c.nom,false);liberer(c.fonction);
+    if(c.tel){if(p.telephone)verrouiller(c.tel,true,'le téléphone');else liberer(c.tel);}
+    if(c.mail){if(p.courriel)verrouiller(c.mail,true,'le courriel');else liberer(c.mail);}}
+  function afficher(el,bloc,personnes){var role=bloc.role,nom=role==='TUTEUR'?'tuteur':'responsable',l=trier(personnes,role),grp='euc717_'+role+'_'+Date.now();
+    el.innerHTML='<b class="titre">'+(role==='TUTEUR'?'Ton tuteur est-il déjà connu du lycée ?':'Le responsable est-il déjà connu du lycée ?')+'</b>'+
+      '<p class="aide717">Coche son nom s’il apparaît dans la liste : ses informations sont remplies pour toi. Si son téléphone ou son courriel a changé, clique sur « Modifier ». Sinon, choisis « Autre personne » et saisis toutes ses informations.</p>'+
+      l.map(function(p,i){return '<label class="choix717"><input type="radio" name="'+grp+'" value="'+i+'"><span>'+libelle(p)+'</span></label>';}).join('')+
+      '<label class="choix717"><input type="radio" name="'+grp+'" value="autre"><span><b>Autre personne</b> — le '+nom+' n’est pas dans la liste : saisie complète (prénom, nom, fonction, téléphone, courriel)</span></label>';
+    el.querySelectorAll('input[type=radio]').forEach(function(r){r.onchange=function(){appliquer(bloc,r.value==='autre'?null:l[Number(r.value)]);};});}
+  function proposer(o){
+    o=o||{};var siret=String(o.siret||'').replace(/\D/g,''),blocs=(o.blocs||[]).filter(function(b){return b&&b.champs&&b.champs.prenom;});
+    document.querySelectorAll('[data-euc717]').forEach(function(x){x.remove();});
+    blocs.forEach(function(b){['prenom','nom','fonction','tel','mail'].forEach(function(k){liberer(b.champs[k]);});});
+    if(siret.length!==14||!blocs.length||!window.google||!google.script||!google.script.run)return;
+    var num=++appelEnCours,panneaux=blocs.map(function(b){var p=panneau(b,b.role);if(p)p.innerHTML='<span class="spin717" aria-hidden="true"></span>Recherche des personnes déjà connues pour cette entreprise…';return p;});
+    var fini=false,minuteur=setTimeout(function(){if(fini)return;fini=true;panneaux.forEach(function(p){if(p)p.remove();});},DELAI);
+    var arg=Object.assign({siret:siret},o.auth||{});
+    google.script.run.withSuccessHandler(function(r){if(fini||num!==appelEnCours)return;fini=true;clearTimeout(minuteur);var l=(r&&r.personnes)||[];
+        blocs.forEach(function(b,i){var p=panneaux[i];if(!p)return;if(!l.length){p.remove();return;}afficher(p,b,l);});})
+      .withFailureHandler(function(){if(fini||num!==appelEnCours)return;fini=true;clearTimeout(minuteur);panneaux.forEach(function(p){if(p)p.remove();});})
+      .EUC_DEV717_contactsConnus(arg);
+  }
+  window.EUC717={proposer:proposer,_appliquer:appliquer,_trier:trier};
+})();
+</script>

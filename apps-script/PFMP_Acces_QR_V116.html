@@ -1253,6 +1253,14 @@ function appliquerEntreprise(r){
 
   status.className = 'status ok';
 
+  /* DEV717 : responsables et tuteurs déjà connus pour ce SIRET. */
+  proposerContactsConnus717();
+
+}
+function proposerContactsConnus717(){
+  if(!window.EUC717)return;
+  const b=function(role,pre){return{role:role,champs:{prenom:field(pre+'Prenom'),nom:field(pre+'Nom'),fonction:field(pre+'Fonction'),tel:field(pre+'Telephone'),mail:field(pre+'Courriel')}};};
+  EUC717.proposer({siret:normaliserSiretValeur(field('entrepriseSiret').value),auth:{reprise:RESUME},blocs:[b('RESPONSABLE','responsable'),b('TUTEUR','tuteur')]});
 }
 
 
@@ -2091,6 +2099,7 @@ window.EUC_DEV649_nonDiffusible=function(){
 document.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='siret'){var b=document.getElementById('ndNoteDev649');if(b)b.remove();}},true);
 </script>
 <?!= HtmlService.createHtmlOutputFromFile('Saisie_Contacts_DEV691').getContent() ?>
+<?!= HtmlService.createHtmlOutputFromFile('Contacts_Connus_DEV717').getContent() ?>
 <?!= EUC_ENT_inclure('Etablissements_DEV707') ?>
 <?!= HtmlService.createHtmlOutputFromFile('Identites_Contacts_DEV602').getContent() ?>
 </body>

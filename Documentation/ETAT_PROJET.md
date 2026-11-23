@@ -1,5 +1,17 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV717 : formulaires élève, responsables et tuteurs déjà connus pour le SIRET
+
+- Formulaires concernés : QR code (`PFMP_Acces_QR_V116`), reprise QR (`PFMP_Continuation_QR_V117`) et « Déclarer mon entreprise » (`Declaration_Entreprise_DEV603`).
+- Après la vérification du SIRET, le composant commun `Contacts_Connus_DEV717.html` interroge `EUC_DEV717_contactsConnus`. Pour chaque bloc (responsable, tuteur), l'élève coche la personne connue ou « Autre personne » :
+  - une personne cochée remplit prénom, nom, fonction, téléphone et courriel, en clair (décision de l'utilisateur) ;
+  - le nom est verrouillé ; le téléphone et le courriel restent en lecture seule jusqu'au clic sur « Modifier », car ils peuvent avoir changé ;
+  - « Autre personne » libère les champs pour une saisie complète.
+- Sources, pour ce seul SIRET : conventions, dépôts vérifiés et références du bureau (`EUC_CONTACTS_REFERENCE`, prioritaires). Les variantes d'un nom sont regroupées avec les règles DEV706. On garde l'orthographe la plus fréquente, et les coordonnées valides les plus récentes. Au plus 8 personnes.
+- Accès : jeton de reprise du QR code ou jeton signé de la déclaration, sinon refus. Lecture seule.
+- Sans réponse en 30 s ou en cas d'erreur, la liste disparaît et le formulaire reste utilisable comme avant.
+- Tests : `tests/run-dev717-tests.js` (6).
+
 ## Mise à jour du 23 novembre 2026 — DEV716 : « même période » = périodes officielles (retard et prolongation compris)
 
 - Règle de l'utilisateur : les élèves d'une même entreprise se comparent sur une même période. Un élève qui commence en retard ou qui est prolongé reste dans sa période.

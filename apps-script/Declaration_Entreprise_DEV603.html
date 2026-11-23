@@ -225,6 +225,8 @@ function lieuIncomplet(pre){var l=lireLieu(pre);return (l.lieuStageAdresse||l.li
 $('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');
   appel('EUC_ENT_rechercherSiret',s,function(r){
     function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
+      /* DEV717 : responsables et tuteurs déjà connus pour ce SIRET (à cocher à l'étape 4). */
+      if(window.EUC717){var bloc717=function(id,role){var z=$(id);return{role:role,ancre:z,champs:{civ:z.querySelector('.civ'),prenom:z.querySelector('.pre'),nom:z.querySelector('.nom'),fonction:z.querySelector('.fon'),tel:z.querySelector('.tel'),mail:z.querySelector('.mel')}};};EUC717.proposer({siret:s,auth:{jeton:JETON},blocs:[bloc717('resp','RESPONSABLE'),bloc717('tut','TUTEUR')]});}
       /* DEV649 : entreprise non diffusible : nom et adresse à saisir. */
       ND=e.nonDiffusible===true;$('ndBloc').hidden=!ND;
       if(ND){['ndNom','ndAdr','ndCp','ndVille'].forEach(function(k){$(k).value='';});$('ndInpi').href=EUC_DEV650_lienInpi(s);if(e.codePostal)$('ndCp').value=e.codePostal;if(e.commune)$('ndVille').value=e.commune;
@@ -295,6 +297,7 @@ appel('EUC_DEV603_classes',{},function(r){CAPTCHA=r.captcha.jeton;$('captchaImg'
 })();
 </script>
 <?!= HtmlService.createHtmlOutputFromFile('Saisie_Contacts_DEV691').getContent() ?>
+<?!= HtmlService.createHtmlOutputFromFile('Contacts_Connus_DEV717').getContent() ?>
 <?!= EUC_ENT_inclure('Etablissements_DEV707') ?>
 </body>
 </html>

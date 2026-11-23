@@ -362,3 +362,7 @@ activités.
 ## Élèves dans une même entreprise : même période (DEV716, 23/11/2026)
 
 Deux élèves (de la même classe ou de classes différentes) sont « ensemble » dans une entreprise s'ils y sont sur une même période. On compare les dates officielles des périodes, jamais les dates individuelles des conventions : un élève qui commence en retard ou qui est prolongé reste dans sa période. Cette règle vaut pour le suivi des PFMP, ses exports PDF, le tableau joint au courriel d'un dépôt et les statistiques.
+
+## Responsables et tuteurs déjà connus dans les formulaires élève (DEV717, 23/11/2026)
+
+Après la saisie du SIRET, l'élève voit en clair les responsables et tuteurs déjà connus pour cette entreprise (nom, fonction, téléphone, courriel) et coche le sien. Les champs sont pré-remplis. Le nom est verrouillé ; le téléphone et le courriel ne se modifient qu'après un clic sur « Modifier ». Une personne absente de la liste se saisit en entier (« Autre personne »). La liste n'est servie qu'avec un accès élève valide (lien ou QR code, jeton de la déclaration).
