@@ -140,7 +140,35 @@ function EUC_DEV665_lister() {
     if (!base) { try { base = EUC_DEV666_connues_(EUC_IMPORT_lireRecords_(EUC_DEV646_table_()), lignes); } catch (e) { base = EUC_DEV666_connues_([], lignes); } }
     x.suggestions = EUC_DEV666_chercher_(base, x.saisie.nom);
   });
-  return { soumissions: l };
+  return { soumissions: l, classees: EUC_DEV722_classees_(lignes) };
+}
+
+/* DEV722 : dépôts classés sans suite (REJETEE, REFUSEE) : jamais effacés, consultables et réouvrables. Sans eux, un
+ * dépôt classé par erreur n'apparaissait plus nulle part (ni à traiter, ni dans le suivi). Calcul pur. */
+var EUC_DEV722_CLASSEES_ = ['REJETEE', 'REFUSEE'];
+function EUC_DEV722_motif_(alertes) {
+  var m = EUC_DEV665_t_(alertes).split(' — ').filter(function(x) { return /^Classé sans suite/.test(x); }).pop() || '';
+  return m.replace(/^Classé sans suite par le bureau : /, '').replace(/ \(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}\)$/, '');
+}
+function EUC_DEV722_classees_(records) {
+  return (records || []).filter(function(r) { var f = r.fields || {}; return /^SECOURS-/.test(EUC_DEV665_t_(f.Submission_ID)) && EUC_DEV722_CLASSEES_.indexOf(EUC_DEV665_t_(f.Decision).toUpperCase()) >= 0; })
+    .map(function(r) { var f = r.fields || {}, x = EUC_DEV665_vue_(r);
+      x.classee = { decision: EUC_DEV665_t_(f.Decision).toUpperCase(), le: EUC_DEV673_jour_(f.Date_validation), par: EUC_DEV665_t_(f.Valide_par), motif: EUC_DEV722_motif_(f.Alertes) };
+      x.aTraiter = false; x.raison = ''; return x; })
+    .sort(function(a, b) { return b.id - a.id; });
+}
+/* DEV722 : rouvrir un dépôt classé sans suite : il revient dans « À traiter » (ou dans le suivi si son SIRET est vérifié).
+ * Refusé si un autre dépôt du même élève pour la même période est déjà en attente (doublon). Une seule ligne écrite. */
+function EUC_DEV722_rouvrir(q) {
+  var ctx = EUC_IMPORT_exigerAdminTexte_() || {}, id = Number((q || {}).id) || 0, lignes = EUC_DEV665_lignes_();
+  var r = lignes.filter(function(x) { return Number(x.id) === id; })[0], f = (r && r.fields) || {};
+  if (!r || !/^SECOURS-/.test(EUC_DEV665_t_(f.Submission_ID))) throw new Error('Dépôt introuvable : actualisez la liste.');
+  if (EUC_DEV722_CLASSEES_.indexOf(EUC_DEV665_t_(f.Decision).toUpperCase()) < 0) throw new Error('Ce dépôt n’est pas classé sans suite : actualisez la liste.');
+  var autre = EUC_DEV665_enAttente_(lignes).filter(function(x) { return x.id !== id && x.eleveId && x.eleveId === (Number(f.Eleve_match_id) || 0) && x.periode === EUC_DEV665_t_(f.Periode_numero); })[0];
+  if (autre) throw new Error('Un autre dépôt de cet élève pour cette période est déjà en attente (' + autre.numero + ') : rouvrir créerait un doublon.');
+  EUC_DEV665_patch_(id, { Decision: 'A_CONTROLER', Date_validation: null, Valide_par: '', Alertes: EUC_DEV665_trace_(f.Alertes, 'Rouvert par le bureau' + (ctx.email ? ' (' + EUC_DEV665_t_(ctx.email) + ')' : '')) });
+  var x = EUC_DEV665_enAttente_(EUC_DEV665_lignes_()).filter(function(y) { return y.id === id; })[0];
+  return { ok: true, id: id, soumission: x || null };
 }
 /* DEV666 : recherche par nom (calcul pur). Formes juridiques et petits mots ignorés ; un mot de 5 lettres ou plus
  * est reconnu par ses 5 premières lettres (SACOME ↔ SACOM), un mot plus court entier (CONTI). */

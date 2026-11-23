@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV722 : dépôts en ligne classés sans suite, consultables et réouvrables
+
+- Constat (dépôt PFMP-2026-S0015, 1CAR) : un dépôt classé sans suite (`Decision` REJETEE/REFUSEE) n'apparaissait plus nulle part. Il sortait de « Soumissions à traiter » (filtre « Toutes » compris) et du bandeau « À faire », il n'était pas compté dans le suivi, et la fiche de l'administration des conventions renvoyait à tort vers « Soumissions à traiter ».
+- « Soumissions à traiter » : nouveau filtre « Classées sans suite » (motif, date, auteur) et bouton « Rouvrir : remettre à traiter » (confirmation, spinner, délai 60 s). Le lien d'un courriel vers un dépôt classé le montre au lieu de « introuvable ».
+- `EUC_DEV722_rouvrir` : administration seulement, une seule ligne écrite (`Decision` A_CONTROLER, historique `Alertes` gardé, « Rouvert par le bureau »). Refus pour un dépôt validé ou d'essai, ou si un autre dépôt du même élève et de la même période est déjà en attente (doublon). Aucun courriel.
+- Administration des conventions : la fiche d'un dépôt classé l'indique et donne le chemin pour le rouvrir.
+- Tests : dev665 (liste, réouverture, refus en cas de doublon, page).
+
 ## Mise à jour du 23 novembre 2026 — DEV721 : « À vérifier » des élèves dans une même entreprise
 
 - Défaut corrigé : un élève sans professeur affecté comptait comme un second professeur, d'où « plusieurs professeurs » alors qu'un seul professeur était affecté (ex. 1CAR).

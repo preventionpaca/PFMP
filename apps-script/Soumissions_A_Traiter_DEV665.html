@@ -54,7 +54,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       <li><b>Doublon ou abandon</b> : « Classer sans suite ». Rien n’est effacé.</li>
     </ol>
     <div class="onglets" role="group" aria-label="Filtre">
-      <button type="button" data-filtre="atraiter" aria-pressed="true">À traiter</button><button type="button" data-filtre="aide" aria-pressed="false">Demandes d’aide</button><button type="button" data-filtre="doublon" aria-pressed="false">Doublons</button><button type="button" data-filtre="prevenir" aria-pressed="false">Élèves à prévenir</button><button type="button" data-filtre="suivi" aria-pressed="false">Déjà dans le suivi (rien à faire)</button><button type="button" data-filtre="tout" aria-pressed="false">Toutes</button>
+      <button type="button" data-filtre="atraiter" aria-pressed="true">À traiter</button><button type="button" data-filtre="aide" aria-pressed="false">Demandes d’aide</button><button type="button" data-filtre="doublon" aria-pressed="false">Doublons</button><button type="button" data-filtre="prevenir" aria-pressed="false">Élèves à prévenir</button><button type="button" data-filtre="suivi" aria-pressed="false">Déjà dans le suivi (rien à faire)</button><button type="button" data-filtre="tout" aria-pressed="false">Toutes</button><button type="button" data-filtre="classees" aria-pressed="false">Classées sans suite</button>
       <button type="button" id="actualiser" class="leger"><span class="spin"></span><span class="txt">Actualiser</span></button>
     </div>
     <p id="blocPrevenir" hidden><button type="button" id="prevenirTous"><span class="spin"></span><span class="txt">Prévenir les élèves dont le problème est résolu</span></button> <span class="note">Courriel « Problème résolu : ta convention de stage est enregistrée — n° … », une seule fois par élève.</span></p>
@@ -65,7 +65,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
 </main>
 <script>
 (function(){
-  var $=function(id){return document.getElementById(id);},LISTE=[],FILTRE='atraiter',MODE={},CIBLE='<?= numero ?>';
+  var $=function(id){return document.getElementById(id);},LISTE=[],CLASSEES=[],FILTRE='atraiter',MODE={},CIBLE='<?= numero ?>';
   /* DEV672 : ouvert depuis le courriel de l'équipe (?numero=…) : cette soumission seule, correction dépliée. */
   if(CIBLE)FILTRE='cible';
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -107,15 +107,24 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.ferme&&x.dansSuivi&&!x.doublonDe?bouton('garderSiret',x.id,'Garder ce SIRET (vérifié par le bureau)','leger'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
   }
+  /* DEV722 : dépôt classé sans suite : consultable, réouvrable (il revient dans « À traiter »). */
+  function carteClassee(x){var c=x.classee||{},s=x.saisie;
+    return '<div class="carte doublon" id="c'+x.id+'"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b style="font-size:16px">'+esc(x.eleve)+'</b> — '+esc(x.classe)+' — '+esc(x.periode)+(x.debut?' <span class="note">('+dfr(x.debut)+' → '+dfr(x.fin)+')</span>':'')+'<br><span class="note">N° '+esc(x.numero)+(x.depose?' · déposé le '+dfr(x.depose):'')+'</span></div><div><span class="pastille gris">'+(c.decision==='REFUSEE'?'Refusé':'Classé sans suite')+'</span></div></div>'+
+      '<h3>Saisi par l’élève</h3><div class="grille"><div><b>'+esc(s.nom||'—')+'</b><br>'+esc([s.adresse,[s.cp,s.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'—')+'<br><span class="note">Numéro saisi : '+esc(x.numeroSaisi||'aucun')+'</span></div>'+
+      '<div><span class="note">Responsable :</span> '+personne(x.contact)+'<br><span class="note">Tuteur :</span> '+personne(x.tuteur)+'</div></div>'+
+      '<p class="message erreur" style="margin:8px 0 0">'+(c.decision==='REFUSEE'?'Refusé':'Classé sans suite')+(c.le?' le '+dfr(c.le):'')+(c.par?' par '+esc(c.par):'')+(c.motif?' — motif : '+esc(c.motif):'')+'. Ce dépôt n’est ni à traiter ni compté dans le suivi.</p>'+
+      '<div class="actions">'+bouton('rouvrir',x.id,'Rouvrir : remettre à traiter','leger')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';}
   /* Entreprise connue (base ou dépôt vérifié) : un clic reprend son SIRET ou son NIS. */
   function proposition(f,groupe,id,i){return '<button type="button" data-prop="'+groupe+'" data-id="'+id+'" data-i="'+i+'"><b>'+esc(f.nom)+'</b>'+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc([f.adresse,[f.cp,f.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+' · <b>'+(f.siret?'SIRET '+esc(f.siret):'NIS '+esc(f.nis))+'</b> <span class="note">('+esc(f.source)+') — utiliser</span></button>';}
   function dessiner(){
-    var l=LISTE.filter(function(x){return GARDER[x.id]||FILTRE==='tout'||(FILTRE==='atraiter'&&x.aTraiter)||(FILTRE==='aide'&&x.aide&&x.aTraiter)||(FILTRE==='doublon'&&x.doublonDe)||(FILTRE==='suivi'&&!x.aTraiter)||(FILTRE==='prevenir'&&x.aPrevenir)||(FILTRE==='cible'&&x.numero===CIBLE);});
+    var l=FILTRE==='classees'?CLASSEES:LISTE.filter(function(x){return GARDER[x.id]||FILTRE==='tout'||(FILTRE==='atraiter'&&x.aTraiter)||(FILTRE==='aide'&&x.aide&&x.aTraiter)||(FILTRE==='doublon'&&x.doublonDe)||(FILTRE==='suivi'&&!x.aTraiter)||(FILTRE==='prevenir'&&x.aPrevenir)||(FILTRE==='cible'&&x.numero===CIBLE);});
     var np=LISTE.filter(function(x){return x.aPrevenir;}).length;$('blocPrevenir').hidden=!np;$('prevenirTous').querySelector('.txt').textContent='Prévenir les '+np+' élève(s) dont le problème est résolu';
     var n=LISTE.filter(function(x){return x.aTraiter;}).length;
-    $('compte').textContent=n+' soumission(s) à traiter · '+(LISTE.length-n)+' déjà dans le suivi (rien à faire).';
+    $('compte').textContent=n+' soumission(s) à traiter · '+(LISTE.length-n)+' déjà dans le suivi (rien à faire) · '+CLASSEES.length+' classée(s) sans suite.';
+    /* DEV722 : lien du courriel vers un dépôt classé sans suite : il est montré au lieu de « introuvable ». */
+    if(FILTRE==='cible'&&!l.length)l=CLASSEES.filter(function(x){return x.numero===CIBLE;});
     $('blocCible').hidden=FILTRE!=='cible';
-    $('liste').innerHTML=l.length?l.map(carte).join(''):'<section><p class="note">'+(FILTRE==='cible'?'Dépôt '+esc(CIBLE)+' introuvable parmi les soumissions en attente : il a peut-être déjà été validé ou classé (filtre « Toutes » pour vérifier).':FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':'Aucune soumission pour ce filtre.')+'</p></section>';
+    $('liste').innerHTML=l.length?l.map(function(x){return x.classee?carteClassee(x):carte(x);}).join(''):'<section><p class="note">'+(FILTRE==='cible'?'Dépôt '+esc(CIBLE)+' introuvable parmi les soumissions en attente : il a peut-être déjà été validé ou classé (filtre « Toutes » pour vérifier).':FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':FILTRE==='classees'?'Aucun dépôt classé sans suite.':'Aucune soumission pour ce filtre.')+'</p></section>';
   }
   /* Carte corrigée : reste affichée jusqu'à l'actualisation, avec son message. */
   var PROPS={},GARDER={},RCI={};
@@ -127,7 +136,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
   function fini(x,prevenu){return x.aTraiter?'':' '+x.eleve+' apparaît maintenant dans le suivi (convention enregistrée)'+(prevenu?' et a été prévenu par courriel':'')+' : rien d’autre à faire.';}
   function charger(){
     var b=$('actualiser');occupe(b,true,'Chargement…');msg('Liste','');GARDER={};
-    appel('EUC_DEV665_lister',{},60000,function(r){occupe(b,false);LISTE=r.soumissions||[];dessiner();},function(e){occupe(b,false);$('liste').innerHTML='';msg('Liste',(e&&e.message)||'Lecture impossible.','erreur');});
+    appel('EUC_DEV665_lister',{},60000,function(r){occupe(b,false);LISTE=r.soumissions||[];CLASSEES=r.classees||[];dessiner();},function(e){occupe(b,false);$('liste').innerHTML='';msg('Liste',(e&&e.message)||'Lecture impossible.','erreur');});
   }
   $('actualiser').onclick=charger;
   $('voirTout').onclick=function(){FILTRE='atraiter';document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.filtre==='atraiter'));});dessiner();};
@@ -150,7 +159,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     },function(e){occupe(b,false);msg(id,(e&&e.message)||'Vérification impossible.','erreur');});
   }
   $('liste').addEventListener('click',function(ev){
-    var b=ev.target.closest('button');if(!b)return;var id=Number(b.dataset.id),x=LISTE.filter(function(y){return y.id===id;})[0];if(!x)return;
+    var b=ev.target.closest('button');if(!b)return;var id=Number(b.dataset.id),x=LISTE.concat(CLASSEES).filter(function(y){return y.id===id;})[0];if(!x)return;
     if(b.dataset.mode){MODE[id]=b.dataset.mode;dessiner();return;}
     if(b.dataset.rci){var c=(RCI[id]||[])[Number(b.dataset.rci)];if(!c||b.disabled)return;b.disabled=true;msg(id,'Lecture de la fiche '+c.rci+'…');
       appel('EUC_DEV667_ficheRci',{rci:c.rci},30000,function(f){b.disabled=false;$('n'+id).value=f.nis||'';$('nom'+id).value=f.nom||c.nom;$('adr'+id).value=f.adresse||'';$('cp'+id).value=f.cp||'98000';$('v'+id).value=f.ville||'Monaco';
@@ -204,6 +213,13 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV711_accepterFerme',{id:id,motif:vu},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'SIRET gardé : le dépôt ne demande plus d’action.','ok');},
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    if(a==='rouvrir'){
+      if(!confirm('Rouvrir le dépôt '+x.numero+' de '+x.eleve+' ?\nIl revient dans « À traiter » (ou dans le suivi si son SIRET est déjà vérifié). Aucun courriel n’est envoyé.'))return;
+      occupe(b,true,'Réouverture…');msg(id,'');
+      appel('EUC_DEV722_rouvrir',{id:id},60000,function(r){occupe(b,false);CLASSEES=CLASSEES.filter(function(y){return y.id!==id;});
+          if(r&&r.soumission){LISTE=LISTE.filter(function(y){return y.id!==id;}).concat([r.soumission]);GARDER[id]=true;FILTRE='atraiter';document.querySelectorAll('[data-filtre]').forEach(function(z){z.setAttribute('aria-pressed',String(z.dataset.filtre==='atraiter'));});}
+          dessiner();msg('Liste','Dépôt '+x.numero+' rouvert'+(r&&r.soumission&&!r.soumission.aTraiter?' : il est déjà compté dans le suivi.':' : il est maintenant dans « À traiter ».'),'ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Réouverture impossible.','erreur');});}
     if(a==='sansSuite'){
       var motif=prompt('Classer sans suite la soumission '+x.numero+' de '+x.eleve+' ?\nMotif :',x.doublonDe?'doublon de '+x.doublonDe:'');if(motif===null)return;
       occupe(b,true,'Classement…');msg(id,'');

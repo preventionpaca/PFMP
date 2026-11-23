@@ -196,4 +196,45 @@ test('DEV666 : NIS enregistré par le bureau : entreprise ajoutée à la base, s
   assert.match(h, /FILTRE='atraiter'/, 'vue par défaut : à traiter'); assert.match(h, /appel\('EUC_DEV666_chercherBase',\{nom:q\},30000,/);
   assert.match(h, /x\.aTraiter&&x\.pret&&!x\.doublonDe\?bouton\('valider'/, 'pas de validation à faire pour un dépôt déjà dans le suivi');
 });
+test('DEV722 : dépôt classé sans suite consultable (motif, date, auteur) puis rouvert : revient à traiter, une seule ligne écrite', () => {
+  const l = [ligneJoan(10, 'PFMP-2026-S0015'), ligneJoan(11, 'PFMP-2026-S0016', { Eleve_match_id: 8, Decision: 'VALIDEE' }), ligneJoan(12, 'ESSAI-1', { Submission_ID: 'ESSAI-1', Decision: 'ESSAI' })], k = contexte(l);
+  k.EUC_DEV665_sansSuite({ id: 10, motif: 'doublon de la sœur' });
+  l[0].fields.Date_validation = '2026-11-12T09:00:00.000Z';
+  let r = J(k.EUC_DEV665_lister());
+  assert.equal(r.soumissions.length, 0, 'plus à traiter');
+  assert.deepEqual(r.classees.map(x => x.numero), ['PFMP-2026-S0015'], 'seul le dépôt classé sans suite : ni validé, ni essai');
+  assert.deepEqual(r.classees[0].classee, { decision: 'REJETEE', le: '2026-11-12', par: 'bureau@ex.test', motif: 'doublon de la sœur' });
+  assert.equal(r.classees[0].aTraiter, false);
+  k.__appels.length = 0;
+  const o = J(k.EUC_DEV722_rouvrir({ id: 10 }));
+  const ecritures = k.__appels.filter(a => a[0] !== 'get');
+  assert.equal(ecritures.length, 1); assert.deepEqual(ecritures[0][2].records.map(x => x.id), [10], 'une seule ligne écrite');
+  assert.equal(l[0].fields.Decision, 'A_CONTROLER'); assert.equal(l[0].fields.Date_validation, null); assert.equal(l[0].fields.Valide_par, '');
+  assert.match(l[0].fields.Alertes, /Classé sans suite par le bureau : doublon de la sœur .* — Rouvert par le bureau \(bureau@ex\.test\)/, 'historique gardé');
+  assert.equal(o.soumission.numero, 'PFMP-2026-S0015'); assert.equal(o.soumission.aTraiter, true);
+  r = J(k.EUC_DEV665_lister()); assert.equal(r.soumissions.length, 1); assert.equal(r.classees.length, 0);
+  assert.throws(() => k.EUC_DEV722_rouvrir({ id: 10 }), /n’est pas classé sans suite/);
+  assert.throws(() => k.EUC_DEV722_rouvrir({ id: 11 }), /n’est pas classé sans suite/, 'dépôt validé : jamais rouvert');
+  assert.throws(() => k.EUC_DEV722_rouvrir({ id: 12 }), /introuvable/, 'essai : jamais rouvert');
+});
+
+test('DEV722 : réouverture refusée si un autre dépôt du même élève pour la même période est en attente (doublon)', () => {
+  const l = [ligneJoan(10, 'PFMP-2026-S0015', { Decision: 'REJETEE' }), ligneJoan(13, 'PFMP-2026-S0030')], k = contexte(l);
+  assert.throws(() => k.EUC_DEV722_rouvrir({ id: 10 }), /déjà en attente \(PFMP-2026-S0030\)/);
+  assert.equal(l[0].fields.Decision, 'REJETEE'); assert.ok(!k.__appels.some(a => a[0] === 'patch'), 'rien écrit');
+  const k2 = contexte([ligneJoan(10, 'PFMP-2026-S0015', { Decision: 'REFUSEE' }), ligneJoan(13, 'PFMP-2026-S0030', { Periode_numero: 'PFMP n°2' })]);
+  assert.equal(J(k2.EUC_DEV722_rouvrir({ id: 10 })).ok, true, 'autre période : pas un doublon');
+});
+
+test('DEV722 : page — filtre « Classées sans suite », bouton « Rouvrir » protégé, lien du courriel ; fiche de l’administration des conventions', () => {
+  const h = read('apps-script/Soumissions_A_Traiter_DEV665.html'), ac = read('apps-script/Admin_Conventions_PFMP.html');
+  assert.match(h, /data-filtre="classees" aria-pressed="false">Classées sans suite<\/button>/);
+  assert.match(h, /var l=FILTRE==='classees'\?CLASSEES:/); assert.match(h, /CLASSEES=r\.classees\|\|\[\]/);
+  assert.match(h, /if\(FILTRE==='cible'&&!l\.length\)l=CLASSEES\.filter\(function\(x\)\{return x\.numero===CIBLE;\}\);/, 'lien du courriel : dépôt classé montré');
+  assert.match(h, /bouton\('rouvrir',x\.id,'Rouvrir : remettre à traiter','leger'\)/);
+  assert.match(h, /if\(!confirm\('Rouvrir le dépôt '[^]*?occupe\(b,true,'Réouverture…'\);msg\(id,''\);\s*appel\('EUC_DEV722_rouvrir',\{id:id\},60000,function\(r\)\{occupe\(b,false\);[^]*?function\(e\)\{occupe\(b,false\);msg\(id,/, 'spinner, délai, retour en succès et en erreur');
+  assert.match(h, /x=LISTE\.concat\(CLASSEES\)\.filter/);
+  assert.match(ac, /\/\^\(REJETEE\|REFUSEE\)\$\/\.test\(v\.decision\|\|''\)\?'⚠ Dépôt classé sans suite : [^']*« Rouvrir »\.'/);
+});
+
 console.log(n + ' tests DEV665 réussis.');
