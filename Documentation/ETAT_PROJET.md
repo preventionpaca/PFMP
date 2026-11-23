@@ -1,5 +1,15 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV716 : « même période » = périodes officielles (retard et prolongation compris)
+
+- Règle de l'utilisateur : les élèves d'une même entreprise se comparent sur une même période. Un élève qui commence en retard ou qui est prolongé reste dans sa période.
+- Avant, les dates individuelles de la convention étaient comparées : un élève prolongé au-delà de sa période pouvait « rencontrer » un élève d'une période suivante.
+- Désormais, seules les dates officielles des périodes comptent, aux trois endroits :
+  - `EUC_DEV714_memeEntreprise_`, utilisé par le suivi, l'export PDF et le PDF du courriel de dépôt ;
+  - les statistiques « Élèves accueillis ensemble » (`pDeb` / `pFin`) ;
+  - les statistiques « Classes accueillies en même temps » (`grappes`).
+- Tests : `tests/run-dev716-tests.js` (2).
+
 ## Mise à jour du 23 novembre 2026 — DEV715 : statistiques, dates des dépôts en ligne ; noms des apprentis
 
 - Cas réel (détails hors Git) : deux élèves d'une même entreprise, l'un par convention, l'autre par dépôt en ligne. Ils n'apparaissaient pas dans « Élèves accueillis ensemble » : le dépôt n'avait pas de dates dans les statistiques, car le parcours DEV688 ne fournit pas de `Date_debut` pour un dépôt. Ses dates ne pouvaient donc chevaucher aucune autre.

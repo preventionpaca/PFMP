@@ -235,19 +235,22 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   function tableauCommunes(id,E){const com=communesDe(E);return tableau(id,['Commune','Code postal / secteur','Entreprises','Élèves en stage'],Object.keys(com).map(function(c){const x=com[c],cps=Object.keys(x.cps).sort();return{c:[c,cps.length>1?cps.length+' codes postaux':cpLib(cps[0]),x.e,x.s.size],enfants:cps.length>1?cps.map(function(cp){return[c,cpLib(cp),x.cps[cp].e,x.cps[cp].s.size]}):[]}}),[2,3],[2,-1])}
 
   /* DEV704 : stages d'une entreprise regroupés quand leurs dates se chevauchent ; apprentis en contrat pendant ces dates. */
-  function grappes(e){const out=[];e.stages.filter(function(x){return x.debut}).slice().sort(function(a,b){return a.debut<b.debut?-1:a.debut>b.debut?1:0}).forEach(function(x){const g=out[out.length-1],f=x.fin||x.debut;if(g&&x.debut<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else out.push({debut:x.debut,fin:f,l:[x]})});
+  function grappes(e){const out=[];const pd=function(x){return x.debutOfficiel||x.debut||''},pf=function(x){return x.finOfficiel||x.fin||''};/* DEV716 : périodes officielles. */e.stages.filter(function(x){return pd(x)}).slice().sort(function(a,b){return pd(a)<pd(b)?-1:pd(a)>pd(b)?1:0}).forEach(function(x){const g=out[out.length-1],d=pd(x),f=pf(x)||d;if(g&&d<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else out.push({debut:d,fin:f,l:[x]})});
     return out.map(function(g){const d1=g.debut,d2=g.fin,ap=e.apps.filter(function(a){return(!a.debut||!d2||a.debut<=d2)&&(!a.fin||!d1||a.fin>=d1)});
       return{e:e,debut:d1,fin:d2,stag:new Set(g.l.map(function(x){return x.e||x.id})).size,app:ap.length,periodes:new Set(g.l.map(function(x){return x.periode}).filter(Boolean)),etiquettes:new Set(g.l.map(function(x){return x.classe+' (stage)'}).concat(ap.map(function(a){return a.classe+' (apprenti)'})))}})}
   /* DEV710 : élèves accueillis ensemble (dates qui se chevauchent) avec les professeurs affectés (téléphone, visite). */
   function ensembleGroupes(E,tous){const out=[];
-    E.liste.forEach(function(e){if(!e.stages.length)return;const avec=e.stages.filter(function(x){return x.debut}).slice().sort(function(a,b){return a.debut<b.debut?-1:a.debut>b.debut?1:0}),gs=[];/* DEV715 : dates des dépôts en ligne fournies par le serveur (sinon celles de la période). */
-      avec.forEach(function(x){const g=gs[gs.length-1],f=x.fin||x.debut;if(g&&x.debut<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else gs.push({debut:x.debut,fin:f,l:[x]})});
-      const sans=e.stages.filter(function(x){return!x.debut});if(sans.length)gs.push({debut:'',fin:'',l:sans});
+    E.liste.forEach(function(e){if(!e.stages.length)return;const avec=e.stages.filter(function(x){return pDeb(x)}).slice().sort(function(a,b){return pDeb(a)<pDeb(b)?-1:pDeb(a)>pDeb(b)?1:0}),gs=[];/* DEV716 : même période = dates officielles des périodes (retard ou prolongation : la période de l'élève). */
+      avec.forEach(function(x){const g=gs[gs.length-1],d=pDeb(x),f=pFin(x)||d;if(g&&d<=g.fin){g.l.push(x);if(f>g.fin)g.fin=f}else gs.push({debut:d,fin:f,l:[x]})});
+      const sans=e.stages.filter(function(x){return!pDeb(x)});if(sans.length)gs.push({debut:'',fin:'',l:sans});
       gs.forEach(function(g){const vu={},l=g.l.filter(function(x){const k=x.e||x.id;if(vu[k])return false;vu[k]=true;return true}).sort(function(a,b){return String(a.eleve).localeCompare(String(b.eleve),'fr')});
         if(l.length<2&&!tous)return;
         const profs=function(t){const c={};l.forEach(function(x){const p=String(x[t]||'').trim();c[p]=(c[p]||0)+1});return c};
         out.push({e:e,debut:g.debut,fin:g.fin,l:l,pt:profs('pt'),pv:profs('pv'),periodes:Array.from(new Set(l.map(function(x){return x.periode}).filter(Boolean)))})})});
     return out}
+  /* DEV716 : dates officielles de la période de l'élève (à défaut, celles de sa convention). */
+  function pDeb(x){return x.debutOfficiel||x.debut||''}
+  function pFin(x){return x.finOfficiel||x.fin||''}
   function profsTxt(c){const k=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b,'fr')});return k.length===1?(k[0]||'Non affecté'):k.map(function(p){return(p||'Non affecté')+' ('+c[p]+')'}).join('\n')}
   function aVerifier(g){if(g.l.length<2){return[!Object.keys(g.pt)[0]?'Téléphone non affecté':'',!Object.keys(g.pv)[0]?'Visite non affectée':''].filter(Boolean).join('\n')}
     const v=function(c,lib){const k=Object.keys(c);return k.length>1?lib+' : plusieurs professeurs':!k[0]?lib+' : non affecté':''};return[v(g.pt,'Téléphone'),v(g.pv,'Visite')].filter(Boolean).join('\n')}

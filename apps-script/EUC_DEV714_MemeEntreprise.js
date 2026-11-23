@@ -6,7 +6,8 @@
  * autonome (aucune autre fonction appelée). Calcul pur sur la vue du suivi (EUC_SUIVI2_vueEnseignants_), sans écriture.
  *
  * Entreprise : nom sans casse, accents ni forme juridique, et code postal du lieu du stage (à défaut de l'entreprise).
- * Dates : celles de la convention, à défaut celles de la période ; deux élèves sont ensemble si leurs dates se recouvrent.
+ * Même période : dates officielles des périodes (DEV716), jamais celles de la convention : un élève en retard ou en
+ * prolongation reste dans sa période. Deux classes sont ensemble si leurs périodes officielles se recouvrent.
  * Seules les conventions enregistrées comptent (stage, ou P.dif. en entreprise) ; les classes entières d'apprentis non.
  */
 function EUC_DEV714_memeEntreprise_(D, classeId, periodeId) {
@@ -22,7 +23,7 @@ function EUC_DEV714_memeEntreprise_(D, classeId, periodeId) {
       var l = (per.lignes || {})[e[0]], f = l && l[1] >= 0 ? fiches[l[1]] : null;
       if (!l || !f || (l[0] !== 'AVEC' && l[0] !== 'PDIF_ENTREPRISE')) return;
       var k = cle(f.entreprise); if (!k) return;
-      fn(k + '|' + cp(f.lieu || f.adresse), { id: e[0], nom: t(e[1]), classe: t(cl.nom), tel: t(l[2]), visite: t(l[3]), debut: t(f.debut || per.debut).slice(0, 10), fin: t(f.fin || per.fin).slice(0, 10) }, f);
+      fn(k + '|' + cp(f.lieu || f.adresse), { id: e[0], nom: t(e[1]), classe: t(cl.nom), tel: t(l[2]), visite: t(l[3]), debut: t(per.debut).slice(0, 10), fin: t(per.fin).slice(0, 10) }, f);
     });
   };
   var groupes = {}, ordre = [];
