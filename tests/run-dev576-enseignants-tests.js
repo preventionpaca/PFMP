@@ -147,7 +147,7 @@ test('accès professeur principal rebranché sur la page des enseignants (code t
 test('administration : suivi rapide en mode admin (affectation directe, retrait, envoi du tableau), lien depuis l’accueil admin', () => {
   const pg = read('apps-script/Suivi_Enseignants_DEV576.html'), adm = read('apps-script/Admin_PFMP.html');
   assert.match(ens, /admin = !!\(typeof EUC_V156_contexteAdmin_ === 'function' && EUC_V156_contexteAdmin_\(\)\)/, 'mode admin vérifié côté serveur');
-  assert.match(pg, /'EUC_DEV448_affecterAdmin':'EUC_DEV448_affecterPp'/); assert.match(pg, /EUC_SUIVI_DESAFFECTER_F24\(/); assert.match(pg, /EUC_V157_preparerEnvoi\(q\)/); assert.match(pg, /EUC_V157_envoyerTableau\(q\)/);
+  assert.match(pg, /'EUC_DEV448_affecterAdmin':'EUC_DEV448_affecterPp'/); assert.match(pg, /EUC_SUIVI_DESAFFECTER_F24\(/); assert.match(pg, /EUC_V157_preparerEnvoi\(q\)/); assert.match(pg, /EUC_V157_envoyerTableau\(Object\.assign\(\{\},q,\{pdf:pdf\}\)\)/);
   assert.match(pg, /EUC_DEV435_professeursDisponibles\(\)/);
   assert.match(adm, /page=suivi-pfmp-enseignants&amp;admin=1/); assert.match(adm, /Ancien suivi des PFMP/);
 });

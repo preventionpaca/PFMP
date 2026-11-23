@@ -54,7 +54,10 @@ test('page et PDF : encadré sous le tableau (imprimé aussi) ; second tableau d
   assert.doesNotMatch(h.match(/\.meme-ent\{[^}]*\}/)[0], /display:none/); assert.match(h, /@media print\{\.meme-ent\{break-inside:avoid/);
   assert.match(h, /var mg=c\.ce\?\[\]:memeEntreprise\(c,p\);/);
   assert.match(h, /doc\.autoTable\(\{startY:y\+3,head:\[EUC_DEV714_ENTETES_\],body:EUC_DEV714_lignes_\(mg\)/);
-  assert.ok(h.indexOf('var mg=c.ce') < h.indexOf("doc.save(((c.ce?'Suivi apprentis '"));
+  /* DEV720 : le PDF est construit par construirePdf (export et pièce jointe du courriel) ; le second tableau y est ajouté avant le retour du document. */
+  const deb = h.indexOf('function construirePdf(c,p){'), fin = h.indexOf('        return doc;\n  }', deb);
+  assert.ok(deb > 0 && fin > deb && h.indexOf('var mg=c.ce', deb) > deb && h.indexOf('var mg=c.ce', deb) < fin);
+  assert.match(h, /construirePdf\(c,p\)\.save\(nomPdf\(c,p\)\)/);
   assert.doesNotMatch(bloc, /google\.script\.run/);
 });
 

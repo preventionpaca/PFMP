@@ -235,6 +235,15 @@ function EUC_V157_envoyerTableau(payload){
   var safeMsg=EUC_V157_txt_(prep.message)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
 
+  /* DEV720 : depuis le suivi des PFMP, le tableau part en pièce jointe (PDF de « Exporter PDF ») ; les anciennes pages
+   * sans PDF gardent l'ancien envoi. */
+  if(payload.pdf&&typeof EUC_DEV678_pdf_==='function'){
+    var pdf=EUC_DEV678_pdf_(payload,detail);
+    MailApp.sendEmail({to:prep.to.join(','),cc:prep.cc.join(','),subject:prep.objet,
+      htmlBody:'<div style="font-family:Arial,sans-serif">'+EUC_DEV678_messagePj_(safeMsg)+'</div>'+EUC_DEV678_mentionPdf_(pdf),attachments:[pdf],name:'PFMP — Lycée Les Eucalyptus'});
+    return {ok:true,to:prep.to,cc:prep.cc,objet:prep.objet,pieceJointe:pdf.getName()};
+  }
+
   MailApp.sendEmail({
     to:prep.to.join(','),
     cc:prep.cc.join(','),

@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV720 : envoi du tableau de suivi aux professeurs, en pièce jointe PDF
+
+- Constat : le courriel « Envoyer le tableau aux professeurs » (professeur principal, DEV678) et l'envoi de l'administration (DEV578 / V157) recopiaient dans le corps du courriel un tableau calculé par l'ancien moteur `EUC_SUIVI_CLASSE_detailV162` : dépôts en ligne ignorés (entreprises vides), « Convention enregistrée » pour des élèves sans convention et pour les apprentis. L'export PDF de la page utilise la vue `EUC_SUIVI2_vueEnseignants_` (données justes).
+- Désormais, depuis le suivi des PFMP (`Suivi_Enseignants_DEV576.html`), la page construit le PDF de « Exporter PDF » (`construirePdf`, partagé) et l'envoie avec la demande ; le serveur le joint (`EUC_DEV678_pdf_` : vrai PDF `%PDF`, 10 Mo au plus, nom fixé par le serveur `PFMP_<classe>_<période>_<année>.pdf`) et n'écrit plus le tableau dans le courriel. Le message paramétré « ci-dessous » devient « en pièce jointe » à l'envoi (paramètre Grist inchangé).
+- Sans PDF valide : refus, rien n'est envoyé. Les destinataires restent calculés par le serveur (inchangés).
+- Anciennes pages de classe (V156) sans PDF : ancien envoi conservé.
+- Tests : DEV678 (8, dont pièce jointe, refus sans PDF, envoi administration), DEV576 et DEV712 adaptés à `construirePdf`.
+
 ## Mise à jour du 23 novembre 2026 — DEV719 : simulation des formulaires élève (rien n'est enregistré)
 
 - Nouvelle route d'administration `simulation-formulaires-eleve` (lien « Simulation des formulaires élève » dans Administration PFMP › Développement), réservée à `EUC_SUIVI2_exigerAdmin_`. Paramètres : `formulaire=qr|declaration`, `siret` facultatif (sinon SIRET tiré au hasard parmi les conventions de la base ayant au moins deux personnes connues).

@@ -299,7 +299,11 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     document.getElementById('ppEnvoi').onclick=function(){var b=this,q=Object.assign({code:code.value.trim()},portee);
       appelPP(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,function(r){
         if(!confirm('Envoyer le tableau '+r.classe+' — '+r.periode+' ?\n\nÀ : '+((r.to||[]).join(', ')||'aucun destinataire')+'\nCopie : '+((r.cc||[]).join(', ')||'aucune')+'\n\nObjet : '+(r.objet||'')))return;
-        appelPP(b,'Envoi…','EUC_DEV678_envoyerTableauPp',q,function(x){etatPP.textContent='Tableau envoyé à '+(x.to||[]).length+' destinataire(s)'+((x.cc||[]).length?' et '+x.cc.length+' copie(s)':'')+'.';},function(e){etatPP.textContent='Envoi impossible : '+(e&&e.message||e);});
+        /* DEV720 : le tableau part en pièce jointe, identique à « Exporter PDF ». */
+        occupe(b,true,'Préparation du PDF…');
+        pdfEnvoi(c,p,function(pdf){
+        appelPP(b,'Envoi…','EUC_DEV678_envoyerTableauPp',Object.assign({},q,{pdf:pdf}),function(x){etatPP.textContent='Tableau envoyé à '+(x.to||[]).length+' destinataire(s)'+((x.cc||[]).length?' et '+x.cc.length+' copie(s)':'')+'.';},function(e){etatPP.textContent='Envoi impossible : '+(e&&e.message||e);});
+        },function(e){occupe(b,false);etatPP.textContent='PDF impossible, rien n’a été envoyé : '+(e&&e.message||e);});
       },function(e){etatPP.textContent='Préparation impossible : '+(e&&e.message||e);});};
     function appelPP(b,txt,fn,arg,ok,ko){var fini=false,t=setTimeout(function(){if(fini)return;fini=true;occupe(b,false);ko({message:'délai dépassé, réessayez.'});},330000);occupe(b,true,txt);
       google.script.run.withSuccessHandler(function(r){if(fini)return;fini=true;clearTimeout(t);occupe(b,false);ok(r);}).withFailureHandler(function(e){if(fini)return;fini=true;clearTimeout(t);occupe(b,false);ko(e);})[fn](arg);}
@@ -313,8 +317,11 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function envoiTableau(b,c,p){var q={annee:String(D.annee||''),classeId:Number(c.id),periodeId:Number(p.id)},t0=b.textContent;b.disabled=true;b.innerHTML='<span class="spin"></span>Préparation…';
     google.script.run.withSuccessHandler(function(r){b.disabled=false;b.textContent=t0;
       if(!confirm('Envoyer le tableau '+r.classe+' — '+r.periode+' ?\n\nÀ : '+((r.to||[]).join(', ')||'aucun destinataire')+'\nCopie : '+((r.cc||[]).join(', ')||'aucune')+'\n\nObjet : '+(r.objet||'')))return;
-      b.disabled=true;b.innerHTML='<span class="spin"></span>Envoi…';
-      google.script.run.withSuccessHandler(function(){b.disabled=false;b.textContent='Tableau envoyé ✓';setTimeout(function(){b.textContent=t0;},4000);}).withFailureHandler(function(e){b.disabled=false;b.textContent=t0;alert('Envoi impossible : '+(e&&e.message||e));}).EUC_V157_envoyerTableau(q);})
+      b.disabled=true;b.innerHTML='<span class="spin"></span>Préparation du PDF…';
+      /* DEV720 : le tableau part en pièce jointe, identique à « Exporter PDF ». */
+      pdfEnvoi(c,p,function(pdf){b.innerHTML='<span class="spin"></span>Envoi…';
+      google.script.run.withSuccessHandler(function(){b.disabled=false;b.textContent='Tableau envoyé ✓';setTimeout(function(){b.textContent=t0;},4000);}).withFailureHandler(function(e){b.disabled=false;b.textContent=t0;alert('Envoi impossible : '+(e&&e.message||e));}).EUC_V157_envoyerTableau(Object.assign({},q,{pdf:pdf}));
+      },function(e){b.disabled=false;b.textContent=t0;alert('PDF impossible, rien n’a été envoyé : '+(e&&e.message||e));});})
     .withFailureHandler(function(e){b.disabled=false;b.textContent=t0;alert('Préparation impossible : '+(e&&e.message||e));}).EUC_V157_preparerEnvoi(q);}
   function chargerPdf(ok,ko){
     var i=0;(function suivant(){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return ok();if(i>=PDFLIBS.length)return ko();
@@ -322,11 +329,19 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   }
   function maintenant(){var d=new Date();return d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
   function texteCoord(o){return o?[o.nom,o.tel,o.mail].filter(Boolean).join('\n'):'';}
+  /* DEV720 : le même document sert à l'export et à la pièce jointe du courriel d'envoi du tableau. */
+  function nomPdf(c,p){return ((c.ce?'Suivi apprentis ':'PFMP ')+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';}
+  function pdfEnvoi(c,p,ok,ko){chargerPdf(function(){var x;try{x=construirePdf(c,p).output('datauristring').split(',')[1];}catch(e){ko(e);return;}ok(x);},function(){ko(new Error('le module PDF n’a pas pu être chargé'));});}
   function exporterPdf(btn,c,p){
     var texte=btn.textContent;btn.disabled=true;btn.textContent='Préparation du PDF…';
     function fin(){btn.disabled=false;btn.textContent=texte;}
     chargerPdf(function(){
-      try{
+      try{construirePdf(c,p).save(nomPdf(c,p));}
+      catch(e){alert('Le PDF n’a pas pu être créé : '+(e&&e.message||e)+'. Utilisez « Imprimer » puis « Enregistrer en PDF ».');}
+      fin();
+    },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+  }
+  function construirePdf(c,p){
         var n=p.n,doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),edite='Édité le '+maintenant();
         var titre=c.nom+' — '+p.libelle,sous='Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'');
         var cpt=compteurs(c,p).map(function(x){return x[0]+' : '+x[1];});
@@ -358,10 +373,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
             theme:'grid',margin:{left:8,right:8,bottom:12},styles:{fontSize:7.6,cellPadding:1.4,overflow:'linebreak',valign:'top',lineColor:[213,230,222],lineWidth:0.15},
             headStyles:{fillColor:[11,107,79],textColor:255,fontStyle:'bold'},columnStyles:{0:{cellWidth:58},1:{cellWidth:50},2:{cellWidth:55},3:{cellWidth:40},4:{cellWidth:40},5:{cellWidth:38}},
             didParseCell:function(d){if(d.section!=='body')return;var g=mg[d.row.index];if(d.column.index===5)d.cell.styles.textColor=g.aVerifier.length?[161,92,0]:[11,116,95];if(d.column.index===2&&g.autres.length)d.cell.styles.textColor=[161,92,0];}});}
-        doc.save(((c.ce?'Suivi apprentis ':'PFMP ')+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf');
-      }catch(e){alert('Le PDF n’a pas pu être créé : '+(e&&e.message||e)+'. Utilisez « Imprimer » puis « Enregistrer en PDF ».');}
-      fin();
-    },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
+        return doc;
   }
   var bulle=document.createElement('div');bulle.className='bulle';bulle.hidden=true;document.body.appendChild(bulle);
   /* Bulle en position fixe, toujours dans l'écran : elle ne doit jamais agrandir la page

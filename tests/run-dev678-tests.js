@@ -15,9 +15,10 @@ function ctx(opt) {
     EUC_DEV448_t_: v => String(v == null ? '' : v).trim(), EUC_DEV448_n_: v => Number(v) || 0,
     EUC_DEV448_lookupPp_: c => { if (c !== 'BON-CODE') throw new Error('Code inconnu ou révoqué.'); return ACCES; },
     EUC_SUIVI_CLASSE_detailV162: () => detail(opt.affectes !== false),
-    EUC_V157_assurerParametres_: () => true, EUC_V157_paramMap_: () => ({ SUIVI_PFMP_EMAIL_OBJET: { Valeur: 'Suivi PFMP — {{CLASSE}}' }, SUIVI_PFMP_EMAIL_MESSAGE: { Valeur: 'Bonjour,\\n\\nVoici le tableau.' } }),
+    EUC_V157_assurerParametres_: () => true, EUC_V157_paramMap_: () => ({ SUIVI_PFMP_EMAIL_OBJET: { Valeur: 'Suivi PFMP — {{CLASSE}}' }, SUIVI_PFMP_EMAIL_MESSAGE: { Valeur: 'Bonjour,\\n\\nVoici le tableau ci-dessous.' } }),
     EUC_V158_ccMails_: () => ['ddfpt@lycee.test'], EUC_V161F3_historiqueHtml_: () => '',
     MailApp: { getRemainingDailyQuota: () => 50, sendEmail: m => mails.push(m) },
+    Utilities: { base64Decode: b => Array.from(Buffer.from(b, 'base64')).map(x => x > 127 ? x - 256 : x), newBlob: (o, type, nom) => ({ type, nom, octets: Buffer.from(o.map(x => x & 255)).toString('base64'), getName: () => nom }) },
     CacheService: { getScriptCache: () => ({ get: c => cache[c] || null, put: (c, v) => { cache[c] = v; } }) } };
   vm.createContext(k);
   const v157 = read('apps-script/EUC_SUIVI_PFMP_EnvoisV157.gs');
@@ -27,6 +28,7 @@ function ctx(opt) {
   return k;
 }
 const Q = { code: 'BON-CODE', annee: '2026-2027', classeId: 1, periodeId: 11 };
+const PDF_B64 = Buffer.from('%PDF-1.3 tableau fictif').toString('base64'), QP = Object.assign({ pdf: PDF_B64 }, Q);
 test('destinataires : professeurs du tableau (téléphone, visite) et professeur principal ; copies institutionnelles ; aucun autre professeur', () => {
   const r = J(ctx().EUC_DEV678_preparerEnvoiPp(Q));
   assert.deepEqual(r.to.sort(), ['pp@ac-nice.fr', 'tel@ac-nice.fr', 'visite@ac-nice.fr']); assert.deepEqual(r.cc, ['ddfpt@lycee.test']); assert.equal(r.objet, 'Suivi PFMP — 1MELEC2');
@@ -38,13 +40,23 @@ test('code inconnu, autre classe ou autre période : refus, aucun courriel', () 
   assert.throws(() => k.EUC_DEV678_preparerEnvoiPp(Object.assign({}, Q, { periodeId: 12 })), /autre période/);
   assert.equal(k.__mails.length, 0);
 });
-test('envoi : tableau en direct, échappé, réponse au professeur principal, mention de l’expéditeur ; second envoi immédiat bloqué', () => {
-  const k = ctx(), r = J(k.EUC_DEV678_envoyerTableauPp(Q)), m = k.__mails[0];
+test('envoi (DEV720) : tableau en pièce jointe (PDF de « Exporter PDF »), plus de tableau dans le courriel ; réponse au professeur principal, mention de l’expéditeur ; second envoi immédiat bloqué', () => {
+  const k = ctx(), r = J(k.EUC_DEV678_envoyerTableauPp(QP)), m = k.__mails[0];
   assert.equal(r.ok, true); assert.equal(k.__mails.length, 1);
   assert.equal(m.to, 'pp@ac-nice.fr,tel@ac-nice.fr,visite@ac-nice.fr'); assert.equal(m.cc, 'ddfpt@lycee.test'); assert.equal(m.replyTo, 'pp@ac-nice.fr');
-  assert.match(m.htmlBody, /Bonjour,<br><br>Voici le tableau\./); assert.match(m.htmlBody, /Envoyé par M\. PP, professeur principal/);
-  assert.match(m.htmlBody, /M\. VISITE/); assert.match(m.htmlBody, /A&lt;b&gt;/); assert.doesNotMatch(m.htmlBody, /A<b>/);
-  assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Q), /Patientez deux minutes/); assert.equal(k.__mails.length, 1);
+  assert.match(m.htmlBody, /Bonjour,<br><br>Voici le tableau en pièce jointe\./, 'message paramétré « ci-dessous » adapté à la pièce jointe');
+  assert.match(m.htmlBody, /Envoyé par M\. PP, professeur principal/);
+  assert.doesNotMatch(m.htmlBody, /<table|M\. VISITE|A&lt;b&gt;|A<b>/, 'plus de tableau (ancien calcul) dans le courriel');
+  assert.equal(m.attachments.length, 1); assert.equal(m.attachments[0].type, 'application/pdf'); assert.equal(m.attachments[0].nom, 'PFMP_1MELEC2_PFMP_n1_2026-2027.pdf');
+  assert.equal(m.attachments[0].octets, PDF_B64, 'PDF de la page joint tel quel');
+  assert.match(m.htmlBody, /joint en PDF \(PFMP_1MELEC2_PFMP_n1_2026-2027\.pdf\)/);
+  assert.throws(() => k.EUC_DEV678_envoyerTableauPp(QP), /Patientez deux minutes/); assert.equal(k.__mails.length, 1);
+});
+test('envoi (DEV720) : sans PDF, ou fichier qui n’est pas un PDF : refus, aucun courriel', () => {
+  const k = ctx();
+  assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Q), /pas été préparé[^]*Rien n’a été envoyé/);
+  assert.throws(() => k.EUC_DEV678_envoyerTableauPp(Object.assign({}, Q, { pdf: Buffer.from('<html>pas un pdf').toString('base64') })), /illisible/);
+  assert.equal(k.__mails.length, 0);
 });
 test('sans professeur affecté, seul le professeur principal est destinataire ; liste vide : aucun envoi', () => {
   const k = ctx({ affectes: false }); const r = J(k.EUC_DEV678_preparerEnvoiPp(Q)); assert.deepEqual(r.to, ['pp@ac-nice.fr']);
@@ -56,7 +68,9 @@ test('page des professeurs (DEV576) : « Exporter PDF » et « Envoyer le tablea
   assert.match(h, /<div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF<\/button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs<\/button><\/div>/);
   assert.match(h, /espace\.hidden=false;var pa=document\.getElementById\('ppPartage'\);pa\.hidden=!!CFG\.admin;pa\.style\.display=CFG\.admin\?'none':'';/, 'visible seulement après déverrouillage, pour le professeur principal (display forcé : .pp-outils est en flex)');
   assert.match(h, /document\.getElementById\('ppPdf'\)\.onclick=function\(\)\{exporterPdf\(this,c,p\);\};/);
-  assert.match(h, /appelPP\(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,[^]*?if\(!confirm\('Envoyer le tableau '[^]*?\)\)return;\s*appelPP\(b,'Envoi…','EUC_DEV678_envoyerTableauPp',q,/, 'destinataires confirmés avant l’envoi');
+  assert.match(h, /appelPP\(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,[^]*?if\(!confirm\('Envoyer le tableau '[^]*?\)\)return;[^]*?occupe\(b,true,'Préparation du PDF…'\);\s*pdfEnvoi\(c,p,function\(pdf\)\{\s*appelPP\(b,'Envoi…','EUC_DEV678_envoyerTableauPp',Object\.assign\(\{\},q,\{pdf:pdf\}\),/, 'destinataires confirmés, puis PDF identique à l’export, puis envoi');
+  assert.match(h, /function\(e\)\{occupe\(b,false\);etatPP\.textContent='PDF impossible, rien n’a été envoyé : '/, 'PDF impossible : bouton rendu, rien n’est envoyé');
+  assert.match(h, /function pdfEnvoi\(c,p,ok,ko\)\{chargerPdf\(function\(\)\{var x;try\{x=construirePdf\(c,p\)\.output\('datauristring'\)\.split\(','\)\[1\];/, 'même construction que « Exporter PDF »');
   assert.match(h, /function appelPP\(b,txt,fn,arg,ok,ko\)\{var fini=false,t=setTimeout\([^]*?330000\);occupe\(b,true,txt\);/, 'bouton occupé, indicateur, délai dépassé');
   assert.match(h, /if\(CFG\.admin\)document\.getElementById\('envoiTableau'\)\.onclick/, 'envoi administrateur inchangé');
 });
@@ -64,5 +78,16 @@ test('affectation par le professeur principal : données de la page mises à jou
   const h = read('apps-script/Suivi_Enseignants_DEV576.html');
   assert.match(h, /Object\.keys\(sel\)\.forEach\(function\(id\)\{var l=p\.lignes\[id\]\|\|\(p\.lignes\[id\]=\['SANS',-1,'','',0\]\);l\[r\.type==='TELEPHONE'\?2:3\]=r\.professeur\.nom;\}\);/);
   assert.match(h, /c\.pp\.join\('\\n'\),l\[2\]\|\|'',l\[3\]\|\|''\]\);/, 'colonnes du PDF : suivi téléphonique l[2], visiteur l[3]');
+});
+test('envoi par l’administration (DEV720) : même pièce jointe depuis le suivi des PFMP ; anciennes pages sans PDF inchangées', () => {
+  const k = ctx(), v157 = read('apps-script/EUC_SUIVI_PFMP_EnvoisV157.gs');
+  ['EUC_V157_preparerEnvoi', 'EUC_V157_envoyerTableau'].forEach(f => vm.runInContext(v157.match(new RegExp('function ' + f + '\\([\\s\\S]*?\\n}\\n'))[0], k));
+  k.EUC_V156_contexteAdmin_ = () => ({ role: 'ADMIN_PFMP' });
+  const r = J(k.EUC_V157_envoyerTableau({ annee: '2026-2027', classeId: 1, periodeId: 11, pdf: PDF_B64 })), m = k.__mails[0];
+  assert.equal(r.pieceJointe, 'PFMP_1MELEC2_PFMP_n1_2026-2027.pdf'); assert.equal(m.attachments[0].octets, PDF_B64);
+  assert.doesNotMatch(m.htmlBody, /<table/); assert.match(m.htmlBody, /Voici le tableau en pièce jointe\./);
+  k.EUC_V157_envoyerTableau({ annee: '2026-2027', classeId: 1, periodeId: 11 });
+  assert.match(k.__mails[1].htmlBody, /<table/); assert.equal(k.__mails[1].attachments, undefined);
+  k.EUC_V156_contexteAdmin_ = () => null; assert.throws(() => k.EUC_V157_envoyerTableau({ pdf: PDF_B64 }), /administrateur/); assert.equal(k.__mails.length, 2);
 });
 console.log(n + ' tests DEV678 réussis.');
