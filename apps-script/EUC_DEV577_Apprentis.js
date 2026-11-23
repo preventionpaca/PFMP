@@ -88,7 +88,7 @@ function EUC_DEV577_calcul_(annee) {
     if (s.valide) l.noms.contratsValides.push(e.nom);
     if (s.rompu) l.noms.ruptures.push(e.nom);
     if (s.apprenti || s.futur || s.potentiel || s.rompu) {
-      (cartes[e.classeId] = cartes[e.classeId] || []).push({ eleve: e.nom, statut: s.apprenti ? 'APPRENTI' : s.futur ? 'FUTUR' : s.potentiel ? 'POTENTIEL' : 'RUPTURE',
+      (cartes[e.classeId] = cartes[e.classeId] || []).push({ id: e.id, eleve: e.nom, statut: s.apprenti ? 'APPRENTI' : s.futur ? 'FUTUR' : s.potentiel ? 'POTENTIEL' : 'RUPTURE',
         dates: s.dates, etapes: { distribue: s.distribue, rapporte: s.rapporte, cfa: s.cfa, valide: s.valide }, fiche: row ? EUC_DEV577_fiche_(row) : null });
     }
   });

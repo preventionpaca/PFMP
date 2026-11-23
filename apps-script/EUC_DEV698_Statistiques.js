@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.715';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.718';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -103,6 +103,26 @@ function EUC_DEV698_affectations_(annee) {
   return out;
 }
 
+/* DEV718 : profil d'un élève (calcul pur) : sexe (F / M), régime (INTERNE = pensionnaire, DEMI_PENSIONNAIRE, EXTERNE),
+ * collège d'origine (dernier établissement), département du domicile (Monaco à part). Vide si l'import ne l'a pas fourni. */
+function EUC_DEV698_sexe_(e) {
+  var s = EUC_DEV698_t_(e.Sexe || e.Genre || e.Civilite).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), m = (s.match(/[A-Z0-9]+/) || [''])[0];
+  if (['F', 'FEMININ', 'FEMME', 'FILLE', 'MME', 'MLLE', 'MADAME', 'MADEMOISELLE', '2'].indexOf(m) >= 0) return 'F';
+  if (['M', 'MASCULIN', 'HOMME', 'GARCON', 'MR', 'MONSIEUR', '1'].indexOf(m) >= 0) return 'M';
+  return '';
+}
+function EUC_DEV698_regime_(e) {
+  var s = EUC_DEV698_t_(e.Regime || e.Regime_scolaire).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!s) return ''; if (/INTERN|PENSIONNAIRE$|^PENSION/.test(s) && !/DEMI/.test(s)) return 'INTERNE';
+  if (/DEMI|DP\b|D\.P/.test(s)) return 'DEMI_PENSIONNAIRE'; if (/EXTERN/.test(s)) return 'EXTERNE'; return 'AUTRE';
+}
+function EUC_DEV698_departement_(e) {
+  var cp = EUC_DEV698_t_(e.Code_postal).replace(/\s/g, ''), pays = EUC_DEV698_t_(e.Pays).toUpperCase();
+  if (/^980\d\d$/.test(cp) || /MONACO/.test(pays)) return 'Monaco';
+  if (/^\d{5}$/.test(cp)) return cp.slice(0, 2) === '20' ? 'Corse' : cp.slice(0, 2);
+  return '';
+}
+
 /* Calcul d'une année : conventions (y compris interrompues et annulées) et apprentis. */
 function EUC_DEV698_calcul_(annee) {
   var T = EUC_DEV698_t_, cls = EUC_DEV698_classes_(annee), fiches = EUC_DEV689_fiches_(), lignes = [], vus = {};
@@ -153,7 +173,7 @@ function EUC_DEV698_calcul_(annee) {
         apprentis.push({ k: !connue ? '' : siret.length === 14 ? 'S' + siret : 'N' + EUC_DEV688_norm_(nom) + '|' + EUC_DEV688_norm_(commune), nn: EUC_DEV688_norm_(nom), nom: nom, commune: T(commune), cp: mcp[1] || '', identifiant: siret.length === 14 ? 'SIRET ' + siret : '',
           classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '',
           niveau: niveauDe(T(l.classe) || x.classe || '', T(l.famille).toUpperCase() || x.famille || ''),
-          eleve: T(c.eleve), organisme: organisme ? nom : '', debut: T(c.dates && c.dates.debut), fin: T(c.dates && (c.dates.rupture || c.dates.fin)),
+          e: Number(c.id) || 0, eleve: T(c.eleve), organisme: organisme ? nom : '', debut: T(c.dates && c.dates.debut), fin: T(c.dates && (c.dates.rupture || c.dates.fin)),
           etablissement: etabs[String(cid)] || '', mode: T(l.mode), gestionnaire: T(l.gestionnaire), donneur: T(l.donneur) });
       });
     });
@@ -162,7 +182,15 @@ function EUC_DEV698_calcul_(annee) {
   var pasEssai = function(l) { return !/^TEST\b/i.test(T(l.classe)); };
   /* DEV702 : 1TSMV / 2TSMV comptées avec 1BTS MV / 2BTS MV. */
   lignes.concat(apprentis).forEach(function(l) { l.classe = EUC_DEV688_classe_(l.classe); });
-  return { version: EUC_DEV698_VERSION_, annee: annee, calculeLe: new Date().toISOString(), conventions: lignes.filter(pasEssai), apprentis: apprentis.filter(pasEssai) };
+  /* DEV718 : élèves inscrits de l'année (classes du catalogue, hors essais et sortis) avec leur profil, pour les statistiques par public. */
+  var eleves = [];
+  Object.keys(byEleve).forEach(function(id) {
+    var e = byEleve[id], x = cls.parId[Number(EUC_PFMP_ref_(e.Classe)) || 0];
+    if (!x || essai(e, x.classe) || e.Actif === false || T(e.Statut_scolarite).toUpperCase() === 'SORTI') return;
+    eleves.push({ e: Number(id), classe: EUC_DEV688_classe_(x.classe), famille: x.famille, diplome: x.diplome, niveau: '', sexe: EUC_DEV698_sexe_(e), regime: EUC_DEV698_regime_(e),
+      college: T(e.Dernier_etablissement), departement: EUC_DEV698_departement_(e), ville: T(e.Ville).toUpperCase() });
+  });
+  return { version: EUC_DEV698_VERSION_, annee: annee, calculeLe: new Date().toISOString(), conventions: lignes.filter(pasEssai), apprentis: apprentis.filter(pasEssai), eleves: eleves.filter(pasEssai) };
 }
 
 function EUC_DEV698_annee(q) {

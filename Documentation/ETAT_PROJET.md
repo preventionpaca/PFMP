@@ -1,5 +1,22 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV718 : statistiques par public (filles, pensionnaires…)
+
+- Nouvelle section « Filles, pensionnaires : stages par public » (`statistiques-pfmp`), avec export Excel. Elle compare plusieurs publics : tous, filles, garçons, pensionnaires, filles pensionnaires, demi-pensionnaires, externes.
+- Indicateurs par public :
+  - effectif et apprentis ;
+  - stagiaires sans convention ;
+  - retard au démarrage, prolongation, rattrapage, interruption ;
+  - distance médiane domicile → stage, trajets de 30 min et plus ;
+  - stage près du domicile (≤ 15 km) ou à Nice.
+- Détail du public choisi : régime, département du domicile, classes, collège d'origine (dernier établissement).
+- Données : le modèle de l'année (`EUC_DEV698_calcul_`, version `1.0.0-dev.718`) ajoute `eleves` (inscrits, hors essais et sortis) avec sexe, régime, collège et département. Chaque apprenti porte son identifiant d'élève (`e`, carte DEV577 `id`).
+- Import Pronote complet : les colonnes SEXE (ou GENRE) et RÉGIME sont lues et enregistrées (colonnes `Sexe` et `Regime` d'`EUC_ELEVES_PFMP`).
+  - Elles étaient absentes jusque-là : tant que l'import n'a pas été relancé avec ces colonnes, la page l'indique.
+  - Le premier import qui les apporte comptera ces élèves comme modifiés.
+- Rappel DEV716 : les classes différentes ne sont comparées que si leurs périodes officielles se recouvrent (BTS MV et Premières MVA séparés, CAP et Terminales réunis s'ils se chevauchent).
+- Tests : `tests/run-dev718-tests.js` (4).
+
 ## Mise à jour du 23 novembre 2026 — DEV717 : formulaires élève, responsables et tuteurs déjà connus pour le SIRET
 
 - Formulaires concernés : QR code (`PFMP_Acces_QR_V116`), reprise QR (`PFMP_Continuation_QR_V117`) et « Déclarer mon entreprise » (`Declaration_Entreprise_DEV603`).

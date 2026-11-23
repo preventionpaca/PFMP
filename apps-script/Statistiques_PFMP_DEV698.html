@@ -43,7 +43,7 @@ th button{background:none;color:var(--gris);padding:0;font:700 12px Arial,sans-s
 th[aria-sort="ascending"] button::after{content:" ▲"}th[aria-sort="descending"] button::after{content:" ▼"}
 tr.enfant td{background:#f7fbf9;color:#33504a}tr.enfant td:first-child{padding-left:22px}
 td.n,th.n{text-align:right}
-#ensemble .defile{max-height:520px;overflow-y:auto;border:1px solid var(--bord);border-radius:8px}#ensemble thead th{position:sticky;top:0;background:#fff;z-index:1}#ensemble td{white-space:pre-line}.noms-mix td{white-space:pre-line}
+#ensemble .defile{max-height:520px;overflow-y:auto;border:1px solid var(--bord);border-radius:8px}#ensemble thead th{position:sticky;top:0;background:#fff;z-index:1}#ensemble td{white-space:pre-line}.defile-publics{overflow-x:auto}.noms-mix td{white-space:pre-line}
 .deux{display:grid;grid-template-columns:1fr 1fr;gap:40px}.deux>div+div{border-left:1px solid var(--bord);padding-left:24px}
 .outils{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 .etat{font-weight:700}.etat.erreur{color:var(--alerte)}
@@ -115,6 +115,13 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
       <p class="note">Itinéraire Google en voiture, de l’adresse exacte de l’élève (import Pronote, à défaut celle de son responsable) à l’adresse du lieu de stage (à défaut celle de l’entreprise). Aucune adresse n’est affichée ni enregistrée : seules les distances sont gardées.</p>
       <div class="outils"><button type="button" id="distCalc" hidden>Calculer les distances manquantes</button><span class="etat" id="distEtat"></span></div>
       <div id="distCorps"><p class="vide">Distances non chargées.</p></div>
+    </section>
+    <section id="publics">
+      <h2>Filles, pensionnaires : stages par public</h2>
+      <p class="note">Élèves inscrits de l’année selon les filtres (classe, filière ; la période s’applique aux conventions). Sexe et régime (pensionnaire, demi-pensionnaire, externe) viennent de l’import Pronote ; collège d’origine = dernier établissement ; département = domicile de l’élève. Stage « près du domicile » : 15 km ou moins en voiture ; « à Nice » : lieu de stage à Nice, près du lycée.</p>
+      <div id="publicsTable"></div>
+      <div class="outils" style="margin-top:12px"><label style="font-weight:700">Détail du public<select id="publicChoix" style="min-width:260px"><option value="F">Filles</option><option value="INTERNE">Pensionnaires</option><option value="FI">Filles pensionnaires</option><option value="M">Garçons</option><option value="DEMI_PENSIONNAIRE">Demi-pensionnaires</option><option value="EXTERNE">Externes</option><option value="TOUS">Tous les élèves</option></select></label><button class="leger" id="xPublics" type="button">Exporter en Excel</button></div>
+      <div id="publicsDetail"></div>
     </section>
     <section id="qualite" hidden>
       <h2>Données à corriger</h2>
@@ -301,6 +308,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     $('multi').innerHTML=multi.length?'<details><summary>'+multi.length+' entreprise(s) : voir la liste</summary>'+tableau('multi',['Entreprise','Commune','Code postal','Nombre de filières','Filières'],multi.map(function(e){return[e.nom,e.commune,cpLib(e.cp),e.diplomes.size,Array.from(e.diplomes).sort().join(' · ')]}),[3],[3,-1])+'</details>':'<p class="vide">Aucune.</p>';
     deroulement(E.conv);
     distances(E.conv);
+    publics(E,m);
     qualite(E);
     evolution();
   }
@@ -333,6 +341,36 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   const mediane=function(v){if(!v.length)return 0;const s=v.slice().sort(function(a,b){return a-b}),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2};
   const kmTxt=function(v){return(Math.round(v*10)/10).toString().replace('.',',')+' km'};
   const PROBLEMES={DOMICILE:'Adresse de l’élève incomplète (fiche Pronote et responsables)',LIEU:'Adresse du lieu de stage ou de l’entreprise incomplète',INTROUVABLE:'Itinéraire introuvable : adresse à vérifier',A_CALCULER:'Distance pas encore calculée'};
+  /* DEV718 : statistiques par public (filles, garçons, pensionnaires, demi-pensionnaires, externes). Lecture seule. */
+  const PUBLICS=[['TOUS','Tous les élèves',function(){return true}],['F','Filles',function(x){return x.sexe==='F'}],['M','Garçons',function(x){return x.sexe==='M'}],['INTERNE','Pensionnaires',function(x){return x.regime==='INTERNE'}],['FI','Filles pensionnaires',function(x){return x.sexe==='F'&&x.regime==='INTERNE'}],['DEMI_PENSIONNAIRE','Demi-pensionnaires',function(x){return x.regime==='DEMI_PENSIONNAIRE'}],['EXTERNE','Externes',function(x){return x.regime==='EXTERNE'}]];
+  const REGIMES={INTERNE:'Pensionnaire',DEMI_PENSIONNAIRE:'Demi-pensionnaire',EXTERNE:'Externe',AUTRE:'Autre régime'};
+  function gardeEleve(x){return(!fFamille.value||x.famille===fFamille.value)&&(!fDiplome.value||x.diplome===fDiplome.value)&&(!fClasse.value||x.classe===fClasse.value)}
+  function indicateursPublic(el,E,dist){
+    const ids=new Set(el.map(function(x){return x.e})),app=new Set(E.app.filter(function(a){return a.e&&ids.has(a.e)}).map(function(a){return a.e}));
+    const conv=E.conv.filter(function(x){return x.e&&ids.has(x.e)}),acc=conv.filter(function(x){return x.statut!=='ANNULEE'}),uniq=function(l){return new Set(l.map(function(x){return x.e})).size};
+    const avec=uniq(acc.filter(function(x){return x.statut==='EN_COURS'||x.statut==='INTERROMPUE'})),stag=Math.max(0,ids.size-app.size);
+    const d=[],pres={dom:0,nice:0,ail:0};acc.forEach(function(x){const v=dist&&dist.parConvention&&dist.parConvention[x.id];if(!Array.isArray(v))return;d.push(v);if(v[0]<=15)pres.dom++;else if(/^NICE\b/.test(String(x.commune||'').toUpperCase())||/^06[0-3]00$/.test(String(x.cp||'')))pres.nice++;else pres.ail++});
+    return{eleves:ids.size,apprentis:app.size,stagiaires:stag,sans:Math.max(0,stag-avec),retard:uniq(acc.filter(function(x){return x.decalage>0})),prolong:uniq(acc.filter(function(x){return x.prolongation>0})),
+      rattrapage:uniq(acc.filter(function(x){return x.sequence==='RATTRAPAGE'})),interrompu:uniq(conv.filter(function(x){return x.statut==='INTERROMPUE'})),avec:avec,
+      kmMed:d.length?mediane(d.map(function(v){return v[0]})):null,plus30:d.filter(function(v){return v[1]>=30}).length,nDist:d.length,pres:pres};
+  }
+  function publics(E,m){
+    const el=(m.eleves||[]).filter(gardeEleve),dist=DIST[annee.value],avecSexe=el.filter(function(x){return x.sexe}).length,avecRegime=el.filter(function(x){return x.regime}).length;
+    const manque=(!avecSexe||!avecRegime)?'<p class="note" style="color:var(--alerte)"><b>'+(!avecSexe&&!avecRegime?'Sexe et régime':!avecSexe?'Sexe':'Régime')+' non renseignés pour ces élèves.</b> Relancez l’import Pronote complet avec les colonnes SEXE et RÉGIME : les lignes correspondantes se rempliront.</p>':'';
+    const f=function(n,t){return t?n+' ('+pct(n,t)+')':String(n)};
+    const lignes=PUBLICS.map(function(p){const l=el.filter(p[2]);if(!l.length&&p[0]!=='TOUS')return null;const k=indicateursPublic(l,E,dist);
+      return[p[1],k.eleves,f(k.apprentis,k.eleves),f(k.sans,k.stagiaires),f(k.retard,k.avec),f(k.prolong,k.avec),f(k.rattrapage,k.avec),f(k.interrompu,k.avec),k.kmMed==null?'—':kmTxt(k.kmMed),f(k.plus30,k.nDist),f(k.pres.dom,k.nDist),f(k.pres.nice,k.nDist)]}).filter(Boolean);
+    const ent=['Public','Élèves','Apprentis','Stagiaires sans convention','Retard au démarrage','Prolongation','Rattrapage','Stage interrompu','Distance médiane domicile → stage','Trajets de 30 min et plus','Stage près du domicile (≤ 15 km)','Stage à Nice'];
+    LISTES.publics={titre:'Stages par public (filles, pensionnaires…)',entetes:ent,lignes:lignes};
+    $('publicsTable').innerHTML=manque+'<div class="defile-publics">'+tableau('publics',ent,lignes,[1],null)+'</div>'+(dist?'':'<p class="note">Distances en cours de chargement : colonnes de distance incomplètes.</p>')+'<p class="note">Retard, prolongation, rattrapage et interruption : en part des élèves ayant une convention. Stage près du domicile / à Nice : en part des trajets calculés.</p>';
+    const choix=PUBLICS.filter(function(p){return p[0]===$('publicChoix').value})[0]||PUBLICS[1],l=el.filter(choix[2]);
+    if(!l.length){$('publicsDetail').innerHTML='<p class="vide">Aucun élève pour ce public'+(manque?' (donnée non importée)':'')+'.</p>';return}
+    const cpt=function(fn){const o={};l.forEach(function(x){const k=fn(x);o[k]=(o[k]||0)+1});return Object.keys(o).sort(function(a,b){return o[b]-o[a]||a.localeCompare(b,'fr')}).map(function(k){return{l:k,v:o[k],t:o[k]+' ('+pct(o[k],l.length)+')'}})};
+    const reg=cpt(function(x){return REGIMES[x.regime]||'Régime non renseigné'}),dep=cpt(function(x){return x.departement?(x.departement==='Monaco'||x.departement==='Corse'?x.departement:'Département '+x.departement):'Domicile non renseigné'}),col=cpt(function(x){return x.college||'Collège non renseigné'});
+    const parClasse=cpt(function(x){return x.classe});
+    $('publicsDetail').innerHTML='<h3>'+esc(choix[1])+' : '+l.length+' élève'+(l.length>1?'s':'')+'</h3><div class="deux"><div><h3>Régime</h3>'+barres(reg)+'<h3>Département du domicile</h3>'+barres(dep.slice(0,12),'b')+'</div><div><h3>Classes</h3>'+barres(parClasse.slice(0,15),'o')+'</div></div>'+
+      '<h3>Collège d’origine (dernier établissement)</h3>'+barres(col.slice(0,15),'b')+(col.length>15?'<details><summary>Voir les '+col.length+' établissements</summary>'+tableau('publicsCol',['Collège d’origine','Élèves'],col.map(function(x){return[x.l,x.v]}),[1],[1,-1])+'</details>':'');
+  }
   function distances(conv){
     const d=DIST[annee.value],btn=$('distCalc');
     if(!d){$('distCorps').innerHTML='<p class="vide">'+(DIST_ERR[annee.value]?esc(DIST_ERR[annee.value]):'Chargement des distances…')+'</p>';btn.hidden=true;return}
@@ -390,6 +428,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   const XLSX_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
   function exporter(btn,def){if(btn.disabled)return;const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Export…';let fini=false;const fin=function(){fini=true;clearTimeout(tm);btn.disabled=false;btn.innerHTML=old};const tm=setTimeout(function(){if(fini)return;fin();alert('L’export n’a pas abouti à temps : réessayez.')},60000);
     (window.XLSX?Promise.resolve():new Promise(function(ok,ko){const s=document.createElement('script');s.src=XLSX_URL;s.onload=ok;s.onerror=function(){ko(new Error('bibliothèque d’export indisponible'))};document.head.appendChild(s)})).then(function(){if(fini)return;const d=def();const ws=window.XLSX.utils.aoa_to_sheet([[d.titre],[$('perimetre').textContent],[],d.entetes].concat(d.lignes));const wb=window.XLSX.utils.book_new();window.XLSX.utils.book_append_sheet(wb,ws,'Statistiques');window.XLSX.writeFile(wb,'Statistiques_PFMP_'+annee.value+'_'+new Date().toISOString().slice(0,10)+'.xlsx');fin()}).catch(function(e){if(fini)return;fin();alert('Export impossible : '+(e&&e.message||e))})}
+  $('xPublics').onclick=function(){exporter($('xPublics'),function(){return LISTES.publics})};
+  $('publicChoix').onchange=rendre;
   $('xEnsemble').onclick=function(){exporter($('xEnsemble'),function(){return LISTES.ensemble})};
   $('xCommunes').onclick=function(){exporter($('xCommunes'),function(){return LISTES.communes})};
   $('xListe').onclick=function(){exporter($('xListe'),function(){return LISTES[liste.value]})};
