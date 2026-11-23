@@ -85,11 +85,17 @@ function EUC_DEV717_contactsConnus(q) {
   if (EUC_DEV717_t_(q.reprise)) { var a = EUC_CONVENTION_lireRepriseV117_(EUC_DEV717_t_(q.reprise)); EUC_CONVENTION_exigerQRValideV511_(a); }
   else if (EUC_DEV717_t_(q.jeton)) EUC_DEV603_lireJeton_(EUC_DEV717_t_(q.jeton));
   else throw new Error('Accès refusé : ouvre le formulaire depuis ton lien ou ton QR code.');
-  var siret = EUC_DEV717_t_(q.siret).replace(/\D/g, '');
+  return EUC_DEV717_calculer_(q.siret);
+}
+
+/* Lecture seule, sans contrôle d'accès : appelée seulement après le contrôle de l'appelant (élève ou simulation DEV719). */
+function EUC_DEV717_calculer_(valeur, donnees) {
+  var siret = EUC_DEV717_t_(valeur).replace(/\D/g, '');
   if (siret.length !== 14) return { siret: siret, personnes: [] };
-  var refs = []; try { refs = (typeof EUC_DEV706_references_ === 'function' ? EUC_DEV706_references_() : []).filter(function(r) { return r.k === 'S' + siret || EUC_DEV717_t_(r.k).indexOf(siret) >= 0; }); } catch (eR) { refs = []; }
-  var convs = [], depots = [];
-  try { convs = EUC_CONVENTION_lireAccesFraisV108_() || []; } catch (eC) { convs = []; }
-  try { depots = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eD) { depots = []; }
+  var d = donnees || {};
+  var refs = []; try { refs = (d.references || (typeof EUC_DEV706_references_ === 'function' ? EUC_DEV706_references_() : [])).filter(function(r) { return r.k === 'S' + siret || EUC_DEV717_t_(r.k).indexOf(siret) >= 0; }); } catch (eR) { refs = []; }
+  var convs = d.conventions, depots = d.depots;
+  if (!convs) { try { convs = EUC_CONVENTION_lireAccesFraisV108_() || []; } catch (eC) { convs = []; } }
+  if (!depots) { try { depots = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eD) { depots = []; } }
   return { siret: siret, personnes: EUC_DEV717_personnes_(EUC_DEV717_saisies_(siret, convs, depots), refs) };
 }

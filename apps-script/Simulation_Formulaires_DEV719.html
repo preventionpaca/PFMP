@@ -1,0 +1,76 @@
+<style id="EUC_DEV719_STYLE">
+body{padding-top:96px!important}
+#sim719{position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a2e00;color:#fff;font:14px/1.35 Arial,sans-serif;padding:8px 14px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#sim719 b.t{font-size:15px;letter-spacing:.02em}
+#sim719 a,#sim719 button{color:#fff;background:transparent;border:1px solid #fff;border-radius:6px;padding:2px 8px;margin:3px 4px 0 0;font:inherit;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block;width:auto}
+#sim719 .aide{display:block;margin-top:3px;font-size:13px;opacity:.95}
+#sim719Recap{margin:16px auto;max-width:900px;border:3px dashed #7a2e00;border-radius:10px;background:#fff7f0;padding:12px 14px;font:14px/1.4 Arial,sans-serif;color:#3b1700}
+#sim719Recap pre{white-space:pre-wrap;word-break:break-word;font-size:12px;background:#fff;border:1px solid #e8cbb5;border-radius:6px;padding:8px;max-height:420px;overflow:auto}
+#sim719Bloque{position:fixed;inset:0;z-index:100000;background:rgba(255,255,255,.97);display:flex;align-items:center;justify-content:center;padding:20px;font:18px Arial,sans-serif;color:#8a1c1c;text-align:center}
+</style>
+<script id="EUC_DEV719_SCRIPT">
+/* DEV719 : simulation des formulaires élève. Aucun appel d'écriture ne quitte le navigateur : identification, captcha,
+ * dépôt et enregistrement reçoivent une réponse simulée ; seules les recherches en lecture seule vont au serveur. */
+(function(){
+  'use strict';
+  var C=window.EUC_DEV719_CONFIG||{},LECTURE=C.lecture||[];
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function iso(d){return d.toISOString().slice(0,10);}
+  function fr(d){return iso(d).split('-').reverse().join('/');}
+  var debut=new Date(Date.now()+14*864e5),fin=new Date(Date.now()+42*864e5);
+  function bloquer(){var go=function(){var d=document.createElement('div');d.id='sim719Bloque';d.textContent='Simulation impossible dans ce navigateur : rien n’a été chargé et rien ne peut être envoyé.';document.body.appendChild(d);};
+    if(document.body)go();else document.addEventListener('DOMContentLoaded',go);}
+  function sansGros(k,v){return /^(reponseApi|json)$/.test(k)?(v?'(réponse officielle de l’annuaire)':v):v;}
+  function recap(titre,donnees){var go=function(){var z=document.getElementById('sim719Recap');if(!z){z=document.createElement('section');z.id='sim719Recap';document.body.appendChild(z);}
+      z.innerHTML='<b>SIMULATION — '+esc(titre)+' : rien n’a été enregistré.</b><p>Voici ce que le formulaire aurait envoyé au lycée :</p><pre>'+esc(JSON.stringify(donnees,sansGros,2))+'</pre>';
+      try{z.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}};
+    setTimeout(go,400);}
+  var captcha='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="230" height="70"><rect width="230" height="70" fill="#f4f8f6"/><text x="115" y="46" font-family="Arial" font-size="30" font-weight="700" fill="#7a2e00" text-anchor="middle">SIMUL</text></svg>');
+  var SIMULE={
+    EUC_CONVENTION_verifierIdentiteV113:function(){return{ok:true,eleve:{prenom:'Élève',nom:'TEST (simulation)',classe:'CLASSE TEST',anneeScolaire:'Simulation',dateDebut:fr(debut),dateFin:fr(fin)},
+      reference:'SIMULATION',diagnostic:'DEV719 — simulation, rien n’est enregistré',resume:'SIMULATION-DEV719',saisieAutorisee:true,entreprise:{},responsable:{},tuteur:{}};},
+    EUC_CONVENTION_enregistrerEntrepriseV117:function(a){recap('formulaire du QR code',a[1]);return{ok:true,simulation:true,numeroEnregistrement:'SIMULATION — rien n’a été enregistré'};},
+    EUC_CONVENTION_verifierEnregistrementV569:function(){return{alreadySaved:false,simulation:true};},
+    EUC_DEV603_classes:function(){return{ok:true,annee:'Simulation',classes:[{id:1,nom:'CLASSE TEST (simulation)'}],captcha:{jeton:'SIMULATION',image:captcha}};},
+    EUC_DEV603_identifier:function(a){var q=a[0]||{},n=[q.prenom,q.nom].filter(Boolean).join(' ')||'Élève TEST';
+      return{jeton:'SIMULATION-DEV719',eleve:n,classe:'CLASSE TEST (simulation)',periodes:[{id:1,libelle:'Période de test',debut:iso(debut),fin:iso(fin)}]};},
+    EUC_DEV603_ouvrirCode:function(){throw new Error('Simulation : le code écrit sous le QR code n’est pas utilisé ici. Choisis « 2. Ma convention n’a pas de QR code » (ou ouvre la simulation du formulaire du QR code depuis le bandeau).');},
+    EUC_DEV603_deposer:function(a){var q=a[0]||{};recap('Déclarer mon entreprise',q);
+      return{simulation:true,numero:'SIMULATION — rien n’a été enregistré',entreprise:(q.nonDiffusible&&q.nonDiffusible.nom)||C.entreprise||('SIRET '+(q.siret||'')),periode:'Période de test — du '+fr(debut)+' au '+fr(fin)};},
+    EUC_DEV603_signalerProbleme:function(a){recap('demande d’aide',a[0]||{});return{simulation:true,numero:'SIMULATION — rien n’a été enregistré',bureau:'bureau G205 (simulation)'};}
+  };
+  var g=window.google&&window.google.script,vrai=g&&g.run;
+  if(!vrai){bloquer();return;}
+  function appeler(nom,args,ok,ko,uo){
+    if(nom==='EUC_DEV717_contactsConnus'){nom='EUC_DEV719_contactsConnus';args=[{siret:(args[0]||{}).siret}];}
+    if(nom==='EUC_DEV719_contactsConnus'||LECTURE.indexOf(nom)>=0){var r=vrai;if(ok)r=r.withSuccessHandler(ok);if(ko)r=r.withFailureHandler(ko);if(uo!==undefined)r=r.withUserObject(uo);r[nom].apply(r,args);return;}
+    setTimeout(function(){var res;
+      try{if(!SIMULE[nom])throw new Error('Simulation : l’appel « '+nom+' » est bloqué (rien n’est envoyé au serveur).');res=SIMULE[nom](args);}
+      catch(e){if(ko)ko(e,uo);return;}
+      if(ok)ok(res,uo);},350);
+  }
+  function runner(ok,ko,uo){var o={__sim719:true,withSuccessHandler:function(h){return runner(h,ko,uo);},withFailureHandler:function(h){return runner(ok,h,uo);},withUserObject:function(x){return runner(ok,ko,x);}};
+    return new Proxy(o,{get:function(t,k){if(k in t)return t[k];if(typeof k!=='string')return undefined;return function(){appeler(k,[].slice.call(arguments),ok,ko,uo);};}});}
+  var faux=runner();
+  try{g.run=faux;}catch(e1){}
+  if(g.run!==faux){try{Object.defineProperty(g,'run',{value:faux,configurable:true,writable:true});}catch(e2){}}
+  if(g.run!==faux){bloquer();return;}
+  /* Formulaire du QR code : identifiant de convention fictif. */
+  if(C.formulaire==='qr'&&g.url){var gl=g.url.getLocation&&g.url.getLocation.bind(g.url);
+    var loc=function(cb){var fini=function(l){l=l||{};l.parameter=Object.assign({},l.parameter||{},{rid:'SIMULATION'});cb(l);};if(gl)gl(fini);else fini({});};
+    try{g.url.getLocation=loc;}catch(e3){}
+    if(g.url.getLocation!==loc){try{Object.defineProperty(g.url,'getLocation',{value:loc,configurable:true,writable:true});}catch(e4){}}}
+  function bandeau(){if(document.getElementById('sim719'))return;var L=C.liens||{},b=document.createElement('div');b.id='sim719';b.setAttribute('role','note');
+    b.innerHTML='<b class="t">SIMULATION — rien n’est enregistré · élève fictif</b> · '+(C.formulaire==='qr'?'Formulaire du QR code':'« Déclarer mon entreprise » (sans QR code)')+'<br>'+
+      (C.siret?'SIRET de test pris dans la base : <b>'+esc(C.siret)+'</b>'+(C.entreprise?' — '+esc(C.entreprise):'')+' ('+Number(C.personnes||0)+' personne(s) déjà connue(s)) <button type="button" id="sim719Remplir">Remplir le SIRET de test</button>':'Aucun SIRET avec des personnes connues trouvé dans la base. ')+
+      '<a href="'+esc(L.hasard||'#')+'" target="_top">Autre SIRET au hasard</a>'+
+      (C.formulaire==='qr'?'<a href="'+esc(L.declaration||'#')+'" target="_top">Passer à « Déclarer mon entreprise »</a>':'<a href="'+esc(L.qr||'#')+'" target="_top">Passer au formulaire du QR code</a>')+
+      '<a href="'+esc(L.admin||'#')+'" target="_top">Administration PFMP</a>'+
+      '<span class="aide">'+(C.formulaire==='qr'?'Étapes : indique n’importe quel jour et mois de naissance, puis « Remplir le SIRET de test » et « Rechercher ».':'Étapes : choisis « 2. Ma convention n’a pas de QR code », la classe de test, un nom et une date au hasard, recopie le code SIMUL ; puis « Remplir le SIRET de test » et « Vérifier ».')+'</span>';
+    document.body.insertBefore(b,document.body.firstChild);
+    var r=document.getElementById('sim719Remplir');if(r)r.onclick=function(){var s=document.getElementById('siret');if(!s||s.offsetParent===null){r.textContent='Le champ SIRET apparaît à l’étape de l’entreprise';return;}r.textContent='Remplir le SIRET de test';
+      s.value=C.siret;['input','change'].forEach(function(t){try{s.dispatchEvent(new Event(t,{bubbles:true}));}catch(e){}});try{s.scrollIntoView({behavior:'smooth',block:'center'});s.focus();}catch(e){}};}
+  if(document.body)bandeau();else document.addEventListener('DOMContentLoaded',bandeau);
+  window.EUC719={appeler:appeler,simule:SIMULE};
+})();
+</script>

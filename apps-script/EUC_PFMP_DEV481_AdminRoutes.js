@@ -65,6 +65,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV630_afficher(e);
     case 'banc-essai-pfmp':
       return EUC_DEV633_afficher(e);
+    case 'simulation-formulaires-eleve':
+      return EUC_DEV719_afficher(e);
     case 'apprentis-classes-pfmp':
       return EUC_DEV635_afficher(e);
     case 'echeancier-apprentis-pfmp':

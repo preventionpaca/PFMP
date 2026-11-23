@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV719 : simulation des formulaires élève (rien n'est enregistré)
+
+- Nouvelle route d'administration `simulation-formulaires-eleve` (lien « Simulation des formulaires élève » dans Administration PFMP › Développement), réservée à `EUC_SUIVI2_exigerAdmin_`. Paramètres : `formulaire=qr|declaration`, `siret` facultatif (sinon SIRET tiré au hasard parmi les conventions de la base ayant au moins deux personnes connues).
+- Les vraies pages sont affichées (`PFMP_Acces_QR_V116`, `Declaration_Entreprise_DEV603`) avec un élève fictif ; `Simulation_Formulaires_DEV719.html`, injecté avant les scripts de la page, remplace `google.script.run` : recherches SIRET / annuaire / Monaco transmises (lecture seule) ; personnes connues → `EUC_DEV719_contactsConnus` (administration, sans jeton d'élève) ; identification, captcha, dépôt, demande d'aide et enregistrement simulés dans le navigateur avec un récapitulatif de ce qui aurait été envoyé ; tout autre appel refusé. Si le remplacement est impossible, un voile plein écran bloque la page.
+- Double sécurité : les jetons simulés (`SIMULATION-DEV719`) ne sont pas signés, le serveur les refuserait.
+- `EUC_DEV717_calculer_(siret, donnees)` : calcul des personnes connues, sans contrôle d'accès, partagé par DEV717 et DEV719.
+- Tests : `tests/run-dev719-tests.js` (5).
+
 ## Mise à jour du 23 novembre 2026 — DEV718 : statistiques par public (filles, pensionnaires…)
 
 - Nouvelle section « Filles, pensionnaires : stages par public » (`statistiques-pfmp`), avec export Excel. Elle compare plusieurs publics : tous, filles, garçons, pensionnaires, filles pensionnaires, demi-pensionnaires, externes.
