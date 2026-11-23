@@ -1,5 +1,16 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV724 : book des entreprises (administration), corriger l'adresse d'une entreprise
+
+- Fiche d'une entreprise → « Profil de l'entreprise » → « Adresse de l'entreprise » : numéro et voie, code postal, ville (préremplis), « Enregistrer l'adresse » (spinner, délai 20 s).
+- Cas d'usage : un numéro de voie absent de data.gouv (BYMYCAR, 62 avenue des Baumettes), qui fait mal placer l'entreprise sur la carte.
+- Les conventions ne sont pas réécrites et data.gouv n'est pas modifié. La correction est une surcharge sur le profil de l'entreprise (`EUC_ENTREPRISES_PROFILS` : `Adresse_corrigee`, `Adresse_avant_correction`, `Latitude_corrigee`, `Longitude_corrigee`, date, auteur ; colonnes créées au premier usage).
+- Position calculée par la Géoplateforme (même choix que le géocodage), gardée seulement si la voie ou le numéro est reconnu. Monaco : position à placer à la main dans « Entreprises et cartographie ».
+- Le book (administration et personnels) affiche l'adresse corrigée et sa position (`EUC_DEV724_appliquer_` dans `EUC_DEV547_bookResponse_`). La fiche rappelle l'adresse d'avant.
+- Case cochée par défaut (entreprise avec SIRET) : la fiche existante de la base des entreprises est aussi corrigée (DEV723), pour les prochains dépôts et conventions.
+- Pas encore repris : le book des familles et les autres cartes (suivi, apprentis), qui lisent la table de géocodage. Pour celles-ci, la position manuelle se fait dans « Entreprises et cartographie ».
+- Tests : `tests/run-dev724-tests.js`.
+
 ## Mise à jour du 23 novembre 2026 — DEV723 : l'entreprise retenue remplace la saisie de l'élève ; adresse corrigée par le bureau
 
 - « Vérifier le SIRET », le choix d'une entreprise proposée (même vérification) et « Enregistrer l'entreprise de Monaco » remplacent maintenant le nom, l'adresse, le code postal et la ville saisis par l'élève par ceux de l'entreprise retenue. Le responsable, le tuteur et le lieu du stage ne sont jamais touchés, et l'ancienne saisie reste dans l'historique (`Alertes`).
