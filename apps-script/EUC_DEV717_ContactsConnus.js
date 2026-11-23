@@ -23,12 +23,24 @@ function EUC_DEV717_scinder_(nomComplet) {
   return { prenom: m.filter(function(x) { return !maj(x); }).join(' '), nom: noms.join(' ') };
 }
 
+/* DEV719 : identité remise en ordre (calcul pur). Nom complet saisi dans « nom » (« BATAILLE Delphine », prénom vide) :
+ * scindé ; prénom et nom inversés quand le courriel l'indique (robin.feligioni@… pour prénom « Feligioni », nom « Robin »). */
+function EUC_DEV717_identite_(prenom, nom, courriel) {
+  var T = EUC_DEV717_t_, p = T(prenom), n = T(nom);
+  if (!p && n.indexOf(' ') > 0) { var sc = EUC_DEV717_scinder_(n); if (sc.prenom && sc.nom) { p = sc.prenom; n = sc.nom; } }
+  var simple = function(v) { return T(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/g, ''); };
+  var morceaux = T(courriel).toLowerCase().split('@')[0].split(/[._-]+/).map(simple).filter(Boolean);
+  if (p && n && morceaux.length >= 2 && morceaux[0] === simple(n) && morceaux[1] === simple(p) && simple(n) !== simple(p)) { var x = p; p = n; n = x; }
+  return { prenom: p, nom: n };
+}
+
 /* Saisies d'un SIRET (calcul pur) : une par rôle et par convention ou dépôt ; rang = plus récent en dernier. */
 function EUC_DEV717_saisies_(siret, conventions, depots) {
   var T = EUC_DEV717_t_, out = [];
   var ajouter = function(rang, role, x) {
-    var prenom = T(x.prenom), nom = T(x.nom); if (!EUC_DEV706_cleNom_(prenom + ' ' + nom)) return;
-    out.push({ rang: rang, role: role, civilite: T(x.civilite), prenom: prenom, nom: nom, fonction: T(x.fonction), tel: EUC_DEV706_tel_(x.tel), mail: EUC_DEV706_courriel_(x.mail) });
+    var prenom = T(x.prenom), nom = T(x.nom), mail = EUC_DEV706_courriel_(x.mail); if (!EUC_DEV706_cleNom_(prenom + ' ' + nom)) return;
+    var id = EUC_DEV717_identite_(prenom, nom, mail);
+    out.push({ rang: rang, role: role, civilite: T(x.civilite), prenom: id.prenom, nom: id.nom, fonction: T(x.fonction), tel: EUC_DEV706_tel_(x.tel), mail: mail });
   };
   (conventions || []).forEach(function(a) {
     if (!a || a.Revoked === true || a.Supprimee_admin === true || /SUPPRIMEE|ANNULEE/i.test(T(a.Statut_administratif))) return;

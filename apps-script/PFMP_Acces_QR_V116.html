@@ -1260,9 +1260,11 @@ function appliquerEntreprise(r){
 }
 function proposerContactsConnus717(){
   if(!window.EUC717)return;
-  const b=function(role,pre){return{role:role,champs:{prenom:field(pre+'Prenom'),nom:field(pre+'Nom'),fonction:field(pre+'Fonction'),tel:field(pre+'Telephone'),mail:field(pre+'Courriel')}};};
+  const b=function(role,pre){return{role:role,champs:{civ:field(pre+'Civilite'),prenom:field(pre+'Prenom'),nom:field(pre+'Nom'),fonction:field(pre+'Fonction'),tel:field(pre+'Telephone'),mail:field(pre+'Courriel')}};};
   EUC717.proposer({siret:normaliserSiretValeur(field('entrepriseSiret').value),auth:{reprise:RESUME},blocs:[b('RESPONSABLE','responsable'),b('TUTEUR','tuteur')]});
 }
+/* DEV719 : la recherche SIRET passe par le contrôleur EUC_QR_CONTROLLER_FIX9 (appliquerEntreprise n'y est pas appelé). */
+window.EUC_QR_proposerContacts717=proposerContactsConnus717;
 
 
 $('#save').onclick =
@@ -1647,6 +1649,7 @@ init();
                     lockOne('entrepriseEnseigne',false);
                     status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
                     /* DEV707 : établissement d'accueil dans les Alpes-Maritimes. */if(window.EUC707){var f707=function(n){var el=document.querySelector('[name="'+n+'"]')||document.getElementById(n);return el?el.value:'';};EUC707.proposer({siret:siret,nom:f707('entrepriseRaisonSociale'),cp:f707('entrepriseCodePostal'),commune:f707('entrepriseCommune'),ancre:search,choisir:function(x){ident.value=x;search.disabled=false;search.click();}});}
+                    /* DEV717 : responsables et tuteurs déjà connus pour ce SIRET. */if(typeof window.EUC_QR_proposerContacts717==='function')window.EUC_QR_proposerContacts717();
 
                     if(x.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
                   })
@@ -1693,6 +1696,7 @@ init();
             lockOne('entrepriseEnseigne',false);
             status('✓ Entreprise française retrouvée. Données officielles verrouillées.',false);
                     /* DEV707 : établissement d'accueil dans les Alpes-Maritimes. */if(window.EUC707){var f707=function(n){var el=document.querySelector('[name="'+n+'"]')||document.getElementById(n);return el?el.value:'';};EUC707.proposer({siret:siret,nom:f707('entrepriseRaisonSociale'),cp:f707('entrepriseCodePostal'),commune:f707('entrepriseCommune'),ancre:search,choisir:function(x){ident.value=x;search.disabled=false;search.click();}});}
+                    /* DEV717 : responsables et tuteurs déjà connus pour ce SIRET. */if(typeof window.EUC_QR_proposerContacts717==='function')window.EUC_QR_proposerContacts717();
 
             if(r.nonDiffusible===true&&typeof window.EUC_DEV649_nonDiffusible==='function')window.EUC_DEV649_nonDiffusible();
           })

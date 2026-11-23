@@ -6,7 +6,8 @@
 - Les vraies pages sont affichées (`PFMP_Acces_QR_V116`, `Declaration_Entreprise_DEV603`) avec un élève fictif ; `Simulation_Formulaires_DEV719.html`, injecté avant les scripts de la page, remplace `google.script.run` : recherches SIRET / annuaire / Monaco transmises (lecture seule) ; personnes connues → `EUC_DEV719_contactsConnus` (administration, sans jeton d'élève) ; identification, captcha, dépôt, demande d'aide et enregistrement simulés dans le navigateur avec un récapitulatif de ce qui aurait été envoyé ; tout autre appel refusé. Si le remplacement est impossible, un voile plein écran bloque la page.
 - Double sécurité : les jetons simulés (`SIMULATION-DEV719`) ne sont pas signés, le serveur les refuserait.
 - `EUC_DEV717_calculer_(siret, donnees)` : calcul des personnes connues, sans contrôle d'accès, partagé par DEV717 et DEV719.
-- Tests : `tests/run-dev719-tests.js` (5).
+- Défauts DEV717 révélés par la simulation et corrigés : (1) dans le formulaire du QR code, la recherche SIRET passe par le contrôleur `EUC_QR_CONTROLLER_FIX9`, qui n'appelait jamais la proposition des personnes connues (`window.EUC_QR_proposerContacts717`, appelé après les deux réponses positives ; civilité ajoutée) ; (2) identités mal saisies remises en ordre (`EUC_DEV717_identite_`) : nom complet dans « nom » avec prénom vide, prénom et nom inversés quand le courriel l'indique.
+- Tests : `tests/run-dev719-tests.js` (7).
 
 ## Mise à jour du 23 novembre 2026 — DEV718 : statistiques par public (filles, pensionnaires…)
 

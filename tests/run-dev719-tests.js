@@ -113,4 +113,25 @@ test('navigateur : formulaire du QR code avec convention fictive ; page bloquée
   assert.equal(f.envoyes.length, 1, 'remplacement impossible : voile plein écran, aucune simulation partielle');
 });
 
+test('formulaire du QR code : la recherche SIRET du contrôleur FIX9 propose aussi les personnes connues (défaut DEV717 révélé par la simulation)', () => {
+  const h = read('apps-script/PFMP_Acces_QR_V116.html'), fix9 = h.slice(h.indexOf('<script id="EUC_QR_CONTROLLER_FIX9">'));
+  assert.ok(h.includes('window.EUC_QR_proposerContacts717=proposerContactsConnus717;'));
+  assert.equal((fix9.match(/window\.EUC_QR_proposerContacts717\(\)/g) || []).length, 2, 'les deux réponses positives (fiche connue et annuaire officiel)');
+  assert.ok(h.includes("champs:{civ:field(pre+'Civilite'),prenom:field(pre+'Prenom')"));
+});
+
+test('identité remise en ordre : nom complet saisi dans « nom », prénom et nom inversés d’après le courriel (données fictives)', () => {
+  const k = serveur(true);
+  assert.deepEqual(J(k.EUC_DEV717_identite_('', 'DUPONT Claire', '')), { prenom: 'Claire', nom: 'DUPONT' });
+  assert.deepEqual(J(k.EUC_DEV717_identite_('Durand', 'Hugo', 'hugo.durand@garage.test')), { prenom: 'Hugo', nom: 'Durand' });
+  assert.deepEqual(J(k.EUC_DEV717_identite_('Paul', 'MARTIN', 'paul.martin@garage.test')), { prenom: 'Paul', nom: 'MARTIN' });
+  assert.deepEqual(J(k.EUC_DEV717_identite_('Paul', 'MARTIN', 'contact@garage.test')), { prenom: 'Paul', nom: 'MARTIN' });
+  const convs = [conv(10, S1, { Responsable_prenom: '', Responsable_nom: 'DUPONT Claire', Responsable_courriel: 'rh@garage.test', Tuteur_prenom: 'Durand', Tuteur_nom: 'Hugo', Tuteur_courriel: 'hugo.durand@garage.test' }),
+    conv(11, S1, { Responsable_prenom: 'Claire', Responsable_nom: 'DUPONT', Tuteur_prenom: 'Hugo', Tuteur_nom: 'DURAND' })];
+  const r = J(k.EUC_DEV717_calculer_(S1, { conventions: convs, depots: [], references: [] }));
+  assert.equal(r.personnes.length, 2, 'les saisies remises en ordre rejoignent la même personne');
+  assert.ok(r.personnes.some(p => p.prenom === 'Claire' && p.nom === 'DUPONT'));
+  assert.ok(r.personnes.some(p => p.prenom === 'Hugo' && /^durand$/i.test(p.nom)));
+});
+
 console.log(n + ' tests DEV719 réussis.');
