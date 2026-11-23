@@ -2384,7 +2384,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function horsStage(x){var s=n(String(x&&x.statutCode||'')+' '+String(x&&x.statut||''));return s.indexOf('annule')>=0||s.indexOf('interromp')>=0}
   /* Profs affectés dans le groupe : {nom: nombre}, '' = non affecté. */
   function compte(eleves,champ){var c={};eleves.forEach(function(x){var p=String(x[champ]||'').trim();c[p]=(c[p]||0)+1});return c}
-  function verdict(c){var noms=Object.keys(c);return noms.length===1&&noms[0]!==''?'UN_SEUL':(noms.length===1?'AUCUN':'PLUSIEURS')}
+  /* Un élève sans professeur ne compte pas comme un second professeur (PARTIEL : un seul professeur, des élèves à affecter). */
+  function verdict(c){var noms=Object.keys(c),vrais=noms.filter(Boolean);return vrais.length>1?'PLUSIEURS':!vrais.length?'AUCUN':noms.length>1?'PARTIEL':'UN_SEUL'}
   function groupes(lignes){
     var par={},ordre=[];
     (lignes||[]).forEach(function(x){
@@ -2403,6 +2404,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function ligneProf(libelle,c,ver){
     var noms=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b,'fr')});
     if(ver==='UN_SEUL')return '<div class="euc709-prof">'+libelle+' : <span class="euc709-ok">'+h(noms[0])+' ✓</span></div>';
+    if(ver==='PARTIEL')return '<div class="euc709-prof">'+libelle+' : '+h(noms.filter(Boolean)[0])+' — <span class="euc709-warn">⚠ '+c['']+' élève(s) non affecté(s)</span></div>';
     if(ver==='AUCUN')return '<div class="euc709-prof">'+libelle+' : <span class="euc709-warn">aucun professeur affecté</span></div>';
     return '<div class="euc709-prof">'+libelle+' : <span class="euc709-warn">⚠ plusieurs professeurs — </span>'+noms.map(function(p){return h(p||'non affecté')+' ('+c[p]+')'}).join(', ')+'</div>';
   }

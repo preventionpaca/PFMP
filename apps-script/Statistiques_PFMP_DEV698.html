@@ -258,9 +258,10 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
   /* DEV716 : dates officielles de la période de l'élève (à défaut, celles de sa convention). */
   function pDeb(x){return x.debutOfficiel||x.debut||''}
   function pFin(x){return x.finOfficiel||x.fin||''}
-  function profsTxt(c){const k=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b,'fr')});return k.length===1?(k[0]||'Non affecté'):k.map(function(p){return(p||'Non affecté')+' ('+c[p]+')'}).join('\n')}
+  function profsTxt(c){const k=Object.keys(c).sort(function(a,b){return(!a)-(!b)||c[b]-c[a]||a.localeCompare(b,'fr')});return k.length===1?(k[0]||'Non affecté'):k.map(function(p){return(p||'Non affecté')+' ('+c[p]+')'}).join('\n')}
   function aVerifier(g){if(g.l.length<2){return[!Object.keys(g.pt)[0]?'Téléphone non affecté':'',!Object.keys(g.pv)[0]?'Visite non affectée':''].filter(Boolean).join('\n')}
-    const v=function(c,lib){const k=Object.keys(c);return k.length>1?lib+' : plusieurs professeurs':!k[0]?lib+' : non affecté':''};return[v(g.pt,'Téléphone'),v(g.pv,'Visite')].filter(Boolean).join('\n')}
+    /* Plusieurs professeurs différents (un élève sans professeur n'en est pas un) ; élèves sans professeur, nommés. */
+    const v=function(t,lib,sansLib){const profs=new Set(),sans=[];g.l.forEach(function(x){const p=String(x[t]||'').trim();if(p)profs.add(p);else sans.push(x.eleve+' ('+x.classe+')')});return[profs.size>1?lib+' : plusieurs professeurs':'',sans.length?sansLib+' : '+sans.join(', '):'']};return v('pt','Téléphone','Téléphone non affecté').concat(v('pv','Visite','Visite non affectée')).filter(Boolean).join('\n')}
   function ensembleLignes(gs){return gs.map(function(g){return[g.e.nom,g.e.commune||'',g.debut?jj(g.debut)+' → '+jj(g.fin):(g.periodes.join(', ')||'Dates non renseignées'),g.l.length,g.l.map(function(x){return x.eleve+' ('+x.classe+')'}).join('\n'),profsTxt(g.pt),profsTxt(g.pv),aVerifier(g)]})}
   const ENTETES_ENSEMBLE=['Entreprise','Commune','Dates','Élèves','Noms des élèves (classe)','Suivi téléphonique','Professeur visiteur','À vérifier'];
   function rendre(){

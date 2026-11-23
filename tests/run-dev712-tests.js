@@ -30,7 +30,7 @@ test('regroupement : même entreprise et même code postal ; élèves sans conve
   assert.equal(g.length, 2);
   const az = g.find(x => /azur/i.test(x.entreprise)), ch = g.find(x => /ch/i.test(x.entreprise));
   assert.deepEqual(az.eleves, ['DUPONT Jean', 'MARTIN Paul']); assert.deepEqual(az.aVerifier, []);
-  assert.deepEqual(ch.eleves, ['BEN Ali', 'ZOE Eva']); assert.deepEqual(ch.aVerifier, ['Téléphone : plusieurs professeurs', 'Visite : plusieurs professeurs']);
+  assert.deepEqual(ch.eleves, ['BEN Ali', 'ZOE Eva']); assert.deepEqual(ch.aVerifier, ['Téléphone non affecté : ZOE Eva', 'Visite : plusieurs professeurs'], 'un élève sans professeur n’est pas un second professeur : il est nommé');
 });
 
 test('lieu du stage prioritaire sur l’adresse de l’entreprise', () => {
@@ -42,7 +42,7 @@ test('encadré : liste, professeurs, alerte ; message sans entreprise partagée 
   const k = ctx(F), html = k.b(C, P);
   assert.match(html, /Élèves en stage dans une même entreprise/);
   assert.match(html, /2 élèves :\nDUPONT Jean\nMARTIN Paul/);
-  assert.match(html, /✓ un seul professeur/); assert.match(html, /<td>Non affecté \(1\)\nMme Y \(1\)<\/td><td>M\. W \(1\)\nM\. X \(1\)<\/td>/);
+  assert.match(html, /✓ un seul professeur/); assert.match(html, /<td>Mme Y \(1\)\nNon affecté \(1\)<\/td><td>M\. W \(1\)\nM\. X \(1\)<\/td>/);
   assert.match(html, /1 à vérifier/);
   assert.match(k.b({ eleves: [[1, 'A']] }, { lignes: { 1: ['AVEC', 0, '', ''] } }), /Aucune entreprise n’accueille plusieurs élèves/);
   assert.equal(k.b(Object.assign({ ce: true }, C), P), '');

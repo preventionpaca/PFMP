@@ -50,6 +50,16 @@ test('lignes du tableau : élèves de la classe, autres classes, professeurs, à
   assert.equal(J(k.EUC_DEV714_ENTETES_).length, az.length);
 });
 
+test('à vérifier : un élève sans professeur n’est pas un second professeur ; les élèves à affecter sont nommés', () => {
+  const d = J(D); d.classes[0].periodes[0].lignes[1] = ligne('AVEC', 0, 'M. B', ''); d.classes[1].periodes[0].lignes[4] = ligne('AVEC', 1, '', 'M. V');
+  const az = J(k.EUC_DEV714_memeEntreprise_(d, 20, 501)).find(x => /azur/i.test(x.entreprise));
+  assert.deepEqual(az.aVerifier, ['Téléphone non affecté : ZOE Eva (TMVA1)', 'Visite non affectée : DUPONT Léo']);
+  assert.equal(J(k.EUC_DEV714_lignes_([az]))[0][3], 'M. B (1)\nNon affecté (1)');
+  d.classes[1].periodes[0].lignes[4] = ligne('AVEC', 1, 'M. C', 'M. V'); d.classes[0].periodes[0].lignes[1] = ligne('AVEC', 0, '', 'M. V');
+  d.classes[1].eleves.push([9, 'AAA Zoé']); d.classes[1].periodes[0].lignes[9] = ligne('AVEC', 1, 'M. B', 'M. V');
+  assert.deepEqual(J(k.EUC_DEV714_memeEntreprise_(d, 20, 501)).find(x => /azur/i.test(x.entreprise)).aVerifier, ['Téléphone : plusieurs professeurs', 'Téléphone non affecté : DUPONT Léo']);
+});
+
 test('PDF joint au courriel de dépôt (DEV663) : second tableau sous celui de la classe', () => {
   const d = J(k.EUC_DEV663_donnees_(D, 20, 501, 0, null, '23/11/2026 10:00'));
   assert.equal(d.memeEntreprise.length, 2); assert.equal(d.memeEntreprise[0].autres.length, 1);

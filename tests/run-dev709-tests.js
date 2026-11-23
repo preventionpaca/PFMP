@@ -50,6 +50,12 @@ test('signale plusieurs professeurs ou aucun professeur affecté', () => {
   assert.equal(gs[0].visiteVerdict, 'PLUSIEURS'); assert.equal(gs[0].telephoneVerdict, 'AUCUN');
 });
 
+test('un seul professeur et un élève sans professeur : PARTIEL, pas « plusieurs professeurs »', () => {
+  const { k } = page([]);
+  const gs = k.window.EUC_DEV709_groupes([L('A', 'CH Cannes', '06400', 'M. X', ''), L('B', 'CH Cannes', '06400', '', '')]);
+  assert.equal(gs[0].visiteVerdict, 'PARTIEL'); assert.equal(gs[0].telephoneVerdict, 'AUCUN');
+});
+
 test('encadré sous le tableau : liste et alerte ; message si aucune entreprise partagée ; masqué sans élève', () => {
   let p = page([L('DUPONT', 'Garage Azur', '06300', 'M. X', 'Mme Y'), L('MARTIN', 'Garage Azur', '06300', 'Mme W', 'Mme Y')]);
   const h = p.box().innerHTML;

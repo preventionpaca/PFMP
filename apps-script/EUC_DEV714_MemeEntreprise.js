@@ -45,8 +45,13 @@ function EUC_DEV714_memeEntreprise_(D, classeId, periodeId) {
     });
   });
   var compte = function(l, champ) { var o = {}; l.forEach(function(x) { o[x[champ]] = (o[x[champ]] || 0) + 1; }); return o; };
-  var etat = function(o, lib) { var k = Object.keys(o); return k.length > 1 ? lib + ' : plusieurs professeurs' : !k[0] ? lib + ' : non affecté' : ''; };
   var tri = function(a, b) { return a.classe.localeCompare(b.classe, 'fr', { numeric: true }) || a.nom.localeCompare(b.nom, 'fr'); };
+  /* À vérifier : plusieurs professeurs différents (un élève sans professeur n'en est pas un) ; élèves sans professeur, nommés. */
+  var etat = function(l, champ, lib, sansLib) {
+    var profs = {}, sans = [];
+    l.slice().sort(tri).forEach(function(x) { if (x[champ]) profs[x[champ]] = true; else sans.push(x.nom + (x.classe !== t(c.nom) ? ' (' + x.classe + ')' : '')); });
+    return (Object.keys(profs).length > 1 ? [lib + ' : plusieurs professeurs'] : []).concat(sans.length ? [sansLib + ' : ' + sans.join(', ')] : []);
+  };
   return ordre.map(function(k) { return groupes[k]; }).filter(function(g) { return g.eleves.length + g.autres.length > 1; }).map(function(g) {
     var tous = g.eleves.concat(g.autres), tel = compte(tous, 'tel'), visite = compte(tous, 'visite');
     var autresClasses = []; g.autres.forEach(function(x) { if (autresClasses.indexOf(x.classe) < 0) autresClasses.push(x.classe); });
@@ -54,13 +59,13 @@ function EUC_DEV714_memeEntreprise_(D, classeId, periodeId) {
       eleves: g.eleves.slice().sort(tri).map(function(x) { return x.nom; }),
       autres: g.autres.slice().sort(tri).map(function(x) { return { nom: x.nom, classe: x.classe }; }),
       autresClasses: autresClasses.sort(function(a, b) { return a.localeCompare(b, 'fr', { numeric: true }); }),
-      tel: tel, visite: visite, aVerifier: [etat(tel, 'Téléphone'), etat(visite, 'Visite')].filter(Boolean) };
+      tel: tel, visite: visite, aVerifier: etat(tous, 'tel', 'Téléphone', 'Téléphone non affecté').concat(etat(tous, 'visite', 'Visite', 'Visite non affectée')) };
   }).sort(function(a, b) { return (b.eleves.length + b.autres.length) - (a.eleves.length + a.autres.length) || a.entreprise.localeCompare(b.entreprise, 'fr'); });
 }
 
-/* Texte des professeurs affectés (calcul pur) : « Nom » s'il est seul, sinon « Nom (n) » par ligne ; « Non affecté » pour un vide. */
+/* Texte des professeurs affectés (calcul pur) : « Nom » s'il est seul, sinon « Nom (n) » par ligne ; « Non affecté » pour un vide, en dernier. */
 function EUC_DEV714_profsTexte_(o) {
-  var k = Object.keys(o || {}).sort(function(a, b) { return o[b] - o[a] || a.localeCompare(b, 'fr'); });
+  var k = Object.keys(o || {}).sort(function(a, b) { return (!a) - (!b) || o[b] - o[a] || a.localeCompare(b, 'fr'); });
   return k.length === 1 ? (k[0] || 'Non affecté') : k.map(function(x) { return (x || 'Non affecté') + ' (' + o[x] + ')'; }).join('\n');
 }
 /* Lignes du tableau (PDF et courriel) : Entreprise | Élèves de la classe | Autres classes | Téléphone | Visite | À vérifier. */

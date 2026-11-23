@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 23 novembre 2026 — DEV721 : « À vérifier » des élèves dans une même entreprise
+
+- Défaut corrigé : un élève sans professeur affecté comptait comme un second professeur, d'où « plusieurs professeurs » alors qu'un seul professeur était affecté (ex. 1CAR).
+- Désormais : « Téléphone : plusieurs professeurs » seulement s'il y a au moins deux professeurs différents ; les élèves sans professeur sont nommés (« Téléphone non affecté : NOM Prénom (classe si autre classe) », « Visite non affectée : … »). « Non affecté (n) » passe en dernier dans les colonnes des professeurs.
+- Même calcul partout : suivi d'une classe (`EUC_DEV714_MemeEntreprise.js`), son export PDF, PDF joint au courriel des professeurs (DEV720) et au courriel de dépôt (DEV663) ; statistiques « élèves accueillis ensemble » (`Statistiques_PFMP_DEV698.html`) ; ancien encadré V156 (verdict `PARTIEL`).
+- Tests : dev714, dev712, dev709 (cas un professeur + un élève sans professeur, plusieurs professeurs + élève sans professeur).
+
 ## Mise à jour du 23 novembre 2026 — DEV720 : envoi du tableau de suivi aux professeurs, en pièce jointe PDF
 
 - Constat : le courriel « Envoyer le tableau aux professeurs » (professeur principal, DEV678) et l'envoi de l'administration (DEV578 / V157) recopiaient dans le corps du courriel un tableau calculé par l'ancien moteur `EUC_SUIVI_CLASSE_detailV162` : dépôts en ligne ignorés (entreprises vides), « Convention enregistrée » pour des élèves sans convention et pour les apprentis. L'export PDF de la page utilise la vue `EUC_SUIVI2_vueEnseignants_` (données justes).
