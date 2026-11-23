@@ -11,7 +11,8 @@ input.verrou717{background:#eef3f1!important;color:#16302a}
 button.modifier717{margin:4px 0 0;padding:3px 10px;font-size:13px;border:1px solid #0b6b4f;border-radius:7px;background:#fff;color:#0b6b4f;cursor:pointer;width:auto}
 </style>
 <script id="EUC_DEV717_SCRIPT">
-/* DEV717 : responsables et tuteurs déjà connus pour le SIRET vérifié (formulaire du QR code et « Déclarer mon entreprise »).
+/* DEV719 : les cases à cocher n'appartiennent à aucun formulaire (attribut form) : jamais envoyées avec la convention.
+ * DEV717 : responsables et tuteurs déjà connus pour le SIRET vérifié (formulaire du QR code et « Déclarer mon entreprise »).
  * L'élève coche la personne : prénom, nom, fonction, téléphone et courriel sont pré-remplis. Le nom est verrouillé ; le
  * téléphone et le courriel restent en lecture seule jusqu'au clic sur « Modifier » (ils peuvent avoir changé).
  * « Autre personne » : saisie complète. Sans réponse du serveur, le formulaire reste utilisable comme avant. */
@@ -45,8 +46,8 @@ button.modifier717{margin:4px 0 0;padding:3px 10px;font-size:13px;border:1px sol
   function afficher(el,bloc,personnes){var role=bloc.role,nom=role==='TUTEUR'?'tuteur':'responsable',l=trier(personnes,role),grp='euc717_'+role+'_'+Date.now();
     el.innerHTML='<b class="titre">'+(role==='TUTEUR'?'Ton tuteur est-il déjà connu du lycée ?':'Le responsable est-il déjà connu du lycée ?')+'</b>'+
       '<p class="aide717">Coche son nom s’il apparaît dans la liste : ses informations sont remplies pour toi. Si son téléphone ou son courriel a changé, clique sur « Modifier ». Sinon, choisis « Autre personne » et saisis toutes ses informations.</p>'+
-      l.map(function(p,i){return '<label class="choix717"><input type="radio" name="'+grp+'" value="'+i+'"><span>'+libelle(p)+'</span></label>';}).join('')+
-      '<label class="choix717"><input type="radio" name="'+grp+'" value="autre"><span><b>Autre personne</b> — le '+nom+' n’est pas dans la liste : saisie complète (prénom, nom, fonction, téléphone, courriel)</span></label>';
+      l.map(function(p,i){return '<label class="choix717"><input type="radio" form="euc717-hors-formulaire" name="'+grp+'" value="'+i+'"><span>'+libelle(p)+'</span></label>';}).join('')+
+      '<label class="choix717"><input type="radio" form="euc717-hors-formulaire" name="'+grp+'" value="autre"><span><b>Autre personne</b> — le '+nom+' n’est pas dans la liste : saisie complète (prénom, nom, fonction, téléphone, courriel)</span></label>';
     el.querySelectorAll('input[type=radio]').forEach(function(r){r.onchange=function(){appliquer(bloc,r.value==='autre'?null:l[Number(r.value)]);};});}
   function proposer(o){
     o=o||{};var siret=String(o.siret||'').replace(/\D/g,''),blocs=(o.blocs||[]).filter(function(b){return b&&b.champs&&b.champs.prenom;});

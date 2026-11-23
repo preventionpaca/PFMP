@@ -7,6 +7,7 @@
 - Double sécurité : les jetons simulés (`SIMULATION-DEV719`) ne sont pas signés, le serveur les refuserait.
 - `EUC_DEV717_calculer_(siret, donnees)` : calcul des personnes connues, sans contrôle d'accès, partagé par DEV717 et DEV719.
 - Défauts DEV717 révélés par la simulation et corrigés : (1) dans le formulaire du QR code, la recherche SIRET passe par le contrôleur `EUC_QR_CONTROLLER_FIX9`, qui n'appelait jamais la proposition des personnes connues (`window.EUC_QR_proposerContacts717`, appelé après les deux réponses positives ; civilité ajoutée) ; (2) identités mal saisies remises en ordre (`EUC_DEV717_identite_`) : nom complet dans « nom » avec prénom vide, prénom et nom inversés quand le courriel l'indique.
+- Le choix de la personne (cases à cocher DEV717) n'appartient à aucun formulaire (`form="euc717-hors-formulaire"`) : il n'est plus envoyé avec la convention.
 - Tests : `tests/run-dev719-tests.js` (7).
 
 ## Mise à jour du 23 novembre 2026 — DEV718 : statistiques par public (filles, pensionnaires…)

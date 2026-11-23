@@ -118,6 +118,9 @@ test('formulaire du QR code : la recherche SIRET du contrôleur FIX9 propose aus
   assert.ok(h.includes('window.EUC_QR_proposerContacts717=proposerContactsConnus717;'));
   assert.equal((fix9.match(/window\.EUC_QR_proposerContacts717\(\)/g) || []).length, 2, 'les deux réponses positives (fiche connue et annuaire officiel)');
   assert.ok(h.includes("champs:{civ:field(pre+'Civilite'),prenom:field(pre+'Prenom')"));
+  const c717 = read('apps-script/Contacts_Connus_DEV717.html');
+  assert.equal((c717.match(/<input type="radio" form="euc717-hors-formulaire" name="/g) || []).length, 2, 'choix de la personne jamais envoyé avec le formulaire');
+  assert.ok(!/<input type="radio" name=/.test(c717));
 });
 
 test('identité remise en ordre : nom complet saisi dans « nom », prénom et nom inversés d’après le courriel (données fictives)', () => {
