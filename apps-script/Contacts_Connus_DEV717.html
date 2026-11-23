@@ -49,19 +49,31 @@ button.modifier717{margin:4px 0 0;padding:3px 10px;font-size:13px;border:1px sol
       l.map(function(p,i){return '<label class="choix717"><input type="radio" form="euc717-hors-formulaire" name="'+grp+'" value="'+i+'"><span>'+libelle(p)+'</span></label>';}).join('')+
       '<label class="choix717"><input type="radio" form="euc717-hors-formulaire" name="'+grp+'" value="autre"><span><b>Autre personne</b> — le '+nom+' n’est pas dans la liste : saisie complète (prénom, nom, fonction, téléphone, courriel)</span></label>';
     el.querySelectorAll('input[type=radio]').forEach(function(r){r.onchange=function(){appliquer(bloc,r.value==='autre'?null:l[Number(r.value)]);};});}
+  /* DEV719 : une seule demande par SIRET dans la page, lancée dès le clic sur « Rechercher » (en même temps que la
+   * vérification du SIRET) ; le panneau reprend la réponse déjà reçue ou attend celle en cours. */
+  var memo={},chaud=false;
+  function serveurPret(){return !!(window.google&&google.script&&google.script.run);}
+  function demander(siret,auth){var m=memo[siret];if(m&&m.etat!=='ko')return m;
+    m=memo[siret]={etat:'attente',res:null,rappels:[]};
+    var fin=function(etat,res){m.etat=etat;m.res=res;var l=m.rappels;m.rappels=[];l.forEach(function(f){try{f(etat,res);}catch(e){}});};
+    google.script.run.withSuccessHandler(function(r){fin('ok',r);}).withFailureHandler(function(e){fin('ko',e);}).EUC_DEV717_contactsConnus(Object.assign({siret:siret},auth||{}));
+    return m;}
+  function precharger(siret,auth){siret=String(siret||'').replace(/\D/g,'');if(siret.length!==14||!serveurPret())return;demander(siret,auth);}
+  /* Préchauffage de l'index des personnes connues dès que l'élève est identifié. */
+  function prechauffer(auth){if(chaud||!serveurPret()||!auth)return;chaud=true;try{google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){chaud=false;}).EUC_DEV717_prechauffer(auth);}catch(e){chaud=false;}}
   function proposer(o){
     o=o||{};var siret=String(o.siret||'').replace(/\D/g,''),blocs=(o.blocs||[]).filter(function(b){return b&&b.champs&&b.champs.prenom;});
     document.querySelectorAll('[data-euc717]').forEach(function(x){x.remove();});
     blocs.forEach(function(b){['prenom','nom','fonction','tel','mail'].forEach(function(k){liberer(b.champs[k]);});});
-    if(siret.length!==14||!blocs.length||!window.google||!google.script||!google.script.run)return;
+    if(siret.length!==14||!blocs.length||!serveurPret())return;
     var num=++appelEnCours,panneaux=blocs.map(function(b){var p=panneau(b,b.role);if(p)p.innerHTML='<span class="spin717" aria-hidden="true"></span>Recherche des personnes déjà connues pour cette entreprise…';return p;});
     var fini=false,minuteur=setTimeout(function(){if(fini)return;fini=true;panneaux.forEach(function(p){if(p)p.remove();});},DELAI);
-    var arg=Object.assign({siret:siret},o.auth||{});
-    google.script.run.withSuccessHandler(function(r){if(fini||num!==appelEnCours)return;fini=true;clearTimeout(minuteur);var l=(r&&r.personnes)||[];
-        blocs.forEach(function(b,i){var p=panneaux[i];if(!p)return;if(!l.length){p.remove();return;}afficher(p,b,l);});})
-      .withFailureHandler(function(){if(fini||num!==appelEnCours)return;fini=true;clearTimeout(minuteur);panneaux.forEach(function(p){if(p)p.remove();});})
-      .EUC_DEV717_contactsConnus(arg);
+    var traiter=function(etat,r){if(fini||num!==appelEnCours)return;fini=true;clearTimeout(minuteur);
+      if(etat!=='ok'){panneaux.forEach(function(p){if(p)p.remove();});return;}
+      var l=(r&&r.personnes)||[];blocs.forEach(function(b,i){var p=panneaux[i];if(!p)return;if(!l.length){p.remove();return;}afficher(p,b,l);});};
+    var m=demander(siret,o.auth);
+    if(m.etat==='attente')m.rappels.push(traiter);else traiter(m.etat,m.res);
   }
-  window.EUC717={proposer:proposer,_appliquer:appliquer,_trier:trier};
+  window.EUC717={proposer:proposer,precharger:precharger,prechauffer:prechauffer,_appliquer:appliquer,_trier:trier,_memo:memo};
 })();
 </script>

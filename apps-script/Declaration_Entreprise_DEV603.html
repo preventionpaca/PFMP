@@ -199,7 +199,7 @@ $('bCode').onclick=function(){var b=this;$('mCode').textContent='';if(!$('captch
     function(e){libre(b);erreur('mCode',e);nouveauCode();});};
 $('b1').onclick=function(){var b=this;$('m1').textContent='';occupe(b,'Vérification…');
   appel('EUC_DEV603_identifier',{classeId:Number($('classe').value),nom:$('nomEleve').value,prenom:$('prenomEleve').value,naissance:$('naissance').value,captcha:$('captcha').value,captchaJeton:CAPTCHA,site:$('site').value},
-    function(r){libre(b);JETON=r.jeton;PERIODES=r.periodes;$('bonjour').textContent='Bonjour '+r.eleve+' ('+r.classe+').';
+    function(r){libre(b);JETON=r.jeton;PERIODES=r.periodes;/* DEV719 : index des personnes connues préparé à l'avance. */if(window.EUC717)EUC717.prechauffer({jeton:JETON});$('bonjour').textContent='Bonjour '+r.eleve+' ('+r.classe+').';
       $('periode').innerHTML=r.periodes.length?r.periodes.map(function(p){return '<option value="'+p.id+'">'+esc(p.libelle)+' — du '+dfr(p.debut)+' au '+dfr(p.fin)+'</option>';}).join(''):'<option value="">Aucune période définie pour ta classe</option>';etape(2);},
     function(e){libre(b);erreur('m1',e);nouveauCode();});};
 /* Étape 2 */
@@ -223,7 +223,7 @@ function EUC_DEV650_lienInpi(n){n=String(n||'').replace(/\D/g,'');if(n.length!==
   return 'https://data.inpi.fr/recherche_avancee/entreprises?advancedSearch='+encodeURIComponent(JSON.stringify({checkboxes:{status:{order:0,searchField:['is_rad'],values:[{value:'false',checked:true},{value:'true',checked:true}]}},texts:{siret:{order:3,searchField:c,checkedSearchField:[],value:n}},multipleSelects:{},dates:{}}));}
 function lireLieu(pre){return {lieuStageAdresse:$(pre+'LieuAdr').value.trim(),lieuStageCodePostal:$(pre+'LieuCp').value.trim(),lieuStageCommune:$(pre+'LieuVille').value.trim()};}
 function lieuIncomplet(pre){var l=lireLieu(pre);return (l.lieuStageAdresse||l.lieuStageCodePostal||l.lieuStageCommune)&&!(l.lieuStageAdresse&&l.lieuStageCommune);}
-$('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');
+$('verifier').onclick=function(){var b=this,s=$('siret').value.replace(/\D/g,'');$('m3').textContent='';$('officiel').innerHTML='';occupe(b,'Vérification…');/* DEV719 */if(window.EUC717)EUC717.precharger(s,{jeton:JETON});
   appel('EUC_ENT_rechercherSiret',s,function(r){
     function montrer(e){libre(b);if(!e){erreur('m3','Aucune entreprise trouvée pour ce SIRET : vérifie les 14 chiffres.');return;}SIRET=s;
       /* DEV717 : responsables et tuteurs déjà connus pour ce SIRET (à cocher à l'étape 4). */

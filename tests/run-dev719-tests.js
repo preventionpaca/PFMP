@@ -137,4 +137,33 @@ test('identité remise en ordre : nom complet saisi dans « nom », prénom et n
   assert.ok(r.personnes.some(p => p.prenom === 'Hugo' && /^durand$/i.test(p.nom)));
 });
 
+test('accélération : index de toutes les entreprises calculé une fois, gardé 20 min en cache ; une demande ne relit plus Grist', () => {
+  const k = serveur(true);
+  const idx = J(k.EUC_DEV717_index_(CONVS, [], []));
+  assert.deepEqual(Object.keys(idx).sort(), [S1, S2], 'convention annulée (S3) absente de l’index');
+  assert.deepEqual(idx[S2], J(k.EUC_DEV717_calculer_(S2, { conventions: CONVS, depots: [], references: [] })).personnes, 'même résultat que le calcul SIRET par SIRET');
+  let lectures = 0; const cache = {};
+  k.EUC_CONVENTION_lireAccesFraisV108_ = () => { lectures++; return CONVS; };
+  k.CacheService = { getScriptCache: () => ({ get: c => cache[c] || null, getAll: l => { const o = {}; l.forEach(c => { if (c in cache) o[c] = cache[c]; }); return o; }, putAll: (o, ttl) => { assert.equal(ttl, 1200); Object.assign(cache, o); } }) };
+  const r1 = J(k.EUC_DEV717_calculer_(S2)), r2 = J(k.EUC_DEV717_calculer_(S1));
+  assert.equal(lectures, 1, 'une seule lecture des conventions pour deux SIRET');
+  assert.equal(r1.personnes.length, 2); assert.equal(r2.personnes.length, 1);
+  assert.equal(J(k.EUC_DEV717_calculer_('99999999999999')).personnes.length, 0);
+  assert.throws(() => k.EUC_DEV717_prechauffer({}), /Accès refusé/);
+  assert.equal(J(k.EUC_DEV719_prechauffer()).ok, true); assert.throws(() => serveur(false).EUC_DEV719_prechauffer(), /administration/);
+});
+
+test('accélération : préchauffage dès l’identification et demande lancée au clic « Rechercher », dans les trois formulaires', () => {
+  const qr = read('apps-script/PFMP_Acces_QR_V116.html'), v117 = read('apps-script/PFMP_Continuation_QR_V117.html'), dec = read('apps-script/Declaration_Entreprise_DEV603.html');
+  assert.ok(qr.includes('if(window.EUC717)EUC717.prechauffer({reprise:RESUME});'));
+  assert.ok(qr.includes("window.EUC_QR_prechargerContacts717=function(siret){if(window.EUC717)EUC717.precharger(siret,{reprise:RESUME});};"));
+  assert.ok(/ident\.value=siret;\n[^\n]*window\.EUC_QR_prechargerContacts717\(siret\)/.test(qr), 'contrôleur FIX9 : demande au clic');
+  assert.ok(v117.includes('initData(r);\n          /* DEV719 : index des personnes connues préparé à l\'avance. */if(window.EUC717)EUC717.prechauffer({reprise:RESUME});'));
+  assert.ok(v117.includes("if(window.EUC717)EUC717.precharger(field('entrepriseSiret').value,{reprise:RESUME});"));
+  assert.ok(dec.includes('JETON=r.jeton;PERIODES=r.periodes;/* DEV719 : index des personnes connues préparé à l\'avance. */if(window.EUC717)EUC717.prechauffer({jeton:JETON});'));
+  assert.ok(dec.includes("occupe(b,'Vérification…');/* DEV719 */if(window.EUC717)EUC717.precharger(s,{jeton:JETON});"));
+  const sim = read('apps-script/Simulation_Formulaires_DEV719.html');
+  assert.ok(sim.includes("if(nom==='EUC_DEV717_prechauffer'){nom='EUC_DEV719_prechauffer';args=[];}"));
+});
+
 console.log(n + ' tests DEV719 réussis.');

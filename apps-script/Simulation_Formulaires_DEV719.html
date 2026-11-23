@@ -43,7 +43,8 @@ body{padding-top:96px!important}
   if(!vrai){bloquer();return;}
   function appeler(nom,args,ok,ko,uo){
     if(nom==='EUC_DEV717_contactsConnus'){nom='EUC_DEV719_contactsConnus';args=[{siret:(args[0]||{}).siret}];}
-    if(nom==='EUC_DEV719_contactsConnus'||LECTURE.indexOf(nom)>=0){var r=vrai;if(ok)r=r.withSuccessHandler(ok);if(ko)r=r.withFailureHandler(ko);if(uo!==undefined)r=r.withUserObject(uo);r[nom].apply(r,args);return;}
+    if(nom==='EUC_DEV717_prechauffer'){nom='EUC_DEV719_prechauffer';args=[];}
+    if(nom==='EUC_DEV719_contactsConnus'||nom==='EUC_DEV719_prechauffer'||LECTURE.indexOf(nom)>=0){var r=vrai;if(ok)r=r.withSuccessHandler(ok);if(ko)r=r.withFailureHandler(ko);if(uo!==undefined)r=r.withUserObject(uo);r[nom].apply(r,args);return;}
     setTimeout(function(){var res;
       try{if(!SIMULE[nom])throw new Error('Simulation : l’appel « '+nom+' » est bloqué (rien n’est envoyé au serveur).');res=SIMULE[nom](args);}
       catch(e){if(ko)ko(e,uo);return;}

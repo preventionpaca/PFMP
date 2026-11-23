@@ -8,7 +8,12 @@
 - `EUC_DEV717_calculer_(siret, donnees)` : calcul des personnes connues, sans contrôle d'accès, partagé par DEV717 et DEV719.
 - Défauts DEV717 révélés par la simulation et corrigés : (1) dans le formulaire du QR code, la recherche SIRET passe par le contrôleur `EUC_QR_CONTROLLER_FIX9`, qui n'appelait jamais la proposition des personnes connues (`window.EUC_QR_proposerContacts717`, appelé après les deux réponses positives ; civilité ajoutée) ; (2) identités mal saisies remises en ordre (`EUC_DEV717_identite_`) : nom complet dans « nom » avec prénom vide, prénom et nom inversés quand le courriel l'indique.
 - Le choix de la personne (cases à cocher DEV717) n'appartient à aucun formulaire (`form="euc717-hors-formulaire"`) : il n'est plus envoyé avec la convention.
-- Tests : `tests/run-dev719-tests.js` (7).
+- Accélération de la proposition des personnes connues (environ 20 s mesurées dans le formulaire du QR code) :
+  - index SIRET → personnes de toutes les entreprises (`EUC_DEV717_index_`), calculé en une passe après lecture parallèle des conventions, des dépôts et des références (`EUC_DEV717_lireSources_`, `UrlFetchApp.fetchAll`), gardé 20 minutes dans le cache du script (`EUC_DEV717_indexCache_`, morceaux de 45 000 caractères) ; une demande ne relit plus Grist ;
+  - conséquence acceptée : une personne saisie ou validée par le bureau depuis moins de 20 minutes peut ne pas encore être proposée ;
+  - préchauffage dès l'identification de l'élève (`EUC_DEV717_prechauffer`, mêmes jetons que la demande) et demande lancée dès le clic sur « Rechercher » / « Vérifier le SIRET », en même temps que la vérification du SIRET (`EUC717.precharger`, une seule demande par SIRET dans la page) ; QR code, reprise QR et « Déclarer mon entreprise » ;
+  - la page de simulation met l'index en cache au passage.
+- Tests : `tests/run-dev719-tests.js` (9) ; test DEV717 de l'erreur serveur réécrit en test de comportement (panneau retiré), plus réutilisation de la réponse et préchauffage unique.
 
 ## Mise à jour du 23 novembre 2026 — DEV718 : statistiques par public (filles, pensionnaires…)
 

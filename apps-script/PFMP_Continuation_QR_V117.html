@@ -5,7 +5,7 @@
 function toggleTutor(){const same=field('tuteurEstResponsable').checked;$('#tuteur').hidden=same;field('tuteurNom').required=!same;}$('#same').onchange=toggleTutor;
 function applyCompany(r){if(r&&r.introuvable){msg('Aucune entreprise trouvée pour ce SIRET.',true);return}const d=r&&r.entreprise||{};fill({entrepriseSiret:d.siret||field('entrepriseSiret').value,entrepriseRaisonSociale:d.raisonSociale,entrepriseEnseigne:d.enseigne,entrepriseAdresse:d.numeroVoie,entrepriseComplement:d.complementAdresse,entrepriseCodePostal:d.codePostal,entrepriseCommune:d.commune,entreprisePays:d.pays||'France'});msg(r&&r.source==='grist'?'Entreprise existante chargée.':'Données publiques chargées.');/* DEV717 : responsables et tuteurs déjà connus pour ce SIRET. */if(window.EUC717){const b717=function(role,pre){return{role:role,champs:{prenom:field(pre+'Prenom'),nom:field(pre+'Nom'),fonction:field(pre+'Fonction'),tel:field(pre+'Telephone'),mail:field(pre+'Courriel')}};};EUC717.proposer({siret:d.siret||field('entrepriseSiret').value,auth:{reprise:RESUME},blocs:[b717('RESPONSABLE','responsable'),b717('TUTEUR','tuteur')]});}/* DEV707 */if(window.EUC707)EUC707.proposer({siret:d.siret||field('entrepriseSiret').value,nom:d.raisonSociale,cp:d.codePostal,commune:d.commune,ancre:$('#search'),choisir:function(x){field('entrepriseSiret').value=x;$('#search').disabled=false;$('#search').click()}});}
 async function publicApi(r){const b=$('#search');try{msg('Recherche des données publiques de l’entreprise…',false,true);const rep=await fetch(r.url,{headers:{Accept:'application/json'}});if(!rep.ok)throw new Error('API entreprises indisponible ('+rep.status+').');google.script.run.withSuccessHandler(x=>{b.disabled=false;applyCompany(x)}).withFailureHandler(e=>{b.disabled=false;msg(e.message||String(e),true)}).EUC_ENT_traiterReponseApiNavigateur(await rep.json(),r.siret);}catch(e){b.disabled=false;msg(e.message||String(e),true)}}
-$('#search').onclick=()=>{const b=$('#search');b.disabled=true;msg('Recherche du SIRET en cours…',false,true);google.script.run.withSuccessHandler(r=>{if(r.source==='api_navigateur'){publicApi(r)}else{b.disabled=false;applyCompany(r)}}).withFailureHandler(e=>{b.disabled=false;msg(e.message||String(e),true)}).EUC_ENT_rechercherSiret(field('entrepriseSiret').value)};
+$('#search').onclick=()=>{const b=$('#search');b.disabled=true;/* DEV719 */if(window.EUC717)EUC717.precharger(field('entrepriseSiret').value,{reprise:RESUME});msg('Recherche du SIRET en cours…',false,true);google.script.run.withSuccessHandler(r=>{if(r.source==='api_navigateur'){publicApi(r)}else{b.disabled=false;applyCompany(r)}}).withFailureHandler(e=>{b.disabled=false;msg(e.message||String(e),true)}).EUC_ENT_rechercherSiret(field('entrepriseSiret').value)};
 function EUC_SAVE_retablirBouton_(){
   const b=$('#save');
   b.disabled=false;
@@ -116,6 +116,7 @@ function start(){
         try{
           msg('DEV.135 — Réponse serveur reçue, chargement du formulaire…',false,true);
           initData(r);
+          /* DEV719 : index des personnes connues préparé à l'avance. */if(window.EUC717)EUC717.prechauffer({reprise:RESUME});
         }catch(err){
           msg(
             'DEV.135 — Erreur Javascript après réponse serveur : '+

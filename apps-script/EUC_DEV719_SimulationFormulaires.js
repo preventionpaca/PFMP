@@ -44,6 +44,13 @@ function EUC_DEV719_contactsConnus(q) {
   return EUC_DEV717_calculer_((q || {}).siret);
 }
 
+/* Préchauffage de l'index pour la simulation : administration seulement. */
+function EUC_DEV719_prechauffer() {
+  EUC_SUIVI2_exigerAdmin_();
+  var t0 = Date.now(), idx = EUC_DEV717_indexCache_();
+  return { ok: true, siret: Object.keys(idx.s || {}).length, ms: Date.now() - t0 };
+}
+
 function EUC_DEV719_lienSimulation_(base, formulaire, siret) {
   return base + '?page=' + EUC_DEV719_ROUTE_ + '&formulaire=' + encodeURIComponent(formulaire) + (siret ? '&siret=' + encodeURIComponent(siret) : '');
 }
@@ -64,14 +71,13 @@ function EUC_DEV719_afficher(e) {
   EUC_SUIVI2_exigerAdmin_();
   var p = (e && e.parameter) || {}, formulaire = p.formulaire === 'declaration' ? 'declaration' : 'qr';
   var siret = EUC_DEV719_t_(p.siret).replace(/\D/g, ''), choix;
-  var convs = [], depots = [], refs = [];
-  try { convs = EUC_CONVENTION_lireAccesFraisV108_() || []; } catch (eC) { convs = []; }
-  try { depots = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eD) { depots = []; }
-  try { refs = typeof EUC_DEV706_references_ === 'function' ? EUC_DEV706_references_() : []; } catch (eR) { refs = []; }
+  var d = EUC_DEV717_lireSources_(), convs = d.conventions || [], depots = d.depots || [], refs = d.references || [];
   if (siret.length === 14) {
     var conv = convs.filter(function(a) { return EUC_DEV719_t_(a.Entreprise_siret).replace(/\D/g, '') === siret; })[0] || {};
     choix = { siret: siret, entreprise: EUC_DEV719_t_(conv.Entreprise_raison_sociale), personnes: EUC_DEV717_calculer_(siret, { conventions: convs, depots: depots, references: refs }).personnes.length };
   } else choix = EUC_DEV719_choisirSiret_(convs, depots, refs);
+  /* Sources déjà lues : l'index des personnes connues est mis en cache au passage (réponses immédiates ensuite). */
+  try { if (!EUC_DEV717_cacheLire_()) EUC_DEV717_cacheEcrire_({ le: new Date().toISOString(), s: EUC_DEV717_index_(convs, depots, refs) }); } catch (eI) {}
   var base = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   var t = HtmlService.createTemplateFromFile(formulaire === 'qr' ? 'PFMP_Acces_QR_V116' : 'Declaration_Entreprise_DEV603');
   t.simulation719 = EUC_DEV719_injection_(EUC_DEV719_config_(formulaire, choix, base));

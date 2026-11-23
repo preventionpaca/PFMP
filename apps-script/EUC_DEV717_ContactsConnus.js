@@ -91,23 +91,111 @@ function EUC_DEV717_personnes_(saisies, references) {
   });
 }
 
-/* Appel des formulaires élève : { siret, reprise } (QR code) ou { siret, jeton } (« Déclarer mon entreprise »). */
-function EUC_DEV717_contactsConnus(q) {
+/* Accès des formulaires élève : jeton de reprise du QR code ou jeton signé de « Déclarer mon entreprise ». */
+function EUC_DEV717_exigerAcces_(q) {
   q = q || {};
-  if (EUC_DEV717_t_(q.reprise)) { var a = EUC_CONVENTION_lireRepriseV117_(EUC_DEV717_t_(q.reprise)); EUC_CONVENTION_exigerQRValideV511_(a); }
-  else if (EUC_DEV717_t_(q.jeton)) EUC_DEV603_lireJeton_(EUC_DEV717_t_(q.jeton));
-  else throw new Error('Accès refusé : ouvre le formulaire depuis ton lien ou ton QR code.');
-  return EUC_DEV717_calculer_(q.siret);
+  if (EUC_DEV717_t_(q.reprise)) { var a = EUC_CONVENTION_lireRepriseV117_(EUC_DEV717_t_(q.reprise)); EUC_CONVENTION_exigerQRValideV511_(a); return true; }
+  if (EUC_DEV717_t_(q.jeton)) { EUC_DEV603_lireJeton_(EUC_DEV717_t_(q.jeton)); return true; }
+  throw new Error('Accès refusé : ouvre le formulaire depuis ton lien ou ton QR code.');
 }
 
-/* Lecture seule, sans contrôle d'accès : appelée seulement après le contrôle de l'appelant (élève ou simulation DEV719). */
+/* Appel des formulaires élève : { siret, reprise } (QR code) ou { siret, jeton } (« Déclarer mon entreprise »). */
+function EUC_DEV717_contactsConnus(q) {
+  EUC_DEV717_exigerAcces_(q);
+  return EUC_DEV717_calculer_((q || {}).siret);
+}
+
+/* DEV719 : préchauffage dès l'identification de l'élève (l'index est prêt quand il saisit son SIRET). */
+function EUC_DEV717_prechauffer(q) {
+  EUC_DEV717_exigerAcces_(q);
+  var t0 = Date.now(), idx = EUC_DEV717_indexCache_();
+  return { ok: true, siret: Object.keys(idx.s || {}).length, ms: Date.now() - t0 };
+}
+
+/* ---------- DEV719 : index de toutes les entreprises, calculé une fois et mis en cache ----------
+ * Avant : chaque SIRET relisait en entier, l'une après l'autre, la table des conventions, celle des dépôts en ligne et
+ * les références du bureau (jusqu'à 20 s). Désormais : lecture parallèle des trois tables, index SIRET → personnes
+ * calculé en une passe, gardé 20 minutes dans le cache du script ; une demande ne lit plus que le cache. */
+var EUC_DEV717_CLE_INDEX_ = 'EUC_DEV717_IDX_V1', EUC_DEV717_TTL_ = 1200;
+
+function EUC_DEV717_siretsTexte_(v) { return (EUC_DEV717_t_(v).replace(/[\s.]/g, '').match(/\d{14}/g) || []); }
+
+/* Index (calcul pur) : { siret: [personnes] } pour chaque SIRET ayant au moins une personne connue. */
+function EUC_DEV717_index_(conventions, depots, references) {
+  var T = EUC_DEV717_t_, conv = {}, dep = {}, refs = {};
+  var mettre = function(o, k, x) { if (k.length === 14) (o[k] = o[k] || []).push(x); };
+  (conventions || []).forEach(function(a) { if (a) mettre(conv, T(a.Entreprise_siret).replace(/\D/g, ''), a); });
+  (depots || []).forEach(function(j) { if (j) mettre(dep, T(j.SIRET_normalise || j.SIRET_brut).replace(/\D/g, ''), j); });
+  (references || []).forEach(function(r) { EUC_DEV717_siretsTexte_(r && r.k).forEach(function(k) { mettre(refs, k, r); }); });
+  var out = {};
+  Object.keys(conv).concat(Object.keys(dep)).forEach(function(siret) {
+    if (out[siret]) return;
+    var l = EUC_DEV717_personnes_(EUC_DEV717_saisies_(siret, conv[siret] || [], dep[siret] || []), refs[siret] || []);
+    if (l.length) out[siret] = l;
+  });
+  return out;
+}
+
+/* Lecture des trois sources en parallèle (repli : lectures successives). */
+function EUC_DEV717_lireSources_() {
+  var tables = [typeof EUC_CONVENTION_ACCES_TABLE_ === 'string' ? EUC_CONVENTION_ACCES_TABLE_ : 'EUC_ACCES_FORMULAIRES_PFMP', 'EUC_MIGRATION_JOTFORM_PFMP', typeof EUC_DEV706_TABLE_ === 'string' ? EUC_DEV706_TABLE_ : 'EUC_CONTACTS_REFERENCE'];
+  var lignes = null;
+  try {
+    var g = EUC_SUIVI2_grist_();
+    var reps = UrlFetchApp.fetchAll(tables.map(function(t) { return { url: g.base + '/tables/' + encodeURIComponent(t) + '/records', headers: g.entetes, muteHttpExceptions: true }; }));
+    lignes = reps.map(function(rep, i) {
+      if (rep.getResponseCode() === 404 && i === 2) return [];
+      if (rep.getResponseCode() !== 200) throw new Error('Grist ' + rep.getResponseCode());
+      return (JSON.parse(rep.getContentText()).records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields || {}); });
+    });
+  } catch (e) { lignes = null; }
+  if (!lignes) {
+    lignes = [[], [], []];
+    try { lignes[0] = EUC_CONVENTION_lireAccesFraisV108_() || []; } catch (eC) {}
+    try { lignes[1] = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eD) {}
+    try { lignes[2] = EUC_IMPORT_lireRecords_(EUC_DEV706_TABLE_) || []; } catch (eR) {}
+  }
+  var refs = []; try { refs = typeof EUC_DEV706_references_ === 'function' ? EUC_DEV706_references_(lignes[2]) : []; } catch (eF) { refs = []; }
+  return { conventions: lignes[0], depots: lignes[1], references: refs };
+}
+
+function EUC_DEV717_cacheLire_() {
+  try {
+    var c = CacheService.getScriptCache(), n = Number(c.get(EUC_DEV717_CLE_INDEX_ + '_N')) || 0; if (n < 1 || n > 100) return null;
+    var cles = []; for (var i = 0; i < n; i++) cles.push(EUC_DEV717_CLE_INDEX_ + '_' + i);
+    var tout = c.getAll(cles) || {}, parts = [];
+    for (var j = 0; j < n; j++) { if (tout[cles[j]] == null) return null; parts.push(tout[cles[j]]); }
+    return JSON.parse(parts.join(''));
+  } catch (e) { return null; }
+}
+function EUC_DEV717_cacheEcrire_(v) {
+  try {
+    var brut = JSON.stringify(v), t = 45000, n = Math.ceil(brut.length / t) || 1; if (n > 100) return false; /* 45 000 caractères : sous 100 Ko même accentués. */
+    var o = {}; for (var i = 0; i < n; i++) o[EUC_DEV717_CLE_INDEX_ + '_' + i] = brut.slice(i * t, (i + 1) * t);
+    o[EUC_DEV717_CLE_INDEX_ + '_N'] = String(n);
+    CacheService.getScriptCache().putAll(o, EUC_DEV717_TTL_); return true;
+  } catch (e) { return false; }
+}
+
+/* Index en cache (20 min) ; reconstruit si absent. */
+function EUC_DEV717_indexCache_() {
+  var idx = EUC_DEV717_cacheLire_();
+  if (idx && idx.s) return idx;
+  var d = EUC_DEV717_lireSources_();
+  idx = { le: new Date().toISOString(), s: EUC_DEV717_index_(d.conventions, d.depots, d.references) };
+  EUC_DEV717_cacheEcrire_(idx);
+  return idx;
+}
+
+/* Lecture seule, sans contrôle d'accès : appelée seulement après le contrôle de l'appelant (élève ou simulation DEV719).
+ * Avec des données fournies (tests, tirage de la simulation) : calcul direct ; sinon : index en cache. */
 function EUC_DEV717_calculer_(valeur, donnees) {
   var siret = EUC_DEV717_t_(valeur).replace(/\D/g, '');
   if (siret.length !== 14) return { siret: siret, personnes: [] };
-  var d = donnees || {};
-  var refs = []; try { refs = (d.references || (typeof EUC_DEV706_references_ === 'function' ? EUC_DEV706_references_() : [])).filter(function(r) { return r.k === 'S' + siret || EUC_DEV717_t_(r.k).indexOf(siret) >= 0; }); } catch (eR) { refs = []; }
-  var convs = d.conventions, depots = d.depots;
-  if (!convs) { try { convs = EUC_CONVENTION_lireAccesFraisV108_() || []; } catch (eC) { convs = []; } }
-  if (!depots) { try { depots = EUC_IMPORT_lireRecords_('EUC_MIGRATION_JOTFORM_PFMP') || []; } catch (eD) { depots = []; } }
-  return { siret: siret, personnes: EUC_DEV717_personnes_(EUC_DEV717_saisies_(siret, convs, depots), refs) };
+  if (donnees) {
+    var refs = (donnees.references || []).filter(function(r) { return EUC_DEV717_siretsTexte_(r && r.k).indexOf(siret) >= 0; });
+    return { siret: siret, personnes: EUC_DEV717_personnes_(EUC_DEV717_saisies_(siret, donnees.conventions || [], donnees.depots || []), refs) };
+  }
+  var idx = EUC_DEV717_indexCache_();
+  return { siret: siret, personnes: (idx.s && idx.s[siret]) || [], le: idx.le };
 }

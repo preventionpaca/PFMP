@@ -80,7 +80,27 @@ test('composant : choix d’une personne = champs remplis, nom verrouillé, tél
   ['prenom', 'nom', 'fonction', 'tel', 'mail'].forEach(k => { assert.equal(champs[k].readOnly, false, k); assert.equal(champs[k].value, '', k); });
   assert.match(h, /Autre personne<\/b> — le '\+nom\+' n’est pas dans la liste : saisie complète \(prénom, nom, fonction, téléphone, courriel\)/);
   assert.match(js, /Recherche des personnes déjà connues pour cette entreprise…/); assert.match(js, /var DELAI=30000/);
-  assert.match(js, /withFailureHandler\(function\(\)\{if\(fini\|\|num!==appelEnCours\)return;fini=true;clearTimeout\(minuteur\);panneaux\.forEach\(function\(p\)\{if\(p\)p\.remove\(\);\}\);\}\)/, 'erreur : le formulaire reste utilisable');
+  /* Erreur du serveur : panneau retiré, le formulaire reste utilisable (comportement vérifié, plus seulement la forme du code). */
+  const panneaux = [], appels = [];
+  const el2 = () => ({ attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, remove() { this.supprime = true; }, set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h; }, querySelectorAll: () => [] });
+  const run = (ok, ko) => new Proxy({}, { get: (t, k) => k === 'withSuccessHandler' ? h => run(h, ko) : k === 'withFailureHandler' ? h => run(ok, h) : (...a) => appels.push({ k, a, ok, ko }) });
+  const w2 = { google: { script: { run: run() } } };
+  const doc2 = { createElement: () => { const p = el2(); panneaux.push(p); return p; }, querySelectorAll: () => [] };
+  const c2 = vm.createContext({ window: w2, google: w2.google, document: doc2, Event: function() {}, setTimeout, clearTimeout, Object, String, Number, Date });
+  vm.runInContext(js, c2);
+  const ancre = { parentNode: { insertBefore() {} } }, bloc = () => ({ role: 'RESPONSABLE', ancre, champs: { prenom: champ(), nom: champ(), fonction: champ(), tel: champ(), mail: champ() } });
+  w2.EUC717.proposer({ siret: '12345678200010', auth: { jeton: 'J' }, blocs: [bloc()] });
+  assert.equal(appels.length, 1); assert.equal(appels[0].k, 'EUC_DEV717_contactsConnus');
+  appels[0].ko(new Error('panne'));
+  assert.ok(panneaux[0].supprime, 'erreur : panneau retiré, le formulaire reste utilisable');
+  /* Après une erreur, une nouvelle demande repart ; une demande réussie est partagée par la page (préchargement puis panneau). */
+  w2.EUC717.precharger('12345678200010', { jeton: 'J' }); assert.equal(appels.length, 2, 'nouvel essai après une erreur');
+  appels[1].ok({ personnes: [{ prenom: 'Paul', nom: 'MARTIN', roles: ['RESPONSABLE'] }] });
+  w2.EUC717.proposer({ siret: '12345678200010', auth: { jeton: 'J' }, blocs: [bloc()] });
+  assert.equal(appels.length, 2, 'réponse déjà reçue réutilisée, aucun nouvel appel');
+  assert.match(panneaux[panneaux.length - 1].innerHTML, /Paul<\/b>|MARTIN/, 'liste affichée immédiatement');
+  w2.EUC717.prechauffer({ jeton: 'J' }); w2.EUC717.prechauffer({ jeton: 'J' });
+  assert.deepEqual(appels.slice(2).map(x => x.k), ['EUC_DEV717_prechauffer'], 'préchauffage une seule fois');
 });
 
 test('formulaires : composant inclus et appelé après le SIRET vérifié (QR code, reprise QR, « Déclarer mon entreprise »)', () => {

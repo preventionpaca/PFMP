@@ -814,6 +814,8 @@ function afficherEntreprise(r){
 
     return;
   }
+  /* DEV719 : index des personnes connues préparé pendant que l'élève saisit son SIRET. */
+  if(window.EUC717)EUC717.prechauffer({reprise:RESUME});
 
   fill({
 
@@ -1265,6 +1267,7 @@ function proposerContactsConnus717(){
 }
 /* DEV719 : la recherche SIRET passe par le contrôleur EUC_QR_CONTROLLER_FIX9 (appliquerEntreprise n'y est pas appelé). */
 window.EUC_QR_proposerContacts717=proposerContactsConnus717;
+window.EUC_QR_prechargerContacts717=function(siret){if(window.EUC717)EUC717.precharger(siret,{reprise:RESUME});};
 
 
 $('#save').onclick =
@@ -1600,6 +1603,7 @@ init();
       if(country.value==='France'){
         var siret=siretNorm(ident.value);
         ident.value=siret;
+        /* DEV719 : personnes connues demandées en même temps que la vérification du SIRET. */if(typeof window.EUC_QR_prechargerContacts717==='function')window.EUC_QR_prechargerContacts717(siret);
         if(siret.length!==14){
           status('Le SIRET est obligatoire et doit comporter 14 chiffres.',true);
           return;

@@ -147,9 +147,9 @@ function EUC_DEV706_personne_(k, g, l) {
 }
 
 /* ---------- Lectures ---------- */
-function EUC_DEV706_references_() {
-  var l = [];
-  try { l = EUC_IMPORT_lireRecords_(EUC_DEV706_TABLE_) || []; } catch (e) { l = []; }
+function EUC_DEV706_references_(lignes) {
+  var l = lignes || [];
+  if (!lignes) { try { l = EUC_IMPORT_lireRecords_(EUC_DEV706_TABLE_) || []; } catch (e) { l = []; } }
   var s = function(v) { return EUC_DEV706_t_(v).split('|').filter(Boolean); };
   return l.filter(function(r) { return r.Actif !== false; }).map(function(r) {
     return { id: Number(r.id), k: EUC_DEV706_t_(r.Cle_entreprise), nom: EUC_DEV706_t_(r.Nom_reference), telephone: EUC_DEV706_t_(r.Telephone_reference), courriel: EUC_DEV706_t_(r.Courriel_reference),
