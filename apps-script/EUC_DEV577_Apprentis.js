@@ -12,7 +12,7 @@
  *   commencé. Un apprenti n'est plus compté potentiel ni futur ; la date de
  *   distribution reste conservée dans sa fiche.
  */
-var EUC_DEV577_VERSION_ = '1.0.0-dev.702';
+var EUC_DEV577_VERSION_ = '1.0.0-dev.718'; /* DEV718 : identifiant d'élève sur chaque carte (cache renouvelé). */
 var EUC_DEV577_CATEGORIES_ = ['apprentis', 'futurs', 'potentiels', 'distribues', 'rapportes', 'transmisCfa', 'contratsValides', 'ruptures'];
 
 function EUC_DEV577_t_(v) { return String(v == null ? '' : v).trim(); }

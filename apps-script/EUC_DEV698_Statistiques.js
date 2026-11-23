@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.718';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.718b';
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -188,7 +188,9 @@ function EUC_DEV698_calcul_(annee) {
     var e = byEleve[id], x = cls.parId[Number(EUC_PFMP_ref_(e.Classe)) || 0];
     if (!x || essai(e, x.classe) || e.Actif === false || T(e.Statut_scolarite).toUpperCase() === 'SORTI') return;
     eleves.push({ e: Number(id), classe: EUC_DEV688_classe_(x.classe), famille: x.famille, diplome: x.diplome, niveau: '', sexe: EUC_DEV698_sexe_(e), regime: EUC_DEV698_regime_(e),
-      college: T(e.Dernier_etablissement), departement: EUC_DEV698_departement_(e), ville: T(e.Ville).toUpperCase() });
+      college: T(e.Dernier_etablissement), departement: EUC_DEV698_departement_(e), ville: T(e.Ville).toUpperCase(),
+      /* Première période de stage de la classe : un élève n'est « sans convention » qu'une fois une période commencée. */
+      debutPfmp: (x.periodes || []).map(function(p) { return p.debut; }).filter(Boolean).sort()[0] || '' });
   });
   return { version: EUC_DEV698_VERSION_, annee: annee, calculeLe: new Date().toISOString(), conventions: lignes.filter(pasEssai), apprentis: apprentis.filter(pasEssai), eleves: eleves.filter(pasEssai) };
 }

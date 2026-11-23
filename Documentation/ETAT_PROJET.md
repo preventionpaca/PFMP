@@ -15,6 +15,9 @@
   - Elles étaient absentes jusque-là : tant que l'import n'a pas été relancé avec ces colonnes, la page l'indique.
   - Le premier import qui les apporte comptera ces élèves comme modifiés.
 - Rappel DEV716 : les classes différentes ne sont comparées que si leurs périodes officielles se recouvrent (BTS MV et Premières MVA séparés, CAP et Terminales réunis s'ils se chevauchent).
+- Correctif (718b), après le parcours réel :
+  - les apprentis étaient à 0 car le modèle DEV577 était en cache : il passe en version `1.0.0-dev.718`, ce qui le renouvelle ;
+  - « Sans convention » ne compte plus que les stagiaires d'une classe dont une période a commencé (`debutPfmp`). Avant, toutes les Secondes étaient comptées, soit 416 élèves (59 %).
 - Tests : `tests/run-dev718-tests.js` (4).
 
 ## Mise à jour du 23 novembre 2026 — DEV717 : formulaires élève, responsables et tuteurs déjà connus pour le SIRET

@@ -349,8 +349,10 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const ids=new Set(el.map(function(x){return x.e})),app=new Set(E.app.filter(function(a){return a.e&&ids.has(a.e)}).map(function(a){return a.e}));
     const conv=E.conv.filter(function(x){return x.e&&ids.has(x.e)}),acc=conv.filter(function(x){return x.statut!=='ANNULEE'}),uniq=function(l){return new Set(l.map(function(x){return x.e})).size};
     const avec=uniq(acc.filter(function(x){return x.statut==='EN_COURS'||x.statut==='INTERROMPUE'})),stag=Math.max(0,ids.size-app.size);
+    /* Sans convention : stagiaires d'une classe dont une période a commencé, sans aucune convention. */
+    const auj=new Date().toISOString().slice(0,10),avecSet=new Set(acc.map(function(x){return x.e})),sans=el.filter(function(x){return x.debutPfmp&&x.debutPfmp<=auj&&!app.has(x.e)&&!avecSet.has(x.e)}).length;
     const d=[],pres={dom:0,nice:0,ail:0};acc.forEach(function(x){const v=dist&&dist.parConvention&&dist.parConvention[x.id];if(!Array.isArray(v))return;d.push(v);if(v[0]<=15)pres.dom++;else if(/^NICE\b/.test(String(x.commune||'').toUpperCase())||/^06[0-3]00$/.test(String(x.cp||'')))pres.nice++;else pres.ail++});
-    return{eleves:ids.size,apprentis:app.size,stagiaires:stag,sans:Math.max(0,stag-avec),retard:uniq(acc.filter(function(x){return x.decalage>0})),prolong:uniq(acc.filter(function(x){return x.prolongation>0})),
+    return{eleves:ids.size,apprentis:app.size,stagiaires:stag,sans:sans,concernes:el.filter(function(x){return x.debutPfmp&&x.debutPfmp<=auj&&!app.has(x.e)}).length,retard:uniq(acc.filter(function(x){return x.decalage>0})),prolong:uniq(acc.filter(function(x){return x.prolongation>0})),
       rattrapage:uniq(acc.filter(function(x){return x.sequence==='RATTRAPAGE'})),interrompu:uniq(conv.filter(function(x){return x.statut==='INTERROMPUE'})),avec:avec,
       kmMed:d.length?mediane(d.map(function(v){return v[0]})):null,plus30:d.filter(function(v){return v[1]>=30}).length,nDist:d.length,pres:pres};
   }
@@ -359,8 +361,8 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     const manque=(!avecSexe||!avecRegime)?'<p class="note" style="color:var(--alerte)"><b>'+(!avecSexe&&!avecRegime?'Sexe et régime':!avecSexe?'Sexe':'Régime')+' non renseignés pour ces élèves.</b> Relancez l’import Pronote complet avec les colonnes SEXE et RÉGIME : les lignes correspondantes se rempliront.</p>':'';
     const f=function(n,t){return t?n+' ('+pct(n,t)+')':String(n)};
     const lignes=PUBLICS.map(function(p){const l=el.filter(p[2]);if(!l.length&&p[0]!=='TOUS')return null;const k=indicateursPublic(l,E,dist);
-      return[p[1],k.eleves,f(k.apprentis,k.eleves),f(k.sans,k.stagiaires),f(k.retard,k.avec),f(k.prolong,k.avec),f(k.rattrapage,k.avec),f(k.interrompu,k.avec),k.kmMed==null?'—':kmTxt(k.kmMed),f(k.plus30,k.nDist),f(k.pres.dom,k.nDist),f(k.pres.nice,k.nDist)]}).filter(Boolean);
-    const ent=['Public','Élèves','Apprentis','Stagiaires sans convention','Retard au démarrage','Prolongation','Rattrapage','Stage interrompu','Distance médiane domicile → stage','Trajets de 30 min et plus','Stage près du domicile (≤ 15 km)','Stage à Nice'];
+      return[p[1],k.eleves,f(k.apprentis,k.eleves),f(k.sans,k.concernes),f(k.retard,k.avec),f(k.prolong,k.avec),f(k.rattrapage,k.avec),f(k.interrompu,k.avec),k.kmMed==null?'—':kmTxt(k.kmMed),f(k.plus30,k.nDist),f(k.pres.dom,k.nDist),f(k.pres.nice,k.nDist)]}).filter(Boolean);
+    const ent=['Public','Élèves','Apprentis','Sans convention (période commencée)','Retard au démarrage','Prolongation','Rattrapage','Stage interrompu','Distance médiane domicile → stage','Trajets de 30 min et plus','Stage près du domicile (≤ 15 km)','Stage à Nice'];
     LISTES.publics={titre:'Stages par public (filles, pensionnaires…)',entetes:ent,lignes:lignes};
     $('publicsTable').innerHTML=manque+'<div class="defile-publics">'+tableau('publics',ent,lignes,[1],null)+'</div>'+(dist?'':'<p class="note">Distances en cours de chargement : colonnes de distance incomplètes.</p>')+'<p class="note">Retard, prolongation, rattrapage et interruption : en part des élèves ayant une convention. Stage près du domicile / à Nice : en part des trajets calculés.</p>';
     const choix=PUBLICS.filter(function(p){return p[0]===$('publicChoix').value})[0]||PUBLICS[1],l=el.filter(choix[2]);

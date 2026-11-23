@@ -40,7 +40,7 @@ test('modèle de l’année : élèves inscrits avec leur profil ; apprentis rat
     { id: 2, Nom: 'DEUX', Prenom: 'B', Classe: 10, Statut_scolarite: 'SORTI' }, { id: 3, Nom: 'TROIS', Prenom: 'C', Classe: 99 }] : [];
   const m = J(k.EUC_DEV698_calcul_('2026-2027'));
   assert.equal(m.eleves.length, 1);
-  assert.deepEqual([m.eleves[0].e, m.eleves[0].sexe, m.eleves[0].regime, m.eleves[0].college, m.eleves[0].departement, m.eleves[0].classe], [1, 'F', 'INTERNE', 'COLLEGE X', '04', '1MELEC']);
+  assert.deepEqual([m.eleves[0].e, m.eleves[0].sexe, m.eleves[0].regime, m.eleves[0].college, m.eleves[0].departement, m.eleves[0].classe], [1, 'F', 'INTERNE', 'COLLEGE X', '04', '1MELEC']); assert.equal(m.eleves[0].debutPfmp, '2026-11-23', 'première période de la classe');
   assert.match(read('apps-script/EUC_DEV577_Apprentis.js'), /push\(\{ id: e\.id, eleve: e\.nom, statut:/);
   assert.match(read('apps-script/EUC_DEV698_Statistiques.js'), /e: Number\(c\.id\) \|\| 0, eleve: T\(c\.eleve\)/);
 });
@@ -59,13 +59,13 @@ test('page : indicateurs par public (apprentis, sans convention, retard, prolong
   const h = read('apps-script/Statistiques_PFMP_DEV698.html'), b = h.slice(h.indexOf('  const PUBLICS='), h.indexOf('  function publics(E,m){'));
   const c = vm.createContext({ fFamille: { value: '' }, fDiplome: { value: '' }, fClasse: { value: '' }, Set, Math, Object, String, Number });
   vm.runInContext("const mediane=function(v){if(!v.length)return 0;const s=v.slice().sort(function(a,b){return a-b}),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2};\n" + b + '\nthis.ind=indicateursPublic;this.P=PUBLICS;', c);
-  const el = [{ e: 1, sexe: 'F', regime: 'INTERNE' }, { e: 2, sexe: 'F', regime: 'EXTERNE' }, { e: 3, sexe: 'F', regime: 'INTERNE' }];
+  const el = [{ e: 1, sexe: 'F', regime: 'INTERNE', debutPfmp: '2026-11-23' }, { e: 2, sexe: 'F', regime: 'EXTERNE', debutPfmp: '2026-11-23' }, { e: 3, sexe: 'F', regime: 'INTERNE', debutPfmp: '2026-11-23' }, { e: 4, sexe: 'F', regime: 'EXTERNE', debutPfmp: '2099-01-04' }];
   const E = { app: [{ e: 3 }], conv: [
     { id: 'c1', e: 1, statut: 'EN_COURS', decalage: 7, prolongation: 0, sequence: 'INITIALE', commune: 'NICE', cp: '06200' },
     { id: 'c2', e: 1, statut: 'EN_COURS', decalage: 0, prolongation: 0, sequence: 'RATTRAPAGE', commune: 'NICE', cp: '06200' },
     { id: 'c3', e: 2, statut: 'ANNULEE', decalage: 0, prolongation: 5, sequence: 'INITIALE' }] };
   const k = J(c.ind(el, E, { parConvention: { c1: [42, 40], c2: [3, 6] } }));
-  assert.deepEqual([k.eleves, k.apprentis, k.stagiaires, k.avec, k.sans, k.retard, k.prolong, k.rattrapage], [3, 1, 2, 1, 1, 1, 0, 1]);
+  assert.deepEqual([k.eleves, k.apprentis, k.stagiaires, k.avec, k.sans, k.concernes, k.retard, k.prolong, k.rattrapage], [4, 1, 3, 1, 1, 2, 1, 0, 1], 'élève 4 : période pas commencée, jamais « sans convention »');
   assert.equal(k.nDist, 2); assert.equal(k.plus30, 1); assert.deepEqual(k.pres, { dom: 1, nice: 1, ail: 0 });
   assert.deepEqual(J(c.P.map(p => p[1])), ['Tous les élèves', 'Filles', 'Garçons', 'Pensionnaires', 'Filles pensionnaires', 'Demi-pensionnaires', 'Externes']);
   assert.match(h, /Relancez l’import Pronote complet avec les colonnes SEXE et RÉGIME/);

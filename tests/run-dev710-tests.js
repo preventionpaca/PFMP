@@ -57,7 +57,7 @@ test('serveur : professeurs de la dernière affectation active par élève et p�
   const a = JSON.parse(JSON.stringify(c.EUC_DEV698_affectations_('2026-2027')));
   assert.deepEqual(a, { '10|5|pv': 'Nouveau' });
   assert.ok(!/EUC_ENT_grist\(\s*'(POST|PATCH|PUT|DELETE)'/.test(s));
-  assert.match(s, /EUC_DEV698_VERSION_ = '1\.0\.0-dev\.718'/, 'nouveau calcul : le cache des statistiques est renouvelé');
+  assert.match(s, /EUC_DEV698_VERSION_ = '1\.0\.0-dev\.718b'/, 'nouveau calcul : le cache des statistiques est renouvelé');
 });
 
 console.log(n + ' tests DEV710 réussis.');
