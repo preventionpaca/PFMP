@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 24 novembre 2026 — DEV726 : affectation des professeurs, liste triée par nom et recherche
+
+- Liste des professeurs (« Accès professeur principal », mode administration et code PP) triée par nom de famille puis prénom (`EUC_DEV726_ordre_`, serveur DEV448 et V156) ; clé de cache `EUC_DEV448_PROFESSEURS_V2`. Le libellé enregistré dans les affectations (« Civilité Prénom Nom ») ne change pas.
+- Page `Suivi_Enseignants_DEV576.html` : libellé « NOM Prénom (civilité) — discipline » et champ « Tapez 3 lettres du nom… » qui filtre la liste (début du nom ou du prénom, sans accents ni majuscules) et sélectionne le premier professeur trouvé ; affectation refusée sans professeur choisi.
+- Tests : `tests/run-dev726-tests.js` (4).
+
 ## Mise à jour du 24 novembre 2026 — DEV725 : stockage des propriétés du script saturé (lenteurs, affectation en erreur)
 
 - Constat (exécutions Apps Script du 24/11, version 1297) : `EUC_DEV448_affecterAdmin` en échec après 28 et 30 s (« Une erreur est survenue sur le serveur »), `EUC_DEV435_professeursDisponibles` 41 s, `EUC_DEV692_effectifs` 89 et 140 s, génération d'un code professeur principal de plus de 6 min, compteur « Consommation API Grist » à 0 appel.

@@ -61,12 +61,13 @@ function EUC_V156_professeurs_(){
       return {
         id:Number(p.id),
         nom:[p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' '),
+        nomFamille:EUC_V156_txt_(p.Nom),prenom:EUC_V156_txt_(p.Prenom),
         email:EUC_V156_txt_(p.Email),
         discipline:EUC_V156_txt_(p.Discipline)
       };
     })
     .filter(function(p){return p.id&&p.nom;})
-    .sort(function(a,b){return a.nom.localeCompare(b.nom,'fr');});
+    .sort(function(a,b){return typeof EUC_DEV726_ordre_==='function'?EUC_DEV726_ordre_(a,b):a.nom.localeCompare(b.nom,'fr');});
 }
 
 function EUC_V156_affectations_(annee,classeId,periodeId){

@@ -9,7 +9,7 @@
 var EUC_DEV448_VERSION_='1.2.0-dev.448';
 var EUC_DEV448_ASSIGN_TABLE_='EUC_AFFECTATIONS_SUIVI_PFMP';
 var EUC_DEV448_PROF_TABLE_='EUC_PROFESSEURS_PFMP';
-var EUC_DEV448_PROF_CACHE_='EUC_DEV448_PROFESSEURS_V1';
+var EUC_DEV448_PROF_CACHE_='EUC_DEV448_PROFESSEURS_V2'; /* DEV726 : tri par nom de famille puis prénom */
 var EUC_DEV448_SNAPSHOT_HANDLER_='EUC_DEV424_refreshScheduled';
 var EUC_DEV448_SNAPSHOT_PAUSE_PROP_='EUC_DEV448_SNAPSHOT_PAUSE_V1';
 
@@ -74,10 +74,15 @@ function EUC_DEV448_professeurs_(){
   try{raw=cache.get(EUC_DEV448_PROF_CACHE_)||'';}catch(e){}
   if(raw){try{return JSON.parse(raw)||[];}catch(e2){}}
   var rows=EUC_DEV448_rows_(EUC_DEV448_PROF_TABLE_,{Actif:[true]}).filter(function(p){return p.Actif!==false;}).map(function(p){
-    return{id:EUC_DEV448_n_(p.id),nom:[p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' ').trim(),email:EUC_DEV448_t_(p.Email),discipline:EUC_DEV448_t_(p.Discipline)};
-  }).filter(function(p){return p.id&&p.nom;}).sort(function(a,b){return a.nom.localeCompare(b.nom,'fr');});
+    return{id:EUC_DEV448_n_(p.id),nom:[p.Civilite,p.Prenom,p.Nom].filter(Boolean).join(' ').trim(),nomFamille:EUC_DEV448_t_(p.Nom),prenom:EUC_DEV448_t_(p.Prenom),civilite:EUC_DEV448_t_(p.Civilite),email:EUC_DEV448_t_(p.Email),discipline:EUC_DEV448_t_(p.Discipline)};
+  }).filter(function(p){return p.id&&p.nom;}).sort(EUC_DEV726_ordre_);
   try{cache.put(EUC_DEV448_PROF_CACHE_,JSON.stringify(rows),21600);}catch(e3){}
   return rows;
+}
+/* DEV726 : ordre alphabétique du nom de famille, puis du prénom (et non plus « Civilité Prénom Nom »). */
+function EUC_DEV726_ordre_(a,b){
+  var k=function(p){return[EUC_DEV448_t_(p.nomFamille)||EUC_DEV448_t_(p.nom),EUC_DEV448_t_(p.prenom)];},x=k(a),y=k(b);
+  return x[0].localeCompare(y[0],'fr',{sensitivity:'base'})||x[1].localeCompare(y[1],'fr',{sensitivity:'base'})||EUC_DEV448_n_(a.id)-EUC_DEV448_n_(b.id);
 }
 function EUC_DEV435_professeursDisponibles(){
   var ctx=typeof EUC_V156_contexteAdmin_==='function'?EUC_V156_contexteAdmin_():null;
