@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 24 novembre 2026 — DEV725 : stockage des propriétés du script saturé (lenteurs, affectation en erreur)
+
+- Constat (exécutions Apps Script du 24/11, version 1297) : `EUC_DEV448_affecterAdmin` en échec après 28 et 30 s (« Une erreur est survenue sur le serveur »), `EUC_DEV435_professeursDisponibles` 41 s, `EUC_DEV692_effectifs` 89 et 140 s, génération d'un code professeur principal de plus de 6 min, compteur « Consommation API Grist » à 0 appel.
+- Cause : le stockage des propriétés du script (500 Ko, déjà signalé plein au DEV703) est rempli par trois caches régénérables : snapshots persistants des familles (DEV456), index du book public (DEV549), lignes d'accès (DEV398). Toute écriture de propriété échoue : la révision DEV457 levait l'erreur après une écriture Grist réussie (affectation enregistrée mais affichée en erreur), le compteur DEV447 purgeait et échouait à chaque appel Grist, les snapshots de famille n'étaient plus conservés et étaient reconstruits à chaque ouverture du catalogue.
+- `EUC_DEV725_StockageProprietes.js` : budget de 430 000 octets pour les caches régénérables (le reste est réservé aux réglages et révisions) ; `EUC_DEV725_ecrire_` (révision DEV457, compteur DEV447) libère les caches (book, puis accès, puis familles) et retente, sans jamais lever ; `EUC_DEV725_reserver_` n'autorise un snapshot de famille ou le book que sous le budget, en libérant seulement un cache de rang inférieur (une famille n'évince jamais une autre), et retire les anciens blocs du groupe. Aucune donnée métier dans ces caches : tout est relu depuis Grist.
+- Diagnostic (noms et tailles, jamais de valeur) sur la page « Consommation API Grist ».
+- Tests : `tests/run-dev725-tests.js` (8).
+
 ## Mise à jour du 23 novembre 2026 — DEV724 : book des entreprises (administration), corriger l'adresse d'une entreprise
 
 - Fiche d'une entreprise → « Profil de l'entreprise » → « Adresse de l'entreprise » : numéro et voie, code postal, ville (préremplis), « Enregistrer l'adresse » (spinner, délai 20 s).

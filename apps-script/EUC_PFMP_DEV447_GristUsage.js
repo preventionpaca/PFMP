@@ -111,7 +111,7 @@ function EUC_DEV447_record_(method,path,body,status,durationMs,origin){
     data.hours=data.hours||{};data.hours[hour]=(Number(data.hours[hour])||0)+1;
     data.origins=data.origins||{};data.origins[origin]=(Number(data.origins[origin])||0)+1;
     if(!raw)try{EUC_DEV648_purgerUsageAncien_(props);}catch(ePurge){}
-    try{props.setProperty(key,JSON.stringify(data));}catch(eQuota){EUC_DEV648_purgerUsageAncien_(props);props.setProperty(key,JSON.stringify(data));}
+    try{props.setProperty(key,JSON.stringify(data));}catch(eQuota){EUC_DEV648_purgerUsageAncien_(props);if(typeof EUC_DEV725_ecrire_==='function'){if(!EUC_DEV725_ecrire_(props,key,JSON.stringify(data)))return false;}else props.setProperty(key,JSON.stringify(data));}
     if(!raw)EUC_DEV447_updateIndex_(props,day);
     return true;
   }catch(e){return false;}
@@ -165,7 +165,8 @@ function EUC_DEV447_dashboardData_(){
   }).sort(function(a,b){return b.total-a.total||a.name.localeCompare(b.name,'fr');});
   var hours=Object.keys(today.hours||{}).sort().map(function(hour){return{hour:hour,total:Number(today.hours[hour])||0};});
   var origins=Object.keys(today.origins||{}).map(function(name){return{name:name,total:Number(today.origins[name])||0};}).sort(function(a,b){return b.total-a.total||a.name.localeCompare(b.name,'fr');}).slice(0,30);
-  return{ok:true,installedFrom:'DEV447',today:today,categories:categories,hours:hours,origins:origins,breaker:EUC_DEV447_breaker_(),history:days,quota:EUC_DEV447_USAGE_QUOTA_,remaining:Math.max(0,EUC_DEV447_USAGE_QUOTA_-(Number(today.total)||0)),percentage:Math.min(100,Math.round(((Number(today.total)||0)/EUC_DEV447_USAGE_QUOTA_)*1000)/10),resetTimeVerified:false,scope:'Appels Grist observés par les deux passerelles PFMP depuis l’installation de DEV447.'};
+  var stockage=null;try{if(typeof EUC_DEV725_etat_==='function')stockage=EUC_DEV725_etat_();}catch(eSt){}
+  return{ok:true,installedFrom:'DEV447',stockage:stockage,today:today,categories:categories,hours:hours,origins:origins,breaker:EUC_DEV447_breaker_(),history:days,quota:EUC_DEV447_USAGE_QUOTA_,remaining:Math.max(0,EUC_DEV447_USAGE_QUOTA_-(Number(today.total)||0)),percentage:Math.min(100,Math.round(((Number(today.total)||0)/EUC_DEV447_USAGE_QUOTA_)*1000)/10),resetTimeVerified:false,scope:'Appels Grist observés par les deux passerelles PFMP depuis l’installation de DEV447.'};
 }
 
 function EUC_DEV447_getUsageDashboard(){

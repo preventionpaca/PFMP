@@ -26,7 +26,11 @@ function EUC_DEV457_revision_(table){
 }
 function EUC_DEV457_bump_(path){
   var table=EUC_DEV457_table_(path),p=PropertiesService.getScriptProperties(),v=String(Date.now())+'_'+String(Math.random()).slice(2,8);
-  p.setProperty(EUC_DEV457_PROP_PREFIX_+(table||'ALL'),v);EUC_DEV457_MEMO_={};
+  /* DEV725 : l'écriture Grist a déjà réussi ; un stockage des propriétés plein ne doit plus la transformer en erreur.
+   * Les caches régénérables sont libérés puis l'écriture de la révision est retentée. */
+  EUC_DEV457_MEMO_={};
+  if(typeof EUC_DEV725_ecrire_==='function')EUC_DEV725_ecrire_(p,EUC_DEV457_PROP_PREFIX_+(table||'ALL'),v);
+  else try{p.setProperty(EUC_DEV457_PROP_PREFIX_+(table||'ALL'),v);}catch(e){}
 }
 function EUC_DEV457_key_(path){
   var table=EUC_DEV457_table_(path),raw=EUC_DEV457_revision_(table)+'|'+path,digest='';

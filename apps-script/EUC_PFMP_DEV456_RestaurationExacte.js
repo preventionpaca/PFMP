@@ -36,6 +36,8 @@ function EUC_DEV456_familyPersistentPut_(annee,famille,data){
   var p=PropertiesService.getScriptProperties(),k=EUC_DEV456_familyKey_(annee,famille),raw='',size=7000,items={};
   try{raw=JSON.stringify(data);}catch(e){return data;}var n=Math.ceil(raw.length/size);if(!n||n>60)return data;
   items[k+'_PN']=String(n);for(var i=0;i<n;i++)items[k+'_P'+i]=raw.slice(i*size,(i+1)*size);
+  /* DEV725 : seulement s'il reste de la place sous le budget des caches (le stockage plein ralentissait tout). */
+  try{if(typeof EUC_DEV725_reserver_==='function'&&!EUC_DEV725_reserver_(items,k+'_P'))return data;}catch(e3){return data;}
   try{p.setProperties(items,false);}catch(e2){}return data;
 }
 function EUC_DEV456_familyCacheDrop_(annee,famille){

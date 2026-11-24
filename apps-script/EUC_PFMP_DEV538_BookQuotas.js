@@ -524,7 +524,7 @@ function EUC_DEV549_publicBookCacheRead_(revision){
 }
 function EUC_DEV549_publicBookCacheStore_(revision,list){
   var raw='';try{raw=JSON.stringify(list||[]);}catch(eJson){return list||[];}var key=EUC_DEV549_PUBLIC_BOOK_CACHE_PROP_;
-  try{var props=PropertiesService.getScriptProperties(),size=7000,count=Math.ceil(raw.length/size)||1,values={};if(count<=80){values[key+'_REV']=revision;values[key+'_COUNT']=String(count);for(var i=0;i<count;i++)values[key+'_'+i]=raw.slice(i*size,(i+1)*size);props.setProperties(values,false);}}catch(eProps){}
+  try{var props=PropertiesService.getScriptProperties(),size=7000,count=Math.ceil(raw.length/size)||1,values={};if(count<=80){values[key+'_REV']=revision;values[key+'_COUNT']=String(count);for(var i=0;i<count;i++)values[key+'_'+i]=raw.slice(i*size,(i+1)*size);/* DEV725 : budget des caches */if(typeof EUC_DEV725_reserver_!=='function'||EUC_DEV725_reserver_(values,key+'_'))props.setProperties(values,false);}}catch(eProps){}
   try{var cache=CacheService.getScriptCache(),chunk=70000,n=Math.ceil(raw.length/chunk)||1;if(n<=20){for(var j=0;j<n;j++)cache.put(key+'_C'+j,raw.slice(j*chunk,(j+1)*chunk),21600);cache.put(key+'_N',String(n),21600);cache.put(key+'_REV',revision,21600);}}catch(eCache){}
   return list||[];
 }
