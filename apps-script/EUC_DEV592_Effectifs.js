@@ -6,8 +6,10 @@
  * Les entreprises comptées sont celles de l'année entière (toutes les périodes, conventions et contrats) :
  * le chiffre augmente au fil des PFMP. Les stagiaires de formation continue sont comptés à part.
  * scolaires et de mixité sont rangées par établissement (LP, LGT) ; les classes entières
- * d'apprentis et la formation continue par organisme (CFA RAN, CFAI, GRETA) : une classe
- * co-gérée (ex. BTS ELEC Alt : CFA RAN + CFAI) apparaît dans les deux organismes.
+ * d'apprentis et la formation continue par organisme (CFA RAN, CFAI, GRETA).
+ * DEV732 : une classe entière n'est comptée que dans l'organisme qui a la relation avec l'OPCO (colonne
+ * « Organisme relation OPCO » de la table Classes, DEV579) ; LP et LGT affichent aussi les apprentis
+ * des classes entières qui leur sont rattachées (colonne Etab).
  */
 var EUC_DEV592_ORDRE_ = ['LP', 'LGT', 'CFA RAN', 'CFAI', 'GRETA'];
 var EUC_DEV592_STATUTS_ = { AVEC: 1, CONTRAT: 1, APPRENTI: 1, PDIF_ENTREPRISE: 1 };
@@ -16,6 +18,7 @@ var EUC_DEV592_STATUTS_ = { AVEC: 1, CONTRAT: 1, APPRENTI: 1, PDIF_ENTREPRISE: 1
 function EUC_DEV592_calcul_(m) {
   var groupes = {}, n = function(v) { return String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); };
   function groupe(nom) { return groupes[nom] = groupes[nom] || { nom: nom, classes: [], entreprises: {} }; }
+  var rattaches = {};
   (m.classes || []).forEach(function(c) {
     if (c.test) return;
     var ce = c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE', ents = {};
@@ -28,17 +31,21 @@ function EUC_DEV592_calcul_(m) {
     var effectif = (c.eleves || []).length, fc = c.modeApprentissage === 'FORMATION_CONTINUE';
     var apprentis = fc ? 0 : ce ? effectif : (c.eleves || []).filter(function(e) { return e.apprentissage && e.apprentissage.code === 'APPRENTI'; }).length;
     var x = { id: c.id, nom: c.nom, famille: c.famille, mode: c.modeApprentissage || 'MIXITE', effectif: effectif, scolaires: ce ? 0 : effectif - apprentis, apprentis: apprentis, stagiaires: fc ? effectif : 0, entreprises: Object.keys(ents).length,
-      organismes: [c.gestionnaire, c.donneur].filter(function(v, i, a) { return v && a.indexOf(v) === i; }) };
+      organismes: [c.gestionnaire, c.donneur].filter(function(v, i, a) { return v && a.indexOf(v) === i; }), etab: c.etab || '' };
+    x.opco = c.opco || c.donneur || c.gestionnaire || '';
     /* DEV635 : classe entière / formation continue — liste des jeunes avec entreprise et tuteur du contrat en cours. */
     if (ce) x.liste = (c.eleves || []).map(function(e) { var a = e.apprentissage || {}; return { nom: e.libelle || [e.nom, e.prenom].filter(Boolean).join(' '), statut: a.code || 'SCOLAIRE', entreprise: a.code === 'APPRENTI' ? a.entreprise || '' : '', siret: a.siret || '', tuteur: a.tuteur || '', debut: a.debut || '', fin: a.fin || '' }; })
       .sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
-    var noms = ce ? x.organismes.slice() : [c.etab === 'LGT' ? 'LGT' : c.etab === 'LP' ? 'LP' : (c.etab || 'Autres')];
-    if (ce && !noms.length) noms = ['Organisme à renseigner'];
+    var noms = ce ? [x.opco || 'Organisme à renseigner'] : [c.etab === 'LGT' ? 'LGT' : c.etab === 'LP' ? 'LP' : (c.etab || 'Autres')];
+    if (ce && !fc && (c.etab === 'LP' || c.etab === 'LGT')) rattaches[c.etab] = (rattaches[c.etab] || 0) + apprentis;
     noms.forEach(function(g) { var G = groupe(g); G.classes.push(x); Object.keys(ents).forEach(function(k) { G.entreprises[k] = true; }); });
   });
   var liste = Object.keys(groupes).map(function(k) {
     var g = groupes[k], t = { classes: g.classes.length, effectif: 0, scolaires: 0, apprentis: 0, stagiaires: 0, entreprises: Object.keys(g.entreprises).length };
     g.classes.forEach(function(c) { t.effectif += c.effectif; t.scolaires += c.scolaires; t.apprentis += c.apprentis; t.stagiaires += c.stagiaires; });
+    /* DEV732 : établissement → apprentis en mixité et apprentis des classes entières rattachées ; organisme → classes dédiées. */
+    if (g.nom === 'LP' || g.nom === 'LGT') { t.etablissement = true; t.apprentisMixite = t.apprentis; t.apprentisClasseEntiere = rattaches[g.nom] || 0; }
+    else if (EUC_DEV592_ORDRE_.indexOf(g.nom) >= 0) t.organisme = true;
     g.classes.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     return { nom: g.nom, totaux: t, classes: g.classes };
   });

@@ -385,10 +385,10 @@ test('DEV592 : effectifs — LP / LGT pour les scolaires et la mixité, organism
       periodes: per({ 5: 'CONTRAT', 6: 'SANS_CONTRAT' }, { 5: { entreprise: 'ENEDIS' } }) },
     { id: 4, nom: 'TPMMA', etab: 'GRETA', modeApprentissage: 'FORMATION_CONTINUE', gestionnaire: 'GRETA', donneur: 'GRETA', eleves: [{ id: 7 }], periodes: [] }] };
   const r = JSON.parse(JSON.stringify(k.EUC_DEV592_calcul_(m)));
-  assert.deepEqual(r.groupes.map(g => g.nom), ['LP', 'LGT', 'CFA RAN', 'CFAI', 'GRETA']);
+  assert.deepEqual(r.groupes.map(g => g.nom), ['LP', 'LGT', 'CFAI', 'GRETA'], 'DEV732 : classe entière dans le seul organisme de la relation OPCO (à défaut, le donneur d’ordre)');
   const lp = r.groupes[0].classes[0];
   assert.deepEqual([lp.effectif, lp.scolaires, lp.apprentis, lp.entreprises], [3, 2, 1, 1], 'même SIRET = une entreprise');
-  assert.deepEqual([r.groupes[2].totaux.apprentis, r.groupes[3].totaux.apprentis, r.groupes[2].totaux.entreprises], [2, 2, 1]);
+  assert.deepEqual([r.groupes[2].totaux.apprentis, r.groupes[2].totaux.entreprises, r.groupes[2].classes[0].opco], [2, 1, 'CFAI']);
   assert.deepEqual([r.total.classes, r.total.effectif, r.total.apprentis, r.total.stagiaires], [4, 7, 3, 1], 'classe co-gérée comptée une fois ; FC à part');
   const m2 = { classes: [{ id: 9, nom: '1BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', eleves: [{ id: 1, apprentissage: { code: 'APPRENTI', entreprise: 'ENEDIS' } }, { id: 2, apprentissage: { code: 'APPRENTI', entreprise: 'Enedis' } }], periodes: [] }] };
   assert.equal(k.EUC_DEV592_calcul_(m2).groupes[0].classes[0].entreprises, 1, 'entreprise du contrat, sans période au calendrier');
@@ -472,7 +472,7 @@ test('DEV635 : classes entières — liste des jeunes (entreprise, tuteur, contr
     { id: 3, nom: '2BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', donneur: 'CFAI', periodes: [], eleves: [{ id: 5, libelle: 'ZOE A', apprentissage: ap('ENEDIS', '11111111111111', 'M. Un') }, { id: 6, libelle: 'ALI B', apprentissage: { code: 'FUTUR_APPRENTI' } }, { id: 7, libelle: 'BOB C', apprentissage: ap('Enedis SA', '11111111111111', 'Mme Deux') }] },
     { id: 4, nom: '1BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', periodes: [], eleves: [{ id: 8, libelle: 'EVE D', apprentissage: ap('ENEDIS', '11111111111111', 'M. Un') }, { id: 9, libelle: 'LEO E', apprentissage: ap('GARAGE', '', '') }] },
     { id: 1, nom: 'TCAR', etab: 'LP', modeApprentissage: 'MIXITE', periodes: [], eleves: [{ id: 1, libelle: 'X', apprentissage: ap('ENEDIS', '11111111111111', '') }] }] };
-  const r = JSON.parse(JSON.stringify(k.EUC_DEV592_calcul_(m))), cfa = r.groupes.find(g => g.nom === 'CFA RAN'), c2 = cfa.classes.find(c => c.id === 3);
+  const r = JSON.parse(JSON.stringify(k.EUC_DEV592_calcul_(m))), cfa = r.groupes.find(g => g.nom === 'CFAI'), c2 = cfa.classes.find(c => c.id === 3);
   assert.deepEqual(c2.liste.map(j => [j.nom, j.statut, j.entreprise, j.tuteur]), [['ALI B', 'FUTUR_APPRENTI', '', ''], ['BOB C', 'APPRENTI', 'Enedis SA', 'Mme Deux'], ['ZOE A', 'APPRENTI', 'ENEDIS', 'M. Un']], 'tri alphabétique, futur sans entreprise');
   assert.equal(r.groupes.find(g => g.nom === 'LP').classes[0].liste, undefined, 'mixité : pas de liste');
   const html = read('apps-script/Apprentis_Classes_DEV635_Rendu.html'), w = { String, Object, Array }; w.window = w; vm.createContext(w);

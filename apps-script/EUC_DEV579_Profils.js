@@ -14,7 +14,7 @@
  */
 var EUC_DEV579_PROFILS_PROP_ = 'EUC_DEV579_PROFILS';
 var EUC_DEV579_ORGANISMES_ = ['CFA RAN', 'CFAI', 'GRETA'];
-var EUC_DEV579_COLONNES_ = { modalite: 'Modalite_apprentissage', gestionnaire: 'Organisme_gestionnaire', donneur: 'Organisme_donneur_ordre' };
+var EUC_DEV579_COLONNES_ = { modalite: 'Modalite_apprentissage', gestionnaire: 'Organisme_gestionnaire', donneur: 'Organisme_donneur_ordre', opco: 'Organisme_relation_OPCO' };
 var EUC_DEV579_MODES_ = { CLASSE_ENTIERE: 'Classe entière', MIXITE: 'Mixité', FORMATION_CONTINUE: 'Formation continue' };
 
 function EUC_DEV579_norm_(v) { return String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); }
@@ -62,6 +62,17 @@ function EUC_DEV579_profilDefaut_(classe, etab) {
   return null;
 }
 
+/* DEV732 — Organisme qui a la relation avec l'OPCO (celui qui porte le contrat) : une classe entière n'est comptée
+ * que dans cet organisme. Colonne Grist « Organisme relation OPCO » (table Classes) prioritaire ; à défaut, cette
+ * table (décision DDFPT du 25/11/2026) ; à défaut, le donneur d'ordre puis le gestionnaire. */
+function EUC_DEV579_opcoDefaut_(classe, etab) {
+  var n = EUC_DEV579_norm_(classe), e = EUC_DEV579_norm_(etab);
+  if (/^CQPM\b/.test(n) || /^BACHELOR\b/.test(n) || /^[12]BTS ELEC ALT$/.test(n) || /^[12]BTS (CPI|CPRP)$/.test(n)) return 'CFAI';
+  if (/^TP ?(MMA|EEB)\b/.test(n) || /^(1|T)MELEC G$/.test(n) || e === 'GRETA') return 'GRETA';
+  if (/^1CAPP$/.test(n) || /^TSEC$/.test(n) || /^[12](BTS MV|TSMV)$/.test(n)) return 'CFA RAN';
+  return '';
+}
+
 var EUC_DEV579_PROFILS_MEMO_ = null;
 function EUC_DEV579_profilsConfig_() {
   if (EUC_DEV579_PROFILS_MEMO_) return EUC_DEV579_PROFILS_MEMO_;
@@ -77,7 +88,7 @@ function EUC_DEV579_colonnesClasses_() {
   try {
     (typeof EUC_DEV538_records_ === 'function' ? EUC_DEV538_records_('Classes', {}) : []).forEach(function(r) {
       var f = r.fields || r, C = EUC_DEV579_COLONNES_;
-      out[String(r.id || f.id)] = { modalite: EUC_DEV579_modeDe_(f[C.modalite]), gestionnaire: EUC_DEV579_organismeDe_(f[C.gestionnaire]), donneur: EUC_DEV579_organismeDe_(f[C.donneur]) };
+      out[String(r.id || f.id)] = { modalite: EUC_DEV579_modeDe_(f[C.modalite]), gestionnaire: EUC_DEV579_organismeDe_(f[C.gestionnaire]), donneur: EUC_DEV579_organismeDe_(f[C.donneur]), opco: EUC_DEV579_organismeDe_(f[C.opco]) };
     });
   } catch (e) {}
   EUC_DEV579_COLONNES_MEMO_ = out;
@@ -90,6 +101,11 @@ function EUC_DEV579_fabrique_(mode, g, d, source) {
 
 /* Profil effectif d'une classe pour une année. */
 function EUC_DEV579_profil_(config, annee, classId, classe, etab, ancienMode) {
+  var p = EUC_DEV579_profilBase_(config, annee, classId, classe, etab, ancienMode), col = EUC_DEV579_colonnesClasses_()[String(classId)];
+  p.opco = (col && col.opco) || EUC_DEV579_opcoDefaut_(classe, etab) || p.donneur || p.gestionnaire || '';
+  return p;
+}
+function EUC_DEV579_profilBase_(config, annee, classId, classe, etab, ancienMode) {
   var col = EUC_DEV579_colonnesClasses_()[String(classId)], d = EUC_DEV579_profilDefaut_(classe, etab);
   if (col && (col.modalite || col.gestionnaire || col.donneur)) {
     return EUC_DEV579_fabrique_(col.modalite || (d && d.mode) || 'MIXITE', col.gestionnaire, col.donneur || col.gestionnaire, 'GRIST');
@@ -140,7 +156,7 @@ function EUC_DEV579_ecrireTableClasses(q) {
   if (typeof EUC_SUIVI2_exigerAdmin_ === 'function') EUC_SUIVI2_exigerAdmin_();
   q = q || {};
   var C = EUC_DEV579_COLONNES_, cols = (EUC_ENT_grist('get', '/tables/Classes/columns').columns || []).map(function(c) { return c.id; });
-  var manquantes = [[C.modalite, 'Modalité apprentissage', ['Classe entière', 'Mixité', 'Formation continue']], [C.gestionnaire, 'Organisme gestionnaire', EUC_DEV579_ORGANISMES_], [C.donneur, 'Organisme donneur d’ordre', EUC_DEV579_ORGANISMES_]].filter(function(c) { return cols.indexOf(c[0]) < 0; });
+  var manquantes = [[C.modalite, 'Modalité apprentissage', ['Classe entière', 'Mixité', 'Formation continue']], [C.gestionnaire, 'Organisme gestionnaire', EUC_DEV579_ORGANISMES_], [C.donneur, 'Organisme donneur d’ordre', EUC_DEV579_ORGANISMES_], [C.opco, 'Organisme relation OPCO', EUC_DEV579_ORGANISMES_]].filter(function(c) { return cols.indexOf(c[0]) < 0; });
   var lignes = [];
   (EUC_ENT_grist('get', '/tables/Classes/records').records || []).forEach(function(r) {
     var f = r.fields || {}, d = EUC_DEV579_profilDefaut_(f.Nom || f.Libelle, f.Etab); if (!d) return;
@@ -148,6 +164,7 @@ function EUC_DEV579_ecrireTableClasses(q) {
     if (!EUC_DEV579_modeDe_(f[C.modalite])) champs[C.modalite] = EUC_DEV579_MODES_[d.mode];
     if (!EUC_DEV579_organismeDe_(f[C.gestionnaire])) champs[C.gestionnaire] = d.gestionnaire;
     if (!EUC_DEV579_organismeDe_(f[C.donneur])) champs[C.donneur] = d.donneur;
+    var o = EUC_DEV579_opcoDefaut_(f.Nom || f.Libelle, f.Etab); if (o && !EUC_DEV579_organismeDe_(f[C.opco])) champs[C.opco] = o;
     if (Object.keys(champs).length) lignes.push({ id: r.id, classe: f.Nom || f.Libelle, fields: champs });
   });
   var res = { ok: true, colonnesACreer: manquantes.map(function(c) { return c[0]; }), lignes: lignes.length, exemples: lignes.slice(0, 15).map(function(l) { return l.classe + ' : ' + Object.keys(l.fields).map(function(k) { return l.fields[k]; }).join(' / '); }), apercu: q.confirmation !== 'ECRIRE' };

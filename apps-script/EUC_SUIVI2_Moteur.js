@@ -410,7 +410,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '',
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '', opco: profil ? profil.opco || '' : '',
       apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), test: EUC_SUIVI2_classeTest_(nom), periodes: [], eleves: [] };
   });
 

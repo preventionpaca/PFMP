@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV732 : effectifs de l'accueil, organisme de la relation OPCO
+
+- Nouveau paramètre par classe : « Organisme relation OPCO » (Grist, table Classes, colonne `Organisme_relation_OPCO`, choix CFA RAN / CFAI / GRETA). Le bouton de pré-remplissage de la page des quotas crée la colonne et remplit les cases vides. Sans colonne renseignée, une règle par défaut s'applique : BTS ELEC Alt, Bachelor, CQPM et BTS CPI / CPRP → CFAI ; 1MELEC G, TMELEC G, TPEEB, TPMMA et autres classes GRETA → GRETA ; 1CAPP, TSEC et BTS MV → CFA RAN. À défaut, on prend le donneur d'ordre, puis le gestionnaire.
+- Bloc Effectifs : une classe entière n'est plus comptée que dans l'organisme de la relation OPCO (avant : dans le gestionnaire et dans le donneur d'ordre). Les tuiles CFA RAN, CFAI et GRETA indiquent le nombre de classes dédiées, d'apprentis et d'entreprises.
+- Tuiles LP et LGT : scolaires, apprentis en mixité et apprentis des classes entières rattachées à l'établissement (colonne Etab ; formation continue exclue).
+- Gestionnaire et donneur d'ordre restent inchangés et toujours affichés dans les bulles de la page Apprentissage.
+- Tests : `tests/run-dev732-tests.js` (4). Assertions DEV592/DEV635 mises à jour selon la nouvelle règle ; profil DEV577 complété du champ `opco`.
+
 ## Mise à jour du 25 novembre 2026 — DEV731 : géocodage des entreprises, recherche élargie et décompte exact
 
 - Constats : « Réessayer automatiquement » ne relançait rien pour une adresse française « Coordonnées à renseigner » (seules « à géocoder » / « à regéocoder » étaient retenues) ; le décompte « 0 française restante » ignorait les adresses en échec ou à contrôler ; le code postal saisi était imposé (« Chemin des Arboras 06000 » est en 06200) ; abréviations, « 2rue », « BP 139 » faisaient échouer ; un mot générique (« PROMENADE ») suffisait à accepter la Promenade des Arts pour le 455 Promenade des Anglais (KONE) et la RD 6098 pour la RD 6007 ; un point validé pouvait être effacé quand une autre convention écrivait la même adresse autrement.
