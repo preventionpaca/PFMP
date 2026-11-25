@@ -22,7 +22,7 @@ window.EUC635=(function(){
     var l=Object.keys(m).map(function(k){var e=m[k];e.classes=Object.keys(e.classes);e.tuteurs=Object.keys(e.tuteurs).map(function(t){return e.tuteurs[t];});return e;}).filter(function(e){return e.apprentis.length>1;});
     l.sort(function(a,b){return b.apprentis.length-a.apprentis.length||a.nom.localeCompare(b.nom,'fr');});l.forEach(function(e,i){e.couleur=PALETTE[i%PALETTE.length];m[e.cle].couleur=e.couleur;});
     return{parCle:m,multiples:l};}
-  function statut(j){return j.statut==='FUTUR_APPRENTI'?'Futur apprenti — contrat pas encore commencé':'Sans contrat en cours enregistré';}
+  function statut(j){if(j.statut==='APPRENTI')return 'Entreprise non renseignée'+(j.organismeFormation?' (Yparéo indique l’organisme de formation '+esc(j.organismeFormation)+')':'');return j.statut==='FUTUR_APPRENTI'?'Futur apprenti — contrat pas encore commencé':'Sans contrat en cours enregistré';}
   function tableau(c,ents){var l=c.liste||[];if(!l.length)return '<p class="legende">Aucun élève dans cette classe.</p>';
     return '<table><thead><tr><th>Apprenti</th><th>Entreprise</th><th>Tuteur</th><th>Contrat</th></tr></thead><tbody>'+l.map(function(j){var e=ents.parCle[cle(j)]||{},fond=e.couleur?' style="background:'+e.couleur+'"':'';
       var tag=e.couleur?'<span class="tag" title="'+esc(e.apprentis.join(', '))+'">'+e.apprentis.length+' apprentis · '+(e.tuteurs.length||'?')+' tuteur(s)</span>':'';

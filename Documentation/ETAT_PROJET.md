@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV734 : entreprises non renseignées (organisme de formation à la place de l'employeur)
+
+- Dans l'export Yparéo du CQPM ascensoriste, les 49 colonnes ont été examinées : aucun employeur n'y figure, et les colonnes entreprise donnent l'organisme de formation pour les 12 apprentis. Décision DDFPT : un jeune = une entreprise non renseignée.
+- Bloc Effectifs : un organisme de formation (AFPI, CFAI, GRETA, UIMM, Pôle formation, CFA…) n'est plus compté comme entreprise d'accueil. Dans une classe entière, chaque apprenti sous contrat sans employeur identifié compte pour une entreprise « non renseignée » : bulle « non rens. » sur la vignette et « + N non renseignée(s) » sur la tuile de l'organisme.
+- Liste des jeunes (DEV635) : « Entreprise non renseignée (Yparéo indique l'organisme de formation …) ».
+- Tests : `tests/run-dev734-tests.js` (3).
+
 ## Mise à jour du 25 novembre 2026 — DEV733 : établissement de rattachement des classes entières (LP / LGT)
 
 - Nouveau paramètre par classe : « Établissement de rattachement » (LP / LGT / Aucun). Il se règle sur la page « Quotas d'apprentissage » (4e liste « Établ. ») et s'enregistre dans la colonne Grist `Etablissement_rattachement`, créée au premier enregistrement. Règle par défaut : TSEC et 1CAPP → LP ; BTS ELEC Alt et Bachelor → LGT ; sinon la colonne Etab si elle vaut LP ou LGT.
