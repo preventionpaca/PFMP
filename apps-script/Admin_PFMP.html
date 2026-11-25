@@ -39,6 +39,12 @@
     @media(max-width:980px){.grid{grid-template-columns:1fr 1fr}}
     @media(max-width:680px){.grid{grid-template-columns:1fr}main{padding:20px 16px 36px}}
       .card.effectifs{border-top:4px solid #0f766e;margin-top:4px}
+    details.effectifs>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}details.effectifs>summary::-webkit-details-marker{display:none}
+    details.effectifs>summary h2{margin:0}details.effectifs>summary h2::before{content:"▸ ";color:#0f766e}details.effectifs[open]>summary h2::before{content:"▾ "}
+    .eff-aide{font-size:.85rem;color:#0f766e;font-weight:700}details.effectifs[open] .eff-aide{display:none}
+    .eff-maj{font:inherit;font-weight:800;border:1px solid #0f766e;color:#0f766e;background:#fff;border-radius:8px;padding:5px 12px;cursor:pointer}.eff-maj:disabled{opacity:.7;cursor:wait}
+    .afaire-rubriques{margin:6px 0 0;padding-left:18px}.afaire-rubriques li{margin:3px 0}.afaire-rubriques a{margin-left:6px;font-weight:800;color:#92400e}
+    a.link.chargement,button.link.chargement{opacity:.8;cursor:progress}a.link .spin,button.link .spin{margin-right:6px}
     .eff-tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
     .eff-tuile{text-align:left;border:1px solid #cfe3dc;border-radius:12px;background:#f3faf7;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
     .eff-tuile[aria-pressed="true"]{background:#0f766e;color:#fff;border-color:#0f766e}
@@ -66,12 +72,17 @@
 
   <!-- DEV694 : bandeau « À faire » : dépôts des élèves qui demandent une action (demande d'aide, SIRET, NIS, doublon…) ; absent quand tout est traité. -->
   <section id="aFaireV694" hidden role="status" aria-live="polite" style="background:#fff7e6;border:1px solid #f3c56b;border-left:6px solid #d97706;border-radius:12px;padding:12px 16px;margin:0 0 16px">
-    <b style="color:#92400e">À faire</b> <span id="aFaireTexte"></span>
-    <a id="aFaireLien" target="_top" href="<?= adminBase ?>?page=soumissions-a-traiter-pfmp" style="margin-left:8px;font-weight:800;color:#92400e">Ouvrir « Soumissions à traiter » →</a>
+    <b style="color:#92400e">À faire</b>
+    <!-- DEV728 : une ligne par rubrique, chacune avec le lien de la page où se traite le problème. -->
+    <ul class="afaire-rubriques">
+      <li id="aFaireEleves" hidden><b>Élèves — dépôts en ligne</b> : <span id="aFaireTexte"></span> <a id="aFaireLien" target="_top" href="<?= adminBase ?>?page=soumissions-a-traiter-pfmp">Ouvrir « Soumissions à traiter » →</a></li>
+      <li id="aFaireCarte" hidden><b>Cartographie</b> : <span id="aFaireCarteTexte"></span> <a id="aFaireCarteLien" target="_top" href="<?= adminBase ?>?page=geocodage-pfmp-admin">Ouvrir « Entreprises et cartographie » →</a></li>
+    </ul>
   </section>
 
   <!-- DEV592 : effectifs par établissement et par organisme, chargés après l'affichage. -->
-  <section class="card effectifs" id="effectifs"><h2>Effectifs <span id="effAnnee"></span></h2><p id="effEtat"><span class="spin"></span> Chargement des effectifs…</p><p id="effAlertes" hidden></p><div id="effTuiles" class="eff-tuiles"></div><div id="effClasses"></div></section>
+  <!-- DEV728 : accordéon replié par défaut ; le calcul (long) ne se lance qu'à l'ouverture ou sur « Mettre à jour ». -->
+  <details class="card effectifs" id="effectifs"><summary><h2>Effectifs <span id="effAnnee"></span></h2><span class="eff-aide">Développer pour calculer les effectifs</span></summary><p><button type="button" id="effMaj" class="eff-maj">Mettre à jour</button></p><p id="effEtat">Chiffres calculés à la demande.</p><p id="effAlertes" hidden></p><div id="effTuiles" class="eff-tuiles"></div><div id="effClasses"></div></details>
 
   <!-- Trois parcours : chacun ses pages, puis son paramétrage. -->
   <section class="grid">
@@ -271,8 +282,14 @@ function rendre(){
   Array.prototype.forEach.call(document.querySelectorAll('.eff-tuile'),function(b){b.onclick=function(){var n=b.getAttribute('data-g');CHOIX=(CHOIX===n||n==='Total')?'':n;CLASSE=0;rendre();};});
 }
 if(!(window.google&&google.script&&google.script.run)){$('effEtat').textContent='Effectifs indisponibles dans cet aperçu.';return;}
-google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r.annee||'';var ec=r.echeancier;if(ec&&(ec.RETARD||ec.ALERTE||ec.RAPPEL||ec.sansReferent)){var al=$('effAlertes');al.hidden=false;al.innerHTML='<a target="_top" href="'+(document.querySelector('a[href*="echeancier-apprentis-pfmp"]')||{}).href+'" style="font-weight:800;color:#9a3412">Contacts d’entrée des apprentis : '+[ec.RETARD?ec.RETARD+' en retard':'',ec.ALERTE?ec.ALERTE+' en alerte (45 j)':'',ec.RAPPEL?ec.RAPPEL+' à relancer (30 j)':'',ec.sansReferent?ec.sansReferent+' sans référent':''].filter(Boolean).join(' · ')+' →</a>';}$('effEtat').textContent='Cliquez sur un établissement ou un organisme pour voir ses classes. Une classe co-gérée (ex. CFA RAN + CFAI) figure dans les deux organismes, mais une seule fois dans le total.';rendre();})
-  .withFailureHandler(function(e){$('effEtat').textContent='Effectifs indisponibles : '+(e&&e.message||e);}).EUC_DEV592_effectifs('');
+/* DEV728 : calcul à la demande (ouverture de l'accordéon ou « Mettre à jour »), bouton désactivé avec spinner, délai borné. */
+var majB=$('effMaj'),majLib=majB.innerHTML,charge=false,enCours=false;
+function charger(){if(enCours)return;enCours=true;charge=true;var fini=false,fin=function(){fini=true;clearTimeout(t);enCours=false;majB.disabled=false;majB.innerHTML=majLib;},
+  t=setTimeout(function(){if(fini)return;fin();$('effEtat').textContent='Le calcul des effectifs a dépassé 3 minutes : réessayez avec « Mettre à jour ».';},180000);
+  majB.disabled=true;majB.innerHTML='<span class="spin" aria-hidden="true"></span> Calcul…';$('effEtat').innerHTML='<span class="spin"></span> Calcul des effectifs…';
+google.script.run.withSuccessHandler(function(r){if(fini)return;fin();D=r;$('effAnnee').textContent=r.annee||'';var ec=r.echeancier;if(ec&&(ec.RETARD||ec.ALERTE||ec.RAPPEL||ec.sansReferent)){var al=$('effAlertes');al.hidden=false;al.innerHTML='<a target="_top" href="'+(document.querySelector('a[href*="echeancier-apprentis-pfmp"]')||{}).href+'" style="font-weight:800;color:#9a3412">Contacts d’entrée des apprentis : '+[ec.RETARD?ec.RETARD+' en retard':'',ec.ALERTE?ec.ALERTE+' en alerte (45 j)':'',ec.RAPPEL?ec.RAPPEL+' à relancer (30 j)':'',ec.sansReferent?ec.sansReferent+' sans référent':''].filter(Boolean).join(' · ')+' →</a>';}$('effEtat').textContent='Cliquez sur un établissement ou un organisme pour voir ses classes. Une classe co-gérée (ex. CFA RAN + CFAI) figure dans les deux organismes, mais une seule fois dans le total.';rendre();})
+  .withFailureHandler(function(e){if(fini)return;fin();$('effEtat').textContent='Effectifs indisponibles : '+(e&&e.message||e);}).EUC_DEV592_effectifs('');}
+majB.onclick=charger;$('effectifs').addEventListener('toggle',function(){if(this.open&&!charge)charger();});
 })();
 </script>
 <script>
@@ -294,12 +311,25 @@ google.script.run.withSuccessHandler(function(r){D=r;$('effAnnee').textContent=r
     .withFailureHandler(function(e){b.disabled=false;b.innerHTML=lib;document.getElementById('essaiInfo').textContent='Erreur : '+(e&&e.message||e);}).EUC_DEV603_activerEssai();};})();
 </script>
 <script>
-/* DEV694 : bandeau « À faire », recalculé à chaque ouverture : il disparaît dès qu'il n'y a plus rien à traiter. */
+/* DEV694 / DEV728 : bandeau « À faire » par rubriques, recalculé à chaque ouverture ; une rubrique disparaît dès
+ * qu'elle n'a plus rien à traiter, le bandeau dès qu'aucune rubrique n'est affichée. */
 (function(){var z=document.getElementById('aFaireV694');if(!z||!(window.google&&google.script&&google.script.run))return;
-  google.script.run.withSuccessHandler(function(r){var l=(r&&r.points)||[];if(!l.length){z.hidden=true;return;}
-    var e=function(v){var d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML;};
-    document.getElementById('aFaireTexte').innerHTML=l.map(function(x){return '<b>'+e(x.nombre)+'</b> '+e(x.texte);}).join(' · ');z.hidden=false;})
-  .withFailureHandler(function(){z.hidden=true;}).EUC_DEV694_aFaire();})();
+  var g=function(i){return document.getElementById(i);},e=function(v){var d=document.createElement('div');d.textContent=v==null?'':v;return d.innerHTML;};
+  function voir(){z.hidden=g('aFaireEleves').hidden&&g('aFaireCarte').hidden;}
+  google.script.run.withSuccessHandler(function(r){var l=(r&&r.points)||[];if(!l.length){g('aFaireEleves').hidden=true;voir();return;}
+    g('aFaireTexte').innerHTML=l.map(function(x){return '<b>'+e(x.nombre)+'</b> '+e(x.texte);}).join(' · ');g('aFaireEleves').hidden=false;voir();})
+  .withFailureHandler(function(){g('aFaireEleves').hidden=true;voir();}).EUC_DEV694_aFaire();
+  google.script.run.withSuccessHandler(function(r){if(!r||!r.total){g('aFaireCarte').hidden=true;voir();return;}
+    var cl=(r.classes||[]).map(function(c){return e(c.classe)+' : '+e(c.nombre);}).join(' · ')+(r.autresClasses?' · et '+e(r.autresClasses)+' autre(s) classe(s)':'');
+    g('aFaireCarteTexte').innerHTML='<b>'+e(r.total)+'</b> '+(r.total>1?'entreprises reconnues mais pas encore placées':'entreprise reconnue mais pas encore placée')+' sur la carte (adresse à préciser ou position à valider)'+(cl?' — '+cl:'');g('aFaireCarte').hidden=false;voir();})
+  .withFailureHandler(function(){g('aFaireCarte').hidden=true;voir();}).EUC_DEV728_aFaireCartographie();})();
+/* DEV728 : chaque lien de l'accueil affiche un spinner dès le clic, jusqu'à l'ouverture de la page (repère visible même
+ * avec beaucoup d'onglets) ; retiré au retour sur la page ou après 30 s, et au bout de 3 s pour un nouvel onglet. */
+(function(){function fin(a){a.classList.remove('chargement');a.removeAttribute('aria-busy');var sp=a.querySelector('.spin.lien728');if(sp)sp.remove();}
+  document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a.link,#aFaireLien,#aFaireCarteLien'):null;if(!a||ev.defaultPrevented||ev.button!==0||ev.ctrlKey||ev.metaKey||ev.shiftKey||a.classList.contains('chargement'))return;
+    a.classList.add('chargement');a.setAttribute('aria-busy','true');var sp=document.createElement('span');sp.className='spin lien728';sp.setAttribute('aria-hidden','true');a.insertBefore(sp,a.firstChild);
+    setTimeout(function(){fin(a);},a.target==='_blank'?3000:30000);});
+  window.addEventListener('pageshow',function(){Array.prototype.forEach.call(document.querySelectorAll('.chargement'),fin);});})();
 </script>
 </body>
 </html>

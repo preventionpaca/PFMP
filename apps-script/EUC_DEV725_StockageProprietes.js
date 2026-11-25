@@ -6,7 +6,8 @@
  * Cause : trois caches régénérables écrits dans les propriétés du script remplissent les 500 Ko :
  *   - snapshot persistant de chaque famille (DEV456, jusqu'à 60 blocs de 7 000 caractères par famille) ;
  *   - index du book public (DEV549, jusqu'à 80 blocs) ;
- *   - lignes d'accès des formulaires (DEV398, une clé par année).
+ *   - lignes d'accès des formulaires (DEV398, une clé par année) ;
+ *   - index géographique des cartes (DEV517) et reliquat DEV418 d'une ancienne version (constatés le 25/11 : 445 Ko).
  * Stockage plein : chaque écriture (révision DEV457 après une écriture Grist, compteur DEV447, état DEV425) échoue ;
  * la révision DEV457 levait l'erreur APRÈS l'écriture Grist réussie (affectation enregistrée mais « Erreur ») ; les
  * snapshots de famille ne pouvaient plus être conservés et chaque ouverture les reconstruisait.
@@ -36,6 +37,11 @@ function EUC_DEV725_groupe_(k) {
   k = String(k || '');
   var livre = (typeof EUC_DEV549_PUBLIC_BOOK_CACHE_PROP_ === 'string' ? EUC_DEV549_PUBLIC_BOOK_CACHE_PROP_ : 'EUC_DEV549_PUBLIC_BOOK_INDEX_V1') + '_';
   if (k.indexOf(livre) === 0) return { groupe: livre, rang: 0 };
+  /* Reliquat d'une ancienne version (plus aucun code ne le lit) : libéré en premier. */
+  if (/^DEV418_ACCESS_ROWS_/.test(k)) return { groupe: 'DEV418_ACCESS_ROWS_', rang: 0 };
+  /* Index géographique des cartes (DEV517), aussi conservé dans le cache de script. */
+  var geo = k.match(/^(DEV517_GEO_INDEX_.+?)_(?:COUNT|REV|AT|\d+)$/);
+  if (geo) return { groupe: geo[1] + '_', rang: 0 };
   if (/^DEV398_ACCESS_ROWS_/.test(k)) return { groupe: k, rang: 1 };
   var m = k.match(/^(DEV456R13_FAMILY_.+_P)(?:N|\d+)$/);
   if (m) return { groupe: m[1], rang: 2 };

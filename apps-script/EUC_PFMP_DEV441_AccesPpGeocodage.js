@@ -413,7 +413,8 @@ function EUC_DEV517_geoIndexStore_(year,items){
     if(count>80)return items||[];
     values[key+'_COUNT']=String(count);values[key+'_REV']=rev;values[key+'_AT']=String(Date.now());
     for(var i=0;i<count;i++)values[key+'_'+i]=raw.slice(i*size,(i+1)*size);
-    props.setProperties(values,false);
+    /* DEV725 : budget des caches du stockage des propriétés */
+    if(typeof EUC_DEV725_reserver_!=='function'||EUC_DEV725_reserver_(values,key+'_'))props.setProperties(values,false);
   }catch(eProps){}
   try{
     var cache=CacheService.getScriptCache(),chunk=70000,n=Math.ceil(raw.length/chunk)||1;

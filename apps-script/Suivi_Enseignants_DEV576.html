@@ -298,12 +298,30 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     document.getElementById('ppOuvrir').onclick=function(){var b=this;if(!code.value.trim()){etatPP.textContent='Saisissez le code reçu par courriel.';return;}occupe(b,true,'Vérification…');etatPP.textContent='';
       google.script.run.withSuccessHandler(function(d){occupe(b,false);afficher(d);etatPP.textContent='Accès ouvert.';}).withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Accès refusé : '+(e&&e.message||e);}).EUC_DEV448_unlockPp(Object.assign({code:code.value.trim()},portee));};
     code.onkeydown=function(e){if(e.key==='Enter')document.getElementById('ppOuvrir').click();};
-    document.getElementById('ppAffecter').onclick=function(){var b=this,ids=Array.prototype.map.call(document.querySelectorAll('.ppEleve:checked'),function(x){return Number(x.value);});
-      if(!ids.length){etatPP.textContent='Cochez au moins un élève.';return;}if(!Number(document.getElementById('ppProf').value)){etatPP.textContent='Choisissez un professeur.';return;}occupe(b,true,'Enregistrement…');
-      google.script.run.withSuccessHandler(function(r){occupe(b,false);var sel={};(r.eleveIds||[]).forEach(function(id){sel[Number(id)]=true;});(donnees.lignes||[]).forEach(function(x){if(!sel[Number(x.eleveId)])return;if(r.type==='TELEPHONE')x.telephone=r.professeur.nom;else x.visite=r.professeur.nom;});Object.keys(sel).forEach(function(id){var l=p.lignes[id]||(p.lignes[id]=['SANS',-1,'','',0]);l[r.type==='TELEPHONE'?2:3]=r.professeur.nom;});afficher(donnees);modifie=true;
-        etatPP.textContent=(r.warning||'Affectation enregistrée.')+' Le tableau de la classe se mettra à jour avec « Actualiser ».';})
-      .withFailureHandler(function(e){occupe(b,false);etatPP.textContent='Erreur : '+(e&&e.message||e);})
-      [CFG.admin?'EUC_DEV448_affecterAdmin':'EUC_DEV448_affecterPp'](CFG.admin?Object.assign({famille:c.familleBase||c.famille,type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids,scopeIds:c.eleves.map(function(e){return Number(e[0]);})},portee):Object.assign({code:code.value.trim(),type:document.getElementById('ppType').value,profId:Number(document.getElementById('ppProf').value),eleveIds:ids},portee));};
+    /* DEV727 : affectation instantanée. Le tableau change dès le clic ; l'enregistrement part en arrière-plan.
+     * Les clics faits pendant un envoi sont regroupés dans l'envoi suivant (un seul appel serveur).
+     * En cas d'échec, seules les affectations non enregistrées reviennent à leur état précédent. */
+    var file727=[],envoi727=null,seq727=0;
+    function valeur727(eid,type){var x=(donnees.lignes||[]).filter(function(l){return Number(l.eleveId)===eid;})[0];return x?String((type==='TELEPHONE'?x.telephone:x.visite)||''):'';}
+    function poser727(eid,type,nom){(donnees.lignes||[]).forEach(function(x){if(Number(x.eleveId)!==eid)return;if(type==='TELEPHONE')x.telephone=nom;else x.visite=nom;});var l=p.lignes[eid]||(p.lignes[eid]=['SANS',-1,'','',0]);l[type==='TELEPHONE'?2:3]=nom;}
+    function rendre727(){var coches={};document.querySelectorAll('.ppEleve:checked').forEach(function(x){coches[x.value]=true;});afficher(donnees);document.querySelectorAll('.ppEleve').forEach(function(x){if(coches[x.value])x.checked=true;});}
+    function attente727(){return file727.length+(envoi727?envoi727.length:0);}
+    function etat727(msg){window.__eucPp727=attente727();etatPP.innerHTML=window.__eucPp727?'<span class="spin" aria-hidden="true"></span>Enregistrement de '+window.__eucPp727+' affectation(s) en arrière-plan… vous pouvez continuer.':esc(msg||'');}
+    function annuler727(ops){ops.slice().reverse().forEach(function(o){Object.keys(o.avant).forEach(function(eid){if(valeur727(Number(eid),o.type)===o.nom)poser727(Number(eid),o.type,o.avant[eid]);});});rendre727();}
+    function pompe727(){if(envoi727||!file727.length)return;var lot=envoi727=file727.splice(0,40),fini=false;etat727();
+      var fin=function(echecs,msg){if(fini)return;fini=true;clearTimeout(t);envoi727=null;if(echecs.length)annuler727(echecs);modifie=true;
+          etat727(echecs.length?'Erreur : '+msg+' — '+echecs.length+' affectation(s) non enregistrée(s), revenue(s) à leur état précédent.':'Affectations enregistrées ✓ Le tableau de la classe se mettra à jour avec « Actualiser ».');pompe727();},
+        t=setTimeout(function(){fin(lot,'délai dépassé, rechargez la page pour vérifier');},120000);
+      var q=Object.assign(CFG.admin?{famille:c.familleBase||c.famille,scopeIds:c.eleves.map(function(e){return Number(e[0]);})}:{code:code.value.trim()},portee,{operations:lot.map(function(o){return{id:o.id,type:o.type,profId:o.profId,eleveIds:o.eleveIds};})});
+      google.script.run.withSuccessHandler(function(r){var ok={},msg='';(r&&r.resultats||[]).forEach(function(x){if(x.ok)ok[x.id]=true;else msg=msg||x.message;});fin(lot.filter(function(o){return!ok[o.id];}),msg||'réponse incomplète');})
+        .withFailureHandler(function(e){fin(lot,String(e&&e.message||e));}).EUC_DEV727_affecterLot(q);}
+    if(!window.__eucPp727Garde){window.__eucPp727Garde=true;window.addEventListener('beforeunload',function(e){if(window.__eucPp727){e.preventDefault();e.returnValue='';}});}
+    document.getElementById('ppAffecter').onclick=function(){var b=this,ids=Array.prototype.map.call(document.querySelectorAll('.ppEleve:checked'),function(x){return Number(x.value);}),pid=Number(document.getElementById('ppProf').value),type=document.getElementById('ppType').value;
+      if(b.disabled)return;if(!ids.length){etatPP.textContent='Cochez au moins un élève.';return;}if(!pid){etatPP.textContent='Choisissez un professeur.';return;}
+      var prof=profsPP.filter(function(x){return Number(x.id)===pid;})[0];if(!prof){etatPP.textContent='Choisissez un professeur.';return;}
+      b.disabled=true;setTimeout(function(){b.disabled=false;},300);
+      var o={id:'a'+(++seq727),type:type,profId:pid,eleveIds:ids,nom:String(prof.nom||''),avant:{}};ids.forEach(function(eid){o.avant[eid]=valeur727(eid,type);poser727(eid,type,o.nom);});
+      afficher(donnees);file727.push(o);etat727();pompe727();};
     /* DEV678 : le professeur principal exporte le tableau en PDF et l'envoie aux professeurs qui y figurent (après confirmation des destinataires). */
     document.getElementById('ppPdf').onclick=function(){exporterPdf(this,c,p);};
     document.getElementById('ppEnvoi').onclick=function(){var b=this,q=Object.assign({code:code.value.trim()},portee);

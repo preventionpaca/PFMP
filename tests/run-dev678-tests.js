@@ -76,7 +76,8 @@ test('page des professeurs (DEV576) : « Exporter PDF » et « Envoyer le tablea
 });
 test('affectation par le professeur principal : données de la page mises à jour, le PDF reprend les professeurs juste affectés', () => {
   const h = read('apps-script/Suivi_Enseignants_DEV576.html');
-  assert.match(h, /Object\.keys\(sel\)\.forEach\(function\(id\)\{var l=p\.lignes\[id\]\|\|\(p\.lignes\[id\]=\['SANS',-1,'','',0\]\);l\[r\.type==='TELEPHONE'\?2:3\]=r\.professeur\.nom;\}\);/);
+  /* DEV727 : mise à jour dès le clic (avant la réponse du serveur), mêmes colonnes ; comportement vérifié par run-dev727-tests.js. */
+  assert.match(h, /var l=p\.lignes\[eid\]\|\|\(p\.lignes\[eid\]=\['SANS',-1,'','',0\]\);l\[type==='TELEPHONE'\?2:3\]=nom;/);
   assert.match(h, /c\.pp\.join\('\\n'\),l\[2\]\|\|'',l\[3\]\|\|''\]\);/, 'colonnes du PDF : suivi téléphonique l[2], visiteur l[3]');
 });
 test('envoi par l’administration (DEV720) : même pièce jointe depuis le suivi des PFMP ; anciennes pages sans PDF inchangées', () => {

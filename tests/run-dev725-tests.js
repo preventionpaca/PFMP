@@ -44,6 +44,8 @@ test('groupes : seuls les caches régénérables (book, accès, familles) sont l
   assert.strictEqual(k.EUC_DEV725_groupe_('DEV456R13_FAMILY_2026-2027_BTS_P3').rang, 2);
   ['DEV457_TABLE_REV_ALL', 'EUC_PFMP_ADMIN_EMAILS', 'EUC_DEV545_COMPANY_ALIASES_V1', 'DEV456R13_FAMILY_2026-2027_BTS_N'].forEach(c => assert.strictEqual(k.EUC_DEV725_groupe_(c), null, c));
   assert.strictEqual(k.EUC_DEV725_octets_('é'), 2);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(k.EUC_DEV725_groupe_('DEV418_ACCESS_ROWS_2026-2027_28_13'))), { groupe: 'DEV418_ACCESS_ROWS_', rang: 0 });
+  ['DEV517_GEO_INDEX_2026-2027_12', 'DEV517_GEO_INDEX_2026-2027_COUNT', 'DEV517_GEO_INDEX_2026-2027_AT'].forEach(c => assert.strictEqual(k.EUC_DEV725_groupe_(c).groupe, 'DEV517_GEO_INDEX_2026-2027_', c));
 });
 
 test('stockage plein : une révision (écriture indispensable) libère le book puis réussit, sans toucher aux réglages', () => {
@@ -88,6 +90,20 @@ test('budget : un book trop gros n’évince aucune famille et n’est pas écri
   assert.strictEqual(k.__store['DEV398_ACCESS_ROWS_2026-2027'].length, 8000);
 });
 
+test('situation du 25/11 (445 Ko : index géographique, reliquat DEV418) : un snapshot de famille libère ces caches et tient sous le budget', () => {
+  const s = { REGLAGES: bloc('r', 60000) };
+  for (let i = 0; i < 28; i++) s['DEV418_ACCESS_ROWS_2026-2027_28_' + i] = bloc('a', 7000);
+  for (let i = 0; i < 20; i++) s['DEV517_GEO_INDEX_2026-2027_' + i] = bloc('g', 7000);
+  s['DEV517_GEO_INDEX_2026-2027_COUNT'] = '20';
+  const k = contexte(s, 500 * 1024), items = { 'DEV456R13_FAMILY_2026-2027_BACPRO_PN': '30' };
+  for (let i = 0; i < 30; i++) items['DEV456R13_FAMILY_2026-2027_BACPRO_P' + i] = bloc('f', 7000);
+  assert.strictEqual(k.EUC_DEV725_reserver_(items, 'DEV456R13_FAMILY_2026-2027_BACPRO_P'), true);
+  assert.ok(!Object.keys(k.__store).some(c => /^DEV418_/.test(c)), 'reliquat libéré d’abord');
+  assert.strictEqual(k.__store.REGLAGES.length, 60000);
+  k.PropertiesService.getScriptProperties().setProperties(items, false);
+  assert.ok(k.__taille() <= k.EUC_DEV725_BUDGET_);
+});
+
 test('diagnostic : tailles et noms seulement, jamais de valeur', () => {
   const k = contexte(plein(), 1e9), e = k.EUC_DEV725_etat_(), txt = JSON.stringify(e);
   assert.strictEqual(e.ok, true); assert.ok(e.octets > 400000); assert.strictEqual(e.lourds[0].nom, 'DEV456R13_FAMILY_2026-2027_BACPRO_P');
@@ -100,6 +116,7 @@ test('câblage : révision DEV457, snapshot famille DEV456, book DEV549, compteu
   assert.ok(!/\n  p\.setProperty\(EUC_DEV457_PROP_PREFIX_/.test(read('apps-script/EUC_PFMP_DEV457_GristReadMemo.js')), 'plus d’écriture de révision qui lève');
   assert.ok(/EUC_DEV725_reserver_\(items,k\+'_P'\)/.test(read('apps-script/EUC_PFMP_DEV456_RestaurationExacte.js')));
   assert.ok(/EUC_DEV725_reserver_\(values,key\+'_'\)/.test(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js')));
+  assert.ok(/EUC_DEV725_reserver_\(values,key\+'_'\)\)props\.setProperties/.test(read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js')), 'index géographique');
   const u = read('apps-script/EUC_PFMP_DEV447_GristUsage.js');
   assert.ok(/EUC_DEV725_ecrire_\(props,key/.test(u) && /stockage:stockage/.test(u));
   assert.ok(/id="stockage725"/.test(read('apps-script/Consommation_API_Grist_DEV447.html')));

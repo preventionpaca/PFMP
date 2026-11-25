@@ -179,7 +179,9 @@ test('accueil d’administration : bandeau masqué par défaut, affiché seuleme
   const a = read('apps-script/Admin_PFMP.html');
   assert.match(a, /<section id="aFaireV694" hidden role="status"/);
   assert.ok(a.includes('href="<?= adminBase ?>?page=soumissions-a-traiter-pfmp"'));
-  assert.ok(a.includes("if(!l.length){z.hidden=true;return;}") && a.includes('.withFailureHandler(function(){z.hidden=true;}).EUC_DEV694_aFaire();'));
+  /* DEV728 : bandeau par rubriques ; la rubrique des dépôts disparaît quand il n'y a rien, le bandeau quand aucune rubrique n'est affichée. */
+  assert.ok(a.includes("if(!l.length){g('aFaireEleves').hidden=true;voir();return;}") && a.includes(".withFailureHandler(function(){g('aFaireEleves').hidden=true;voir();}).EUC_DEV694_aFaire();"));
+  assert.ok(a.includes("function voir(){z.hidden=g('aFaireEleves').hidden&&g('aFaireCarte').hidden;}"));
 });
 
 test('recherche de l’Administration : dépôts en ligne de l’année ajoutés (n° S, classe, entreprise), ouverts dans l’éditeur de dépôt', () => {
