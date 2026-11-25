@@ -1,5 +1,18 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV736 : tableau de bord de la direction
+
+- Nouvelle route `?page=tableau-de-bord` (« Tableau de bord — Direction »), sur la même Web App que l'accueil. Elle contient :
+  - les effectifs : mêmes chiffres, même cache et même présentation que l'accueil d'administration ;
+  - quatre accès rapides : Suivi des PFMP, Book des entreprises, Suivi des apprentis (statistiques) et Cartographie des apprentis. Ils passent par les adresses `pfmp` et `apprentis` de la table des liens.
+- Accès aux effectifs : administration PFMP, ou code direction actif (DEV684, créé et révoqué depuis l'administration). Le code peut être retenu sur l'ordinateur (localStorage, bouton « Oublier mon code »). Un code PP de classe ne suffit pas.
+- Après vérification, le serveur renvoie un jeton de session enseignant valable 12 h, ajouté aux accès rapides : les pages s'ouvrent même quand la clé des liens enseignants est exigée.
+- `EUC_DEV736_effectifs` est ajoutée aux fonctions publiques (`scripts/generate-acces-liste.js`) car elle fait son propre contrôle. `EUC_DEV592_effectifs` (accueil) garde son contrôle admin ; le calcul est partagé (`EUC_DEV592_effectifsCalcul_`).
+- Rendu des effectifs extrait dans `Effectifs_Rendu_DEV736.html`, inclus par l'accueil et le tableau de bord ; les tests DEV575, DEV732, DEV733, DEV734 et DEV735 lisent l'accueil et ce fichier.
+- Route ajoutée au contrôle de release (`scripts/pfmp-release-config.json`).
+- Adresse publique à créer : enregistrement DNS (zone `lycee-les-eucalyptus.org` chez GoDaddy, pas OVH) et dépôt GitHub Pages de redirection, comme `alternance`.
+- Tests : `tests/run-dev736-tests.js` (4).
+
 ## Mise à jour du 25 novembre 2026 — DEV735 : effectifs, entreprises estimées et affichage sans recalcul
 
 - Tuile Total : apprentis détaillés (en mixité / en classe entière) ; entreprises estimées sur l'ensemble, chaque entreprise comptée une fois.

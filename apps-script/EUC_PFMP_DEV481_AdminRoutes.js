@@ -47,6 +47,8 @@ function EUC_DEV481_routeAccueil_(e) {
       return EUC_DEV670_afficher(e);
     case 'soumissions-a-traiter-pfmp':
       return EUC_DEV665_afficher(e);
+    case 'tableau-de-bord':
+      return EUC_DEV736_afficher(e);
     case 'statistiques-pfmp':
       return EUC_DEV698_afficher(e);
     case 'contacts-entreprises-pfmp':

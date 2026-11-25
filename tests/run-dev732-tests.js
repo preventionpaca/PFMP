@@ -47,7 +47,7 @@ test('effectifs : classe entière dans un seul organisme, total inchangé ; LP /
   assert.deepEqual([lgt.apprentisMixite, lgt.apprentisClasseEntiere], [1, 1]);
 });
 test('accueil : tuiles établissement / organisme et rappel du réglage', () => {
-  const h = read('apps-script/Admin_PFMP.html');
+  const h = (() => { const a = read('apps-script/Admin_PFMP.html'); assert.ok(a.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')"), 'rendu partagé DEV736 inclus'); return a + read('apps-script/Effectifs_Rendu_DEV736.html'); })();
   assert.match(h, /apprenti\(s\) en mixité · '\+t\.apprentisClasseEntiere\+' apprenti\(s\) en classe entière rattachée\(s\)'/);
   assert.match(h, /classe\(s\) dédiée\(s\) · '\+t\.apprentis\+' apprenti\(s\)'/);
   assert.match(h, /page « Quotas d’apprentissage », colonne « Organismes » → OPCO/);

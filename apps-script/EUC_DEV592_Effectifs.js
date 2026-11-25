@@ -87,6 +87,10 @@ function EUC_DEV592_reponse_(cache, temoin, forcer) {
 }
 function EUC_DEV592_effectifs(annee, options) {
   EUC_SUIVI2_exigerAdmin_();
+  return EUC_DEV592_effectifsCalcul_(annee, options);
+}
+/* DEV736 : calcul sans contrôle d'accès — appelé seulement après contrôle (administration, ou code direction du tableau de bord). */
+function EUC_DEV592_effectifsCalcul_(annee, options) {
   var forcer = !!(options && options.forcer), cle = EUC_DEV592_cle_(annee), temoin = '';
   try { temoin = EUC_SUIVI2_temoin_(); } catch (e) { temoin = ''; }
   var vite = EUC_DEV592_reponse_(typeof EUC_DEV572_lire_ === 'function' ? EUC_DEV572_lire_(cle) : null, temoin, forcer);

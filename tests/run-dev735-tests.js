@@ -36,7 +36,7 @@ test('cache : même témoin Grist → résultat rendu sans recalcul ; témoin di
   assert.match(k.EUC_DEV592_cle_('2026-2027'), /^EUC_DEV592_EFF_V2_20262027_100dev735$/);
 });
 test('page d’accueil : chargement rapide puis recalcul automatique si périmé ; bouton = recalcul forcé ; chiffres précédents conservés en cas d’erreur', () => {
-  const a = read('apps-script/Admin_PFMP.html');
+  const a = (() => { const a = read('apps-script/Admin_PFMP.html'); assert.ok(a.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')"), 'rendu partagé DEV736 inclus'); return a + read('apps-script/Effectifs_Rendu_DEV736.html'); })();
   assert.match(a, /\.EUC_DEV592_effectifs\('',\{forcer:forcer\}\)/); assert.match(a, /majB\.onclick=function\(\)\{charger\(true\);\}/);
   assert.match(a, /if\(r\.perime&&!forcer\)setTimeout\(function\(\)\{charger\(true\);\},0\)/); assert.match(a, /chiffres précédents conservés/);
   assert.match(a, /' en mixité, '\+\(t\.apprentisClasseEntiere\|\|0\)\+' en classe entière\)'/); assert.match(a, /' · ≈ '\+/);

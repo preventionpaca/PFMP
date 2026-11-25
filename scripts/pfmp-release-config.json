@@ -33,6 +33,7 @@
     {"page": "entreprises-monaco-pfmp", "scope": "admin", "expected": "Entreprises de Monaco"},
     {"page": "soumissions-a-traiter-pfmp", "scope": "admin", "expected": "Soumissions à traiter"},
     {"page": "statistiques-pfmp", "scope": "admin", "expected": "Statistiques PFMP"},
+    {"page": "tableau-de-bord", "scope": "admin", "expected": "Tableau de bord"},
     {"page": "contacts-entreprises-pfmp", "scope": "admin", "expected": "Fiabiliser les contacts entreprises"},
     {"page": "test-siret-pfmp", "scope": "admin", "expected": "Tester un SIRET ou un NIS"},
     {"page": "acces-inpi-pfmp", "scope": "admin", "expected": "Accès INPI"},

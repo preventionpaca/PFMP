@@ -27,7 +27,7 @@ test('CQPM : 12 apprentis tous « AFPI PROVENCE » → 0 entreprise identifiée,
   assert.equal(w.EUC635.entreprises([cq]).multiples.length, 0, 'pas de fausse entreprise commune');
 });
 test('accueil : bulle « non rens. » et tuile « + N non renseignée(s) »', () => {
-  const a = read('apps-script/Admin_PFMP.html');
+  const a = (() => { const a = read('apps-script/Admin_PFMP.html'); assert.ok(a.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')"), 'rendu partagé DEV736 inclus'); return a + read('apps-script/Effectifs_Rendu_DEV736.html'); })();
   assert.match(a, /'<small>non rens\.<\/small><\/span>'/); assert.match(a, /nr=t\.entreprisesNonRenseignees\|\|0/); assert.match(a, /\(nr\?' \+ '\+nr\+' non renseignée\(s\)':''\)/); assert.match(a, /\.b-nr\{/);
 });
 console.log(n + ' tests DEV734 réussis.');

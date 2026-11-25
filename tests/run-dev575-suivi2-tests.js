@@ -482,7 +482,7 @@ test('DEV635 : classes entières — liste des jeunes (entreprise, tuteur, contr
   assert.deepEqual([e.apprentis.length, e.tuteurs.length, e.classes.length], [3, 2, 2], 'même SIRET réuni, classe co-gérée comptée une fois, 2 tuteurs');
   const t = w.EUC635.tableau(c2, ents); assert.equal((t.match(new RegExp('background:' + e.couleur, 'g')) || []).length, 2); assert.match(t, /3 apprentis · 2 tuteur\(s\)/); assert.match(t, /Futur apprenti/);
   const admin = read('apps-script/Admin_PFMP.html'), routes = read('apps-script/EUC_PFMP_DEV481_AdminRoutes.js'), cfg = read('scripts/pfmp-release-config.json');
-  assert.ok(admin.includes("EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu')") && admin.includes('?page=apprentis-classes-pfmp">Apprentis par classe entière') && admin.includes('Voir les jeunes et leurs entreprises'));
+  assert.ok(admin.includes("EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu')") && admin.includes('?page=apprentis-classes-pfmp">Apprentis par classe entière') && admin.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')") && read('apps-script/Effectifs_Rendu_DEV736.html').includes('Voir les jeunes et leurs entreprises'), 'DEV736 : rendu partagé inclus dans l’accueil');
   assert.ok(routes.includes("case 'apprentis-classes-pfmp':\n      return EUC_DEV635_afficher(e);") && cfg.includes('"page": "apprentis-classes-pfmp"'));
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /siret: EUC_SUIVI2_t_\(b\.SIRET \|\| b\.Entreprise_siret\)/);
 });

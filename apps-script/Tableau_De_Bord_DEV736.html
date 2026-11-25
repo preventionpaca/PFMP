@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><base target="_top">
+<style>
+  :root{--vert:#0f766e;--encre:#14202b;--doux:#4d5c6b;--fond:#f4f7f6}
+  *{box-sizing:border-box}body{margin:0;background:var(--fond);color:var(--encre);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:1180px;margin:0 auto;padding:24px 20px 40px}
+  header h1{margin:0;font-size:1.6rem}header p{margin:4px 0 0;color:var(--doux)}
+  .card{background:#fff;border:1px solid #dce3ea;border-radius:14px;padding:16px 18px;margin-top:16px}
+  .card h2{margin:0 0 10px;font-size:1.15rem}
+  .liens{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .liens a{display:block;border:1px solid #cfe3dc;border-radius:12px;background:#f3faf7;padding:12px 14px;text-decoration:none;color:inherit}
+  .liens a:hover,.liens a:focus{border-color:var(--vert);box-shadow:0 0 0 2px #99d5cc;outline:none}
+  .liens b{display:block;color:var(--vert);font-size:1rem}.liens span{font-size:.82rem;color:var(--doux)}
+  .acces form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.acces input{font:inherit;padding:7px 10px;border:1px solid #b9c6d2;border-radius:8px;min-width:240px}
+  .btn{font:inherit;font-weight:800;border:1px solid var(--vert);color:#fff;background:var(--vert);border-radius:8px;padding:7px 14px;cursor:pointer}
+  .btn.sec{color:var(--vert);background:#fff}.btn:disabled{opacity:.7;cursor:wait}
+  .note{color:var(--doux);font-size:.86rem}.err{color:#b42318;font-weight:700}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid #9bd3c4;border-top-color:var(--vert);border-radius:50%;animation:t 1s linear infinite;vertical-align:-1px}@keyframes t{to{transform:rotate(360deg)}}
+  .entete-eff{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.entete-eff h2{margin:0}
+  @media(max-width:600px){main{padding:16px}.acces input{min-width:0;width:100%}}
+</style>
+<?!= EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu'); ?>
+<?!= EUC_PFMP_inclure_('Effectifs_Rendu_DEV736'); ?>
+<title>Tableau de bord — Direction</title></head>
+<body><main>
+<header><h1>Tableau de bord</h1><p>Direction — effectifs de l’année et accès rapides aux outils de l’alternance.</p></header>
+
+<section class="card" aria-labelledby="tLiens"><h2 id="tLiens">Accès rapides</h2>
+  <div class="liens">
+    <a class="lien" href="__LIEN_PFMP__" target="_blank" rel="noopener"><b>Suivi des PFMP</b><span>Classes, périodes, conventions, professeurs du suivi et visites.</span></a>
+    <a class="lien" href="__LIEN_PFMP__?page=book-entreprises-public-pfmp" target="_blank" rel="noopener"><b>Book des entreprises</b><span>Entreprises d’accueil des PFMP et des apprentis.</span></a>
+    <a class="lien" href="__LIEN_APPRENTIS__" target="_blank" rel="noopener"><b>Suivi des apprentis</b><span>Statistiques des apprentis (mixité, classes entières, contrats), référents et visites.</span></a>
+    <a class="lien" href="__LIEN_APPRENTIS__?page=cartographie-apprentis-public-pfmp" target="_blank" rel="noopener"><b>Cartographie des apprentis</b><span>Carte des entreprises qui accueillent les apprentis.</span></a>
+  </div>
+  <p class="note">Statistiques et cartographie des apprentis : apprentis seulement (pas les élèves scolaires). Les liens s’ouvrent dans un nouvel onglet ; ils sont activés pour 12 heures après votre code direction, comme les liens Atrium des professeurs.</p>
+</section>
+
+<section class="card acces" id="acces" hidden aria-labelledby="tAcces"><h2 id="tAcces">Code direction</h2>
+  <p class="note">Les effectifs comportent la liste nominative des apprentis : saisissez votre code direction personnel (remis par le bureau des formations et des entreprises).</p>
+  <form id="fAcces"><input id="code" autocomplete="off" spellcheck="false" aria-label="Code direction" placeholder="Code direction">
+    <label class="note"><input type="checkbox" id="retenir" checked> Se souvenir sur cet ordinateur</label>
+    <button class="btn" id="bAcces" type="submit">Ouvrir les effectifs</button></form>
+  <p id="eAcces" class="note" role="status"></p>
+</section>
+
+<section class="card" id="effectifs" hidden aria-labelledby="tEff">
+  <div class="entete-eff"><h2 id="tEff">Effectifs <span id="effAnnee"></span></h2><button type="button" class="btn sec" id="effMaj">Mettre à jour</button><button type="button" class="btn sec" id="oublier" hidden>Oublier mon code</button></div>
+  <p id="effEtat" class="note" role="status"></p>
+  <div id="effTuiles" class="eff-tuiles"></div><div id="effClasses"></div>
+</section>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);},ADMIN=<?!= admin ? 'true' : 'false' ?>,CLE='eucCodeDirection',D=null,CODE='',enCours=false;
+/* Liens des enveloppes Atrium (pfmp, apprentis) : jeton de session enseignant (12 h) ajouté une fois le code direction vérifié. */
+function activerLiens(jeton){if(!jeton)return;Array.prototype.forEach.call(document.querySelectorAll('a.lien'),function(a){try{var u=new URL(a.getAttribute('href'));u.searchParams.set('jeton',jeton);a.href=u.toString();}catch(e){}});}
+function lire(){try{return localStorage.getItem(CLE)||'';}catch(e){return '';}}
+function ecrire(v){try{if(v)localStorage.setItem(CLE,v);else localStorage.removeItem(CLE);}catch(e){}}
+function occupe(b,on,lib){if(!b.dataset.lib)b.dataset.lib=b.innerHTML;b.disabled=!!on;b.innerHTML=on?'<span class="spin" aria-hidden="true"></span> '+lib:b.dataset.lib;}
+function heure(r){var d=r&&r.calculeA?new Date(r.calculeA):null;return d&&!isNaN(d)?d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';}
+function demanderCode(msg){$('acces').hidden=false;$('effectifs').hidden=!D;$('eAcces').className=msg?'err':'note';$('eAcces').textContent=msg||'';$('code').focus();}
+/* Chargement : dernier calcul tout de suite (cache), recalcul en arrière-plan s'il y a eu des modifications ; bouton = recalcul forcé. */
+function charger(forcer,bouton){forcer=forcer===true;if(enCours)return;enCours=true;var maj=$('effMaj'),b=bouton||maj,fini=false,avant=!!D;
+  var fin=function(){fini=true;clearTimeout(t);enCours=false;occupe(b,false);if(b!==maj)occupe(maj,false);};
+  var t=setTimeout(function(){if(fini)return;fin();$('effEtat').textContent='Le calcul des effectifs a dépassé 3 minutes : réessayez avec « Mettre à jour ».';},180000);
+  occupe(b,true,b===maj?'Calcul…':'Ouverture…');if(b!==maj)occupe(maj,true,'Calcul…');$('effEtat').innerHTML='<span class="spin"></span> '+(forcer?'Recalcul des effectifs…':'Chargement des effectifs…');
+  google.script.run.withSuccessHandler(function(r){if(fini)return;fin();D=r;$('acces').hidden=true;$('effectifs').hidden=false;$('oublier').hidden=ADMIN||!lire();
+    $('effAnnee').textContent=r.annee||'';var h=heure(r);
+    $('effEtat').textContent=(r.nom?'Bonjour '+r.nom+'. ':'')+(h?'Chiffres du '+h+(r.perime?' — des modifications ont eu lieu depuis : mise à jour en arrière-plan…':' — à jour')+'. ':'')+'Cliquez sur un établissement ou un organisme pour voir ses classes. Entreprises : estimation (un jeune sans employeur identifié = une entreprise).';
+    EUC736.rendre(D,$('effTuiles'),$('effClasses'));activerLiens(r.jeton);if(r.perime&&!forcer)setTimeout(function(){charger(true);},0);})
+  .withFailureHandler(function(e){if(fini)return;fin();var m=String(e&&e.message||e);
+    if(/Code direction/.test(m)){ecrire('');CODE='';demanderCode(m);return;}
+    $('effEtat').textContent=(avant?'Mise à jour impossible (chiffres précédents conservés) : ':'Effectifs indisponibles : ')+m;$('effectifs').hidden=false;})
+  .EUC_DEV736_effectifs({code:CODE,forcer:forcer});}
+$('fAcces').onsubmit=function(ev){ev.preventDefault();var v=$('code').value.trim();if(!v){demanderCode('Saisissez votre code direction.');return;}CODE=v;if($('retenir').checked)ecrire(v);$('effectifs').hidden=false;charger(false,$('bAcces'));};
+$('effMaj').onclick=function(){charger(true);};
+$('oublier').onclick=function(){ecrire('');CODE='';D=null;$('effTuiles').innerHTML='';$('effClasses').innerHTML='';$('effectifs').hidden=true;demanderCode('Code oublié sur cet ordinateur.');};
+if(!(window.google&&google.script&&google.script.run)){$('effectifs').hidden=false;$('effEtat').textContent='Effectifs indisponibles dans cet aperçu.';return;}
+CODE=lire();if(ADMIN||CODE){$('effectifs').hidden=false;charger(false);}else demanderCode('');
+})();
+</script>
+</body></html>

@@ -37,6 +37,8 @@ const PAGES_PUBLIQUES = [
   'Declaration_Entreprise_DEV603',
   /* DEV632 : page d'accès des apprentis (code personnel) et des professeurs (demande de lien). */
   'Acces_Alternance_DEV632',
+  /* DEV736 : tableau de bord de la direction ; EUC_DEV736_effectifs vérifie lui-même le code direction (ou l'administration). */
+  'Tableau_De_Bord_DEV736',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',
