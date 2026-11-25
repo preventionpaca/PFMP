@@ -14,7 +14,7 @@
  */
 var EUC_DEV579_PROFILS_PROP_ = 'EUC_DEV579_PROFILS';
 var EUC_DEV579_ORGANISMES_ = ['CFA RAN', 'CFAI', 'GRETA'];
-var EUC_DEV579_COLONNES_ = { modalite: 'Modalite_apprentissage', gestionnaire: 'Organisme_gestionnaire', donneur: 'Organisme_donneur_ordre', opco: 'Organisme_relation_OPCO' };
+var EUC_DEV579_COLONNES_ = { modalite: 'Modalite_apprentissage', gestionnaire: 'Organisme_gestionnaire', donneur: 'Organisme_donneur_ordre', opco: 'Organisme_relation_OPCO', rattachement: 'Etablissement_rattachement' };
 var EUC_DEV579_MODES_ = { CLASSE_ENTIERE: 'Classe entière', MIXITE: 'Mixité', FORMATION_CONTINUE: 'Formation continue' };
 
 function EUC_DEV579_norm_(v) { return String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); }
@@ -73,6 +73,18 @@ function EUC_DEV579_opcoDefaut_(classe, etab) {
   return '';
 }
 
+/* DEV733 — Établissement (LP ou LGT) auquel une classe entière est rattachée dans les effectifs de l'accueil.
+ * Colonne Grist « Établissement de rattachement » (LP / LGT / Aucun) prioritaire ; à défaut cette table
+ * (décision DDFPT du 25/11/2026), puis la colonne Etab de la classe si elle vaut LP ou LGT. */
+var EUC_DEV579_RATTACHEMENTS_ = ['LP', 'LGT', 'Aucun'];
+function EUC_DEV579_rattachementDe_(v) { var n = EUC_DEV579_norm_(v); return n === 'LP' ? 'LP' : n === 'LGT' ? 'LGT' : n === 'AUCUN' ? 'Aucun' : ''; }
+function EUC_DEV579_rattachementDefaut_(classe) {
+  var n = EUC_DEV579_norm_(classe);
+  if (/^1CAPP$/.test(n) || /^TSEC$/.test(n)) return 'LP';
+  if (/^BACHELOR\b/.test(n) || /^[12]BTS ELEC ALT$/.test(n)) return 'LGT';
+  return '';
+}
+
 var EUC_DEV579_PROFILS_MEMO_ = null;
 function EUC_DEV579_profilsConfig_() {
   if (EUC_DEV579_PROFILS_MEMO_) return EUC_DEV579_PROFILS_MEMO_;
@@ -88,7 +100,7 @@ function EUC_DEV579_colonnesClasses_() {
   try {
     (typeof EUC_DEV538_records_ === 'function' ? EUC_DEV538_records_('Classes', {}) : []).forEach(function(r) {
       var f = r.fields || r, C = EUC_DEV579_COLONNES_;
-      out[String(r.id || f.id)] = { modalite: EUC_DEV579_modeDe_(f[C.modalite]), gestionnaire: EUC_DEV579_organismeDe_(f[C.gestionnaire]), donneur: EUC_DEV579_organismeDe_(f[C.donneur]), opco: EUC_DEV579_organismeDe_(f[C.opco]) };
+      out[String(r.id || f.id)] = { modalite: EUC_DEV579_modeDe_(f[C.modalite]), gestionnaire: EUC_DEV579_organismeDe_(f[C.gestionnaire]), donneur: EUC_DEV579_organismeDe_(f[C.donneur]), opco: EUC_DEV579_organismeDe_(f[C.opco]), rattachement: EUC_DEV579_rattachementDe_(f[C.rattachement]) };
     });
   } catch (e) {}
   EUC_DEV579_COLONNES_MEMO_ = out;
@@ -103,6 +115,8 @@ function EUC_DEV579_fabrique_(mode, g, d, source) {
 function EUC_DEV579_profil_(config, annee, classId, classe, etab, ancienMode) {
   var p = EUC_DEV579_profilBase_(config, annee, classId, classe, etab, ancienMode), col = EUC_DEV579_colonnesClasses_()[String(classId)];
   p.opco = (col && col.opco) || EUC_DEV579_opcoDefaut_(classe, etab) || p.donneur || p.gestionnaire || '';
+  var e = EUC_DEV579_norm_(etab);
+  p.rattachement = (col && col.rattachement) || EUC_DEV579_rattachementDefaut_(classe) || (e === 'LP' || e === 'LGT' ? e : '');
   return p;
 }
 function EUC_DEV579_profilBase_(config, annee, classId, classe, etab, ancienMode) {

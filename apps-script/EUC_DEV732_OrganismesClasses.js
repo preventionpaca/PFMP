@@ -6,15 +6,18 @@
  * table Grist « Classes » (colonnes DEV579), seulement pour les cases réellement modifiées. « Automatique » (vide)
  * laisse la règle par défaut s'appliquer (table de vérité DEV579, puis donneur d'ordre, puis gestionnaire).
  */
-var EUC_DEV732_CHAMPS_ = ['gestionnaire', 'donneur', 'opco'];
-var EUC_DEV732_LIBELLES_ = { gestionnaire: 'Organisme gestionnaire', donneur: 'Organisme donneur d’ordre', opco: 'Organisme relation OPCO' };
+var EUC_DEV732_CHAMPS_ = ['gestionnaire', 'donneur', 'opco', 'rattachement'];
+var EUC_DEV732_LIBELLES_ = { gestionnaire: 'Organisme gestionnaire', donneur: 'Organisme donneur d’ordre', opco: 'Organisme relation OPCO', rattachement: 'Établissement de rattachement' };
+/* DEV733 : établissement de rattachement d'une classe entière (LP / LGT / Aucun), réglé de la même façon. */
+function EUC_DEV732_choix_(k) { return k === 'rattachement' ? EUC_DEV579_RATTACHEMENTS_ : EUC_DEV579_ORGANISMES_; }
+function EUC_DEV732_valeur_(k, v) { return k === 'rattachement' ? EUC_DEV579_rattachementDe_(v) : EUC_DEV579_organismeDe_(v); }
 
 /* Profil d'une ligne de la page des quotas : valeurs effectives et valeurs saisies dans Grist (vides si automatiques). */
 function EUC_DEV732_profilLigne_(annee, c) {
   var p = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, c.classe, c.etablissement, 'MIXITE') : null;
   var col = (typeof EUC_DEV579_colonnesClasses_ === 'function' ? EUC_DEV579_colonnesClasses_()[String(c.id)] : null) || {};
-  return { organismes: p ? p.organismes : [], gestionnaire: p ? p.gestionnaire : '', donneur: p ? p.donneur : '', opco: p ? p.opco || '' : '',
-    saisis: { gestionnaire: col.gestionnaire || '', donneur: col.donneur || '', opco: col.opco || '' } };
+  return { organismes: p ? p.organismes : [], gestionnaire: p ? p.gestionnaire : '', donneur: p ? p.donneur : '', opco: p ? p.opco || '' : '', rattachement: p ? p.rattachement || '' : '',
+    saisis: { gestionnaire: col.gestionnaire || '', donneur: col.donneur || '', opco: col.opco || '', rattachement: col.rattachement || '' } };
 }
 
 /* Modifications à écrire (calcul pur) : lignes envoyées par la page × enregistrements actuels de la table Classes. */
@@ -27,8 +30,8 @@ function EUC_DEV732_modifications_(lignes, records) {
     var champs = {};
     EUC_DEV732_CHAMPS_.forEach(function(k) {
       if (!(k in o)) return;
-      var v = String(o[k] || ''); if (v && EUC_DEV579_ORGANISMES_.indexOf(v) < 0) throw new Error('Organisme invalide pour une classe : ' + v);
-      if (EUC_DEV579_organismeDe_(f[C[k]]) !== v) champs[C[k]] = v;
+      var v = String(o[k] || ''); if (v && EUC_DEV732_choix_(k).indexOf(v) < 0) throw new Error((k === 'rattachement' ? 'Établissement' : 'Organisme') + ' invalide pour une classe : ' + v);
+      if (EUC_DEV732_valeur_(k, f[C[k]]) !== v) champs[C[k]] = v;
     });
     if (Object.keys(champs).length) out.push({ id: Number(l.classeId), fields: champs });
   });
@@ -42,7 +45,7 @@ function EUC_DEV732_ecrireOrganismes_(lignes) {
   var cols = (EUC_ENT_grist('get', '/tables/Classes/columns').columns || []).map(function(c) { return c.id; });
   var utiles = {}; mods.forEach(function(m) { Object.keys(m.fields).forEach(function(k) { utiles[k] = true; }); });
   var manquantes = EUC_DEV732_CHAMPS_.filter(function(k) { return utiles[C[k]] && cols.indexOf(C[k]) < 0; });
-  if (manquantes.length) EUC_ENT_grist('post', '/tables/Classes/columns', { columns: manquantes.map(function(k) { return { id: C[k], fields: { label: EUC_DEV732_LIBELLES_[k], type: 'Choice', widgetOptions: JSON.stringify({ choices: EUC_DEV579_ORGANISMES_ }) } }; }) });
+  if (manquantes.length) EUC_ENT_grist('post', '/tables/Classes/columns', { columns: manquantes.map(function(k) { return { id: C[k], fields: { label: EUC_DEV732_LIBELLES_[k], type: 'Choice', widgetOptions: JSON.stringify({ choices: EUC_DEV732_choix_(k) }) } }; }) });
   for (var i = 0; i < mods.length; i += 100) EUC_ENT_grist('patch', '/tables/Classes/records', { records: mods.slice(i, i + 100) });
   EUC_DEV579_COLONNES_MEMO_ = null;
   return mods.length;

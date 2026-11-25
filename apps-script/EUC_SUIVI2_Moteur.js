@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.732'; /* DEV732 : organisme de la relation OPCO (recalcul forcé) ; DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) ; DEV694 : identifiants du dossier ou du dépôt (« Éditer la fiche ») */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.733'; /* DEV733 : établissement de rattachement ; DEV732 : organisme de la relation OPCO (recalcul forcé) ; DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) ; DEV694 : identifiants du dossier ou du dépôt (« Éditer la fiche ») */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -410,7 +410,7 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     var famille = EUC_SUIVI2_famille_(c, diplomes[c.id]);
     var niveau = EUC_SUIVI2_niveau_(nom, famille);
     var profil = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, nom, c.Etab, 'MIXITE') : null, modeApp = profil ? profil.mode : '';
-    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '', opco: profil ? profil.opco || '' : '',
+    classes[c.id] = { id: Number(c.id), nom: nom, famille: famille, niveau: niveau, diplome: (diplomes[c.id] || {}).diplome || '', etab: EUC_SUIVI2_etab_(c.Etab || c.Etablissement_Pronote), modeApprentissage: modeApp, gestionnaire: profil ? profil.gestionnaire : '', donneur: profil ? profil.donneur : '', opco: profil ? profil.opco || '' : '', rattachement: profil ? profil.rattachement || '' : '',
       apprentisAffiches: modeApp === 'CLASSE_ENTIERE' || EUC_SUIVI2_apprentisAffiches_(famille, niveau), test: EUC_SUIVI2_classeTest_(nom), periodes: [], eleves: [] };
   });
 

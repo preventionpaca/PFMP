@@ -37,14 +37,17 @@ function EUC_DEV592_calcul_(m) {
     if (ce) x.liste = (c.eleves || []).map(function(e) { var a = e.apprentissage || {}; return { nom: e.libelle || [e.nom, e.prenom].filter(Boolean).join(' '), statut: a.code || 'SCOLAIRE', entreprise: a.code === 'APPRENTI' ? a.entreprise || '' : '', siret: a.siret || '', tuteur: a.tuteur || '', debut: a.debut || '', fin: a.fin || '' }; })
       .sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     var noms = ce ? [x.opco || 'Organisme à renseigner'] : [c.etab === 'LGT' ? 'LGT' : c.etab === 'LP' ? 'LP' : (c.etab || 'Autres')];
-    if (ce && !fc && (c.etab === 'LP' || c.etab === 'LGT')) rattaches[c.etab] = (rattaches[c.etab] || 0) + apprentis;
+    /* DEV733 : établissement de rattachement réglé (LP / LGT / Aucun) ; à défaut, la colonne Etab. */
+    var ratt = c.rattachement != null && c.rattachement !== '' ? c.rattachement : c.etab;
+    x.rattachement = ratt === 'LP' || ratt === 'LGT' ? ratt : '';
+    if (ce && !fc && x.rattachement) { var R = rattaches[x.rattachement] = rattaches[x.rattachement] || { apprentis: 0, classes: [] }; R.apprentis += apprentis; R.classes.push(c.nom); }
     noms.forEach(function(g) { var G = groupe(g); G.classes.push(x); Object.keys(ents).forEach(function(k) { G.entreprises[k] = true; }); });
   });
   var liste = Object.keys(groupes).map(function(k) {
     var g = groupes[k], t = { classes: g.classes.length, effectif: 0, scolaires: 0, apprentis: 0, stagiaires: 0, entreprises: Object.keys(g.entreprises).length };
     g.classes.forEach(function(c) { t.effectif += c.effectif; t.scolaires += c.scolaires; t.apprentis += c.apprentis; t.stagiaires += c.stagiaires; });
     /* DEV732 : établissement → apprentis en mixité et apprentis des classes entières rattachées ; organisme → classes dédiées. */
-    if (g.nom === 'LP' || g.nom === 'LGT') { t.etablissement = true; t.apprentisMixite = t.apprentis; t.apprentisClasseEntiere = rattaches[g.nom] || 0; }
+    if (g.nom === 'LP' || g.nom === 'LGT') { t.etablissement = true; t.apprentisMixite = t.apprentis; t.apprentisClasseEntiere = rattaches[g.nom] ? rattaches[g.nom].apprentis : 0; t.classesRattachees = rattaches[g.nom] ? rattaches[g.nom].classes.sort() : []; }
     else if (EUC_DEV592_ORDRE_.indexOf(g.nom) >= 0) t.organisme = true;
     g.classes.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     return { nom: g.nom, totaux: t, classes: g.classes };

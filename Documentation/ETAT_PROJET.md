@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV733 : établissement de rattachement des classes entières (LP / LGT)
+
+- Nouveau paramètre par classe : « Établissement de rattachement » (LP / LGT / Aucun). Il se règle sur la page « Quotas d'apprentissage » (4e liste « Établ. ») et s'enregistre dans la colonne Grist `Etablissement_rattachement`, créée au premier enregistrement. Règle par défaut : TSEC et 1CAPP → LP ; BTS ELEC Alt et Bachelor → LGT ; sinon la colonne Etab si elle vaut LP ou LGT.
+- Tuiles LP et LGT de l'accueil : apprentis des classes entières rattachées, avec le nom des classes entre parenthèses. Modèle du suivi recalculé (version 1.0.0-dev.733).
+- Diagnostic CQPM ascensoriste (pas de modification) : dans l'export Yparéo du groupe, toutes les colonnes entreprise (NOM_ENTREPRISE, ENSEIGNE, SIRET) donnent l'organisme de formation pour les 12 apprentis, et les colonnes maître d'apprentissage et adresse entreprise sont vides. L'import lit les bonnes colonnes : c'est la source qui ne contient pas les employeurs.
+- Tests : `tests/run-dev733-tests.js` (3) ; profil DEV577 complété du champ `rattachement`.
+
 ## Mise à jour du 25 novembre 2026 — DEV732 : effectifs de l'accueil, organisme de la relation OPCO
 
 - Nouveau paramètre par classe : « Organisme relation OPCO » (Grist, table Classes, colonne `Organisme_relation_OPCO`, choix CFA RAN / CFAI / GRETA). Le bouton de pré-remplissage de la page des quotas crée la colonne et remplit les cases vides. Sans colonne renseignée, une règle par défaut s'applique : BTS ELEC Alt, Bachelor, CQPM et BTS CPI / CPRP → CFAI ; 1MELEC G, TMELEC G, TPEEB, TPMMA et autres classes GRETA → GRETA ; 1CAPP, TSEC et BTS MV → CFA RAN. À défaut, on prend le donneur d'ordre, puis le gestionnaire.
