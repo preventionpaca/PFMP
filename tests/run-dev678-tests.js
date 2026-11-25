@@ -65,7 +65,7 @@ test('sans professeur affecté, seul le professeur principal est destinataire ; 
 });
 test('page des professeurs (DEV576) : « Exporter PDF » et « Envoyer le tableau aux professeurs » dans l’accès professeur principal, une fois le code accepté', () => {
   const h = read('apps-script/Suivi_Enseignants_DEV576.html');
-  assert.match(h, /<div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF<\/button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs<\/button><\/div>/);
+  assert.match(h, /<div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF<\/button> <button class="btn" type="button" id="ppExcel">Exporter Excel<\/button> <button class="btn" type="button" id="ppColonnes" aria-expanded="false">Colonnes…<\/button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs<\/button><\/div>/);
   assert.match(h, /espace\.hidden=false;var pa=document\.getElementById\('ppPartage'\);pa\.hidden=!!CFG\.admin;pa\.style\.display=CFG\.admin\?'none':'';/, 'visible seulement après déverrouillage, pour le professeur principal (display forcé : .pp-outils est en flex)');
   assert.match(h, /document\.getElementById\('ppPdf'\)\.onclick=function\(\)\{exporterPdf\(this,c,p\);\};/);
   assert.match(h, /appelPP\(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,[^]*?if\(!confirm\('Envoyer le tableau '[^]*?\)\)return;[^]*?occupe\(b,true,'Préparation du PDF…'\);\s*pdfEnvoi\(c,p,function\(pdf\)\{\s*appelPP\(b,'Envoi…','EUC_DEV678_envoyerTableauPp',Object\.assign\(\{\},q,\{pdf:pdf\}\),/, 'destinataires confirmés, puis PDF identique à l’export, puis envoi');

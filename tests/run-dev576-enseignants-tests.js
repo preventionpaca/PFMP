@@ -80,7 +80,8 @@ test('la page reçoit les données échappées et son script est valide', () => 
   assert.match(page, /closest\('a\[href\^="#"\]'\)/, 'les liens internes ne naviguent jamais la fenêtre principale');
   assert.match(page, /retour=enseignants/, 'carte filtrée avec retour vers la page enseignants');
   assert.match(page, /doc\.autoTable\(/, 'PDF construit comme un tableau (toutes les colonnes)');
-  assert.match(page, /Professeur visiteur'\]\]/, 'colonnes suivi téléphonique et visiteur dans le PDF');
+  /* DEV729 : colonnes définies une fois (PDF et Excel), toutes par défaut. */
+  assert.match(page, /\{id:'telephone',t:'Suivi téléphonique',l:24\},\{id:'visite',t:'Professeur visiteur',l:25\}\]/, 'colonnes suivi téléphonique et visiteur dans le PDF');
   assert.match(page, /Édité le '\+maintenant\(\)/, 'date d’édition sur le PDF et l’impression');
   assert.match(page, /&focus='\+encodeURIComponent/, 'clic sur l’entreprise : carte centrée sur elle');
   assert.match(read('apps-script/Cartographie_PFMP_DEV441.html'), /if\(P\.focus\|\|P\.adr\)/);

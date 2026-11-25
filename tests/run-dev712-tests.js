@@ -55,9 +55,9 @@ test('page et PDF : encadré sous le tableau (imprimé aussi) ; second tableau d
   assert.match(h, /var mg=c\.ce\?\[\]:memeEntreprise\(c,p\);/);
   assert.match(h, /doc\.autoTable\(\{startY:y\+3,head:\[EUC_DEV714_ENTETES_\],body:EUC_DEV714_lignes_\(mg\)/);
   /* DEV720 : le PDF est construit par construirePdf (export et pièce jointe du courriel) ; le second tableau y est ajouté avant le retour du document. */
-  const deb = h.indexOf('function construirePdf(c,p){'), fin = h.indexOf('        return doc;\n  }', deb);
+  const deb = h.indexOf('function construirePdf(c,p,cols){'), fin = h.indexOf('        return doc;\n  }', deb);
   assert.ok(deb > 0 && fin > deb && h.indexOf('var mg=c.ce', deb) > deb && h.indexOf('var mg=c.ce', deb) < fin);
-  assert.match(h, /construirePdf\(c,p\)\.save\(nomPdf\(c,p\)\)/);
+  assert.match(h, /construirePdf\(c,p,colonnesChoisies\(\)\)\.save\(nomPdf\(c,p\)\)/, 'DEV729 : export avec les colonnes choisies');
   assert.doesNotMatch(bloc, /google\.script\.run/);
 });
 

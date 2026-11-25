@@ -66,7 +66,7 @@ select{font:14px Arial,sans-serif;padding:7px 10px;border:1px solid var(--bord);
 @page{size:A4 landscape;margin:10mm}
 .meme-ent{margin-top:14px;padding:12px 14px;background:#f7fbf9;border:1px solid var(--bord);border-radius:12px}.meme-ent h3{margin:0 0 4px;font-size:15px;color:#0b6b4f}.meme-ent table{width:100%;border-collapse:collapse;font-size:13px}.meme-ent th,.meme-ent td{text-align:left;vertical-align:top;padding:6px 7px;border-bottom:1px solid #e3ece8}.meme-ent td{white-space:pre-line}.meme-ent .ok{color:#0b745f;font-weight:700}.meme-ent .alerte{color:#a15c00;font-weight:700}@media print{.meme-ent{break-inside:avoid;background:#fff}}
 @media print{header,.barre,.noprint{display:none!important}body{background:#fff;font-size:11px}.tableau{border:0;overflow:visible}th{position:static}.imprime-seul{display:block;font-weight:700}tr.apprenti td{background:#fffbe6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:inherit;text-decoration:none}}
-.pp-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}.pp-modal[hidden]{display:none}.pp-carte{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}.pp-carte h2{margin:0 0 4px}.pp-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:8px 0}.pp-carte input#ppCode{padding:7px;border:1px solid #9cc;border-radius:7px;min-width:260px}.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:ppspin .7s linear infinite}@keyframes ppspin{to{transform:rotate(360deg)}}@media print{.pp-modal{display:none!important}}.edition{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#e3f4ee;color:#0b6b4f;border:1px solid #9fd8c9}.edition.non{background:#fff4e5;color:#9a4a00;border-color:#f3c48a}.pdf-liens{display:block;margin-top:4px;font-size:12px}.pdf-liens a{display:block;margin-top:2px}
+.pp-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}.pp-modal[hidden]{display:none}.pp-carte{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}.pp-carte h2{margin:0 0 4px}.pp-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:8px 0}.colonnes-choix{border:1px solid #cfe3dc;border-radius:10px;background:#f6fbf9;padding:8px 12px;margin:6px 0}.colonnes-choix label{display:inline-flex;align-items:center;gap:4px;margin:3px 14px 3px 0;font-size:.9rem}.colonnes-choix .note{display:block;margin-top:4px}.pp-carte input#ppCode{padding:7px;border:1px solid #9cc;border-radius:7px;min-width:260px}.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:6px;vertical-align:-2px;animation:ppspin .7s linear infinite}@keyframes ppspin{to{transform:rotate(360deg)}}@media print{.pp-modal{display:none!important}}.edition{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#e3f4ee;color:#0b6b4f;border:1px solid #9fd8c9}.edition.non{background:#fff4e5;color:#9a4a00;border-color:#f3c48a}.pdf-liens{display:block;margin-top:4px;font-size:12px}.pdf-liens a{display:block;margin-top:2px}
 .lieu-stage-cell{margin-top:6px;padding:6px 8px;border:2px solid #d97706;border-radius:6px;background:#fff7d6;color:#92400e;font-weight:700}
 </style>
 </head>
@@ -214,8 +214,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       '<label class="note" for="autre">Classe</label><select id="autre">'+memes.map(function(x){return '<option value="'+x.id+'"'+(x.id===c.id?' selected':'')+'>'+esc(x.nom)+'</option>';}).join('')+'</select></nav>'+
       '<h2>'+esc(c.nom)+' <span class="note">'+esc(c.niveau)+(c.pp.length?' · Professeur principal : '+esc(c.pp.join(', ')):'')+'</span></h2>'+
       '<div class="barre noprint" role="group" aria-label="Périodes">'+c.periodes.map(function(x){return '<button class="onglet" type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===p.id)+'">'+esc(x.libelle)+'</button>';}).join('')+
-      '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button>'+
-      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button><button class="btn" type="button" id="ppAcces">'+(CFG.admin?'Affecter les professeurs':'Accès professeur principal')+'</button>'+(CFG.admin?'<button class="btn" type="button" id="envoiTableau">Envoyer le tableau aux professeurs</button><button class="btn" type="button" id="demissions">Élèves démissionnaires</button>':'')+'</div>'+(CFG.admin?'<p id="demEtat" class="note noprint" role="status"></p>':'')+
+      '<span class="note">'+dfr(p.debut)+' → '+dfr(p.fin)+'</span><button class="btn" type="button" id="imprimer">Imprimer</button><button class="btn" type="button" id="pdf">Exporter PDF</button><button class="btn" type="button" id="excel">Exporter Excel</button><button class="btn" type="button" id="colonnes" aria-expanded="false" title="Choisir les colonnes du PDF et du fichier Excel">Colonnes…</button>'+
+      '<button class="btn" type="button" id="carte">Carte des lieux de stage</button><button class="btn" type="button" id="ppAcces">'+(CFG.admin?'Affecter les professeurs':'Accès professeur principal')+'</button>'+(CFG.admin?'<button class="btn" type="button" id="envoiTableau">Envoyer le tableau aux professeurs</button><button class="btn" type="button" id="demissions">Élèves démissionnaires</button>':'')+'</div>'+'<div id="colonnesChoix" class="colonnes-choix noprint" hidden></div>'+(CFG.admin?'<p id="demEtat" class="note noprint" role="status"></p>':'')+
       '<p class="imprime-seul">'+esc(c.nom)+' — '+esc(p.libelle)+' ('+dfr(p.debut)+' → '+dfr(p.fin)+') — '+esc(D.annee)+'<span class="edite"></span></p>'+
       '<div class="compteurs">'+cpt.map(function(x,i){return '<button type="button" class="compteur" data-i="'+i+'" aria-expanded="false"><span>'+x[0]+'</span><b>'+x[1]+'</b></button>';}).join('')+'</div>'+
       '<div id="noms" class="noms noprint" hidden></div>'+
@@ -225,6 +225,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var titre=document.title;
     document.getElementById('imprimer').onclick=function(){var e=app.querySelector('.imprime-seul .edite');if(e)e.textContent=' — Édité le '+maintenant();window.print();};
     document.getElementById('pdf').onclick=function(){exporterPdf(this,c,p);};
+    document.getElementById('excel').onclick=function(){exporterExcel(this,c,p);};
+    document.getElementById('colonnes').onclick=function(){panneauColonnes(document.getElementById('colonnesChoix'),this);};
     document.getElementById('ppAcces').onclick=function(){accesPP(c,p);};
     if(CFG.admin)document.getElementById('envoiTableau').onclick=function(){envoiTableau(this,c,p);};
     /* DEV687 : élèves démissionnaires encore dans Pronote (administration). */
@@ -272,7 +274,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
     var m=document.getElementById('ppModal');
     if(!m){document.body.insertAdjacentHTML('beforeend','<div id="ppModal" class="pp-modal" role="dialog" aria-modal="true" aria-labelledby="ppTitre"><div class="pp-carte"><h2 id="ppTitre">Accès professeur principal</h2><p id="ppPortee" class="note"></p>'+
       '<div id="ppConnexion"><label>Code d’accès <input id="ppCode" autocomplete="one-time-code" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label> <button class="btn" type="button" id="ppOuvrir">Déverrouiller</button></div><p id="ppEtat" role="status"></p>'+
-      '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <input id="ppProfCherche" type="search" autocomplete="off" placeholder="Tapez 3 lettres du nom…" aria-label="Rechercher un professeur" style="width:12em"> <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button> <button class="btn" type="button" id="ppRetirer" hidden>Retirer ce type de suivi aux élèves cochés</button></div><div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF</button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs</button></div><div class="tableau"><table id="ppTable"></table></div></div>'+
+      '<div id="ppEspace" hidden><div class="pp-outils"><label>Type de suivi <select id="ppType"><option value="VISITE">Professeur visiteur</option><option value="TELEPHONE">Suivi téléphonique</option></select></label> <label>Professeur <input id="ppProfCherche" type="search" autocomplete="off" placeholder="Tapez 3 lettres du nom…" aria-label="Rechercher un professeur" style="width:12em"> <select id="ppProf"></select></label> <button class="btn" type="button" id="ppAffecter">Affecter aux élèves cochés</button> <button class="btn" type="button" id="ppRetirer" hidden>Retirer ce type de suivi aux élèves cochés</button></div><div class="pp-outils" id="ppPartage" hidden><button class="btn" type="button" id="ppPdf">Exporter PDF</button> <button class="btn" type="button" id="ppExcel">Exporter Excel</button> <button class="btn" type="button" id="ppColonnes" aria-expanded="false">Colonnes…</button> <button class="btn" type="button" id="ppEnvoi">Envoyer le tableau aux professeurs</button></div><div id="ppColonnesChoix" class="colonnes-choix" hidden></div><div class="tableau"><table id="ppTable"></table></div></div>'+
       '<p style="text-align:right"><button class="btn" type="button" id="ppFermer">Fermer</button></p></div></div>');m=document.getElementById('ppModal');
       m.onclick=function(e){if(e.target===m)m.hidden=true;};document.getElementById('ppFermer').onclick=function(){m.hidden=true;};}
     var portee={annee:String(D.annee||''),famille:String(c.familleBase||c.famille||''),classeId:Number(c.id),periodeId:Number(p.id)},code=document.getElementById('ppCode'),etatPP=document.getElementById('ppEtat'),espace=document.getElementById('ppEspace'),donnees=null,modifie=false;
@@ -324,6 +326,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
       afficher(donnees);file727.push(o);etat727();pompe727();};
     /* DEV678 : le professeur principal exporte le tableau en PDF et l'envoie aux professeurs qui y figurent (après confirmation des destinataires). */
     document.getElementById('ppPdf').onclick=function(){exporterPdf(this,c,p);};
+    document.getElementById('ppExcel').onclick=function(){exporterExcel(this,c,p);};
+    document.getElementById('ppColonnes').onclick=function(){panneauColonnes(document.getElementById('ppColonnesChoix'),this);};
     document.getElementById('ppEnvoi').onclick=function(){var b=this,q=Object.assign({code:code.value.trim()},portee);
       appelPP(b,'Préparation…','EUC_DEV678_preparerEnvoiPp',q,function(r){
         if(!confirm('Envoyer le tableau '+r.classe+' — '+r.periode+' ?\n\nÀ : '+((r.to||[]).join(', ')||'aucun destinataire')+'\nCopie : '+((r.cc||[]).join(', ')||'aucune')+'\n\nObjet : '+(r.objet||'')))return;
@@ -360,22 +364,40 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   /* DEV720 : le même document sert à l'export et à la pièce jointe du courriel d'envoi du tableau. */
   function nomPdf(c,p){return ((c.ce?'Suivi apprentis ':'PFMP ')+c.nom+' '+p.libelle+' '+D.annee).replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_')+'.pdf';}
   function pdfEnvoi(c,p,ok,ko){chargerPdf(function(){var x;try{x=construirePdf(c,p).output('datauristring').split(',')[1];}catch(e){ko(e);return;}ok(x);},function(){ko(new Error('le module PDF n’a pas pu être chargé'));});}
+  /* DEV729 : bouton occupé (spinner, double clic bloqué) puis rendu, en succès comme en erreur. */
+  function occuperExport(btn,txt){var lib=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spin" aria-hidden="true"></span>'+txt;return function(){btn.disabled=false;btn.innerHTML=lib;};}
   function exporterPdf(btn,c,p){
-    var texte=btn.textContent;btn.disabled=true;btn.textContent='Préparation du PDF…';
-    function fin(){btn.disabled=false;btn.textContent=texte;}
+    if(btn.disabled)return;var fin=occuperExport(btn,'Préparation du PDF…');
     chargerPdf(function(){
-      try{construirePdf(c,p).save(nomPdf(c,p));}
+      try{construirePdf(c,p,colonnesChoisies()).save(nomPdf(c,p));}
       catch(e){alert('Le PDF n’a pas pu être créé : '+(e&&e.message||e)+'. Utilisez « Imprimer » puis « Enregistrer en PDF ».');}
       fin();
     },function(){fin();alert('Le module PDF n’a pas pu être chargé. Utilisez « Imprimer » puis « Enregistrer en PDF ».');});
   }
-  function construirePdf(c,p){
-        var n=p.n,doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),edite='Édité le '+maintenant();
-        var titre=c.nom+' — '+p.libelle,sous='Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'');
-        var cpt=compteurs(c,p).map(function(x){return x[0]+' : '+x[1];});
-        doc.setFontSize(15);doc.setTextColor(11,107,79);doc.text(titre,10,12);
-        doc.setFontSize(9);doc.setTextColor(60);doc.text(sous,10,18);doc.text(edite,287,12,{align:'right'});
-        doc.setFontSize(9.5);doc.setTextColor(22,48,42);doc.text(cpt.join('   ·   '),10,25);
+  /* DEV729 : export Excel (.xlsx) construit dans le navigateur avec les colonnes choisies : aucun appel au serveur. */
+  var XLSXLIB='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  function chargerExcel(ok,ko){if(window.XLSX&&window.XLSX.utils)return ok();var sc=document.createElement('script');sc.src=XLSXLIB;sc.onload=function(){window.XLSX&&window.XLSX.utils?ok():ko();};sc.onerror=ko;document.head.appendChild(sc);}
+  function feuilleSuivi(c,p,cols){var t=tableauSuivi(c,p),sel=colonnesValides(cols);
+    return {lignes:[[c.nom+' — '+p.libelle],['Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'')],['Édité le '+maintenant()],[],sel.map(function(i){return t.entetes[i];})]
+      .concat(t.lignes.map(function(r){return sel.map(function(i){return r[i];});})),largeurs:sel.map(function(i){return{wch:Math.round(COLONNES[i].l*0.9)};})};}
+  function exporterExcel(btn,c,p){
+    if(btn.disabled)return;var fin=occuperExport(btn,'Préparation du fichier Excel…'),fini=false,t=setTimeout(function(){if(fini)return;fini=true;fin();alert('Le module Excel ne répond pas : réessayez.');},30000);
+    chargerExcel(function(){if(fini)return;fini=true;clearTimeout(t);
+      try{var f=feuilleSuivi(c,p,colonnesChoisies()),ws=XLSX.utils.aoa_to_sheet(f.lignes),wb=XLSX.utils.book_new();ws['!cols']=f.largeurs;
+        XLSX.utils.book_append_sheet(wb,ws,String(c.nom||'Suivi').replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,31));XLSX.writeFile(wb,nomPdf(c,p).replace(/\.pdf$/,'.xlsx'));}
+      catch(e){alert('Le fichier Excel n’a pas pu être créé : '+(e&&e.message||e));}
+      fin();},function(){if(fini)return;fini=true;clearTimeout(t);fin();alert('Le module Excel n’a pas pu être chargé.');});
+  }
+  /* DEV729 : choix des colonnes (mémorisé dans ce navigateur), commun au PDF et à Excel ; au moins une colonne. */
+  function panneauColonnes(box,btn){if(!box)return;var ouvrir=box.hidden;box.hidden=!ouvrir;btn.setAttribute('aria-expanded',String(ouvrir));if(!ouvrir)return;
+    var sel=colonnesChoisies();box.innerHTML='<b>Colonnes du PDF et du fichier Excel</b><br>'+COLONNES.map(function(x,i){return '<label><input type="checkbox" data-col="'+i+'"'+(sel.indexOf(i)>=0?' checked':'')+'> '+esc(x.t)+'</label>';}).join('')+'<span class="note">Choix mémorisé dans ce navigateur. Le tableau envoyé par courriel garde toutes les colonnes.</span>';
+    box.querySelectorAll('input[data-col]').forEach(function(x){x.onchange=function(){var l=Array.prototype.filter.call(box.querySelectorAll('input[data-col]'),function(y){return y.checked;}).map(function(y){return Number(y.dataset.col);});if(!l.length){x.checked=true;return;}memoriserColonnes(colonnesValides(l));};});}
+  /* DEV729 : données du tableau de suivi (mêmes valeurs pour le PDF et pour Excel), colonnes choisies par l'utilisateur. */
+  var COLONNES=[{id:'eleve',t:'Élève',l:30},{id:'statut',t:'Convention / statut',l:34},{id:'entreprise',t:'Entreprise',l:32},{id:'adresse',t:'Adresse entreprise',l:36},{id:'coordEntreprise',t:'Coordonnées entreprise',l:38},{id:'coordTuteur',t:'Coordonnées tuteur',l:38},{id:'pp',t:'Professeur principal',l:24},{id:'telephone',t:'Suivi téléphonique',l:24},{id:'visite',t:'Professeur visiteur',l:25}];
+  function colonnesValides(cols){var l=(cols||[]).map(Number).filter(function(i,j,a){return i>=0&&i<COLONNES.length&&a.indexOf(i)===j;}).sort(function(x,y){return x-y;});return l.length?l:COLONNES.map(function(x,i){return i;});}
+  function colonnesChoisies(){var ids=null;try{ids=JSON.parse(localStorage.getItem('eucColonnesSuivi')||'null');}catch(e){}if(!Array.isArray(ids))return colonnesValides([]);return colonnesValides(ids.map(function(id){return COLONNES.map(function(x){return x.id;}).indexOf(id);}));}
+  function memoriserColonnes(sel){try{localStorage.setItem('eucColonnesSuivi',JSON.stringify(sel.map(function(i){return COLONNES[i].id;})));}catch(e){}}
+  function tableauSuivi(c,p){
         var lignes=[],styles=[];
         c.eleves.forEach(function(e){
           var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0],app=c.ce||st==='APPRENTI'||!!l[4];
@@ -386,12 +408,25 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
           lignes.push([(app?'(A) ':'')+e[1],statut,(f&&f.entreprise||'')+(f&&f.nomSaisi?'\n(saisi : '+f.nomSaisi+')':''),(f&&f.adresse||'')+(f&&f.lieu?'\nLIEU DU STAGE : '+f.lieu:''),texteCoord(f&&f.contact),texteCoord(f&&f.tuteur),c.pp.join('\n'),l[2]||'',l[3]||'']);
           styles.push({app:app,st:st});
         });
-        doc.autoTable({startY:29,head:[['Élève',(c.ce?'Contrat':'Convention')+' / statut','Entreprise','Adresse entreprise','Coordonnées entreprise','Coordonnées tuteur','Professeur principal','Suivi téléphonique','Professeur visiteur']],body:lignes,
+        var entetes=COLONNES.map(function(x){return x.t;});entetes[1]=(c.ce?'Contrat':'Convention')+' / statut';
+        return {entetes:entetes,lignes:lignes,styles:styles};
+  }
+  function construirePdf(c,p,cols){
+        var n=p.n,doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),edite='Édité le '+maintenant();
+        var titre=c.nom+' — '+p.libelle,sous='Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'');
+        var cpt=compteurs(c,p).map(function(x){return x[0]+' : '+x[1];});
+        doc.setFontSize(15);doc.setTextColor(11,107,79);doc.text(titre,10,12);
+        doc.setFontSize(9);doc.setTextColor(60);doc.text(sous,10,18);doc.text(edite,287,12,{align:'right'});
+        doc.setFontSize(9.5);doc.setTextColor(22,48,42);doc.text(cpt.join('   ·   '),10,25);
+        var t=tableauSuivi(c,p),sel=colonnesValides(cols),lignes=t.lignes.map(function(r){return sel.map(function(i){return r[i];});}),styles=t.styles;
+        /* DEV729 : largeurs d'origine, étirées pour remplir la page quand des colonnes sont retirées. */
+        var tot=sel.reduce(function(x,i){return x+COLONNES[i].l;},0),k=281/tot,cs={};sel.forEach(function(i,j){cs[j]={cellWidth:Math.round(COLONNES[i].l*k*10)/10};if(i===0)cs[j].fontStyle='bold';});
+        doc.autoTable({startY:29,head:[sel.map(function(i){return t.entetes[i];})],body:lignes,
           theme:'grid',margin:{left:8,right:8,bottom:12},styles:{fontSize:7.2,cellPadding:1.4,overflow:'linebreak',valign:'top',lineColor:[213,230,222],lineWidth:0.15},
           headStyles:{fillColor:[11,107,79],textColor:255,fontStyle:'bold'},
-          columnStyles:{0:{cellWidth:30,fontStyle:'bold'},1:{cellWidth:34},2:{cellWidth:32},3:{cellWidth:36},4:{cellWidth:38},5:{cellWidth:38},6:{cellWidth:24},7:{cellWidth:24},8:{cellWidth:25}},
+          columnStyles:cs,
           didParseCell:function(d){if(d.section!=='body')return;var x=styles[d.row.index];if(x.app)d.cell.styles.fillColor=[255,251,230];
-            if(d.column.index===1){d.cell.styles.textColor=x.st==='AVEC'||x.st==='CONTRAT'||x.st==='PDIF_ENTREPRISE'?[22,101,52]:x.st==='APPRENTI'?[124,45,146]:x.st==='SANS'||x.st==='SANS_CONTRAT'||x.st==='PDIF_A_DEFINIR'?[154,52,18]:[60,60,60];}},
+            if(sel[d.column.index]===1){d.cell.styles.textColor=x.st==='AVEC'||x.st==='CONTRAT'||x.st==='PDIF_ENTREPRISE'?[22,101,52]:x.st==='APPRENTI'?[124,45,146]:x.st==='SANS'||x.st==='SANS_CONTRAT'||x.st==='PDIF_A_DEFINIR'?[154,52,18]:[60,60,60];}},
           didDrawPage:function(){var h=doc.internal.pageSize.getHeight();doc.setFontSize(7.5);doc.setTextColor(110);doc.text(titre+' · '+edite+' · données Grist (action n° '+D.temoin+')',8,h-5);doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,289,h-5,{align:'right'});}});
         /* DEV712 / DEV714 : sous le tableau, élèves dans une même entreprise (classe et autres classes aux mêmes dates) et professeurs affectés. */
         var mg=c.ce?[]:memeEntreprise(c,p);

@@ -1,5 +1,11 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV729 : tableau de suivi, colonnes au choix pour le PDF et export Excel
+
+- `Suivi_Enseignants_DEV576.html` (page de la classe et accès professeur principal) : bouton « Colonnes… » (cases à cocher, au moins une, choix mémorisé dans le navigateur), « Exporter PDF » avec les colonnes choisies (largeurs étirées pour remplir la page), nouveau « Exporter Excel » (.xlsx construit dans le navigateur avec SheetJS 0.18.5, mêmes valeurs que le PDF, en-tête classe / période / date). Aucun appel serveur : aucun ralentissement. Spinner et double clic bloqué sur les deux exports.
+- Le tableau envoyé par courriel (DEV720) garde toutes les colonnes. Le second tableau « même entreprise » reste dans le PDF seulement.
+- Tests : `tests/run-dev729-tests.js` (5) ; assertions DEV576 / DEV678 / DEV712 alignées sur la nouvelle définition unique des colonnes et la barre de boutons.
+
 ## Mise à jour du 25 novembre 2026 — DEV727 / DEV728 : affectation instantanée, accueil (rubriques « À faire », effectifs à la demande, spinners)
 
 - DEV725 (suite) : après la version 1298, le stockage restait à 445 Ko (205 clés) : index géographique des cartes (`DEV517_GEO_INDEX_*`) et reliquat `DEV418_ACCESS_ROWS_*` d'une ancienne version (plus aucun code ne le lit). Tous deux classés caches libérables en premier ; l'index géographique passe aussi par `EUC_DEV725_reserver_`.
