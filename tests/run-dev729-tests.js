@@ -8,7 +8,7 @@ const h = read('apps-script/Suivi_Enseignants_DEV576.html');
 const bout = (debut, fin) => { const a = h.indexOf(debut); assert.ok(a >= 0, debut); const b = h.indexOf(fin, a); return h.slice(a, b + fin.length); };
 function contexte(stock) {
   const store = Object.assign({}, stock || {}), tables = [];
-  const src = bout('  var COLONNES=', "        return doc;\n  }") + '\n' + bout('  function feuilleSuivi(', "l*0.9)};})};}") + '\n' + bout('  function occuperExport(', 'btn.innerHTML=lib;};}');
+  const src = bout('  var COLONNES=', "        return doc;\n  }") + '\n' + bout('  var COORD_EXCEL=', "largeurs:largeurs};}") + '\n' + bout('  function occuperExport(', 'btn.innerHTML=lib;};}');
   const k = { JSON, Array, Number, String, Math, Object,
     localStorage: { getItem: x => store[x] == null ? null : store[x], setItem: (x, v) => { store[x] = String(v); } }, __store: store, __tables: tables,
     D: { annee: '2026-2027', fiches: [{ entreprise: 'GARAGE TEST', adresse: '1 RUE A 06000 NICE', contact: { nom: 'M. Contact', tel: '0400000000' }, tuteur: { nom: 'Mme Tutrice' } }], temoin: 1 },
@@ -53,6 +53,15 @@ test('Excel : mêmes valeurs que le PDF, en-tête de la classe, colonnes choisie
   assert.deepStrictEqual(f.lignes[4], ['Élève', 'Suivi téléphonique']);
   assert.deepStrictEqual(f.lignes[5], ['ALPHA Anna', 'Mme TEL']); assert.deepStrictEqual(f.lignes[6], ['BETA Bob', '']);
   assert.strictEqual(f.largeurs.length, 2);
+});
+
+test('Excel (DEV730) : responsable et tuteur en colonnes séparées (nom, téléphone, courriel) ; le PDF garde une cellule', () => {
+  const k = contexte(), f = J(k.feuilleSuivi(C, P, [0, 4, 5]));
+  assert.deepStrictEqual(f.lignes[4], ['Élève', 'Responsable — nom', 'Responsable — téléphone', 'Responsable — courriel', 'Tuteur — nom', 'Tuteur — téléphone', 'Tuteur — courriel']);
+  assert.deepStrictEqual(f.lignes[5], ['ALPHA Anna', 'M. Contact', '0400000000', '', 'Mme Tutrice', '', '']);
+  assert.deepStrictEqual(f.lignes[6], ['BETA Bob', '', '', '', '', '', ''], 'sans convention : cellules vides');
+  assert.strictEqual(f.largeurs.length, 7);
+  k.construirePdf(C, P, [0, 4]); assert.strictEqual(J(k.__tables[0]).body[0][1], 'M. Contact\n0400000000');
 });
 
 test('boutons : spinner et double clic bloqué pendant la préparation, état rendu ; boutons présents (classe et accès PP), aucun appel serveur', () => {

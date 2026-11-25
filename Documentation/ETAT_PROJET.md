@@ -1,5 +1,9 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV730 : export Excel, responsable et tuteur en colonnes séparées
+
+- `feuilleSuivi` (Suivi_Enseignants_DEV576.html) : les colonnes « Coordonnées entreprise » et « Coordonnées tuteur » deviennent chacune trois colonnes dans Excel (« Responsable — nom / téléphone / courriel », « Tuteur — nom / téléphone / courriel ») ; le PDF garde une cellule par personne. Test ajouté à `run-dev729-tests.js`.
+
 ## Mise à jour du 25 novembre 2026 — DEV729 : tableau de suivi, colonnes au choix pour le PDF et export Excel
 
 - `Suivi_Enseignants_DEV576.html` (page de la classe et accès professeur principal) : bouton « Colonnes… » (cases à cocher, au moins une, choix mémorisé dans le navigateur), « Exporter PDF » avec les colonnes choisies (largeurs étirées pour remplir la page), nouveau « Exporter Excel » (.xlsx construit dans le navigateur avec SheetJS 0.18.5, mêmes valeurs que le PDF, en-tête classe / période / date). Aucun appel serveur : aucun ralentissement. Spinner et double clic bloqué sur les deux exports.

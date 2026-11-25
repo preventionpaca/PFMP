@@ -377,9 +377,12 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   /* DEV729 : export Excel (.xlsx) construit dans le navigateur avec les colonnes choisies : aucun appel au serveur. */
   var XLSXLIB='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
   function chargerExcel(ok,ko){if(window.XLSX&&window.XLSX.utils)return ok();var sc=document.createElement('script');sc.src=XLSXLIB;sc.onload=function(){window.XLSX&&window.XLSX.utils?ok():ko();};sc.onerror=ko;document.head.appendChild(sc);}
-  function feuilleSuivi(c,p,cols){var t=tableauSuivi(c,p),sel=colonnesValides(cols);
-    return {lignes:[[c.nom+' — '+p.libelle],['Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'')],['Édité le '+maintenant()],[],sel.map(function(i){return t.entetes[i];})]
-      .concat(t.lignes.map(function(r){return sel.map(function(i){return r[i];});})),largeurs:sel.map(function(i){return{wch:Math.round(COLONNES[i].l*0.9)};})};}
+  /* DEV730 : dans Excel, coordonnées du responsable (entreprise) et du tuteur en colonnes séparées : nom, téléphone, courriel. */
+  var COORD_EXCEL={4:['Responsable','contact'],5:['Tuteur','tuteur']};
+  function feuilleSuivi(c,p,cols){var t=tableauSuivi(c,p),sel=colonnesValides(cols),entetes=[],largeurs=[];
+    sel.forEach(function(i){var x=COORD_EXCEL[i];if(x){entetes.push(x[0]+' — nom',x[0]+' — téléphone',x[0]+' — courriel');largeurs.push({wch:24},{wch:16},{wch:30});}else{entetes.push(t.entetes[i]);largeurs.push({wch:Math.round(COLONNES[i].l*0.9)});}});
+    var corps=t.lignes.map(function(r,n){var out=[];sel.forEach(function(i){var x=COORD_EXCEL[i];if(x){var o=t.bruts[n][x[1]]||{};out.push(o.nom||'',o.tel||'',o.mail||'');}else out.push(r[i]);});return out;});
+    return {lignes:[[c.nom+' — '+p.libelle],['Du '+dfr(p.debut)+' au '+dfr(p.fin)+' · '+D.annee+(c.pp.length?' · Professeur principal : '+c.pp.join(', '):'')],['Édité le '+maintenant()],[],entetes].concat(corps),largeurs:largeurs};}
   function exporterExcel(btn,c,p){
     if(btn.disabled)return;var fin=occuperExport(btn,'Préparation du fichier Excel…'),fini=false,t=setTimeout(function(){if(fini)return;fini=true;fin();alert('Le module Excel ne répond pas : réessayez.');},30000);
     chargerExcel(function(){if(fini)return;fini=true;clearTimeout(t);
@@ -398,7 +401,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
   function colonnesChoisies(){var ids=null;try{ids=JSON.parse(localStorage.getItem('eucColonnesSuivi')||'null');}catch(e){}if(!Array.isArray(ids))return colonnesValides([]);return colonnesValides(ids.map(function(id){return COLONNES.map(function(x){return x.id;}).indexOf(id);}));}
   function memoriserColonnes(sel){try{localStorage.setItem('eucColonnesSuivi',JSON.stringify(sel.map(function(i){return COLONNES[i].id;})));}catch(e){}}
   function tableauSuivi(c,p){
-        var lignes=[],styles=[];
+        var lignes=[],styles=[],bruts=[];
         c.eleves.forEach(function(e){
           var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0],app=c.ce||st==='APPRENTI'||!!l[4];
           var statut=LIB[st]||st;
@@ -406,10 +409,10 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
           if(st!=='APPRENTI'&&!c.ce&&f&&!p.pdif){if(f.debut&&f.debut>p.debut)statut+='\nDébut décalé : '+dfr(f.debut);if(f.fin&&f.fin>p.fin)statut+='\nFin prolongée : '+dfr(f.fin);if(f.enregistreLe)statut+='\nEnregistrée le '+dfr(f.enregistreLe)+(f.numero?'\n'+f.numero:'');}
           if(l[4])statut+='\nApprenti depuis le '+dfr(l[4][0]);
           lignes.push([(app?'(A) ':'')+e[1],statut,(f&&f.entreprise||'')+(f&&f.nomSaisi?'\n(saisi : '+f.nomSaisi+')':''),(f&&f.adresse||'')+(f&&f.lieu?'\nLIEU DU STAGE : '+f.lieu:''),texteCoord(f&&f.contact),texteCoord(f&&f.tuteur),c.pp.join('\n'),l[2]||'',l[3]||'']);
-          styles.push({app:app,st:st});
+          styles.push({app:app,st:st});bruts.push({contact:(f&&f.contact)||null,tuteur:(f&&f.tuteur)||null});
         });
         var entetes=COLONNES.map(function(x){return x.t;});entetes[1]=(c.ce?'Contrat':'Convention')+' / statut';
-        return {entetes:entetes,lignes:lignes,styles:styles};
+        return {entetes:entetes,lignes:lignes,styles:styles,bruts:bruts};
   }
   function construirePdf(c,p,cols){
         var n=p.n,doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),edite='Édité le '+maintenant();
