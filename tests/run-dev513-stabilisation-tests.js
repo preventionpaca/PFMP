@@ -140,8 +140,8 @@ test('les actions de géocodage protègent le double clic et bornent l’attente
   assert.match(geoHtml,/function busy\(btn,on,label\)/);
   assert.match(geoHtml,/setTimeout\(\(\)=>\{if\(settled\)return;settled=true;busy\(b,false\)/);
   assert.match(geoHtml,/20000/);
-  assert.match(geoHtml,/45000/);
-  assert.match(geoHtml,/Le géocodage a dépassé 45 secondes/);
+  assert.match(geoHtml,/timeout=isMonaco\?60000:120000/); /* DEV731 : attente toujours bornée, recherches élargies plus longues par adresse */
+  assert.match(geoHtml,/Le géocodage a dépassé 2 minutes/);
   assert.match(geoHtml,/Validation…/);
   assert.match(geoHtml,/Géocodage…/);
 });

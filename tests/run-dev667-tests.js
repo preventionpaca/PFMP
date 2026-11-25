@@ -23,7 +23,10 @@ test('book, carte du suivi, géocodage : garde-fou appliqué partout ; point inv
   const g = read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js'), i = g.indexOf('function EUC_DEV443_savedStatus_'); vm.runInContext(g.slice(i, g.indexOf('\n', g.indexOf('return s||classified.statut', i)) + 1), k);
   assert.equal(k.EUC_DEV443_savedStatus_({ Statut: 'GEOCODE_AUTOMATIQUE', Latitude: 0, Longitude: 0 }, { pays: 'FRANCE', statut: 'A_GEOCODER' }), 'A_REGEOCODER');
   assert.equal(k.EUC_DEV443_savedStatus_({ Statut: 'GEOCODE_AUTOMATIQUE', Latitude: 43.71, Longitude: 7.28 }, { pays: 'FRANCE', statut: 'A_GEOCODER' }), 'GEOCODE_AUTOMATIQUE');
-  assert.match(g, /if\(feature&&coords&&coords\.length>=2&&\(typeof EUC_DEV667_coordOk_!=='function'\|\|EUC_DEV667_coordOk_\(coords\[1\],coords\[0\]\)\)\)/, 'résultat BAN hors zone refusé');
+  /* DEV731 : la recherche France est dans EUC_DEV731_champsFrance_ ; même garde-fou sur chaque résultat (adresse et point d'intérêt). */
+  const g731 = read('apps-script/EUC_DEV731_GeocodageElargi.js');
+  assert.match(g731, /var ok = function\(c\) \{ return c && c\.length >= 2 && \(typeof EUC_DEV667_coordOk_ !== 'function' \|\| EUC_DEV667_coordOk_\(c\[1\], c\[0\]\)\); \};/, 'résultat BAN hors zone refusé');
+  assert.ok((g731.match(/ok\(c\)|ok\(f\.geometry\.coordinates\)/g) || []).length >= 2 && /fields:EUC_DEV731_champsFrance_\(x\)/.test(g));
 });
 const FICHE = `<p class="mb-2"><strong>Numéro RCI :</strong> 17S07483</p><span class="text-bold">État :</span>
 <p class="mb-2"><strong>Raison sociale :</strong> TITAN ENGINEERING MONACO</p><p class="mb-2"><strong>Activité :</strong> En matière d&#39;ingénierie</p>

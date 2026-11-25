@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV731 : géocodage des entreprises, recherche élargie et décompte exact
+
+- Constats : « Réessayer automatiquement » ne relançait rien pour une adresse française « Coordonnées à renseigner » (seules « à géocoder » / « à regéocoder » étaient retenues) ; le décompte « 0 française restante » ignorait les adresses en échec ou à contrôler ; le code postal saisi était imposé (« Chemin des Arboras 06000 » est en 06200) ; abréviations, « 2rue », « BP 139 » faisaient échouer ; un mot générique (« PROMENADE ») suffisait à accepter la Promenade des Arts pour le 455 Promenade des Anglais (KONE) et la RD 6098 pour la RD 6007 ; un point validé pouvait être effacé quand une autre convention écrivait la même adresse autrement.
+- `EUC_DEV731_GeocodageElargi.js` : adresse nettoyée (abréviations, BP/CEDEX), essais successifs — « numéro + voie » extrait d'un nom de zone, adresse avec CP, adresse sans CP dans la même commune, puis index des points d'intérêt (aéroport…) dans la même commune ; un résultat élargi reste « À contrôler ». Monaco : adresse nettoyée, voie sans numéro, nom de l'entreprise (une requête par seconde). « Réessayer » reprend toute adresse non validée ; le lot général reprend une fois les échecs antérieurs (marque « recherche élargie »). `EUC_DEV731_memeLieu_` : même CP, même numéro, voie commune → point conservé.
+- `EUC_DEV540_geoWords_` : types de voie génériques ignorés, numéros RD/RN comparés.
+- Page : décompte de tout ce qui reste (à rechercher, à contrôler, coordonnées à renseigner, dont Monaco) ; résultat en clair après « Réessayer » sur une ligne ; lots de 10 (France, 2 min) et 3 (Monaco, 1 min).
+- Essai réel (lecture seule, moteurs publics) sur les adresses signalées : KONE → 455 Promenade des Anglais ; HERTZ → aéroport de Nice ; GRANY → 7 Traverse des Arboras (à contrôler) ; TITAN, Fairmont, SBM → Monaco trouvés ; restent manuels : RD 6007 Villeneuve-Loubet, Carros ZI, Le Gabre (Saint-Martin-du-Var), 538 route de Grenoble, avenue Prince-Héréditaire-Albert (ancien nom), « avenue Albert III ».
+- Tests : `run-dev731-tests.js` (9) ; DEV445 charge le nouveau module ; DEV513 / DEV667 alignés (attente bornée, garde-fou des coordonnées déplacé dans DEV731).
+
 ## Mise à jour du 25 novembre 2026 — DEV730 : export Excel, responsable et tuteur en colonnes séparées
 
 - `feuilleSuivi` (Suivi_Enseignants_DEV576.html) : les colonnes « Coordonnées entreprise » et « Coordonnées tuteur » deviennent chacune trois colonnes dans Excel (« Responsable — nom / téléphone / courriel », « Tuteur — nom / téléphone / courriel ») ; le PDF garde une cellule par personne. Test ajouté à `run-dev729-tests.js`.
