@@ -123,7 +123,7 @@ test('suivi : fiches avec l’identifiant du dossier ou du dépôt ; identifiant
   const k = ctx([]);
   assert.equal(k.EUC_SUIVI2_ficheDossier_({ id: 812, Entreprise_raison_sociale: 'E' }, {}).dossier, 812);
   assert.equal(k.EUC_SUIVI2_ficheTampon_({ id: 53, Submission_ID: 'SECOURS-PFMP-2026-S0053', Raison_sociale_officielle: 'HOTEL' }, '').depot, 53);
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.694'/, 'cache du suivi recalculé');
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.(69[4-9]|[7-9]\d\d)'/, 'cache du suivi recalculé');
   const ens = read('apps-script/EUC_SUIVI2_Enseignants.js');
   assert.match(ens, /if \(!admin\) \(vue\.fiches \|\| \[\]\)\.forEach\(function\(f\) \{ if \(f\) \{ delete f\.dossier; delete f\.depot; \} \}\);/);
   const s = read('apps-script/Suivi_Enseignants_DEV576.html');

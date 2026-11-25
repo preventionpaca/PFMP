@@ -199,7 +199,7 @@ test('DEV662 : lieu déjà enregistré qui recopie le siège masqué (suivi, ord
   assert.equal(s.EUC_SUIVI2_lieu_('29 Avenue Auguste Verola', '06200', 'Nice', '18 RUE DE LA PETITE SENSIVE', 'NANTES'), '29 Avenue Auguste Verola, 06200 Nice');
   assert.equal(s.EUC_SUIVI2_lieu_('1 rue A', '', 'Nice', '', ''), '1 rue A, Nice', 'siège inconnu : lieu affiché');
   const f = s.EUC_SUIVI2_ficheDossier_(a, {}); assert.equal(f.lieu, ''); assert.equal(f.adresse, '33 RUE BARBERIS, 06300 NICE');
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.6(6[2-9]|[7-9]\d)'/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.(6(6[2-9]|[7-9]\d)|[7-9]\d\d)'/);
 });
 test('DEV666 : numéro ajouté par l’élève à la voie du siège : adresse du siège numérotée, sans alerte (suivi, Mes visites)', () => {
   const s = { console, JSON, Object, String, Number, Array, Math, Date, Error, RegExp, isNaN, parseInt };

@@ -25,6 +25,7 @@ test('la colonne Grist « Organisme relation OPCO » est prioritaire ; à défau
   const src = read('apps-script/EUC_DEV579_Profils.js');
   assert.match(src, /opco: 'Organisme_relation_OPCO'/); assert.match(src, /\[C\.opco, 'Organisme relation OPCO', EUC_DEV579_ORGANISMES_\]/, 'pré-remplissage : colonne créée sur demande');
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /opco: profil \? profil\.opco \|\| '' : ''/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.(73[2-9]|7[4-9]\d|[89]\d\d)'/, 'modèle du suivi recalculé (cache par version)');
 });
 test('effectifs : classe entière dans un seul organisme, total inchangé ; LP / LGT : mixité + classes entières rattachées', () => {
   const k = { String, Number, Array, Object, JSON }; vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV592_Effectifs.js'), k);
