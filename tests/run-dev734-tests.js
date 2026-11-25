@@ -28,6 +28,6 @@ test('CQPM : 12 apprentis tous « AFPI PROVENCE » → 0 entreprise identifiée,
 });
 test('accueil : bulle « non rens. » et tuile « + N non renseignée(s) »', () => {
   const a = read('apps-script/Admin_PFMP.html');
-  assert.match(a, /'<small>non rens\.<\/small><\/span>'/); assert.match(a, /' \+ '\+t\.entreprisesNonRenseignees\+' non renseignée\(s\)'/); assert.match(a, /\.b-nr\{/);
+  assert.match(a, /'<small>non rens\.<\/small><\/span>'/); assert.match(a, /nr=t\.entreprisesNonRenseignees\|\|0/); assert.match(a, /\(nr\?' \+ '\+nr\+' non renseignée\(s\)':''\)/); assert.match(a, /\.b-nr\{/);
 });
 console.log(n + ' tests DEV734 réussis.');

@@ -393,7 +393,7 @@ test('DEV592 : effectifs — LP / LGT pour les scolaires et la mixité, organism
   const m2 = { classes: [{ id: 9, nom: '1BTS ELEC Alt', modeApprentissage: 'CLASSE_ENTIERE', gestionnaire: 'CFA RAN', eleves: [{ id: 1, apprentissage: { code: 'APPRENTI', entreprise: 'ENEDIS' } }, { id: 2, apprentissage: { code: 'APPRENTI', entreprise: 'Enedis' } }], periodes: [] }] };
   assert.equal(k.EUC_DEV592_calcul_(m2).groupes[0].classes[0].entreprises, 1, 'entreprise du contrat, sans période au calendrier');
   const admin = read('apps-script/Admin_PFMP.html');
-  assert.match(admin, /id="effectifs"/); assert.match(admin, /\.EUC_DEV592_effectifs\(''\)/);
+  assert.match(admin, /id="effectifs"/); assert.match(admin, /\.EUC_DEV592_effectifs\('',\{forcer:forcer\}\)/);
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /etab: EUC_SUIVI2_etab_\(c\.Etab \|\| c\.Etablissement_Pronote\)/);
 });
 test('DEV594 : établissement abrégé (copier-coller Pronote) — LP, LGT, CFA, CFAI, CFA RAN, GRETA', () => {

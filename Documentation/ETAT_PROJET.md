@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 25 novembre 2026 — DEV735 : effectifs, entreprises estimées et affichage sans recalcul
+
+- Tuile Total : apprentis détaillés (en mixité / en classe entière) ; entreprises estimées sur l'ensemble, chaque entreprise comptée une fois.
+- Entreprises de chaque tuile, en estimation : identifiées + apprentis sous contrat sans employeur identifié + stagiaires de formation continue (un jeune = une entreprise). Affichage « ≈ T entreprise(s) : N identifiée(s) + M non renseignée(s) + S stagiaire(s) FC ».
+- LP et LGT comptent aussi les entreprises de leurs classes entières rattachées (ex. BTS ELEC Alt dans le LGT).
+- Vitesse : le dernier résultat reste en cache 6 h, avec le témoin Grist. À l'ouverture de l'accordéon, il s'affiche tout de suite. Si Grist n'a pas changé, il est marqué « à jour » ; sinon, il est marqué comme ancien et recalculé automatiquement en arrière-plan. « Mettre à jour » force le recalcul. En cas d'échec, les chiffres précédents restent affichés.
+- Accès : le bloc Effectifs reste réservé à l'accueil d'administration (`EUC_SUIVI2_exigerAdmin_`) ; les professeurs n'y ont pas accès.
+- Tests : `tests/run-dev735-tests.js` (4) ; assertions DEV575/DEV728/DEV734 adaptées à la nouvelle forme d'appel (mêmes garanties).
+
 ## Mise à jour du 25 novembre 2026 — DEV734 : entreprises non renseignées (organisme de formation à la place de l'employeur)
 
 - Dans l'export Yparéo du CQPM ascensoriste, les 49 colonnes ont été examinées : aucun employeur n'y figure, et les colonnes entreprise donnent l'organisme de formation pour les 12 apprentis. Décision DDFPT : un jeune = une entreprise non renseignée.

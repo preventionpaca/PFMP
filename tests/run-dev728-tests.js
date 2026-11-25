@@ -59,10 +59,10 @@ test('bandeau : une ligne par rubrique avec son lien ; bandeau masqué si aucune
 
 test('effectifs : accordéon replié, calcul seulement à l’ouverture ou sur « Mettre à jour », bouton désactivé avec spinner et délai borné', () => {
   assert.ok(/<details class="card effectifs" id="effectifs"><summary>/.test(h) && !/<details class="card effectifs" id="effectifs" open/.test(h));
-  const src = h.slice(h.indexOf("var majB=$('effMaj')"), h.indexOf("majB.onclick=charger;"));
+  const src = h.slice(h.indexOf("var majB=$('effMaj')"), h.indexOf("majB.onclick="));
   assert.ok(!/^google\.script\.run[^\n]*EUC_DEV592_effectifs/m.test(h.slice(0, h.indexOf("var majB=$('effMaj')"))), 'plus de calcul au chargement de la page');
   assert.ok(/majB\.disabled=true;majB\.innerHTML='<span class="spin"/.test(src) && /180000/.test(src) && /function fin\(\)|fin=function\(\)\{fini=true;clearTimeout\(t\);enCours=false;majB\.disabled=false;majB\.innerHTML=majLib;\}/.test(src));
-  assert.ok(h.includes("majB.onclick=charger;$('effectifs').addEventListener('toggle',function(){if(this.open&&!charge)charger();});"));
+  assert.ok(h.includes("majB.onclick=function(){charger(true);};$('effectifs').addEventListener('toggle',function(){if(this.open&&!charge)charger(false);});"), 'DEV735 : ouverture = chargement (cache), bouton = recalcul forcé');
   assert.ok(/\.withFailureHandler\(function\(e\)\{if\(fini\)return;fin\(\);/.test(h), 'erreur : bouton rendu');
 });
 

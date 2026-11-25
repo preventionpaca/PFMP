@@ -26,7 +26,7 @@ function EUC_DEV592_organismeFormation_(nom) {
 function EUC_DEV592_calcul_(m) {
   var groupes = {}, n = function(v) { return String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); };
   function groupe(nom) { return groupes[nom] = groupes[nom] || { nom: nom, classes: [], entreprises: {} }; }
-  var rattaches = {};
+  var rattaches = {}, toutes = {};
   (m.classes || []).forEach(function(c) {
     if (c.test) return;
     var ce = c.modeApprentissage === 'CLASSE_ENTIERE' || c.modeApprentissage === 'FORMATION_CONTINUE', ents = {};
@@ -50,31 +50,53 @@ function EUC_DEV592_calcul_(m) {
     /* DEV733 : établissement de rattachement réglé (LP / LGT / Aucun) ; à défaut, la colonne Etab. */
     var ratt = c.rattachement != null && c.rattachement !== '' ? c.rattachement : c.etab;
     x.rattachement = ratt === 'LP' || ratt === 'LGT' ? ratt : '';
-    if (ce && !fc && x.rattachement) { var R = rattaches[x.rattachement] = rattaches[x.rattachement] || { apprentis: 0, classes: [] }; R.apprentis += apprentis; R.classes.push(c.nom); }
+    /* DEV735 : l'établissement compte aussi les entreprises (identifiées et non renseignées) de ses classes entières rattachées. */
+    if (ce && !fc && x.rattachement) { var R = rattaches[x.rattachement] = rattaches[x.rattachement] || { apprentis: 0, classes: [], entreprises: {}, nonRenseignees: 0 }; R.apprentis += apprentis; R.classes.push(c.nom); R.nonRenseignees += nonRenseignees; Object.keys(ents).forEach(function(k) { R.entreprises[k] = true; }); }
+    Object.keys(ents).forEach(function(k) { toutes[k] = true; });
     noms.forEach(function(g) { var G = groupe(g); G.classes.push(x); Object.keys(ents).forEach(function(k) { G.entreprises[k] = true; }); });
   });
   var liste = Object.keys(groupes).map(function(k) {
     var g = groupes[k], t = { classes: g.classes.length, effectif: 0, scolaires: 0, apprentis: 0, stagiaires: 0, entreprises: Object.keys(g.entreprises).length, entreprisesNonRenseignees: 0 };
     g.classes.forEach(function(c) { t.entreprisesNonRenseignees += c.entreprisesNonRenseignees; t.effectif += c.effectif; t.scolaires += c.scolaires; t.apprentis += c.apprentis; t.stagiaires += c.stagiaires; });
     /* DEV732 : établissement → apprentis en mixité et apprentis des classes entières rattachées ; organisme → classes dédiées. */
-    if (g.nom === 'LP' || g.nom === 'LGT') { t.etablissement = true; t.apprentisMixite = t.apprentis; t.apprentisClasseEntiere = rattaches[g.nom] ? rattaches[g.nom].apprentis : 0; t.classesRattachees = rattaches[g.nom] ? rattaches[g.nom].classes.sort() : []; }
+    if (g.nom === 'LP' || g.nom === 'LGT') { var R = rattaches[g.nom]; t.etablissement = true; t.apprentisMixite = t.apprentis; t.apprentisClasseEntiere = R ? R.apprentis : 0; t.classesRattachees = R ? R.classes.sort() : [];
+      if (R) { Object.keys(R.entreprises).forEach(function(k) { g.entreprises[k] = true; }); t.entreprises = Object.keys(g.entreprises).length; t.entreprisesNonRenseignees += R.nonRenseignees; } }
     else if (EUC_DEV592_ORDRE_.indexOf(g.nom) >= 0) t.organisme = true;
+    /* DEV735 : estimation = entreprises identifiées + apprentis sans employeur identifié + stagiaires de formation continue (un jeune = une entreprise). */
+    t.entreprisesEstimees = t.entreprises + t.entreprisesNonRenseignees + t.stagiaires;
     g.classes.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     return { nom: g.nom, totaux: t, classes: g.classes };
   });
   liste.sort(function(a, b) { var i = EUC_DEV592_ORDRE_.indexOf(a.nom), j = EUC_DEV592_ORDRE_.indexOf(b.nom); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.nom.localeCompare(b.nom, 'fr'); });
   /* Total général : chaque classe une seule fois (une classe co-gérée n'est pas comptée deux fois). */
-  var vues = {}, tot = { classes: 0, effectif: 0, scolaires: 0, apprentis: 0, stagiaires: 0 };
-  liste.forEach(function(g) { g.classes.forEach(function(c) { if (vues[c.id]) return; vues[c.id] = true; tot.classes++; tot.effectif += c.effectif; tot.scolaires += c.scolaires; tot.apprentis += c.apprentis; tot.stagiaires += c.stagiaires; }); });
+  var vues = {}, tot = { classes: 0, effectif: 0, scolaires: 0, apprentis: 0, stagiaires: 0, apprentisMixite: 0, apprentisClasseEntiere: 0, entreprises: Object.keys(toutes).length, entreprisesNonRenseignees: 0 };
+  liste.forEach(function(g) { g.classes.forEach(function(c) { if (vues[c.id]) return; vues[c.id] = true; tot.classes++; tot.effectif += c.effectif; tot.scolaires += c.scolaires; tot.apprentis += c.apprentis; tot.stagiaires += c.stagiaires;
+    tot[c.mode === 'MIXITE' ? 'apprentisMixite' : 'apprentisClasseEntiere'] += c.apprentis; tot.entreprisesNonRenseignees += c.entreprisesNonRenseignees; }); });
+  tot.general = true; tot.entreprisesEstimees = tot.entreprises + tot.entreprisesNonRenseignees + tot.stagiaires;
   return { annee: m.annee, total: tot, groupes: liste };
 }
 
-function EUC_DEV592_effectifs(annee) {
+/* DEV735 : dernier résultat gardé en cache (6 h). Sans modification de Grist depuis (même témoin), il est rendu
+ * tel quel ; sinon il est rendu tout de suite, marqué « perime », et la page relance le calcul en arrière-plan.
+ * « Mettre à jour » (forcer) recalcule toujours. */
+var EUC_DEV592_CACHE_VERSION_ = 'V2';
+function EUC_DEV592_cle_(annee) { return 'EUC_DEV592_EFF_' + EUC_DEV592_CACHE_VERSION_ + '_' + (String(annee || '').replace(/\D/g, '') || 'COURANTE') + '_' + (typeof EUC_SUIVI2_VERSION_ === 'string' ? EUC_SUIVI2_VERSION_.replace(/\W/g, '') : ''); }
+function EUC_DEV592_reponse_(cache, temoin, forcer) {
+  if (forcer || !cache || !cache.resultat) return null;
+  var r = cache.resultat; r.depuisCache = true; r.perime = !temoin || cache.temoin !== temoin; return r;
+}
+function EUC_DEV592_effectifs(annee, options) {
   EUC_SUIVI2_exigerAdmin_();
+  var forcer = !!(options && options.forcer), cle = EUC_DEV592_cle_(annee), temoin = '';
+  try { temoin = EUC_SUIVI2_temoin_(); } catch (e) { temoin = ''; }
+  var vite = EUC_DEV592_reponse_(typeof EUC_DEV572_lire_ === 'function' ? EUC_DEV572_lire_(cle) : null, temoin, forcer);
+  if (vite) return vite;
   var m = EUC_SUIVI2_modele_(String(annee || ''));
-  var r = EUC_DEV592_calcul_(m); r.ok = true; r.calculeLe = m.calculeLe;
+  var r = EUC_DEV592_calcul_(m); r.ok = true; r.calculeLe = m.calculeLe; r.calculeA = new Date().toISOString();
   /* DEV597 : alertes de l'échéancier des contacts d'entrée, affichées sur l'accueil. */
   try { if (typeof EUC_DEV597_compteurs_ === 'function') r.echeancier = EUC_DEV597_compteurs_(annee); } catch (e) {}
+  if (typeof EUC_DEV572_ecrire_ === 'function') EUC_DEV572_ecrire_(cle, { temoin: m.temoin || temoin, resultat: r });
+  r.depuisCache = false; r.perime = false;
   return r;
 }
 
