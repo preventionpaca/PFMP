@@ -42,7 +42,7 @@ test('page : route, rendu partagé, liens Atrium avec jeton, code retenu (option
   assert.ok(h.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')") && h.includes("EUC_PFMP_inclure_('Apprentis_Classes_DEV635_Rendu')") && h.includes("EUC736.rendre(D,$('effTuiles'),$('effClasses'))"));
   ['href="__LIEN_PFMP__"', 'href="__LIEN_PFMP__?page=book-entreprises-public-pfmp"', 'href="__LIEN_APPRENTIS__"', 'href="__LIEN_APPRENTIS__?page=cartographie-apprentis-public-pfmp"'].forEach(x => assert.ok(h.includes(x), x));
   assert.ok(!/https?:\/\/[a-z-]+\.(lycee-les-eucalyptus\.org|loucodi\.fr)/.test(h), 'aucune adresse publique en dur');
-  assert.match(h, /u\.searchParams\.set\('jeton',jeton\)/); assert.match(h, /activerLiens\(r\.jeton\)/);
+  assert.match(h, /u\.searchParams\.set\(a\.hasAttribute\('data-stats'\)\?'dir':'jeton',v\)/); assert.match(h, /activerLiens\(r\.jeton,r\.dir\)/);
   assert.match(h, /\.EUC_DEV736_effectifs\(\{code:CODE,forcer:forcer\}\)/); assert.match(h, /if\(\/Code direction\/\.test\(m\)\)\{ecrire\(''\);CODE='';demanderCode\(m\);return;\}/);
   assert.match(h, /function occupe\(b,on,lib\)\{[^}]*b\.disabled=!!on;b\.innerHTML=on\?'<span class="spin"/); assert.match(h, /180000/); assert.match(h, /chiffres précédents conservés/);
   assert.match(h, /try\{return localStorage\.getItem\(CLE\)\|\|'';\}catch\(e\)\{return '';\}/);

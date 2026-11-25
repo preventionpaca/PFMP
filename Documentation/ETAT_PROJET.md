@@ -1,5 +1,14 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV737 : statistiques de l'établissement pour la direction
+
+- Tableau de bord : les accès rapides deviennent cinq boutons compacts : Suivi des PFMP, Book des entreprises, Suivi des apprentis, Cartographie des apprentis et Statistiques de l'établissement (élèves et apprentis).
+- Nouvelle route `?page=statistiques-direction` : même page et mêmes chiffres que `statistiques-pfmp`, titre « Statistiques de l'établissement », retour vers le tableau de bord.
+- Accès : un jeton direction signé (`DIR|`, 12 h, `EUC_DEV737_creerJeton_`) est renvoyé par `EUC_DEV736_effectifs` après le code direction et ajouté au lien (`dir`). Un jeton enseignant n'est pas accepté. Sans jeton valide ni administration, la route affiche un renvoi vers le tableau de bord.
+- Lecture seule : `EUC_DEV737_statsAnnees` / `statsAnnee` / `statsDistances` appellent les lectures `EUC_DEV698_anneesLecture_`, `EUC_DEV698_anneeLecture_` et `EUC_DEV703_distancesLecture_`. Les fonctions admin gardent `EUC_ADMIN_WORKFLOW_ctxV144_` ; le calcul des distances (appels d'itinéraire) reste réservé à l'administration et son bouton est masqué.
+- La page redirige ses appels côté client (objet `google` local à la page en mode direction) ; le mode administration est inchangé. `Statistiques_PFMP_DEV698` est ajoutée aux pages publiques du verrou (chaque fonction citée fait son propre contrôle).
+- Adresse prévue : `dashboard.lycee-les-eucalyptus.org` (dépôt GitHub Pages `preventionpaca/dashboard-eucalyptus`, CNAME DNS chez GoDaddy).
+
 ## Mise à jour du 25 novembre 2026 — DEV736 : tableau de bord de la direction
 
 - Nouvelle route `?page=tableau-de-bord` (« Tableau de bord — Direction »), sur la même Web App que l'accueil. Elle contient :

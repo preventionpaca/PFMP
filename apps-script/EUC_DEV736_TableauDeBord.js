@@ -32,12 +32,15 @@ function EUC_DEV736_effectifs(q) {
   var r = EUC_DEV592_effectifsCalcul_(String(q.annee || ''), { forcer: !!q.forcer }); r.nom = a.nom;
   /* Jeton de session enseignant (12 h) : ouvre les pages des liens Atrium (suivi PFMP, book, apprentis, cartographie). */
   try { r.jeton = typeof EUC_ACCES_creerJeton_ === 'function' ? EUC_ACCES_creerJeton_() : ''; } catch (e) { r.jeton = ''; }
+  /* DEV737 : jeton direction (12 h) des statistiques de l'établissement. */
+  try { r.dir = typeof EUC_DEV737_creerJeton_ === 'function' ? EUC_DEV737_creerJeton_() : ''; } catch (e) { r.dir = ''; }
   return r;
 }
 
 function EUC_DEV736_afficher(e) {
   var t = HtmlService.createTemplateFromFile('Tableau_De_Bord_DEV736');
   t.admin = EUC_DEV736_estAdmin_();
+  t.base = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
   return t.evaluate().setTitle('Tableau de bord — Direction').addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

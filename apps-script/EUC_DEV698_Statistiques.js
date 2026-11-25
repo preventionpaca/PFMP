@@ -196,7 +196,11 @@ function EUC_DEV698_calcul_(annee) {
 }
 
 function EUC_DEV698_annee(q) {
-  EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
+  EUC_ADMIN_WORKFLOW_ctxV144_(); return EUC_DEV698_anneeLecture_(q);
+}
+/* Lecture sans contrôle d'accès : appelée après EUC_ADMIN_WORKFLOW_ctxV144_ (admin) ou le jeton direction (DEV737). */
+function EUC_DEV698_anneeLecture_(q) {
+  q = q || {};
   var annee = EUC_DEV698_t_(q.annee);
   if (!/^20\d{2}-20\d{2}$/.test(annee)) throw new Error('Année scolaire invalide.');
   var temoin = '';
@@ -210,7 +214,9 @@ function EUC_DEV698_annee(q) {
 }
 
 function EUC_DEV698_annees() {
-  EUC_ADMIN_WORKFLOW_ctxV144_();
+  EUC_ADMIN_WORKFLOW_ctxV144_(); return EUC_DEV698_anneesLecture_();
+}
+function EUC_DEV698_anneesLecture_() {
   var b = {};
   try { b = EUC_DEV368_boot() || {}; } catch (e) { b = {}; }
   var l = (b.years || []).map(EUC_DEV698_t_).filter(function(y, i, a) { return /^20\d{2}-20\d{2}$/.test(y) && a.indexOf(y) === i; });
@@ -225,5 +231,6 @@ function EUC_DEV698_afficher(e) {
   EUC_IMPORT_exigerAdminTexte_();
   var t = HtmlService.createTemplateFromFile('Statistiques_PFMP_DEV698');
   t.adminBase = typeof EUC_RELEASE_serviceBase_ === 'function' ? EUC_RELEASE_serviceBase_() : '';
+  t.direction = false; t.dir = '';
   return t.evaluate().setTitle('Statistiques PFMP').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

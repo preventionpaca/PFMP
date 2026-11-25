@@ -39,6 +39,9 @@ const PAGES_PUBLIQUES = [
   'Acces_Alternance_DEV632',
   /* DEV736 : tableau de bord de la direction ; EUC_DEV736_effectifs vérifie lui-même le code direction (ou l'administration). */
   'Tableau_De_Bord_DEV736',
+  /* DEV737 : statistiques de l'établissement pour la direction ; EUC_DEV737_stats* vérifient le jeton direction,
+   * les fonctions admin citées par la même page gardent leur propre contrôle EUC_ADMIN_WORKFLOW_ctxV144_. */
+  'Statistiques_PFMP_DEV698',
   'PFMP_Acces_QR',
   'PFMP_Acces_QR_V116',
   'PFMP_Continuation_QR_V117',

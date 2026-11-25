@@ -7,10 +7,9 @@
   header h1{margin:0;font-size:1.6rem}header p{margin:4px 0 0;color:var(--doux)}
   .card{background:#fff;border:1px solid #dce3ea;border-radius:14px;padding:16px 18px;margin-top:16px}
   .card h2{margin:0 0 10px;font-size:1.15rem}
-  .liens{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-  .liens a{display:block;border:1px solid #cfe3dc;border-radius:12px;background:#f3faf7;padding:12px 14px;text-decoration:none;color:inherit}
-  .liens a:hover,.liens a:focus{border-color:var(--vert);box-shadow:0 0 0 2px #99d5cc;outline:none}
-  .liens b{display:block;color:var(--vert);font-size:1rem}.liens span{font-size:.82rem;color:var(--doux)}
+  .liens{display:flex;flex-wrap:wrap;gap:8px}
+  .liens a{display:inline-block;border:1px solid var(--vert);border-radius:999px;background:#f3faf7;padding:8px 16px;text-decoration:none;color:var(--vert);font-weight:700;font-size:.95rem}
+  .liens a:hover,.liens a:focus{background:var(--vert);color:#fff;box-shadow:0 0 0 2px #99d5cc;outline:none}
   .acces form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.acces input{font:inherit;padding:7px 10px;border:1px solid #b9c6d2;border-radius:8px;min-width:240px}
   .btn{font:inherit;font-weight:800;border:1px solid var(--vert);color:#fff;background:var(--vert);border-radius:8px;padding:7px 14px;cursor:pointer}
   .btn.sec{color:var(--vert);background:#fff}.btn:disabled{opacity:.7;cursor:wait}
@@ -27,12 +26,13 @@
 
 <section class="card" aria-labelledby="tLiens"><h2 id="tLiens">Accès rapides</h2>
   <div class="liens">
-    <a class="lien" href="__LIEN_PFMP__" target="_blank" rel="noopener"><b>Suivi des PFMP</b><span>Classes, périodes, conventions, professeurs du suivi et visites.</span></a>
-    <a class="lien" href="__LIEN_PFMP__?page=book-entreprises-public-pfmp" target="_blank" rel="noopener"><b>Book des entreprises</b><span>Entreprises d’accueil des PFMP et des apprentis.</span></a>
-    <a class="lien" href="__LIEN_APPRENTIS__" target="_blank" rel="noopener"><b>Suivi des apprentis</b><span>Statistiques des apprentis (mixité, classes entières, contrats), référents et visites.</span></a>
-    <a class="lien" href="__LIEN_APPRENTIS__?page=cartographie-apprentis-public-pfmp" target="_blank" rel="noopener"><b>Cartographie des apprentis</b><span>Carte des entreprises qui accueillent les apprentis.</span></a>
+    <a class="lien" href="__LIEN_PFMP__" target="_blank" rel="noopener">Suivi des PFMP</a>
+    <a class="lien" href="__LIEN_PFMP__?page=book-entreprises-public-pfmp" target="_blank" rel="noopener">Book des entreprises</a>
+    <a class="lien" href="__LIEN_APPRENTIS__" target="_blank" rel="noopener">Suivi des apprentis</a>
+    <a class="lien" href="__LIEN_APPRENTIS__?page=cartographie-apprentis-public-pfmp" target="_blank" rel="noopener">Cartographie des apprentis</a>
+    <a class="lien" data-stats="1" href="<?= base ?>?page=statistiques-direction" target="_blank" rel="noopener">Statistiques de l’établissement</a>
   </div>
-  <p class="note">Statistiques et cartographie des apprentis : apprentis seulement (pas les élèves scolaires). Les liens s’ouvrent dans un nouvel onglet ; ils sont activés pour 12 heures après votre code direction, comme les liens Atrium des professeurs.</p>
+  <p class="note">Suivi et cartographie des apprentis : apprentis seulement. Statistiques : tout l’établissement (élèves et apprentis). Les liens s’ouvrent dans un nouvel onglet ; ils sont activés pour 12 heures après votre code direction.</p>
 </section>
 
 <section class="card acces" id="acces" hidden aria-labelledby="tAcces"><h2 id="tAcces">Code direction</h2>
@@ -53,7 +53,8 @@
 (function(){'use strict';
 var $=function(id){return document.getElementById(id);},ADMIN=<?!= admin ? 'true' : 'false' ?>,CLE='eucCodeDirection',D=null,CODE='',enCours=false;
 /* Liens des enveloppes Atrium (pfmp, apprentis) : jeton de session enseignant (12 h) ajouté une fois le code direction vérifié. */
-function activerLiens(jeton){if(!jeton)return;Array.prototype.forEach.call(document.querySelectorAll('a.lien'),function(a){try{var u=new URL(a.getAttribute('href'));u.searchParams.set('jeton',jeton);a.href=u.toString();}catch(e){}});}
+/* DEV737 : le lien des statistiques reçoit le jeton direction (dir), les autres le jeton enseignant. */
+function activerLiens(jeton,dir){Array.prototype.forEach.call(document.querySelectorAll('a.lien'),function(a){var v=a.hasAttribute('data-stats')?dir:jeton;if(!v)return;try{var u=new URL(a.getAttribute('href'));u.searchParams.set(a.hasAttribute('data-stats')?'dir':'jeton',v);a.href=u.toString();}catch(e){}});}
 function lire(){try{return localStorage.getItem(CLE)||'';}catch(e){return '';}}
 function ecrire(v){try{if(v)localStorage.setItem(CLE,v);else localStorage.removeItem(CLE);}catch(e){}}
 function occupe(b,on,lib){if(!b.dataset.lib)b.dataset.lib=b.innerHTML;b.disabled=!!on;b.innerHTML=on?'<span class="spin" aria-hidden="true"></span> '+lib:b.dataset.lib;}
@@ -67,7 +68,7 @@ function charger(forcer,bouton){forcer=forcer===true;if(enCours)return;enCours=t
   google.script.run.withSuccessHandler(function(r){if(fini)return;fin();D=r;$('acces').hidden=true;$('effectifs').hidden=false;$('oublier').hidden=ADMIN||!lire();
     $('effAnnee').textContent=r.annee||'';var h=heure(r);
     $('effEtat').textContent=(r.nom?'Bonjour '+r.nom+'. ':'')+(h?'Chiffres du '+h+(r.perime?' — des modifications ont eu lieu depuis : mise à jour en arrière-plan…':' — à jour')+'. ':'')+'Cliquez sur un établissement ou un organisme pour voir ses classes. Entreprises : estimation (un jeune sans employeur identifié = une entreprise).';
-    EUC736.rendre(D,$('effTuiles'),$('effClasses'));activerLiens(r.jeton);if(r.perime&&!forcer)setTimeout(function(){charger(true);},0);})
+    EUC736.rendre(D,$('effTuiles'),$('effClasses'));activerLiens(r.jeton,r.dir);if(r.perime&&!forcer)setTimeout(function(){charger(true);},0);})
   .withFailureHandler(function(e){if(fini)return;fin();var m=String(e&&e.message||e);
     if(/Code direction/.test(m)){ecrire('');CODE='';demanderCode(m);return;}
     $('effEtat').textContent=(avant?'Mise à jour impossible (chiffres précédents conservés) : ':'Effectifs indisponibles : ')+m;$('effectifs').hidden=false;})

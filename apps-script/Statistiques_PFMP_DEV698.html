@@ -53,8 +53,13 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
 </style>
 </head>
 <body>
+<? if (direction) { ?><style>#distCalc{display:none!important}</style>
+<header><h1>Statistiques de l’établissement</h1><p>Élèves, apprentis, lieux de stage, entreprises, filières et évolution d’une année à l’autre. Lecture seule.</p></header>
+<nav><a href="<?= adminBase ?>?page=tableau-de-bord">Tableau de bord</a> › Statistiques de l’établissement</nav>
+<? } else { ?>
 <header><h1>Statistiques PFMP</h1><p>Lieux de stage, entreprises, filières, déroulement des stages et évolution d’une année à l’autre. Lecture seule.</p></header>
 <nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Statistiques</nav>
+<? } ?>
 <main>
   <section>
     <h2>Périmètre</h2>
@@ -139,6 +144,14 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
 </main>
 <script>
 (function(){
+  /* DEV737 — direction : mêmes appels, servis par EUC_DEV737_stats* avec le jeton direction (lecture seule, pas de calcul d'itinéraire). */
+  const DIR=<?!= JSON.stringify(direction ? String(dir || '') : '') ?>,DIRECTION=<?!= direction ? 'true' : 'false' ?>;
+  const google=!DIRECTION?window.google:{script:{run:(function mk(s,f){const r=function(){return window.google.script.run.withSuccessHandler(s||function(){}).withFailureHandler(f||function(){})};
+    return{withSuccessHandler:function(h){return mk(h,f)},withFailureHandler:function(h){return mk(s,h)},
+      EUC_DEV698_annees:function(){r().EUC_DEV737_statsAnnees({dir:DIR})},
+      EUC_DEV698_annee:function(q){r().EUC_DEV737_statsAnnee({dir:DIR,annee:q&&q.annee})},
+      EUC_DEV703_distances:function(q){r().EUC_DEV737_statsDistances({dir:DIR,annee:q&&q.annee})},
+      EUC_DEV703_calculer:function(){if(f)f(new Error('Calcul des distances réservé à l’administration.'))}}})()}};
   const $=function(id){return document.getElementById(id)};
   const esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
   const FAM={BACPRO:'Bac pro',BTS:'BTS',CAP:'CAP',BP:'BP',MC:'Mention complémentaire',AUTRES_FORMATIONS:'Autres formations'};

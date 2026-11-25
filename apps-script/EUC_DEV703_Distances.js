@@ -102,7 +102,11 @@ function EUC_DEV703_itineraire_(o, d) {
 
 /* Lecture seule des distances déjà calculées. */
 function EUC_DEV703_distances(q) {
-  EUC_ADMIN_WORKFLOW_ctxV144_(); q = q || {};
+  EUC_ADMIN_WORKFLOW_ctxV144_(); return EUC_DEV703_distancesLecture_(q);
+}
+/* Lecture seule des distances déjà calculées (aucun appel d'itinéraire) : admin ou jeton direction (DEV737). */
+function EUC_DEV703_distancesLecture_(q) {
+  q = q || {};
   var annee = EUC_DEV703_t_(q.annee);
   var v = EUC_DEV703_vue_(EUC_DEV703_paires_(annee), EUC_DEV703_lireStock_(annee)); v.annee = annee; return v;
 }
