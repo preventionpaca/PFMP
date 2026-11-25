@@ -50,7 +50,24 @@ test('accueil : tuiles établissement / organisme et rappel du réglage', () => 
   const h = read('apps-script/Admin_PFMP.html');
   assert.match(h, /apprenti\(s\) en mixité · '\+t\.apprentisClasseEntiere\+' apprenti\(s\) en classe entière rattachée\(s\)'/);
   assert.match(h, /classe\(s\) dédiée\(s\) · '\+t\.apprentis\+' apprenti\(s\)'/);
-  assert.match(h, /colonne « Organisme relation OPCO »/);
+  assert.match(h, /page « Quotas d’apprentissage », colonne « Organismes » → OPCO/);
   assert.match(read('apps-script/Apprentissage_Quotas_DEV538.html'), /<b>Organisme relation OPCO<\/b>/);
+});
+test('page des quotas : organismes réglés dans l’application, seules les cases modifiées écrites dans Grist', () => {
+  const k = { console: { log() {} }, JSON, Object, String, Number, Array, Math, Date, Error, RegExp };
+  vm.createContext(k); vm.runInContext(read('apps-script/EUC_DEV579_Profils.js'), k); vm.runInContext(read('apps-script/EUC_DEV732_OrganismesClasses.js'), k);
+  const recs = [{ id: 1, fields: { Organisme_gestionnaire: 'GRETA', Organisme_donneur_ordre: 'CFAI' } }, { id: 2, fields: { Organisme_gestionnaire: 'CFA RAN' } }, { id: 3, fields: {} }];
+  const lignes = [{ classeId: 1, organismesSaisis: { gestionnaire: 'GRETA', donneur: 'CFAI', opco: 'GRETA' } }, { classeId: 2, organismesSaisis: { gestionnaire: 'CFA RAN', donneur: '', opco: '' } }, { classeId: 3 }, { classeId: 99, organismesSaisis: { opco: 'CFAI' } }];
+  assert.deepEqual(J(k.EUC_DEV732_modifications_(lignes, recs)), [{ id: 1, fields: { Organisme_relation_OPCO: 'GRETA' } }], 'inchangé, sans saisie ou classe inconnue : rien');
+  assert.deepEqual(J(k.EUC_DEV732_modifications_([{ classeId: 1, organismesSaisis: { donneur: '' } }], recs)), [{ id: 1, fields: { Organisme_donneur_ordre: '' } }], 'retour à « Auto » : case vidée');
+  assert.throws(() => k.EUC_DEV732_modifications_([{ classeId: 1, organismesSaisis: { opco: 'OPCO2I' } }], recs), /Organisme invalide/);
+  const appels = []; k.EUC_ENT_grist = (m, u, b) => { appels.push([m, u, b && J(b)]); return u.endsWith('/records') && m === 'get' ? { records: recs } : u.endsWith('/columns') && m === 'get' ? { columns: [{ id: 'Organisme_gestionnaire' }, { id: 'Organisme_donneur_ordre' }] } : {}; };
+  assert.equal(k.EUC_DEV732_ecrireOrganismes_([{ classeId: 3 }]), 0); assert.equal(appels.length, 0, 'aucune saisie : aucun appel Grist');
+  assert.equal(k.EUC_DEV732_ecrireOrganismes_(lignes), 1);
+  assert.deepEqual(appels.map(a => a[0] + ' ' + a[1]), ['get /tables/Classes/records', 'get /tables/Classes/columns', 'post /tables/Classes/columns', 'patch /tables/Classes/records']);
+  assert.equal(appels[2][2].columns[0].id, 'Organisme_relation_OPCO'); assert.deepEqual(appels[3][2].records, [{ id: 1, fields: { Organisme_relation_OPCO: 'GRETA' } }]);
+  const h = read('apps-script/Apprentissage_Quotas_DEV538.html'), q = read('apps-script/EUC_PFMP_DEV538_BookQuotas.js');
+  assert.match(h, /organismesSaisis:orgLigne\(tr\)/); assert.match(h, /class="org-'\+c\[0\]\+'"/); assert.match(h, /organismes mis à jour dans Grist/);
+  assert.match(q, /EUC_DEV732_ecrireOrganismes_\(rows\)/); assert.match(q, /organismesSaisis:p732\.saisis\|\|null/);
 });
 console.log(n + ' tests DEV732 réussis.');

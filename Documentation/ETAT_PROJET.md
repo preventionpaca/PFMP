@@ -6,7 +6,8 @@
 - Bloc Effectifs : une classe entière n'est plus comptée que dans l'organisme de la relation OPCO (avant : dans le gestionnaire et dans le donneur d'ordre). Les tuiles CFA RAN, CFAI et GRETA indiquent le nombre de classes dédiées, d'apprentis et d'entreprises.
 - Tuiles LP et LGT : scolaires, apprentis en mixité et apprentis des classes entières rattachées à l'établissement (colonne Etab ; formation continue exclue).
 - Gestionnaire et donneur d'ordre restent inchangés et toujours affichés dans les bulles de la page Apprentissage.
-- Tests : `tests/run-dev732-tests.js` (4). Assertions DEV592/DEV635 mises à jour selon la nouvelle règle ; profil DEV577 complété du champ `opco`.
+- Réglage dans l'application : page « Quotas d'apprentissage », colonne « Organismes » : trois listes par classe (Gest., Donneur, OPCO ; « Auto » = règle par défaut, affichée entre parenthèses). Le bouton « Enregistrer les réglages » écrit dans Grist (table Classes) uniquement les cases modifiées et crée la colonne manquante si besoin (`EUC_DEV732_OrganismesClasses.js`).
+- Tests : `tests/run-dev732-tests.js` (5). Assertions DEV592/DEV635 mises à jour selon la nouvelle règle ; profil DEV577 complété du champ `opco`.
 
 ## Mise à jour du 25 novembre 2026 — DEV731 : géocodage des entreprises, recherche élargie et décompte exact
 
