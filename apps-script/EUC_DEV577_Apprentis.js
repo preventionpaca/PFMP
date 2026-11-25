@@ -12,7 +12,7 @@
  *   commencé. Un apprenti n'est plus compté potentiel ni futur ; la date de
  *   distribution reste conservée dans sa fiche.
  */
-var EUC_DEV577_VERSION_ = '1.0.0-dev.718'; /* DEV718 : identifiant d'élève sur chaque carte (cache renouvelé). */
+var EUC_DEV577_VERSION_ = '1.0.0-dev.738'; /* DEV718 : identifiant d'élève sur chaque carte ; DEV738 : organisme lié à l'OPCO (cache renouvelé). */
 var EUC_DEV577_CATEGORIES_ = ['apprentis', 'futurs', 'potentiels', 'distribues', 'rapportes', 'transmisCfa', 'contratsValides', 'ruptures'];
 
 function EUC_DEV577_t_(v) { return String(v == null ? '' : v).trim(); }
@@ -71,7 +71,7 @@ function EUC_DEV577_calcul_(annee) {
   classes.forEach(function(c) {
     var pr = typeof EUC_DEV579_profil_ === 'function' ? EUC_DEV579_profil_(EUC_DEV579_profilsConfig_(), annee, c.id, c.classe, c.etablissement, EUC_DEV545_classMode_(modes, annee, c.id)) : null;
     var l = lignes[c.id] = { classeId: c.id, classe: c.classe, famille: c.famille, niveau: c.niveau, diplome: EUC_DEV564_diplomaForClass_(c, diplomes[c.id]),
-      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: pr ? pr.mode : EUC_DEV545_classMode_(modes, annee, c.id), organismes: pr ? pr.organismes : [], gestionnaire: pr ? pr.gestionnaire : '', donneur: pr ? pr.donneur : '', effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
+      active: EUC_DEV542_classActive_(actives, annee, c.id), mode: pr ? pr.mode : EUC_DEV545_classMode_(modes, annee, c.id), organismes: pr ? pr.organismes : [], gestionnaire: pr ? pr.gestionnaire : '', donneur: pr ? pr.donneur : '', opco: pr ? pr.opco || '' : '', effectif: 0, quotaPourcent: EUC_DEV538_n_(quotas[c.id]), quota: 0, noms: {} };
     EUC_DEV577_CATEGORIES_.forEach(function(k) { l.noms[k] = []; });
   });
   eleves.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).forEach(function(e) {

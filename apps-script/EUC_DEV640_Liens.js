@@ -19,7 +19,9 @@ function EUC_LIENS_table_() { return {
   livretek:  'https://livret.lycee-les-eucalyptus.org/',
   suiviek:   'https://suiviek.lycee-les-eucalyptus.org/',
   /* DEV646 : formulaire « Déclarer mon entreprise » (Web App publique, sans compte) — lien Atrium. */
-  enregistrer: 'https://enregistrer-pfmp.lycee-les-eucalyptus.org/'
+  enregistrer: 'https://enregistrer-pfmp.lycee-les-eucalyptus.org/',
+  /* DEV738 : enveloppe du tableau de bord de la direction (dépôt GitHub dashboard-eucalyptus, sans bandeau Google). */
+  dashboard: 'https://dashboard.lycee-les-eucalyptus.org/'
 }; }
 
 function EUC_LIENS_anciens_() { return {
@@ -29,7 +31,8 @@ function EUC_LIENS_anciens_() { return {
   book:      ['https://book-entreprise.loucodi.fr/'],
   livretek:  ['https://livretek.loucodi.fr/'],
   suiviek:   ['https://suiviek.loucodi.fr/'],
-  enregistrer: []
+  enregistrer: [],
+  dashboard: []
 }; }
 
 function EUC_LIEN_(cle) {

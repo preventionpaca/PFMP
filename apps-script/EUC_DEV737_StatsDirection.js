@@ -43,7 +43,7 @@ function EUC_DEV737_afficherStats(e) {
     return HtmlService.createHtmlOutput('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Statistiques de l’établissement</title></head>' +
       '<body style="font:16px/1.5 Arial,sans-serif;margin:0;padding:32px;color:#163;background:#f7fbf9"><h1 style="font-size:22px">Statistiques de l’établissement</h1>' +
       '<p>Ouvrez cette page depuis le tableau de bord de la direction, après votre code direction (accès valable 12 heures).</p>' +
-      '<p><a href="' + base + '?page=tableau-de-bord" target="_top">Tableau de bord</a></p></body></html>')
+      '<p><a href="' + EUC_LIEN_('dashboard') + '" target="_top">Tableau de bord</a></p></body></html>')
       .setTitle('Statistiques de l’établissement').addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }

@@ -7,7 +7,7 @@
  * Les apprentis de l'année (contrat en cours) sont ajoutés avec leur entreprise. Les regroupements, filtres et
  * comparaisons entre années se font dans la page.
  */
-var EUC_DEV698_VERSION_ = '1.0.0-dev.718b';
+var EUC_DEV698_VERSION_ = '1.0.0-dev.738'; /* DEV738 : organisme lié à l'OPCO des apprentis. */
 
 function EUC_DEV698_t_(v) { return v == null ? '' : String(v).trim(); }
 
@@ -54,7 +54,8 @@ function EUC_DEV698_classes_(annee) {
   var parId = {}, parNom = {}, periodes = {}, diplomes = {};
   try { diplomes = typeof EUC_DEV538_diplomas_ === 'function' ? EUC_DEV538_diplomas_() : {}; } catch (eD) { diplomes = {}; }
   var cat = { classes: [] };
-  try { cat = EUC_DEV368_catalog(annee) || cat; } catch (eC) {}
+  /* DEV738 : lecture sans contrôle admin (le contrôle est fait par EUC_DEV698_annee ou le jeton direction). */
+  try { cat = (typeof EUC_DEV368_catalogLecture_ === 'function' ? EUC_DEV368_catalogLecture_(annee) : EUC_DEV368_catalog(annee)) || cat; } catch (eC) {}
   (cat.classes || []).forEach(function(c) {
     var cid = Number(c.classeId) || 0, dip = '';
     try { dip = typeof EUC_DEV564_diplomaForClass_ === 'function' ? EUC_DEV564_diplomaForClass_({ id: cid, classe: c.classe, famille: c.famille }, diplomes[cid]) : ''; } catch (eDip) { dip = ''; }
@@ -62,6 +63,17 @@ function EUC_DEV698_classes_(annee) {
       periodes: (c.periodes || []).map(function(p) { return { id: Number(p.id) || 0, libelle: EUC_DEV698_t_(p.libelle), debut: EUC_DEV698_date_(p.debut), fin: EUC_DEV698_date_(p.fin) }; }) };
     parId[cid] = x; parNom[x.classe.toUpperCase()] = x;
     (c.periodes || []).forEach(function(p) { periodes[Number(p.id) || 0] = { debut: EUC_DEV698_date_(p.debut), fin: EUC_DEV698_date_(p.fin), libelle: EUC_DEV698_t_(p.libelle) }; });
+  });
+  /* DEV738 : toute classe de l'année absente du catalogue (cache des vues vide, classe sans période publiée)
+   * reste reconnue par la table Classes : jamais « Classe inconnue » pour une classe qui existe. */
+  var completes = [];
+  try { completes = typeof EUC_DEV579_classesCompletes_ === 'function' ? (EUC_DEV579_classesCompletes_(annee) || []) : []; } catch (eCc) { completes = []; }
+  completes.forEach(function(c) {
+    var cid = Number(c.id) || 0, nom = EUC_DEV698_t_(c.classe); if (!cid || !nom || parId[cid] || parNom[nom.toUpperCase()]) return;
+    var fam = EUC_DEV698_t_(c.famille).toUpperCase(), dip = '';
+    try { dip = typeof EUC_DEV564_diplomaForClass_ === 'function' ? EUC_DEV564_diplomaForClass_({ id: cid, classe: nom, famille: fam }, diplomes[cid]) : ''; } catch (eDip2) { dip = ''; }
+    var x = { cid: cid, classe: nom, famille: fam, diplome: EUC_DEV698_t_(dip) || fam, periodes: [] };
+    parId[cid] = x; parNom[nom.toUpperCase()] = x;
   });
   return { parId: parId, parNom: parNom, periodes: periodes };
 }
@@ -174,7 +186,7 @@ function EUC_DEV698_calcul_(annee) {
           classe: T(l.classe) || x.classe || '', famille: T(l.famille).toUpperCase() || x.famille || '', diplome: T(l.diplome) || x.diplome || '',
           niveau: niveauDe(T(l.classe) || x.classe || '', T(l.famille).toUpperCase() || x.famille || ''),
           e: Number(c.id) || 0, eleve: T(c.eleve), organisme: organisme ? nom : '', debut: T(c.dates && c.dates.debut), fin: T(c.dates && (c.dates.rupture || c.dates.fin)),
-          etablissement: etabs[String(cid)] || '', mode: T(l.mode), gestionnaire: T(l.gestionnaire), donneur: T(l.donneur) });
+          etablissement: etabs[String(cid)] || '', mode: T(l.mode), gestionnaire: T(l.gestionnaire), donneur: T(l.donneur), opco: T(l.opco) });
       });
     });
   } catch (eApp) { apprentis = []; }

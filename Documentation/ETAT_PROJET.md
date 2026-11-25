@@ -1,5 +1,12 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV738 : statistiques (classes inconnues, organisme OPCO) et enveloppe dashboard
+
+- Constat réel : dans « Données à corriger », presque toutes les conventions apparaissaient en « Classe inconnue dans la liste des classes de l'année ». La liste des classes venait uniquement de `EUC_DEV368_catalog`, qui exige le rôle administrateur et lit des caches de vues : en échec (accès direction, cache vide), aucune classe n'était reconnue et le résultat était mis en cache.
+- Correction : `EUC_DEV368_catalogLecture_` (lecture sans contrôle, `EUC_DEV368_catalog` garde son contrôle admin) ; `EUC_DEV698_classes_` complète avec la table Classes (`EUC_DEV579_classesCompletes_`) toute classe absente du catalogue. `EUC_DEV698_VERSION_` → `1.0.0-dev.738` (cache renouvelé).
+- Apprentis des statistiques : regroupement « Par organisme (relation OPCO) », comme les effectifs (BTS ELEC Alt, Bachelor → CFAI) ; colonne Organisme « CFAI (gestionnaire CFA RAN) ». `opco` ajouté aux lignes de classe de `EUC_DEV577` (`1.0.0-dev.738`).
+- Adresse `dashboard` ajoutée à `EUC_LIENS_table_()`. Le dépôt GitHub `dashboard-eucalyptus` est une enveloppe (cadre) sans bandeau Google qui ne sert que `tableau-de-bord` et `statistiques-direction` (paramètres `dir`, `jeton`, `annee`). Le bouton Statistiques et le retour « Tableau de bord » passent par elle. Certificat https approuvé.
+
 ## Mise à jour du 26 novembre 2026 — DEV737 : statistiques de l'établissement pour la direction
 
 - Tableau de bord : les accès rapides deviennent cinq boutons compacts : Suivi des PFMP, Book des entreprises, Suivi des apprentis, Cartographie des apprentis et Statistiques de l'établissement (élèves et apprentis).

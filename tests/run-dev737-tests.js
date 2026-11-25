@@ -44,7 +44,7 @@ test('page : route, titre direction, bouton de calcul masqué, appels redirigés
   assert.match(read('apps-script/EUC_DEV698_Statistiques.js'), /t\.direction = false; t\.dir = '';/, 'page admin inchangée');
   const h = read('apps-script/Statistiques_PFMP_DEV698.html');
   assert.match(h, /<\? if \(direction\) \{ \?><style>#distCalc\{display:none!important\}<\/style>\n<header><h1>Statistiques de l’établissement<\/h1>/);
-  assert.match(h, /\?page=tableau-de-bord">Tableau de bord<\/a>/); assert.match(h, /\?page=admin-pfmp">Administration PFMP<\/a> › Statistiques/);
+  assert.match(h, /<a href="__LIEN_DASHBOARD__" target="_top">Tableau de bord<\/a>/); assert.match(h, /\?page=admin-pfmp">Administration PFMP<\/a> › Statistiques/);
   const i = h.indexOf('const DIR='), shim = h.slice(h.indexOf('const google=', i), h.indexOf('const $=', i));
   const appels = [], run = { withSuccessHandler(s) { this.s = s; return this; }, withFailureHandler(f) { this.f = f; return this; } };
   ['EUC_DEV737_statsAnnees', 'EUC_DEV737_statsAnnee', 'EUC_DEV737_statsDistances'].forEach(nom => { run[nom] = q => { appels.push([nom, q]); run.s('ok'); }; });
@@ -62,7 +62,7 @@ test('tableau de bord : cinq boutons compacts (statistiques de l’établissemen
   const h = read('apps-script/Tableau_De_Bord_DEV736.html'), t = read('apps-script/EUC_DEV736_TableauDeBord.js');
   const liens = h.slice(h.indexOf('<div class="liens">'), h.indexOf('</div>', h.indexOf('<div class="liens">'))).match(/<a class="lien"[^>]*>[^<]+<\/a>/g);
   assert.deepEqual(liens.map(a => a.slice(a.lastIndexOf('">') + 2, -4)), ['Suivi des PFMP', 'Book des entreprises', 'Suivi des apprentis', 'Cartographie des apprentis', 'Statistiques de l’établissement']);
-  assert.ok(h.includes('data-stats="1" href="<?= base ?>?page=statistiques-direction"')); assert.match(h, /\.liens\{display:flex;flex-wrap:wrap;gap:8px\}/);
+  assert.ok(h.includes('data-stats="1" href="__LIEN_DASHBOARD__?page=statistiques-direction"'), 'statistiques dans l’enveloppe sans bandeau'); assert.match(h, /\.liens\{display:flex;flex-wrap:wrap;gap:8px\}/);
   assert.match(h, /Statistiques : tout l’établissement \(élèves et apprentis\)/);
   assert.match(t, /r\.dir = typeof EUC_DEV737_creerJeton_ === 'function' \? EUC_DEV737_creerJeton_\(\) : ''/); assert.match(t, /t\.base = typeof EUC_RELEASE_serviceBase_/);
   assert.ok(!/https?:\/\/[a-z-]+\.(lycee-les-eucalyptus\.org|loucodi\.fr)/.test(h + read('apps-script/EUC_DEV737_StatsDirection.js')), 'aucune adresse publique en dur');

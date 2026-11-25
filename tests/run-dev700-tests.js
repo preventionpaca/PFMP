@@ -66,7 +66,7 @@ test('page : même période ou année, Nice par secteur dans la vue synthétique
   ['dec', 'pro', 'rat', 'inter', 'ann'].forEach(c => assert.ok(h.includes("'" + c + "']"), c));
   assert.match(h, /tableau\('der',\['Élève','Classe','Période','Entreprise','Dates de la convention'/);
   assert.match(h, /<section id="qualite" hidden>/); assert.match(h, /'Classe non renseignée':!x\.famille\?'Classe inconnue/);
-  assert.match(h, /<h3>Par établissement<\/h3>/); assert.match(h, /<h3>Par organisme gestionnaire<\/h3>/); assert.match(h, /tableau\('dApp',\['Établissement','Modalité','Organisme','Classe','Filière','Apprentis'\]/);
+  assert.match(h, /<h3>Par établissement<\/h3>/); assert.match(h, /<h3>Par organisme \(relation OPCO\)<\/h3>/); assert.match(h, /tableau\('dApp',\['Établissement','Modalité','Organisme','Classe','Filière','Apprentis'\]/);
   assert.match(h, /LISTES\.apprentissage=\{titre:'Entreprises qui emploient des apprentis mais n’accueillent aucun stagiaire[^']*',entetes:\['Entreprise','SIRET \/ NIS','Commune','Code postal \/ secteur','Apprentis','Classes des apprentis'\]/);
 });
 console.log(n + ' tests DEV700 réussis.');

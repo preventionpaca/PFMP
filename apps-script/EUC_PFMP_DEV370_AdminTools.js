@@ -9,7 +9,11 @@ function EUC_DEV368_year(v){v=EUC_DEV368_t(v);return v||EUC_DEV368_t(EUC_PFMP_co
  * BAC PRO, BTS et CAP, y compris celles sans période. Il lit d'abord les caches
  * locaux existants et n'ouvre jamais l'index nominatif pour construire la liste. */
 function EUC_DEV368_catalog(y){
-  EUC_DEV368_admin();y=EUC_DEV368_year(y);var out=[];
+  EUC_DEV368_admin();return EUC_DEV368_catalogLecture_(y);
+}
+/* DEV738 : lecture sans contrôle (statistiques de la direction, après jeton direction). */
+function EUC_DEV368_catalogLecture_(y){
+  y=EUC_DEV368_year(y);var out=[];
   ['BACPRO','BTS','CAP'].forEach(function(family){
     var data=null;
     try{data=EUC_DEV456_familyCacheGet_(y,family)}catch(eCache){}

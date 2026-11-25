@@ -55,7 +55,7 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
 <body>
 <? if (direction) { ?><style>#distCalc{display:none!important}</style>
 <header><h1>Statistiques de l’établissement</h1><p>Élèves, apprentis, lieux de stage, entreprises, filières et évolution d’une année à l’autre. Lecture seule.</p></header>
-<nav><a href="<?= adminBase ?>?page=tableau-de-bord">Tableau de bord</a> › Statistiques de l’établissement</nav>
+<nav><a href="__LIEN_DASHBOARD__" target="_top">Tableau de bord</a> › Statistiques de l’établissement</nav>
 <? } else { ?>
 <header><h1>Statistiques PFMP</h1><p>Lieux de stage, entreprises, filières, déroulement des stages et évolution d’une année à l’autre. Lecture seule.</p></header>
 <nav><a href="<?= adminBase ?>?page=admin-pfmp">Administration PFMP</a> › Statistiques</nav>
@@ -229,15 +229,17 @@ details summary{cursor:pointer;color:var(--vert);font-weight:700;margin-top:8px}
     apprentis:function(E){
       /* Établissement de rattachement (LP, LGT), modalité (mixité, classe entière, formation continue), organismes (CFA RAN, CFAI, GRETA). */
       const MODE={MIXITE:'Mixité',CLASSE_ENTIERE:'Classe entière',FORMATION_CONTINUE:'Formation continue'};
-      const etab=function(a){return a.etablissement||'Établissement non renseigné'},org=function(a){return a.gestionnaire?(a.gestionnaire+(a.donneur&&a.donneur!==a.gestionnaire?' (donneur d’ordre '+a.donneur+')':'')):'Organisme à régler pour la classe'};
-      const parEtab=compter(E.app,etab),parOrg=compter(E.app,function(a){return a.gestionnaire||'Organisme à régler pour la classe'}),parMode=compter(E.app,function(a){return MODE[a.mode]||'Modalité non renseignée'});
+      const etab=function(a){return a.etablissement||'Établissement non renseigné'},org=function(a){const o=orgOpco(a);return o?(o+(a.gestionnaire&&a.gestionnaire!==o?' (gestionnaire '+a.gestionnaire+')':'')):'Organisme à régler pour la classe'};
+      /* DEV738 : organisme lié à l'OPCO (réglé sur la page « Quotas d'apprentissage »), comme les effectifs : BTS ELEC Alt, Bachelor → CFAI. */
+      const orgOpco=function(a){return a.opco||a.donneur||a.gestionnaire||''};
+      const parEtab=compter(E.app,etab),parOrg=compter(E.app,function(a){return orgOpco(a)||'Organisme à régler pour la classe'}),parMode=compter(E.app,function(a){return MODE[a.mode]||'Modalité non renseignée'});
       const o={};E.app.forEach(function(a){const k=[etab(a),MODE[a.mode]||'—',org(a),a.classe,filiere(a)].join('|');o[k]=(o[k]||0)+1});
       const sans=E.app.filter(function(a){return!a.k}),orgs=E.app.filter(function(a){return a.organisme});
       return '<p class="note">'+E.app.length+' apprentis dont le contrat est en cours aujourd’hui (même source que « Gestion des apprentis »).'+(sans.length?' '+sans.length+' sans entreprise employeuse identifiée'+(orgs.length?', dont '+orgs.length+' avec un organisme de formation inscrit comme employeur ('+esc(Array.from(new Set(orgs.map(function(a){return a.organisme}))).join(', '))+')':'')+'.':'')+'</p>'+
-        '<div class="deux"><div><h3>Par établissement</h3>'+barres(Object.keys(parEtab).sort().map(function(k){return{l:k,v:parEtab[k]}}))+'<h3>Par modalité</h3>'+barres(Object.keys(parMode).sort().map(function(k){return{l:k,v:parMode[k]}}),'b')+'</div><div><h3>Par organisme gestionnaire</h3>'+barres(Object.keys(parOrg).sort().map(function(k){return{l:k,v:parOrg[k]}}),'o')+'</div></div>'+
+        '<div class="deux"><div><h3>Par établissement</h3>'+barres(Object.keys(parEtab).sort().map(function(k){return{l:k,v:parEtab[k]}}))+'<h3>Par modalité</h3>'+barres(Object.keys(parMode).sort().map(function(k){return{l:k,v:parMode[k]}}),'b')+'</div><div><h3>Par organisme (relation OPCO)</h3>'+barres(Object.keys(parOrg).sort().map(function(k){return{l:k,v:parOrg[k]}}),'o')+'</div></div>'+
         '<h3>Détail par classe</h3>'+tableau('dApp',['Établissement','Modalité','Organisme','Classe','Filière','Apprentis'],Object.keys(o).map(function(k){const p=k.split('|');return[p[0],p[1],p[2],p[3],p[4],o[k]]}),[5],[0,1])+
         /* DEV715 : noms des apprentis, avec employeur et contrat. */
-        '<h3>Liste des apprentis</h3>'+tableau('dAppNoms',['Apprenti','Classe','Employeur','Commune','Organisme','Début du contrat','Fin du contrat'],E.app.map(function(a){return[a.eleve||'—',a.classe,a.k?a.nom:(a.organisme?a.organisme+' (organisme)':'Employeur non identifié'),a.commune||'',a.gestionnaire||'',jj(a.debut),jj(a.fin)]}),[],[1,1])},
+        '<h3>Liste des apprentis</h3>'+tableau('dAppNoms',['Apprenti','Classe','Employeur','Commune','Organisme','Début du contrat','Fin du contrat'],E.app.map(function(a){return[a.eleve||'—',a.classe,a.k?a.nom:(a.organisme?a.organisme+' (organisme)':'Employeur non identifié'),a.commune||'',orgOpco(a),jj(a.debut),jj(a.fin)]}),[],[1,1])},
     /* DEV715 : noms des stagiaires et des apprentis de chaque entreprise. */
     mixtes:function(E){const noms=function(l){return Array.from(new Set(l.map(function(x){return(x.eleve||'—')+' ('+x.classe+')'}))).sort(function(a,b){return a.localeCompare(b,'fr')}).join('\n')};return '<div class="noms-mix">'+tableau('dMix',['Entreprise','Commune','Stagiaires','Classes en stage','Noms des stagiaires','Apprentis','Classes en apprentissage','Noms des apprentis'],E.liste.filter(function(e){return e.eleves.size&&e.apprentis}).map(function(e){return[e.nom,e.commune,e.eleves.size,classesTxt(e.classesStage),noms(e.stages.filter(function(x){return x.statut!=='ANNULEE'})),e.apprentis,classesTxt(e.classesApp),noms(e.apps)]}),[2,5],[2,-1])+'</div>'}
   };
