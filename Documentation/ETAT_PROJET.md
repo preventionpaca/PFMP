@@ -1,5 +1,10 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV741 : recherche dans « Soumissions à traiter »
+
+- Champ « Rechercher dans la liste » sous les filtres : filtre pendant la frappe la liste du filtre choisi (élève, classe, entreprise saisie ou officielle, adresse, ville, SIRET/NIS, n° de dépôt, période), sans tenir compte des majuscules ni des accents ; chaque mot tapé doit figurer. Calcul local, aucun appel serveur ni écriture. Compteur « Recherche : X résultat(s) sur Y » et message dédié si rien ne correspond.
+- Tests : `tests/run-dev741-tests.js` (6).
+
 ## Mise à jour du 26 novembre 2026 — DEV740 : « Valider sous réserve » (entreprise injoignable)
 
 - Besoin réel : dépôt complet dont l'entreprise ne passe pas le contrôle du SIRET (établissement fermé, numéro introuvable) et patron injoignable. Le stage doit apparaître dans le suivi « sous réserve de validation de l'entreprise » et rester dans les entreprises à vérifier.

@@ -9,6 +9,7 @@
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.45 Arial,sans-serif;color:var(--texte);background:#f7fbf9}
 header{background:linear-gradient(135deg,#eef9f5,#d8f0e6);color:#0b4f40;border-bottom:1px solid #bfe2da;padding:16px 20px}
+.recherche741{margin:10px 0}.recherche741 input{width:min(460px,100%);padding:8px 10px;border:1px solid var(--bord);border-radius:8px;font:inherit}
 header h1{margin:0;font-size:21px}header p{margin:4px 0 0;opacity:.9}
 nav{padding:10px 20px;font-size:14px}nav a{color:var(--vert);font-weight:700;text-decoration:none}
 main{max-width:1150px;margin:0 auto;padding:0 16px 40px}
@@ -57,6 +58,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       <button type="button" data-filtre="atraiter" aria-pressed="true">À traiter</button><button type="button" data-filtre="aide" aria-pressed="false">Demandes d’aide</button><button type="button" data-filtre="doublon" aria-pressed="false">Doublons</button><button type="button" data-filtre="prevenir" aria-pressed="false">Élèves à prévenir</button><button type="button" data-filtre="suivi" aria-pressed="false">Déjà dans le suivi (rien à faire)</button><button type="button" data-filtre="tout" aria-pressed="false">Toutes</button><button type="button" data-filtre="classees" aria-pressed="false">Classées sans suite</button>
       <button type="button" id="actualiser" class="leger"><span class="spin"></span><span class="txt">Actualiser</span></button>
     </div>
+    <p class="recherche741"><label for="recherche">Rechercher dans la liste</label> <input type="search" id="recherche" autocomplete="off" placeholder="Élève, classe, entreprise, ville, SIRET ou n° de dépôt…"> <span class="note">Filtre la liste affichée pendant la frappe (majuscules et accents ignorés).</span></p>
     <p id="blocPrevenir" hidden><button type="button" id="prevenirTous"><span class="spin"></span><span class="txt">Prévenir les élèves dont le problème est résolu</span></button> <span class="note">Courriel « Problème résolu : ta convention de stage est enregistrée — n° … », une seule fois par élève.</span></p>
     <p id="blocCible" class="message ok" hidden>Dépôt ouvert depuis le courriel de l’équipe. <button type="button" id="voirTout" class="leger"><span class="spin"></span><span class="txt">Voir toutes les soumissions à traiter</span></button></p>
     <p class="note"><span id="compte"></span> <span id="mListe" class="message" role="status" aria-live="polite"></span></p>
@@ -125,8 +127,15 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       '<div class="actions">'+bouton('rouvrir',x.id,'Rouvrir : remettre à traiter','leger')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';}
   /* Entreprise connue (base ou dépôt vérifié) : un clic reprend son SIRET ou son NIS. */
   function proposition(f,groupe,id,i){return '<button type="button" data-prop="'+groupe+'" data-id="'+id+'" data-i="'+i+'"><b>'+esc(f.nom)+'</b>'+(f.enseigne?' — '+esc(f.enseigne):'')+' · '+esc([f.adresse,[f.cp,f.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))+' · <b>'+(f.siret?'SIRET '+esc(f.siret):'NIS '+esc(f.nis))+'</b> <span class="note">('+esc(f.source)+') — utiliser</span></button>';}
+  /* DEV741 : recherche dans la liste affichée (élève, classe, entreprise saisie ou officielle, ville, SIRET/NIS, n° de dépôt),
+   * insensible à la casse et aux accents ; chaque mot tapé doit figurer. Calcul local, aucun appel serveur. */
+  function sansAccent741(t){return String(t==null?'':t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+  function texte741(x){var s=x.saisie||{},o=x.officiel||{};return sansAccent741([x.eleve,x.classe,x.numero,x.numeroSaisi,x.periode,s.nom,s.adresse,s.cp,s.ville,o.nom,o.enseigne,o.adresse,o.cp,o.ville].join(' '));}
+  function correspond741(x,q){return !q.length||q.every(function(m){return texte741(x).indexOf(m)>=0;});}
   function dessiner(){
     var l=FILTRE==='classees'?CLASSEES:LISTE.filter(function(x){return GARDER[x.id]||FILTRE==='tout'||(FILTRE==='atraiter'&&x.aTraiter)||(FILTRE==='aide'&&x.aide&&x.aTraiter)||(FILTRE==='doublon'&&x.doublonDe)||(FILTRE==='suivi'&&!x.aTraiter)||(FILTRE==='prevenir'&&x.aPrevenir)||(FILTRE==='cible'&&x.numero===CIBLE);});
+    var q741=sansAccent741(($('recherche')||{}).value||'').split(/\s+/).filter(Boolean),avant741=l.length;
+    l=l.filter(function(x){return correspond741(x,q741);});
     var np=LISTE.filter(function(x){return x.aPrevenir;}).length;$('blocPrevenir').hidden=!np;$('prevenirTous').querySelector('.txt').textContent='Prévenir les '+np+' élève(s) dont le problème est résolu';
     var n=LISTE.filter(function(x){return x.aTraiter;}).length;
     $('compte').textContent=n+' soumission(s) à traiter · '+(LISTE.length-n)+' déjà dans le suivi (rien à faire) · '+CLASSEES.length+' classée(s) sans suite.';
@@ -134,6 +143,8 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     if(FILTRE==='cible'&&!l.length)l=CLASSEES.filter(function(x){return x.numero===CIBLE;});
     $('blocCible').hidden=FILTRE!=='cible';
     $('liste').innerHTML=l.length?l.map(function(x){return x.classee?carteClassee(x):carte(x);}).join(''):'<section><p class="note">'+(FILTRE==='cible'?'Dépôt '+esc(CIBLE)+' introuvable parmi les soumissions en attente : il a peut-être déjà été validé ou classé (filtre « Toutes » pour vérifier).':FILTRE==='atraiter'?'Rien à traiter : toutes les soumissions alimentent déjà le suivi.':FILTRE==='classees'?'Aucun dépôt classé sans suite.':'Aucune soumission pour ce filtre.')+'</p></section>';
+    if(q741.length)$('compte').textContent+=' Recherche : '+l.length+' résultat(s) sur '+avant741+' dans ce filtre.';
+    if(q741.length&&!l.length)$('liste').innerHTML='<section><p class="note">Aucun dépôt ne correspond à « '+esc(($('recherche')||{}).value)+' » dans ce filtre. Essayez le filtre « Toutes » ou « Classées sans suite ».</p></section>';
   }
   /* Carte corrigée : reste affichée jusqu'à l'actualisation, avec son message. */
   var PROPS={},GARDER={},RCI={};
@@ -148,6 +159,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
     appel('EUC_DEV665_lister',{},60000,function(r){occupe(b,false);LISTE=r.soumissions||[];CLASSEES=r.classees||[];dessiner();},function(e){occupe(b,false);$('liste').innerHTML='';msg('Liste',(e&&e.message)||'Lecture impossible.','erreur');});
   }
   $('actualiser').onclick=charger;
+  $('recherche').oninput=function(){dessiner();};
   $('voirTout').onclick=function(){FILTRE='atraiter';document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.filtre==='atraiter'));});dessiner();};
   if(FILTRE==='cible')document.querySelectorAll('[data-filtre]').forEach(function(x){x.setAttribute('aria-pressed','false');});
   $('prevenirTous').onclick=function(){var b=this,l=LISTE.filter(function(x){return x.aPrevenir;});if(b.disabled||!l.length)return;
