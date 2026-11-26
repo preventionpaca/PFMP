@@ -81,7 +81,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
   function personne(x){return [x.nom,x.tel,x.mail].filter(Boolean).map(esc).join(' · ')||'—';}
   function carte(x){
     var mode=MODE[x.id]||(x.pays==='MC'?'MC':'FR'),o=x.officiel,s=x.saisie;
-    var badges=(x.aide?'<span class="pastille rouge">Demande d’aide</span>':'')+(x.dansSuivi?'<span class="pastille">Dans le suivi</span>':'<span class="pastille jaune">Entreprise à identifier</span>')+(x.aPrevenir?'<span class="pastille jaune">Élève à prévenir</span>':'')+(x.doublonDe?'<span class="pastille gris">Doublon de '+esc(x.doublonDe)+'</span>':'')+'<span class="pastille gris">'+(x.pays==='MC'?'Monaco':x.pays==='AUTRE'?'Étranger'+(x.paysNom?' ('+esc(x.paysNom)+')':''):'France')+'</span>';
+    var badges=(x.aide?'<span class="pastille rouge">Demande d’aide</span>':'')+(x.reserve?'<span class="pastille jaune">Dans le suivi sous réserve</span>':x.dansSuivi?'<span class="pastille">Dans le suivi</span>':'<span class="pastille jaune">Entreprise à identifier</span>')+(x.aPrevenir?'<span class="pastille jaune">Élève à prévenir</span>':'')+(x.doublonDe?'<span class="pastille gris">Doublon de '+esc(x.doublonDe)+'</span>':'')+'<span class="pastille gris">'+(x.pays==='MC'?'Monaco':x.pays==='AUTRE'?'Étranger'+(x.paysNom?' ('+esc(x.paysNom)+')':''):'France')+'</span>';
     var h='<div class="carte '+(x.doublonDe?'doublon':x.dansSuivi?'pret':x.aide?'aide':'')+'" id="c'+x.id+'">'+
       '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b style="font-size:16px">'+esc(x.eleve)+'</b> — '+esc(x.classe)+' — '+esc(x.periode)+(x.debut?' <span class="note">('+dfr(x.debut)+' → '+dfr(x.fin)+')</span>':'')+'<br><span class="note">N° '+esc(x.numero)+(x.depose?' · déposé le '+dfr(x.depose):'')+(x.email?' · '+esc(x.email):'')+'</span></div><div>'+badges+'</div></div>'+
       '<h3>Saisi par l’élève</h3><div class="grille"><div><b>'+esc(s.nom||'—')+'</b><br>'+esc([s.adresse,[s.cp,s.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'—')+'<br><span class="note">Numéro saisi : '+esc(x.numeroSaisi||'aucun')+'</span></div>'+
@@ -104,7 +104,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       '<h3>Lieu du stage <span class="note">(vide si identique à l’adresse de l’entreprise)</span></h3><div class="champs">'+ch('Lieu_stage_adresse','Adresse',ld.adresse)+ch('Lieu_stage_code_postal','Code postal',ld.cp)+ch('Lieu_stage_commune','Commune',ld.commune)+'</div>'+
       '<p>'+bouton('corriger',x.id,'Enregistrer les corrections','leger')+' <span class="note">Le SIRET ou le NIS se corrigent plus haut (« Vérifier le SIRET » ou Monaco).</span></p></details>';
     /* Valider (import dans Grist) : seulement pour une soumission à traiter déjà identifiée (ex. établissement fermé à confirmer). */
-    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.ferme&&x.dansSuivi&&!x.doublonDe?bouton('garderSiret',x.id,'Garder ce SIRET (vérifié par le bureau)','leger'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+bouton('sansSuite',x.id,'Classer sans suite','gris')+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
+    h+='<div class="actions">'+(x.aTraiter&&x.pret&&!x.doublonDe?bouton('valider',x.id,'Valider : créer la convention'):'')+(x.ferme&&x.dansSuivi&&!x.doublonDe?bouton('garderSiret',x.id,'Garder ce SIRET (vérifié par le bureau)','leger'):'')+(x.aPrevenir?bouton('prevenir',x.id,'Prévenir l’élève : problème résolu','leger')+bouton('nePasPrevenir',x.id,'Ne pas prévenir l’élève','gris'):'')+/* DEV740 : entreprise injoignable : compté dans le suivi « sous réserve », toujours à traiter. */(!x.reserve&&x.eleveId&&(!x.dansSuivi||x.ferme)&&!x.doublonDe?bouton('reserve',x.id,'Valider sous réserve (entreprise à confirmer)','leger'):'')+(x.reserve&&x.siretVerifie?bouton('lever',x.id,'Lever la réserve : entreprise confirmée','leger'):'')+(x.reserve?bouton('annulerStage',x.id,'Annuler le stage : entreprise non confirmée','gris'):bouton('sansSuite',x.id,'Classer sans suite','gris'))+'<span id="m'+x.id+'" class="message" role="status" aria-live="polite"></span></div></div>';
     return h;
   }
   /* DEV723 : entreprise retenue : reprise dans la saisie de l'élève (responsable et tuteur jamais touchés) ; adresse corrigée
@@ -222,6 +222,25 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
       occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV711_accepterFerme',{id:id,motif:vu},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'SIRET gardé : le dépôt ne demande plus d’action.','ok');},
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    /* DEV740 : validation sous réserve, levée de la réserve, annulation du stage (classé sans suite). */
+    if(a==='reserve'){
+      var mr=prompt('Valider sous réserve le dépôt '+x.numero+' de '+x.eleve+' ?\nLe stage sera compté dans le suivi avec la mention « sous réserve de validation de l’entreprise » et restera dans « À traiter ».\nAucune convention n’est créée et aucun courriel n’est envoyé.\nRaison :','entreprise injoignable : SIRET à confirmer');if(mr===null)return;
+      if(!String(mr).trim()){msg(id,'Indiquez la raison de la réserve.','erreur');return;}
+      occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV740_sousReserve',{id:id,motif:mr},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'Validé sous réserve : le stage apparaît dans le suivi avec la mention « sous réserve ».','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    if(a==='lever'){
+      var ml=prompt('Lever la réserve du dépôt '+x.numero+' (SIRET '+x.numeroSaisi+') ?\nQu’a confirmé l’entreprise ?','entreprise contactée : SIRET confirmé');if(ml===null)return;
+      if(!String(ml).trim()){msg(id,'Indiquez ce qui a été confirmé.','erreur');return;}
+      occupe(b,true,'Enregistrement…');msg(id,'');
+      appel('EUC_DEV740_leverReserve',{id:id,motif:ml},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'Réserve levée : le dépôt ne demande plus d’action.','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
+    if(a==='annulerStage'){
+      var ma=prompt('Annuler le stage de '+x.eleve+' (dépôt '+x.numero+') ?\nLe stage ne sera plus compté dans le suivi ; le dépôt est classé sans suite (jamais supprimé).\nMotif :','entreprise non confirmée : stage annulé');if(ma===null)return;
+      if(!String(ma).trim()){msg(id,'Indiquez le motif.','erreur');return;}
+      occupe(b,true,'Annulation…');msg(id,'');
+      appel('EUC_DEV665_sansSuite',{id:id,motif:ma},60000,function(){occupe(b,false);LISTE=LISTE.filter(function(y){return y.id!==id;});dessiner();msg('Liste','Stage de '+x.eleve+' annulé (dépôt '+x.numero+' classé sans suite).','ok');},
+        function(e){occupe(b,false);msg(id,(e&&e.message)||'Annulation impossible.','erreur');});}
     if(a==='reprendre'){
       occupe(b,true,'Reprise…');msg(id,'');
       appel('EUC_DEV723_reprendre',{id:id},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,r.inchange?'La saisie correspond déjà à l’entreprise retenue.':'Saisie de l’élève remplacée par l’entreprise retenue (responsable et tuteur inchangés).','ok');},

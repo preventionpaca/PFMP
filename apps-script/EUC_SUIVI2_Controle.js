@@ -124,7 +124,7 @@ function EUC_SUIVI2_ficheEleve(recherche) {
       return x;
     });
     var jotform = (src.jotform || []).map(F).filter(function(j) { return EUC_SUIVI2_ref_(j.Eleve_match_id || j.Eleve) === eid; }).map(function(j) {
-      return garder(j, ['Decision', 'Importer', 'SIRET_statut', 'SIRET_normalise', 'SIRET_brut', 'Classe_match_id', 'Periode_numero', 'Date_debut_brut', 'Date_fin_brut', 'Entreprise_nom', 'Entreprise_raison_sociale', 'Entreprise_adresse', 'Entreprise_ville', 'Entreprise_code_postal', 'Entreprise_pays', 'Commentaire']);
+      return garder(j, ['Decision', 'Importer', 'Niveau_controle', 'SIRET_statut', 'SIRET_normalise', 'SIRET_brut', 'Classe_match_id', 'Periode_numero', 'Date_debut_brut', 'Date_fin_brut', 'Entreprise_nom', 'Entreprise_raison_sociale', 'Entreprise_adresse', 'Entreprise_ville', 'Entreprise_code_postal', 'Entreprise_pays', 'Commentaire']);
     });
     var apprentissage = (src.apprentissage || []).map(F).filter(function(r) { return EUC_SUIVI2_ref_(r.Eleve) === eid; }).map(function(r) {
       return garder(r, ['Annee_scolaire', 'Actif', 'Date_contrat_officielle', 'Date_contrat', 'Date_debut', 'Date_fin', 'Date_rupture_contrat', 'Date_rupture', 'Dossier_transmis_CFA', 'Entreprise', 'Statut']);

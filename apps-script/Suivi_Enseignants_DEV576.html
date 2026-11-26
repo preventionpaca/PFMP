@@ -199,6 +199,8 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
         if(f.debut&&f.debut>p.debut)badge+='<span class="decale">Début décalé : '+dfr(f.debut)+'</span>';
         if(f.fin&&f.fin>p.fin)badge+='<span class="decale">Fin prolongée : '+dfr(f.fin)+'</span>';
         if(f.enregistreLe)badge+='<span class="petit">Enregistrée le '+dfr(f.enregistreLe)+(f.numero?' · '+esc(f.numero):'')+'</span>';
+        /* DEV740 : dépôt validé sous réserve par le bureau. */
+        if(f.reserve)badge+='<span class="decale">Sous réserve de validation de l’entreprise</span>';
       }
       /* DEV660 : convention éditée (PDF généré) ou pas encore : évite une réédition inutile. */
       if(!c.ce&&!p.pdif&&st!=='APPRENTI'||p.pdif&&st==='PDIF_ENTREPRISE')badge+=/^\d{4}-/.test(l[5]||'')?'<span class="edition">🖨 Éditée le '+dfr(l[5])+'</span>':'<span class="edition non">Non éditée</span>';
@@ -406,7 +408,7 @@ var D=<?!= donnees ?>,CFG=<?!= config ?>;
           var l=p.lignes[e[0]]||['SANS',-1,'','',0],f=l[1]>=0?D.fiches[l[1]]:null,st=l[0],app=c.ce||st==='APPRENTI'||!!l[4];
           var statut=LIB[st]||st;
           if((st==='APPRENTI'||st==='CONTRAT')&&f&&f.contratDebut)statut+='\nContrat depuis le '+dfr(f.contratDebut);
-          if(st!=='APPRENTI'&&!c.ce&&f&&!p.pdif){if(f.debut&&f.debut>p.debut)statut+='\nDébut décalé : '+dfr(f.debut);if(f.fin&&f.fin>p.fin)statut+='\nFin prolongée : '+dfr(f.fin);if(f.enregistreLe)statut+='\nEnregistrée le '+dfr(f.enregistreLe)+(f.numero?'\n'+f.numero:'');}
+          if(st!=='APPRENTI'&&!c.ce&&f&&!p.pdif){if(f.debut&&f.debut>p.debut)statut+='\nDébut décalé : '+dfr(f.debut);if(f.fin&&f.fin>p.fin)statut+='\nFin prolongée : '+dfr(f.fin);if(f.enregistreLe)statut+='\nEnregistrée le '+dfr(f.enregistreLe)+(f.numero?'\n'+f.numero:'');if(f.reserve)statut+='\nSous réserve de validation de l’entreprise';}
           if(l[4])statut+='\nApprenti depuis le '+dfr(l[4][0]);
           lignes.push([(app?'(A) ':'')+e[1],statut,(f&&f.entreprise||'')+(f&&f.nomSaisi?'\n(saisi : '+f.nomSaisi+')':''),(f&&f.adresse||'')+(f&&f.lieu?'\nLIEU DU STAGE : '+f.lieu:''),texteCoord(f&&f.contact),texteCoord(f&&f.tuteur),c.pp.join('\n'),l[2]||'',l[3]||'']);
           styles.push({app:app,st:st});bruts.push({contact:(f&&f.contact)||null,tuteur:(f&&f.tuteur)||null});

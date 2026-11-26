@@ -61,6 +61,8 @@ function EUC_DEV665_vue_(r) {
     alertes: T(f.Alertes), decision: T(f.Decision).toUpperCase(),
     /* DEV666 : déjà compté « Convention enregistrée » dans le suivi : rien à faire au bureau. */
     dansSuivi: EUC_DEV666_dansSuivi_(f), ferme: T(f.Niveau_controle).toUpperCase() === 'ORANGE',
+    /* DEV740 : validé sous réserve par le bureau (entreprise à confirmer). */
+    reserve: T(f.Niveau_controle).toUpperCase() === 'RESERVE', siretVerifie: statut === 'VERIFIE' && T(f.SIRET_normalise).replace(/\D/g, '').length === 14,
     /* DEV669 : demande d'aide résolue, élève pas encore prévenu par courriel. */
     aPrevenir: typeof EUC_DEV669_aPrevenir_ === 'function' ? EUC_DEV669_aPrevenir_(f) : false
   };
@@ -70,6 +72,8 @@ function EUC_DEV665_vue_(r) {
 function EUC_DEV666_dansSuivi_(f) {
   f = f || {}; var T = EUC_DEV665_t_, decision = T(f.Decision).toUpperCase(), statut = T(f.SIRET_statut).toUpperCase();
   if (decision === 'IGNOREE') return false;
+  /* DEV740 : validé sous réserve = dans le suivi (mention « sous réserve »), sauf stage annulé. */
+  if (T(f.Niveau_controle).toUpperCase() === 'RESERVE') return ['REJETEE', 'REFUSEE', 'ESSAI'].indexOf(decision) < 0;
   var siret = T(f.SIRET_normalise || f.SIRET_brut).replace(/\D/g, '').length === 14, nis = T(f.NIS_normalise || f.NIS);
   var monacoNis = !!nis && (statut === 'NIS_MONACO' || T(f.NIS_statut).toUpperCase().indexOf('VALIDE') === 0);
   var importee = f.Importer === true || Number(f.Importer) === 1 || /^(OUI|YES|TRUE|VRAI)$/i.test(T(f.Importer));
@@ -79,6 +83,7 @@ function EUC_DEV666_dansSuivi_(f) {
 function EUC_DEV666_raison_(x) {
   if (x.doublonDe) return 'Doublon : l’élève a déjà déposé ' + x.doublonDe + ' pour cette période — à classer sans suite';
   if (!x.dansSuivi) return x.aide ? 'Demande d’aide : entreprise à identifier' : x.pays === 'MC' ? 'NIS de Monaco à saisir' : 'SIRET à vérifier';
+  if (x.reserve) return 'Validé sous réserve : entreprise à confirmer — corriger le SIRET, lever la réserve ou annuler le stage';
   if (x.ferme) return 'Établissement fermé selon l’INSEE : vérifier le SIRET';
   return '';
 }

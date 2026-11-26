@@ -40,7 +40,7 @@ function EUC_DEV663_donnees_(vue, classeId, periodeId, eleveId, depot, maintenan
     if (st === 'AVEC' || st === 'CONTRAT' || st === 'PDIF_ENTREPRISE' || st === 'APPRENTI') compte.entreprise++;
     if (st === 'AVEC') compte.avec++; if (st === 'SANS' || st === 'SANS_CONTRAT') compte.sans++;
     if (/^\d{4}-/.test(T(l[5]))) compte.editees++; else if (l[5] === '-') compte.aEditer++;
-    var statut = [EUC_DEV663_LIB_[st] || st, f.enregistreLe ? 'Enregistrée le ' + D(f.enregistreLe) : '', T(f.numero),
+    var statut = [EUC_DEV663_LIB_[st] || st, f.enregistreLe ? 'Enregistrée le ' + D(f.enregistreLe) : '', T(f.numero), f.reserve ? 'Sous réserve de validation de l’entreprise' : '',
       /^\d{4}-/.test(T(l[5])) ? 'Éditée le ' + D(l[5]) : l[5] === '-' ? 'Non éditée' : ''].filter(Boolean);
     var ent = T(f.entreprise), adr = [T(f.adresse), T(f.lieu) ? 'LIEU DU STAGE : ' + T(f.lieu) : ''].filter(Boolean).join('\n'), ce = coord(f.contact), ct = coord(f.tuteur && f.tuteur.nom ? f.tuteur : null);
     if (moi && T(depot.numero)) {

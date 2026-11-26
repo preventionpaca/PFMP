@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV740 : « Valider sous réserve » (entreprise injoignable)
+
+- Besoin réel : dépôt complet dont l'entreprise ne passe pas le contrôle du SIRET (établissement fermé, numéro introuvable) et patron injoignable. Le stage doit apparaître dans le suivi « sous réserve de validation de l'entreprise » et rester dans les entreprises à vérifier.
+- Page « Soumissions à traiter » : bouton « Valider sous réserve (entreprise à confirmer) » (`EUC_DEV740_sousReserve`, motif obligatoire) → `Niveau_controle = RESERVE` sur la seule ligne de la table d'attente, motif tracé ; aucune convention créée, aucun courriel. Le dépôt reste « À traiter » (pastille « Dans le suivi sous réserve »).
+- Issues : nouveau SIRET valide → « Vérifier le SIRET » (la réserve tombe) ; SIRET déjà vérifié et confirmé par l'entreprise → « Lever la réserve » (`EUC_DEV740_leverReserve`) ; entreprise non confirmée → « Annuler le stage » (classé sans suite, jamais supprimé) : le stage n'est plus compté.
+- Suivi (`EUC_SUIVI2`, version 1.0.0-dev.740, recalcul forcé) : dépôt sous réserve compté « avec entreprise », fiche `reserve` ; mention « Sous réserve de validation de l'entreprise » dans le tableau, l'export et le tableau de dépôt. Un dépôt sous réserve annulé n'est jamais compté, même avec un SIRET vérifié.
+- Tests : `run-dev740-tests.js` (7) ; DEV733 accepte une version de modèle ultérieure.
+
 ## Mise à jour du 26 novembre 2026 — DEV739 : géocodage, siège officiel et lieu de stage séparés
 
 - Constat réel : sur « Géocodage des entreprises », une entreprise dont l'élève travaille ailleurs que le siège (auto-entrepreneur en mission chez un autre garage, siège éloigné) affichait l'adresse du lieu de stage sous le SIRET du siège. Siège et lieu se disputaient une seule ligne (« L'adresse a changé depuis la dernière recherche ») et valider le lieu aurait déplacé le siège.

@@ -45,7 +45,7 @@ test('réglage depuis la page des quotas : 4e liste « Établ. » (LP / LGT / Au
   assert.match(h, /\['rattachement','Établ\.','Établissement de rattachement de la classe entière[^']*',\['LP','LGT','Aucun'\]\]/); assert.match(h, /\(c\[3\]\|\|ORG\)\.map/);
   assert.match(read('apps-script/EUC_PFMP_DEV538_BookQuotas.js'), /rattachement:p732\.rattachement\|\|''/);
   assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /rattachement: profil \? profil\.rattachement \|\| '' : ''/);
-  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.733'/);
+  assert.match(read('apps-script/EUC_SUIVI2_Moteur.js'), /EUC_SUIVI2_VERSION_ = '1\.0\.0-dev\.(73[3-9]|7[4-9]\d|[89]\d\d)'/, 'version 733 ou ultérieure (recalcul forcé)');
   assert.match((() => { const a = read('apps-script/Admin_PFMP.html'); assert.ok(a.includes("EUC_PFMP_inclure_('Effectifs_Rendu_DEV736')"), 'rendu partagé DEV736 inclus'); return a + read('apps-script/Effectifs_Rendu_DEV736.html'); })(), /t\.classesRattachees\.join\(', '\)/);
 });
 console.log(n + ' tests DEV733 réussis.');

@@ -11,7 +11,7 @@
  *  - EUC_SUIVI2_lireSources_() : lecture parallèle des tables (UrlFetchApp.fetchAll) ;
  *  - EUC_SUIVI2_modele_(annee) : cache par témoin, puis calcul si nécessaire.
  */
-var EUC_SUIVI2_VERSION_ = '1.0.0-dev.733'; /* DEV733 : établissement de rattachement ; DEV732 : organisme de la relation OPCO (recalcul forcé) ; DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) ; DEV694 : identifiants du dossier ou du dépôt (« Éditer la fiche ») */
+var EUC_SUIVI2_VERSION_ = '1.0.0-dev.740'; /* DEV740 : dépôt validé sous réserve (recalcul forcé) ; DEV733 : établissement de rattachement ; DEV732 : organisme de la relation OPCO (recalcul forcé) ; DEV651 : valeurs masquées ignorées ; DEV652 : lieu modifié par le professeur visiteur ; DEV660 : date d'édition des conventions (recalcul forcé) ; DEV694 : identifiants du dossier ou du dépôt (« Éditer la fiche ») */
 /* DEV604 : classe de test (nom commençant par « TEST ») — visible en administration, dans le suivi
  * et dans le formulaire de secours ; écartée des effectifs, de la carte et des books. */
 function EUC_SUIVI2_classeTest_(nom) { return /^\s*TEST(?![A-Z0-9])/i.test(String(nom || '')); }
@@ -521,14 +521,18 @@ function EUC_SUIVI2_calculer_(src, annee, aujourdhui) {
     /* Monaco : NIS saisi par le bureau (outil « Monaco / NIS ») = identifiant validé. */
     var nis = EUC_SUIVI2_t_(j.NIS_normalise || j.NIS);
     var monacoNis = !!nis && (siretStatut === 'NIS_MONACO' || EUC_SUIVI2_t_(j.NIS_statut).toUpperCase().indexOf('VALIDE') === 0);
-    var valide = decision !== 'IGNOREE' && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || monacoNis || importee);
+    /* DEV740 : dépôt « validé sous réserve » par le bureau (entreprise injoignable, SIRET non confirmé) : compté dans le
+     * suivi avec la mention « sous réserve » ; stage annulé (classé sans suite) = plus compté, même avec un SIRET vérifié. */
+    var reserve740 = EUC_SUIVI2_t_(j.Niveau_controle).toUpperCase() === 'RESERVE', clos740 = ['IGNOREE', 'REJETEE', 'REFUSEE', 'ESSAI'].indexOf(decision) >= 0;
+    var valide = decision !== 'IGNOREE' && !(reserve740 && clos740) && (decision === 'VALIDEE' || siretStatut === 'VERIFIE' || monacoNis || importee || reserve740);
     /* Date mal saisie (ex. 1926) : hors de l'année scolaire, on se fie au numéro de période. */
     var an0 = Number(annee.slice(0, 4)), datesFausses = false;
     [debut, fin].forEach(function(d) { if (d && (Number(d.slice(0, 4)) < an0 - 1 || Number(d.slice(0, 4)) > an0 + 2)) datesFausses = true; });
     if (datesFausses) { debut = ''; fin = ''; }
     var ligne = { id: Number(j.id), debut: debut, fin: fin, datesFausses: datesFausses, numero: Number(j.Periode_numero || brut(j, ['Période n°', 'Periode n°'])) || 0, siret: siret.length === 14, siretNum: siret, decision: (EUC_SUIVI2_t_(j.Decision) || (importee ? 'IMPORTEE' : '')) + (siretStatut ? ' / SIRET ' + siretStatut : '') };
-    if (monacoNis) ligne.siret = true;
+    if (monacoNis || (reserve740 && !clos740)) ligne.siret = true;
     ligne.fiche = EUC_SUIVI2_ficheTampon_(j, siret);
+    if (reserve740 && !clos740) ligne.fiche.reserve = true;
     ((valide && ligne.siret) ? (jotform[eid] = jotform[eid] || []) : (jotformNonValide[eid] = jotformNonValide[eid] || [])).push(ligne);
   });
   function jotformSur(liste, p) {
