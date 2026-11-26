@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV739 : géocodage, siège officiel et lieu de stage séparés
+
+- Constat réel : sur « Géocodage des entreprises », une entreprise dont l'élève travaille ailleurs que le siège (auto-entrepreneur en mission chez un autre garage, siège éloigné) affichait l'adresse du lieu de stage sous le SIRET du siège. Siège et lieu se disputaient une seule ligne (« L'adresse a changé depuis la dernière recherche ») et valider le lieu aurait déplacé le siège.
+- Correction : `EUC_DEV513_geoAccessDetails_` garde l'adresse du siège (siège numéroté DEV666 conservé) et porte `lieuStage` (`EUC_DEV705_lieuDistinct_`). `EUC_DEV739_lieuGeo_` ajoute une ligne « lieu de stage » (entreprise + adresse du lieu, sans SIRET — même identité que la carte du book, `EUC_DEV705_position_`) ; une simple précision du siège (même code postal, même voie) n'en crée pas.
+- Page : étiquettes « Siège officiel » / « Lieu de stage », rappel « Siège officiel : … (SIRET …) » sous un lieu. Carte du book : les lignes lieu ne deviennent jamais des points d'entreprise (DEV705 les rattache au siège).
+- Index géographique renouvelé (`DEV739-GEO-7`). Les anciennes lignes enregistrées sous le SIRET avec l'adresse d'un lieu repassent « à regéocoder » pour le siège. Aucune donnée Grist modifiée par la livraison.
+- Tests : `run-dev739-tests.js` (5) ; DEV649 et DEV577 adaptés à la nouvelle règle (garanties conservées).
+
 ## Mise à jour du 26 novembre 2026 — DEV738 : statistiques (classes inconnues, organisme OPCO) et enveloppe dashboard
 
 - Constat réel : dans « Données à corriger », presque toutes les conventions apparaissaient en « Classe inconnue dans la liste des classes de l'année ». La liste des classes venait uniquement de `EUC_DEV368_catalog`, qui exige le rôle administrateur et lit des caches de vues : en échec (accès direction, cache vide), aucune classe n'était reconnue et le résultat était mis en cache.

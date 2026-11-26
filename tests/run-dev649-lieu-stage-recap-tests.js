@@ -122,7 +122,10 @@ test('suivi, ordres de mission, carte et correction administrative utilisent le 
   assert.match(read('apps-script/Ordres_Mission_PFMP_V368.html'), /x\.lieuStage\?'<div class="lieu-stage-cell"/);
   assert.match(read('apps-script/EUC_SUIVI_PFMP_ClasseDetailV155.gs'), /lieuStage:typeof EUC_DEV649_lieuTexte_==='function'\?EUC_DEV649_lieuTexte_\(d\):''/);
   assert.match(read('apps-script/EUC_PFMP_DEV339_FamilleUX.js'), /x\.lieuStage=typeof EUC_DEV649_lieuTexte_==='function'\?EUC_DEV649_lieuTexte_\(dernier\):'';/);
-  assert.match(read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js'), /if\(typeof EUC_DEV649_lieuTexte_==='function'&&EUC_DEV649_lieuTexte_\(a\)\)address=EUC_DEV649_lieuTexte_\(a\);/);
+  /* DEV739 : le géocodage vise toujours le lieu de stage, désormais sur sa propre ligne (sans SIRET) ; siège numéroté = adresse du siège précisée (vérifié à l'exécution par run-dev739-tests.js). */
+  const g739 = read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js');
+  assert.match(g739, /if\(!lieu739&&typeof EUC_DEV649_lieuTexte_==='function'&&EUC_DEV649_lieuTexte_\(a\)\)address=EUC_DEV649_lieuTexte_\(a\);/);
+  assert.match(g739, /adresseEntreprise:address,lieuStage:lieu739,/); assert.match(g739, /var l=EUC_DEV739_lieuGeo_\(x\);if\(l\)extra\.push\(l\);/);
   const w = read('apps-script/EUC_CONVENTION_PFMP_AdminWorkflowV144.gs');
   assert.match(w, /Lieu_stage_adresse:'Lieu de stage — adresse'/); assert.match(read('apps-script/Admin_Conventions_PFMP.html'), /data-corr="Lieu_stage_adresse"/);
 });

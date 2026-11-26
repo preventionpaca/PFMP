@@ -143,7 +143,7 @@ test('géocodage : les entreprises des apprentis entrent dans la liste (adresse 
   assert.equal(d.length, 1); assert.equal(d[0].classe.id, 24); assert.equal(d[0].periode.libelle, 'Apprentissage');
   assert.deepEqual(JSON.parse(JSON.stringify(d[0].lignes)), [{ eleveId: 1, entreprise: 'ALER', adresseEntreprise: '13 BD RAYMOND POINCARÉ, 06160, ANTIBES', siretEntreprise: '99364978900019' }]);
   const geo = read('apps-script/EUC_PFMP_DEV441_AccesPpGeocodage.js');
-  assert.match(geo, /concat\(typeof EUC_DEV578_geoApprentisDetails_==='function'/); assert.match(geo, /EUC_DEV457_revision_\('EUC_APPRENTISSAGE_PFMP'\)/); assert.match(geo, /DEV578-GEO-6/);
+  assert.match(geo, /concat\(typeof EUC_DEV578_geoApprentisDetails_==='function'/); assert.match(geo, /EUC_DEV457_revision_\('EUC_APPRENTISSAGE_PFMP'\)/); assert.match(geo, /EUC_DEV517_GEO_INDEX_SCHEMA_='DEV\d+-GEO-([6-9]|[1-9]\d+)'/, 'schéma GEO-6 (apprentis) ou ultérieur');
 });
 
 test('administration des conventions : liste des dossiers servie depuis le cache tant que Grist ne change pas', () => {
