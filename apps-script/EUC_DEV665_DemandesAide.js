@@ -84,7 +84,7 @@ function EUC_DEV666_raison_(x) {
   if (x.doublonDe) return 'Doublon : l’élève a déjà déposé ' + x.doublonDe + ' pour cette période — à classer sans suite';
   if (!x.dansSuivi) return x.aide ? 'Demande d’aide : entreprise à identifier' : x.pays === 'MC' ? 'NIS de Monaco à saisir' : 'SIRET à vérifier';
   if (x.reserve) return 'Validé sous réserve : entreprise à confirmer — corriger le SIRET, lever la réserve ou annuler le stage';
-  if (x.ferme) return 'Établissement fermé selon l’INSEE : vérifier le SIRET';
+  if (x.ferme) return 'Établissement fermé administrativement (INSEE) : vérifier le SIRET';
   return '';
 }
 /* Dépôts en attente (calcul pur) : formulaire en ligne seulement, les plus récents d'abord ; doublons repérés
@@ -237,7 +237,7 @@ function EUC_DEV665_verifierSiret(q) {
     Adresse_officielle: EUC_DEV665_t_(e.adresseComplete || e.numeroVoie || e.adresse), Complement_adresse_officielle: EUC_DEV665_t_(e.complementAdresse || e.complement),
     CP_officiel: EUC_DEV665_t_(e.codePostal), Ville_officielle: EUC_DEV665_t_(e.commune), Pays_officiel: 'FR',
     Niveau_controle: actif ? 'VERT' : 'ORANGE', Decision: actif ? 'A_VALIDER' : 'A_CONTROLER',
-    Alertes: EUC_DEV665_trace_(f.Alertes, 'SIRET corrigé par le bureau : ' + siret + (actif ? '' : ' — établissement fermé selon l’INSEE'))
+    Alertes: EUC_DEV665_trace_(f.Alertes, 'SIRET corrigé par le bureau : ' + siret + (actif ? '' : ' — établissement fermé administrativement (INSEE)'))
   };
   /* DEV723 : l'entreprise retenue remplace la saisie de l'élève (nom et adresse ; responsable et tuteur jamais). */
   if (typeof EUC_DEV723_avecSaisie_ === 'function') champs = EUC_DEV723_avecSaisie_(f, champs);
@@ -319,7 +319,7 @@ function EUC_DEV711_accepterFerme(q) {
   if (!v.dansSuivi) throw new Error('Vérifiez d’abord le SIRET de l’entreprise.');
   if (!motif) throw new Error('Indiquez ce qui a été vérifié (motif).');
   var champs = { Niveau_controle: 'VERT', Decision: 'A_VALIDER',
-    Alertes: EUC_DEV665_trace_(f.Alertes, 'Établissement fermé selon l’INSEE : SIRET ' + v.numeroSaisi + ' gardé par le bureau — ' + motif) };
+    Alertes: EUC_DEV665_trace_(f.Alertes, 'Établissement fermé administrativement (INSEE) : SIRET ' + v.numeroSaisi + ' gardé par le bureau — ' + motif) };
   EUC_DEV665_patch_(r.id, champs);
   return { ok: true, soumission: EUC_DEV666_finir_(r.id, Object.assign({}, f, champs)) };
 }

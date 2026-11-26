@@ -176,7 +176,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
           .catch(function(){clearTimeout(minu);occupe(b,false);msg(id,'Le service de vérification ne répond pas. Réessayez dans un instant.','erreur');});
         return;
       }
-      occupe(b,false);remplacer(r.soumission);msg(id,r.ferme?'SIRET vérifié — attention : établissement fermé selon l’INSEE.':'SIRET vérifié.'+fini(r.soumission,r.prevenu),r.ferme?'erreur':'ok');
+      occupe(b,false);remplacer(r.soumission);msg(id,r.ferme?'SIRET vérifié — attention : établissement fermé administrativement (INSEE).':'SIRET vérifié.'+fini(r.soumission,r.prevenu),r.ferme?'erreur':'ok');
     },function(e){occupe(b,false);msg(id,(e&&e.message)||'Vérification impossible.','erreur');});
   }
   $('liste').addEventListener('click',function(ev){
@@ -229,7 +229,7 @@ button.leger{background:var(--vert-clair);color:var(--vert)}button.gris{backgrou
         function(e){occupe(b,false);msg(id,(e&&e.message)||'Enregistrement impossible.','erreur');});}
     /* DEV711 : établissement fermé vérifié par le bureau : SIRET gardé, aucune convention créée, aucun courriel. */
     if(a==='garderSiret'){
-      var vu=prompt('Garder le SIRET '+x.numeroSaisi+' pour '+x.eleve+' malgré « établissement fermé selon l’INSEE » ?\nAucune convention n’est créée et aucun courriel n’est envoyé.\nQu’avez-vous vérifié ?','entreprise contactée : en activité à cette adresse');if(vu===null)return;
+      var vu=prompt('Garder le SIRET '+x.numeroSaisi+' pour '+x.eleve+' malgré « établissement fermé administrativement (INSEE) » ?\nAucune convention n’est créée et aucun courriel n’est envoyé.\nQu’avez-vous vérifié ?','entreprise contactée : en activité à cette adresse');if(vu===null)return;
       if(!String(vu).trim()){msg(id,'Indiquez ce qui a été vérifié.','erreur');return;}
       occupe(b,true,'Enregistrement…');msg(id,'');
       appel('EUC_DEV711_accepterFerme',{id:id,motif:vu},60000,function(r){occupe(b,false);remplacer(r.soumission);msg(id,'SIRET gardé : le dépôt ne demande plus d’action.','ok');},

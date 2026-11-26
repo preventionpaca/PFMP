@@ -166,7 +166,7 @@ function EUC_DEV603_ligne_(numero, annee, eleve, classe, periode, ent, resp, tut
     Eleve_match_id: eleve.id, Eleve_match_libelle: eleve.prenom + ' ' + eleve.nom, Classe_match_id: classe.id, Classe_match_libelle: classe.nom, Entreprise_match_id: 0, Entreprise_match_libelle: '', Entreprise_score: 0,
     SIRET_statut: 'VERIFIE', SIRET_source: 'Recherche d’entreprises (formulaire de secours)', Raison_sociale_officielle: ent.raisonSociale, Nom_commercial: ent.enseigne || ent.raisonSociale,
     Adresse_officielle: ent.adresse, Complement_adresse_officielle: ent.complement, CP_officiel: ent.codePostal, Ville_officielle: ent.commune, Pays_officiel: 'FR',
-    Niveau_controle: ent.actif ? 'VERT' : 'ORANGE', Alertes: ent.actif ? '' : 'Établissement fermé selon l’INSEE', Decision: ent.actif ? 'A_VALIDER' : 'A_CONTROLER', Date_import: new Date().toISOString() };
+    Niveau_controle: ent.actif ? 'VERT' : 'ORANGE', Alertes: ent.actif ? '' : 'Établissement fermé administrativement (INSEE)', Decision: ent.actif ? 'A_VALIDER' : 'A_CONTROLER', Date_import: new Date().toISOString() };
 }
 function EUC_DEV603_numero_(annee) {
   var p = PropertiesService.getScriptProperties(), k = 'EUC_DEV603_COMPTEUR_' + annee, n = Number(p.getProperty(k) || 0) + 1;
@@ -195,6 +195,8 @@ function EUC_DEV603_deposer(q) {
   var trouve = EUC_ENT_rechercherSiret(siret), e = trouve.entreprise;
   if (!e && trouve.source === 'api_navigateur') e = (EUC_ENT_traiterReponseApiNavigateur(q.reponseApi, siret) || {}).entreprise;
   if (!e) throw new Error('Entreprise introuvable pour ce SIRET : vérifiez les 14 chiffres.');
+  /* DEV742 : établissement fermé administrativement : saisie de l'élève refusée (entreprise puis bureau G205). */
+  if (typeof EUC_DEV742_ferme_ === 'function' && EUC_DEV742_ferme_(e)) throw new Error(EUC_DEV742_MESSAGE_);
   var ent = { siret: siret, raisonSociale: EUC_DEV603_t_(e.raisonSociale), enseigne: EUC_DEV603_t_(q.enseigne || e.enseigne), adresse: EUC_DEV603_t_(e.adresseComplete || e.numeroVoie || e.adresse), complement: EUC_DEV603_t_(e.complementAdresse || e.complement),
     codePostal: EUC_DEV603_t_(e.codePostal), commune: EUC_DEV603_t_(e.commune), actif: e.etat !== 'Fermé' };
   /* DEV649 : SIRET non diffusible : nom et adresse saisis par l'élève (le SIRET, lui, est vérifié). */

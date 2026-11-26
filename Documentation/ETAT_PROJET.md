@@ -1,5 +1,13 @@
 # État du projet Eucalyptus PFMP
 
+## Mise à jour du 26 novembre 2026 — DEV742 : établissement fermé administrativement, saisie élève bloquée
+
+- `EUC_DEV742_EtablissementFerme.js` : `EUC_DEV742_ferme_(e)` (état INSEE « Fermé ») et le message unique : « Votre saisie est impossible car l’établissement est fermé administrativement. Veuillez contacter l’entreprise pour savoir s’il ne s’agit pas d’une erreur de numéro SIRET de leur part. Dans tous les cas, passez au bureau des formations et des entreprises (bureau G205). »
+- Déclaration en ligne (DEV603) : bouton « Continuer » bloqué dès la vérification du SIRET, dépôt refusé côté serveur. QR code (V116, reprise V117) : SIRET fermé jamais « trouvé » (ni preuve signée, ni cache), même message ; enregistrement refusé côté serveur.
+- Bureau : « fermé selon l’INSEE » devient « fermé administrativement (INSEE) » (soumissions à traiter, corrections de dépôt, alertes). Le bureau garde ses issues : « Vérifier le SIRET », « Garder ce SIRET », « Valider sous réserve » (DEV740), interruption de convention.
+- Limite : une entreprise déjà présente dans la base Grist est lue depuis sa fiche (champ `Etat`) ; si elle a fermé depuis sans mise à jour de la fiche, le blocage ne se déclenche pas.
+- Tests : `tests/run-dev742-tests.js` (7) ; libellé attendu de `run-dev694` mis à jour.
+
 ## Mise à jour du 26 novembre 2026 — DEV741 : recherche dans « Soumissions à traiter »
 
 - Champ « Rechercher dans la liste » sous les filtres : filtre pendant la frappe la liste du filtre choisi (élève, classe, entreprise saisie ou officielle, adresse, ville, SIRET/NIS, n° de dépôt, période), sans tenir compte des majuscules ni des accents ; chaque mot tapé doit figurer. Calcul local, aucun appel serveur ni écriture. Compteur « Recherche : X résultat(s) sur Y » et message dédié si rien ne correspond.

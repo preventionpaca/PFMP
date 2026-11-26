@@ -85,6 +85,10 @@ function EUC_V161_mapperEntrepriseFrance_(rep,siret){
   if(!rep)return {found:false};
 
   var d=rep.entreprise||rep.data||rep;
+  /* DEV742 : établissement fermé administrativement : jamais « trouvé » (ni preuve, ni cache), message pour l'élève. */
+  if(typeof EUC_DEV742_ferme_==='function'&&EUC_DEV742_ferme_(d)){
+    return {found:false,ferme:true,entrepriseSiret:String(siret||'').replace(/\D/g,''),message:EUC_DEV742_MESSAGE_};
+  }
   function p(){
     for(var i=0;i<arguments.length;i++){
       var v=arguments[i];

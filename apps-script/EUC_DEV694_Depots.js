@@ -175,7 +175,7 @@ function EUC_DEV694_corrigerDepot(q) {
     if (e.nonDiffusible === true && !T(e.raisonSociale)) throw new Error('Entreprise non diffusible : nom et adresse absents de l’annuaire. Utilisez « Accès INPI ».');
     officiel = EUC_DEV713_officiel_(e, f, nouveau);
     var av = EUC_DEV713_adresse_(f), ap = EUC_DEV713_adresse_(officiel);
-    if (av !== ap) { ch.avant.Entreprise_officielle = av; ch.apres.Entreprise_officielle = ap + (officiel.Niveau_controle === 'ORANGE' ? ' (établissement fermé selon l’INSEE)' : ''); }
+    if (av !== ap) { ch.avant.Entreprise_officielle = av; ch.apres.Entreprise_officielle = ap + (officiel.Niveau_controle === 'ORANGE' ? ' (établissement fermé administrativement)' : ''); }
   }
   var champs = EUC_DEV694_champs_(f, ch, motif, T(ctx && ctx.email), new Date().toISOString());
   if (officiel) Object.keys(officiel).forEach(function(k) { champs[k] = officiel[k]; });
@@ -205,7 +205,7 @@ function EUC_DEV694_compter_(liste) {
   if (n.aide) l.push({ cle: 'aide', nombre: n.aide, texte: n.aide > 1 ? 'demandes d’aide : entreprise à identifier' : 'demande d’aide : entreprise à identifier' });
   if (n.siret) l.push({ cle: 'siret', nombre: n.siret, texte: 'SIRET à vérifier' });
   if (n.nis) l.push({ cle: 'nis', nombre: n.nis, texte: 'NIS de Monaco à saisir' });
-  if (n.ferme) l.push({ cle: 'ferme', nombre: n.ferme, texte: n.ferme > 1 ? 'établissements fermés selon l’INSEE à vérifier' : 'établissement fermé selon l’INSEE à vérifier' });
+  if (n.ferme) l.push({ cle: 'ferme', nombre: n.ferme, texte: n.ferme > 1 ? 'établissements fermés administrativement (INSEE) à vérifier' : 'établissement fermé administrativement (INSEE) à vérifier' });
   if (n.doublon) l.push({ cle: 'doublon', nombre: n.doublon, texte: n.doublon > 1 ? 'doublons à classer sans suite' : 'doublon à classer sans suite' });
   if (n.prevenir) l.push({ cle: 'prevenir', nombre: n.prevenir, texte: n.prevenir > 1 ? 'élèves à prévenir (problème résolu)' : 'élève à prévenir (problème résolu)' });
   return l;

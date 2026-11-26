@@ -108,7 +108,7 @@ test('bandeau « À faire » : comptes par type, rien quand tout est traité', (
   const l = [{ aTraiter: true, dansSuivi: false, aide: true }, { aTraiter: true, dansSuivi: false, aide: true }, { aTraiter: true, dansSuivi: false, pays: 'FR' }, { aTraiter: true, dansSuivi: false, pays: 'MC' },
     { aTraiter: true, dansSuivi: true, ferme: true }, { aTraiter: true, doublonDe: 'PFMP-2026-S0018', dansSuivi: false }, { aTraiter: false, dansSuivi: true, aPrevenir: true }, { aTraiter: false, dansSuivi: true }];
   assert.deepEqual(J(k.EUC_DEV694_compter_(l)).map(x => x.cle + ':' + x.nombre + ':' + x.texte), [
-    'aide:2:demandes d’aide : entreprise à identifier', 'siret:1:SIRET à vérifier', 'nis:1:NIS de Monaco à saisir', 'ferme:1:établissement fermé selon l’INSEE à vérifier', 'doublon:1:doublon à classer sans suite', 'prevenir:1:élève à prévenir (problème résolu)']);
+    'aide:2:demandes d’aide : entreprise à identifier', 'siret:1:SIRET à vérifier', 'nis:1:NIS de Monaco à saisir', 'ferme:1:établissement fermé administrativement (INSEE) à vérifier', 'doublon:1:doublon à classer sans suite', 'prevenir:1:élève à prévenir (problème résolu)']);
   assert.deepEqual(J(k.EUC_DEV694_compter_([{ aTraiter: false, dansSuivi: true }])), []);
   /* De bout en bout sur la table d'attente : un dépôt vérifié ne demande rien ; un SIRET non vérifié et un doublon s'affichent. */
   const lignes = [depot(53), depot(70, { Submission_ID: 'SECOURS-PFMP-2026-S0070', Eleve_match_id: 9, Periode_numero: 'PFMP n°1', SIRET_statut: 'A_CONTROLER', Decision: 'A_CONTROLER', Niveau_controle: 'ROUGE', SIRET_normalise: '' }),

@@ -1641,7 +1641,7 @@ init();
                       clearIdentity(false);
                       lockIdentity(true,false);
                       lockOne('entrepriseEnseigne',false);
-                      status(depotG205(),true);
+                      status(x&&x.ferme?(x.message||depotG205()):depotG205(),true);/* DEV742 */
                       return;
                     }
 
@@ -1688,7 +1688,7 @@ init();
               clearIdentity(false);
               lockIdentity(true,false);
               lockOne('entrepriseEnseigne',false);
-              status(depotG205(),true);
+              status(r&&r.ferme?(r.message||depotG205()):depotG205(),true);/* DEV742 */
               return;
             }
 
